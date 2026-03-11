@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(vercel whoami:*)",
+      "Bash(vercel --prod 2>&1)",
+      "Bash(git -C /Users/brock/torch-football status)",
+      "Bash(git -C /Users/brock/torch-football diff)",
+      "Bash(git -C /Users/brock/torch-football add CLAUDE.md public/index.html public/manifest.json public/sw.js && git -C /Users/brock/torch-football commit -m \"$\\(cat <<'EOF'\nAdd PWA support for home screen install and offline play\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && git -C /Users/brock/torch-football status)",
+      "Bash(git -C /Users/brock/torch-football add CLAUDE.md && git -C /Users/brock/torch-football commit -m \"$\\(cat <<'EOF'\nAdd production URL to CLAUDE.md\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(gh auth:*)",
+      "Bash(brew install:*)",
+      "Bash(gh repo:*)",
+      "Bash(git -C /Users/brock/torch-football add -A && git -C /Users/brock/torch-football commit -m \"$\\(cat <<'EOF'\nAdd GitHub remote and deploy workflow\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}

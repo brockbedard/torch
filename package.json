@@ -6,7 +6,7 @@
     "dev": "npx serve public -l 3000 -C",
     "dev:api": "vercel dev",
     "build": "echo 'Static site — no build step needed'",
-    "deploy": "vercel --prod",
+    "deploy": "git add -A && git commit -m 'deploy' && git push && vercel --prod",
     "deploy:preview": "vercel"
   },
   "keywords": ["football", "card-game", "daily-puzzle"],
