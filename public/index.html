@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#07050e">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>🔥 TORCH — The Football Card Game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Press+Start+2P&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
@@ -1250,6 +1254,16 @@ function buildTitle(){
   const qpSub=document.createElement('div');qpSub.style.cssText='font-size:14px;color:var(--purple);margin-top:6px;font-weight:700;text-align:center;opacity:.85;';
   qpSub.textContent=sc0.emoji+' '+sc0.name+' — '+sc0.tagline;
   qp.append(qpBtn,qpSub);el.appendChild(qp);
+
+  // ── CAMPAIGN MODE ──
+  const cp=document.createElement('div');cp.style.cssText='width:100%;padding:10px 14px 0;';
+  const cpBtn=document.createElement('button');cpBtn.className='btn bo';
+  cpBtn.style.cssText='width:100%;padding:16px;font-size:12px;letter-spacing:3px;box-shadow:0 6px 0 #1a2600,0 0 28px rgba(255,102,51,.25);background:linear-gradient(135deg,#1a0d00,#0d0800);position:relative;overflow:hidden;border:1px solid rgba(255,102,51,.3);';
+  cpBtn.innerHTML='<span style="position:relative;z-index:1;">🏈 CAMPAIGN MODE</span>';
+  cpBtn.onclick=function(){SND.click();GS=makeGs(PROGS[Math.floor(Math.random()*PROGS.length)]);render();};
+  const cpSub=document.createElement('div');cpSub.style.cssText='font-size:14px;color:var(--orange);margin-top:6px;font-weight:700;text-align:center;opacity:.85;';
+  cpSub.textContent='Score 5 TDs before losing 3 lives';
+  cp.append(cpBtn,cpSub);el.appendChild(cp);
 
   // ── TEAM + PLAYER SELECTOR ──
   const ts=document.createElement('div');ts.style.cssText='width:100%;padding:12px 14px 8px;';
@@ -3366,6 +3380,8 @@ function render(){
 }
 
 render();
+
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js');}
 </script>
 </body>
 </html>

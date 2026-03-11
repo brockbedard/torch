@@ -9,7 +9,9 @@ Built as a mobile-first single-page app (430px max-width). Currently a single HT
 ```
 torch-project/
 ├── public/
-│   └── index.html      ← The entire game (HTML + CSS + JS in one file)
+│   ├── index.html      ← The entire game (HTML + CSS + JS in one file)
+│   ├── manifest.json   ← PWA manifest (home screen install)
+│   └── sw.js           ← Service worker (offline caching)
 ├── api/
 │   └── commentary.js   ← Vercel serverless function proxying to Anthropic API
 ├── package.json
@@ -82,5 +84,5 @@ All AI calls have static fallbacks (FALLBACK object) so the game works without a
 3. **No versioned localStorage** — Schema changes between versions cause silent bugs from stale stored values.
 4. **Vertical Threat scheme is OP** — PA always active + no go route INT removes too much risk.
 5. **Triple Option +18 streak bonus** — Very swingy, may need tuning.
-6. **No offline/PWA support** — Should add a manifest and service worker.
+6. ~~No offline/PWA support~~ — **Done.** Manifest, service worker, and Apple meta tags added. Uses emoji placeholder icon.
 7. **Campaign mode and Daily mode share 90% of play logic** — Should unify into one `doPlay()` pipeline.
