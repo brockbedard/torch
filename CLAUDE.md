@@ -24,6 +24,7 @@ torch-project/
 - **Static (no AI commentary):** `npx serve public -l 3000` — fallback commentary kicks in
 - **With API routes:** `vercel dev` — requires `ANTHROPIC_API_KEY` in `.env`
 - **Deploy:** `vercel --prod`
+- **Production URL:** https://torch-two.vercel.app/
 
 ## Architecture
 
