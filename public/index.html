@@ -145,6 +145,7 @@ var TEAMS=[
   {id:'iron_ridge',name:'IRON RIDGE',abbr:'IR',icon:'\uD83D\uDD31',
    color:'#CC1A1A',accent:'#ff4444',bg:'#1a0000',
    style:'TRIPLE OPTION',desc:'Give. Keep. Pitch.',
+   defStyle:'THE PROCESS',defDesc:'Trust the system.',
    coach:{name:'Coach Mack Harmon',voice:'Old school. Option football. Three yards and a cloud of dust.'},
    players:[
      {id:'ir_q1',name:'Bo Kendrick',nick:'The Conductor',pos:'QB',ovr:80,desc:'Reads the DE like a book. Never makes the wrong call.',cat:'qb'},
@@ -153,10 +154,19 @@ var TEAMS=[
      {id:'ir_s2',name:'Jaylen Sims',nick:'Jet',pos:'RB',ovr:78,desc:'Pitch man. Once he hits the edge, it\'s over.',cat:'skill'},
      {id:'ir_s3',name:'Duke Owens',nick:'Plow',pos:'RB',ovr:76,desc:'Between the tackles. Three yards. Every time.',cat:'skill'},
      {id:'ir_s4',name:'Cade Buckley',nick:'Big Country',pos:'TE',ovr:74,desc:'Blocking TE who can leak out for a play-action surprise.',cat:'skill'},
+   ],
+   defPlayers:[
+     {id:'ir_dl1',name:'Dez Lawson',nick:'The Professor',pos:'LB',ovr:80,desc:'Reads the offense\'s mail. Knows where the ball is going before the QB does.',cat:'lb'},
+     {id:'ir_dl2',name:'Knox Barrett',nick:'The Eraser',pos:'LB',ovr:76,desc:'You think you have a first down. Then Knox shows up.',cat:'lb'},
+     {id:'ir_db1',name:'Terrance Gill',nick:'Lockdown',pos:'CB',ovr:82,desc:'He\'s on your best receiver. Good luck.',cat:'skill'},
+     {id:'ir_db2',name:'Aiden Kemp',nick:'The Mirror',pos:'CB',ovr:74,desc:'Runs every route with the receiver. Like a shadow that tackles.',cat:'skill'},
+     {id:'ir_db3',name:'Roman Slade',nick:'The Quarterback',pos:'S',ovr:78,desc:'Calls the coverage. Makes the rotation. Sets the defense.',cat:'skill'},
+     {id:'ir_db4',name:'Malik Ware',nick:'Downhill',pos:'S',ovr:72,desc:'If you run it, he\'s the first one there. Every time.',cat:'skill'},
    ]},
   {id:'canyon_tech',name:'CANYON TECH',abbr:'CT',icon:'\uD83C\uDF35',
    color:'#FF5E1A',accent:'#ff8844',bg:'#1a0800',
    style:'AIR RAID',desc:'Sling it. Every play.',
+   defStyle:'SEND EVERYBODY',defDesc:'Blitz or bust.',
    coach:{name:'Coach Hank McCord',voice:'Aggressive. Loves the deep ball. Always attacking.'},
    players:[
      {id:'ct_q1',name:'Colt Avery',nick:'The Gunslinger',pos:'QB',ovr:78,desc:'Throws 50 times a game and smiles about it.',cat:'qb'},
@@ -165,6 +175,14 @@ var TEAMS=[
      {id:'ct_s2',name:'Dante Liu',nick:'The Route Tree',pos:'WR',ovr:76,desc:'Can run all 9 routes and breaks on a dime.',cat:'skill'},
      {id:'ct_s3',name:'Rio Vasquez',nick:'Slot Machine',pos:'SLOT',ovr:82,desc:'Lives in the seams. Catches everything.',cat:'skill'},
      {id:'ct_s4',name:'Kirby Walsh',nick:'Checkdown',pos:'RB',ovr:72,desc:'Screen game specialist. Sneaky yards after catch.',cat:'skill'},
+   ],
+   defPlayers:[
+     {id:'ct_dl1',name:'Jace Wilder',nick:'The Missile',pos:'LB',ovr:78,desc:'Lines up in the A-gap and doesn\'t stop until he finds the quarterback.',cat:'lb'},
+     {id:'ct_dl2',name:'Darius Moon',nick:'Moonshot',pos:'LB',ovr:74,desc:'Sometimes he blitzes. Sometimes he drops. Good luck guessing.',cat:'lb'},
+     {id:'ct_db1',name:'Zion Crews',nick:'Island Boy',pos:'CB',ovr:82,desc:'No safety help? No problem. He lives on the island.',cat:'skill'},
+     {id:'ct_db2',name:'Ty Bishop',nick:'The Gambler',pos:'CB',ovr:76,desc:'Jumps every route. Picks off two. Gets burned once. Worth it.',cat:'skill'},
+     {id:'ct_db3',name:'Andre Knox',nick:'Heat Seeker',pos:'S',ovr:80,desc:'Blitzes more than any safety in the league. The QB hears his footsteps.',cat:'skill'},
+     {id:'ct_db4',name:'Kai Orozco',nick:'Ghost',pos:'S',ovr:72,desc:'You don\'t see him until the ball is in the air. Then it\'s his.',cat:'skill'},
    ]},
 ];
 
@@ -195,53 +213,168 @@ var IR_OFF_CARDS=[
   {id:'pa_flat',      name:'PA FLAT',        type:'pass',cat:'Pass - Short', icon:'\uD83D\uDEE1',desc:'Fake the dive, dump to the flat. Safe play-action.'},
 ];
 
-var DEF_CARDS=[
-  {id:'blitz',        name:'BLITZ',         type:'agg',cat:'Pressure',           icon:'\uD83D\uDD25',desc:'Send extra rushers. High risk/high reward. Gets destroyed by quick throws.'},
-  {id:'corner_blitz', name:'CORNER BLITZ',  type:'agg',cat:'Pressure - Edge',    icon:'\uD83D\uDCA8',desc:'Pressure off the corner. Leaves the sideline exposed.'},
-  {id:'press_man',    name:'PRESS MAN',     type:'agg',cat:'Coverage - Physical', icon:'\uD83E\uDD1D',desc:'Jam receivers at the line. Shuts down short routes. Speed beats you deep.'},
-  {id:'safety_blitz', name:'SAFETY BLITZ',  type:'agg',cat:'Pressure - Downhill', icon:'\u2B07',  desc:'Safety attacks from depth. Kills the run. Zero deep help.'},
-  {id:'line_stunt',   name:'LINE STUNT',    type:'agg',cat:'Pressure - Interior', icon:'\uD83D\uDD04',desc:'DL twist and games. Disrupts timing but opens running lanes.'},
-  {id:'cover_2',      name:'COVER 2',       type:'con',cat:'Zone - Two Deep',    icon:'2\uFE0F\u20E3',desc:'Two safeties deep, corners in flats. Soft in the middle.'},
-  {id:'cover_3',      name:'COVER 3',       type:'con',cat:'Zone - Three Deep',  icon:'3\uFE0F\u20E3',desc:'Three deep zones, 8-man box. Strong vs deep balls, weak underneath.'},
-  {id:'cover_4',      name:'COVER 4',       type:'con',cat:'Zone - Four Deep',   icon:'4\uFE0F\u20E3',desc:'Four across the back. Takes away everything deep, gives up short.'},
-  {id:'spy',          name:'SPY',           type:'con',cat:'Assignment',          icon:'\uD83D\uDD75',desc:'One defender watches the QB. Contains scrambles, fewer guys in coverage.'},
-  {id:'prevent',      name:'PREVENT',       type:'con',cat:'Zone - Max Depth',   icon:'\uD83E\uDDF1',desc:'Everyone drops deep. Nothing over the top. Gives up 5+ yards every snap.'},
+// ===== SCHEME-SPECIFIC DEFENSIVE CARDS =====
+// Iron Ridge (Saban-inspired): Pattern-matching zone, discipline, gap integrity
+var IR_DEF_CARDS=[
+  {id:'rip_liz',   name:'RIP/LIZ MATCH', type:'con',cat:'Zone Match',      icon:'\uD83E\uDDE0',desc:'Pattern-matching Cover 3. Safety rotates to strength. Stops crossers and verticals.'},
+  {id:'cov4_match',name:'COVER 4 MATCH', type:'con',cat:'Zone Match',      icon:'4\uFE0F\u20E3',desc:'Quarters coverage. Four deep, pattern-match routes. Best run-stopping zone.'},
+  {id:'mod',       name:'MOD COVERAGE',  type:'con',cat:'Zone Shell',      icon:'\uD83D\uDEE1',desc:'Two-high base. Both safeties deep, CBs play off-man/zone hybrid. The vanilla look.'},
+  {id:'cover_6',   name:'COVER 6',       type:'con',cat:'Split-Field',     icon:'\u2194',  desc:'Cover 4 to passing strength, Cover 2 to boundary. Forces QB to read two coverages.'},
+  {id:'bracket',   name:'BRACKET',       type:'con',cat:'Man/Zone Hybrid', icon:'\uD83D\uDD12',desc:'Double-team the best weapon. Inside-outside leverage. Shuts down one receiver completely.'},
+  {id:'skinny',    name:'SKINNY',        type:'agg',cat:'Man/Zone Hybrid', icon:'\u2702',  desc:'Trips check. Man on the iso receiver, pattern-match the trips side. Stops overloads.'},
+  {id:'meg',       name:'MEG',           type:'agg',cat:'Man Coverage',    icon:'\uD83D\uDCAA',desc:'Man Everywhere in the Gap. Press-man, everyone has an assignment. Win your matchup.'},
+  {id:'gap_int',   name:'GAP INTEGRITY', type:'agg',cat:'Run Defense',     icon:'\uD83E\uDDF1',desc:'Every defender owns a gap. No freelancing. Built to stop option football and power runs.'},
+  {id:'fire_zone', name:'FIRE ZONE',     type:'agg',cat:'Zone Blitz',      icon:'\uD83D\uDD25',desc:'Send 5, drop 3 into zone behind it. Calculated pressure with coverage underneath.'},
+  {id:'robber',    name:'ROBBER',        type:'agg',cat:'Zone/Man Hybrid', icon:'\uD83D\uDD75',desc:'Safety reads the QB\'s eyes and jumps the route. Guess right = INT. Guess wrong = TD.'},
 ];
 
-// ===== MATCHUP TABLE =====
-// Key: offCardId -> defCardId -> tier
-var MT={
-  // === CANYON TECH (Air Raid) ===
-  mesh:          {blitz:'O+',corner_blitz:'O+',press_man:'O+',safety_blitz:'N', line_stunt:'N', cover_2:'N', cover_3:'N', cover_4:'N', spy:'O+',prevent:'N'},
-  four_verts:    {blitz:'O+',corner_blitz:'O+',press_man:'N', safety_blitz:'O+',line_stunt:'N', cover_2:'N', cover_3:'D+',cover_4:'D+',spy:'N', prevent:'D+'},
-  shallow_cross: {blitz:'O+',corner_blitz:'O+',press_man:'D+',safety_blitz:'N', line_stunt:'N', cover_2:'D+',cover_3:'O+',cover_4:'N', spy:'N', prevent:'N'},
-  y_corner:      {blitz:'O+',corner_blitz:'TO',press_man:'N', safety_blitz:'O+',line_stunt:'N', cover_2:'O+',cover_3:'N', cover_4:'D+',spy:'N', prevent:'D+'},
-  stick:         {blitz:'O+',corner_blitz:'O+',press_man:'D+',safety_blitz:'N', line_stunt:'N', cover_2:'D+',cover_3:'N', cover_4:'N', spy:'O+',prevent:'N'},
-  slant:         {blitz:'O+',corner_blitz:'O+',press_man:'TO',safety_blitz:'N', line_stunt:'N', cover_2:'N', cover_3:'N', cover_4:'N', spy:'O+',prevent:'N'},
-  go_route:      {blitz:'O+',corner_blitz:'O+',press_man:'N', safety_blitz:'O+',line_stunt:'N', cover_2:'D+',cover_3:'D+',cover_4:'D+',spy:'N', prevent:'D+'},
-  bubble_screen: {blitz:'O+',corner_blitz:'N', press_man:'D+',safety_blitz:'O+',line_stunt:'N', cover_2:'D+',cover_3:'N', cover_4:'N', spy:'N', prevent:'N'},
-  draw:          {blitz:'TO',corner_blitz:'N', press_man:'O+',safety_blitz:'D+',line_stunt:'D+',cover_2:'O+',cover_3:'N', cover_4:'N', spy:'N', prevent:'O+'},
-  qb_sneak:      {blitz:'N', corner_blitz:'N', press_man:'D+',safety_blitz:'N', line_stunt:'D+',cover_2:'O+',cover_3:'O+',cover_4:'N', spy:'N', prevent:'O+'},
-  // === IRON RIDGE (Triple Option) ===
-  triple_option: {blitz:'D+',corner_blitz:'O+',press_man:'N', safety_blitz:'D+',line_stunt:'O+',cover_2:'O+',cover_3:'N', cover_4:'O+',spy:'D+',prevent:'O+'},
-  midline:       {blitz:'D+',corner_blitz:'N', press_man:'N', safety_blitz:'N', line_stunt:'D+',cover_2:'O+',cover_3:'D+',cover_4:'N', spy:'N', prevent:'O+'},
-  rocket_toss:   {blitz:'N', corner_blitz:'D+',press_man:'N', safety_blitz:'O+',line_stunt:'O+',cover_2:'N', cover_3:'N', cover_4:'N', spy:'N', prevent:'O+'},
-  trap:          {blitz:'N', corner_blitz:'N', press_man:'N', safety_blitz:'D+',line_stunt:'O+',cover_2:'O+',cover_3:'N', cover_4:'N', spy:'N', prevent:'O+'},
-  qb_keeper:     {blitz:'D+',corner_blitz:'O+',press_man:'N', safety_blitz:'N', line_stunt:'N', cover_2:'N', cover_3:'N', cover_4:'O+',spy:'D+',prevent:'O+'},
-  power:         {blitz:'D+',corner_blitz:'O+',press_man:'N', safety_blitz:'D+',line_stunt:'O+',cover_2:'N', cover_3:'D+',cover_4:'N', spy:'N', prevent:'O+'},
-  zone_read:     {blitz:'D+',corner_blitz:'O+',press_man:'N', safety_blitz:'N', line_stunt:'O+',cover_2:'N', cover_3:'N', cover_4:'O+',spy:'D+',prevent:'O+'},
-  pa_post:       {blitz:'N', corner_blitz:'N', press_man:'O+',safety_blitz:'O+',line_stunt:'D+',cover_2:'O+',cover_3:'N', cover_4:'D+',spy:'N', prevent:'D+'},
-  pa_flat:       {blitz:'O+',corner_blitz:'N', press_man:'D+',safety_blitz:'O+',line_stunt:'N', cover_2:'D+',cover_3:'O+',cover_4:'N', spy:'N', prevent:'N'},
+// Canyon Tech (Williams-inspired): Blitz from everywhere, zero coverage, high risk/reward
+var CT_DEF_CARDS=[
+  {id:'overload',  name:'OVERLOAD BLITZ',type:'agg',cat:'Pressure',        icon:'\uD83D\uDCA5',desc:'Stack extra rushers to one side. OL can\'t sort out the numbers. Pure chaos.'},
+  {id:'db_blitz',  name:'DB BLITZ',      type:'agg',cat:'Exotic Pressure', icon:'\u26A1',  desc:'Safety AND corner blitz off the edge. Zero coverage behind it. Pure aggression.'},
+  {id:'zero_cov',  name:'ZERO COVER',    type:'agg',cat:'Man / Zero',      icon:'\uD83C\uDFAF',desc:'All-out man coverage, no safety help. Every defender on an island. Win or get burned.'},
+  {id:'a_gap_mug', name:'A-GAP MUG',     type:'agg',cat:'Simulated Press.', icon:'\uD83D\uDC7B',desc:'Two defenders in both A-gaps. Sometimes both come. Sometimes neither. Creates hesitation.'},
+  {id:'edge_crash',name:'EDGE CRASH',    type:'agg',cat:'Pressure',        icon:'\uD83C\uDF2A',desc:'Both edges pin ears back. Speed rush outside. Interior holds gaps. Pure pass rush.'},
+  {id:'cov2_buc',  name:'COVER 2 BUC',   type:'con',cat:'Zone',            icon:'2\uFE0F\u20E3',desc:'Tampa 2 variant. Two deep, LB drops to cover the seam. The changeup to set up blitzes.'},
+  {id:'man_press', name:'MAN PRESS',     type:'con',cat:'Man Coverage',    icon:'\uD83E\uDD1D',desc:'Press coverage at the line. Jam receivers to break timing. No safety help.'},
+  {id:'zone_drop', name:'ZONE BLITZ DROP',type:'con',cat:'Zone Blitz',     icon:'\uD83C\uDCCF',desc:'Show blitz, drop the edge into coverage. QB throws to the flat, the dropped DE picks it off.'},
+  {id:'spy',       name:'SPY',           type:'con',cat:'Assignment',      icon:'\uD83D\uDD75',desc:'One defender shadows the QB. Contains scrambles, watches for the draw.'},
+  {id:'prevent',   name:'PREVENT',       type:'con',cat:'Zone - Max Depth',icon:'\uD83E\uDDF1',desc:'Everyone drops deep. Nothing over the top. Gives up 5+ yards every snap.'},
+];
+
+// ===== MATCHUP TABLES (4 grids) =====
+// Tier key: O+ (8-20 yds), N (2-6), D+ (-2 to 2), TO (turnover risk), OT (boom w/ turnover risk)
+
+// Canyon Tech Offense vs Iron Ridge Defense
+var MT_CT_IR={
+  mesh:          {rip_liz:'D+',cov4_match:'N', mod:'N', cover_6:'D+',bracket:'O+',skinny:'D+',meg:'O+',gap_int:'O+',fire_zone:'N', robber:'D+'},
+  four_verts:    {rip_liz:'D+',cov4_match:'D+',mod:'D+',cover_6:'N', bracket:'D+',skinny:'N', meg:'N', gap_int:'O+',fire_zone:'N', robber:'O+'},
+  shallow_cross: {rip_liz:'N', cov4_match:'O+',mod:'O+',cover_6:'O+',bracket:'N', skinny:'D+',meg:'N', gap_int:'O+',fire_zone:'O+',robber:'N'},
+  y_corner:      {rip_liz:'N', cov4_match:'D+',mod:'N', cover_6:'N', bracket:'TO',skinny:'O+',meg:'N', gap_int:'O+',fire_zone:'N', robber:'O+'},
+  stick:         {rip_liz:'N', cov4_match:'O+',mod:'O+',cover_6:'O+',bracket:'N', skinny:'D+',meg:'D+',gap_int:'O+',fire_zone:'O+',robber:'D+'},
+  slant:         {rip_liz:'D+',cov4_match:'N', mod:'O+',cover_6:'N', bracket:'N', skinny:'O+',meg:'O+',gap_int:'O+',fire_zone:'O+',robber:'TO'},
+  go_route:      {rip_liz:'D+',cov4_match:'TO',mod:'D+',cover_6:'N', bracket:'TO',skinny:'OT',meg:'N', gap_int:'O+',fire_zone:'N', robber:'OT'},
+  bubble_screen: {rip_liz:'O+',cov4_match:'O+',mod:'N', cover_6:'O+',bracket:'N', skinny:'N', meg:'N', gap_int:'D+',fire_zone:'O+',robber:'N'},
+  draw:          {rip_liz:'N', cov4_match:'O+',mod:'O+',cover_6:'N', bracket:'O+',skinny:'N', meg:'D+',gap_int:'D+',fire_zone:'D+',robber:'N'},
+  qb_sneak:      {rip_liz:'N', cov4_match:'N', mod:'O+',cover_6:'N', bracket:'N', skinny:'N', meg:'D+',gap_int:'D+',fire_zone:'N', robber:'N'},
 };
 
+// Iron Ridge Offense vs Canyon Tech Defense
+var MT_IR_CT={
+  triple_option: {overload:'D+',db_blitz:'D+',zero_cov:'D+',a_gap_mug:'N', edge_crash:'O+',cov2_buc:'N', man_press:'N', zone_drop:'N', spy:'D+',prevent:'O+'},
+  midline:       {overload:'D+',db_blitz:'N', zero_cov:'N', a_gap_mug:'D+',edge_crash:'O+',cov2_buc:'N', man_press:'N', zone_drop:'N', spy:'D+',prevent:'O+'},
+  rocket_toss:   {overload:'N', db_blitz:'N', zero_cov:'N', a_gap_mug:'O+',edge_crash:'N', cov2_buc:'N', man_press:'N', zone_drop:'D+',spy:'N', prevent:'O+'},
+  trap:          {overload:'D+',db_blitz:'O+',zero_cov:'O+',a_gap_mug:'D+',edge_crash:'O+',cov2_buc:'N', man_press:'N', zone_drop:'N', spy:'N', prevent:'O+'},
+  qb_keeper:     {overload:'N', db_blitz:'N', zero_cov:'N', a_gap_mug:'N', edge_crash:'N', cov2_buc:'N', man_press:'O+',zone_drop:'N', spy:'D+',prevent:'O+'},
+  power:         {overload:'D+',db_blitz:'N', zero_cov:'N', a_gap_mug:'D+',edge_crash:'O+',cov2_buc:'N', man_press:'O+',zone_drop:'N', spy:'N', prevent:'O+'},
+  zone_read:     {overload:'D+',db_blitz:'N', zero_cov:'N', a_gap_mug:'N', edge_crash:'O+',cov2_buc:'N', man_press:'N', zone_drop:'N', spy:'D+',prevent:'O+'},
+  qb_sneak:      {overload:'N', db_blitz:'N', zero_cov:'N', a_gap_mug:'D+',edge_crash:'N', cov2_buc:'O+',man_press:'N', zone_drop:'N', spy:'N', prevent:'O+'},
+  pa_post:       {overload:'D+',db_blitz:'OT',zero_cov:'OT',a_gap_mug:'N', edge_crash:'D+',cov2_buc:'O+',man_press:'N', zone_drop:'N', spy:'N', prevent:'D+'},
+  pa_flat:       {overload:'O+',db_blitz:'O+',zero_cov:'N', a_gap_mug:'O+',edge_crash:'N', cov2_buc:'N', man_press:'D+',zone_drop:'D+',spy:'N', prevent:'N'},
+};
+
+// Canyon Tech Offense vs Canyon Tech Defense (mirror)
+var MT_CT_CT={
+  mesh:          {overload:'O+',db_blitz:'O+',zero_cov:'O+',a_gap_mug:'N', edge_crash:'N', cov2_buc:'N', man_press:'O+',zone_drop:'N', spy:'N', prevent:'N'},
+  four_verts:    {overload:'OT',db_blitz:'OT',zero_cov:'N', a_gap_mug:'N', edge_crash:'D+',cov2_buc:'D+',man_press:'N', zone_drop:'O+',spy:'N', prevent:'D+'},
+  shallow_cross: {overload:'O+',db_blitz:'O+',zero_cov:'N', a_gap_mug:'O+',edge_crash:'N', cov2_buc:'N', man_press:'D+',zone_drop:'O+',spy:'N', prevent:'N'},
+  y_corner:      {overload:'O+',db_blitz:'OT',zero_cov:'N', a_gap_mug:'N', edge_crash:'D+',cov2_buc:'O+',man_press:'N', zone_drop:'N', spy:'N', prevent:'D+'},
+  stick:         {overload:'O+',db_blitz:'O+',zero_cov:'N', a_gap_mug:'O+',edge_crash:'N', cov2_buc:'N', man_press:'D+',zone_drop:'O+',spy:'N', prevent:'N'},
+  slant:         {overload:'O+',db_blitz:'O+',zero_cov:'N', a_gap_mug:'N', edge_crash:'N', cov2_buc:'D+',man_press:'TO',zone_drop:'N', spy:'O+',prevent:'N'},
+  go_route:      {overload:'OT',db_blitz:'OT',zero_cov:'N', a_gap_mug:'N', edge_crash:'D+',cov2_buc:'D+',man_press:'N', zone_drop:'O+',spy:'N', prevent:'D+'},
+  bubble_screen: {overload:'O+',db_blitz:'O+',zero_cov:'N', a_gap_mug:'O+',edge_crash:'N', cov2_buc:'D+',man_press:'D+',zone_drop:'D+',spy:'N', prevent:'N'},
+  draw:          {overload:'D+',db_blitz:'D+',zero_cov:'D+',a_gap_mug:'D+',edge_crash:'O+',cov2_buc:'O+',man_press:'O+',zone_drop:'N', spy:'N', prevent:'O+'},
+  qb_sneak:      {overload:'N', db_blitz:'N', zero_cov:'N', a_gap_mug:'D+',edge_crash:'N', cov2_buc:'O+',man_press:'N', zone_drop:'N', spy:'N', prevent:'O+'},
+};
+
+// Iron Ridge Offense vs Iron Ridge Defense (mirror)
+var MT_IR_IR={
+  triple_option: {rip_liz:'N', cov4_match:'O+',mod:'N', cover_6:'N', bracket:'O+',skinny:'N', meg:'N', gap_int:'D+',fire_zone:'D+',robber:'O+'},
+  midline:       {rip_liz:'N', cov4_match:'N', mod:'N', cover_6:'N', bracket:'O+',skinny:'N', meg:'N', gap_int:'D+',fire_zone:'D+',robber:'N'},
+  rocket_toss:   {rip_liz:'N', cov4_match:'N', mod:'N', cover_6:'O+',bracket:'N', skinny:'O+',meg:'N', gap_int:'D+',fire_zone:'N', robber:'N'},
+  trap:          {rip_liz:'O+',cov4_match:'N', mod:'N', cover_6:'N', bracket:'N', skinny:'N', meg:'D+',gap_int:'D+',fire_zone:'D+',robber:'O+'},
+  qb_keeper:     {rip_liz:'O+',cov4_match:'N', mod:'N', cover_6:'N', bracket:'N', skinny:'N', meg:'N', gap_int:'D+',fire_zone:'N', robber:'O+'},
+  power:         {rip_liz:'N', cov4_match:'N', mod:'N', cover_6:'N', bracket:'N', skinny:'N', meg:'N', gap_int:'D+',fire_zone:'N', robber:'N'},
+  zone_read:     {rip_liz:'N', cov4_match:'O+',mod:'N', cover_6:'N', bracket:'O+',skinny:'N', meg:'D+',gap_int:'D+',fire_zone:'N', robber:'N'},
+  qb_sneak:      {rip_liz:'O+',cov4_match:'N', mod:'O+',cover_6:'N', bracket:'N', skinny:'N', meg:'D+',gap_int:'D+',fire_zone:'N', robber:'N'},
+  pa_post:       {rip_liz:'N', cov4_match:'D+',mod:'D+',cover_6:'D+',bracket:'N', skinny:'N', meg:'N', gap_int:'O+',fire_zone:'N', robber:'TO'},
+  pa_flat:       {rip_liz:'O+',cov4_match:'O+',mod:'O+',cover_6:'O+',bracket:'N', skinny:'N', meg:'D+',gap_int:'N', fire_zone:'O+',robber:'N'},
+};
+
+// ===== YARD/TURNOVER RESOLUTION =====
 function rollYards(tier){
   if(tier==='O+') return 8+Math.floor(Math.random()*13);
   if(tier==='N')  return 2+Math.floor(Math.random()*5);
   if(tier==='D+') return -2+Math.floor(Math.random()*5);
-  if(tier==='TO') return -2+Math.floor(Math.random()*3);
+  if(tier==='TO') return -2+Math.floor(Math.random()*5);
+  if(tier==='OT') return Math.random()<0.7?(8+Math.floor(Math.random()*13)):(-2+Math.floor(Math.random()*3));
   return 3;
 }
-function isTurnover(tier){return tier==='TO'&&Math.random()<0.2;}
+function isTurnover(tier){
+  if(tier==='TO') return Math.random()<0.2;
+  if(tier==='OT') return Math.random()<0.2;
+  return false;
+}
+
+// ===== AI PLAY-CALLING =====
+function aiPickDefense(defTeamId,hand,lastPlayId){
+  if(hand.length===0) return null;
+  if(hand.length===1) return hand[0];
+  var pool=hand.slice();
+  // Iron Ridge (Saban): 60% zone, 25% adjustment, 15% aggressive
+  if(defTeamId==='iron_ridge'){
+    // Never call same play twice in a row
+    if(lastPlayId) pool=pool.filter(function(c){return c.id!==lastPlayId;});
+    if(pool.length===0) pool=hand.slice();
+    var zone=['rip_liz','cov4_match','mod','cover_6'];
+    var adjust=['skinny','bracket','meg'];
+    var aggr=['fire_zone','robber','gap_int'];
+    var r=Math.random();
+    var bucket=r<0.6?zone:r<0.85?adjust:aggr;
+    var avail=pool.filter(function(c){return bucket.indexOf(c.id)!==-1;});
+    if(avail.length>0) return avail[Math.floor(Math.random()*avail.length)];
+  }
+  // Canyon Tech (Williams): 50% blitz, 30% coverage, 15% specialty, 5% random
+  if(defTeamId==='canyon_tech'){
+    var blitz=['overload','db_blitz','zero_cov','a_gap_mug','edge_crash'];
+    var cov=['cov2_buc','man_press','zone_drop'];
+    var spec=['spy','prevent'];
+    var r2=Math.random();
+    var bucket2=r2<0.5?blitz:r2<0.8?cov:r2<0.95?spec:null;
+    if(bucket2){
+      var avail2=pool.filter(function(c){return bucket2.indexOf(c.id)!==-1;});
+      if(avail2.length>0) return avail2[Math.floor(Math.random()*avail2.length)];
+    }
+  }
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function aiPickOffense(offTeamId,hand,lastPlayId){
+  if(hand.length===0) return null;
+  if(hand.length===1) return hand[0];
+  var pool=hand.slice();
+  // Canyon Tech AI (Air Raid): 70% short pass, 20% deep, 10% run
+  if(offTeamId==='canyon_tech'){
+    var short=['mesh','slant','shallow_cross','stick','bubble_screen'];
+    var deep=['four_verts','go_route','y_corner'];
+    var run=['draw','qb_sneak'];
+    var r=Math.random();
+    var bucket=r<0.7?short:r<0.9?deep:run;
+    var avail=pool.filter(function(c){return bucket.indexOf(c.id)!==-1;});
+    if(avail.length>0) return avail[Math.floor(Math.random()*avail.length)];
+  }
+  // Iron Ridge AI (Triple Option): 70% run, 20% option/misdirection, 10% play-action
+  if(offTeamId==='iron_ridge'){
+    var mainRun=['triple_option','zone_read','power'];
+    var optMis=['midline','qb_keeper','trap','rocket_toss'];
+    var pa=['pa_post','pa_flat'];
+    var r2=Math.random();
+    var bucket2=r2<0.7?mainRun:r2<0.9?optMis:pa;
+    var avail2=pool.filter(function(c){return bucket2.indexOf(c.id)!==-1;});
+    if(avail2.length>0) return avail2[Math.floor(Math.random()*avail2.length)];
+  }
+  return pool[Math.floor(Math.random()*pool.length)];
+}
 
 // ===== SCENARIO =====
 var SCENARIO={down:2,dist:10,ballOn:35,clock:165,timeouts:1,offScore:14,defScore:21};
@@ -255,6 +388,13 @@ function setGs(fn){GS=typeof fn==='function'?fn(GS):fn;render();}
 function getTeam(id){return TEAMS.find(function(t){return t.id===id;})||TEAMS[0];}
 function getOtherTeam(id){return TEAMS.find(function(t){return t.id!==id;})||TEAMS[1];}
 function getOffCards(teamId){return teamId==='canyon_tech'?CT_OFF_CARDS:IR_OFF_CARDS;}
+function getDefCards(teamId){return teamId==='canyon_tech'?CT_DEF_CARDS:IR_DEF_CARDS;}
+function getMatchupTable(offTeamId,defTeamId){
+  if(offTeamId==='canyon_tech'&&defTeamId==='iron_ridge') return MT_CT_IR;
+  if(offTeamId==='iron_ridge'&&defTeamId==='canyon_tech') return MT_IR_CT;
+  if(offTeamId==='canyon_tech'&&defTeamId==='canyon_tech') return MT_CT_CT;
+  return MT_IR_IR;
+}
 function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function fmtClock(sec){var m=Math.floor(sec/60);var s=sec%60;return m+':'+(s<10?'0':'')+s;}
 
@@ -650,21 +790,27 @@ function buildPlayers(){
   var content=document.createElement('div');
   content.style.cssText='flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;';
 
-  // Instructions
+  // Instructions — side-aware
+  var isDef=GS.side==='defense';
+  var playerPool=isDef?team.defPlayers:team.players;
+  var primaryCat=isDef?'lb':'qb';
+  var primaryLabel=isDef?'LINEBACKER (PICK 1)':'QUARTERBACK (PICK 1)';
+  var subLabel=isDef?'Pick 1 LB + 3 defensive backs':'Pick 1 QB + 3 skill players';
+
   var inst=document.createElement('div');
   inst.style.cssText='text-align:center;padding:4px 0;';
-  inst.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;color:var(--text);letter-spacing:2px;">DRAFT YOUR SQUAD</div><div style="font-size:14px;color:var(--text);font-weight:600;margin-top:2px;opacity:.7;">Pick 1 QB + 3 skill players</div>';
+  inst.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;color:var(--text);letter-spacing:2px;">DRAFT YOUR SQUAD</div><div style="font-size:14px;color:var(--text);font-weight:600;margin-top:2px;opacity:.7;">'+subLabel+'</div>';
   content.appendChild(inst);
 
-  var qbs=team.players.filter(function(p){return p.cat==='qb';});
-  var skills=team.players.filter(function(p){return p.cat==='skill';});
+  var qbs=playerPool.filter(function(p){return p.cat===primaryCat;});
+  var skills=playerPool.filter(function(p){return p.cat==='skill';});
   var selQB=null;
   var selSkill={};
 
-  // QB section
+  // Primary section (QB or LB)
   var qbLabel=document.createElement('div');
   qbLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:6px;color:"+team.accent+";letter-spacing:2px;text-align:center;margin-top:4px;";
-  qbLabel.textContent='\u25B8 QUARTERBACK (PICK 1)';
+  qbLabel.textContent='\u25B8 '+primaryLabel;
   content.appendChild(qbLabel);
 
   var qbGrid=document.createElement('div');qbGrid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px;';
@@ -702,7 +848,7 @@ function buildPlayers(){
   // Skill section
   var skillLabel=document.createElement('div');
   skillLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:6px;color:"+team.accent+";letter-spacing:2px;text-align:center;margin-top:6px;";
-  skillLabel.textContent='\u25B8 SKILL PLAYERS (PICK 3)';
+  skillLabel.textContent='\u25B8 '+(isDef?'DEFENSIVE BACKS (PICK 3)':'SKILL PLAYERS (PICK 3)');
   content.appendChild(skillLabel);
 
   var skillGrid=document.createElement('div');skillGrid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px;';
@@ -771,7 +917,7 @@ function buildDraft(){
 
   var team=getTeam(GS.team);
   var isOffense=GS.side==='offense';
-  var pool=isOffense?getOffCards(GS.team):DEF_CARDS;
+  var pool=isOffense?getOffCards(GS.team):getDefCards(GS.team);
 
   // Header
   var hdr=document.createElement('div');
