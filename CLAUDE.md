@@ -42,9 +42,9 @@ Home → Team + Side Selection → Player Draft → Card Draft → **Gameplay** 
 1. **Home** — Logo, animated flame, "Play Today's Torch" button, expandable How to Play / What is a Torch
 2. **Setup** — Retro LED scoreboard (stadium centerpiece with metallic frame, glowing LED cells, corner bolts), team picker (2 teams as portrait trading cards), offense/defense picker, punchy tagline, crowd ambience
 3. **Player Draft** — Pick 1 QB/LB + 3 skill players from team-specific pool of 6. Side-aware: shows offensive players (QB + skill) or defensive players (LB + DBs). Portrait trading card layout.
-4. **Card Draft** — Pick 5 play cards from team-specific pool of 10. Offensive or defensive cards based on side. Portrait trading cards with SVG play diagrams. "Pick For Me" button.
-5. **Gameplay** — Full drive simulation with scorebug, field visualization, clash mechanic, hand management, AI play-calling, drive logic (downs, clock, turnovers).
-6. **Result** — Win ("TORCH LIT") or loss ("TORCH OUT") with final score and drive stats.
+4. **Card Draft** — Pick 5 play cards from team-specific pool of 10. Offensive or defensive cards based on side. Portrait trading cards with emoji icons. "Pick For Me" button.
+5. **Gameplay** — Full drive simulation with scorebug, field visualization, clash mechanic, hand management, AI play-calling, drive logic (downs, clock, turnovers). Works for both offense and defense modes.
+6. **Result** — Win ("TORCH LIT" with flame animation, glow effects) or loss ("TORCH OUT" with dying flame). Includes final score with team abbreviations, drive stats, streak counter, share-to-clipboard button, bonus round unlock (winners play the other side of the ball), and "Perfect Torch" state for winning both sides.
 
 ### Teams & Schemes
 - **Iron Ridge** (Triple Option offense / "The Process" defense)
@@ -60,14 +60,18 @@ Home → Team + Side Selection → Player Draft → Card Draft → **Gameplay** 
 
 ### Key Game Systems
 - **Scoreboard** — Retro LED with CSS split-flap animations, metallic frame, glowing cells, crowd ambience via Web Audio filtered noise
-- **Play Diagrams** — SVG X's and O's diagrams on every card (`PD` data object + `playSvg()` renderer). 30 unique diagrams covering all offensive and defensive plays.
+- **Play Diagrams** — SVG diagram data still exists (`PD` object + `playSvg()`) but cards now display emoji icons (`card.icon`) instead for better mobile readability.
+- **Player Silhouettes** — `posSilhouette()` renders position-specific SVG silhouettes on player cards (QB throwing, WR running, RB stiff-arm, LB blitz stance, CB backpedal, S ready, TE blocking, FB).
 - **Matchup Tables** — 4 grids for all team combinations: `MT_CT_IR`, `MT_IR_CT`, `MT_CT_CT`, `MT_IR_IR`. Selected via `getMatchupTable(offTeamId, defTeamId)`.
 - **Yard resolution** — `rollYards(tier)` returns randomized yards per tier. `isTurnover(tier)` for TO/OT tiers. OT tier = boom-or-bust (70% O+ yards, 30% D+ with 20% turnover risk).
 - **AI Play-Calling** — `aiPickDefense()` and `aiPickOffense()` with scheme-appropriate weighted selection. IR defense: 60% zone / 25% adjust / 15% aggressive. CT defense: 50% blitz / 30% coverage / 15% specialty / 5% random.
 - **Clock** — `clockCost(cardId)` deducts 8-22 seconds per play based on play type.
 - **Gameplay Screen** — Scorebug (broadcast-style), field visualization (green strip with LOS/yard lines/player dots/end zone), clash zone (animated card collision with flash/shake), hand management (5 portrait cards, tap-to-select, SNAP to confirm, deck replacement with NEW badge).
 - **Drive Logic** — 4 downs to gain 10 yards, first down resets, TD at ballOn=0, turnover on downs/INT/fumble, clock expiration.
-- **Sound engine** (`SND`) — Web Audio synth: click, select, snap, menu, td, turnover, clash, draft, flip, crowdStart/crowdStop
+- **Streak Tracking** — localStorage (`torch_streak`, `torch_last_play`). Increments on win, resets on loss. Displayed on result screen.
+- **Share** — Clipboard copy of formatted result text (emoji + score + stats + streak + URL).
+- **Bonus Round** — Winners unlock play as the other side of the ball. localStorage `torch_bonus_<date>` tracks completion. Both sides won = "Perfect Torch".
+- **Sound engine** (`SND`) — Web Audio synth: click, select, snap, menu, td, turnover, clash, draft, flip, crowdStart/crowdStop. Crowd sound uses 3-band filtered noise (250Hz/800Hz/2200Hz) with random volume swells for stadium atmosphere.
 
 ### Football Knowledge (matchup design principles)
 - Quick passes (Mesh, Slant, Stick, Shallow Cross, Bubble Screen) beat blitzes and aggressive pressure
@@ -91,11 +95,10 @@ Home → Team + Side Selection → Player Draft → Card Draft → **Gameplay** 
 - localStorage keys prefixed with `torch_`
 
 ## What's Next
-- **Bonus round** — Winners play again as the other side of the ball
-- **Share card** — Wordle-style emoji result sharing
-- **Polish** — Card helper buttons, better animations, sound tuning
 - **Daily lockout** — One play per day, come back tomorrow on loss
 - **2-point conversion** — Post-TD decision: XP to tie or go for 2 to win
+- **Card helper buttons** — Explain what each card does on long-press
+- **Better field visualization** — Jersey numbers, sideline detail, animated dots
 
 ## Testing Plan
 - **Audience:** Discord dynasty group (9 football-knowledgeable players)
