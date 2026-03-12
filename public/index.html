@@ -54,13 +54,27 @@ body{font-family:'Barlow Condensed',sans-serif;font-size:18px;color:var(--text);
 .bm{background:#08071a;color:#28264a;border-color:#18162e;font-size:9px;cursor:default;}
 .bsnap{background:#200b00;color:var(--orange);border-color:var(--orange);box-shadow:0 5px 0 #501c00;font-size:10px;}
 /* SCOREBOARD */
-.sb{background:linear-gradient(180deg,#0a0814 0%,#060410 100%);border:2px solid #1a1830;border-radius:10px;padding:12px;position:relative;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 0 30px rgba(0,212,255,.08),0 4px 20px rgba(0,0,0,.6);}
-.sb::before{content:'';position:absolute;inset:0;border-radius:9px;border:1px solid rgba(0,212,255,.08);pointer-events:none;}
-.sb-led{font-family:'Press Start 2P',monospace;color:var(--cyan);text-shadow:0 0 8px rgba(0,212,255,.8),0 0 20px rgba(0,212,255,.3);}
-.sb-led-gold{font-family:'Press Start 2P',monospace;color:var(--gold);text-shadow:0 0 8px rgba(255,215,0,.8),0 0 20px rgba(255,215,0,.3);}
+.sb{background:linear-gradient(180deg,#0c0a1a 0%,#06040e 50%,#080614 100%);
+  border:3px solid #2a2445;border-radius:12px;padding:14px 12px;position:relative;
+  box-shadow:0 0 40px rgba(0,212,255,.12),0 0 80px rgba(0,212,255,.05),0 8px 32px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.06);
+  overflow:hidden;}
+.sb::before{content:'';position:absolute;inset:0;border-radius:10px;
+  border:1px solid rgba(0,212,255,.12);pointer-events:none;z-index:2;}
+.sb::after{content:'';position:absolute;inset:0;border-radius:10px;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 3px);
+  pointer-events:none;z-index:3;}
+.sb-cell{background:linear-gradient(180deg,#08061a 0%,#050310 100%);border:1px solid #1a1640;border-radius:6px;
+  padding:6px 8px;position:relative;box-shadow:inset 0 0 12px rgba(0,0,0,.5),0 0 6px rgba(0,212,255,.04);}
+.sb-cell::before{content:'';position:absolute;inset:0;border-radius:5px;border:1px solid rgba(0,212,255,.06);pointer-events:none;}
+.sb-led{font-family:'Press Start 2P',monospace;color:var(--cyan);text-shadow:0 0 8px rgba(0,212,255,.9),0 0 24px rgba(0,212,255,.4),0 0 48px rgba(0,212,255,.15);}
+.sb-led-gold{font-family:'Press Start 2P',monospace;color:var(--gold);text-shadow:0 0 10px rgba(255,215,0,.9),0 0 28px rgba(255,215,0,.4),0 0 56px rgba(255,215,0,.15);}
 .sb-led-dim{font-family:'Press Start 2P',monospace;color:#1a1830;text-shadow:none;}
-.sb-label{font-family:'Press Start 2P',monospace;font-size:5px;color:#4a4878;letter-spacing:2px;text-transform:uppercase;}
+.sb-label{font-family:'Press Start 2P',monospace;font-size:5px;color:#5a5888;letter-spacing:2px;text-transform:uppercase;text-shadow:0 0 4px rgba(90,88,136,.3);}
+/* TRADING CARDS */
+.tcard{border-radius:10px;position:relative;overflow:hidden;transition:all .15s;cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.4),0 0 1px rgba(255,255,255,.05) inset;}
+.tcard:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.5);}
+.tcard-sel{transform:translateY(-3px);}
 /* SPLIT-FLAP */
 .flap-wrap{display:inline-flex;perspective:200px;gap:1px;}
 .flap-char{display:inline-block;position:relative;overflow:hidden;width:.65em;height:1.15em;background:#08061a;border:1px solid #14122a;border-radius:2px;}
@@ -130,7 +144,7 @@ var SND=(function(){
 var TEAMS=[
   {id:'iron_ridge',name:'IRON RIDGE',abbr:'IR',icon:'\uD83D\uDD31',
    color:'#CC1A1A',accent:'#ff4444',bg:'#1a0000',
-   style:'Triple Option',desc:'Run the triple. Read the end. Pitch, keep, or give.',
+   style:'TRIPLE OPTION',desc:'Give. Keep. Pitch.',
    coach:{name:'Coach Mack Harmon',voice:'Old school. Option football. Three yards and a cloud of dust.'},
    players:[
      {id:'ir_q1',name:'Bo Kendrick',nick:'The Conductor',pos:'QB',ovr:80,desc:'Reads the DE like a book. Never makes the wrong call.',cat:'qb'},
@@ -142,7 +156,7 @@ var TEAMS=[
    ]},
   {id:'canyon_tech',name:'CANYON TECH',abbr:'CT',icon:'\uD83C\uDF35',
    color:'#FF5E1A',accent:'#ff8844',bg:'#1a0800',
-   style:'Air Raid',desc:'Spread the field. Throw it 50 times. Make them pay.',
+   style:'AIR RAID',desc:'Sling it. Every play.',
    coach:{name:'Coach Hank McCord',voice:'Aggressive. Loves the deep ball. Always attacking.'},
    players:[
      {id:'ct_q1',name:'Colt Avery',nick:'The Gunslinger',pos:'QB',ovr:78,desc:'Throws 50 times a game and smiles about it.',cat:'qb'},
@@ -265,58 +279,64 @@ function buildScoreboard(homeTeam,awayTeam){
   var sb=document.createElement('div');
   sb.className='sb';
 
-  // Scanlines overlay
-  var scan=document.createElement('div');
-  scan.style.cssText='position:absolute;inset:0;border-radius:9px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 3px);pointer-events:none;z-index:1;';
-  sb.appendChild(scan);
+  // Corner bolts
+  var bolts=['top:6px;left:6px;','top:6px;right:6px;','bottom:6px;left:6px;','bottom:6px;right:6px;'];
+  bolts.forEach(function(pos){
+    var b=document.createElement('div');
+    b.style.cssText='position:absolute;'+pos+'width:6px;height:6px;border-radius:50%;background:radial-gradient(circle,#3a3860,#1a1840);border:1px solid #2a2850;z-index:4;';
+    sb.appendChild(b);
+  });
 
-  // Quarter + Time row
-  var topRow=document.createElement('div');
-  topRow.style.cssText='display:flex;justify-content:center;align-items:baseline;gap:12px;margin-bottom:8px;';
-  topRow.innerHTML='<span class="sb-label">4TH</span><span class="sb-led" style="font-size:18px;">'+fmtClock(SCENARIO.clock)+'</span>';
-  sb.appendChild(topRow);
+  // Ambient glow behind the board
+  var ambGlow=document.createElement('div');
+  ambGlow.style.cssText='position:absolute;top:-20px;left:10%;right:10%;height:40px;background:radial-gradient(ellipse,rgba(0,212,255,.08),transparent 70%);pointer-events:none;z-index:0;';
+  sb.appendChild(ambGlow);
 
-  // Teams + Scores
+  // === TOP ROW: CLOCK ===
+  var clockCell=document.createElement('div');
+  clockCell.className='sb-cell';
+  clockCell.style.cssText+='text-align:center;margin-bottom:10px;padding:8px 12px;';
+  clockCell.innerHTML='<div class="sb-label" style="margin-bottom:4px;">4TH QUARTER</div>'+
+    '<div class="sb-led" style="font-size:22px;letter-spacing:4px;">'+fmtClock(SCENARIO.clock)+'</div>';
+  sb.appendChild(clockCell);
+
+  // === MIDDLE ROW: HOME - SCORE - AWAY ===
   var scoreRow=document.createElement('div');
-  scoreRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:10px;';
+  scoreRow.style.cssText='display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:stretch;margin-bottom:10px;';
 
-  // Home side
-  var homeDiv=document.createElement('div');
-  homeDiv.style.cssText='flex:1;text-align:center;';
-  var homeLabel=document.createElement('div');
-  homeLabel.className='sb-label';
-  homeLabel.style.cssText+='margin-bottom:4px;';
-  homeLabel.textContent='HOME';
+  // Home cell
+  var homeCell=document.createElement('div');
+  homeCell.className='sb-cell';
+  homeCell.style.cssText+='text-align:center;padding:8px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;';
+  var homeLabel=document.createElement('div');homeLabel.className='sb-label';homeLabel.textContent='HOME';
   var homeName=document.createElement('div');
-  homeName.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:8px;color:#fff;letter-spacing:1px;min-height:16px;display:flex;justify-content:center;';
-  var homeScore=document.createElement('div');
-  homeScore.className='sb-led-gold';
-  homeScore.style.cssText+='font-size:28px;margin-top:2px;';
+  homeName.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:7px;color:#fff;letter-spacing:1px;min-height:14px;display:flex;justify-content:center;text-shadow:0 0 6px rgba(255,255,255,.2);';
+  var homeScore=document.createElement('div');homeScore.className='sb-led-gold';
+  homeScore.style.cssText+='font-size:32px;line-height:1;';
 
-  // Dash
-  var dash=document.createElement('div');
-  dash.className='sb-led';
-  dash.style.cssText+='font-size:20px;flex-shrink:0;padding:0 4px;margin-top:14px;';
-  dash.textContent='-';
+  // Score divider
+  var divCell=document.createElement('div');
+  divCell.className='sb-cell';
+  divCell.style.cssText+='display:flex;align-items:center;justify-content:center;padding:8px 10px;';
+  var divLed=document.createElement('div');divLed.className='sb-led';
+  divLed.style.cssText+='font-size:24px;';divLed.textContent='\u2014';
+  divCell.appendChild(divLed);
 
-  // Away side
-  var awayDiv=document.createElement('div');
-  awayDiv.style.cssText='flex:1;text-align:center;';
-  var awayLabel=document.createElement('div');
-  awayLabel.className='sb-label';
-  awayLabel.style.cssText+='margin-bottom:4px;';
-  awayLabel.textContent='AWAY';
+  // Away cell
+  var awayCell=document.createElement('div');
+  awayCell.className='sb-cell';
+  awayCell.style.cssText+='text-align:center;padding:8px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;';
+  var awayLabel=document.createElement('div');awayLabel.className='sb-label';awayLabel.textContent='AWAY';
   var awayName=document.createElement('div');
-  awayName.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:8px;color:#fff;letter-spacing:1px;min-height:16px;display:flex;justify-content:center;';
-  var awayScore=document.createElement('div');
-  awayScore.className='sb-led-gold';
-  awayScore.style.cssText+='font-size:28px;margin-top:2px;';
+  awayName.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:7px;color:#fff;letter-spacing:1px;min-height:14px;display:flex;justify-content:center;text-shadow:0 0 6px rgba(255,255,255,.2);';
+  var awayScore=document.createElement('div');awayScore.className='sb-led-gold';
+  awayScore.style.cssText+='font-size:32px;line-height:1;';
 
   function renderFlap(container,text){
     container.innerHTML='';
     var wrap=document.createElement('span');
     wrap.className='flap-wrap';
-    wrap.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:8px;letter-spacing:1px;';
+    wrap.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:7px;letter-spacing:1px;';
     for(var i=0;i<text.length;i++){
       var ch=document.createElement('span');
       ch.className='flap-char';
@@ -334,7 +354,6 @@ function buildScoreboard(homeTeam,awayTeam){
   }
 
   function flipTo(container,newText){
-    var oldChars=container.querySelectorAll('.flap-char');
     var padded=newText;
     while(padded.length<12)padded+=' ';
     renderFlap(container,padded);
@@ -358,12 +377,12 @@ function buildScoreboard(homeTeam,awayTeam){
     SND.flip();
   }
 
-  homeDiv.append(homeLabel,homeName,homeScore);
-  awayDiv.append(awayLabel,awayName,awayScore);
-  scoreRow.append(homeDiv,dash,awayDiv);
+  homeCell.append(homeLabel,homeName,homeScore);
+  awayCell.append(awayLabel,awayName,awayScore);
+  scoreRow.append(homeCell,divCell,awayCell);
   sb.appendChild(scoreRow);
 
-  // Initialize names
+  // Initialize
   homeScore.textContent=String(SCENARIO.offScore);
   awayScore.textContent=String(SCENARIO.defScore);
   if(homeTeam){flipTo(homeName,homeTeam);}
@@ -371,25 +390,26 @@ function buildScoreboard(homeTeam,awayTeam){
   if(awayTeam){flipTo(awayName,awayTeam);}
   else{renderFlap(awayName,'---         ');}
 
-  // Info bar: Down, Distance, Ball, Timeouts
+  // === BOTTOM ROW: DOWN / BALL / TIMEOUTS ===
   var infoRow=document.createElement('div');
-  infoRow.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:6px 0 0;border-top:1px solid #14122a;';
+  infoRow.style.cssText='display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;';
 
   var downs=['','1ST','2ND','3RD','4TH'];
-  var cells=[
+  var infoCells=[
     {label:'DOWN',val:downs[SCENARIO.down]+' & '+SCENARIO.dist},
     {label:'BALL ON',val:'DEF '+SCENARIO.ballOn},
     {label:'TIMEOUTS',val:String(SCENARIO.timeouts)},
   ];
-  cells.forEach(function(c){
+  infoCells.forEach(function(c){
     var cell=document.createElement('div');
-    cell.style.cssText='text-align:center;flex:1;';
-    cell.innerHTML='<div class="sb-label" style="margin-bottom:2px;">'+c.label+'</div><div class="sb-led" style="font-size:9px;">'+c.val+'</div>';
+    cell.className='sb-cell';
+    cell.style.cssText+='text-align:center;padding:6px;';
+    cell.innerHTML='<div class="sb-label" style="margin-bottom:3px;">'+c.label+'</div><div class="sb-led" style="font-size:9px;">'+c.val+'</div>';
     infoRow.appendChild(cell);
   });
   sb.appendChild(infoRow);
 
-  // Expose update method
+  // Expose update
   sb._update=function(ht,at){
     if(ht){flipTo(homeName,ht);homeScore.textContent=String(SCENARIO.offScore);}
     if(at){flipTo(awayName,at);awayScore.textContent=String(SCENARIO.defScore);}
@@ -509,11 +529,12 @@ function buildSetup(){
   var sb=buildScoreboard(null,null);
   content.appendChild(sb);
 
-  // Scenario narrative
-  var narrative=document.createElement('div');
-  narrative.style.cssText='text-align:center;padding:4px 8px;font-size:14px;color:var(--text);font-weight:600;line-height:1.6;font-style:italic;';
-  narrative.textContent='Down 7 with 2:45 left. The offense needs a touchdown to stay alive. One drive. One chance.';
-  content.appendChild(narrative);
+  // Tagline
+  var tagline=document.createElement('div');
+  tagline.style.cssText='text-align:center;padding:6px 16px;';
+  tagline.innerHTML='<span style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:var(--text);letter-spacing:3px;opacity:.7;">4TH QUARTER. DOWN 7. ONE DRIVE.</span> '+
+    '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;color:var(--gold);letter-spacing:3px;text-shadow:0 0 16px rgba(255,215,0,.4);">THIS IS YOUR TORCH.</span>';
+  content.appendChild(tagline);
 
   var selTeam=GS.team;
   var selSide=GS.side;
@@ -526,16 +547,17 @@ function buildSetup(){
     else sb._update(oppTeam.name,myTeam.name);
   }
 
-  // Page header
-  var pageTitle=document.createElement('div');
-  pageTitle.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--text);letter-spacing:3px;text-align:center;";
-  pageTitle.textContent='PICK YOUR TEAM';
-  content.appendChild(pageTitle);
+  // Page header — matches "DRAFT YOUR SQUAD" style exactly
+  var pageInst=document.createElement('div');
+  pageInst.style.cssText='text-align:center;padding:4px 0;';
+  pageInst.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;color:var(--text);letter-spacing:2px;">PICK YOUR TEAM</div>'+
+    '<div style="font-size:14px;color:var(--text);font-weight:600;margin-top:2px;opacity:.7;">Choose a team and side of the ball</div>';
+  content.appendChild(pageInst);
 
-  // Team selection
+  // Team selection label
   var teamLabel=document.createElement('div');
-  teamLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:6px;color:var(--cyan);letter-spacing:3px;text-align:center;";
-  teamLabel.textContent='CHOOSE YOUR TEAM';
+  teamLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:6px;color:var(--cyan);letter-spacing:2px;text-align:center;";
+  teamLabel.textContent='\u25B8 TEAM';
   content.appendChild(teamLabel);
 
   var teamGrid=document.createElement('div');teamGrid.style.cssText='display:flex;gap:10px;';
@@ -545,12 +567,13 @@ function buildSetup(){
     TEAMS.forEach(function(team){
       var isSel=selTeam===team.id;
       var card=document.createElement('div');
-      card.style.cssText='flex:1;cursor:pointer;border:2px solid '+(isSel?team.accent:'var(--bdr)')+';background:'+(isSel?team.bg:'var(--bg2)')+';border-radius:10px;padding:14px 10px;text-align:center;transition:all .15s;'+(isSel?'box-shadow:0 0 20px '+team.accent+'33;transform:translateY(-2px);':'');
+      card.className='tcard'+(isSel?' tcard-sel':'');
+      card.style.cssText='flex:1;border:2px solid '+(isSel?team.accent:'#1c1930')+';background:'+(isSel?'linear-gradient(180deg,'+team.bg+',#06040e)':'linear-gradient(180deg,#0e0c22,#08061a)')+';padding:16px 12px 14px;text-align:center;min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;'+(isSel?'box-shadow:0 0 24px '+team.accent+'44,0 0 48px '+team.accent+'11,inset 0 0 20px '+team.accent+'0a;':'');
       card.innerHTML=
-        '<div style="font-size:32px;margin-bottom:4px;">'+team.icon+'</div>'+
-        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;color:'+(isSel?team.accent:'var(--text)')+';letter-spacing:2px;line-height:1;">'+team.name+'</div>'+
-        '<div style="font-family:\'Press Start 2P\',monospace;font-size:7px;color:'+(isSel?team.accent:'var(--cyan)')+';margin-top:6px;letter-spacing:1px;">'+team.style+'</div>'+
-        '<div style="font-size:13px;color:var(--text);margin-top:6px;font-weight:600;line-height:1.4;opacity:.7;">'+team.desc+'</div>';
+        '<div style="font-size:36px;margin-bottom:4px;'+(isSel?'filter:drop-shadow(0 0 8px '+team.accent+');':'')+'">'+team.icon+'</div>'+
+        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:'+(isSel?team.accent:'var(--text)')+';letter-spacing:3px;line-height:1;">'+team.name+'</div>'+
+        '<div style="font-family:\'Press Start 2P\',monospace;font-size:7px;color:'+(isSel?team.accent:'var(--gold)')+';margin-top:6px;letter-spacing:1px;text-shadow:0 0 8px '+(isSel?team.accent+'88':'rgba(255,215,0,.3)')+';white-space:nowrap;">'+team.style+'</div>'+
+        '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:14px;color:var(--text);margin-top:4px;font-weight:700;letter-spacing:2px;opacity:.6;">'+team.desc+'</div>';
       card.onclick=function(){SND.select();selTeam=team.id;GS.team=team.id;refreshTeams();refreshSides();updateBoard();refreshGo();};
       teamGrid.appendChild(card);
     });
@@ -559,8 +582,8 @@ function buildSetup(){
 
   // Side selection
   var sideLabel=document.createElement('div');
-  sideLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:6px;color:var(--cyan);letter-spacing:3px;text-align:center;";
-  sideLabel.textContent='PICK YOUR SIDE';
+  sideLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:6px;color:var(--cyan);letter-spacing:2px;text-align:center;";
+  sideLabel.textContent='\u25B8 SIDE OF THE BALL';
   content.appendChild(sideLabel);
 
   var sideRow=document.createElement('div');sideRow.style.cssText='display:flex;gap:10px;';
@@ -574,11 +597,12 @@ function buildSetup(){
     sides.forEach(function(s){
       var isSel=selSide===s.id;
       var opt=document.createElement('div');
-      opt.style.cssText='flex:1;cursor:pointer;border:2px solid '+(isSel?s.color:'var(--bdr)')+';background:'+(isSel?s.bgc:'var(--bg2)')+';border-radius:10px;padding:16px 10px;text-align:center;transition:all .15s;'+(isSel?'box-shadow:0 0 20px '+s.glow+';transform:translateY(-2px);':'');
+      opt.className='tcard'+(isSel?' tcard-sel':'');
+      opt.style.cssText='flex:1;border:2px solid '+(isSel?s.color:'#1c1930')+';background:'+(isSel?'linear-gradient(180deg,'+s.bgc+',#06040e)':'linear-gradient(180deg,#0e0c22,#08061a)')+';padding:18px 10px 14px;text-align:center;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;'+(isSel?'box-shadow:0 0 24px '+s.glow+',0 0 48px '+s.glow.replace('.2)','.08)')+',inset 0 0 20px '+s.glow.replace('.2)','.06)')+';':'');
       opt.innerHTML=
-        '<div style="font-size:28px;margin-bottom:4px;">'+s.icon+'</div>'+
-        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;color:'+(isSel?s.color:'var(--text)')+';letter-spacing:2px;">'+s.label+'</div>'+
-        '<div style="font-size:12px;color:var(--muted);margin-top:4px;font-weight:600;">'+s.desc+'</div>';
+        '<div style="font-size:32px;margin-bottom:6px;'+(isSel?'filter:drop-shadow(0 0 8px '+s.color+');':'')+'">'+s.icon+'</div>'+
+        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:'+(isSel?s.color:'var(--text)')+';letter-spacing:3px;">'+s.label+'</div>'+
+        '<div style="font-family:\'Press Start 2P\',monospace;font-size:5px;color:'+(isSel?s.color:'var(--muted)')+';margin-top:6px;letter-spacing:1px;">'+s.desc.toUpperCase()+'</div>';
       opt.onclick=function(){SND.select();selSide=s.id;GS.side=s.id;refreshSides();updateBoard();refreshGo();};
       sideRow.appendChild(opt);
     });
@@ -643,20 +667,24 @@ function buildPlayers(){
   qbLabel.textContent='\u25B8 QUARTERBACK (PICK 1)';
   content.appendChild(qbLabel);
 
-  var qbGrid=document.createElement('div');qbGrid.style.cssText='display:flex;gap:8px;';
+  var qbGrid=document.createElement('div');qbGrid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px;';
 
   function renderPlayerCard(pl,isSel){
     var c=document.createElement('div');
-    c.style.cssText='flex:1;cursor:pointer;border:2px solid '+(isSel?team.accent:'var(--bdr)')+';background:'+(isSel?team.bg:'var(--bg2)')+';border-radius:10px;padding:12px 10px;transition:all .15s;position:relative;overflow:hidden;'+(isSel?'box-shadow:0 0 16px '+team.accent+'33;transform:translateY(-2px);':'');
+    c.className='tcard'+(isSel?' tcard-sel':'');
     var ovrColor=pl.ovr>=80?'var(--green)':pl.ovr>=76?'var(--cyan)':'var(--muted)';
+    var ovrGlow=pl.ovr>=80?'rgba(0,255,136,.3)':pl.ovr>=76?'rgba(0,212,255,.3)':'transparent';
+    c.style.cssText='border:2px solid '+(isSel?team.accent:'#1c1930')+';background:'+(isSel?'linear-gradient(180deg,'+team.bg+' 0%,#08061a 100%)':'linear-gradient(180deg,#0e0c22 0%,#08061a 100%)')+';padding:10px 10px 12px;aspect-ratio:5/7;display:flex;flex-direction:column;justify-content:space-between;'+(isSel?'box-shadow:0 0 20px '+team.accent+'44,0 0 40px '+team.accent+'11,inset 0 0 16px '+team.accent+'0a;':'');
     c.innerHTML=
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'+
-        '<div style="font-family:\'Press Start 2P\',monospace;font-size:6px;color:var(--muted);">'+pl.pos+'</div>'+
-        '<div style="font-family:\'Press Start 2P\',monospace;font-size:9px;color:'+ovrColor+';text-shadow:0 0 8px '+ovrColor+'88;">'+pl.ovr+'</div>'+
+      '<div>'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
+          '<div style="font-family:\'Press Start 2P\',monospace;font-size:6px;color:'+(isSel?team.accent:'var(--muted)')+';letter-spacing:1px;background:rgba(0,0,0,.3);padding:2px 4px;border-radius:3px;">'+pl.pos+'</div>'+
+          '<div style="font-family:\'Press Start 2P\',monospace;font-size:12px;color:'+ovrColor+';text-shadow:0 0 10px '+ovrGlow+';line-height:1;">'+pl.ovr+'</div>'+
+        '</div>'+
+        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:'+(isSel?team.accent:'#fff')+';letter-spacing:2px;line-height:1;">'+pl.name+'</div>'+
+        '<div style="font-family:\'Press Start 2P\',monospace;font-size:7px;color:var(--gold);margin-top:5px;letter-spacing:1px;text-shadow:0 0 10px rgba(255,215,0,.5);">\u201C'+pl.nick+'\u201D</div>'+
       '</div>'+
-      '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;color:'+(isSel?team.accent:'#fff')+';letter-spacing:1px;line-height:1;">'+pl.name+'</div>'+
-      '<div style="font-family:\'Press Start 2P\',monospace;font-size:7px;color:var(--gold);margin-top:4px;letter-spacing:1px;text-shadow:0 0 8px rgba(255,215,0,.4);">"'+pl.nick+'"</div>'+
-      '<div style="font-size:12px;color:var(--text);margin-top:6px;font-weight:600;line-height:1.4;font-style:italic;opacity:.7;">'+pl.desc+'</div>';
+      '<div style="font-size:11px;color:var(--text);font-weight:600;line-height:1.4;font-style:italic;opacity:.6;border-top:1px solid '+(isSel?team.accent+'33':'#1c1930')+';padding-top:8px;">'+pl.desc+'</div>';
     return c;
   }
 
@@ -772,13 +800,13 @@ function buildDraft(){
   var selected={};
 
   var cardGrid=document.createElement('div');
-  cardGrid.style.cssText='display:flex;flex-direction:column;gap:6px;';
+  cardGrid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px;';
 
   function typeColor(card){
-    if(card.type==='run') return {border:'#cc5522',bg:'linear-gradient(135deg,#1a0800,#0e0400)',label:'RUN',labelBg:'#331100'};
-    if(card.type==='pass') return {border:'#2255cc',bg:'linear-gradient(135deg,#0c1535,#06091a)',label:'PASS',labelBg:'#0a1030'};
-    if(card.type==='agg') return {border:'#ff2424',bg:'linear-gradient(135deg,#220000,#140000)',label:'AGG',labelBg:'#330000'};
-    return {border:'#00aacc',bg:'linear-gradient(135deg,#001822,#000a14)',label:'CON',labelBg:'#001020'};
+    if(card.type==='run') return {border:'#cc5522',bg:'linear-gradient(180deg,#1a0800 0%,#0e0400 100%)',glow:'rgba(204,85,34,.25)',label:'RUN'};
+    if(card.type==='pass') return {border:'#2255cc',bg:'linear-gradient(180deg,#0c1535 0%,#06091a 100%)',glow:'rgba(34,85,204,.25)',label:'PASS'};
+    if(card.type==='agg') return {border:'#ff2424',bg:'linear-gradient(180deg,#220000 0%,#140000 100%)',glow:'rgba(255,36,36,.25)',label:'AGG'};
+    return {border:'#00aacc',bg:'linear-gradient(180deg,#001822 0%,#000a14 100%)',glow:'rgba(0,170,204,.25)',label:'CON'};
   }
 
   function refreshCards(){
@@ -790,38 +818,32 @@ function buildDraft(){
     pool.forEach(function(card,idx){
       var isSel=!!selected[card.id+'_'+idx];
       var tc=typeColor(card);
-      var row=document.createElement('div');
-      row.style.cssText='cursor:pointer;border:2px solid '+(isSel?'var(--gold)':tc.border+'66')+';background:'+tc.bg+';border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;transition:all .12s;position:relative;overflow:hidden;'+(isSel?'box-shadow:0 0 16px rgba(255,215,0,.25);transform:translateX(4px);':'');
-      row.style.animationDelay=(idx*0.04)+'s';
+      var cel=document.createElement('div');
+      cel.className='tcard'+(isSel?' tcard-sel':'');
+      cel.style.cssText='border:2px solid '+(isSel?'var(--gold)':tc.border+'55')+';background:'+tc.bg+';padding:12px 10px;aspect-ratio:5/7;display:flex;flex-direction:column;justify-content:space-between;'+(isSel?'box-shadow:0 0 20px rgba(255,215,0,.3),0 0 40px rgba(255,215,0,.08),inset 0 0 16px rgba(255,215,0,.05);':'');
+      cel.style.animationDelay=(idx*0.03)+'s';
 
-      var iconDiv=document.createElement('div');
-      iconDiv.style.cssText='font-size:22px;flex-shrink:0;width:32px;text-align:center;';
-      iconDiv.textContent=card.icon;
-
-      var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
-      info.innerHTML=
-        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">'+
-          '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:17px;color:'+(isSel?'var(--gold)':'#fff')+';letter-spacing:1px;">'+card.name+'</div>'+
-          '<div style="font-family:\'Press Start 2P\',monospace;font-size:5px;padding:2px 5px;background:'+tc.labelBg+';color:'+tc.border+';border-radius:2px;letter-spacing:1px;">'+card.cat+'</div>'+
+      cel.innerHTML=
+        '<div>'+
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
+            '<div style="font-family:\'Press Start 2P\',monospace;font-size:5px;padding:2px 4px;background:rgba(0,0,0,.3);color:'+tc.border+';border-radius:3px;letter-spacing:1px;">'+tc.label+'</div>'+
+            (isSel?'<div style="font-size:12px;color:var(--gold);text-shadow:0 0 6px rgba(255,215,0,.5);">\u2713</div>':'')+
+          '</div>'+
+          '<div style="font-size:24px;text-align:center;margin:4px 0 6px;'+(isSel?'filter:drop-shadow(0 0 6px var(--gold));':'')+'">'+card.icon+'</div>'+
+          '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:'+(isSel?'var(--gold)':'#fff')+';letter-spacing:2px;line-height:1;text-align:center;">'+card.name+'</div>'+
+          '<div style="font-family:\'Press Start 2P\',monospace;font-size:4px;color:'+tc.border+';text-align:center;margin-top:4px;letter-spacing:1px;opacity:.8;">'+card.cat+'</div>'+
         '</div>'+
-        '<div style="font-size:12px;color:var(--text);font-weight:600;line-height:1.3;opacity:.7;">'+card.desc+'</div>';
+        '<div style="font-size:10px;color:var(--text);font-weight:600;line-height:1.3;opacity:.6;text-align:center;border-top:1px solid '+(isSel?'rgba(255,215,0,.2)':'#1c1930')+';padding-top:6px;">'+card.desc+'</div>';
 
-      var check=document.createElement('div');
-      check.style.cssText='flex-shrink:0;width:24px;height:24px;border:2px solid '+(isSel?'var(--gold)':'var(--bdr)')+';border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:14px;background:'+(isSel?'rgba(255,215,0,.15)':'transparent')+';';
-      check.textContent=isSel?'\u2713':'';
-      check.style.color=isSel?'var(--gold)':'';
-
-      row.append(iconDiv,info,check);
-
-      if(!isSel&&count>=5) row.style.opacity='.35';
-      row.onclick=function(){
+      if(!isSel&&count>=5) cel.style.opacity='.3';
+      cel.onclick=function(){
         SND.click();
         var key=card.id+'_'+idx;
         if(selected[key]) delete selected[key];
         else if(Object.keys(selected).length<5) selected[key]=card;
         refreshCards();refreshGoBtn();
       };
-      cardGrid.appendChild(row);
+      cardGrid.appendChild(cel);
     });
   }
   content.appendChild(cardGrid);
