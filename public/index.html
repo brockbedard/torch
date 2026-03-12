@@ -395,6 +395,73 @@ function aiPickOffense(offTeamId,hand,lastPlayId){
   return pool[Math.floor(Math.random()*pool.length)];
 }
 
+// ===== CARD INTEL OVERLAY =====
+function showCardIntel(card, teamId, side){
+  var overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fi .3s ease-out both;';
+  
+  var modal=document.createElement('div');
+  modal.style.cssText='width:100%;max-width:340px;background:var(--bg2);border:2px solid var(--cyan);border-radius:12px;padding:24px;position:relative;box-shadow:0 0 40px rgba(0,212,255,.2);';
+  
+  var close=document.createElement('div');
+  close.style.cssText='position:absolute;top:12px;right:12px;font-size:24px;color:var(--muted);cursor:pointer;line-height:1;';
+  close.textContent='\u00D7';
+  close.onclick=function(){overlay.remove();};
+  
+  var title=document.createElement('div');
+  title.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--cyan);letter-spacing:2px;margin-bottom:4px;";
+  title.textContent=card.name;
+  
+  var type=document.createElement('div');
+  type.className='px';
+  type.style.cssText='font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:16px;';
+  type.textContent=card.cat.toUpperCase();
+  
+  var body=document.createElement('div');
+  body.style.cssText='font-size:15px;color:var(--text);line-height:1.6;font-weight:600;';
+  body.textContent=card.desc;
+  
+  var intel=document.createElement('div');
+  intel.style.cssText='margin-top:20px;padding-top:16px;border-top:1px solid var(--bdr);';
+  
+  var intelH=document.createElement('div');
+  intelH.className='px';
+  intelH.style.cssText='font-size:6px;color:var(--gold);margin-bottom:10px;letter-spacing:1px;';
+  intelH.textContent='STRATEGIC INTEL';
+  
+  var intelText=document.createElement('div');
+  intelText.style.cssText='font-size:14px;color:var(--text);opacity:.8;font-style:italic;';
+  
+  // Logic-based intel
+  var text = '';
+  var isOffense = side==='offense';
+  if(isOffense){
+    if(card.type==='pass'){
+      if(card.cat.includes('Quick') || card.cat.includes('Short')) text='Effective against heavy pressure and blitzes. Harder to pick off, but lower yardage ceiling.';
+      else if(card.cat.includes('Deep') || card.cat.includes('Bomb')) text='High risk, high reward. Beats soft zone but very vulnerable to deep coverage and "Robber" looks.';
+      else if(card.id.includes('pa_')) text='Play-action constraints. Punishes aggressive run-stuffing defenses by faking the dive.';
+    } else {
+      if(card.id==='triple_option') text='The core engine. QB reads the end. Devastates soft zones, but dies to "Spy" and "Gap Integrity".';
+      else if(card.cat.includes('Inside')) text='Safe yards between the tackles. Beats speed-rushers, but struggles against "A-Gap Mug".';
+      else if(card.cat.includes('Outside')) text='Attacks the perimeter. Beats slow interior defenses, but loses to "DB Blitz" and speed on the edge.';
+    }
+  } else {
+    if(card.type==='agg'){
+      if(card.cat.includes('Pressure')) text='High pressure. Creates sacks and turnovers, but leaves huge holes against quick-game passing.';
+      else if(card.id==='robber' || card.id==='gap_int') text='Discipline over chaos. Counters specific concepts like deep shots or option runs.';
+    } else {
+      if(card.cat.includes('Zone')) text='Safe coverage. Keeps the play in front of you. Weak against "Mesh" and short, high-percentage throws.';
+      else if(card.id==='spy') text='Hard counter to mobile QBs and Triple Option keepers. Sacrifice pressure for containment.';
+    }
+  }
+  intelText.textContent=text || 'Versatile call. Use based on situational field position and down/distance.';
+  
+  intel.append(intelH,intelText);
+  modal.append(close,title,type,body,intel);
+  overlay.appendChild(modal);
+  root.appendChild(overlay);
+}
+
 // ===== SCENARIO =====
 var SCENARIO={down:2,dist:10,ballOn:35,clock:165,timeouts:1,offScore:14,defScore:21};
 
@@ -669,6 +736,11 @@ function buildHome(){
   el.className='sup';
   el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-y:auto;';
 
+  var today=new Date().toDateString();
+  var lastPlay=localStorage.getItem('torch_last_play');
+  var lastResult=localStorage.getItem('torch_last_result');
+  var isLocked=lastPlay===today&&lastResult==='loss';
+
   var hero=document.createElement('div');
   hero.style.cssText='width:100%;background:radial-gradient(ellipse at 50% 0%,#1a0030 0%,#0d0020 40%,var(--bg) 75%);padding:48px 20px 32px;text-align:center;border-bottom:1px solid var(--bdr);position:relative;overflow:hidden;';
   var scl=document.createElement('div');
@@ -690,9 +762,10 @@ function buildHome(){
   var playWrap=document.createElement('div');
   playWrap.style.cssText='width:100%;padding:24px 20px 0;';
   var playBtn=document.createElement('button');
-  playBtn.className='btn bp';
-  playBtn.style.cssText='width:100%;padding:22px;font-size:11px;letter-spacing:3px;box-shadow:0 6px 0 #260048,0 0 28px rgba(204,68,255,.35);background:linear-gradient(135deg,#1a0035,#110020);position:relative;overflow:hidden;';
-  playBtn.innerHTML='<span style="position:relative;z-index:1;">\u26A1 PLAY TODAY\'S TORCH</span>';
+  playBtn.className='btn '+(isLocked?'bm':'bp');
+  playBtn.style.cssText='width:100%;padding:22px;font-size:11px;letter-spacing:3px;box-shadow:'+(isLocked?'none':'0 6px 0 #260048,0 0 28px rgba(204,68,255,.35)')+';background:'+(isLocked?'#08071a':'linear-gradient(135deg,#1a0035,#110020)')+';position:relative;overflow:hidden;';
+  playBtn.disabled=isLocked;
+  playBtn.innerHTML='<span style="position:relative;z-index:1;">'+(isLocked?'\u23F3 COME BACK TOMORROW':'\u26A1 PLAY TODAY\'S TORCH')+'</span>';
   playBtn.onclick=function(){SND.click();setGs({screen:'setup',team:null,side:null});};
   playWrap.appendChild(playBtn);
   el.appendChild(playWrap);
@@ -1095,7 +1168,10 @@ function buildDraft(){
         '<div>'+
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'+
             '<div style="font-family:\'Press Start 2P\',monospace;font-size:5px;padding:2px 4px;background:rgba(0,0,0,.3);color:'+tc.border+';border-radius:3px;letter-spacing:1px;">'+tc.label+'</div>'+
-            (isSel?'<div style="font-size:12px;color:var(--gold);text-shadow:0 0 6px rgba(255,215,0,.5);">\u2713</div>':'')+
+            '<div style="display:flex;gap:6px;align-items:center;">'+
+              '<div style="width:14px;height:14px;border-radius:50%;border:1px solid '+tc.border+';color:'+tc.border+';font-size:8px;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;background:rgba(0,0,0,.2);" onclick="event.stopPropagation();SND.click();showCardIntel('+JSON.stringify(card).replace(/"/g,'&quot;')+','+JSON.stringify(GS.team).replace(/"/g,'&quot;')+','+JSON.stringify(GS.side).replace(/"/g,'&quot;')+')">?</div>'+
+              (isSel?'<div style="font-size:12px;color:var(--gold);text-shadow:0 0 6px rgba(255,215,0,.5);">\u2713</div>':'')+
+            '</div>'+
           '</div>'+
           '<div style="font-size:32px;text-align:center;margin:6px 0 8px;'+(isSel?'filter:drop-shadow(0 0 8px var(--gold));':'')+'">'+card.icon+'</div>'+
           '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:'+(isSel?'var(--gold)':'#fff')+';letter-spacing:2px;line-height:1;text-align:center;">'+card.name+'</div>'+
@@ -1296,18 +1372,27 @@ function buildPlay(){
 
   // Player dots near LOS
   var dotColors=[isOff?team.color:opp.color,isOff?opp.color:team.color];
-  var offDots=[[losX-2,40],[losX-2,55],[losX-2,70],[losX-5,45],[losX-5,65]];
-  var defDots=[[losX+3,40],[losX+3,55],[losX+3,70],[losX+6,45],[losX+6,65]];
-  offDots.forEach(function(pos){
-    var dot=document.createElement('div');
-    dot.style.cssText='position:absolute;width:6px;height:6px;border-radius:50%;background:'+dotColors[0]+';box-shadow:0 0 4px '+dotColors[0]+';left:'+pos[0]+'%;top:'+pos[1]+'%;transform:translate(-50%,-50%);z-index:3;';
-    field.appendChild(dot);
-  });
-  defDots.forEach(function(pos){
-    var dot=document.createElement('div');
-    dot.style.cssText='position:absolute;width:6px;height:6px;border-radius:50%;background:'+dotColors[1]+';box-shadow:0 0 4px '+dotColors[1]+';left:'+pos[0]+'%;top:'+pos[1]+'%;transform:translate(-50%,-50%);z-index:3;';
-    field.appendChild(dot);
-  });
+  var offDots=[{x:losX-2,y:40,n:qb?10:12},{x:losX-2,y:55,n:7},{x:losX-2,y:70,n:88},{x:losX-5,y:45,n:22},{x:losX-5,y:65,n:81}];
+  var defDots=[{x:losX+3,y:40,n:qb?52:55},{x:losX+3,y:55,n:21},{x:losX+3,y:70,n:24},{x:losX+6,y:45,n:44},{x:losX+6,y:65,n:31}];
+  
+  var dotEls=[];
+  function renderDots(){
+    offDots.forEach(function(d){
+      var dot=document.createElement('div');
+      dot.style.cssText='position:absolute;width:10px;height:10px;border-radius:50%;background:'+dotColors[0]+';box-shadow:0 0 6px '+dotColors[0]+';left:'+d.x+'%;top:'+d.y+'%;transform:translate(-50%,-50%);z-index:3;display:flex;align-items:center;justify-content:center;font-family:\'Press Start 2P\',monospace;font-size:3px;color:#fff;font-weight:bold;transition:left .6s cubic-bezier(.34,1.56,.64,1);';
+      dot.textContent=d.n;
+      field.appendChild(dot);
+      dotEls.push({el:dot,d:d,isOff:true});
+    });
+    defDots.forEach(function(d){
+      var dot=document.createElement('div');
+      dot.style.cssText='position:absolute;width:10px;height:10px;border-radius:50%;background:'+dotColors[1]+';box-shadow:0 0 6px '+dotColors[1]+';left:'+d.x+'%;top:'+d.y+'%;transform:translate(-50%,-50%);z-index:3;display:flex;align-items:center;justify-content:center;font-family:\'Press Start 2P\',monospace;font-size:3px;color:#fff;font-weight:bold;transition:left .6s cubic-bezier(.34,1.56,.64,1);';
+      dot.textContent=d.n;
+      field.appendChild(dot);
+      dotEls.push({el:dot,d:d,isOff:false});
+    });
+  }
+  renderDots();
 
   // Yards to go pill
   var pill=document.createElement('div');
@@ -1324,6 +1409,13 @@ function buildPlay(){
     fdX=Math.max(5,Math.min(85,(100-(ballOn-dist)*100/60)));
     fdLine.style.left=fdX+'%';
     pill.textContent=ballOn+' YDS TO END ZONE';
+    
+    // Animate dots
+    dotEls.forEach(function(obj){
+      var offset=obj.isOff?-2:3;
+      var depth=obj.d.x < (losX-3) || obj.d.x > (losX+5) ? -3 : 0; // maintain relative stagger
+      obj.el.style.left=(losX+offset+depth)+'%';
+    });
   }
 
   // ===== CLASH ZONE =====
@@ -1410,6 +1502,13 @@ function buildPlay(){
       if(newCardIndices[i]){
         cel.innerHTML='<div class="px" style="position:absolute;top:2px;right:2px;font-size:4px;color:var(--green);background:rgba(0,40,0,.8);padding:1px 3px;border-radius:2px;letter-spacing:1px;">NEW</div>';
       }
+      
+      var helpBtn=document.createElement('div');
+      helpBtn.style.cssText='position:absolute;top:2px;right:2px;width:12px;height:12px;border-radius:50%;border:1px solid '+tc.border+';color:'+tc.border+';font-size:7px;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;background:rgba(0,0,0,.4);z-index:5;';
+      helpBtn.textContent='?';
+      helpBtn.onclick=function(e){e.stopPropagation();SND.click();showCardIntel(card,GS.team,GS.side);};
+      cel.appendChild(helpBtn);
+
       var badge=document.createElement('div');
       badge.className='px';
       badge.style.cssText='font-size:4px;color:'+tc.border+';letter-spacing:1px;background:rgba(0,0,0,.3);padding:1px 3px;border-radius:2px;align-self:flex-start;';
@@ -1526,18 +1625,70 @@ function buildPlay(){
   function endDrive(result){
     var stats={plays:playNum,yards:totalYards,turnovers:turnovers};
     if(result==='td'){
-      offScore+=7;
+      // Transition to conversion sub-screen
+      animating=true;
+      offScore+=6; // TD is 6 pts, conversion decides the rest
+      updateScoreBug();
+      
+      setTimeout(function(){
+        resetClash();
+        pickPrompt.textContent='TOUCHDOWN!';
+        pickPrompt.style.color='var(--green)';
+        
+        var convArea=document.createElement('div');
+        convArea.style.cssText='display:flex;flex-direction:column;gap:12px;width:100%;max-width:240px;animation:fi .4s ease-out both;';
+        
+        var xpBtn=document.createElement('button');
+        xpBtn.className='btn bg';
+        xpBtn.style.padding='14px';
+        xpBtn.innerHTML='EXTRA POINT (TIE)<br><span style="font-size:6px;opacity:.7;">95% CHANCE</span>';
+        
+        var tpBtn=document.createElement('button');
+        tpBtn.className='btn bo';
+        tpBtn.style.padding='14px';
+        tpBtn.innerHTML='2-POINT TRY (WIN)<br><span style="font-size:6px;opacity:.7;">45% CHANCE</span>';
+        
+        function resolveConv(isTwoPt){
+          SND.snap();
+          convArea.innerHTML='';
+          var success=Math.random()<(isTwoPt?0.45:0.95);
+          if(success) offScore+=(isTwoPt?2:1);
+          updateScoreBug();
+          
+          var res=document.createElement('div');
+          res.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:32px;color:"+(success?'var(--green)':'var(--danger)')+";letter-spacing:2px;animation:pop .4s both;";
+          res.textContent=success?(isTwoPt?'2-PT CONVERSION GOOD!':'XP IS GOOD!'):(isTwoPt?'2-PT TRY FAILED!':'XP MISSED!');
+          convArea.appendChild(res);
+          
+          setTimeout(function(){
+            var finalResult;
+            if(isOff) finalResult=offScore>defScore?'win':'loss';
+            else finalResult=offScore<defScore?'win':'loss';
+            
+            setGs({screen:'result',team:GS.team,side:GS.side,roster:GS.roster,hand:GS.hand,
+              result:finalResult,
+              finalScore:{off:offScore,def:defScore},
+              driveStats:stats});
+          },1500);
+        }
+        
+        xpBtn.onclick=function(){resolveConv(false);};
+        tpBtn.onclick=function(){resolveConv(true);};
+        
+        convArea.append(xpBtn,tpBtn);
+        resultArea.appendChild(convArea);
+      },800);
+      return;
     }
+    
     var finalResult;
-    if(isOff){
-      finalResult=result==='td'?'win':'loss';
-    } else {
-      finalResult=result==='td'?'loss':'win';
-    }
+    if(isOff) finalResult=result==='td'?'win':'loss';
+    else finalResult=result==='td'?'loss':'win';
+    
     setTimeout(function(){
       setGs({screen:'result',team:GS.team,side:GS.side,roster:GS.roster,hand:GS.hand,
         result:finalResult,
-        finalScore:{off:result==='td'?offScore:SCENARIO.offScore,def:defScore},
+        finalScore:{off:offScore,def:defScore},
         driveStats:stats});
     },1200);
   }
@@ -1762,14 +1913,18 @@ function buildResult(){
   // Streak tracking
   var streakKey='torch_streak';
   var lastPlayKey='torch_last_play';
+  var lastResultKey='torch_last_result';
   var today=new Date().toDateString();
   var lastPlay=localStorage.getItem(lastPlayKey);
   var streak=parseInt(localStorage.getItem(streakKey)||'0',10);
+  
   if(lastPlay!==today){
     if(isWin){
       streak++;
+      localStorage.setItem(lastResultKey, 'win');
     } else {
       streak=0;
+      localStorage.setItem(lastResultKey, 'loss');
     }
     localStorage.setItem(streakKey,String(streak));
     localStorage.setItem(lastPlayKey,today);
