@@ -1,19 +1,42 @@
 # TORCH — The Football Card Game
 
 ## What This Is
-TORCH is a daily football puzzle game (think Wordle meets Madden playcalling). Players read a defensive coverage shell and pick play cards that exploit it. The core loop: **read the defense → pick your play → see if you read it right**.
+TORCH is a daily football card game. You pick offense or defense, draft your hand, and play cards one snap at a time against an AI opponent. Neither side knows what the other called. Cards clash, results reveal, and the drive plays out with real down-and-distance, a ticking clock, and a scoreboard.
 
-Built as a mobile-first single-page app (430px max-width). Currently a single HTML file (`public/index.html`, ~3400 lines) with vanilla JS, no framework.
+The core question every snap: **"What would you call here?"**
+
+Built as a mobile-first single-page app (430px max-width). Single HTML file with vanilla JS, no framework.
+
+## Version Status
+- **v0.6.1** — Legacy code in `public/index.html`. Functional but being replaced.
+- **v0.7** — "First Testable Build." Significant redesign of daily mode. See `TORCH-GDD-v0.7.md` for the full spec.
+
+### What's Changing in v0.7
+- **Daily mode redesign** — Draft 5 from 10 cards, simultaneous card clash (neither side knows what the other called), real down/distance/clock/scoreboard
+- **Bonus round** — Winners unlock a second round playing the other side of the ball
+- **Simplified home screen** — One button ("Play Today's Torch"), no scheme/team clutter
+- **Two teams** (down from 4) with strong visual identity
+- **No campaign mode** (hidden, preserved in codebase)
+- **No AI commentary** (static fallbacks only)
+- **No scheme selection, no coin shop, no 90 rotating scenarios**
+- **One test scenario** to validate core mechanics
+
+### What's Preserved from v0.6.1
+- Single HTML file architecture, vanilla JS, no build step
+- PWA support (manifest, service worker, home screen install)
+- Card system fundamentals, coverage logic, team/player data
+- Sound engine, visual style, color palette, font stack
 
 ## Project Structure
 ```
-torch-project/
+torch-football/
 ├── public/
 │   ├── index.html      ← The entire game (HTML + CSS + JS in one file)
 │   ├── manifest.json   ← PWA manifest (home screen install)
 │   └── sw.js           ← Service worker (offline caching)
 ├── api/
-│   └── commentary.js   ← Vercel serverless function proxying to Anthropic API
+│   └── commentary.js   ← Vercel serverless function (not used in v0.7)
+├── TORCH-GDD-v0.7.md   ← Game design document — the v0.7 spec
 ├── package.json
 ├── vercel.json
 ├── .env.example
@@ -21,53 +44,43 @@ torch-project/
 ```
 
 ## How to Run
-- **Static (no AI commentary):** `npx serve public -l 3000` — fallback commentary kicks in
-- **With API routes:** `vercel dev` — requires `ANTHROPIC_API_KEY` in `.env`
+- **Local dev:** `npx serve public -l 3000`
 - **Deploy:** `vercel --prod`
 - **Production URL:** https://torch-two.vercel.app/
 
 ## Architecture
 
-### Current State (v0.6.1)
+### Current State (v0.6.1 — legacy)
 Everything lives in one HTML file. The "framework" is:
 - `GS` — global game state object
 - `setGs(fn)` — updates state and calls `render()`
 - `render()` — wipes `root.innerHTML`, rebuilds the active screen via `buildXxx()` functions
 - Screen functions: `buildTitle`, `buildDaily`, `buildIntro`, `buildGame`, `buildResult`, `buildShop`, `buildEnd`, `buildOnboarding`
 
-This approach works but won't scale much further. The next major refactor should move to a component-based approach (Preact recommended — tiny, no build step required with HTM).
-
-### Game Modes
-1. **Daily Torch** (primary) — One scenario per day, pick from 5 cards, try to hit a yardage target. Wordle-style sharing. Has both offense and defense sides.
-2. **Campaign Mode** — Multi-drive run: score 5 TDs before losing 3 lives. Has deck building, coin shop, player cards.
+### v0.7 Target Screens (per GDD)
+1. **Home** — Logo + single "Play Today's Torch" button
+2. **Team & Side Selection** — Pick team, pick offense/defense, see scenario context
+3. **Draft** — See 10 cards, pick 5 (offense: 5 run + 5 pass; defense: 5 aggressive + 5 conservative)
+4. **Gameplay** — Real down/distance, clock, scoreboard. Pick card → AI picks → CLASH → reveal
+5. **Result** — Win/Tie/Loss, stats, shareable emoji result
+6. **Bonus Round** — Winners play again as the other side of the ball
 
 ### Key Game Systems
-- **Coverage logic** (`CVR` object) — 7 coverages (Cover 0-4, Man Free, Cover 6), each with weak plays, weakness confidence values, formation variants, hints
-- **Card resolution** (`resolve()` function) — Calculates yards based on card vs coverage matchup, buffs, streaks, scheme bonuses. Uses `weakStrength` confidence values so exploits aren't guaranteed
-- **Offensive schemes** (4) — Spread Option, Lightning Tempo, Vertical Threat, Triple Option. Each has starter decks and unique bonuses
-- **Defensive schemes** (4) — Gulf Coast Zone, Pressure Storm, Sooner Four, Pacific Press
-- **Defensive cards** (12) — DCARDS array, used in defense mode
-- **Teams & Players** (4 teams, 3 players each) — TORCH_TEAMS array, with abilities that boost specific plays
-- **Daily scenarios** (90) — SCENARIOS array, each with a specific coverage, hand, yardage target, and difficulty
-- **Streak system** — localStorage-based, unlocks film room hints at 3-day and 7-day streaks
+- **The Clash** — Both sides pick a card simultaneously. Cards collide on screen, result reveals. This is the heartbeat of the game.
+- **Card resolution** — Football logic determines outcomes. Screens beat blitzes. Deep routes beat single-high. Runs get stuffed against stacked boxes.
+- **Draft system** — Pick 5 from 10. Drafted cards are your game plan; random draws after each snap are improvisation.
+- **Hand management** — Always 5 cards in hand. Play 1, draw 1 random replacement.
+- **Coverage logic** (`CVR` object) — 7 coverages (Cover 0-4, Man Free, Cover 6)
+- **Teams & Players** — `TORCH_TEAMS` array (trimming to 2 teams for v0.7)
 - **Sound engine** — Web Audio API synthesized 8-bit sounds (SND object)
 
 ### Football Knowledge
-The game mechanics are grounded in real football concepts from Smart Football (Chris Brown):
+The game teaches through play, not explanation. Card helpers explain what a play IS, never what it's good against. Players learn through pattern recognition:
 - Cover 2's true weakness is the deep middle seam
 - Screens are the mathematical answer to Cover 0 blitz
 - Play action only works if you've established the run
 - Motion pre-snap identifies man vs zone coverage
-- Run streaks open passing lanes (safeties cheat up)
 - Cover 4 pattern-matches, it's not just soft zone
-
-### AI Commentary
-The `ai()` function calls `/api/commentary` which proxies to the Anthropic API. Three types:
-1. **Play-by-play commentary** — after each snap on the result screen
-2. **DC adjustments** — between drives, the AI defensive coordinator comments on tendencies
-3. **Game recap** — end screen summary
-
-All AI calls have static fallbacks (FALLBACK object) so the game works without a backend.
 
 ## Coding Conventions
 - Vanilla JS, no transpilation, no build step
@@ -79,11 +92,7 @@ All AI calls have static fallbacks (FALLBACK object) so the game works without a
 - All state in the `GS` object; `setGs()` triggers full re-render
 - localStorage keys all prefixed with `torch_`
 
-## Known Issues & Next Steps
-1. **Monolith** — 3400 lines in one file. Needs component extraction.
-2. **Full re-render** — Every state change rebuilds the entire DOM. Causes scroll position loss and animation restart.
-3. **No versioned localStorage** — Schema changes between versions cause silent bugs from stale stored values.
-4. **Vertical Threat scheme is OP** — PA always active + no go route INT removes too much risk.
-5. **Triple Option +18 streak bonus** — Very swingy, may need tuning.
-6. ~~No offline/PWA support~~ — **Done.** Manifest, service worker, and Apple meta tags added. Uses emoji placeholder icon.
-7. **Campaign mode and Daily mode share 90% of play logic** — Should unify into one `doPlay()` pipeline.
+## Testing Plan
+- **Audience:** Discord dynasty group (9 football-knowledgeable players)
+- **Deploy to Vercel**, share URL
+- **Key questions:** Can players finish in 5-7 min? Does the draft feel meaningful? Is the clash exciting or random? Do winners play the bonus round? Do losers come back tomorrow?
