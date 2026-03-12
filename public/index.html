@@ -24,7 +24,6 @@ body{font-family:'Barlow Condensed',sans-serif;font-size:18px;color:var(--text);
 #root{width:100%;max-width:430px;min-height:100vh;background:var(--bg);position:relative;}
 .bn{font-family:'Bebas Neue',sans-serif;}
 .px{font-family:'Press Start 2P',monospace;}
-/* FIELD GRID BACKGROUND */
 #root::before{content:'';position:fixed;inset:0;width:100%;max-width:430px;left:50%;transform:translateX(-50%);
   background-image:linear-gradient(rgba(0,212,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.018) 1px,transparent 1px);
   background-size:36px 36px;pointer-events:none;z-index:0;}
@@ -35,7 +34,7 @@ body{font-family:'Barlow Condensed',sans-serif;font-size:18px;color:var(--text);
 @keyframes pop{0%{transform:scale(.2);opacity:0;}65%{transform:scale(1.16);}100%{transform:scale(1);opacity:1;}}
 @keyframes fire{0%,100%{transform:scaleY(1) scaleX(1);}33%{transform:scaleY(1.12) scaleX(.93);}66%{transform:scaleY(.93) scaleX(1.09);}}
 @keyframes fi{from{opacity:0;}to{opacity:1;}}
-@keyframes deal{from{transform:translateY(50px) rotate(6deg);opacity:0;}to{transform:none;opacity:1;}}
+@keyframes deal{from{transform:translateY(40px) rotate(4deg);opacity:0;}to{transform:none;opacity:1;}}
 @keyframes pulse{0%,100%{opacity:.6;}50%{opacity:1;}}
 /* CLASSES */
 .gg{animation:gGold 2s ease-in-out infinite;color:var(--gold);}
@@ -44,8 +43,6 @@ body{font-family:'Barlow Condensed',sans-serif;font-size:18px;color:var(--text);
 .pop{animation:pop .48s cubic-bezier(.34,1.56,.64,1) both;}
 .fire{animation:fire 1.35s ease-in-out infinite;display:inline-block;}
 .fi{animation:fi .45s ease-out both;}
-.d1{animation:deal .3s .04s ease-out both;}.d2{animation:deal .3s .09s ease-out both;}
-.d3{animation:deal .3s .14s ease-out both;}.d4{animation:deal .3s .19s ease-out both;}
 /* BUTTONS */
 .btn{font-family:'Press Start 2P',monospace;padding:12px 18px;cursor:pointer;border:2px solid;text-transform:uppercase;transition:all .11s;letter-spacing:.06em;border-radius:4px;position:relative;top:0;line-height:1.5;}
 .btn:hover:not(:disabled){top:-2px;filter:brightness(1.2);}
@@ -56,10 +53,26 @@ body{font-family:'Barlow Condensed',sans-serif;font-size:18px;color:var(--text);
 .bp{background:#110020;color:var(--purple);border-color:var(--purple);box-shadow:0 5px 0 #260048;font-size:10px;}
 .bm{background:#08071a;color:#28264a;border-color:#18162e;font-size:9px;cursor:default;}
 .bsnap{background:#200b00;color:var(--orange);border-color:var(--orange);box-shadow:0 5px 0 #501c00;font-size:10px;}
-/* SIDE SELECTOR */
-.side-opt{flex:1;cursor:pointer;border:2px solid;border-radius:10px;padding:18px 10px;text-align:center;transition:all .15s;background:var(--bg2);}
-.side-opt:hover{transform:translateY(-2px);filter:brightness(1.1);}
-.side-opt.act{transform:translateY(-2px);}
+/* SCOREBOARD */
+.sb{background:linear-gradient(180deg,#0a0814 0%,#060410 100%);border:2px solid #1a1830;border-radius:10px;padding:12px;position:relative;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 0 30px rgba(0,212,255,.08),0 4px 20px rgba(0,0,0,.6);}
+.sb::before{content:'';position:absolute;inset:0;border-radius:9px;border:1px solid rgba(0,212,255,.08);pointer-events:none;}
+.sb-led{font-family:'Press Start 2P',monospace;color:var(--cyan);text-shadow:0 0 8px rgba(0,212,255,.8),0 0 20px rgba(0,212,255,.3);}
+.sb-led-gold{font-family:'Press Start 2P',monospace;color:var(--gold);text-shadow:0 0 8px rgba(255,215,0,.8),0 0 20px rgba(255,215,0,.3);}
+.sb-led-dim{font-family:'Press Start 2P',monospace;color:#1a1830;text-shadow:none;}
+.sb-label{font-family:'Press Start 2P',monospace;font-size:4px;color:#2a2850;letter-spacing:2px;text-transform:uppercase;}
+/* SPLIT-FLAP */
+.flap-wrap{display:inline-flex;perspective:200px;gap:1px;}
+.flap-char{display:inline-block;position:relative;overflow:hidden;width:.65em;height:1.15em;background:#08061a;border:1px solid #14122a;border-radius:2px;}
+.flap-char .flap-top,.flap-char .flap-bot{position:absolute;left:0;right:0;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.flap-char .flap-top{top:0;height:50%;border-bottom:1px solid #0a081a;}
+.flap-char .flap-bot{bottom:0;height:50%;}
+.flap-char .flap-top span{position:absolute;bottom:0;transform:translateY(50%);}
+.flap-char .flap-bot span{position:absolute;top:0;transform:translateY(-50%);}
+@keyframes flapDown{0%{transform:rotateX(0);}100%{transform:rotateX(-90deg);}}
+@keyframes flapUp{0%{transform:rotateX(90deg);}100%{transform:rotateX(0);}}
+.flap-anim-top{animation:flapDown .15s ease-in forwards;transform-origin:bottom;backface-visibility:hidden;}
+.flap-anim-bot{animation:flapUp .15s ease-out forwards;transform-origin:top;backface-visibility:hidden;}
 </style>
 </head>
 <body>
@@ -69,7 +82,7 @@ body{font-family:'Barlow Condensed',sans-serif;font-size:18px;color:var(--text);
 
 // ===== SOUND ENGINE =====
 var SND=(function(){
-  var ctx=null;
+  var ctx=null;var crowdNode=null;var crowdGain=null;
   function ac(){if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume();return ctx;}
   function tone(f,dur,type,vol,t0){
     try{var c=ac(),now=c.currentTime,o=c.createOscillator(),g=c.createGain();
@@ -93,130 +106,293 @@ var SND=(function(){
     turnover:function(){[330,247,196,147,110].forEach(function(f,i){tone(f,.2,'sawtooth',.18-i*.02,i*.13);});},
     clash:function(){noise(.14,.32);[110,220,440,880].forEach(function(f,i){tone(f,.12,'square',.18,i*.03);});tone(1320,.4,'square',.2,.2);},
     draft:function(){tone(330,.04,'square',.1);tone(550,.05,'square',.12,.05);tone(880,.1,'square',.14,.1);},
+    flip:function(){for(var i=0;i<4;i++)tone(1200+i*200,.02,'square',.04,i*.04);},
+    crowdStart:function(){
+      try{var c=ac();if(crowdNode)return;
+        var sr=c.sampleRate,dur=4,buf=c.createBuffer(1,Math.floor(sr*dur),sr),data=buf.getChannelData(0);
+        for(var i=0;i<data.length;i++)data[i]=Math.random()*2-1;
+        crowdNode=c.createBufferSource();crowdNode.buffer=buf;crowdNode.loop=true;
+        var bp=c.createBiquadFilter();bp.type='bandpass';bp.frequency.value=400;bp.Q.value=0.5;
+        crowdGain=c.createGain();crowdGain.gain.setValueAtTime(0.025,c.currentTime);
+        var lfo=c.createOscillator();lfo.frequency.value=0.3;var lfoGain=c.createGain();lfoGain.gain.value=0.008;
+        lfo.connect(lfoGain);lfoGain.connect(crowdGain.gain);lfo.start();
+        crowdNode.connect(bp);bp.connect(crowdGain);crowdGain.connect(c.destination);crowdNode.start();
+      }catch(e){}},
+    crowdStop:function(){
+      try{if(crowdGain){crowdGain.gain.exponentialRampToValueAtTime(0.001,ac().currentTime+0.5);}
+        setTimeout(function(){if(crowdNode){crowdNode.stop();crowdNode=null;crowdGain=null;}},600);
+      }catch(e){crowdNode=null;crowdGain=null;}},
   };
 })();
 
 // ===== TEAMS (v0.7: 2 teams) =====
 var TEAMS=[
-  {id:'iron_ridge',name:'IRON RIDGE',abbr:'IR',icon:'🔱',
+  {id:'iron_ridge',name:'IRON RIDGE',abbr:'IR',icon:'\uD83D\uDD31',
    color:'#CC1A1A',accent:'#ff4444',bg:'#1a0000',
-   style:'Ground & Pound',desc:'Downhill runs. Physical defense. Win in the trenches.',
-   coach:{name:'Coach Mack Harmon',voice:'Old school. No nonsense. Believes in the run game.'},
+   style:'Triple Option',desc:'Run the triple. Read the end. Pitch, keep, or give.',
+   coach:{name:'Coach Mack Harmon',voice:'Old school. Option football. Three yards and a cloud of dust.'},
    players:[
-     {name:'Darnell Wade',nick:'"Red Dog"',pos:'QB',ovr:91},
-     {name:'T.J. Harks',nick:'"Freight Train"',pos:'RB',ovr:88},
-     {name:'Marcus Cole',nick:'"Iron Wall"',pos:'OL',ovr:94},
+     {id:'ir_q1',name:'Bo Kendrick',nick:'The Conductor',pos:'QB',ovr:80,desc:'Reads the DE like a book. Never makes the wrong call.',cat:'qb'},
+     {id:'ir_q2',name:'Tate Larkin',nick:'Wild Horse',pos:'QB',ovr:74,desc:'More athlete than QB. Will outrun your safety.',cat:'qb'},
+     {id:'ir_s1',name:'Mack Torres',nick:'The Anvil',pos:'FB',ovr:82,desc:"5'10 230. Built to run through linebackers.",cat:'skill'},
+     {id:'ir_s2',name:'Jaylen Sims',nick:'Jet',pos:'RB',ovr:78,desc:'Pitch man. Once he hits the edge, it\'s over.',cat:'skill'},
+     {id:'ir_s3',name:'Duke Owens',nick:'Plow',pos:'RB',ovr:76,desc:'Between the tackles. Three yards. Every time.',cat:'skill'},
+     {id:'ir_s4',name:'Cade Buckley',nick:'Big Country',pos:'TE',ovr:74,desc:'Blocking TE who can leak out for a play-action surprise.',cat:'skill'},
    ]},
-  {id:'canyon_tech',name:'CANYON TECH',abbr:'CT',icon:'🌵',
+  {id:'canyon_tech',name:'CANYON TECH',abbr:'CT',icon:'\uD83C\uDF35',
    color:'#FF5E1A',accent:'#ff8844',bg:'#1a0800',
-   style:'Air Raid',desc:'Spread the field. Throw it deep. Make them pay.',
+   style:'Air Raid',desc:'Spread the field. Throw it 50 times. Make them pay.',
    coach:{name:'Coach Hank McCord',voice:'Aggressive. Loves the deep ball. Always attacking.'},
    players:[
-     {name:'Casey Burns',nick:'"The Maestro"',pos:'QB',ovr:96},
-     {name:'Marquise Reed',nick:'"Big Play"',pos:'WR',ovr:87},
-     {name:'Jalen Torres',nick:'"The Mismatch"',pos:'TE',ovr:85},
+     {id:'ct_q1',name:'Colt Avery',nick:'The Gunslinger',pos:'QB',ovr:78,desc:'Throws 50 times a game and smiles about it.',cat:'qb'},
+     {id:'ct_q2',name:'Dash Meyers',nick:'Neon Arm',pos:'QB',ovr:74,desc:'His release is so fast you don\'t see the ball leave.',cat:'qb'},
+     {id:'ct_s1',name:'Quez Sampson',nick:'Smoke',pos:'WR',ovr:80,desc:'4.3 speed. Runs one route: past you.',cat:'skill'},
+     {id:'ct_s2',name:'Dante Liu',nick:'The Route Tree',pos:'WR',ovr:76,desc:'Can run all 9 routes and breaks on a dime.',cat:'skill'},
+     {id:'ct_s3',name:'Rio Vasquez',nick:'Slot Machine',pos:'SLOT',ovr:82,desc:'Lives in the seams. Catches everything.',cat:'skill'},
+     {id:'ct_s4',name:'Kirby Walsh',nick:'Checkdown',pos:'RB',ovr:72,desc:'Screen game specialist. Sneaky yards after catch.',cat:'skill'},
    ]},
 ];
 
-// ===== CARDS =====
-var OFF_CARDS=[
-  // Run plays
-  {id:'qb_sneak', name:'QB SNEAK',    type:'run', cat:'Run - Short',     icon:'🏃', desc:'QB drives forward behind the center. Almost always gains 1-2 yards.'},
-  {id:'draw',     name:'DRAW',        type:'run', cat:'Run - Deceptive', icon:'🃏', desc:'QB fakes a pass dropback, hands to the RB. Exploits aggressive pass rushers.'},
-  {id:'power',    name:'POWER',       type:'run', cat:'Run - Physical',  icon:'💪', desc:'Downhill run with a lead blocker. Attacks one specific gap.'},
-  {id:'zone_read',name:'ZONE READ',   type:'run', cat:'Run - Read',      icon:'👁', desc:'QB reads the defender — keeps or gives based on what he sees. Spread staple.'},
-  {id:'toss',     name:'TOSS',        type:'run', cat:'Run - Outside',   icon:'↗', desc:'Pitch sweep to the edge. Gets the RB outside with blockers in front.'},
-  // Pass plays
-  {id:'slant',    name:'SLANT',       type:'pass',cat:'Pass - Quick',         icon:'⚡', desc:'Quick inside route at 5 yards. Ball out in under 2 seconds.'},
-  {id:'flat',     name:'FLAT',        type:'pass',cat:'Pass - Safe',          icon:'🛡', desc:'Short throw to the RB/TE along the sideline. Safety valve. 4-6 yards.'},
-  {id:'cross',    name:'CROSS',       type:'pass',cat:'Pass - Intermediate',  icon:'↔', desc:'WR runs across the field at 10-12 yards. Beats man coverage with traffic.'},
-  {id:'corner_rte',name:'CORNER RTE', type:'pass',cat:'Pass - Deep',          icon:'↖', desc:'WR breaks to the sideline at 15 yards. High reward, needs arm strength.'},
-  {id:'go_route', name:'GO ROUTE',    type:'pass',cat:'Pass - Bomb',          icon:'🚀', desc:'Straight vertical. Home run ball — 30+ yards if it hits. Biggest risk/reward.'},
+// ===== SCHEME-SPECIFIC OFFENSIVE CARDS =====
+var CT_OFF_CARDS=[
+  {id:'mesh',         name:'MESH',           type:'pass',cat:'Pass - Short', icon:'\u2194',  desc:'Two receivers cross in traffic at 5-7 yards. Man coverage killer.'},
+  {id:'four_verts',   name:'FOUR VERTS',     type:'pass',cat:'Pass - Deep',  icon:'\u2B06',  desc:'All receivers go deep. Stretches safeties horizontally.'},
+  {id:'shallow_cross',name:'SHALLOW CROSS',  type:'pass',cat:'Pass - Quick', icon:'\u27A1',  desc:'WR drags across underneath at 4 yards. Quick, reliable.'},
+  {id:'y_corner',     name:'Y-CORNER',       type:'pass',cat:'Pass - Deep',  icon:'\u2196',  desc:'Slot receiver fakes in then breaks to the corner at 15 yards. Cover 2 beater.'},
+  {id:'stick',        name:'STICK',          type:'pass',cat:'Pass - Quick', icon:'\uD83D\uDCCD',desc:'Quick 3-step concept. Hitch at 6 yards with a flat option.'},
+  {id:'slant',        name:'SLANT',          type:'pass',cat:'Pass - Quick', icon:'\u26A1',  desc:'Quick inside break at 5 yards. Timing route.'},
+  {id:'go_route',     name:'GO ROUTE',       type:'pass',cat:'Pass - Bomb',  icon:'\uD83D\uDE80',desc:'Straight vertical bomb. Home run or bust.'},
+  {id:'bubble_screen',name:'BUBBLE SCREEN',  type:'pass',cat:'Pass - Screen',icon:'\uD83D\uDCA8',desc:'Quick lateral to the WR with blockers. Blitz beater.'},
+  {id:'draw',         name:'DRAW',           type:'run', cat:'Run',          icon:'\uD83C\uDCCF',desc:'Fake pass, hand to RB. Only run play that makes sense in Air Raid.'},
+  {id:'qb_sneak',     name:'QB SNEAK',       type:'run', cat:'Run - Short',  icon:'\uD83C\uDFC3',desc:'Short yardage push. Universal.'},
+];
+
+var IR_OFF_CARDS=[
+  {id:'triple_option',name:'TRIPLE OPTION',  type:'run', cat:'Run - Option', icon:'\uD83D\uDD25',desc:'Give, keep, or pitch. The signature play. QB reads the DE.'},
+  {id:'midline',      name:'MIDLINE',        type:'run', cat:'Run - Inside', icon:'\u23EC',  desc:'QB reads the DT instead of the DE. Fullback dive inside.'},
+  {id:'rocket_toss',  name:'ROCKET TOSS',    type:'run', cat:'Run - Outside',icon:'\uD83D\uDE80',desc:'Quick pitch sweep to the outside. Speed to the edge.'},
+  {id:'trap',         name:'TRAP',           type:'run', cat:'Run - Inside', icon:'\uD83E\uDE9C',desc:'Offensive lineman pulls to block the unblocked defender. Deceptive.'},
+  {id:'qb_keeper',    name:'QB KEEPER',      type:'run', cat:'Run - Option', icon:'\uD83C\uDFC3',desc:'QB keeps on the option read and turns upfield.'},
+  {id:'power',        name:'POWER',          type:'run', cat:'Run - Power',  icon:'\uD83D\uDCAA',desc:'Lead blocker through the gap. Downhill physical.'},
+  {id:'zone_read',    name:'ZONE READ',      type:'run', cat:'Run - Option', icon:'\uD83D\uDC41',desc:'Spread formation option. QB reads end, gives or keeps.'},
+  {id:'qb_sneak',     name:'QB SNEAK',       type:'run', cat:'Run - Short',  icon:'\u270A',  desc:'Short yardage push. Universal.'},
+  {id:'pa_post',      name:'PA POST',        type:'pass',cat:'Pass - Deep',  icon:'\uD83C\uDFAF',desc:'Fake the triple, throw deep post. The constraint play.'},
+  {id:'pa_flat',      name:'PA FLAT',        type:'pass',cat:'Pass - Short', icon:'\uD83D\uDEE1',desc:'Fake the dive, dump to the flat. Safe play-action.'},
 ];
 
 var DEF_CARDS=[
-  // Aggressive
-  {id:'blitz',        name:'BLITZ',         type:'agg',cat:'Pressure',            icon:'🔥', desc:'Send extra rushers. High risk/high reward. Gets destroyed by quick throws.'},
-  {id:'corner_blitz', name:'CORNER BLITZ',  type:'agg',cat:'Pressure - Edge',     icon:'💨', desc:'Pressure off the corner. Leaves the sideline exposed.'},
-  {id:'press_man',    name:'PRESS MAN',     type:'agg',cat:'Coverage - Physical',  icon:'🤝', desc:'Jam receivers at the line. Shuts down short routes. Speed beats you deep.'},
-  {id:'safety_blitz', name:'SAFETY BLITZ',  type:'agg',cat:'Pressure - Downhill',  icon:'⬇', desc:'Safety attacks from depth. Kills the run. Zero deep help.'},
-  {id:'line_stunt',   name:'LINE STUNT',    type:'agg',cat:'Pressure - Interior',  icon:'🔄', desc:'DL twist and games. Disrupts timing but opens running lanes.'},
-  // Conservative
-  {id:'cover_2',  name:'COVER 2',  type:'con',cat:'Zone - Two Deep',   icon:'2️⃣', desc:'Two safeties deep, corners in flats. Soft in the middle.'},
-  {id:'cover_3',  name:'COVER 3',  type:'con',cat:'Zone - Three Deep', icon:'3️⃣', desc:'Three deep zones, 8-man box. Strong vs deep balls, weak underneath.'},
-  {id:'cover_4',  name:'COVER 4',  type:'con',cat:'Zone - Four Deep',  icon:'4️⃣', desc:'Four across the back. Takes away everything deep, gives up short.'},
-  {id:'spy',      name:'SPY',      type:'con',cat:'Assignment',         icon:'🕵', desc:'One defender watches the QB. Contains scrambles, fewer guys in coverage.'},
-  {id:'prevent',  name:'PREVENT',  type:'con',cat:'Zone - Max Depth',   icon:'🧱', desc:'Everyone drops deep. Nothing over the top. Gives up 5+ yards every snap.'},
+  {id:'blitz',        name:'BLITZ',         type:'agg',cat:'Pressure',           icon:'\uD83D\uDD25',desc:'Send extra rushers. High risk/high reward. Gets destroyed by quick throws.'},
+  {id:'corner_blitz', name:'CORNER BLITZ',  type:'agg',cat:'Pressure - Edge',    icon:'\uD83D\uDCA8',desc:'Pressure off the corner. Leaves the sideline exposed.'},
+  {id:'press_man',    name:'PRESS MAN',     type:'agg',cat:'Coverage - Physical', icon:'\uD83E\uDD1D',desc:'Jam receivers at the line. Shuts down short routes. Speed beats you deep.'},
+  {id:'safety_blitz', name:'SAFETY BLITZ',  type:'agg',cat:'Pressure - Downhill', icon:'\u2B07',  desc:'Safety attacks from depth. Kills the run. Zero deep help.'},
+  {id:'line_stunt',   name:'LINE STUNT',    type:'agg',cat:'Pressure - Interior', icon:'\uD83D\uDD04',desc:'DL twist and games. Disrupts timing but opens running lanes.'},
+  {id:'cover_2',      name:'COVER 2',       type:'con',cat:'Zone - Two Deep',    icon:'2\uFE0F\u20E3',desc:'Two safeties deep, corners in flats. Soft in the middle.'},
+  {id:'cover_3',      name:'COVER 3',       type:'con',cat:'Zone - Three Deep',  icon:'3\uFE0F\u20E3',desc:'Three deep zones, 8-man box. Strong vs deep balls, weak underneath.'},
+  {id:'cover_4',      name:'COVER 4',       type:'con',cat:'Zone - Four Deep',   icon:'4\uFE0F\u20E3',desc:'Four across the back. Takes away everything deep, gives up short.'},
+  {id:'spy',          name:'SPY',           type:'con',cat:'Assignment',          icon:'\uD83D\uDD75',desc:'One defender watches the QB. Contains scrambles, fewer guys in coverage.'},
+  {id:'prevent',      name:'PREVENT',       type:'con',cat:'Zone - Max Depth',   icon:'\uD83E\uDDF1',desc:'Everyone drops deep. Nothing over the top. Gives up 5+ yards every snap.'},
 ];
 
 // ===== MATCHUP TABLE =====
-// Tiers: 'O+' = offense wins (8-20), 'N' = neutral (2-6), 'D+' = defense wins (-2 to 2), 'TO' = turnover risk (-2 to 0, ~20% INT/fumble)
-// Rows: offense cards (order matches OFF_CARDS). Cols: defense cards (order matches DEF_CARDS).
-var MATCHUPS=[
-  // QB Sneak vs: Blitz, CornerBlitz, PressMan, SafetyBlitz, LineStunt, Cover2, Cover3, Cover4, Spy, Prevent
-  ['N',  'N',  'D+', 'N',  'D+', 'O+', 'O+', 'N',  'N',  'O+'],
-  // Draw
-  ['TO', 'N',  'O+', 'D+', 'D+', 'O+', 'N',  'N',  'N',  'O+'],
-  // Power
-  ['D+', 'O+', 'N',  'D+', 'O+', 'N',  'D+', 'N',  'N',  'O+'],
-  // Zone Read
-  ['D+', 'O+', 'N',  'N',  'O+', 'N',  'N',  'O+', 'D+', 'O+'],
-  // Toss
-  ['N',  'D+', 'N',  'O+', 'O+', 'N',  'N',  'N',  'N',  'O+'],
-  // Slant
-  ['O+', 'O+', 'TO', 'N',  'N',  'N',  'N',  'N',  'O+', 'N'],
-  // Flat
-  ['O+', 'N',  'D+', 'O+', 'N',  'D+', 'O+', 'N',  'N',  'N'],
-  // Cross
-  ['N',  'N',  'O+', 'N',  'D+', 'O+', 'N',  'D+', 'O+', 'N'],
-  // Corner Rte
-  ['O+', 'TO', 'N',  'O+', 'N',  'O+', 'N',  'D+', 'N',  'D+'],
-  // Go Route
-  ['O+', 'O+', 'N',  'O+', 'N',  'D+', 'D+', 'D+', 'N',  'D+'],
-];
+// Key: offCardId -> defCardId -> tier
+var MT={
+  // === CANYON TECH (Air Raid) ===
+  mesh:          {blitz:'O+',corner_blitz:'O+',press_man:'O+',safety_blitz:'N', line_stunt:'N', cover_2:'N', cover_3:'N', cover_4:'N', spy:'O+',prevent:'N'},
+  four_verts:    {blitz:'O+',corner_blitz:'O+',press_man:'N', safety_blitz:'O+',line_stunt:'N', cover_2:'N', cover_3:'D+',cover_4:'D+',spy:'N', prevent:'D+'},
+  shallow_cross: {blitz:'O+',corner_blitz:'O+',press_man:'D+',safety_blitz:'N', line_stunt:'N', cover_2:'D+',cover_3:'O+',cover_4:'N', spy:'N', prevent:'N'},
+  y_corner:      {blitz:'O+',corner_blitz:'TO',press_man:'N', safety_blitz:'O+',line_stunt:'N', cover_2:'O+',cover_3:'N', cover_4:'D+',spy:'N', prevent:'D+'},
+  stick:         {blitz:'O+',corner_blitz:'O+',press_man:'D+',safety_blitz:'N', line_stunt:'N', cover_2:'D+',cover_3:'N', cover_4:'N', spy:'O+',prevent:'N'},
+  slant:         {blitz:'O+',corner_blitz:'O+',press_man:'TO',safety_blitz:'N', line_stunt:'N', cover_2:'N', cover_3:'N', cover_4:'N', spy:'O+',prevent:'N'},
+  go_route:      {blitz:'O+',corner_blitz:'O+',press_man:'N', safety_blitz:'O+',line_stunt:'N', cover_2:'D+',cover_3:'D+',cover_4:'D+',spy:'N', prevent:'D+'},
+  bubble_screen: {blitz:'O+',corner_blitz:'N', press_man:'D+',safety_blitz:'O+',line_stunt:'N', cover_2:'D+',cover_3:'N', cover_4:'N', spy:'N', prevent:'N'},
+  draw:          {blitz:'TO',corner_blitz:'N', press_man:'O+',safety_blitz:'D+',line_stunt:'D+',cover_2:'O+',cover_3:'N', cover_4:'N', spy:'N', prevent:'O+'},
+  qb_sneak:      {blitz:'N', corner_blitz:'N', press_man:'D+',safety_blitz:'N', line_stunt:'D+',cover_2:'O+',cover_3:'O+',cover_4:'N', spy:'N', prevent:'O+'},
+  // === IRON RIDGE (Triple Option) ===
+  triple_option: {blitz:'D+',corner_blitz:'O+',press_man:'N', safety_blitz:'D+',line_stunt:'O+',cover_2:'O+',cover_3:'N', cover_4:'O+',spy:'D+',prevent:'O+'},
+  midline:       {blitz:'D+',corner_blitz:'N', press_man:'N', safety_blitz:'N', line_stunt:'D+',cover_2:'O+',cover_3:'D+',cover_4:'N', spy:'N', prevent:'O+'},
+  rocket_toss:   {blitz:'N', corner_blitz:'D+',press_man:'N', safety_blitz:'O+',line_stunt:'O+',cover_2:'N', cover_3:'N', cover_4:'N', spy:'N', prevent:'O+'},
+  trap:          {blitz:'N', corner_blitz:'N', press_man:'N', safety_blitz:'D+',line_stunt:'O+',cover_2:'O+',cover_3:'N', cover_4:'N', spy:'N', prevent:'O+'},
+  qb_keeper:     {blitz:'D+',corner_blitz:'O+',press_man:'N', safety_blitz:'N', line_stunt:'N', cover_2:'N', cover_3:'N', cover_4:'O+',spy:'D+',prevent:'O+'},
+  power:         {blitz:'D+',corner_blitz:'O+',press_man:'N', safety_blitz:'D+',line_stunt:'O+',cover_2:'N', cover_3:'D+',cover_4:'N', spy:'N', prevent:'O+'},
+  zone_read:     {blitz:'D+',corner_blitz:'O+',press_man:'N', safety_blitz:'N', line_stunt:'O+',cover_2:'N', cover_3:'N', cover_4:'O+',spy:'D+',prevent:'O+'},
+  pa_post:       {blitz:'N', corner_blitz:'N', press_man:'O+',safety_blitz:'O+',line_stunt:'D+',cover_2:'O+',cover_3:'N', cover_4:'D+',spy:'N', prevent:'D+'},
+  pa_flat:       {blitz:'O+',corner_blitz:'N', press_man:'D+',safety_blitz:'O+',line_stunt:'N', cover_2:'D+',cover_3:'O+',cover_4:'N', spy:'N', prevent:'N'},
+};
 
-// Yard ranges per tier
 function rollYards(tier){
-  if(tier==='O+') return 8+Math.floor(Math.random()*13);   // 8-20
-  if(tier==='N')  return 2+Math.floor(Math.random()*5);    // 2-6
-  if(tier==='D+') return -2+Math.floor(Math.random()*5);   // -2 to 2
-  if(tier==='TO') return -2+Math.floor(Math.random()*3);   // -2 to 0
+  if(tier==='O+') return 8+Math.floor(Math.random()*13);
+  if(tier==='N')  return 2+Math.floor(Math.random()*5);
+  if(tier==='D+') return -2+Math.floor(Math.random()*5);
+  if(tier==='TO') return -2+Math.floor(Math.random()*3);
   return 3;
 }
 function isTurnover(tier){return tier==='TO'&&Math.random()<0.2;}
 
-// ===== SCENARIO (v0.7: one test scenario) =====
-var SCENARIO={
-  desc:'2nd & 10 from the defense\'s 35',
-  context:'Down 7 · 2:45 left · 1 timeout',
-  down:2, dist:10, ballOn:35,
-  clock:165, // seconds
-  timeouts:1,
-  offScore:14, defScore:21,
-};
+// ===== SCENARIO =====
+var SCENARIO={down:2,dist:10,ballOn:35,clock:165,timeouts:1,offScore:14,defScore:21};
 
 // ===== STATE =====
 var GS=null;
 var root=document.getElementById('root');
-
 function setGs(fn){GS=typeof fn==='function'?fn(GS):fn;render();}
 
-// ===== STORAGE =====
-function getSaved(key,def){try{return localStorage.getItem('torch_'+key)||def;}catch(e){return def;}}
-function setSaved(key,val){try{localStorage.setItem('torch_'+key,val);}catch(e){}}
+// ===== HELPERS =====
+function getTeam(id){return TEAMS.find(function(t){return t.id===id;})||TEAMS[0];}
+function getOtherTeam(id){return TEAMS.find(function(t){return t.id!==id;})||TEAMS[1];}
+function getOffCards(teamId){return teamId==='canyon_tech'?CT_OFF_CARDS:IR_OFF_CARDS;}
+function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function fmtClock(sec){var m=Math.floor(sec/60);var s=sec%60;return m+':'+(s<10?'0':'')+s;}
 
 // ===== RENDER =====
 function render(){
+  SND.crowdStop();
   root.innerHTML='';
   var content;
   if(!GS) content=buildHome();
   else if(GS.screen==='setup') content=buildSetup();
+  else if(GS.screen==='players') content=buildPlayers();
   else if(GS.screen==='draft') content=buildDraft();
   else if(GS.screen==='play') content=buildPlay();
   else if(GS.screen==='result') content=buildResult();
   else content=buildHome();
   if(content) root.appendChild(content);
   root.scrollTop=0;
+}
+
+// ===== SCOREBOARD BUILDER =====
+function buildScoreboard(homeTeam,awayTeam){
+  var sb=document.createElement('div');
+  sb.className='sb';
+
+  // Scanlines overlay
+  var scan=document.createElement('div');
+  scan.style.cssText='position:absolute;inset:0;border-radius:9px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 3px);pointer-events:none;z-index:1;';
+  sb.appendChild(scan);
+
+  // Quarter + Time row
+  var topRow=document.createElement('div');
+  topRow.style.cssText='display:flex;justify-content:center;align-items:baseline;gap:12px;margin-bottom:8px;';
+  topRow.innerHTML='<span class="sb-label">4TH</span><span class="sb-led" style="font-size:18px;">'+fmtClock(SCENARIO.clock)+'</span>';
+  sb.appendChild(topRow);
+
+  // Teams + Scores
+  var scoreRow=document.createElement('div');
+  scoreRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:10px;';
+
+  // Home side
+  var homeDiv=document.createElement('div');
+  homeDiv.style.cssText='flex:1;text-align:center;';
+  var homeLabel=document.createElement('div');
+  homeLabel.className='sb-label';
+  homeLabel.style.cssText+='margin-bottom:4px;font-size:4px;';
+  homeLabel.textContent='HOME';
+  var homeName=document.createElement('div');
+  homeName.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:7px;color:#fff;letter-spacing:1px;min-height:14px;display:flex;justify-content:center;';
+  var homeScore=document.createElement('div');
+  homeScore.className='sb-led-gold';
+  homeScore.style.cssText+='font-size:28px;margin-top:2px;';
+
+  // Dash
+  var dash=document.createElement('div');
+  dash.className='sb-led';
+  dash.style.cssText+='font-size:20px;flex-shrink:0;padding:0 4px;margin-top:14px;';
+  dash.textContent='-';
+
+  // Away side
+  var awayDiv=document.createElement('div');
+  awayDiv.style.cssText='flex:1;text-align:center;';
+  var awayLabel=document.createElement('div');
+  awayLabel.className='sb-label';
+  awayLabel.style.cssText+='margin-bottom:4px;font-size:4px;';
+  awayLabel.textContent='AWAY';
+  var awayName=document.createElement('div');
+  awayName.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:7px;color:#fff;letter-spacing:1px;min-height:14px;display:flex;justify-content:center;';
+  var awayScore=document.createElement('div');
+  awayScore.className='sb-led-gold';
+  awayScore.style.cssText+='font-size:28px;margin-top:2px;';
+
+  function renderFlap(container,text){
+    container.innerHTML='';
+    var wrap=document.createElement('span');
+    wrap.className='flap-wrap';
+    wrap.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:7px;letter-spacing:1px;';
+    for(var i=0;i<text.length;i++){
+      var ch=document.createElement('span');
+      ch.className='flap-char';
+      if(text[i]===' '){ch.style.width='.3em';ch.style.background='transparent';ch.style.border='none';}
+      else{
+        var top=document.createElement('div');top.className='flap-top';
+        var ts=document.createElement('span');ts.textContent=text[i];ts.style.color='#fff';top.appendChild(ts);
+        var bot=document.createElement('div');bot.className='flap-bot';
+        var bs=document.createElement('span');bs.textContent=text[i];bs.style.color='#fff';bot.appendChild(bs);
+        ch.append(top,bot);
+      }
+      wrap.appendChild(ch);
+    }
+    container.appendChild(wrap);
+  }
+
+  function flipTo(container,newText){
+    var oldChars=container.querySelectorAll('.flap-char');
+    var padded=newText;
+    while(padded.length<12)padded+=' ';
+    renderFlap(container,padded);
+    var newChars=container.querySelectorAll('.flap-char');
+    newChars.forEach(function(ch,i){
+      if(padded[i]===' ')return;
+      var topDiv=ch.querySelector('.flap-top');
+      var botDiv=ch.querySelector('.flap-bot');
+      if(topDiv&&botDiv){
+        topDiv.style.opacity='0';botDiv.style.opacity='0';
+        setTimeout(function(){
+          topDiv.classList.add('flap-anim-top');
+          topDiv.style.opacity='1';
+          setTimeout(function(){
+            botDiv.classList.add('flap-anim-bot');
+            botDiv.style.opacity='1';
+          },80);
+        },i*40);
+      }
+    });
+    SND.flip();
+  }
+
+  homeDiv.append(homeLabel,homeName,homeScore);
+  awayDiv.append(awayLabel,awayName,awayScore);
+  scoreRow.append(homeDiv,dash,awayDiv);
+  sb.appendChild(scoreRow);
+
+  // Initialize names
+  if(homeTeam){flipTo(homeName,homeTeam);homeScore.textContent=String(SCENARIO.offScore);}
+  else{renderFlap(homeName,'---         ');homeScore.textContent='--';}
+  if(awayTeam){flipTo(awayName,awayTeam);awayScore.textContent=String(SCENARIO.defScore);}
+  else{renderFlap(awayName,'---         ');awayScore.textContent='--';}
+
+  // Info bar: Down, Distance, Ball, Timeouts
+  var infoRow=document.createElement('div');
+  infoRow.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:6px 0 0;border-top:1px solid #14122a;';
+
+  var downs=['','1ST','2ND','3RD','4TH'];
+  var cells=[
+    {label:'DOWN',val:downs[SCENARIO.down]+' & '+SCENARIO.dist},
+    {label:'BALL ON',val:'DEF '+SCENARIO.ballOn},
+    {label:'TIMEOUTS',val:String(SCENARIO.timeouts)},
+  ];
+  cells.forEach(function(c){
+    var cell=document.createElement('div');
+    cell.style.cssText='text-align:center;flex:1;';
+    cell.innerHTML='<div class="sb-label" style="margin-bottom:2px;">'+c.label+'</div><div class="sb-led" style="font-size:9px;">'+c.val+'</div>';
+    infoRow.appendChild(cell);
+  });
+  sb.appendChild(infoRow);
+
+  // Expose update method
+  sb._update=function(ht,at){
+    if(ht){flipTo(homeName,ht);homeScore.textContent=String(SCENARIO.offScore);}
+    if(at){flipTo(awayName,at);awayScore.textContent=String(SCENARIO.defScore);}
+  };
+
+  return sb;
 }
 
 // ===== SCREEN 1: HOME =====
@@ -226,31 +402,24 @@ function buildHome(){
   el.className='sup';
   el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-y:auto;';
 
-  // Hero banner
   var hero=document.createElement('div');
   hero.style.cssText='width:100%;background:radial-gradient(ellipse at 50% 0%,#1a0030 0%,#0d0020 40%,var(--bg) 75%);padding:48px 20px 32px;text-align:center;border-bottom:1px solid var(--bdr);position:relative;overflow:hidden;';
-  // scanlines
   var scl=document.createElement('div');
   scl.style.cssText='position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.1) 3px,rgba(0,0,0,.1) 4px);pointer-events:none;';
   hero.appendChild(scl);
 
-  var fireEl=document.createElement('div');
-  fireEl.className='fire';
+  var fireEl=document.createElement('div');fireEl.className='fire';
   fireEl.style.cssText='font-size:64px;line-height:1;margin-bottom:12px;position:relative;z-index:1;';
   fireEl.textContent='\uD83D\uDD25';
-
   var title=document.createElement('h1');
-  title.style.cssText='font-family:\'Bebas Neue\',sans-serif;font-size:90px;letter-spacing:14px;line-height:.9;color:var(--gold);text-shadow:0 0 44px rgba(255,215,0,.7),0 0 90px rgba(255,215,0,.2),2px 4px 0 #3a1a00;position:relative;z-index:1;';
+  title.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:90px;letter-spacing:14px;line-height:.9;color:var(--gold);text-shadow:0 0 44px rgba(255,215,0,.7),0 0 90px rgba(255,215,0,.2),2px 4px 0 #3a1a00;position:relative;z-index:1;";
   title.textContent='TORCH';
-
   var sub=document.createElement('div');
-  sub.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:7px;color:var(--cyan);letter-spacing:5px;margin:12px 0 0;position:relative;z-index:1;';
+  sub.style.cssText="font-family:'Press Start 2P',monospace;font-size:7px;color:var(--cyan);letter-spacing:5px;margin:12px 0 0;position:relative;z-index:1;";
   sub.textContent='THE FOOTBALL CARD GAME';
-
   hero.append(fireEl,title,sub);
   el.appendChild(hero);
 
-  // Play button
   var playWrap=document.createElement('div');
   playWrap.style.cssText='width:100%;padding:24px 20px 0;';
   var playBtn=document.createElement('button');
@@ -261,206 +430,125 @@ function buildHome(){
   playWrap.appendChild(playBtn);
   el.appendChild(playWrap);
 
-  // Scenario teaser
   var teaser=document.createElement('div');
   teaser.style.cssText='text-align:center;padding:12px 20px 0;font-size:14px;color:var(--muted);font-weight:700;';
-  teaser.textContent=SCENARIO.desc+' \u00B7 '+SCENARIO.context;
+  teaser.textContent='2nd & 10 from the DEF 35 \u00B7 Down 7 \u00B7 2:45 left';
   el.appendChild(teaser);
 
-  // How to Play (expandable)
-  var htpWrap=document.createElement('div');
-  htpWrap.style.cssText='width:100%;padding:28px 20px 0;';
+  // How to Play
+  var htpWrap=document.createElement('div');htpWrap.style.cssText='width:100%;padding:28px 20px 0;';
   var htpBtn=document.createElement('button');
-  htpBtn.style.cssText='background:none;border:none;cursor:pointer;font-family:\'Press Start 2P\',monospace;font-size:6px;color:var(--cyan);letter-spacing:2px;display:flex;align-items:center;gap:8px;width:100%;justify-content:center;padding:8px;';
-  var htpArrow=document.createElement('span');
-  htpArrow.textContent='\u25B6';
-  htpArrow.style.cssText='transition:transform .2s;font-size:8px;';
-  var htpLabel=document.createElement('span');
-  htpLabel.textContent='HOW TO PLAY';
+  htpBtn.style.cssText="background:none;border:none;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:6px;color:var(--cyan);letter-spacing:2px;display:flex;align-items:center;gap:8px;width:100%;justify-content:center;padding:8px;";
+  var htpArrow=document.createElement('span');htpArrow.textContent='\u25B6';htpArrow.style.cssText='transition:transform .2s;font-size:8px;';
+  var htpLabel=document.createElement('span');htpLabel.textContent='HOW TO PLAY';
   htpBtn.append(htpArrow,htpLabel);
-
-  var htpContent=document.createElement('div');
-  htpContent.style.cssText='max-height:0;overflow:hidden;transition:max-height .3s ease;';
-  var htpInner=document.createElement('div');
-  htpInner.style.cssText='padding:16px 0 8px;';
-
-  var steps=[
-    {icon:'\uD83C\uDFC8',text:'Pick your team. Choose offense or defense.'},
-    {icon:'\uD83C\uDCCF',text:'Draft 5 cards from 10 to build your game plan.'},
-    {icon:'\u26A1',text:'Each snap: pick a card. The AI picks for the other side. Neither knows.'},
-    {icon:'\uD83D\uDCA5',text:'Cards CLASH. See who won the matchup. Real football logic decides.'},
-    {icon:'\uD83C\uDFC6',text:'Win the drive. Share your result. Come back tomorrow.'},
-  ];
-  steps.forEach(function(s){
-    var row=document.createElement('div');
-    row.style.cssText='display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;';
-    var ico=document.createElement('div');
-    ico.style.cssText='font-size:20px;flex-shrink:0;width:28px;text-align:center;';
-    ico.textContent=s.icon;
-    var txt=document.createElement('div');
-    txt.style.cssText='font-size:14px;color:var(--text);font-weight:600;line-height:1.5;';
-    txt.textContent=s.text;
-    row.append(ico,txt);
-    htpInner.appendChild(row);
+  var htpContent=document.createElement('div');htpContent.style.cssText='max-height:0;overflow:hidden;transition:max-height .3s ease;';
+  var htpInner=document.createElement('div');htpInner.style.cssText='padding:16px 0 8px;';
+  [{icon:'\uD83C\uDFC8',text:'Pick your team and choose offense or defense.'},
+   {icon:'\uD83D\uDC65',text:'Draft your squad \u2014 1 QB + 3 skill players.'},
+   {icon:'\uD83C\uDCCF',text:'Draft 5 play cards from 10 to build your game plan.'},
+   {icon:'\u26A1',text:'Each snap: you pick a card. The AI picks for the other side. Neither knows.'},
+   {icon:'\uD83D\uDCA5',text:'Cards CLASH. Real football logic decides who wins.'},
+   {icon:'\uD83C\uDFC6',text:'Win the drive. Share your result. Come back tomorrow.'}
+  ].forEach(function(s){
+    var row=document.createElement('div');row.style.cssText='display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;';
+    var ico=document.createElement('div');ico.style.cssText='font-size:20px;flex-shrink:0;width:28px;text-align:center;';ico.textContent=s.icon;
+    var txt=document.createElement('div');txt.style.cssText='font-size:14px;color:var(--text);font-weight:600;line-height:1.5;';txt.textContent=s.text;
+    row.append(ico,txt);htpInner.appendChild(row);
   });
   htpContent.appendChild(htpInner);
-
   var htpOpen=false;
-  htpBtn.onclick=function(){
-    SND.click();
-    htpOpen=!htpOpen;
-    htpArrow.style.transform=htpOpen?'rotate(90deg)':'';
-    htpContent.style.maxHeight=htpOpen?(htpInner.scrollHeight+'px'):'0';
-  };
-  htpWrap.append(htpBtn,htpContent);
-  el.appendChild(htpWrap);
+  htpBtn.onclick=function(){SND.click();htpOpen=!htpOpen;htpArrow.style.transform=htpOpen?'rotate(90deg)':'';htpContent.style.maxHeight=htpOpen?(htpInner.scrollHeight+'px'):'0';};
+  htpWrap.append(htpBtn,htpContent);el.appendChild(htpWrap);
 
-  // What is a Torch?
-  var whatWrap=document.createElement('div');
-  whatWrap.style.cssText='width:100%;padding:12px 20px 0;';
+  // What is a Torch
+  var whatWrap=document.createElement('div');whatWrap.style.cssText='width:100%;padding:12px 20px 0;';
   var whatBtn=document.createElement('button');
-  whatBtn.style.cssText='background:none;border:none;cursor:pointer;font-family:\'Press Start 2P\',monospace;font-size:6px;color:var(--muted);letter-spacing:2px;display:flex;align-items:center;gap:8px;width:100%;justify-content:center;padding:8px;';
-  var whatArrow=document.createElement('span');
-  whatArrow.textContent='\u25B6';
-  whatArrow.style.cssText='transition:transform .2s;font-size:8px;';
-  var whatLabel=document.createElement('span');
-  whatLabel.textContent='WHAT IS A TORCH?';
+  whatBtn.style.cssText="background:none;border:none;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:6px;color:var(--muted);letter-spacing:2px;display:flex;align-items:center;gap:8px;width:100%;justify-content:center;padding:8px;";
+  var whatArrow=document.createElement('span');whatArrow.textContent='\u25B6';whatArrow.style.cssText='transition:transform .2s;font-size:8px;';
+  var whatLabel=document.createElement('span');whatLabel.textContent='WHAT IS A TORCH?';
   whatBtn.append(whatArrow,whatLabel);
-
-  var whatContent=document.createElement('div');
-  whatContent.style.cssText='max-height:0;overflow:hidden;transition:max-height .3s ease;';
-  var whatInner=document.createElement('div');
-  whatInner.style.cssText='padding:12px 0 8px;font-size:14px;color:var(--muted);font-weight:600;line-height:1.7;text-align:center;';
+  var whatContent=document.createElement('div');whatContent.style.cssText='max-height:0;overflow:hidden;transition:max-height .3s ease;';
+  var whatInner=document.createElement('div');whatInner.style.cssText='padding:12px 0 8px;font-size:14px;color:var(--muted);font-weight:600;line-height:1.7;text-align:center;';
   whatInner.textContent='In football, to "torch" a defense means to burn it \u2014 to read the coverage and exploit its weakness with the perfect play call. Every day, TORCH gives you one drive, one scenario, one chance to prove you can read the defense.';
   whatContent.appendChild(whatInner);
-
   var whatOpen=false;
-  whatBtn.onclick=function(){
-    SND.click();
-    whatOpen=!whatOpen;
-    whatArrow.style.transform=whatOpen?'rotate(90deg)':'';
-    whatContent.style.maxHeight=whatOpen?(whatInner.scrollHeight+'px'):'0';
-  };
-  whatWrap.append(whatBtn,whatContent);
-  el.appendChild(whatWrap);
+  whatBtn.onclick=function(){SND.click();whatOpen=!whatOpen;whatArrow.style.transform=whatOpen?'rotate(90deg)':'';whatContent.style.maxHeight=whatOpen?(whatInner.scrollHeight+'px'):'0';};
+  whatWrap.append(whatBtn,whatContent);el.appendChild(whatWrap);
 
-  // Version
-  var ver=document.createElement('div');
-  ver.style.cssText='text-align:center;padding:28px 20px 20px;font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;';
+  var ver=document.createElement('div');ver.style.cssText='text-align:center;padding:28px 20px 20px;font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;';
   ver.textContent='v0.7';
   el.appendChild(ver);
-
   return el;
 }
 
-// ===== SCREEN 2: TEAM & SIDE SELECTION =====
+// ===== SCREEN 2: TEAM + SIDE SELECTION (with scoreboard) =====
 function buildSetup(){
-  var el=document.createElement('div');
-  el.className='sup';
+  SND.crowdStart();
+  var el=document.createElement('div');el.className='sup';
   el.style.cssText='min-height:100vh;display:flex;flex-direction:column;background:var(--bg);';
 
   // Header
   var hdr=document.createElement('div');
   hdr.style.cssText='background:linear-gradient(135deg,#0a0820,#10082a);border-bottom:2px solid rgba(204,68,255,.3);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;';
-  var hleft=document.createElement('div');
-  hleft.style.cssText='display:flex;align-items:center;gap:8px;';
-  hleft.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:var(--gold);letter-spacing:2px;">\uD83D\uDD25 TORCH</div>';
-  var backBtn=document.createElement('button');
-  backBtn.className='btn bm';
+  hdr.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:var(--gold);letter-spacing:2px;">\uD83D\uDD25 TORCH</div>';
+  var backBtn=document.createElement('button');backBtn.className='btn bm';
   backBtn.style.cssText='font-size:6px;padding:6px 10px;cursor:pointer;color:var(--muted);';
   backBtn.textContent='\u2190 BACK';
   backBtn.onclick=function(){SND.click();GS=null;render();};
-  hdr.append(hleft,backBtn);
+  hdr.appendChild(backBtn);
   el.appendChild(hdr);
 
   var content=document.createElement('div');
-  content.style.cssText='flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:20px;';
+  content.style.cssText='flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:14px;';
 
-  // Scenario context
-  var scenario=document.createElement('div');
-  scenario.style.cssText='background:linear-gradient(135deg,#0c0820,#08061a);border:1px solid var(--bdr);border-radius:10px;padding:16px;text-align:center;';
-  scenario.innerHTML=
-    '<div style="font-family:\'Press Start 2P\',monospace;font-size:5px;color:var(--muted);letter-spacing:3px;margin-bottom:10px;">TODAY\'S SCENARIO</div>'+
-    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;color:var(--text);letter-spacing:2px;line-height:1.1;">'+SCENARIO.desc+'</div>'+
-    '<div style="margin-top:8px;display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">'+
-      '<div style="font-size:14px;font-weight:700;color:var(--danger);">Down 7</div>'+
-      '<div style="font-size:14px;font-weight:700;color:var(--orange);">2:45 left</div>'+
-      '<div style="font-size:14px;font-weight:700;color:var(--cyan);">1 timeout</div>'+
-    '</div>'+
-    '<div style="margin-top:10px;font-size:13px;color:var(--muted);font-weight:600;line-height:1.5;">The offense needs a touchdown. Score + go for 2 to win, or kick the XP to tie.</div>';
-  content.appendChild(scenario);
-
-  // Team selection
-  var teamLabel=document.createElement('div');
-  teamLabel.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:6px;color:var(--muted);letter-spacing:3px;text-align:center;';
-  teamLabel.textContent='CHOOSE YOUR TEAM';
-  content.appendChild(teamLabel);
-
-  var teamGrid=document.createElement('div');
-  teamGrid.style.cssText='display:flex;gap:10px;';
+  // Scoreboard
+  var sb=buildScoreboard(null,null);
+  content.appendChild(sb);
 
   var selTeam=GS.team;
   var selSide=GS.side;
+
+  function updateBoard(){
+    if(!selTeam||!selSide)return;
+    var myTeam=getTeam(selTeam);
+    var oppTeam=getOtherTeam(selTeam);
+    if(selSide==='offense') sb._update(myTeam.name,oppTeam.name);
+    else sb._update(oppTeam.name,myTeam.name);
+  }
+
+  // Team selection
+  var teamLabel=document.createElement('div');
+  teamLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:6px;color:var(--muted);letter-spacing:3px;text-align:center;";
+  teamLabel.textContent='CHOOSE YOUR TEAM';
+  content.appendChild(teamLabel);
+
+  var teamGrid=document.createElement('div');teamGrid.style.cssText='display:flex;gap:10px;';
 
   function refreshTeams(){
     teamGrid.innerHTML='';
     TEAMS.forEach(function(team){
       var isSel=selTeam===team.id;
       var card=document.createElement('div');
-      card.style.cssText='flex:1;cursor:pointer;border:2px solid '+(isSel?team.accent:'var(--bdr)')+';background:'+(isSel?team.bg:'var(--bg2)')+';border-radius:10px;padding:16px 12px;text-align:center;transition:all .15s;'+(isSel?'box-shadow:0 0 20px '+team.accent+'33;transform:translateY(-2px);':'');
+      card.style.cssText='flex:1;cursor:pointer;border:2px solid '+(isSel?team.accent:'var(--bdr)')+';background:'+(isSel?team.bg:'var(--bg2)')+';border-radius:10px;padding:14px 10px;text-align:center;transition:all .15s;'+(isSel?'box-shadow:0 0 20px '+team.accent+'33;transform:translateY(-2px);':'');
       card.innerHTML=
-        '<div style="font-size:36px;margin-bottom:6px;">'+team.icon+'</div>'+
-        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:'+(isSel?team.accent:'var(--text)')+';letter-spacing:2px;line-height:1;">'+team.name+'</div>'+
-        '<div style="font-family:\'Press Start 2P\',monospace;font-size:5px;color:'+(isSel?team.accent:'var(--muted)')+';margin-top:6px;letter-spacing:1px;">'+team.style+'</div>'+
-        '<div style="font-size:12px;color:var(--muted);margin-top:8px;font-weight:600;line-height:1.4;">'+team.desc+'</div>';
-      card.onclick=function(){SND.select();selTeam=team.id;GS.team=team.id;refreshTeams();refreshSides();refreshGo();};
+        '<div style="font-size:32px;margin-bottom:4px;">'+team.icon+'</div>'+
+        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;color:'+(isSel?team.accent:'var(--text)')+';letter-spacing:2px;line-height:1;">'+team.name+'</div>'+
+        '<div style="font-family:\'Press Start 2P\',monospace;font-size:5px;color:'+(isSel?team.accent:'var(--muted)')+';margin-top:4px;letter-spacing:1px;">'+team.style+'</div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-top:6px;font-weight:600;line-height:1.4;">'+team.desc+'</div>';
+      card.onclick=function(){SND.select();selTeam=team.id;GS.team=team.id;refreshTeams();refreshSides();updateBoard();refreshGo();};
       teamGrid.appendChild(card);
     });
   }
-
   content.appendChild(teamGrid);
-
-  // Team roster (shown when team is selected)
-  var rosterWrap=document.createElement('div');
-  rosterWrap.style.cssText='min-height:0;';
-  function refreshRoster(){
-    rosterWrap.innerHTML='';
-    if(!selTeam) return;
-    var team=TEAMS.find(function(t){return t.id===selTeam;});
-    if(!team) return;
-
-    var rLabel=document.createElement('div');
-    rLabel.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:5px;color:'+team.accent+';letter-spacing:2px;margin-bottom:8px;text-align:center;';
-    rLabel.textContent='\u25B8 ROSTER';
-    rosterWrap.appendChild(rLabel);
-
-    team.players.forEach(function(pl){
-      var row=document.createElement('div');
-      row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg2);border:1px solid var(--bdr);border-radius:6px;margin-bottom:5px;';
-      row.innerHTML=
-        '<div style="display:flex;align-items:center;gap:8px;">'+
-          '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:17px;color:'+team.accent+';letter-spacing:.5px;">'+pl.name+'</div>'+
-          '<div style="font-family:\'Press Start 2P\',monospace;font-size:4px;color:var(--muted);">'+pl.pos+' \u00B7 '+pl.ovr+' OVR</div>'+
-        '</div>'+
-        '<div style="font-size:11px;color:var(--muted);font-weight:700;">'+pl.nick+'</div>';
-      rosterWrap.appendChild(row);
-    });
-
-    var coach=document.createElement('div');
-    coach.style.cssText='margin-top:6px;padding:8px 12px;font-size:12px;color:var(--muted);font-weight:600;font-style:italic;text-align:center;';
-    coach.textContent='\uD83C\uDFA4 '+team.coach.name+' \u2014 '+team.coach.voice;
-    rosterWrap.appendChild(coach);
-  }
-  content.appendChild(rosterWrap);
 
   // Side selection
   var sideLabel=document.createElement('div');
-  sideLabel.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:6px;color:var(--muted);letter-spacing:3px;text-align:center;';
+  sideLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:6px;color:var(--muted);letter-spacing:3px;text-align:center;";
   sideLabel.textContent='PICK YOUR SIDE';
   content.appendChild(sideLabel);
 
-  var sideRow=document.createElement('div');
-  sideRow.style.cssText='display:flex;gap:10px;';
+  var sideRow=document.createElement('div');sideRow.style.cssText='display:flex;gap:10px;';
 
   function refreshSides(){
     sideRow.innerHTML='';
@@ -471,84 +559,322 @@ function buildSetup(){
     sides.forEach(function(s){
       var isSel=selSide===s.id;
       var opt=document.createElement('div');
-      opt.className='side-opt'+(isSel?' act':'');
-      opt.style.cssText='flex:1;cursor:pointer;border:2px solid '+(isSel?s.color:'var(--bdr)')+';background:'+(isSel?s.bgc:'var(--bg2)')+';border-radius:10px;padding:18px 10px;text-align:center;transition:all .15s;'+(isSel?'box-shadow:0 0 20px '+s.glow+';transform:translateY(-2px);':'');
+      opt.style.cssText='flex:1;cursor:pointer;border:2px solid '+(isSel?s.color:'var(--bdr)')+';background:'+(isSel?s.bgc:'var(--bg2)')+';border-radius:10px;padding:16px 10px;text-align:center;transition:all .15s;'+(isSel?'box-shadow:0 0 20px '+s.glow+';transform:translateY(-2px);':'');
       opt.innerHTML=
-        '<div style="font-size:32px;margin-bottom:6px;">'+s.icon+'</div>'+
-        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:'+(isSel?s.color:'var(--text)')+';letter-spacing:2px;">'+s.label+'</div>'+
+        '<div style="font-size:28px;margin-bottom:4px;">'+s.icon+'</div>'+
+        '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;color:'+(isSel?s.color:'var(--text)')+';letter-spacing:2px;">'+s.label+'</div>'+
         '<div style="font-size:12px;color:var(--muted);margin-top:4px;font-weight:600;">'+s.desc+'</div>';
-      opt.onclick=function(){SND.select();selSide=s.id;GS.side=s.id;refreshSides();refreshGo();};
+      opt.onclick=function(){SND.select();selSide=s.id;GS.side=s.id;refreshSides();updateBoard();refreshGo();};
       sideRow.appendChild(opt);
     });
   }
   content.appendChild(sideRow);
 
   // GO button
-  var goWrap=document.createElement('div');
-  goWrap.style.cssText='padding:8px 0 20px;';
+  var goWrap=document.createElement('div');goWrap.style.cssText='padding:4px 0 16px;';
   var goBtn=document.createElement('button');
 
   function refreshGo(){
     var ready=selTeam&&selSide;
     goBtn.className='btn '+(ready?'bsnap':'bm');
-    goBtn.style.cssText='width:100%;padding:18px;font-size:10px;letter-spacing:3px;'+(ready?'':'cursor:not-allowed;opacity:.3;');
+    goBtn.style.cssText='width:100%;padding:16px;font-size:10px;letter-spacing:3px;'+(ready?'':'cursor:not-allowed;opacity:.3;');
     goBtn.disabled=!ready;
-    goBtn.textContent=ready?'\uD83C\uDCCF DRAFT YOUR HAND':'SELECT TEAM & SIDE';
-    goBtn.onclick=ready?function(){
-      SND.snap();
-      setGs({screen:'draft',team:selTeam,side:selSide});
-    }:null;
-    refreshRoster();
+    goBtn.textContent=ready?'\uD83D\uDC65 DRAFT YOUR SQUAD':'SELECT TEAM & SIDE';
+    goBtn.onclick=ready?function(){SND.snap();setGs({screen:'players',team:selTeam,side:selSide,roster:null});}:null;
   }
-
   goWrap.appendChild(goBtn);
   content.appendChild(goWrap);
-
   el.appendChild(content);
 
-  // Initialize
-  refreshTeams();
-  refreshSides();
-  refreshGo();
-
+  refreshTeams();refreshSides();refreshGo();
   return el;
 }
 
-// ===== PLACEHOLDER SCREENS (to be built next) =====
+// ===== SCREEN 3: PLAYER SELECTION =====
+function buildPlayers(){
+  var el=document.createElement('div');el.className='sup';
+  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;background:var(--bg);';
+
+  var team=getTeam(GS.team);
+
+  // Header
+  var hdr=document.createElement('div');
+  hdr.style.cssText='background:linear-gradient(135deg,#0a0820,#10082a);border-bottom:2px solid '+team.accent+'55;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;';
+  hdr.innerHTML='<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">'+team.icon+'</span><span style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;color:'+team.accent+';letter-spacing:2px;">'+team.name+'</span></div>';
+  var backBtn=document.createElement('button');backBtn.className='btn bm';
+  backBtn.style.cssText='font-size:6px;padding:6px 10px;cursor:pointer;color:var(--muted);';
+  backBtn.textContent='\u2190 BACK';
+  backBtn.onclick=function(){SND.click();setGs({screen:'setup',team:GS.team,side:GS.side});};
+  hdr.appendChild(backBtn);
+  el.appendChild(hdr);
+
+  var content=document.createElement('div');
+  content.style.cssText='flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;';
+
+  // Instructions
+  var inst=document.createElement('div');
+  inst.style.cssText='text-align:center;padding:4px 0;';
+  inst.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:26px;color:var(--text);letter-spacing:2px;">DRAFT YOUR SQUAD</div><div style="font-size:13px;color:var(--muted);font-weight:600;margin-top:2px;">Pick 1 QB + 3 skill players</div>';
+  content.appendChild(inst);
+
+  var qbs=team.players.filter(function(p){return p.cat==='qb';});
+  var skills=team.players.filter(function(p){return p.cat==='skill';});
+  var selQB=null;
+  var selSkill={};
+
+  // QB section
+  var qbLabel=document.createElement('div');
+  qbLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:5px;color:"+team.accent+";letter-spacing:2px;text-align:center;margin-top:4px;";
+  qbLabel.textContent='\u25B8 QUARTERBACK (PICK 1)';
+  content.appendChild(qbLabel);
+
+  var qbGrid=document.createElement('div');qbGrid.style.cssText='display:flex;gap:8px;';
+
+  function renderPlayerCard(pl,isSel){
+    var c=document.createElement('div');
+    c.style.cssText='flex:1;cursor:pointer;border:2px solid '+(isSel?team.accent:'var(--bdr)')+';background:'+(isSel?team.bg:'var(--bg2)')+';border-radius:10px;padding:12px 10px;transition:all .15s;position:relative;overflow:hidden;'+(isSel?'box-shadow:0 0 16px '+team.accent+'33;transform:translateY(-2px);':'');
+    var ovrColor=pl.ovr>=80?'var(--green)':pl.ovr>=76?'var(--cyan)':'var(--muted)';
+    c.innerHTML=
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'+
+        '<div style="font-family:\'Press Start 2P\',monospace;font-size:5px;color:var(--muted);">'+pl.pos+'</div>'+
+        '<div style="font-family:\'Press Start 2P\',monospace;font-size:8px;color:'+ovrColor+';text-shadow:0 0 6px '+ovrColor+'66;">'+pl.ovr+'</div>'+
+      '</div>'+
+      '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:'+(isSel?team.accent:'#fff')+';letter-spacing:1px;line-height:1;">'+pl.name+'</div>'+
+      '<div style="font-family:\'Press Start 2P\',monospace;font-size:5px;color:'+team.accent+';margin-top:3px;letter-spacing:1px;">"'+pl.nick+'"</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:6px;font-weight:600;line-height:1.4;font-style:italic;">'+pl.desc+'</div>';
+    return c;
+  }
+
+  function refreshQBs(){
+    qbGrid.innerHTML='';
+    qbs.forEach(function(pl){
+      var isSel=selQB===pl.id;
+      var c=renderPlayerCard(pl,isSel);
+      c.onclick=function(){SND.select();selQB=pl.id;refreshQBs();refreshGoBtn();};
+      qbGrid.appendChild(c);
+    });
+  }
+  content.appendChild(qbGrid);
+
+  // Skill section
+  var skillLabel=document.createElement('div');
+  skillLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:5px;color:"+team.accent+";letter-spacing:2px;text-align:center;margin-top:6px;";
+  skillLabel.textContent='\u25B8 SKILL PLAYERS (PICK 3)';
+  content.appendChild(skillLabel);
+
+  var skillGrid=document.createElement('div');skillGrid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px;';
+
+  function refreshSkills(){
+    skillGrid.innerHTML='';
+    var count=Object.keys(selSkill).length;
+    skills.forEach(function(pl){
+      var isSel=!!selSkill[pl.id];
+      var c=renderPlayerCard(pl,isSel);
+      if(!isSel&&count>=3) c.style.opacity='.4';
+      c.onclick=function(){
+        SND.select();
+        if(selSkill[pl.id]){delete selSkill[pl.id];}
+        else if(Object.keys(selSkill).length<3){selSkill[pl.id]=true;}
+        refreshSkills();refreshGoBtn();
+      };
+      skillGrid.appendChild(c);
+    });
+  }
+  content.appendChild(skillGrid);
+
+  // Pick for me + Go buttons
+  var btnRow=document.createElement('div');btnRow.style.cssText='display:flex;gap:8px;padding:8px 0 16px;';
+
+  var pickForMe=document.createElement('button');
+  pickForMe.className='btn bo';
+  pickForMe.style.cssText+='flex:1;padding:14px;font-size:7px;';
+  pickForMe.textContent='\uD83C\uDFB2 PICK FOR ME';
+  pickForMe.onclick=function(){
+    SND.draft();
+    selQB=qbs[Math.floor(Math.random()*qbs.length)].id;
+    selSkill={};
+    var shuffled=shuffle(skills);
+    for(var i=0;i<3;i++) selSkill[shuffled[i].id]=true;
+    refreshQBs();refreshSkills();refreshGoBtn();
+  };
+
+  var goBtn=document.createElement('button');
+
+  function refreshGoBtn(){
+    var ready=selQB&&Object.keys(selSkill).length===3;
+    goBtn.className='btn '+(ready?'bsnap':'bm');
+    goBtn.style.cssText='flex:1.5;padding:14px;font-size:8px;'+(ready?'':'cursor:not-allowed;opacity:.3;');
+    goBtn.disabled=!ready;
+    goBtn.textContent=ready?'\uD83C\uDCCF DRAFT PLAYS \u2192':'PICK YOUR SQUAD';
+    goBtn.onclick=ready?function(){
+      SND.snap();
+      var roster=[selQB].concat(Object.keys(selSkill));
+      setGs({screen:'draft',team:GS.team,side:GS.side,roster:roster});
+    }:null;
+  }
+
+  btnRow.append(pickForMe,goBtn);
+  content.appendChild(btnRow);
+  el.appendChild(content);
+
+  refreshQBs();refreshSkills();refreshGoBtn();
+  return el;
+}
+
+// ===== SCREEN 4: CARD DRAFT =====
 function buildDraft(){
+  var el=document.createElement('div');el.className='sup';
+  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;background:var(--bg);';
+
+  var team=getTeam(GS.team);
+  var isOffense=GS.side==='offense';
+  var pool=isOffense?getOffCards(GS.team):DEF_CARDS;
+
+  // Header
+  var hdr=document.createElement('div');
+  hdr.style.cssText='background:linear-gradient(135deg,#0a0820,#10082a);border-bottom:2px solid '+team.accent+'55;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;';
+  hdr.innerHTML='<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">'+team.icon+'</span><span style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;color:'+team.accent+';letter-spacing:2px;">'+team.name+'</span><span style="font-family:\'Press Start 2P\',monospace;font-size:5px;color:var(--muted);letter-spacing:1px;">'+GS.side.toUpperCase()+'</span></div>';
+  var backBtn=document.createElement('button');backBtn.className='btn bm';
+  backBtn.style.cssText='font-size:6px;padding:6px 10px;cursor:pointer;color:var(--muted);';
+  backBtn.textContent='\u2190 BACK';
+  backBtn.onclick=function(){SND.click();setGs({screen:'players',team:GS.team,side:GS.side,roster:GS.roster});};
+  hdr.appendChild(backBtn);
+  el.appendChild(hdr);
+
+  var content=document.createElement('div');
+  content.style.cssText='flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;';
+
+  var inst=document.createElement('div');
+  inst.style.cssText='text-align:center;padding:4px 0;';
+  inst.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:26px;color:var(--text);letter-spacing:2px;">DRAFT YOUR PLAYS</div><div style="font-size:13px;color:var(--muted);font-weight:600;margin-top:2px;">Pick 5 cards for your game plan</div>';
+  content.appendChild(inst);
+
+  // Counter
+  var counter=document.createElement('div');
+  counter.style.cssText="font-family:'Press Start 2P',monospace;font-size:8px;text-align:center;color:var(--cyan);";
+  content.appendChild(counter);
+
+  var selected={};
+
+  var cardGrid=document.createElement('div');
+  cardGrid.style.cssText='display:flex;flex-direction:column;gap:6px;';
+
+  function typeColor(card){
+    if(card.type==='run') return {border:'#cc5522',bg:'linear-gradient(135deg,#1a0800,#0e0400)',label:'RUN',labelBg:'#331100'};
+    if(card.type==='pass') return {border:'#2255cc',bg:'linear-gradient(135deg,#0c1535,#06091a)',label:'PASS',labelBg:'#0a1030'};
+    if(card.type==='agg') return {border:'#ff2424',bg:'linear-gradient(135deg,#220000,#140000)',label:'AGG',labelBg:'#330000'};
+    return {border:'#00aacc',bg:'linear-gradient(135deg,#001822,#000a14)',label:'CON',labelBg:'#001020'};
+  }
+
+  function refreshCards(){
+    cardGrid.innerHTML='';
+    var count=Object.keys(selected).length;
+    counter.textContent=count+' / 5 SELECTED';
+    counter.style.color=count===5?'var(--green)':'var(--cyan)';
+
+    pool.forEach(function(card,idx){
+      var isSel=!!selected[card.id+'_'+idx];
+      var tc=typeColor(card);
+      var row=document.createElement('div');
+      row.style.cssText='cursor:pointer;border:2px solid '+(isSel?'var(--gold)':tc.border+'66')+';background:'+tc.bg+';border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;transition:all .12s;position:relative;overflow:hidden;'+(isSel?'box-shadow:0 0 16px rgba(255,215,0,.25);transform:translateX(4px);':'');
+      row.style.animationDelay=(idx*0.04)+'s';
+
+      var iconDiv=document.createElement('div');
+      iconDiv.style.cssText='font-size:22px;flex-shrink:0;width:32px;text-align:center;';
+      iconDiv.textContent=card.icon;
+
+      var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
+      info.innerHTML=
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">'+
+          '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:17px;color:'+(isSel?'var(--gold)':'#fff')+';letter-spacing:1px;">'+card.name+'</div>'+
+          '<div style="font-family:\'Press Start 2P\',monospace;font-size:4px;padding:2px 4px;background:'+tc.labelBg+';color:'+tc.border+';border-radius:2px;letter-spacing:1px;">'+card.cat+'</div>'+
+        '</div>'+
+        '<div style="font-size:11px;color:var(--muted);font-weight:600;line-height:1.3;">'+card.desc+'</div>';
+
+      var check=document.createElement('div');
+      check.style.cssText='flex-shrink:0;width:24px;height:24px;border:2px solid '+(isSel?'var(--gold)':'var(--bdr)')+';border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:14px;background:'+(isSel?'rgba(255,215,0,.15)':'transparent')+';';
+      check.textContent=isSel?'\u2713':'';
+      check.style.color=isSel?'var(--gold)':'';
+
+      row.append(iconDiv,info,check);
+
+      if(!isSel&&count>=5) row.style.opacity='.35';
+      row.onclick=function(){
+        SND.click();
+        var key=card.id+'_'+idx;
+        if(selected[key]) delete selected[key];
+        else if(Object.keys(selected).length<5) selected[key]=card;
+        refreshCards();refreshGoBtn();
+      };
+      cardGrid.appendChild(row);
+    });
+  }
+  content.appendChild(cardGrid);
+
+  // Buttons
+  var btnRow=document.createElement('div');btnRow.style.cssText='display:flex;gap:8px;padding:8px 0 16px;';
+
+  var pickForMe=document.createElement('button');
+  pickForMe.className='btn bo';
+  pickForMe.style.cssText+='flex:1;padding:14px;font-size:7px;';
+  pickForMe.textContent='\uD83C\uDFB2 PICK FOR ME';
+  pickForMe.onclick=function(){
+    SND.draft();
+    selected={};
+    var indices=shuffle(pool.map(function(_,i){return i;})).slice(0,5);
+    indices.forEach(function(i){selected[pool[i].id+'_'+i]=pool[i];});
+    refreshCards();refreshGoBtn();
+  };
+
+  var goBtn=document.createElement('button');
+
+  function refreshGoBtn(){
+    var ready=Object.keys(selected).length===5;
+    goBtn.className='btn '+(ready?'bsnap':'bm');
+    goBtn.style.cssText='flex:1.5;padding:14px;font-size:8px;'+(ready?'':'cursor:not-allowed;opacity:.3;');
+    goBtn.disabled=!ready;
+    goBtn.textContent=ready?'\uD83C\uDFC8 START DRIVE \u2192':'PICK 5 CARDS';
+    goBtn.onclick=ready?function(){
+      SND.snap();
+      var hand=Object.keys(selected).map(function(k){return selected[k];});
+      setGs({screen:'play',team:GS.team,side:GS.side,roster:GS.roster,hand:hand});
+    }:null;
+  }
+
+  btnRow.append(pickForMe,goBtn);
+  content.appendChild(btnRow);
+  el.appendChild(content);
+
+  refreshCards();refreshGoBtn();
+  return el;
+}
+
+// ===== PLACEHOLDER SCREENS =====
+function buildPlay(){
   var el=document.createElement('div');
   el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;';
   el.innerHTML=
-    '<div style="font-size:48px;margin-bottom:16px;">\uD83C\uDCCF</div>'+
-    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:36px;color:var(--gold);letter-spacing:3px;">DRAFT SCREEN</div>'+
-    '<div style="font-size:14px;color:var(--muted);margin-top:8px;font-weight:600;">Coming next \u2014 pick 5 cards from 10</div>'+
-    '<div style="font-size:12px;color:var(--muted);margin-top:4px;">Team: '+GS.team+' \u00B7 Side: '+GS.side+'</div>';
-  var back=document.createElement('button');
-  back.className='btn bp';
+    '<div style="font-size:48px;margin-bottom:16px;">\uD83C\uDFC8</div>'+
+    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:36px;color:var(--cyan);letter-spacing:3px;">GAMEPLAY</div>'+
+    '<div style="font-size:14px;color:var(--muted);margin-top:8px;font-weight:600;">Coming next \u2014 the clash</div>'+
+    '<div style="font-size:12px;color:var(--muted);margin-top:4px;">Team: '+GS.team+' \u00B7 Side: '+GS.side+' \u00B7 Hand: '+GS.hand.length+' cards</div>';
+  var back=document.createElement('button');back.className='btn bp';
   back.style.cssText='margin-top:24px;padding:14px 28px;font-size:8px;';
-  back.textContent='\u2190 BACK TO SETUP';
-  back.onclick=function(){SND.click();setGs({screen:'setup',team:GS.team,side:GS.side});};
+  back.textContent='\u2190 BACK TO DRAFT';
+  back.onclick=function(){SND.click();setGs({screen:'draft',team:GS.team,side:GS.side,roster:GS.roster});};
   el.appendChild(back);
-  return el;
-}
-
-function buildPlay(){
-  var el=document.createElement('div');
-  el.style.cssText='min-height:100vh;display:flex;align-items:center;justify-content:center;';
-  el.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:36px;color:var(--cyan);">GAMEPLAY — COMING SOON</div>';
   return el;
 }
 
 function buildResult(){
   var el=document.createElement('div');
   el.style.cssText='min-height:100vh;display:flex;align-items:center;justify-content:center;';
-  el.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:36px;color:var(--green);">RESULT — COMING SOON</div>';
+  el.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:36px;color:var(--green);">RESULT \u2014 COMING SOON</div>';
   return el;
 }
 
 // ===== INIT =====
 render();
-
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js');}
 </script>
 </body>
