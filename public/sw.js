@@ -1,4 +1,4 @@
-var CACHE_NAME = 'torch-v0.6.1';
+var CACHE_NAME = 'torch-v0.7.1';
 var ASSETS = [
   '/',
   '/index.html',

@@ -16,7 +16,7 @@
   --bg:#07050e;--bg2:#0d0b1e;--bg3:#131128;
   --cyan:#00d4ff;--gold:#ffd700;--green:#00ff88;
   --orange:#ff6633;--danger:#ff2424;--purple:#cc44ff;
-  --text:#e8e4ff;--muted:#3e3c60;--bdr:#1c1930;
+  --text:#e8e4ff;--muted:#5c5a8a;--dim:#3e3c60;--bdr:#1c1930;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{background:var(--bg);width:100%;height:100%;}
@@ -60,7 +60,7 @@ body{font-family:'Barlow Condensed',sans-serif;font-size:18px;color:var(--text);
 .sb-led{font-family:'Press Start 2P',monospace;color:var(--cyan);text-shadow:0 0 8px rgba(0,212,255,.8),0 0 20px rgba(0,212,255,.3);}
 .sb-led-gold{font-family:'Press Start 2P',monospace;color:var(--gold);text-shadow:0 0 8px rgba(255,215,0,.8),0 0 20px rgba(255,215,0,.3);}
 .sb-led-dim{font-family:'Press Start 2P',monospace;color:#1a1830;text-shadow:none;}
-.sb-label{font-family:'Press Start 2P',monospace;font-size:4px;color:#2a2850;letter-spacing:2px;text-transform:uppercase;}
+.sb-label{font-family:'Press Start 2P',monospace;font-size:5px;color:#4a4878;letter-spacing:2px;text-transform:uppercase;}
 /* SPLIT-FLAP */
 .flap-wrap{display:inline-flex;perspective:200px;gap:1px;}
 .flap-char{display:inline-block;position:relative;overflow:hidden;width:.65em;height:1.15em;background:#08061a;border:1px solid #14122a;border-radius:2px;}
@@ -119,8 +119,9 @@ var SND=(function(){
         crowdNode.connect(bp);bp.connect(crowdGain);crowdGain.connect(c.destination);crowdNode.start();
       }catch(e){}},
     crowdStop:function(){
-      try{if(crowdGain){crowdGain.gain.exponentialRampToValueAtTime(0.001,ac().currentTime+0.5);}
-        setTimeout(function(){if(crowdNode){crowdNode.stop();crowdNode=null;crowdGain=null;}},600);
+      try{var n=crowdNode,g=crowdGain;crowdNode=null;crowdGain=null;
+        if(g){g.gain.exponentialRampToValueAtTime(0.001,ac().currentTime+0.5);}
+        setTimeout(function(){try{if(n){n.stop();}}catch(e2){}},600);
       }catch(e){crowdNode=null;crowdGain=null;}},
   };
 })();
@@ -284,10 +285,10 @@ function buildScoreboard(homeTeam,awayTeam){
   homeDiv.style.cssText='flex:1;text-align:center;';
   var homeLabel=document.createElement('div');
   homeLabel.className='sb-label';
-  homeLabel.style.cssText+='margin-bottom:4px;font-size:4px;';
+  homeLabel.style.cssText+='margin-bottom:4px;';
   homeLabel.textContent='HOME';
   var homeName=document.createElement('div');
-  homeName.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:7px;color:#fff;letter-spacing:1px;min-height:14px;display:flex;justify-content:center;';
+  homeName.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:8px;color:#fff;letter-spacing:1px;min-height:16px;display:flex;justify-content:center;';
   var homeScore=document.createElement('div');
   homeScore.className='sb-led-gold';
   homeScore.style.cssText+='font-size:28px;margin-top:2px;';
@@ -303,10 +304,10 @@ function buildScoreboard(homeTeam,awayTeam){
   awayDiv.style.cssText='flex:1;text-align:center;';
   var awayLabel=document.createElement('div');
   awayLabel.className='sb-label';
-  awayLabel.style.cssText+='margin-bottom:4px;font-size:4px;';
+  awayLabel.style.cssText+='margin-bottom:4px;';
   awayLabel.textContent='AWAY';
   var awayName=document.createElement('div');
-  awayName.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:7px;color:#fff;letter-spacing:1px;min-height:14px;display:flex;justify-content:center;';
+  awayName.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:8px;color:#fff;letter-spacing:1px;min-height:16px;display:flex;justify-content:center;';
   var awayScore=document.createElement('div');
   awayScore.className='sb-led-gold';
   awayScore.style.cssText+='font-size:28px;margin-top:2px;';
@@ -315,7 +316,7 @@ function buildScoreboard(homeTeam,awayTeam){
     container.innerHTML='';
     var wrap=document.createElement('span');
     wrap.className='flap-wrap';
-    wrap.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:7px;letter-spacing:1px;';
+    wrap.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:8px;letter-spacing:1px;';
     for(var i=0;i<text.length;i++){
       var ch=document.createElement('span');
       ch.className='flap-char';
@@ -363,10 +364,12 @@ function buildScoreboard(homeTeam,awayTeam){
   sb.appendChild(scoreRow);
 
   // Initialize names
-  if(homeTeam){flipTo(homeName,homeTeam);homeScore.textContent=String(SCENARIO.offScore);}
-  else{renderFlap(homeName,'---         ');homeScore.textContent='--';}
-  if(awayTeam){flipTo(awayName,awayTeam);awayScore.textContent=String(SCENARIO.defScore);}
-  else{renderFlap(awayName,'---         ');awayScore.textContent='--';}
+  homeScore.textContent=String(SCENARIO.offScore);
+  awayScore.textContent=String(SCENARIO.defScore);
+  if(homeTeam){flipTo(homeName,homeTeam);}
+  else{renderFlap(homeName,'---         ');}
+  if(awayTeam){flipTo(awayName,awayTeam);}
+  else{renderFlap(awayName,'---         ');}
 
   // Info bar: Down, Distance, Ball, Timeouts
   var infoRow=document.createElement('div');
@@ -431,7 +434,7 @@ function buildHome(){
   el.appendChild(playWrap);
 
   var teaser=document.createElement('div');
-  teaser.style.cssText='text-align:center;padding:12px 20px 0;font-size:14px;color:var(--muted);font-weight:700;';
+  teaser.style.cssText='text-align:center;padding:12px 20px 0;font-size:14px;color:var(--text);font-weight:700;opacity:.6;';
   teaser.textContent='2nd & 10 from the DEF 35 \u00B7 Down 7 \u00B7 2:45 left';
   el.appendChild(teaser);
 
@@ -469,7 +472,7 @@ function buildHome(){
   var whatLabel=document.createElement('span');whatLabel.textContent='WHAT IS A TORCH?';
   whatBtn.append(whatArrow,whatLabel);
   var whatContent=document.createElement('div');whatContent.style.cssText='max-height:0;overflow:hidden;transition:max-height .3s ease;';
-  var whatInner=document.createElement('div');whatInner.style.cssText='padding:12px 0 8px;font-size:14px;color:var(--muted);font-weight:600;line-height:1.7;text-align:center;';
+  var whatInner=document.createElement('div');whatInner.style.cssText='padding:12px 0 8px;font-size:14px;color:var(--text);font-weight:600;line-height:1.7;text-align:center;opacity:.7;';
   whatInner.textContent='In football, to "torch" a defense means to burn it \u2014 to read the coverage and exploit its weakness with the perfect play call. Every day, TORCH gives you one drive, one scenario, one chance to prove you can read the defense.';
   whatContent.appendChild(whatInner);
   var whatOpen=false;
@@ -493,7 +496,7 @@ function buildSetup(){
   hdr.style.cssText='background:linear-gradient(135deg,#0a0820,#10082a);border-bottom:2px solid rgba(204,68,255,.3);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;';
   hdr.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:var(--gold);letter-spacing:2px;">\uD83D\uDD25 TORCH</div>';
   var backBtn=document.createElement('button');backBtn.className='btn bm';
-  backBtn.style.cssText='font-size:6px;padding:6px 10px;cursor:pointer;color:var(--muted);';
+  backBtn.style.cssText='font-size:6px;padding:6px 10px;cursor:pointer;color:var(--muted);border-color:#2a2850;';
   backBtn.textContent='\u2190 BACK';
   backBtn.onclick=function(){SND.click();GS=null;render();};
   hdr.appendChild(backBtn);
@@ -506,6 +509,12 @@ function buildSetup(){
   var sb=buildScoreboard(null,null);
   content.appendChild(sb);
 
+  // Scenario narrative
+  var narrative=document.createElement('div');
+  narrative.style.cssText='text-align:center;padding:4px 8px;font-size:14px;color:var(--text);font-weight:600;line-height:1.6;font-style:italic;';
+  narrative.textContent='Down 7 with 2:45 left. The offense needs a touchdown to stay alive. One drive. One chance.';
+  content.appendChild(narrative);
+
   var selTeam=GS.team;
   var selSide=GS.side;
 
@@ -517,9 +526,15 @@ function buildSetup(){
     else sb._update(oppTeam.name,myTeam.name);
   }
 
+  // Page header
+  var pageTitle=document.createElement('div');
+  pageTitle.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--text);letter-spacing:3px;text-align:center;";
+  pageTitle.textContent='PICK YOUR TEAM';
+  content.appendChild(pageTitle);
+
   // Team selection
   var teamLabel=document.createElement('div');
-  teamLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:6px;color:var(--muted);letter-spacing:3px;text-align:center;";
+  teamLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:6px;color:var(--cyan);letter-spacing:3px;text-align:center;";
   teamLabel.textContent='CHOOSE YOUR TEAM';
   content.appendChild(teamLabel);
 
@@ -534,8 +549,8 @@ function buildSetup(){
       card.innerHTML=
         '<div style="font-size:32px;margin-bottom:4px;">'+team.icon+'</div>'+
         '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;color:'+(isSel?team.accent:'var(--text)')+';letter-spacing:2px;line-height:1;">'+team.name+'</div>'+
-        '<div style="font-family:\'Press Start 2P\',monospace;font-size:5px;color:'+(isSel?team.accent:'var(--muted)')+';margin-top:4px;letter-spacing:1px;">'+team.style+'</div>'+
-        '<div style="font-size:12px;color:var(--muted);margin-top:6px;font-weight:600;line-height:1.4;">'+team.desc+'</div>';
+        '<div style="font-family:\'Press Start 2P\',monospace;font-size:7px;color:'+(isSel?team.accent:'var(--cyan)')+';margin-top:6px;letter-spacing:1px;">'+team.style+'</div>'+
+        '<div style="font-size:13px;color:var(--text);margin-top:6px;font-weight:600;line-height:1.4;opacity:.7;">'+team.desc+'</div>';
       card.onclick=function(){SND.select();selTeam=team.id;GS.team=team.id;refreshTeams();refreshSides();updateBoard();refreshGo();};
       teamGrid.appendChild(card);
     });
@@ -544,7 +559,7 @@ function buildSetup(){
 
   // Side selection
   var sideLabel=document.createElement('div');
-  sideLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:6px;color:var(--muted);letter-spacing:3px;text-align:center;";
+  sideLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:6px;color:var(--cyan);letter-spacing:3px;text-align:center;";
   sideLabel.textContent='PICK YOUR SIDE';
   content.appendChild(sideLabel);
 
@@ -602,7 +617,7 @@ function buildPlayers(){
   hdr.style.cssText='background:linear-gradient(135deg,#0a0820,#10082a);border-bottom:2px solid '+team.accent+'55;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;';
   hdr.innerHTML='<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">'+team.icon+'</span><span style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;color:'+team.accent+';letter-spacing:2px;">'+team.name+'</span></div>';
   var backBtn=document.createElement('button');backBtn.className='btn bm';
-  backBtn.style.cssText='font-size:6px;padding:6px 10px;cursor:pointer;color:var(--muted);';
+  backBtn.style.cssText='font-size:6px;padding:6px 10px;cursor:pointer;color:var(--muted);border-color:#2a2850;';
   backBtn.textContent='\u2190 BACK';
   backBtn.onclick=function(){SND.click();setGs({screen:'setup',team:GS.team,side:GS.side});};
   hdr.appendChild(backBtn);
@@ -614,7 +629,7 @@ function buildPlayers(){
   // Instructions
   var inst=document.createElement('div');
   inst.style.cssText='text-align:center;padding:4px 0;';
-  inst.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:26px;color:var(--text);letter-spacing:2px;">DRAFT YOUR SQUAD</div><div style="font-size:13px;color:var(--muted);font-weight:600;margin-top:2px;">Pick 1 QB + 3 skill players</div>';
+  inst.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;color:var(--text);letter-spacing:2px;">DRAFT YOUR SQUAD</div><div style="font-size:14px;color:var(--text);font-weight:600;margin-top:2px;opacity:.7;">Pick 1 QB + 3 skill players</div>';
   content.appendChild(inst);
 
   var qbs=team.players.filter(function(p){return p.cat==='qb';});
@@ -624,7 +639,7 @@ function buildPlayers(){
 
   // QB section
   var qbLabel=document.createElement('div');
-  qbLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:5px;color:"+team.accent+";letter-spacing:2px;text-align:center;margin-top:4px;";
+  qbLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:6px;color:"+team.accent+";letter-spacing:2px;text-align:center;margin-top:4px;";
   qbLabel.textContent='\u25B8 QUARTERBACK (PICK 1)';
   content.appendChild(qbLabel);
 
@@ -636,12 +651,12 @@ function buildPlayers(){
     var ovrColor=pl.ovr>=80?'var(--green)':pl.ovr>=76?'var(--cyan)':'var(--muted)';
     c.innerHTML=
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'+
-        '<div style="font-family:\'Press Start 2P\',monospace;font-size:5px;color:var(--muted);">'+pl.pos+'</div>'+
-        '<div style="font-family:\'Press Start 2P\',monospace;font-size:8px;color:'+ovrColor+';text-shadow:0 0 6px '+ovrColor+'66;">'+pl.ovr+'</div>'+
+        '<div style="font-family:\'Press Start 2P\',monospace;font-size:6px;color:var(--muted);">'+pl.pos+'</div>'+
+        '<div style="font-family:\'Press Start 2P\',monospace;font-size:9px;color:'+ovrColor+';text-shadow:0 0 8px '+ovrColor+'88;">'+pl.ovr+'</div>'+
       '</div>'+
-      '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:'+(isSel?team.accent:'#fff')+';letter-spacing:1px;line-height:1;">'+pl.name+'</div>'+
-      '<div style="font-family:\'Press Start 2P\',monospace;font-size:5px;color:'+team.accent+';margin-top:3px;letter-spacing:1px;">"'+pl.nick+'"</div>'+
-      '<div style="font-size:11px;color:var(--muted);margin-top:6px;font-weight:600;line-height:1.4;font-style:italic;">'+pl.desc+'</div>';
+      '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;color:'+(isSel?team.accent:'#fff')+';letter-spacing:1px;line-height:1;">'+pl.name+'</div>'+
+      '<div style="font-family:\'Press Start 2P\',monospace;font-size:7px;color:var(--gold);margin-top:4px;letter-spacing:1px;text-shadow:0 0 8px rgba(255,215,0,.4);">"'+pl.nick+'"</div>'+
+      '<div style="font-size:12px;color:var(--text);margin-top:6px;font-weight:600;line-height:1.4;font-style:italic;opacity:.7;">'+pl.desc+'</div>';
     return c;
   }
 
@@ -658,7 +673,7 @@ function buildPlayers(){
 
   // Skill section
   var skillLabel=document.createElement('div');
-  skillLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:5px;color:"+team.accent+";letter-spacing:2px;text-align:center;margin-top:6px;";
+  skillLabel.style.cssText="font-family:'Press Start 2P',monospace;font-size:6px;color:"+team.accent+";letter-spacing:2px;text-align:center;margin-top:6px;";
   skillLabel.textContent='\u25B8 SKILL PLAYERS (PICK 3)';
   content.appendChild(skillLabel);
 
@@ -735,7 +750,7 @@ function buildDraft(){
   hdr.style.cssText='background:linear-gradient(135deg,#0a0820,#10082a);border-bottom:2px solid '+team.accent+'55;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;';
   hdr.innerHTML='<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">'+team.icon+'</span><span style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;color:'+team.accent+';letter-spacing:2px;">'+team.name+'</span><span style="font-family:\'Press Start 2P\',monospace;font-size:5px;color:var(--muted);letter-spacing:1px;">'+GS.side.toUpperCase()+'</span></div>';
   var backBtn=document.createElement('button');backBtn.className='btn bm';
-  backBtn.style.cssText='font-size:6px;padding:6px 10px;cursor:pointer;color:var(--muted);';
+  backBtn.style.cssText='font-size:6px;padding:6px 10px;cursor:pointer;color:var(--muted);border-color:#2a2850;';
   backBtn.textContent='\u2190 BACK';
   backBtn.onclick=function(){SND.click();setGs({screen:'players',team:GS.team,side:GS.side,roster:GS.roster});};
   hdr.appendChild(backBtn);
@@ -746,7 +761,7 @@ function buildDraft(){
 
   var inst=document.createElement('div');
   inst.style.cssText='text-align:center;padding:4px 0;';
-  inst.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:26px;color:var(--text);letter-spacing:2px;">DRAFT YOUR PLAYS</div><div style="font-size:13px;color:var(--muted);font-weight:600;margin-top:2px;">Pick 5 cards for your game plan</div>';
+  inst.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;color:var(--text);letter-spacing:2px;">DRAFT YOUR PLAYS</div><div style="font-size:14px;color:var(--text);font-weight:600;margin-top:2px;opacity:.7;">Pick 5 cards for your game plan</div>';
   content.appendChild(inst);
 
   // Counter
@@ -787,9 +802,9 @@ function buildDraft(){
       info.innerHTML=
         '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">'+
           '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:17px;color:'+(isSel?'var(--gold)':'#fff')+';letter-spacing:1px;">'+card.name+'</div>'+
-          '<div style="font-family:\'Press Start 2P\',monospace;font-size:4px;padding:2px 4px;background:'+tc.labelBg+';color:'+tc.border+';border-radius:2px;letter-spacing:1px;">'+card.cat+'</div>'+
+          '<div style="font-family:\'Press Start 2P\',monospace;font-size:5px;padding:2px 5px;background:'+tc.labelBg+';color:'+tc.border+';border-radius:2px;letter-spacing:1px;">'+card.cat+'</div>'+
         '</div>'+
-        '<div style="font-size:11px;color:var(--muted);font-weight:600;line-height:1.3;">'+card.desc+'</div>';
+        '<div style="font-size:12px;color:var(--text);font-weight:600;line-height:1.3;opacity:.7;">'+card.desc+'</div>';
 
       var check=document.createElement('div');
       check.style.cssText='flex-shrink:0;width:24px;height:24px;border:2px solid '+(isSel?'var(--gold)':'var(--bdr)')+';border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:14px;background:'+(isSel?'rgba(255,215,0,.15)':'transparent')+';';
