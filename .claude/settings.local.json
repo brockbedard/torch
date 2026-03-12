@@ -10,7 +10,15 @@
       "Bash(gh auth:*)",
       "Bash(brew install:*)",
       "Bash(gh repo:*)",
-      "Bash(git -C /Users/brock/torch-football add -A && git -C /Users/brock/torch-football commit -m \"$\\(cat <<'EOF'\nAdd GitHub remote and deploy workflow\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git -C /Users/brock/torch-football add -A && git -C /Users/brock/torch-football commit -m \"$\\(cat <<'EOF'\nAdd GitHub remote and deploy workflow\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C /Users/brock/torch-football push && vercel --prod 2>&1)",
+      "Bash(git -C /Users/brock/torch-football remote set-url origin git@github.com:brockbedard/torch.git && git -C /Users/brock/torch-football push 2>&1)",
+      "Bash(git -C /Users/brock/torch-football add TORCH-GDD-v0.7.md && git -C /Users/brock/torch-football commit -m \"$\\(cat <<'EOF'\nAdd v0.7 game design document\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C /Users/brock/torch-football add CLAUDE.md && git -C /Users/brock/torch-football commit -m \"$\\(cat <<'EOF'\nUpdate CLAUDE.md for v0.7 direction\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C /Users/brock/torch-football add TORCH-GDD-v0.7.md TORCH-MATCHUP-TABLE-v0.7.md && git -C /Users/brock/torch-football commit -m \"$\\(cat <<'EOF'\nAdd updated GDD and matchup table for v0.7\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C /Users/brock/torch-football add public/index.html && git -C /Users/brock/torch-football commit -m \"$\\(cat <<'EOF'\nv0.7: Build home screen and team/side selection\n\nFresh rewrite of index.html based on TORCH-GDD-v0.7.md.\nImplements Screen 1 \\(Home\\) and Screen 2 \\(Team & Side Selection\\)\nwith all card data, matchup table, and scenario embedded.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C /Users/brock/torch-football log --oneline -3)",
+      "Bash(git -C /Users/brock/torch-football add -A && git -C /Users/brock/torch-football commit -m \"$\\(cat <<'EOF'\nSave current state before v0.7 scoreboard rebuild\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
