@@ -101,52 +101,113 @@ This is the heartbeat of the game. Both sides pick a card. Neither knows what th
 
 ---
 
-## Card System
+## Card System — Hand Management
 
 ### Draft Phase
 - 10 cards presented, player picks 5
-- Offense: 5 run cards + 5 pass cards
-- Defense: 5 aggressive cards + 5 conservative cards
+- Offense: 5 run cards + 5 pass cards (see Cards section above)
+- Defense: 5 aggressive cards + 5 conservative cards (see Cards section above)
 - Cards show: name, type, brief description of what the play IS
 - Cards do NOT show: what they're effective against
+- Optional helper button explains the play in plain language
 
 ### In-Game Hand Management
 - Hand size: always 5
-- Play 1 card per snap → draw 1 random replacement from the full card library
+- Play 1 card per snap → draw 1 random replacement from the full card library (all 10 cards)
 - Your 5 drafted cards are your game plan; random draws are improvisation
 - This creates tension: do I play my best card now or save it for a crucial down?
 
-### Card Information
-- Each card has a "helper" explanation accessible via button
-- Helper explains the play in plain language ("A draw play fakes a pass, then hands off to the running back")
-- Helper NEVER reveals strategic matchup information
-- Players learn what works through experience, not tooltips
+### Learning Model
+- The game NEVER tells you what beats what
+- After each clash, you see a description of what happened ("The screen got behind the blitz and picked up 15 yards") — not why it worked strategically
+- Players learn through pattern recognition over days and weeks
+- This is the core of TORCH: you get smarter at football by playing, not by reading
 
 ---
 
 ## The Scenario (v0.7 Test Scenario)
 
-One scenario for initial testing. Must meet these criteria:
-- Both offense and defense have a realistic chance to win
-- Neither side is overpowered by the situation
-- Creates genuine drama and time pressure
-- Tests all core mechanics (drafting, hand management, clock, down/distance)
+**"2nd & 10 from the defense's 35. Down 7. 2:45 left. 1 timeout."**
 
-**Scenario:** TBD — will be defined during build phase. Example framing: "2nd and 10 from the defense's 35. Down 7 with 3:15 left and 1 timeout."
+The offense needs a touchdown to tie (extra point) or win (go for 2). The defense just needs to hold — run the clock, force a turnover, or get a 4th down stop.
 
-**Offense wins by:** Scoring a touchdown. Can go for 2-point conversion (win) or extra point (tie).
-**Defense wins by:** Stopping the drive (4th down stop, turnover, clock runs out).
-**Tie:** Offense scores TD + extra point to tie the game.
+**Offense wins by:** Scoring a TD + successful 2-point conversion
+**Tie:** TD + extra point
+**Defense wins by:** Stopping the drive (4th down stop, turnover, clock runs out)
+
+The 2-point decision creates a dramatic moment: play it safe for the tie or go for the win.
+
+---
+
+## Personnel: 7-on-7
+
+**Offense:** 3 OL, 1 QB, 3 skill positions (any mix of WR/RB/TE)
+**Defense:** 3 DL, 4 skill positions (any mix of LB/CB/S)
+
+NFL Blitz/Street feel — enough to feel like football, few enough that each player matters on mobile.
+
+---
+
+## Cards
+
+### Offensive Cards (10 total — player drafts 5)
+
+**5 Run Plays:**
+| Card | Type | Description |
+|---|---|---|
+| QB Sneak | Run - Short | QB drives forward behind the center. Almost always gains 1-2 yards. |
+| Draw | Run - Deceptive | QB fakes a pass dropback, hands to the RB. Exploits aggressive pass rushers. |
+| Power | Run - Physical | Downhill run with a lead blocker. Attacks one specific gap. |
+| Zone Read | Run - Read | QB reads the defender — keeps or gives based on what he sees. Spread staple. |
+| Toss | Run - Outside | Pitch sweep to the edge. Gets the RB outside with blockers in front. |
+
+**5 Pass Plays:**
+| Card | Type | Description |
+|---|---|---|
+| Slant | Pass - Quick | Quick inside route at 5 yards. Ball out in under 2 seconds. |
+| Flat | Pass - Safe | Short throw to the RB/TE along the sideline. Safety valve. 4-6 yards. |
+| Cross | Pass - Intermediate | WR runs across the field at 10-12 yards. Beats man coverage with traffic. |
+| Corner Route | Pass - Deep | WR breaks to the sideline at 15 yards. High reward, needs arm strength. |
+| Go Route | Pass - Bomb | Straight vertical. Home run ball — 30+ yards if it hits. Biggest risk/reward. |
+
+### Defensive Cards (10 total — player drafts 5)
+
+**5 Aggressive Plays:**
+| Card | Type | Description |
+|---|---|---|
+| Blitz | Pressure | Send extra rushers. High risk/high reward. Gets destroyed by quick throws. |
+| Corner Blitz | Pressure - Edge | Pressure off the corner. Leaves the sideline exposed. |
+| Press Man | Coverage - Physical | Jam receivers at the line. Shuts down short routes. Speed beats you deep. |
+| Safety Blitz | Pressure - Downhill | Safety attacks from depth. Kills the run. Zero deep help. |
+| Line Stunt | Pressure - Interior | DL twist and games. Disrupts timing but opens running lanes. |
+
+**5 Conservative Plays:**
+| Card | Type | Description |
+|---|---|---|
+| Cover 2 | Zone - Two Deep | Two safeties deep, corners in flats. Soft in the middle. |
+| Cover 3 | Zone - Three Deep | Three deep zones, 8-man box. Strong vs deep balls, weak underneath. |
+| Cover 4 | Zone - Four Deep | Four across the back. Takes away everything deep, gives up short. |
+| Spy | Assignment | One defender watches the QB. Contains scrambles, fewer guys in coverage. |
+| Prevent | Zone - Max Depth | Everyone drops deep. Nothing over the top. Gives up 5+ yards every snap. |
+
+### Matchup Resolution
+See `TORCH-MATCHUP-TABLE-v0.7.md` for the full 10×10 grid with football logic explanations for every card-vs-card interaction.
 
 ---
 
 ## Teams (v0.7: 2 Teams)
 
-Two teams with strong visual identity for the test build. Each team should have:
+Two teams with strong visual identity for the test build. Each team has:
 - Name, logo/icon, color scheme
 - 2-3 named players with personality
-- A playstyle identity that affects which cards appear in their draft pool
+- A playstyle identity (visual and narrative — does NOT affect the card pool in v0.7)
 - Coach character with a voice/personality
+
+**Personnel:** 7-on-7 format
+- Offense: 3 OL, 1 QB, 3 skill (any mix WR/RB/TE)
+- Defense: 3 DL, 4 skill (any mix LB/CB/S)
+
+**Progression:** Players start with generic roster. Winning daily torches earns player cards and new play cards that expand the draft pool over time. (Progression details for post-v0.7.)
 
 Full team details to be designed during build phase.
 
