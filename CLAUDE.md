@@ -8,39 +8,24 @@ The core question every snap: **"What would you call here?"**
 Built as a mobile-first single-page app (430px max-width). Single HTML file with vanilla JS, no framework.
 
 ## Version Status
-- **v0.6.1** — Legacy code in `public/index.html`. Functional but being replaced.
-- **v0.7** — "First Testable Build." Significant redesign of daily mode. See `TORCH-GDD-v0.7.md` for the full spec.
-
-### What's Changing in v0.7
-- **Daily mode redesign** — Draft 5 from 10 cards, simultaneous card clash (neither side knows what the other called), real down/distance/clock/scoreboard
-- **Bonus round** — Winners unlock a second round playing the other side of the ball
-- **Simplified home screen** — One button ("Play Today's Torch"), no scheme/team clutter
-- **Two teams** (down from 4) with strong visual identity
-- **No campaign mode** (hidden, preserved in codebase)
-- **No AI commentary** (static fallbacks only)
-- **No scheme selection, no coin shop, no 90 rotating scenarios**
-- **One test scenario** to validate core mechanics
-
-### What's Preserved from v0.6.1
-- Single HTML file architecture, vanilla JS, no build step
-- PWA support (manifest, service worker, home screen install)
-- Card system fundamentals, coverage logic, team/player data
-- Sound engine, visual style, color palette, font stack
+- **v0.6.1** — Legacy. Replaced entirely.
+- **v0.7** — "First Testable Build." Active development. See `TORCH-GDD-v0.7.md` for design spec, `TORCH-MATCHUP-TABLE-v0.7.md` for card matchup logic.
 
 ## Project Structure
 ```
 torch-football/
 ├── public/
-│   ├── index.html      ← The entire game (HTML + CSS + JS in one file)
-│   ├── manifest.json   ← PWA manifest (home screen install)
-│   └── sw.js           ← Service worker (offline caching)
+│   ├── index.html              ← The entire game (HTML + CSS + JS in one file)
+│   ├── manifest.json           ← PWA manifest (home screen install)
+│   └── sw.js                   ← Service worker (offline caching)
 ├── api/
-│   └── commentary.js   ← Vercel serverless function (not used in v0.7)
-├── TORCH-GDD-v0.7.md   ← Game design document — the v0.7 spec
+│   └── commentary.js           ← Vercel serverless function (not used in v0.7)
+├── TORCH-GDD-v0.7.md           ← Game design document
+├── TORCH-MATCHUP-TABLE-v0.7.md ← Card matchup logic reference
 ├── package.json
 ├── vercel.json
 ├── .env.example
-└── CLAUDE.md            ← You are here
+└── CLAUDE.md                    ← You are here
 ```
 
 ## How to Run
@@ -50,47 +35,57 @@ torch-football/
 
 ## Architecture
 
-### Current State (v0.6.1 — legacy)
-Everything lives in one HTML file. The "framework" is:
-- `GS` — global game state object
-- `setGs(fn)` — updates state and calls `render()`
-- `render()` — wipes `root.innerHTML`, rebuilds the active screen via `buildXxx()` functions
-- Screen functions: `buildTitle`, `buildDaily`, `buildIntro`, `buildGame`, `buildResult`, `buildShop`, `buildEnd`, `buildOnboarding`
+### Screen Flow
+Home → Team + Side Selection → Player Draft → Card Draft → Gameplay → Result
 
-### v0.7 Target Screens (per GDD)
-1. **Home** — Logo + single "Play Today's Torch" button
-2. **Team & Side Selection** — Pick team, pick offense/defense, see scenario context
-3. **Draft** — See 10 cards, pick 5 (offense: 5 run + 5 pass; defense: 5 aggressive + 5 conservative)
-4. **Gameplay** — Real down/distance, clock, scoreboard. Pick card → AI picks → CLASH → reveal
-5. **Result** — Win/Tie/Loss, stats, shareable emoji result
-6. **Bonus Round** — Winners play again as the other side of the ball
+### Implemented Screens (v0.7)
+1. **Home** — Logo, animated flame, "Play Today's Torch" button, expandable How to Play / What is a Torch
+2. **Setup** — Retro LED scoreboard with split-flap team name animation, team picker (2 teams), offense/defense picker, crowd ambience
+3. **Player Draft** — Pick 1 QB + 3 skill players from team-specific pool of 6. "Pick For Me" random button.
+4. **Card Draft** — Pick 5 play cards from team-specific pool of 10. "Pick For Me" button.
+5. **Gameplay** — PLACEHOLDER. The clash mechanic goes here.
+6. **Result** — PLACEHOLDER.
+
+### Teams & Schemes
+- **Iron Ridge** (Triple Option) — 7 run / 3 pass offensive cards. Paul Johnson-inspired option attack.
+  - Cards: Triple Option, Midline, Rocket Toss, Trap, QB Keeper, Power, Zone Read, QB Sneak, PA Post, PA Flat
+  - Players: Bo Kendrick, Tate Larkin (QBs), Mack Torres, Jaylen Sims, Duke Owens, Cade Buckley (skill)
+- **Canyon Tech** (Air Raid) — 2 run / 8 pass offensive cards. Mike Leach-inspired air attack.
+  - Cards: Mesh, Four Verts, Shallow Cross, Y-Corner, Stick, Slant, Go Route, Bubble Screen, Draw, QB Sneak
+  - Players: Colt Avery, Dash Meyers (QBs), Quez Sampson, Dante Liu, Rio Vasquez, Kirby Walsh (skill)
+- **Defense** (same for both teams): Blitz, Corner Blitz, Press Man, Safety Blitz, Line Stunt, Cover 2, Cover 3, Cover 4, Spy, Prevent
 
 ### Key Game Systems
-- **The Clash** — Both sides pick a card simultaneously. Cards collide on screen, result reveals. This is the heartbeat of the game.
-- **Card resolution** — Football logic determines outcomes. Screens beat blitzes. Deep routes beat single-high. Runs get stuffed against stacked boxes.
-- **Draft system** — Pick 5 from 10. Drafted cards are your game plan; random draws after each snap are improvisation.
-- **Hand management** — Always 5 cards in hand. Play 1, draw 1 random replacement.
-- **Coverage logic** (`CVR` object) — 7 coverages (Cover 0-4, Man Free, Cover 6)
-- **Teams & Players** — `TORCH_TEAMS` array (trimming to 2 teams for v0.7)
-- **Sound engine** — Web Audio API synthesized 8-bit sounds (SND object)
+- **Scoreboard** — Retro LED with CSS split-flap animations, crowd ambience via Web Audio filtered noise
+- **Matchup Table** (`MT` object) — Card-vs-card lookup: offense card ID → defense card ID → tier (O+/N/D+/TO)
+- **Yard resolution** — `rollYards(tier)` returns randomized yards per tier. `isTurnover(tier)` for TO-tier plays (~20% chance).
+- **The Scenario** — 2nd & 10, DEF 35, down 7, 2:45 left, 1 timeout. Offense needs TD. Go for 2 to win, XP to tie.
+- **Sound engine** (`SND`) — Web Audio synth: click, select, snap, menu, td, turnover, clash, draft, flip, crowdStart/crowdStop
 
-### Football Knowledge
-The game teaches through play, not explanation. Card helpers explain what a play IS, never what it's good against. Players learn through pattern recognition:
-- Cover 2's true weakness is the deep middle seam
-- Screens are the mathematical answer to Cover 0 blitz
-- Play action only works if you've established the run
-- Motion pre-snap identifies man vs zone coverage
-- Cover 4 pattern-matches, it's not just soft zone
+### Football Knowledge (matchup design principles)
+- Quick passes (Mesh, Slant, Stick, Shallow Cross, Bubble Screen) beat blitzes and aggressive pressure
+- Deep shots (Four Verts, Y-Corner, Go Route) beat soft zone, get picked off against deep coverage
+- Triple Option runs devastate soft zones but die to interior pressure and spy LBs
+- Spy is the hard counter to QB Keeper
+- Play-action works as a constraint play (neutral-to-good in v0.7)
+- Cover 2's weakness: deep sideline (Y-Corner, Corner Route) and deep middle (PA Post)
+- Cover 3's weakness: the flat
 
 ## Coding Conventions
 - Vanilla JS, no transpilation, no build step
-- ES5-compatible function expressions (not arrow functions) in most UI code
-- DOM construction via `createElement` chains (not innerHTML for interactive elements)
+- ES5-compatible function expressions (not arrow functions) in UI code
+- DOM construction via `createElement` chains
 - CSS-in-JS via `el.style.cssText` strings
-- Font stack: Bebas Neue (headers), Press Start 2P (labels/badges), Barlow Condensed (body)
+- Font stack: Bebas Neue (headers), Press Start 2P (labels/badges/LED), Barlow Condensed (body)
 - Color palette: `--cyan`, `--gold`, `--green`, `--orange`, `--danger`, `--purple` on dark `--bg`
 - All state in the `GS` object; `setGs()` triggers full re-render
-- localStorage keys all prefixed with `torch_`
+- localStorage keys prefixed with `torch_`
+
+## What's Next
+- **Gameplay screen** — The clash mechanic: pick card → AI picks → cards collide → result reveals → down/distance/clock update
+- **Result screen** — Win/Tie/Loss, stats, shareable emoji result
+- **Bonus round** — Winners play again as the other side of the ball
+- **Polish** — Card helper buttons, better animations, sound tuning
 
 ## Testing Plan
 - **Audience:** Discord dynasty group (9 football-knowledgeable players)
