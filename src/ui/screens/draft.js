@@ -204,7 +204,7 @@ export function buildDraft() {
   brandName.style.cssText =
     'font-family:"Bebas Neue",sans-serif;font-size:24px;color:' + team.accent + ';' +
     'letter-spacing:2px;text-shadow:2px 2px 0 #000, 0 0 10px ' + team.accent + ';';
-  brandName.textContent = team.icon + ' ' + team.name;
+  brandName.textContent = team.name;
   var brandScheme = document.createElement('span');
   brandScheme.style.cssText =
     'font-family:"Bebas Neue",sans-serif;font-size:16px;color:var(--muted);' +

@@ -2,6 +2,7 @@ import { SND } from '../../engine/sound.js';
 import { render, setGs, getInitialScenario, VERSION, VERSION_NAME } from '../../state.js';
 
 var DEV_LOG = [
+  "Remove emojis from player draft cards",
   "Fix modal offense/defense preview — not interactive, stop confusing testers",
   "Add specialty badges to all 24 player cards",
   "Fix play card selection visibility and add section label",
