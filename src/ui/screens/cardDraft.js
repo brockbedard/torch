@@ -39,7 +39,7 @@ export function buildCardDraft() {
   // Content
   var content = document.createElement('div');
   content.style.cssText =
-    'flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:14px;' +
+    'flex:1;overflow-y:auto;padding:20px 16px 80px;display:flex;flex-direction:column;gap:14px;' +
     'position:relative;z-index:2;';
 
   var title = document.createElement('div');

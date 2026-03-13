@@ -174,7 +174,7 @@ export function buildDraft() {
   // Content area
   var content = document.createElement('div');
   content.style.cssText =
-    'flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:10px;' +
+    'flex:1;overflow-y:auto;padding:20px 16px 80px;display:flex;flex-direction:column;gap:10px;' +
     'position:relative;z-index:2;';
 
   // Page header

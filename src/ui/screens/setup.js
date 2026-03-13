@@ -26,7 +26,7 @@ export function buildSetup(){
   hdr.appendChild(backBtn);
   el.appendChild(hdr);
   var content=document.createElement('div');
-  content.style.cssText='flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:28px;position:relative;z-index:2;';
+  content.style.cssText='flex:1;overflow-y:auto;padding:16px 16px 80px;display:flex;flex-direction:column;gap:16px;position:relative;z-index:2;';
 
   var selTeam=GS.team;
   var selSide=GS.side;
@@ -251,7 +251,7 @@ export function buildSetup(){
   var teamContainer = document.createElement('div');
   var pageInst=document.createElement('div');
   pageInst.className='chrome-header';
-  pageInst.style.fontSize='22px';
+  pageInst.style.cssText='font-size:22px;margin-bottom:10px;';
   pageInst.textContent='1. CHOOSE YOUR TEAM';
   teamContainer.appendChild(pageInst);
 
@@ -296,12 +296,12 @@ export function buildSetup(){
       }
       var iconEl=document.createElement('div');
       iconEl.style.cssText=
-        'font-size:46px;margin-bottom:2px;position:relative;z-index:1;'+
+        'font-size:36px;margin-bottom:2px;position:relative;z-index:1;'+
         'filter:drop-shadow(0 0 16px '+team.accent+') drop-shadow(0 0 30px '+team.accent+'44);';
       iconEl.textContent=team.icon;
       var nameEl=document.createElement('div');
       nameEl.style.cssText=
-        'font-family:"Bebas Neue",sans-serif;font-size:26px;font-style:italic;'+
+        'font-family:"Bebas Neue",sans-serif;font-size:22px;font-style:italic;'+
         'color:'+team.accent+';line-height:1;margin-bottom:4px;position:relative;z-index:1;'+
         'text-shadow:0 0 12px '+team.accent+'66, 2px 2px 0 #000;letter-spacing:2px;';
       nameEl.textContent=team.name;
@@ -324,11 +324,11 @@ export function buildSetup(){
   var sideContainer = document.createElement('div');
   var sideLabel=document.createElement('div');
   sideLabel.className='chrome-header';
-  sideLabel.style.fontSize='22px';
+  sideLabel.style.cssText='font-size:22px;margin-bottom:10px;';
   sideLabel.textContent='2. PICK YOUR SIDE OF THE BALL';
   sideContainer.appendChild(sideLabel);
 
-  var sideRow=document.createElement('div');sideRow.style.cssText='display:flex;flex-direction:column;gap:10px;';
+  var sideRow=document.createElement('div');sideRow.style.cssText='display:flex;flex-direction:column;gap:8px;';
   function refreshSides(){
     sideRow.innerHTML='';
     var sides=[
@@ -339,7 +339,7 @@ export function buildSetup(){
       var isSel=selSide===s.id;
       var opt=document.createElement('button');
       opt.className='btn-blitz';
-      opt.style.cssText='flex:1;font-size:16px;text-align:center;padding:20px 5px;'+(isSel?'background:'+s.color+';color:#000;border-color:'+s.color+';box-shadow:0 0 25px '+s.glow+';':'background:transparent;border-color:'+s.color+';color:'+s.color+';opacity:0.5;');
+      opt.style.cssText='flex:1;font-size:14px;text-align:center;padding:14px 5px;'+(isSel?'background:'+s.color+';color:#000;border-color:'+s.color+';box-shadow:0 0 25px '+s.glow+';':'background:transparent;border-color:'+s.color+';color:'+s.color+';opacity:0.5;');
       opt.textContent=s.label;
       opt.onclick=function(){SND.select();selSide=s.id;GS.side=s.id;refreshSides();refreshBoard();refreshGo();};
       sideRow.appendChild(opt);
@@ -352,7 +352,7 @@ export function buildSetup(){
   var sbContainer = document.createElement('div');
   var sbLabel=document.createElement('div');
   sbLabel.className='chrome-header';
-  sbLabel.style.fontSize='22px';
+  sbLabel.style.cssText='font-size:22px;margin-bottom:10px;';
   sbLabel.textContent='3. ANALYZE THE SCENARIO';
   sbContainer.appendChild(sbLabel);
   var sbInner = document.createElement('div');
@@ -364,7 +364,7 @@ export function buildSetup(){
   refreshBoard();
   content.appendChild(sbContainer);
 
-  var goWrap=document.createElement('div');goWrap.style.cssText='padding:10px 0 20px;';
+  var goWrap=document.createElement('div');goWrap.style.cssText='padding:6px 0 0;';
   var goBtn=document.createElement('button');
   function refreshGo(){
     var ready=selTeam&&selSide;
