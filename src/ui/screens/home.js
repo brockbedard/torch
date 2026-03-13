@@ -2,6 +2,7 @@ import { SND } from '../../engine/sound.js';
 import { render, setGs, getInitialScenario, VERSION, VERSION_NAME } from '../../state.js';
 
 var DEV_LOG = [
+  "Add specialty badges to all 24 player cards",
   "Fix play card selection visibility and add section label",
   "Polish play card draft — sizing, readability, scheme in nav bar, consistency with player cards",
   "Play diagram SVG test page with 4 sample formations",
