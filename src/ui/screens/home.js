@@ -32,7 +32,7 @@ export function buildHome(){
   el.appendChild(logoWrap);
 
   var title=document.createElement('h1');
-  title.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:120px;line-height:0.8;color:var(--a-gold);text-shadow:8px 8px 0 #000, 0 0 40px var(--a-gold);font-style:italic;transform:rotate(-5deg) scale(1.1);margin-bottom:40px;text-align:center;";
+  title.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:100px;line-height:0.8;color:var(--a-gold);text-shadow:8px 8px 0 #000, 0 0 40px var(--a-gold);font-style:italic;transform:rotate(-5deg);margin-bottom:40px;text-align:center;";
   title.innerHTML='TORCH<span style="display:block;color:white;font-size:40px;letter-spacing:15px;text-shadow:4px 4px 0 #000;margin-left:10px;">FOOTBALL</span>';
   el.append(title);
   var playWrap=document.createElement('div');

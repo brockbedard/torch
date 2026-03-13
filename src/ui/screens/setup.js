@@ -39,8 +39,8 @@ export function buildSetup(){
 
   var mBox=document.createElement('div');
   mBox.style.cssText=
-    'width:100%;max-width:370px;background:var(--bg);border:2px solid var(--a-gold);'+
-    'border-radius:10px;padding:28px 24px;text-align:center;position:relative;overflow:hidden;'+
+    'width:100%;max-width:370px;max-height:calc(100vh - 40px);background:var(--bg);border:2px solid var(--a-gold);'+
+    'border-radius:10px;padding:20px 20px;text-align:center;position:relative;overflow:hidden;'+
     'box-shadow:0 0 60px rgba(255,204,0,0.15), 0 0 120px rgba(255,204,0,0.05);';
   // Scale+fade in
   mBox.animate([
@@ -58,19 +58,19 @@ export function buildSetup(){
   // Header: TODAY'S/TONIGHT'S TORCH (time-based)
   var mHdr=document.createElement('div');
   mHdr.style.cssText=
-    'display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px;margin-top:6px;';
+    'display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;margin-top:4px;';
   var mFireL=document.createElement('div');
-  mFireL.style.cssText='font-size:30px;animation:flicker 0.1s infinite alternate;line-height:1;';
+  mFireL.style.cssText='font-size:24px;animation:flicker 0.1s infinite alternate;line-height:1;';
   mFireL.textContent='\uD83D\uDD25';
   var mTitle=document.createElement('div');
   var hour=new Date().getHours();
   var timeWord=(hour>=17||hour<5)?"TONIGHT'S":"TODAY'S";
   mTitle.style.cssText=
-    "font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--a-gold);letter-spacing:3px;"+
+    "font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--a-gold);letter-spacing:3px;"+
     "font-style:italic;transform:skewX(-10deg);text-shadow:2px 2px 0 #000, 0 0 14px var(--a-gold);line-height:1;white-space:nowrap;";
   mTitle.textContent=timeWord+" TORCH";
   var mFireR=document.createElement('div');
-  mFireR.style.cssText='font-size:30px;animation:flicker 0.1s infinite alternate;line-height:1;';
+  mFireR.style.cssText='font-size:24px;animation:flicker 0.1s infinite alternate;line-height:1;';
   mFireR.textContent='\uD83D\uDD25';
   mHdr.append(mFireL,mTitle,mFireR);
   mBox.appendChild(mHdr);
@@ -92,33 +92,33 @@ export function buildSetup(){
   // Line 1: 4TH QUARTER
   var ln1=document.createElement('div');
   ln1.style.cssText=
-    "font-family:'Bebas Neue',sans-serif;font-size:32px;color:#fff;letter-spacing:3px;"+
-    "line-height:1;margin-bottom:10px;text-shadow:2px 2px 0 #000;";
+    "font-family:'Bebas Neue',sans-serif;font-size:24px;color:#fff;letter-spacing:3px;"+
+    "line-height:1;margin-bottom:6px;text-shadow:2px 2px 0 #000;";
   ln1.textContent='4TH QUARTER';
   addStaggered(ln1,stagger*0);
 
   // Line 2: ONE POSSESSION GAME
   var ln2=document.createElement('div');
   ln2.style.cssText=
-    "font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;"+
-    "line-height:1;margin-bottom:16px;opacity:0.9;";
+    "font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;letter-spacing:2px;"+
+    "line-height:1;margin-bottom:10px;opacity:0.9;";
   ln2.textContent='ONE POSSESSION GAME';
   addStaggered(ln2,stagger*1);
 
   // Line 3: 2:45 ON THE CLOCK
   var ln3=document.createElement('div');
   ln3.style.cssText=
-    "font-family:'Press Start 2P',monospace;font-size:14px;color:#fff;"+
-    "line-height:1;margin-bottom:20px;letter-spacing:1px;";
-  ln3.innerHTML='<span style="color:var(--orange);font-size:16px;">2:45</span> ON THE CLOCK';
+    "font-family:'Press Start 2P',monospace;font-size:11px;color:#fff;"+
+    "line-height:1;margin-bottom:12px;letter-spacing:1px;";
+  ln3.innerHTML='<span style="color:var(--orange);font-size:13px;">2:45</span> ON THE CLOCK';
   addStaggered(ln3,stagger*2);
 
   // Line 4: Field position bar
   var fieldWrap=document.createElement('div');
-  fieldWrap.style.cssText='margin-bottom:18px;';
+  fieldWrap.style.cssText='margin-bottom:10px;';
   var fieldBar=document.createElement('div');
   fieldBar.style.cssText=
-    'width:100%;height:22px;background:#0a3d0a;border-radius:4px;position:relative;overflow:hidden;'+
+    'width:100%;height:14px;background:#0a3d0a;border-radius:4px;position:relative;overflow:hidden;'+
     'border:1px solid rgba(0,255,68,0.25);';
   // Yard line marks (every 10 yards)
   for(var yd=1;yd<10;yd++){
@@ -138,7 +138,7 @@ export function buildSetup(){
   var ballMark=document.createElement('div');
   ballMark.style.cssText=
     'position:absolute;top:50%;left:35%;transform:translate(-50%,-50%);'+
-    'font-size:20px;line-height:1;filter:drop-shadow(0 0 6px var(--a-gold)) drop-shadow(0 0 12px rgba(255,204,0,0.5));';
+    'font-size:12px;line-height:1;filter:drop-shadow(0 0 6px var(--a-gold)) drop-shadow(0 0 12px rgba(255,204,0,0.5));';
   ballMark.textContent='\uD83C\uDFC8';
   fieldBar.appendChild(ballMark);
   // Animate bar drawing in from left
@@ -153,8 +153,8 @@ export function buildSetup(){
   // Field label
   var fieldLabel=document.createElement('div');
   fieldLabel.style.cssText=
-    "font-family:'Press Start 2P',monospace;font-size:10px;color:var(--muted);"+
-    "margin-top:8px;letter-spacing:1px;";
+    "font-family:'Press Start 2P',monospace;font-size:8px;color:var(--muted);"+
+    "margin-top:5px;letter-spacing:1px;";
   fieldLabel.textContent='BALL ON THE 35 \u00B7 2ND & 10';
   fieldWrap.appendChild(fieldLabel);
   addStaggered(fieldWrap,stagger*3);
@@ -162,8 +162,8 @@ export function buildSetup(){
   // Line 5: ONE DRIVE DECIDES EVERYTHING
   var ln5=document.createElement('div');
   ln5.style.cssText=
-    "font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--a-gold);"+
-    "letter-spacing:2px;line-height:1;margin-bottom:20px;"+
+    "font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--a-gold);"+
+    "letter-spacing:2px;line-height:1;margin-bottom:10px;"+
     "text-shadow:0 0 12px rgba(255,204,0,0.4), 2px 2px 0 #000;";
   ln5.textContent='ONE DRIVE DECIDES EVERYTHING';
   addStaggered(ln5,stagger*4);
@@ -171,15 +171,15 @@ export function buildSetup(){
   // CHOOSE YOUR SIDE label
   var chooseLabel=document.createElement('div');
   chooseLabel.style.cssText=
-    "font-family:'Press Start 2P',monospace;font-size:9px;color:var(--muted);"+
-    "letter-spacing:2px;margin-bottom:14px;";
+    "font-family:'Press Start 2P',monospace;font-size:8px;color:var(--muted);"+
+    "letter-spacing:2px;margin-bottom:10px;";
   chooseLabel.textContent='CHOOSE YOUR SIDE';
   addStaggered(chooseLabel,stagger*5);
 
   // Preview cards: OFFENSE / DEFENSE
   var previewRow=document.createElement('div');
   previewRow.style.cssText=
-    'display:flex;gap:12px;align-items:stretch;margin-bottom:24px;opacity:0;';
+    'display:flex;gap:10px;align-items:stretch;margin-bottom:16px;opacity:0;';
   setTimeout(function(){
     previewRow.animate([
       {opacity:0,transform:'translateY(10px)'},
@@ -191,12 +191,12 @@ export function buildSetup(){
   var offCard=document.createElement('div');
   offCard.style.cssText=
     'flex:1;background:rgba(0,255,68,0.06);border:1px solid rgba(0,255,68,0.3);'+
-    'border-left:4px solid var(--l-green);border-radius:8px;padding:20px 12px;text-align:center;'+
+    'border-left:4px solid var(--l-green);border-radius:8px;padding:14px 10px;text-align:center;'+
     'display:flex;flex-direction:column;align-items:center;justify-content:center;';
   var offH=document.createElement('div');
   offH.style.cssText=
-    "font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--l-green);"+
-    "letter-spacing:3px;line-height:1;margin-bottom:6px;";
+    "font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--l-green);"+
+    "letter-spacing:2px;line-height:1;margin-bottom:4px;";
   offH.textContent='OFFENSE';
   var offT=document.createElement('div');
   offT.style.cssText="font-size:13px;color:var(--muted);line-height:1.4;letter-spacing:0.5px;";
@@ -207,12 +207,12 @@ export function buildSetup(){
   var defCard=document.createElement('div');
   defCard.style.cssText=
     'flex:1;background:rgba(255,0,64,0.06);border:1px solid rgba(255,0,64,0.3);'+
-    'border-left:4px solid var(--p-red);border-radius:8px;padding:20px 12px;text-align:center;'+
+    'border-left:4px solid var(--p-red);border-radius:8px;padding:14px 10px;text-align:center;'+
     'display:flex;flex-direction:column;align-items:center;justify-content:center;';
   var defH=document.createElement('div');
   defH.style.cssText=
-    "font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--p-red);"+
-    "letter-spacing:3px;line-height:1;margin-bottom:6px;";
+    "font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--p-red);"+
+    "letter-spacing:2px;line-height:1;margin-bottom:4px;";
   defH.textContent='DEFENSE';
   var defT=document.createElement('div');
   defT.style.cssText="font-size:13px;color:var(--muted);line-height:1.4;letter-spacing:0.5px;";
