@@ -270,7 +270,7 @@ export function buildDraft() {
       var roster = [selPrimary].concat(Object.keys(selSkill));
       setGs(function(s) {
         return Object.assign({}, s, {
-          screen: 'under_construction',
+          screen: 'card_draft',
           team: GS.team,
           side: GS.side,
           roster: roster

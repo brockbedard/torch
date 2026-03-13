@@ -2,6 +2,7 @@ import { SND } from '../../engine/sound.js';
 import { render, setGs, getInitialScenario, VERSION, VERSION_NAME } from '../../state.js';
 
 var DEV_LOG = [
+  "Play card draft screen with X's and O's diagrams and risk meters",
   "0.10.0 — Gameday Edition: arcade broadcast redesign, player art, Vite modular architecture",
   "0.9.0 — Vite modularization, Vercel deploy, AI commentary",
   "0.8.0 — Arcade Broadcast visual redesign",
