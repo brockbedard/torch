@@ -1,4 +1,5 @@
 import { SND } from '../../engine/sound.js';
+import { buildMuteBtn } from '../../engine/bgm.js';
 import { GS, setGs, getTeam, shuffle } from '../../state.js';
 
 function getPlayerImage(player, team, side) {
@@ -12,7 +13,7 @@ function getPlayerImage(player, team, side) {
 function buildPlayerCard(player, team, side, isSel, size) {
   var isLarge = size === 'large';
   var artH = isLarge ? 200 : 160;
-  var nameSize = isLarge ? 19 : 16;
+  var nameSize = isLarge ? 22 : 18;
   var imgSrc = getPlayerImage(player, team, side);
 
   var card = document.createElement('div');
@@ -50,7 +51,7 @@ function buildPlayerCard(player, team, side, isSel, size) {
 
   var posEl = document.createElement('div');
   posEl.style.cssText =
-    'font-family:"Courier New",monospace;font-size:14px;font-weight:bold;' +
+    'font-family:"Courier New",monospace;font-size:' + (isLarge ? 17 : 15) + 'px;font-weight:bold;' +
     'color:#ff0040;letter-spacing:2px;line-height:1;';
   posEl.textContent = player.pos;
 
@@ -78,7 +79,7 @@ function buildPlayerCard(player, team, side, isSel, size) {
   ovrLabel.style.cssText =
     'font-family:"Courier New",monospace;font-size:8px;font-weight:bold;' +
     'color:#00eaff;opacity:0.5;letter-spacing:2px;line-height:1;margin-top:1px;';
-  ovrLabel.textContent = 'OVR';
+  ovrLabel.textContent = 'OVERALL';
 
   rightCol.appendChild(ovrNum);
   rightCol.appendChild(ovrLabel);
@@ -106,8 +107,15 @@ function buildPlayerCard(player, team, side, isSel, size) {
     'position:absolute;bottom:0;left:0;right:0;height:40%;z-index:2;' +
     'background:linear-gradient(to bottom, transparent 0%, #12101e 100%);pointer-events:none;';
 
+  // Watermark cover (bottom-right corner)
+  var wmCover = document.createElement('div');
+  wmCover.style.cssText =
+    'position:absolute;bottom:0;right:0;width:40px;height:40px;z-index:3;' +
+    'background:radial-gradient(circle at bottom right, #12101e 60%, transparent 100%);pointer-events:none;';
+
   artWrap.appendChild(img);
   artWrap.appendChild(fade);
+  artWrap.appendChild(wmCover);
   card.appendChild(artWrap);
 
   // Footer
@@ -117,9 +125,9 @@ function buildPlayerCard(player, team, side, isSel, size) {
 
   var nickEl = document.createElement('div');
   nickEl.style.cssText =
-    'font-family:"Courier New",monospace;font-size:' + (isLarge ? 13 : 12) + 'px;' +
+    'font-family:"Courier New",monospace;font-size:' + (isLarge ? 14 : 13) + 'px;' +
     'color:#ffcc00;font-weight:bold;letter-spacing:1px;line-height:1;' +
-    'text-shadow:0 0 6px rgba(255,204,0,0.4);';
+    'text-align:center;text-shadow:0 0 6px rgba(255,204,0,0.4);';
   nickEl.textContent = '"' + player.nick + '"';
 
   footer.appendChild(nickEl);
@@ -144,11 +152,13 @@ export function buildDraft() {
   hdr.style.cssText =
     'background:rgba(0,0,0,0.5);padding:10px 14px;display:flex;justify-content:space-between;' +
     'align-items:center;flex-shrink:0;border-bottom:2px solid var(--f-purple);';
-  hdr.innerHTML =
-    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;color:var(--a-gold);' +
+  var teamBrand = document.createElement('div');
+  teamBrand.style.cssText =
+    'font-family:"Bebas Neue",sans-serif;font-size:24px;color:' + team.accent + ';' +
     'letter-spacing:2px;font-style:italic;transform:skewX(-10deg);' +
-    'text-shadow:2px 2px 0 #000, 0 0 10px var(--a-gold);cursor:pointer;">\uD83D\uDD25 TORCH</div>';
-  hdr.onclick = function() { setGs(null); };
+    'text-shadow:2px 2px 0 #000, 0 0 10px ' + team.accent + ';';
+  teamBrand.textContent = team.icon + ' ' + team.name;
+  hdr.appendChild(teamBrand);
 
   var backBtn = document.createElement('button');
   backBtn.style.cssText =
@@ -159,7 +169,10 @@ export function buildDraft() {
     SND.click();
     setGs(function(s) { return Object.assign({}, s, { screen: 'setup', team: GS.team, side: GS.side }); });
   };
-  hdr.appendChild(backBtn);
+  var hdrRight=document.createElement('div');
+  hdrRight.style.cssText='display:flex;align-items:center;gap:8px;';
+  hdrRight.append(buildMuteBtn(),backBtn);
+  hdr.appendChild(hdrRight);
   el.appendChild(hdr);
 
   // Content area
@@ -172,7 +185,7 @@ export function buildDraft() {
   var title = document.createElement('div');
   title.className = 'chrome-header';
   title.style.fontSize = '22px';
-  title.textContent = '3. DRAFT YOUR SQUAD';
+  title.textContent = '4. DRAFT YOUR SQUAD';
   content.appendChild(title);
 
   // State
@@ -255,13 +268,13 @@ export function buildDraft() {
         ? 'background:#ffcc00;border-color:#ffcc00;color:#000;box-shadow:6px 6px 0 #997a00, 0 0 30px rgba(255,204,0,0.4);'
         : 'opacity:0.35;');
     goBtn.disabled = !ready;
-    goBtn.textContent = ready ? 'LOCK IN SQUAD \u2192' : 'SELECT 1 ' + (isDef ? 'LB' : 'QB') + ' + 3 SKILL';
+    goBtn.textContent = ready ? 'LOCK IN SQUAD \u2192' : 'SELECT 1 ' + (isDef ? 'LB' : 'QB') + ' + 3 ' + (isDef ? 'DBS' : 'SKILL');
     goBtn.onclick = ready ? function() {
       SND.snap();
       var roster = [selPrimary].concat(Object.keys(selSkill));
       setGs(function(s) {
         return Object.assign({}, s, {
-          screen: 'card_draft',
+          screen: 'under_construction',
           team: GS.team,
           side: GS.side,
           roster: roster

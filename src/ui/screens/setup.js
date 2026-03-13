@@ -1,4 +1,5 @@
 import { SND } from '../../engine/sound.js';
+import { buildMuteBtn } from '../../engine/bgm.js';
 import { GS, setGs, getTeam, getOtherTeam, render } from '../../state.js';
 import { TEAMS } from '../../data/teams.js';
 import { buildScoreboard } from '../components/scoreboard.js';
@@ -8,16 +9,28 @@ export function buildSetup(){
   el.style.cssText='height:100vh;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;';
   var hdr=document.createElement('div');
   hdr.style.cssText='background:rgba(0,0,0,0.5);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-bottom:2px solid var(--f-purple);';
-  hdr.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;color:var(--a-gold);letter-spacing:2px;font-style:italic;transform:skewX(-10deg);text-shadow:2px 2px 0 #000, 0 0 10px var(--a-gold); cursor:pointer;">\uD83D\uDD25 TORCH</div>';
-  hdr.onclick=function(){setGs(null);};
+  var logoWrap=document.createElement('div');
+  logoWrap.style.cssText='display:flex;align-items:center;gap:6px;cursor:pointer;';
+  var hdrFire=document.createElement('div');
+  hdrFire.style.cssText='font-size:24px;animation:flicker 0.1s infinite alternate;line-height:1;';
+  hdrFire.textContent='\uD83D\uDD25';
+  var hdrTitle=document.createElement('div');
+  hdrTitle.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--a-gold);letter-spacing:2px;font-style:italic;transform:skewX(-10deg);text-shadow:2px 2px 0 #000, 0 0 10px var(--a-gold);line-height:1;";
+  hdrTitle.innerHTML='TORCH <span style="font-size:14px;color:white;letter-spacing:4px;text-shadow:2px 2px 0 #000;">FOOTBALL</span>';
+  logoWrap.append(hdrFire,hdrTitle);
+  logoWrap.onclick=function(){setGs(null);};
+  hdr.appendChild(logoWrap);
   var backBtn=document.createElement('button');
   backBtn.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:8px;padding:10px 16px;cursor:pointer;background:#000;color:var(--white);border:2px solid #333;';
   backBtn.textContent='\u2190 BACK';
   backBtn.onclick=function(){SND.click();setGs(null);};
-  hdr.appendChild(backBtn);
+  var hdrRight=document.createElement('div');
+  hdrRight.style.cssText='display:flex;align-items:center;gap:8px;';
+  hdrRight.append(buildMuteBtn(),backBtn);
+  hdr.appendChild(hdrRight);
   el.appendChild(hdr);
   var content=document.createElement('div');
-  content.style.cssText='flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:20px;position:relative;z-index:2;';
+  content.style.cssText='flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:28px;position:relative;z-index:2;';
 
   var selTeam=GS.team;
   var selSide=GS.side;
@@ -53,26 +66,57 @@ export function buildSetup(){
       var isSel=selTeam===team.id;
       var card=document.createElement('div');
       card.style.cssText=
-        'flex:1;background:#12101e;border:2px solid '+(isSel?'#00ff88':'#00ff8844')+';'+
-        'border-radius:6px;padding:16px 12px;cursor:pointer;text-align:center;'+
+        'flex:1;background:linear-gradient(160deg, #1a1030 0%, #0d0820 50%, #12101e 100%);' +
+        'border:2px solid '+(isSel?'#00ff88':team.accent+'55')+';'+
+        'border-radius:8px;padding:10px 8px;cursor:pointer;text-align:center;'+
         'transition:all 0.15s ease;position:relative;overflow:hidden;'+
-        'opacity:'+(isSel?'1':'0.7')+';'+
-        (isSel?'box-shadow:0 0 18px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08);':'');
+        'opacity:'+(isSel?'1':'0.8')+';'+
+        (isSel
+          ?'box-shadow:0 0 20px rgba(0,255,136,0.4), inset 0 0 15px rgba(0,255,136,0.08);'
+          :'box-shadow:0 4px 20px rgba(0,0,0,0.5);');
+      // Accent glow behind the card
+      var glow=document.createElement('div');
+      glow.style.cssText=
+        'position:absolute;top:-30%;left:50%;transform:translateX(-50%);width:80%;height:60%;'+
+        'background:radial-gradient(ellipse,'+team.accent+'18 0%,transparent 70%);'+
+        'pointer-events:none;z-index:0;';
+      card.appendChild(glow);
+      // Corner accent lines
+      var cornerTL=document.createElement('div');
+      cornerTL.style.cssText=
+        'position:absolute;top:0;left:0;width:20px;height:20px;'+
+        'border-top:2px solid '+team.accent+'44;border-left:2px solid '+team.accent+'44;'+
+        'border-radius:8px 0 0 0;pointer-events:none;';
+      var cornerBR=document.createElement('div');
+      cornerBR.style.cssText=
+        'position:absolute;bottom:0;right:0;width:20px;height:20px;'+
+        'border-bottom:2px solid '+team.accent+'44;border-right:2px solid '+team.accent+'44;'+
+        'border-radius:0 0 8px 0;pointer-events:none;';
+      card.append(cornerTL,cornerBR);
       if(isSel){
         var bar=document.createElement('div');
-        bar.style.cssText='position:absolute;top:0;left:50%;transform:translateX(-50%);width:36px;height:3px;background:#00ff88;border-radius:0 0 3px 3px;';
+        bar.style.cssText='position:absolute;top:0;left:50%;transform:translateX(-50%);width:40px;height:3px;background:#00ff88;border-radius:0 0 3px 3px;z-index:2;';
         card.appendChild(bar);
       }
       var iconEl=document.createElement('div');
-      iconEl.style.cssText='font-size:50px;margin-bottom:8px;filter:drop-shadow(0 0 12px '+team.accent+');';
+      iconEl.style.cssText=
+        'font-size:46px;margin-bottom:4px;position:relative;z-index:1;'+
+        'filter:drop-shadow(0 0 16px '+team.accent+') drop-shadow(0 0 30px '+team.accent+'44);';
       iconEl.textContent=team.icon;
       var nameEl=document.createElement('div');
-      nameEl.style.cssText='font-family:"Bebas Neue",sans-serif;font-size:26px;font-style:italic;color:'+team.accent+';line-height:1;margin-bottom:10px;text-shadow:0 0 10px '+team.accent+'44;';
+      nameEl.style.cssText=
+        'font-family:"Bebas Neue",sans-serif;font-size:26px;font-style:italic;'+
+        'color:'+team.accent+';line-height:1;margin-bottom:6px;position:relative;z-index:1;'+
+        'text-shadow:0 0 12px '+team.accent+'66, 2px 2px 0 #000;letter-spacing:2px;';
       nameEl.textContent=team.name;
+      var divider=document.createElement('div');
+      divider.style.cssText=
+        'width:30px;height:1px;background:linear-gradient(to right,transparent,'+team.accent+'66,transparent);'+
+        'margin:0 auto 6px;position:relative;z-index:1;';
       var schemeEl=document.createElement('div');
-      schemeEl.style.cssText='font-family:"Courier New",monospace;font-size:9px;color:#ffcc00;font-weight:bold;letter-spacing:1px;line-height:1.8;';
+      schemeEl.style.cssText='font-family:"Courier New",monospace;font-size:10px;color:#ffcc00;font-weight:bold;letter-spacing:1px;line-height:1.8;position:relative;z-index:1;';
       schemeEl.innerHTML='OFF: '+team.style+'<br>DEF: '+team.defStyle;
-      card.append(iconEl,nameEl,schemeEl);
+      card.append(iconEl,nameEl,divider,schemeEl);
       card.onclick=function(){SND.select();selTeam=team.id;GS.team=team.id;refreshTeams();refreshBoard();refreshGo();};
       teamGrid.appendChild(card);
     });
@@ -88,7 +132,7 @@ export function buildSetup(){
   sideLabel.textContent='2. PICK YOUR SIDE OF THE BALL';
   sideContainer.appendChild(sideLabel);
 
-  var sideRow=document.createElement('div');sideRow.style.cssText='display:flex;gap:10px;';
+  var sideRow=document.createElement('div');sideRow.style.cssText='display:flex;flex-direction:column;gap:10px;';
   function refreshSides(){
     sideRow.innerHTML='';
     var sides=[
@@ -99,7 +143,7 @@ export function buildSetup(){
       var isSel=selSide===s.id;
       var opt=document.createElement('button');
       opt.className='btn-blitz';
-      opt.style.cssText='flex:1;font-size:12px;text-align:center;padding:15px 5px;'+(isSel?'background:'+s.color+';color:#000;border-color:'+s.color+';box-shadow:0 0 25px '+s.glow+';':'background:transparent;border-color:'+s.color+';color:'+s.color+';opacity:0.5;');
+      opt.style.cssText='flex:1;font-size:16px;text-align:center;padding:20px 5px;'+(isSel?'background:'+s.color+';color:#000;border-color:'+s.color+';box-shadow:0 0 25px '+s.glow+';':'background:transparent;border-color:'+s.color+';color:'+s.color+';opacity:0.5;');
       opt.textContent=s.label;
       opt.onclick=function(){SND.select();selSide=s.id;GS.side=s.id;refreshSides();refreshBoard();refreshGo();};
       sideRow.appendChild(opt);
@@ -108,11 +152,18 @@ export function buildSetup(){
   sideContainer.appendChild(sideRow);
   content.appendChild(sideContainer);
 
-  // 3. Scoreboard (context for scenario)
+  // 3. The Situation
   var sbContainer = document.createElement('div');
+  var sbLabel=document.createElement('div');
+  sbLabel.className='chrome-header';
+  sbLabel.style.fontSize='22px';
+  sbLabel.textContent='3. ANALYZE THE SCENARIO';
+  sbContainer.appendChild(sbLabel);
+  var sbInner = document.createElement('div');
+  sbContainer.appendChild(sbInner);
   function refreshBoard(){
-    sbContainer.innerHTML='';
-    sbContainer.appendChild(buildScoreboard(selSide, selTeam));
+    sbInner.innerHTML='';
+    sbInner.appendChild(buildScoreboard(selSide, selTeam));
   }
   refreshBoard();
   content.appendChild(sbContainer);

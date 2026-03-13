@@ -1,11 +1,13 @@
 import { SND } from '../../engine/sound.js';
+import { BGM, buildMuteBtn } from '../../engine/bgm.js';
 import { render, setGs, getInitialScenario } from '../../state.js';
 
 export function buildHome(){
   SND.menu();
+  BGM.play();
   var el=document.createElement('div');
   el.className='sup';
-  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;background:radial-gradient(circle at 50% 30%,#330066 0%,#080020 70%);';
+  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;background:radial-gradient(circle at 50% 30%,#330066 0%,#080020 70%);position:relative;';
   var today=new Date().toDateString();
   var lastPlay=localStorage.getItem('torch_last_play');
   var lastResult=localStorage.getItem('torch_last_result');
@@ -19,15 +21,15 @@ export function buildHome(){
   fireEl.textContent='\uD83D\uDD25';
 
   var ballCont=document.createElement('div');
-  ballCont.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;pointer-events:none;animation:ballPass 2.5s ease-in-out infinite;';
+  ballCont.style.cssText='position:absolute;top:46%;left:50%;transform:translate(-50%,-50%);z-index:10;pointer-events:none;animation:ballPass 1.5s ease-in-out infinite;';
   var ballIcon=document.createElement('div');
   ballIcon.style.cssText='font-size:40px;filter:drop-shadow(0 0 10px rgba(0,0,0,0.5));';
   ballIcon.textContent='\uD83C\uDFC8';
   var ballFire=document.createElement('div');
-  ballFire.style.cssText='position:absolute;inset:0;font-size:40px;animation:ignite 2.5s infinite;filter:drop-shadow(0 0 15px var(--orange));mix-blend-mode:screen;';
+  ballFire.style.cssText='position:absolute;inset:0;font-size:40px;animation:ignite 1.5s infinite;filter:drop-shadow(0 0 15px var(--orange));mix-blend-mode:screen;';
   ballFire.textContent='\uD83D\uDD25';
   ballCont.append(ballIcon,ballFire);
-  
+
   logoWrap.append(fireEl, ballCont);
   el.appendChild(logoWrap);
 
@@ -40,19 +42,18 @@ export function buildHome(){
   var playBtn=document.createElement('button');
   playBtn.className='btn-blitz';
   playBtn.disabled=isLocked;
-  playBtn.style.cssText='border-color:var(--white);color:var(--f-purple);background:var(--white);';
-  playBtn.textContent=isLocked?'LOCKED: RETURN TMW':"PLAY TODAY'S TORCH";
+  playBtn.style.cssText='border-color:var(--cyan);color:#000;background:var(--cyan);box-shadow:6px 6px 0 #006a77, 10px 10px 0 #000;font-size:16px;padding:20px 15px;';
+  playBtn.textContent=isLocked?'LOCKED: RETURN TMW':'DAILY CHALLENGE';
   playBtn.onclick=function(){
     SND.click();
     setGs(function(s){ return Object.assign({}, s, {screen:'setup', team:null, side:null, scenario:getInitialScenario()}); });
   };
-  
+
   var freeBtn=document.createElement('button');
   freeBtn.className='btn-blitz';
   freeBtn.disabled=true;
-  freeBtn.style.opacity='0.4';
-  freeBtn.style.filter='grayscale(1)';
-  freeBtn.textContent='FREE PLAY';
+  freeBtn.style.cssText='border-color:var(--l-green);color:var(--l-green);background:transparent;box-shadow:4px 4px 0 #006622;opacity:0.5;font-size:16px;padding:20px 15px;';
+  freeBtn.innerHTML='FREE PLAY <span style="font-size:8px;opacity:0.5;">(COMING SOON)</span>';
 
   var devBtn=document.createElement('button');
   devBtn.className='btn-blitz';
@@ -62,5 +63,15 @@ export function buildHome(){
 
   playWrap.append(playBtn,freeBtn,devBtn);
   el.appendChild(playWrap);
+
+  var muteBtn=buildMuteBtn();
+  muteBtn.style.cssText+='position:absolute;top:14px;right:14px;z-index:10;';
+  el.appendChild(muteBtn);
+
+  var buildLabel=document.createElement('div');
+  buildLabel.style.cssText='position:absolute;bottom:12px;width:100%;text-align:center;font-family:"Courier New",monospace;font-size:9px;color:#ffffff22;letter-spacing:1px;';
+  buildLabel.textContent='v0.9.0';
+  el.appendChild(buildLabel);
+
   return el;
 }
