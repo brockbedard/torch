@@ -8,24 +8,22 @@ The core question every snap: **"What would you call here?"**
 Built as a mobile-first single-page app (430px max-width). Single HTML file with vanilla JS, no framework.
 
 ## Version Status
-- **v0.6.1** — Legacy. Replaced entirely.
-- **v0.7** — "First Testable Build." Active development. See `TORCH-GDD-v0.7.md` for design spec, `TORCH-MATCHUP-TABLE-v0.7.md` for card matchup logic, `TORCH-DEFENSE-SPEC-v0.7.md` for defensive scheme details.
+- **v0.8** — "Arcade Broadcast Build." Massively updated the UI to an "NFL Blitz/Tecmo Bowl" high-octane aesthetic. Introduced dynamic scoring, CRT scanlines, and new synthesized football audio (grunts, whistles).
 
 ## Project Structure
 ```
 torch-football/
 ├── public/
-│   ├── index.html              ← The entire game (~1800 lines: HTML + CSS + JS)
+│   ├── index.html              ← The entire game (~1200 lines: HTML + CSS + JS)
 │   ├── manifest.json           ← PWA manifest (home screen install)
 │   └── sw.js                   ← Service worker (offline caching)
 ├── api/
-│   └── commentary.js           ← Vercel serverless function (not used in v0.7)
-├── TORCH-GDD-v0.7.md           ← Game design document
+│   └── commentary.js           ← Vercel serverless function (not used currently)
+├── TORCH-GDD-v0.7.md           ← Game design document (legacy UI notes)
 ├── TORCH-MATCHUP-TABLE-v0.7.md ← Card matchup logic reference
 ├── package.json
 ├── vercel.json
-├── .env.example
-└── CLAUDE.md                    ← You are here
+└── CLAUDE.md                   ← You are here
 ```
 
 ## How to Run
@@ -33,74 +31,63 @@ torch-football/
 - **Deploy:** `vercel --prod`
 - **Production URL:** https://torch-two.vercel.app/
 
-## Architecture
+## Architecture (v0.8 Arcade Redesign)
+
+### Visual Philosophy: "Arcade Broadcast"
+The UI is styled like a 1998 arcade machine mixed with a high-end TV sports graphic. 
+- **Global VFX:** `.crt-overlay` applies a persistent scanline and vignette overlay (`pointer-events: none`).
+- **CSS:** Heavy use of `box-shadow` for neon glows, `linear-gradient` for chrome/metallic bevels, and CSS keyframe animations (`flicker`, `pop`, `sup`).
+- **Fonts:** `Bebas Neue` (large headers), `Press Start 2P` (pixel data/buttons), `Barlow Condensed` (body).
+- **Colors:** Deep purple/navy background (`--bg: #050015`), vivid accents (`--l-green`, `--a-gold`, `--p-red`, `--f-purple`).
 
 ### Screen Flow
-Home → Team + Side Selection → Player Draft → Card Draft → **Gameplay** → Result
+Home → Setup (Side & Team) → Player Draft → Card Draft → **Gameplay** → Result
 
-### Implemented Screens (v0.7)
-1. **Home** — Logo, animated flame, "Play Today's Torch" button, expandable How to Play / What is a Torch
-2. **Setup** — Retro LED scoreboard (stadium centerpiece with metallic frame, glowing LED cells, corner bolts), team picker (2 teams as portrait trading cards), offense/defense picker, punchy tagline, crowd ambience
-3. **Player Draft** — Pick 1 QB/LB + 3 skill players from team-specific pool of 6. Side-aware: shows offensive players (QB + skill) or defensive players (LB + DBs). Portrait trading card layout.
-4. **Card Draft** — Pick 5 play cards from team-specific pool of 10. Offensive or defensive cards based on side. Portrait trading cards with emoji icons. "Pick For Me" button.
-5. **Gameplay** — Full drive simulation with scorebug, field visualization, clash mechanic, hand management, AI play-calling, drive logic (downs, clock, turnovers). Works for both offense and defense modes.
-6. **Result** — Win ("TORCH LIT" with flame animation, glow effects) or loss ("TORCH OUT" with dying flame). Includes final score with team abbreviations, drive stats, streak counter, share-to-clipboard button, bonus round unlock (winners play the other side of the ball), and "Perfect Torch" state for winning both sides.
+### Implemented Screens (v0.8)
+1. **Home** — Giant skewed `TORCH` logo, animated flame, "PLAY TODAY'S TORCH" button, grayed-out "FREE PLAY", and a hidden "DEV: RESET DAILY LOCK" button.
+2. **Setup** — Scenario Brief Modal pops up first (late 4th quarter, score 14-21). 3-column Proportional Scoreboard. Step 1: Pick Side (Offense/Defense). Step 2: Choose Team (Iron Ridge / Canyon Tech). "LOCK IN TEAM" button.
+3. **Player Draft** — Pick 1 QB/LB + 3 skill players from team-specific pool of 6. Side-aware. Cards use the `.play-card-blitz` class.
+4. **Card Draft** — Pick 5 play cards from team-specific pool of 10. Side-aware. 
+5. **Gameplay** — Widescreen broadcast Scorebug (dynamic team names/colors based on Side choice), Field Visualization (neon green/red player dots), Clash Zone (VS circle with red plasma glow), Hand Management.
+6. **Result** — Win ("TORCH LIT") or loss ("TORCH OUT"). Includes final score, drive stats, streak counter, and share-to-clipboard button.
 
 ### Teams & Schemes
-- **Iron Ridge** (Triple Option offense / "The Process" defense)
-  - Offense cards (7 run / 3 pass): Triple Option, Midline, Rocket Toss, Trap, QB Keeper, Power, Zone Read, QB Sneak, PA Post, PA Flat
-  - Defense cards (Saban-inspired, 5 zone / 5 aggressive): Rip/Liz Match, Cover 4 Match, MOD, Cover 6, Bracket, Skinny, MEG, Gap Integrity, Fire Zone, Robber
-  - Offensive players: Bo Kendrick, Tate Larkin (QBs), Mack Torres, Jaylen Sims, Duke Owens, Cade Buckley (skill)
-  - Defensive players: Dez Lawson, Knox Barrett (LBs), Terrance Gill, Aiden Kemp, Roman Slade, Malik Ware (DBs)
-- **Canyon Tech** (Air Raid offense / "Send Everybody" defense)
-  - Offense cards (2 run / 8 pass): Mesh, Four Verts, Shallow Cross, Y-Corner, Stick, Slant, Go Route, Bubble Screen, Draw, QB Sneak
-  - Defense cards (Williams-inspired, 5 blitz / 5 coverage): Overload Blitz, DB Blitz, Zero Cover, A-Gap Mug, Edge Crash, Cover 2 Buc, Man Press, Zone Blitz Drop, Spy, Prevent
-  - Offensive players: Colt Avery, Dash Meyers (QBs), Quez Sampson, Dante Liu, Rio Vasquez, Kirby Walsh (skill)
-  - Defensive players: Jace Wilder, Darius Moon (LBs), Zion Crews, Ty Bishop, Andre Knox, Kai Orozco (DBs)
+- **Iron Ridge (IRON)**
+  - Offense: TRIPLE OPTION
+  - Defense: MULTIPLE D
+  - Colors: Red/Black
+- **Canyon Tech (CANYON)**
+  - Offense: AIR RAID
+  - Defense: SEND EVERYBODY
+  - Colors: Orange/Black
 
 ### Key Game Systems
-- **Scoreboard** — Retro LED with CSS split-flap animations, metallic frame, glowing cells, crowd ambience via Web Audio filtered noise
-- **Play Diagrams** — SVG diagram data still exists (`PD` object + `playSvg()`) but cards now display emoji icons (`card.icon`) instead for better mobile readability.
-- **Player Silhouettes** — `posSilhouette()` renders position-specific SVG silhouettes on player cards (QB throwing, WR running, RB stiff-arm, LB blitz stance, CB backpedal, S ready, TE blocking, FB).
-- **Matchup Tables** — 4 grids for all team combinations: `MT_CT_IR`, `MT_IR_CT`, `MT_CT_CT`, `MT_IR_IR`. Selected via `getMatchupTable(offTeamId, defTeamId)`.
-- **Yard resolution** — `rollYards(tier)` returns randomized yards per tier. `isTurnover(tier)` for TO/OT tiers. OT tier = boom-or-bust (70% O+ yards, 30% D+ with 20% turnover risk).
-- **AI Play-Calling** — `aiPickDefense()` and `aiPickOffense()` with scheme-appropriate weighted selection. IR defense: 60% zone / 25% adjust / 15% aggressive. CT defense: 50% blitz / 30% coverage / 15% specialty / 5% random.
-- **Clock** — `clockCost(cardId)` deducts 8-22 seconds per play based on play type.
-- **Gameplay Screen** — Scorebug (broadcast-style), field visualization (green strip with LOS/yard lines/player dots/end zone), clash zone (animated card collision with flash/shake), hand management (5 portrait cards, tap-to-select, SNAP to confirm, deck replacement with NEW badge).
-- **Drive Logic** — 4 downs to gain 10 yards, first down resets, TD at ballOn=0, turnover on downs/INT/fumble, clock expiration.
-- **Streak Tracking** — localStorage (`torch_streak`, `torch_last_play`). Increments on win, resets on loss. Displayed on result screen.
-- **Share** — Clipboard copy of formatted result text (emoji + score + stats + streak + URL).
-- **Bonus Round** — Winners unlock play as the other side of the ball. localStorage `torch_bonus_<date>` tracks completion. Both sides won = "Perfect Torch".
-- **Sound engine** (`SND`) — Web Audio synth: click, select, snap, menu, td, turnover, clash, draft, flip, crowdStart/crowdStop. Crowd sound uses 3-band filtered noise (250Hz/800Hz/2200Hz) with random volume swells for stadium atmosphere.
-
-### Football Knowledge (matchup design principles)
-- Quick passes (Mesh, Slant, Stick, Shallow Cross, Bubble Screen) beat blitzes and aggressive pressure
-- Deep shots (Four Verts, Y-Corner, Go Route) beat soft zone, get picked off against deep coverage
-- Rip/Liz Match (Saban's signature) kills crossing routes — it was literally invented to stop them
-- Triple Option runs devastate soft zones but die to Overload Blitz and A-Gap Mug
-- Spy is the hard counter to QB Keeper and Triple Option
-- Play-action works as a constraint (PA Flat kills Overload Blitz, PA Post kills soft zone)
-- Gap Integrity is Saban's answer to option football — every defender owns a gap
-- Williams' zone looks (Cover 2 Buc, Zone Drop) are the changeup that counters quick-game offense
+- **Matchup Tables** — 4 grids for all team combinations: `MT_CT_IR`, `MT_IR_CT`, `MT_CT_CT`, `MT_IR_IR`.
+- **Yard resolution** — `rollYards(tier)` returns randomized yards per tier. `isTurnover(tier)`.
+- **AI Play-Calling** — Scheme-appropriate weighted selection in `aiPickDefense()` and `aiPickOffense()`.
+- **Streak Tracking** — localStorage (`torch_streak`, `torch_last_play`). Increments on win, resets on loss. Displayed on result screen. Locked out on loss until next day.
+- **Sound engine (`SND`)** — Web Audio synth. Football-specific sounds: `snap()` (grunt + noise), `td()` and `turnover()` (modulated whistles), `clash()` (heavy hit). 
 
 ## Coding Conventions
-- Vanilla JS, no transpilation, no build step
-- ES5-compatible function expressions (not arrow functions) in UI code
-- DOM construction via `createElement` chains
-- CSS-in-JS via `el.style.cssText` strings
-- Font stack: Bebas Neue (headers), Press Start 2P (labels/badges/LED), Barlow Condensed (body)
-- Color palette: `--cyan`, `--gold`, `--green`, `--orange`, `--danger`, `--purple` on dark `--bg`
-- All state in the `GS` object; `setGs()` triggers full re-render
-- Gameplay screen uses local state + manual DOM updates for animations (no setGs during play)
-- localStorage keys prefixed with `torch_`
+- Vanilla JS, no transpilation, no build step.
+- DOM construction via `document.createElement` chains.
+- CSS-in-JS via `el.style.cssText` strings.
+- All state in the `GS` object; `setGs()` triggers full re-render.
+- Gameplay screen uses local state + manual DOM updates for animations (no setGs during play).
+- localStorage keys prefixed with `torch_`.
+
+## Recent Changes (Gemini CLI - v0.8 Redesign)
+- Scrapped Neubrutalism UI for "Arcade Broadcast" (NFL Blitz style).
+- Re-wrote `index.html` structure to use `.btn-blitz` and `.chrome-header` utility classes.
+- Added CRT scanline overlay and high-saturation color palette.
+- Overhauled Setup flow: Users now pick Side (Off/Def) before Team.
+- Added auto-firing Scenario Modal to Setup screen.
+- Redesigned Scoreboard/Scorebug into a proportional 3-column grid with dynamic team naming ("IRON" / "CANYON").
+- Added dynamic "BALL ON: [TEAM] 35" logic.
+- Overhauled sound engine with synthesized football grunts and whistles.
+- Fixed Next Play button overlap bug and emoji sharing encoding.
 
 ## What's Next
-- **Daily lockout** — One play per day, come back tomorrow on loss
-- **2-point conversion** — Post-TD decision: XP to tie or go for 2 to win
-- **Card helper buttons** — Explain what each card does on long-press
-- **Better field visualization** — Jersey numbers, sideline detail, animated dots
-
-## Testing Plan
-- **Audience:** Discord dynasty group (9 football-knowledgeable players)
-- **Deploy to Vercel**, share URL
-- **Key questions:** Can players finish in 5-7 min? Does the draft feel meaningful? Is the clash exciting or random? Do winners play the bonus round? Do losers come back tomorrow?
+- Re-integrating `api/commentary.js` AI system.
+- Adding specific defensive playbook logic for "Multiple D".
+- Implementing "FREE PLAY" mode.
