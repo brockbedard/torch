@@ -37,12 +37,12 @@ export function buildScoreboard(selSide, selTeamId){
   // Score row — 5-column grid: icon | score | clock | score | icon
   var scoreRow = document.createElement('div');
   scoreRow.style.cssText =
-    'display:grid;grid-template-columns:1fr 1.2fr auto 1.2fr 1fr;align-items:center;' +
-    'padding:18px 14px;';
+    'display:grid;grid-template-columns:auto 1fr auto 1fr auto;align-items:center;gap:4px;' +
+    'padding:14px 10px;';
 
   // Left icon (centered between border and score)
   var leftIconEl = document.createElement('div');
-  leftIconEl.style.cssText = 'font-size:36px;line-height:1;text-align:center;';
+  leftIconEl.style.cssText = 'font-size:28px;line-height:1;text-align:center;';
   leftIconEl.textContent = leftIcon;
 
   // Left score info
@@ -51,17 +51,17 @@ export function buildScoreboard(selSide, selTeamId){
     (leftIsPlayer ? 'background:radial-gradient(ellipse,rgba(255,204,0,0.25) 0%,rgba(255,204,0,0.08) 50%,transparent 75%);box-shadow:0 0 30px rgba(255,204,0,0.25), inset 0 0 15px rgba(255,204,0,0.08);' : '');
   leftInfo.innerHTML =
     '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:' + leftColor + ';font-style:italic;line-height:1;letter-spacing:1px;' + (leftIsPlayer ? 'text-shadow:0 0 16px rgba(255,204,0,0.8), 0 0 30px rgba(255,204,0,0.4);' : '') + '">' + leftAbbr + '</div>' +
-    '<div class="px" style="font-size:30px;color:var(--white);line-height:1;margin-top:3px;' + (leftIsPlayer ? 'text-shadow:0 0 18px rgba(255,204,0,0.7), 0 0 35px rgba(255,204,0,0.3);' : '') + '">' + leftPts + '</div>' +
+    '<div class="px" style="font-size:24px;color:var(--white);line-height:1;margin-top:3px;' + (leftIsPlayer ? 'text-shadow:0 0 18px rgba(255,204,0,0.7), 0 0 35px rgba(255,204,0,0.3);' : '') + '">' + leftPts + '</div>' +
     '<div class="px" style="font-size:8px;color:#cc66ff;margin-top:4px;letter-spacing:1px;">TO: ' + scen.timeouts + '</div>';
 
   // Center clock
   var centerBlock = document.createElement('div');
   centerBlock.style.cssText =
-    'text-align:center;padding:0 10px;border-left:1px solid rgba(255,255,255,0.08);' +
-    'border-right:1px solid rgba(255,255,255,0.08);min-width:80px;';
+    'text-align:center;padding:0 8px;border-left:1px solid rgba(255,255,255,0.08);' +
+    'border-right:1px solid rgba(255,255,255,0.08);min-width:70px;';
   centerBlock.innerHTML =
     '<div class="px" style="font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:5px;">4TH QTR</div>' +
-    '<div class="px" style="font-size:22px;color:var(--white);text-shadow:0 0 8px white;line-height:1;">' + fmtClock(scen.clock) + '</div>';
+    '<div class="px" style="font-size:18px;color:var(--white);text-shadow:0 0 8px white;line-height:1;">' + fmtClock(scen.clock) + '</div>';
 
   // Right score info
   var rightInfo = document.createElement('div');
@@ -69,12 +69,12 @@ export function buildScoreboard(selSide, selTeamId){
     (rightIsPlayer ? 'background:radial-gradient(ellipse,rgba(255,204,0,0.25) 0%,rgba(255,204,0,0.08) 50%,transparent 75%);box-shadow:0 0 30px rgba(255,204,0,0.25), inset 0 0 15px rgba(255,204,0,0.08);' : '');
   rightInfo.innerHTML =
     '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:' + rightColor + ';font-style:italic;line-height:1;letter-spacing:1px;' + (rightIsPlayer ? 'text-shadow:0 0 16px rgba(255,204,0,0.8), 0 0 30px rgba(255,204,0,0.4);' : '') + '">' + rightAbbr + '</div>' +
-    '<div class="px" style="font-size:30px;color:var(--white);line-height:1;margin-top:3px;' + (rightIsPlayer ? 'text-shadow:0 0 18px rgba(255,204,0,0.7), 0 0 35px rgba(255,204,0,0.3);' : '') + '">' + rightPts + '</div>' +
+    '<div class="px" style="font-size:24px;color:var(--white);line-height:1;margin-top:3px;' + (rightIsPlayer ? 'text-shadow:0 0 18px rgba(255,204,0,0.7), 0 0 35px rgba(255,204,0,0.3);' : '') + '">' + rightPts + '</div>' +
     '<div class="px" style="font-size:8px;color:#cc66ff;margin-top:4px;letter-spacing:1px;">TO: ' + scen.timeouts + '</div>';
 
   // Right icon (centered between score and border)
   var rightIconEl = document.createElement('div');
-  rightIconEl.style.cssText = 'font-size:36px;line-height:1;text-align:center;';
+  rightIconEl.style.cssText = 'font-size:28px;line-height:1;text-align:center;';
   rightIconEl.textContent = rightIcon;
 
   scoreRow.append(leftIconEl, leftInfo, centerBlock, rightInfo, rightIconEl);

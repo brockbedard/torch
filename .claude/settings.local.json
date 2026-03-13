@@ -27,7 +27,19 @@
       "Bash(find /Users/brock/torch-football/public -name \"*.mp3\" -o -name \"*.wav\" -o -name \"*.ogg\" 2>/dev/null | head -20)",
       "Bash(git -C /Users/brock/torch-football status -u)",
       "Bash(git -C /Users/brock/torch-football diff --stat)",
-      "Bash(git -C /Users/brock/torch-football log --oneline -5)"
+      "Bash(git -C /Users/brock/torch-football log --oneline -5)",
+      "Bash(pip3 install:*)",
+      "Bash(python3 << 'PYEOF'\nfrom PIL import Image\n\nimg = Image.open\\(\"/Users/brock/torch-football/public/images/broadcast-host.jpg\"\\)\nw, h = img.size\nprint\\(f\"Size: {w}x{h}\"\\)\n\n# Check bottom-right area for the watermark star\n# Crop bottom 10% off to remove watermark\ncrop_h = int\\(h * 0.90\\)\nimg_cropped = img.crop\\(\\(0, 0, w, crop_h\\)\\)\n\n# Create new image with black background at original aspect\nout = Image.new\\(\"RGB\", \\(w, crop_h\\), \\(5, 0, 21\\)\\)  # #050015 background color\nout.paste\\(img_cropped, \\(0, 0\\)\\)\n\nout.save\\(\"/Users/brock/torch-football/public/images/broadcast-host.jpg\", quality=90\\)\nprint\\(f\"Saved: {w}x{crop_h}\"\\)\nPYEOF)",
+      "Bash(python3.12 -m pip install Pillow 2>&1 | tail -2)",
+      "Bash(python3 -c \"from PIL import Image; print\\('ok'\\)\")",
+      "Bash(python3.12 << 'PYEOF'\nfrom PIL import Image\n\nimg = Image.open\\(\"/Users/brock/torch-football/public/images/broadcast-host.jpg\"\\)\nw, h = img.size\nprint\\(f\"Size: {w}x{h}\"\\)\n\n# Crop bottom 10% to remove watermark\ncrop_h = int\\(h * 0.90\\)\nimg_cropped = img.crop\\(\\(0, 0, w, crop_h\\)\\)\n\n# Create new image with app background color \\(#050015\\)\nout = Image.new\\(\"RGB\", \\(w, crop_h\\), \\(5, 0, 21\\)\\)\nout.paste\\(img_cropped, \\(0, 0\\)\\)\n\nout.save\\(\"/Users/brock/torch-football/public/images/broadcast-host.jpg\", quality=90\\)\nprint\\(f\"Saved: {w}x{crop_h}\"\\)\nPYEOF)",
+      "Bash(which python3.12 && python3.12 -c \"import sys; print\\(sys.executable\\); import PIL; print\\('pil ok'\\)\" 2>&1)",
+      "Bash(git push:*)",
+      "Bash(vercel --prod --force 2>&1)",
+      "Bash(vercel --version 2>&1)",
+      "Bash(NODE_TLS_REJECT_UNAUTHORIZED=0 vercel --prod 2>&1)",
+      "Bash(du -h /Users/brock/torch-football/public/img/players/*.png | head -5)",
+      "Bash(for f:*)"
     ]
   }
 }
