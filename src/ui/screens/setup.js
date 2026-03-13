@@ -176,51 +176,29 @@ export function buildSetup(){
   chooseLabel.textContent='CHOOSE YOUR SIDE';
   addStaggered(chooseLabel,stagger*5);
 
-  // Preview cards: OFFENSE / DEFENSE
-  var previewRow=document.createElement('div');
-  previewRow.style.cssText=
-    'display:flex;gap:10px;align-items:stretch;margin-bottom:16px;opacity:0;';
+  // Preview lines: OFFENSE / DEFENSE — plain text, not interactive
+  var previewBlock=document.createElement('div');
+  previewBlock.style.cssText=
+    'display:flex;flex-direction:column;gap:6px;margin-bottom:16px;opacity:0;';
   setTimeout(function(){
-    previewRow.animate([
+    previewBlock.animate([
       {opacity:0,transform:'translateY(10px)'},
       {opacity:1,transform:'translateY(0)'}
     ],{duration:300,easing:'ease-out',fill:'forwards'});
   },300+stagger*5.5*1000);
 
-  // Offense card
-  var offCard=document.createElement('div');
-  offCard.style.cssText=
-    'flex:1;background:rgba(0,255,68,0.06);border:1px solid rgba(0,255,68,0.3);'+
-    'border-left:4px solid var(--l-green);border-radius:8px;padding:14px 10px;text-align:center;'+
-    'display:flex;flex-direction:column;align-items:center;justify-content:center;';
-  var offH=document.createElement('div');
-  offH.style.cssText=
-    "font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--l-green);"+
-    "letter-spacing:2px;line-height:1;margin-bottom:4px;";
-  offH.textContent='OFFENSE';
-  var offT=document.createElement('div');
-  offT.style.cssText="font-size:13px;color:var(--muted);line-height:1.4;letter-spacing:0.5px;";
-  offT.textContent='SCORE AND WIN';
-  offCard.append(offH,offT);
+  var offLine=document.createElement('div');
+  offLine.style.cssText=
+    "font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;line-height:1.2;text-align:center;";
+  offLine.innerHTML='<span style="color:var(--l-green);">OFFENSE</span> <span style="color:var(--muted);font-size:14px;">\u2014 Score the touchdown</span>';
 
-  // Defense card
-  var defCard=document.createElement('div');
-  defCard.style.cssText=
-    'flex:1;background:rgba(255,0,64,0.06);border:1px solid rgba(255,0,64,0.3);'+
-    'border-left:4px solid var(--p-red);border-radius:8px;padding:14px 10px;text-align:center;'+
-    'display:flex;flex-direction:column;align-items:center;justify-content:center;';
-  var defH=document.createElement('div');
-  defH.style.cssText=
-    "font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--p-red);"+
-    "letter-spacing:2px;line-height:1;margin-bottom:4px;";
-  defH.textContent='DEFENSE';
-  var defT=document.createElement('div');
-  defT.style.cssText="font-size:13px;color:var(--muted);line-height:1.4;letter-spacing:0.5px;";
-  defT.textContent='GET THE STOP';
-  defCard.append(defH,defT);
+  var defLine=document.createElement('div');
+  defLine.style.cssText=
+    "font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;line-height:1.2;text-align:center;";
+  defLine.innerHTML='<span style="color:var(--p-red);">DEFENSE</span> <span style="color:var(--muted);font-size:14px;">\u2014 Get the stop</span>';
 
-  previewRow.append(offCard,defCard);
-  mBox.appendChild(previewRow);
+  previewBlock.append(offLine,defLine);
+  mBox.appendChild(previewBlock);
 
   // LET'S GO button — pulses in last
   var mBtn=document.createElement('button');
