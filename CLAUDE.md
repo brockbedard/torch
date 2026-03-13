@@ -149,6 +149,13 @@ Home → Setup (scenario modal → team selection → side selection → scorebo
 - Inline styles via `.style.cssText` for component-scoped styling
 - CSS variables for theme consistency
 
+## Git Conventions
+- **Version constants** live in `src/state.js` (`VERSION`, `VERSION_NAME`) — update these on every release
+- **PATCH** (0.10.x): Bug fixes, copy changes, style tweaks
+- **MINOR** (0.x.0): New features, new screens, new game modes
+- **MAJOR** (x.0.0): Fundamental gameplay or architecture changes
+- Commit messages: `v{VERSION} — short description of changes`
+
 ## Current Gaps / TODO
 - **Free Play mode:** Button exists on home screen but disabled ("COMING SOON")
 - **AI Commentary:** API route exists (`api/commentary.js`) but Broadcast Booth UI not wired up in v0.10.0

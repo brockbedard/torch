@@ -1,10 +1,10 @@
 import { SND } from '../../engine/sound.js';
-import { render, setGs, getInitialScenario } from '../../state.js';
+import { render, setGs, getInitialScenario, VERSION, VERSION_NAME } from '../../state.js';
 
 var DEV_LOG = [
-  "v0.10.0 — Scenario modal redesign, player art, bottom padding fix",
-  "v0.9.0 — Vite modularization, Vercel deploy, AI commentary",
-  "v0.8.0 — Arcade Broadcast visual redesign",
+  "0.10.0 — Gameday Edition: arcade broadcast redesign, player art, Vite modular architecture",
+  "0.9.0 — Vite modularization, Vercel deploy, AI commentary",
+  "0.8.0 — Arcade Broadcast visual redesign",
 ];
 
 export function buildHome(){
@@ -102,8 +102,8 @@ export function buildHome(){
   el.appendChild(playWrap);
 
   var buildLabel=document.createElement('div');
-  buildLabel.style.cssText='position:absolute;bottom:12px;width:100%;text-align:center;font-family:"Courier New",monospace;font-size:9px;color:#ffffff22;letter-spacing:1px;';
-  buildLabel.textContent='v0.10.0';
+  buildLabel.style.cssText='position:absolute;bottom:12px;width:100%;text-align:center;font-family:"Courier New",monospace;font-size:8px;color:#ffffff22;letter-spacing:1px;';
+  buildLabel.textContent='v' + VERSION + ' \u00b7 ' + VERSION_NAME;
   el.appendChild(buildLabel);
 
   return el;

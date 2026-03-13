@@ -2,6 +2,9 @@ import { TEAMS } from './data/teams.js';
 import { CT_OFF_CARDS, IR_OFF_CARDS, IR_DEF_CARDS, CT_DEF_CARDS } from './data/cards.js';
 import { MT_CT_IR, MT_IR_CT, MT_CT_CT, MT_IR_IR } from './data/matchups.js';
 
+export var VERSION = '0.10.0';
+export var VERSION_NAME = 'Gameday Edition';
+
 export var GS = null;
 
 export function setGs(fn) {
