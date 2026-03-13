@@ -1,5 +1,4 @@
 import { SND } from '../../engine/sound.js';
-import { buildMuteBtn } from '../../engine/bgm.js';
 import { GS, setGs, getTeam, getOffCards, getDefCards, shuffle } from '../../state.js';
 import { showCardIntel } from '../components/intel.js';
 
@@ -34,10 +33,7 @@ export function buildCardDraft() {
       return Object.assign({}, s, { screen: 'draft', team: GS.team, side: GS.side });
     });
   };
-  var hdrRight=document.createElement('div');
-  hdrRight.style.cssText='display:flex;align-items:center;gap:8px;';
-  hdrRight.append(buildMuteBtn(),backBtn);
-  hdr.appendChild(hdrRight);
+  hdr.appendChild(backBtn);
   el.appendChild(hdr);
 
   // Content

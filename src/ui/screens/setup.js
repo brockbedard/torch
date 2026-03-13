@@ -1,5 +1,4 @@
 import { SND } from '../../engine/sound.js';
-import { buildMuteBtn } from '../../engine/bgm.js';
 import { GS, setGs, getTeam, getOtherTeam, render } from '../../state.js';
 import { TEAMS } from '../../data/teams.js';
 import { buildScoreboard } from '../components/scoreboard.js';
@@ -24,10 +23,7 @@ export function buildSetup(){
   backBtn.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:8px;padding:10px 16px;cursor:pointer;background:#000;color:var(--white);border:2px solid #333;';
   backBtn.textContent='\u2190 BACK';
   backBtn.onclick=function(){SND.click();setGs(null);};
-  var hdrRight=document.createElement('div');
-  hdrRight.style.cssText='display:flex;align-items:center;gap:8px;';
-  hdrRight.append(buildMuteBtn(),backBtn);
-  hdr.appendChild(hdrRight);
+  hdr.appendChild(backBtn);
   el.appendChild(hdr);
   var content=document.createElement('div');
   content.style.cssText='flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:28px;position:relative;z-index:2;';

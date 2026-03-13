@@ -1,10 +1,8 @@
 import { SND } from '../../engine/sound.js';
-import { BGM, buildMuteBtn } from '../../engine/bgm.js';
 import { render, setGs, getInitialScenario } from '../../state.js';
 
 export function buildHome(){
   SND.menu();
-  BGM.play();
   var el=document.createElement('div');
   el.className='sup';
   el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;background:radial-gradient(circle at 50% 30%,#330066 0%,#080020 70%);position:relative;';
@@ -63,10 +61,6 @@ export function buildHome(){
 
   playWrap.append(playBtn,freeBtn,devBtn);
   el.appendChild(playWrap);
-
-  var muteBtn=buildMuteBtn();
-  muteBtn.style.cssText+='position:absolute;top:14px;right:14px;z-index:10;';
-  el.appendChild(muteBtn);
 
   var buildLabel=document.createElement('div');
   buildLabel.style.cssText='position:absolute;bottom:12px;width:100%;text-align:center;font-family:"Courier New",monospace;font-size:9px;color:#ffffff22;letter-spacing:1px;';

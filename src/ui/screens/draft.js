@@ -1,5 +1,4 @@
 import { SND } from '../../engine/sound.js';
-import { buildMuteBtn } from '../../engine/bgm.js';
 import { GS, setGs, getTeam, shuffle } from '../../state.js';
 
 function getPlayerImage(player, team, side) {
@@ -169,10 +168,7 @@ export function buildDraft() {
     SND.click();
     setGs(function(s) { return Object.assign({}, s, { screen: 'setup', team: GS.team, side: GS.side }); });
   };
-  var hdrRight=document.createElement('div');
-  hdrRight.style.cssText='display:flex;align-items:center;gap:8px;';
-  hdrRight.append(buildMuteBtn(),backBtn);
-  hdr.appendChild(hdrRight);
+  hdr.appendChild(backBtn);
   el.appendChild(hdr);
 
   // Content area

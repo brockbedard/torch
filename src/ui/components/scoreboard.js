@@ -45,7 +45,7 @@ export function buildScoreboard(selSide, selTeamId){
   var leftInfo = document.createElement('div');
   leftInfo.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
   leftInfo.innerHTML =
-    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:' + leftColor + ';font-style:italic;line-height:1;letter-spacing:1px;">' + leftAbbr + '</div>' +
+    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:' + leftColor + ';font-style:italic;line-height:1;letter-spacing:1px;">' + leftAbbr + '</div>' +
     '<div class="px" style="font-size:30px;color:var(--a-gold);line-height:1;margin-top:3px;">' + leftPts + '</div>' +
     '<div class="px" style="font-size:8px;color:var(--f-purple);margin-top:4px;letter-spacing:1px;">TO: ' + scen.timeouts + '</div>';
 
@@ -62,7 +62,7 @@ export function buildScoreboard(selSide, selTeamId){
   var rightInfo = document.createElement('div');
   rightInfo.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
   rightInfo.innerHTML =
-    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:' + rightColor + ';font-style:italic;line-height:1;letter-spacing:1px;">' + rightAbbr + '</div>' +
+    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:' + rightColor + ';font-style:italic;line-height:1;letter-spacing:1px;">' + rightAbbr + '</div>' +
     '<div class="px" style="font-size:30px;color:var(--a-gold);line-height:1;margin-top:3px;">' + rightPts + '</div>' +
     '<div class="px" style="font-size:8px;color:var(--f-purple);margin-top:4px;letter-spacing:1px;">TO: ' + scen.timeouts + '</div>';
 

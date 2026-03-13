@@ -1,6 +1,5 @@
 import { GS, setRender } from './state.js';
 import { SND } from './engine/sound.js';
-import { BGM } from './engine/bgm.js';
 import { buildHome } from './ui/screens/home.js';
 import { buildSetup } from './ui/screens/setup.js';
 import { buildDraft } from './ui/screens/draft.js';
@@ -15,13 +14,6 @@ function render() {
   SND.crowdStop();
   root.innerHTML = '';
   let content;
-
-  // Stop music when entering gameplay or result screens
-  var menuScreens = [null, 'setup', 'draft', 'card_draft', 'under_construction'];
-  var currentScreen = GS ? GS.screen : null;
-  if (menuScreens.indexOf(currentScreen) === -1) {
-    BGM.stop();
-  }
 
   if (!GS) {
     content = buildHome();
