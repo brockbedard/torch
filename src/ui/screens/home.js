@@ -1,11 +1,50 @@
 import { SND } from '../../engine/sound.js';
 import { render, setGs, getInitialScenario } from '../../state.js';
 
+var DEV_LOG = [
+  "v0.10.0 — Scenario modal redesign, player art, bottom padding fix",
+  "v0.9.0 — Vite modularization, Vercel deploy, AI commentary",
+  "v0.8.0 — Arcade Broadcast visual redesign",
+];
+
 export function buildHome(){
   SND.menu();
   var el=document.createElement('div');
   el.className='sup';
   el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;background:radial-gradient(circle at 50% 30%,#330066 0%,#080020 70%);position:relative;';
+
+  // Dev changelog banner — localhost only
+  var host=window.location.hostname;
+  if(host==='localhost'||host==='127.0.0.1'){
+    var dismissed=false;
+    var expanded=false;
+    var banner=document.createElement('div');
+    banner.style.cssText=
+      'position:absolute;top:0;left:0;right:0;z-index:100;background:rgba(0,0,0,0.85);'+
+      'border-left:4px solid var(--cyan);padding:8px 12px;cursor:pointer;'+
+      'font-family:"Courier New",monospace;font-size:9px;color:var(--muted);line-height:1.5;';
+
+    function renderBanner(){
+      if(dismissed){banner.style.display='none';return;}
+      var html='<div style="display:flex;justify-content:space-between;align-items:center;">'+
+        '<span style="color:var(--cyan);">DEV BUILD</span> · '+DEV_LOG[0]+
+        '<span id="dev-dismiss" style="color:var(--muted);cursor:pointer;padding:0 4px;font-size:12px;">×</span></div>';
+      if(expanded){
+        html+='<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);">';
+        DEV_LOG.forEach(function(entry,i){
+          html+='<div style="opacity:'+(i===0?'1':'0.6')+';margin-bottom:2px;">'+entry+'</div>';
+        });
+        html+='</div>';
+      }
+      banner.innerHTML=html;
+      banner.querySelector('#dev-dismiss').onclick=function(e){
+        e.stopPropagation();dismissed=true;renderBanner();
+      };
+    }
+    banner.onclick=function(){expanded=!expanded;renderBanner();};
+    renderBanner();
+    el.appendChild(banner);
+  }
   var today=new Date().toDateString();
   var lastPlay=localStorage.getItem('torch_last_play');
   var lastResult=localStorage.getItem('torch_last_result');
