@@ -8,7 +8,7 @@ The core question every snap: **"What would you call here?"**
 Built as a mobile-first single-page app (430px max-width). Single HTML file with vanilla JS, no framework.
 
 ## Version Status
-- **v0.8** — "Arcade Broadcast Build." Massively updated the UI to an "NFL Blitz/Tecmo Bowl" high-octane aesthetic. Introduced dynamic scoring, CRT scanlines, and new synthesized football audio (grunts, whistles).
+- **v0.9.0** — "Broadcast Ready Build." Re-integrated AI Commentary via `api/commentary.js`, restored the 2-point conversion strategic choice, overhauled state management to eliminate global variables, added the "Broadcast Offline" under construction screen, and implemented mobile app CSS optimizations (safe areas, touch actions) for app store readiness.
 
 ## Project Structure
 ```
@@ -76,18 +76,15 @@ Home → Setup (Side & Team) → Player Draft → Card Draft → **Gameplay** �
 - Gameplay screen uses local state + manual DOM updates for animations (no setGs during play).
 - localStorage keys prefixed with `torch_`.
 
-## Recent Changes (Gemini CLI - v0.8 Redesign)
-- Scrapped Neubrutalism UI for "Arcade Broadcast" (NFL Blitz style).
-- Re-wrote `index.html` structure to use `.btn-blitz` and `.chrome-header` utility classes.
-- Added CRT scanline overlay and high-saturation color palette.
-- Overhauled Setup flow: Users now pick Side (Off/Def) before Team.
-- Added auto-firing Scenario Modal to Setup screen.
-- Redesigned Scoreboard/Scorebug into a proportional 3-column grid with dynamic team naming ("IRON" / "CANYON").
-- Added dynamic "BALL ON: [TEAM] 35" logic.
-- Overhauled sound engine with synthesized football grunts and whistles.
-- Fixed Next Play button overlap bug and emoji sharing encoding.
+## Recent Changes (Gemini CLI - v0.9.0 Broadcast Ready Build)
+- Re-integrated `api/commentary.js` AI system with a functional "Broadcast Booth" UI during play resolution.
+- Restored the 2-point conversion strategic choice following a touchdown.
+- Centralized game state by moving `SCENARIO` into the dynamic `GS.scenario` object to fix session reset bugs.
+- Implemented mobile-specific CSS optimizations (`user-select: none`, `touch-action: manipulation`, safe area insets).
+- Added a "BROADCAST OFFLINE" Under Construction screen after "START MATCH" with a hidden dev bypass.
+- Fixed opening screen ball alignment so it perfectly crosses the flame logo.
 
 ## What's Next
-- Re-integrating `api/commentary.js` AI system.
+- Preparing for native packaging and Android/iOS app store deployment.
 - Adding specific defensive playbook logic for "Multiple D".
 - Implementing "FREE PLAY" mode.
