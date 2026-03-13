@@ -7,26 +7,30 @@ export function buildScoreboard(selSide, selTeamId){
     'padding:0;overflow:hidden;';
 
   var scen = GS.scenario;
-  function getScoreName(id){ if(id==='iron_ridge') return 'IRON'; if(id==='canyon_tech') return 'CANYON'; return '---'; }
 
   var leftAbbr = '---'; var leftPts = '--'; var leftColor = 'var(--white)';
   var leftIcon = ''; var rightIcon = '';
   var rightAbbr = '---'; var rightPts = '--'; var rightColor = 'var(--white)';
   var defName = 'DEF'; var defColor = 'var(--white)';
+  var leftIsPlayer = false; var rightIsPlayer = false;
 
   if (selSide && selTeamId) {
     var myTeam = getTeam(selTeamId);
     var oppTeam = getOtherTeam(selTeamId);
     var defTeam = selSide === 'offense' ? oppTeam : myTeam;
-    defName = getScoreName(defTeam.id);
+    defName = defTeam.abbr;
     defColor = defTeam.accent;
 
+    function mascot(id){ if(id==='iron_ridge') return 'TRIDENTS'; if(id==='canyon_tech') return 'CACTI'; return '---'; }
+
     if (selSide === 'offense') {
-      leftAbbr = getScoreName(myTeam.id); leftPts = scen.offScore; leftColor = myTeam.accent; leftIcon = myTeam.icon;
-      rightAbbr = getScoreName(oppTeam.id); rightPts = scen.defScore; rightColor = oppTeam.accent; rightIcon = oppTeam.icon;
+      leftAbbr = mascot(myTeam.id); leftPts = scen.offScore; leftColor = myTeam.accent; leftIcon = myTeam.icon;
+      rightAbbr = mascot(oppTeam.id); rightPts = scen.defScore; rightColor = oppTeam.accent; rightIcon = oppTeam.icon;
+      leftIsPlayer = true;
     } else {
-      leftAbbr = getScoreName(oppTeam.id); leftPts = scen.offScore; leftColor = oppTeam.accent; leftIcon = oppTeam.icon;
-      rightAbbr = getScoreName(myTeam.id); rightPts = scen.defScore; rightColor = myTeam.accent; rightIcon = myTeam.icon;
+      leftAbbr = mascot(oppTeam.id); leftPts = scen.offScore; leftColor = oppTeam.accent; leftIcon = oppTeam.icon;
+      rightAbbr = mascot(myTeam.id); rightPts = scen.defScore; rightColor = myTeam.accent; rightIcon = myTeam.icon;
+      rightIsPlayer = true;
     }
   }
 
@@ -43,10 +47,11 @@ export function buildScoreboard(selSide, selTeamId){
 
   // Left score info
   var leftInfo = document.createElement('div');
-  leftInfo.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
+  leftInfo.style.cssText = 'display:flex;flex-direction:column;align-items:center;position:relative;padding:6px 8px;border-radius:6px;' +
+    (leftIsPlayer ? 'background:radial-gradient(ellipse,rgba(255,204,0,0.25) 0%,rgba(255,204,0,0.08) 50%,transparent 75%);box-shadow:0 0 30px rgba(255,204,0,0.25), inset 0 0 15px rgba(255,204,0,0.08);' : '');
   leftInfo.innerHTML =
-    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:' + leftColor + ';font-style:italic;line-height:1;letter-spacing:1px;">' + leftAbbr + '</div>' +
-    '<div class="px" style="font-size:30px;color:var(--white);line-height:1;margin-top:3px;">' + leftPts + '</div>' +
+    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:' + leftColor + ';font-style:italic;line-height:1;letter-spacing:1px;' + (leftIsPlayer ? 'text-shadow:0 0 16px rgba(255,204,0,0.8), 0 0 30px rgba(255,204,0,0.4);' : '') + '">' + leftAbbr + '</div>' +
+    '<div class="px" style="font-size:30px;color:var(--white);line-height:1;margin-top:3px;' + (leftIsPlayer ? 'text-shadow:0 0 18px rgba(255,204,0,0.7), 0 0 35px rgba(255,204,0,0.3);' : '') + '">' + leftPts + '</div>' +
     '<div class="px" style="font-size:8px;color:#cc66ff;margin-top:4px;letter-spacing:1px;">TO: ' + scen.timeouts + '</div>';
 
   // Center clock
@@ -60,10 +65,11 @@ export function buildScoreboard(selSide, selTeamId){
 
   // Right score info
   var rightInfo = document.createElement('div');
-  rightInfo.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
+  rightInfo.style.cssText = 'display:flex;flex-direction:column;align-items:center;position:relative;padding:6px 8px;border-radius:6px;' +
+    (rightIsPlayer ? 'background:radial-gradient(ellipse,rgba(255,204,0,0.25) 0%,rgba(255,204,0,0.08) 50%,transparent 75%);box-shadow:0 0 30px rgba(255,204,0,0.25), inset 0 0 15px rgba(255,204,0,0.08);' : '');
   rightInfo.innerHTML =
-    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:' + rightColor + ';font-style:italic;line-height:1;letter-spacing:1px;">' + rightAbbr + '</div>' +
-    '<div class="px" style="font-size:30px;color:var(--white);line-height:1;margin-top:3px;">' + rightPts + '</div>' +
+    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:' + rightColor + ';font-style:italic;line-height:1;letter-spacing:1px;' + (rightIsPlayer ? 'text-shadow:0 0 16px rgba(255,204,0,0.8), 0 0 30px rgba(255,204,0,0.4);' : '') + '">' + rightAbbr + '</div>' +
+    '<div class="px" style="font-size:30px;color:var(--white);line-height:1;margin-top:3px;' + (rightIsPlayer ? 'text-shadow:0 0 18px rgba(255,204,0,0.7), 0 0 35px rgba(255,204,0,0.3);' : '') + '">' + rightPts + '</div>' +
     '<div class="px" style="font-size:8px;color:#cc66ff;margin-top:4px;letter-spacing:1px;">TO: ' + scen.timeouts + '</div>';
 
   // Right icon (centered between score and border)

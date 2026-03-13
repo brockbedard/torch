@@ -19,7 +19,7 @@ export function buildHome(){
   fireEl.textContent='\uD83D\uDD25';
 
   var ballCont=document.createElement('div');
-  ballCont.style.cssText='position:absolute;top:46%;left:50%;transform:translate(-50%,-50%);z-index:10;pointer-events:none;animation:ballPass 1.5s ease-in-out infinite;';
+  ballCont.style.cssText='position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);z-index:10;pointer-events:none;animation:ballPass 1.5s ease-in-out infinite;';
   var ballIcon=document.createElement('div');
   ballIcon.style.cssText='font-size:40px;filter:drop-shadow(0 0 10px rgba(0,0,0,0.5));';
   ballIcon.textContent='\uD83C\uDFC8';
@@ -64,7 +64,7 @@ export function buildHome(){
 
   var buildLabel=document.createElement('div');
   buildLabel.style.cssText='position:absolute;bottom:12px;width:100%;text-align:center;font-family:"Courier New",monospace;font-size:9px;color:#ffffff22;letter-spacing:1px;';
-  buildLabel.textContent='v0.9.0';
+  buildLabel.textContent='v0.10.0';
   el.appendChild(buildLabel);
 
   return el;

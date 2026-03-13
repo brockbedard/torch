@@ -37,7 +37,7 @@ export function buildUnderConstruction(){
   content.appendChild(glow);
 
   var icon=document.createElement('div');
-  icon.style.cssText='font-size:56px;margin-bottom:20px;animation:flicker 0.15s infinite alternate;filter:drop-shadow(0 0 20px var(--f-purple)) drop-shadow(0 0 40px var(--f-purple));position:relative;z-index:1;';
+  icon.style.cssText='font-size:80px;margin-bottom:20px;filter:drop-shadow(0 0 20px var(--f-purple)) drop-shadow(0 0 40px var(--f-purple));position:relative;z-index:1;';
   icon.textContent='\uD83D\uDCE1';
 
   var title=document.createElement('div');
@@ -79,7 +79,7 @@ export function buildUnderConstruction(){
       document.addEventListener('click',handler,{once:true});
       document.addEventListener('touchstart',handler,{once:true});
     });
-  },700);
+  },1500);
 
   // Stop audio if navigating away
   var obs=new MutationObserver(function(){

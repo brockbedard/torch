@@ -55,27 +55,25 @@ export function buildSetup(){
     'background:linear-gradient(to right,transparent,var(--a-gold),transparent);border-radius:0 0 3px 3px;';
   mBox.appendChild(topLine);
 
-  // Header: TONIGHT'S TORCH
+  // Header: TODAY'S/TONIGHT'S TORCH (time-based)
   var mHdr=document.createElement('div');
   mHdr.style.cssText=
-    'display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:20px;margin-top:4px;';
-  var mFire=document.createElement('div');
-  mFire.style.cssText='font-size:22px;animation:flicker 0.1s infinite alternate;line-height:1;';
-  mFire.textContent='\uD83D\uDD25';
+    'display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px;margin-top:6px;';
+  var mFireL=document.createElement('div');
+  mFireL.style.cssText='font-size:30px;animation:flicker 0.1s infinite alternate;line-height:1;';
+  mFireL.textContent='\uD83D\uDD25';
   var mTitle=document.createElement('div');
+  var hour=new Date().getHours();
+  var timeWord=(hour>=17||hour<5)?"TONIGHT'S":"TODAY'S";
   mTitle.style.cssText=
-    "font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--a-gold);letter-spacing:3px;"+
-    "font-style:italic;transform:skewX(-10deg);text-shadow:2px 2px 0 #000, 0 0 12px var(--a-gold);line-height:1;";
-  mTitle.textContent="TONIGHT'S TORCH";
-  mHdr.append(mFire,mTitle);
+    "font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--a-gold);letter-spacing:3px;"+
+    "font-style:italic;transform:skewX(-10deg);text-shadow:2px 2px 0 #000, 0 0 14px var(--a-gold);line-height:1;white-space:nowrap;";
+  mTitle.textContent=timeWord+" TORCH";
+  var mFireR=document.createElement('div');
+  mFireR.style.cssText='font-size:30px;animation:flicker 0.1s infinite alternate;line-height:1;';
+  mFireR.textContent='\uD83D\uDD25';
+  mHdr.append(mFireL,mTitle,mFireR);
   mBox.appendChild(mHdr);
-
-  // Gold divider
-  var mDiv1=document.createElement('div');
-  mDiv1.style.cssText=
-    'width:60%;height:1px;margin:0 auto 18px;'+
-    'background:linear-gradient(to right,transparent,rgba(255,204,0,0.4),transparent);';
-  mBox.appendChild(mDiv1);
 
   // Staggered content lines
   var stagger=0.15;
@@ -95,7 +93,7 @@ export function buildSetup(){
   var ln1=document.createElement('div');
   ln1.style.cssText=
     "font-family:'Bebas Neue',sans-serif;font-size:32px;color:#fff;letter-spacing:3px;"+
-    "line-height:1;margin-bottom:6px;text-shadow:2px 2px 0 #000;";
+    "line-height:1;margin-bottom:10px;text-shadow:2px 2px 0 #000;";
   ln1.textContent='4TH QUARTER';
   addStaggered(ln1,stagger*0);
 
@@ -103,7 +101,7 @@ export function buildSetup(){
   var ln2=document.createElement('div');
   ln2.style.cssText=
     "font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;"+
-    "line-height:1;margin-bottom:12px;opacity:0.9;";
+    "line-height:1;margin-bottom:16px;opacity:0.9;";
   ln2.textContent='ONE POSSESSION GAME';
   addStaggered(ln2,stagger*1);
 
@@ -111,13 +109,13 @@ export function buildSetup(){
   var ln3=document.createElement('div');
   ln3.style.cssText=
     "font-family:'Press Start 2P',monospace;font-size:14px;color:#fff;"+
-    "line-height:1;margin-bottom:16px;letter-spacing:1px;";
+    "line-height:1;margin-bottom:20px;letter-spacing:1px;";
   ln3.innerHTML='<span style="color:var(--orange);font-size:16px;">2:45</span> ON THE CLOCK';
   addStaggered(ln3,stagger*2);
 
   // Line 4: Field position bar
   var fieldWrap=document.createElement('div');
-  fieldWrap.style.cssText='margin-bottom:14px;';
+  fieldWrap.style.cssText='margin-bottom:18px;';
   var fieldBar=document.createElement('div');
   fieldBar.style.cssText=
     'width:100%;height:22px;background:#0a3d0a;border-radius:4px;position:relative;overflow:hidden;'+
@@ -136,12 +134,12 @@ export function buildSetup(){
     'position:absolute;top:0;bottom:0;right:0;width:30%;'+
     'background:linear-gradient(to right,transparent,rgba(255,77,0,0.25));pointer-events:none;';
   fieldBar.appendChild(ezGlow);
-  // Ball marker at 35 yard line (35% from left)
+  // Football marker at 35 yard line (35% from left)
   var ballMark=document.createElement('div');
   ballMark.style.cssText=
     'position:absolute;top:50%;left:35%;transform:translate(-50%,-50%);'+
-    'width:10px;height:10px;background:var(--a-gold);border-radius:50%;'+
-    'box-shadow:0 0 8px var(--a-gold), 0 0 16px rgba(255,204,0,0.4);';
+    'font-size:20px;line-height:1;filter:drop-shadow(0 0 6px var(--a-gold)) drop-shadow(0 0 12px rgba(255,204,0,0.5));';
+  ballMark.textContent='\uD83C\uDFC8';
   fieldBar.appendChild(ballMark);
   // Animate bar drawing in from left
   fieldBar.style.clipPath='inset(0 100% 0 0)';
@@ -155,8 +153,8 @@ export function buildSetup(){
   // Field label
   var fieldLabel=document.createElement('div');
   fieldLabel.style.cssText=
-    "font-family:'Press Start 2P',monospace;font-size:8px;color:var(--muted);"+
-    "margin-top:6px;letter-spacing:1px;";
+    "font-family:'Press Start 2P',monospace;font-size:10px;color:var(--muted);"+
+    "margin-top:8px;letter-spacing:1px;";
   fieldLabel.textContent='BALL ON THE 35 \u00B7 2ND & 10';
   fieldWrap.appendChild(fieldLabel);
   addStaggered(fieldWrap,stagger*3);
@@ -165,59 +163,63 @@ export function buildSetup(){
   var ln5=document.createElement('div');
   ln5.style.cssText=
     "font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--a-gold);"+
-    "letter-spacing:2px;line-height:1;margin-bottom:18px;"+
+    "letter-spacing:2px;line-height:1;margin-bottom:20px;"+
     "text-shadow:0 0 12px rgba(255,204,0,0.4), 2px 2px 0 #000;";
   ln5.textContent='ONE DRIVE DECIDES EVERYTHING';
   addStaggered(ln5,stagger*4);
 
+  // CHOOSE YOUR SIDE label
+  var chooseLabel=document.createElement('div');
+  chooseLabel.style.cssText=
+    "font-family:'Press Start 2P',monospace;font-size:9px;color:var(--muted);"+
+    "letter-spacing:2px;margin-bottom:14px;";
+  chooseLabel.textContent='CHOOSE YOUR SIDE';
+  addStaggered(chooseLabel,stagger*5);
+
   // Preview cards: OFFENSE / DEFENSE
   var previewRow=document.createElement('div');
   previewRow.style.cssText=
-    'display:flex;gap:10px;align-items:center;margin-bottom:20px;opacity:0;';
+    'display:flex;gap:12px;align-items:stretch;margin-bottom:24px;opacity:0;';
   setTimeout(function(){
     previewRow.animate([
       {opacity:0,transform:'translateY(10px)'},
       {opacity:1,transform:'translateY(0)'}
     ],{duration:300,easing:'ease-out',fill:'forwards'});
-  },300+stagger*5*1000);
+  },300+stagger*5.5*1000);
 
   // Offense card
   var offCard=document.createElement('div');
   offCard.style.cssText=
-    'flex:1;background:rgba(0,255,68,0.05);border:1px solid rgba(0,255,68,0.25);'+
-    'border-left:3px solid var(--l-green);border-radius:6px;padding:12px 8px;text-align:center;';
+    'flex:1;background:rgba(0,255,68,0.06);border:1px solid rgba(0,255,68,0.3);'+
+    'border-left:4px solid var(--l-green);border-radius:8px;padding:20px 12px;text-align:center;'+
+    'display:flex;flex-direction:column;align-items:center;justify-content:center;';
   var offH=document.createElement('div');
   offH.style.cssText=
-    "font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--l-green);"+
-    "letter-spacing:2px;line-height:1;margin-bottom:4px;";
+    "font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--l-green);"+
+    "letter-spacing:3px;line-height:1;margin-bottom:6px;";
   offH.textContent='OFFENSE';
   var offT=document.createElement('div');
-  offT.style.cssText="font-size:12px;color:var(--muted);line-height:1.3;";
-  offT.textContent='Score the touchdown.';
+  offT.style.cssText="font-size:13px;color:var(--muted);line-height:1.4;letter-spacing:0.5px;";
+  offT.textContent='SCORE AND WIN';
   offCard.append(offH,offT);
-
-  // OR divider
-  var orText=document.createElement('div');
-  orText.style.cssText=
-    "font-family:'Press Start 2P',monospace;font-size:8px;color:var(--muted);flex-shrink:0;";
-  orText.textContent='OR';
 
   // Defense card
   var defCard=document.createElement('div');
   defCard.style.cssText=
-    'flex:1;background:rgba(255,0,64,0.05);border:1px solid rgba(255,0,64,0.25);'+
-    'border-left:3px solid var(--p-red);border-radius:6px;padding:12px 8px;text-align:center;';
+    'flex:1;background:rgba(255,0,64,0.06);border:1px solid rgba(255,0,64,0.3);'+
+    'border-left:4px solid var(--p-red);border-radius:8px;padding:20px 12px;text-align:center;'+
+    'display:flex;flex-direction:column;align-items:center;justify-content:center;';
   var defH=document.createElement('div');
   defH.style.cssText=
-    "font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--p-red);"+
-    "letter-spacing:2px;line-height:1;margin-bottom:4px;";
+    "font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--p-red);"+
+    "letter-spacing:3px;line-height:1;margin-bottom:6px;";
   defH.textContent='DEFENSE';
   var defT=document.createElement('div');
-  defT.style.cssText="font-size:12px;color:var(--muted);line-height:1.3;";
-  defT.textContent='Get the stop.';
+  defT.style.cssText="font-size:13px;color:var(--muted);line-height:1.4;letter-spacing:0.5px;";
+  defT.textContent='GET THE STOP';
   defCard.append(defH,defT);
 
-  previewRow.append(offCard,orText,defCard);
+  previewRow.append(offCard,defCard);
   mBox.appendChild(previewRow);
 
   // LET'S GO button — pulses in last
@@ -239,7 +241,7 @@ export function buildSetup(){
       {boxShadow:'6px 6px 0 #997a00, 10px 10px 0 #000, 0 0 20px rgba(255,204,0,0.4)'},
       {boxShadow:'6px 6px 0 #997a00, 10px 10px 0 #000, 0 0 0px rgba(255,204,0,0)'}
     ],{duration:2000,iterations:Infinity});
-  },300+stagger*6*1000);
+  },300+stagger*6.5*1000);
   mBox.appendChild(mBtn);
 
   modal.appendChild(mBox);
@@ -294,22 +296,22 @@ export function buildSetup(){
       }
       var iconEl=document.createElement('div');
       iconEl.style.cssText=
-        'font-size:46px;margin-bottom:4px;position:relative;z-index:1;'+
+        'font-size:46px;margin-bottom:2px;position:relative;z-index:1;'+
         'filter:drop-shadow(0 0 16px '+team.accent+') drop-shadow(0 0 30px '+team.accent+'44);';
       iconEl.textContent=team.icon;
       var nameEl=document.createElement('div');
       nameEl.style.cssText=
         'font-family:"Bebas Neue",sans-serif;font-size:26px;font-style:italic;'+
-        'color:'+team.accent+';line-height:1;margin-bottom:6px;position:relative;z-index:1;'+
+        'color:'+team.accent+';line-height:1;margin-bottom:4px;position:relative;z-index:1;'+
         'text-shadow:0 0 12px '+team.accent+'66, 2px 2px 0 #000;letter-spacing:2px;';
       nameEl.textContent=team.name;
       var divider=document.createElement('div');
       divider.style.cssText=
         'width:30px;height:1px;background:linear-gradient(to right,transparent,'+team.accent+'66,transparent);'+
-        'margin:0 auto 6px;position:relative;z-index:1;';
+        'margin:0 auto 4px;position:relative;z-index:1;';
       var schemeEl=document.createElement('div');
-      schemeEl.style.cssText='font-family:"Courier New",monospace;font-size:10px;color:var(--muted);font-weight:bold;letter-spacing:1px;line-height:1.8;position:relative;z-index:1;';
-      schemeEl.innerHTML='OFF: '+team.style+'<br>DEF: '+team.defStyle;
+      schemeEl.style.cssText='font-family:"Courier New",monospace;font-size:8px;color:var(--muted);font-weight:bold;letter-spacing:0.5px;line-height:1.6;position:relative;z-index:1;white-space:nowrap;';
+      schemeEl.innerHTML=team.style+' OFFENSE<br>'+team.defStyle+' DEFENSE';
       card.append(iconEl,nameEl,divider,schemeEl);
       card.onclick=function(){SND.select();selTeam=team.id;GS.team=team.id;refreshTeams();refreshBoard();refreshGo();};
       teamGrid.appendChild(card);
