@@ -18,13 +18,13 @@ function buildPlayerCard(player, team, side, isSel, size) {
   var card = document.createElement('div');
   card.style.cssText =
     'background:#12101e;' +
-    'border:2px solid ' + (isSel ? '#00ff88' : '#00ff8844') + ';' +
+    'border:2px solid ' + (isSel ? '#00ff88' : '#00ff8866') + ';' +
     'border-radius:6px;' +
     'padding:0;' +
     'cursor:pointer;' +
     'position:relative;' +
     'overflow:hidden;' +
-    'opacity:' + (isSel ? '1' : '0.6') + ';' +
+    'opacity:' + (isSel ? '1' : '0.7') + ';' +
     'transition:all 0.15s ease;' +
     (isSel ? 'box-shadow:0 0 18px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08);' : '');
 
@@ -76,7 +76,7 @@ function buildPlayerCard(player, team, side, isSel, size) {
 
   var ovrLabel = document.createElement('div');
   ovrLabel.style.cssText =
-    'font-family:"Courier New",monospace;font-size:7px;font-weight:bold;' +
+    'font-family:"Courier New",monospace;font-size:8px;font-weight:bold;' +
     'color:#00eaff;opacity:0.5;letter-spacing:2px;line-height:1;margin-top:1px;';
   ovrLabel.textContent = 'OVR';
 
@@ -152,7 +152,7 @@ export function buildDraft() {
 
   var backBtn = document.createElement('button');
   backBtn.style.cssText =
-    'font-family:\'Press Start 2P\',monospace;font-size:6px;padding:6px 10px;' +
+    'font-family:\'Press Start 2P\',monospace;font-size:8px;padding:10px 16px;' +
     'cursor:pointer;background:#000;color:var(--white);border:2px solid #333;';
   backBtn.textContent = '\u2190 BACK';
   backBtn.onclick = function() {
@@ -182,7 +182,7 @@ export function buildDraft() {
   // Primary section (QB or LB)
   var primaryLabel = document.createElement('div');
   primaryLabel.style.cssText =
-    'font-family:"Press Start 2P",monospace;font-size:11px;color:#00ff88;' +
+    'font-family:"Press Start 2P",monospace;font-size:10px;color:#00ff88;' +
     'letter-spacing:1px;margin-bottom:8px;' +
     'border-bottom:1px solid #00ff8833;padding-bottom:6px;';
   primaryLabel.textContent = (isDef ? 'LINEBACKERS' : 'QUARTERBACK') + ' \u2014 PICK 1';
@@ -195,7 +195,7 @@ export function buildDraft() {
   // Skill section
   var skillLabel = document.createElement('div');
   skillLabel.style.cssText =
-    'font-family:"Press Start 2P",monospace;font-size:11px;color:#00ff88;' +
+    'font-family:"Press Start 2P",monospace;font-size:10px;color:#00ff88;' +
     'letter-spacing:1px;margin-bottom:8px;' +
     'border-bottom:1px solid #00ff8833;padding-bottom:6px;';
   skillLabel.textContent = (isDef ? 'DEFENSIVE BACKS' : 'SKILL PLAYERS') + ' \u2014 PICK 3';
@@ -255,13 +255,13 @@ export function buildDraft() {
         ? 'background:#ffcc00;border-color:#ffcc00;color:#000;box-shadow:6px 6px 0 #997a00, 0 0 30px rgba(255,204,0,0.4);'
         : 'opacity:0.35;');
     goBtn.disabled = !ready;
-    goBtn.textContent = ready ? 'LOCK IN SQUAD \u2192' : 'PICK YOUR SQUAD';
+    goBtn.textContent = ready ? 'LOCK IN SQUAD \u2192' : 'SELECT 1 ' + (isDef ? 'LB' : 'QB') + ' + 3 SKILL';
     goBtn.onclick = ready ? function() {
       SND.snap();
       var roster = [selPrimary].concat(Object.keys(selSkill));
       setGs(function(s) {
         return Object.assign({}, s, {
-          screen: 'under_construction',
+          screen: 'card_draft',
           team: GS.team,
           side: GS.side,
           roster: roster

@@ -11,7 +11,7 @@ export function buildSetup(){
   hdr.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;color:var(--a-gold);letter-spacing:2px;font-style:italic;transform:skewX(-10deg);text-shadow:2px 2px 0 #000, 0 0 10px var(--a-gold); cursor:pointer;">\uD83D\uDD25 TORCH</div>';
   hdr.onclick=function(){setGs(null);};
   var backBtn=document.createElement('button');
-  backBtn.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:6px;padding:6px 10px;cursor:pointer;background:#000;color:var(--white);border:2px solid #333;';
+  backBtn.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:8px;padding:10px 16px;cursor:pointer;background:#000;color:var(--white);border:2px solid #333;';
   backBtn.textContent='\u2190 BACK';
   backBtn.onclick=function(){SND.click();setGs(null);};
   hdr.appendChild(backBtn);

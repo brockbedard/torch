@@ -3,6 +3,7 @@ import { SND } from './engine/sound.js';
 import { buildHome } from './ui/screens/home.js';
 import { buildSetup } from './ui/screens/setup.js';
 import { buildDraft } from './ui/screens/draft.js';
+import { buildCardDraft } from './ui/screens/cardDraft.js';
 import { buildUnderConstruction } from './ui/screens/under_construction.js';
 import { buildPlay } from './ui/screens/play.js';
 import { buildResult } from './ui/screens/result.js';
@@ -20,6 +21,7 @@ function render() {
     switch (GS.screen) {
       case 'setup': content = buildSetup(); break;
       case 'draft': content = buildDraft(); break;
+      case 'card_draft': content = buildCardDraft(); break;
       case 'under_construction': content = buildUnderConstruction(); break;
       case 'play': content = buildPlay(); break;
       case 'result': content = buildResult(); break;

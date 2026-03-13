@@ -165,7 +165,7 @@ export function buildPlay(){
   resultArea.style.cssText='text-align:center;min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;margin-top:10px;';
 
   var commBox=document.createElement('div');
-  commBox.style.cssText='width:100%;max-width:320px;padding:8px 12px;background:rgba(0,0,0,0.4);border:1px solid var(--a-gold);border-radius:4px;font-family:\'Barlow Condensed\',sans-serif;font-style:italic;color:var(--a-gold);font-size:13px;opacity:0;transition:opacity 0.4s;min-height:40px;';
+  commBox.style.cssText='width:100%;max-width:320px;padding:8px 12px;background:rgba(0,0,0,0.4);border:1px solid var(--a-gold);border-radius:4px;font-family:\'Barlow Condensed\',sans-serif;font-style:italic;color:var(--a-gold);font-size:13px;opacity:0;transition:opacity 0.4s;min-height:0;';
   commBox.textContent='... BROADCAST BOOTH ...';
   resultArea.appendChild(commBox);
 
@@ -180,6 +180,7 @@ export function buildPlay(){
   snapWrap.style.cssText='padding:10px;background:#000;flex-shrink:0;';
   var snapBtn=document.createElement('button');
   snapBtn.className='btn-blitz';
+  snapBtn.style.fontSize='14px';
   snapBtn.textContent='SELECT A PLAY';
   snapBtn.disabled=true;
   snapWrap.appendChild(snapBtn);
@@ -200,7 +201,7 @@ export function buildPlay(){
       var isSel=selIdx===i;
       var cel=document.createElement('div');
       cel.className='play-card-blitz'+(isSel?' selected':'');
-      cel.style.cssText+='width:80px;flex-shrink:0;transform:scale('+(isSel?0.9:0.8)+');border-color:'+tc.border+';';
+      cel.style.cssText+='width:90px;flex-shrink:0;transform:scale('+(isSel?0.95:0.85)+');border-color:'+tc.border+';';
       if(newCardIndices[i]){
         var n=document.createElement('div');
         n.style.cssText='position:absolute;top:2px;right:2px;font-family:\'Press Start 2P\',monospace;font-size:4px;color:var(--white);background:var(--l-green);padding:2px;';
@@ -214,7 +215,7 @@ export function buildPlay(){
       iconEl.style.cssText='font-size:24px;margin:5px 0;';
       iconEl.textContent=card.icon;
       var helpBtn=document.createElement('div');
-      helpBtn.style.cssText='position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;border:1px solid '+tc.border+';color:'+tc.border+';font-size:7px;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;';
+      helpBtn.style.cssText='position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;border:1px solid '+tc.border+';color:'+tc.border+';font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;';
       helpBtn.textContent='?';
       helpBtn.onclick=function(e){e.stopPropagation();SND.click();showCardIntel(card,GS.team,GS.side);};
       cel.appendChild(helpBtn);

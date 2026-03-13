@@ -21,7 +21,7 @@ body { color: white; font-family: 'Barlow Condensed', sans-serif; display: flex;
 #root::after {
   content: ""; position: fixed; inset: 0; width: 100%; max-width: 430px; left: 50%; transform: translateX(-50%);
   background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-  background-size: 100% 3px, 3px 100%; z-index: 9999; pointer-events: none; opacity: 0.6;
+  background-size: 100% 3px, 3px 100%; z-index: 1999; pointer-events: none; opacity: 0.6;
 }
 .px { font-family: 'Press Start 2P', monospace; }
 .bn { font-family: 'Bebas Neue', sans-serif; }
@@ -82,7 +82,7 @@ body { color: white; font-family: 'Barlow Condensed', sans-serif; display: flex;
 .play-card-blitz.selected { background: var(--f-purple); border-color: var(--a-gold); box-shadow: 0 0 15px var(--f-purple); transform: scale(1.05); }
 
 .clash-card {
-  width: 100px; height: 140px; border: 4px solid var(--white); background: #111;
+  width: 110px; height: 150px; border: 4px solid var(--white); background: #111;
   display: flex; flex-direction: column; align-items: center; justify-content: space-between;
   box-shadow: 0 0 20px rgba(255,255,255,0.2); padding: 6px; text-align: center;
 }

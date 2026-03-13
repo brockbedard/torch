@@ -56,7 +56,7 @@ export function buildHome(){
 
   var devBtn=document.createElement('button');
   devBtn.className='btn-blitz';
-  devBtn.style.cssText='border-color:var(--muted);color:var(--muted);background:transparent;box-shadow:none;font-size:8px;padding:10px;margin-top:20px;';
+  devBtn.style.cssText='display:none;border-color:var(--muted);color:var(--muted);background:transparent;box-shadow:none;font-size:8px;padding:10px;margin-top:20px;';
   devBtn.textContent='DEV: RESET DAILY LOCK';
   devBtn.onclick=function(){localStorage.clear(); render();};
 
