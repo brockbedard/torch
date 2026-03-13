@@ -38,6 +38,48 @@ var CAT_COLORS = {
   BLITZ: '#ff0040', ZONE: '#00ccaa', PRESSURE: '#ffcc00', HYBRID: '#bb00ff',
 };
 
+var SHORT_DESC = {
+  mesh: 'Man coverage killer',
+  four_verts: 'Stretch them deep',
+  shallow_cross: 'Quick and reliable',
+  y_corner: 'Beats Cover 2',
+  stick: 'Safe short money',
+  slant: 'Timing route, quick hitter',
+  go_route: 'One-on-one deep shot',
+  bubble_screen: 'Fast lateral, blockers lead',
+  draw: 'Fake pass, run it',
+  qb_sneak: 'Short yardage push',
+  triple_option: 'Give, keep, or pitch',
+  midline: 'Fullback dive inside',
+  rocket_toss: 'Speed to the edge',
+  trap: 'Pulling guard, deceptive',
+  qb_keeper: 'QB turns the corner',
+  power: 'Downhill and physical',
+  zone_read: 'Read the end, decide',
+  pa_post: 'Fake run, throw deep',
+  pa_flat: 'Fake dive, dump short',
+  rip_liz: 'Pattern-match Cover 3',
+  cov4_match: 'Quarters, stop the run',
+  mod: 'Two-high vanilla look',
+  cover_6: 'Split-field coverage',
+  bracket: 'Double their best weapon',
+  skinny: 'Trips check, stop overloads',
+  meg: 'Man up, win matchups',
+  gap_int: 'Every gap accounted for',
+  fire_zone: 'Send five, drop three',
+  robber: 'Jump the route, gamble',
+  overload: 'Numbers to one side',
+  db_blitz: 'Corner and safety blitz',
+  zero_cov: 'All-out, no safety help',
+  a_gap_mug: 'A-gap mind games',
+  edge_crash: 'Speed rush both edges',
+  cov2_buc: 'Tampa 2, seam dropper',
+  man_press: 'Jam at the line',
+  zone_drop: 'Show blitz, drop edge',
+  spy: 'Shadow the quarterback',
+  prevent: 'Nothing over the top',
+};
+
 function buildPlayCard(card, isSel, staggerIdx) {
   var cat = catLabel(card);
   var catColor = CAT_COLORS[cat] || '#aaa';
@@ -46,12 +88,12 @@ function buildPlayCard(card, isSel, staggerIdx) {
   var cel = document.createElement('div');
   cel.style.cssText =
     'background:var(--bg-surface);' +
-    'border:2px solid ' + (isSel ? '#00ff88' : '#00ff8844') + ';' +
+    'border:2px solid ' + (isSel ? '#00ff88' : '#00ff8866') + ';' +
     'border-radius:6px;padding:0;position:relative;overflow:hidden;' +
     'cursor:pointer;display:flex;flex-direction:column;' +
-    'transition:transform 0.15s ease-out, box-shadow 0.15s ease-out, border-color 0.15s ease;' +
-    'opacity:' + (isSel ? '1' : '0.6') + ';' +
-    (isSel ? 'box-shadow:0 0 18px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08);transform:translateY(-6px) scale(1.02);' : 'transform:translateY(0) scale(1);');
+    'transition:all 0.15s ease;' +
+    'opacity:' + (isSel ? '1' : '0.8') + ';' +
+    (isSel ? 'box-shadow:0 0 18px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08);' : '');
 
   // Entrance animation
   cel.style.animation = 'cardSlideUp 0.35s ease-out ' + (staggerIdx * 0.05) + 's both';
@@ -87,34 +129,36 @@ function buildPlayCard(card, isSel, staggerIdx) {
   header.append(nameEl, badge);
   cel.appendChild(header);
 
-  // Diagram area
+  // Diagram area — taller, zoomed in
   var diagWrap = document.createElement('div');
   diagWrap.style.cssText =
-    'height:85px;display:flex;align-items:center;justify-content:center;' +
+    'height:105px;display:flex;align-items:center;justify-content:center;' +
     'background:radial-gradient(ellipse at center, #1a1030 0%, #0a0818 100%);' +
     'margin:0 8px;border-radius:4px;overflow:hidden;position:relative;';
 
   var svgHTML = playSvg(card.id, '#00ff88');
-  // Modify SVG for animated routes
   var animId = 'anim_' + card.id + '_' + staggerIdx;
+  // Tighter viewBox to zoom in, thicker strokes, bigger dots
   var animSvg = svgHTML
+    .replace('viewBox="0 0 60 50"', 'viewBox="4 4 52 44"')
     .replace('width="60" height="50"', 'width="100%" height="100%" preserveAspectRatio="xMidYMid meet"')
     .replace(/<line /g, '<line class="' + animId + '-route" ')
-    .replace(/<polyline /g, '<polyline class="' + animId + '-route" ');
-
-  // Replace green dots with gold lines
-  animSvg = animSvg
+    .replace(/<polyline /g, '<polyline class="' + animId + '-route" ')
+    .replace(/stroke-width="1.5"/g, 'stroke-width="2.5"')
+    .replace(/stroke-width="1"/g, 'stroke-width="2"')
+    .replace(/r="3.5"/g, 'r="5"')
+    .replace(/r="2.5"/g, 'r="4"')
     .replace(/stroke="#00ff88"/g, 'stroke="#ffcc00"')
     .replace(/fill="#00ff88"/g, 'fill="#00ff88"');
 
   diagWrap.innerHTML = animSvg;
 
-  // Add route draw animation via style tag
+  // Route draw animation
   var styleTag = document.createElement('style');
   styleTag.textContent =
     '.' + animId + '-route {' +
-    '  stroke-dasharray: 80;' +
-    '  stroke-dashoffset: 80;' +
+    '  stroke-dasharray: 120;' +
+    '  stroke-dashoffset: 120;' +
     '  animation: routeDraw 0.5s ease-out ' + (staggerIdx * 0.05 + 0.3) + 's forwards;' +
     '}';
   diagWrap.appendChild(styleTag);
@@ -131,7 +175,7 @@ function buildPlayCard(card, isSel, staggerIdx) {
 
   var meterFill = document.createElement('div');
   var riskLabel = document.createElement('div');
-  riskLabel.style.cssText = 'font-family:"Courier New",monospace;font-size:7px;letter-spacing:0.5px;margin-top:3px;';
+  riskLabel.style.cssText = 'font-family:"Courier New",monospace;font-size:9px;font-weight:bold;letter-spacing:0.5px;margin-top:3px;';
 
   if (risk === 'high') {
     meterFill.style.cssText =
@@ -160,12 +204,12 @@ function buildPlayCard(card, isSel, staggerIdx) {
   meterWrap.append(meterTrack, riskLabel);
   cel.appendChild(meterWrap);
 
-  // Footer — description
+  // Footer — short punchy description
   var footer = document.createElement('div');
   footer.style.cssText =
-    'padding:4px 10px 10px;font-family:"Courier New",monospace;font-size:7px;' +
+    'padding:4px 10px 10px;font-family:"Courier New",monospace;font-size:9px;' +
     'color:var(--muted);line-height:1.3;opacity:0.7;';
-  footer.textContent = card.desc;
+  footer.textContent = SHORT_DESC[card.id] || card.desc;
   cel.appendChild(footer);
 
   return cel;
@@ -180,7 +224,6 @@ export function buildCardDraft() {
   var isOff = GS.side === 'offense';
   var pool = isOff ? getOffCards(GS.team) : getDefCards(GS.team);
   var schemeName = isOff ? team.style : team.defStyle;
-  var mascot = GS.team === 'iron_ridge' ? 'TRIDENTS' : 'CACTI';
 
   // Inject animations
   var styleEl = document.createElement('style');
@@ -194,17 +237,27 @@ export function buildCardDraft() {
     '@keyframes lockGlow { 0%,100% { box-shadow:6px 6px 0 #997a00, 0 0 30px rgba(255,204,0,0.4); } 50% { box-shadow:6px 6px 0 #997a00, 0 0 50px rgba(255,204,0,0.7); } }';
   el.appendChild(styleEl);
 
-  // Header bar
+  // Header bar — team name + scheme
   var hdr = document.createElement('div');
   hdr.style.cssText =
     'background:rgba(0,0,0,0.5);padding:10px 14px;display:flex;justify-content:space-between;' +
     'align-items:center;flex-shrink:0;border-bottom:2px solid var(--f-purple);';
+
   var teamBrand = document.createElement('div');
   teamBrand.style.cssText =
+    'display:flex;align-items:baseline;gap:0;' +
+    'font-style:italic;transform:skewX(-10deg);';
+  var brandName = document.createElement('span');
+  brandName.style.cssText =
     'font-family:"Bebas Neue",sans-serif;font-size:24px;color:' + team.accent + ';' +
-    'letter-spacing:2px;font-style:italic;transform:skewX(-10deg);' +
-    'text-shadow:2px 2px 0 #000, 0 0 10px ' + team.accent + ';';
-  teamBrand.textContent = team.icon + ' ' + team.name;
+    'letter-spacing:2px;text-shadow:2px 2px 0 #000, 0 0 10px ' + team.accent + ';';
+  brandName.textContent = team.icon + ' ' + team.name;
+  var brandScheme = document.createElement('span');
+  brandScheme.style.cssText =
+    'font-family:"Bebas Neue",sans-serif;font-size:16px;color:var(--muted);' +
+    'letter-spacing:1px;margin-left:6px;';
+  brandScheme.textContent = '\u00b7 ' + schemeName;
+  teamBrand.append(brandName, brandScheme);
   hdr.appendChild(teamBrand);
 
   var backBtn = document.createElement('button');
@@ -227,42 +280,34 @@ export function buildCardDraft() {
     'flex:1;overflow-y:auto;padding:20px 16px 80px;display:flex;flex-direction:column;gap:10px;' +
     'position:relative;z-index:2;';
 
-  // Title — matching draft.js header exactly
+  // Title — "5. DRAFT YOUR PLAYS" matching chrome-header style from draft.js
   var title = document.createElement('div');
-  title.style.cssText =
-    'font-family:"Bebas Neue",sans-serif;font-size:28px;color:var(--a-gold);' +
-    'letter-spacing:2px;font-style:italic;transform:skewX(-10deg);' +
-    'text-shadow:2px 2px 0 #000, 0 0 10px var(--a-gold);line-height:1;';
-  title.textContent = 'DRAFT YOUR PLAYS';
+  title.className = 'chrome-header';
+  title.style.fontSize = '22px';
+  title.textContent = '5. DRAFT YOUR PLAYS';
   content.appendChild(title);
 
-  // Subtitle — scheme name
-  var subtitle = document.createElement('div');
-  subtitle.style.cssText =
-    'font-family:"Press Start 2P",monospace;font-size:8px;color:var(--muted);' +
-    'letter-spacing:1px;margin-bottom:8px;';
-  subtitle.textContent = team.name + ' ' + mascot + ' \u2014 ' + schemeName;
-  content.appendChild(subtitle);
-
-  // Counter with dot indicators
+  // Counter with dot indicators — positioned like "QUARTERBACK — PICK 1" label
   var counterRow = document.createElement('div');
   counterRow.style.cssText =
-    'display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px;';
+    'font-family:"Press Start 2P",monospace;font-size:10px;color:#00ff88;' +
+    'letter-spacing:1px;margin-bottom:8px;' +
+    'border-bottom:1px solid #00ff8833;padding-bottom:6px;' +
+    'display:flex;align-items:center;gap:8px;';
 
   var dots = [];
   for (var d = 0; d < 5; d++) {
     var dot = document.createElement('div');
     dot.style.cssText =
       'width:8px;height:8px;border-radius:50%;background:#333;border:1px solid #555;' +
-      'transition:background 0.2s, border-color 0.2s, box-shadow 0.2s;';
+      'transition:background 0.2s, border-color 0.2s, box-shadow 0.2s;flex-shrink:0;';
     dots.push(dot);
     counterRow.appendChild(dot);
   }
 
   var counterText = document.createElement('div');
   counterText.style.cssText =
-    'font-family:"Press Start 2P",monospace;font-size:10px;' +
-    'color:var(--a-gold);margin-left:4px;transition:color 0.2s;';
+    'color:var(--a-gold);margin-left:4px;transition:color 0.2s;white-space:nowrap;';
   counterRow.appendChild(counterText);
   content.appendChild(counterRow);
 
@@ -309,7 +354,6 @@ export function buildCardDraft() {
           refreshCards();
           refreshGoBtn();
         } else {
-          // Flash counter red
           counterText.style.animation = 'counterFlash 0.4s ease-out';
           setTimeout(function() { counterText.style.animation = ''; }, 400);
         }
@@ -329,7 +373,7 @@ export function buildCardDraft() {
     goBtn.style.cssText =
       'width:100%;font-size:14px;margin-top:12px;' +
       (ready
-        ? 'background:#ffcc00;border-color:#ffcc00;color:#000;animation:lockGlow 2s ease-in-out infinite;'
+        ? 'background:#ffcc00;border-color:#ffcc00;color:#000;box-shadow:6px 6px 0 #997a00, 0 0 30px rgba(255,204,0,0.4);animation:lockGlow 2s ease-in-out infinite;'
         : 'opacity:0.35;');
     goBtn.disabled = !ready;
     goBtn.textContent = ready ? 'LOCK IN PLAYS \u2192' : 'PICK 5 PLAYS';

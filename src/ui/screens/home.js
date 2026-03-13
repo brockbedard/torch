@@ -2,6 +2,7 @@ import { SND } from '../../engine/sound.js';
 import { render, setGs, getInitialScenario, VERSION, VERSION_NAME } from '../../state.js';
 
 var DEV_LOG = [
+  "Polish play card draft — sizing, readability, scheme in nav bar, consistency with player cards",
   "Play diagram SVG test page with 4 sample formations",
   "Play card draft screen with X's and O's diagrams and risk meters",
   "0.10.0 — Gameday Edition: arcade broadcast redesign, player art, Vite modular architecture",

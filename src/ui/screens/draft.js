@@ -151,12 +151,22 @@ export function buildDraft() {
   hdr.style.cssText =
     'background:rgba(0,0,0,0.5);padding:10px 14px;display:flex;justify-content:space-between;' +
     'align-items:center;flex-shrink:0;border-bottom:2px solid var(--f-purple);';
+  var schemeName = isDef ? team.defStyle : team.style;
   var teamBrand = document.createElement('div');
   teamBrand.style.cssText =
+    'display:flex;align-items:baseline;gap:0;' +
+    'font-style:italic;transform:skewX(-10deg);';
+  var brandName = document.createElement('span');
+  brandName.style.cssText =
     'font-family:"Bebas Neue",sans-serif;font-size:24px;color:' + team.accent + ';' +
-    'letter-spacing:2px;font-style:italic;transform:skewX(-10deg);' +
-    'text-shadow:2px 2px 0 #000, 0 0 10px ' + team.accent + ';';
-  teamBrand.textContent = team.icon + ' ' + team.name;
+    'letter-spacing:2px;text-shadow:2px 2px 0 #000, 0 0 10px ' + team.accent + ';';
+  brandName.textContent = team.icon + ' ' + team.name;
+  var brandScheme = document.createElement('span');
+  brandScheme.style.cssText =
+    'font-family:"Bebas Neue",sans-serif;font-size:16px;color:var(--muted);' +
+    'letter-spacing:1px;margin-left:6px;';
+  brandScheme.textContent = '\u00b7 ' + schemeName;
+  teamBrand.append(brandName, brandScheme);
   hdr.appendChild(teamBrand);
 
   var backBtn = document.createElement('button');
