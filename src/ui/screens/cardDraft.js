@@ -88,12 +88,14 @@ function buildPlayCard(card, isSel, staggerIdx) {
   var cel = document.createElement('div');
   cel.style.cssText =
     'background:var(--bg-surface);' +
-    'border:2px solid ' + (isSel ? '#00ff88' : '#00ff8866') + ';' +
+    'border:2px solid ' + (isSel ? '#00ff88' : '#00ff8833') + ';' +
     'border-radius:6px;padding:0;position:relative;overflow:hidden;' +
     'cursor:pointer;display:flex;flex-direction:column;' +
     'transition:all 0.15s ease;' +
-    'opacity:' + (isSel ? '1' : '0.8') + ';' +
-    (isSel ? 'box-shadow:0 0 18px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08);' : '');
+    'opacity:' + (isSel ? '1' : '0.55') + ';' +
+    (isSel
+      ? 'box-shadow:0 0 18px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08);transform:translateY(-4px);'
+      : 'transform:translateY(0);');
 
   // Entrance animation
   cel.style.animation = 'cardSlideUp 0.35s ease-out ' + (staggerIdx * 0.05) + 's both';
@@ -287,12 +289,20 @@ export function buildCardDraft() {
   title.textContent = '5. DRAFT YOUR PLAYS';
   content.appendChild(title);
 
-  // Counter with dot indicators — positioned like "QUARTERBACK — PICK 1" label
-  var counterRow = document.createElement('div');
-  counterRow.style.cssText =
+  // Section label — matches "QUARTERBACK — PICK 1" on player draft
+  var sectionLabel = document.createElement('div');
+  sectionLabel.style.cssText =
     'font-family:"Press Start 2P",monospace;font-size:10px;color:#00ff88;' +
     'letter-spacing:1px;margin-bottom:8px;' +
-    'border-bottom:1px solid #00ff8833;padding-bottom:6px;' +
+    'border-bottom:1px solid #00ff8833;padding-bottom:6px;';
+  sectionLabel.textContent = 'PLAYS \u2014 PICK 5';
+  content.appendChild(sectionLabel);
+
+  // Counter with dot indicators
+  var counterRow = document.createElement('div');
+  counterRow.style.cssText =
+    'font-family:"Press Start 2P",monospace;font-size:10px;' +
+    'letter-spacing:1px;margin-bottom:8px;' +
     'display:flex;align-items:center;gap:8px;';
 
   var dots = [];
