@@ -63,5 +63,29 @@ export function buildUnderConstruction(){
 
   content.append(icon,title,divider,msg,highlight,btn);
   el.appendChild(content);
+
+  // Broadcast voice-over
+  var vo=new Audio('/audio/broadcast-intro.mp3');
+  vo.volume=0.7;
+  vo.loop=false;
+  setTimeout(function(){
+    vo.play().catch(function(){
+      // Autoplay blocked — play on first interaction
+      var handler=function(){
+        vo.play().catch(function(){});
+        document.removeEventListener('click',handler);
+        document.removeEventListener('touchstart',handler);
+      };
+      document.addEventListener('click',handler,{once:true});
+      document.addEventListener('touchstart',handler,{once:true});
+    });
+  },700);
+
+  // Stop audio if navigating away
+  var obs=new MutationObserver(function(){
+    if(!document.contains(el)){vo.pause();vo.currentTime=0;obs.disconnect();}
+  });
+  obs.observe(document.getElementById('root'),{childList:true});
+
   return el;
 }
