@@ -38,21 +38,56 @@ export function buildSetup(){
   modal.appendChild(mBox);
   el.appendChild(modal);
 
-  var sbContainer = document.createElement('div');
-  function refreshBoard(){
-    sbContainer.innerHTML='';
-    sbContainer.appendChild(buildScoreboard(selSide, selTeam));
-  }
-  refreshBoard();
-  content.appendChild(sbContainer);
+  // 1. Choose Your Team
+  var teamContainer = document.createElement('div');
+  var pageInst=document.createElement('div');
+  pageInst.className='chrome-header';
+  pageInst.style.fontSize='22px';
+  pageInst.textContent='1. CHOOSE YOUR TEAM';
+  teamContainer.appendChild(pageInst);
 
+  var teamGrid=document.createElement('div');teamGrid.style.cssText='display:flex;gap:12px;';
+  function refreshTeams(){
+    teamGrid.innerHTML='';
+    TEAMS.forEach(function(team){
+      var isSel=selTeam===team.id;
+      var card=document.createElement('div');
+      card.style.cssText=
+        'flex:1;background:#12101e;border:2px solid '+(isSel?'#00ff88':'#00ff8844')+';'+
+        'border-radius:6px;padding:16px 12px;cursor:pointer;text-align:center;'+
+        'transition:all 0.15s ease;position:relative;overflow:hidden;'+
+        'opacity:'+(isSel?'1':'0.7')+';'+
+        (isSel?'box-shadow:0 0 18px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08);':'');
+      if(isSel){
+        var bar=document.createElement('div');
+        bar.style.cssText='position:absolute;top:0;left:50%;transform:translateX(-50%);width:36px;height:3px;background:#00ff88;border-radius:0 0 3px 3px;';
+        card.appendChild(bar);
+      }
+      var iconEl=document.createElement('div');
+      iconEl.style.cssText='font-size:50px;margin-bottom:8px;filter:drop-shadow(0 0 12px '+team.accent+');';
+      iconEl.textContent=team.icon;
+      var nameEl=document.createElement('div');
+      nameEl.style.cssText='font-family:"Bebas Neue",sans-serif;font-size:26px;font-style:italic;color:'+team.accent+';line-height:1;margin-bottom:10px;text-shadow:0 0 10px '+team.accent+'44;';
+      nameEl.textContent=team.name;
+      var schemeEl=document.createElement('div');
+      schemeEl.style.cssText='font-family:"Courier New",monospace;font-size:9px;color:#ffcc00;font-weight:bold;letter-spacing:1px;line-height:1.8;';
+      schemeEl.innerHTML='OFF: '+team.style+'<br>DEF: '+team.defStyle;
+      card.append(iconEl,nameEl,schemeEl);
+      card.onclick=function(){SND.select();selTeam=team.id;GS.team=team.id;refreshTeams();refreshBoard();refreshGo();};
+      teamGrid.appendChild(card);
+    });
+  }
+  teamContainer.appendChild(teamGrid);
+  content.appendChild(teamContainer);
+
+  // 2. Pick Your Side
   var sideContainer = document.createElement('div');
   var sideLabel=document.createElement('div');
   sideLabel.className='chrome-header';
   sideLabel.style.fontSize='22px';
   sideLabel.textContent='2. PICK YOUR SIDE OF THE BALL';
   sideContainer.appendChild(sideLabel);
-  
+
   var sideRow=document.createElement('div');sideRow.style.cssText='display:flex;gap:10px;';
   function refreshSides(){
     sideRow.innerHTML='';
@@ -71,38 +106,16 @@ export function buildSetup(){
     });
   }
   sideContainer.appendChild(sideRow);
-
-  var teamContainer = document.createElement('div');
-  var pageInst=document.createElement('div');
-  pageInst.className='chrome-header';
-  pageInst.style.fontSize='22px';
-  pageInst.textContent='1. CHOOSE YOUR TEAM';
-  teamContainer.appendChild(pageInst);
-
-  var teamGrid=document.createElement('div');teamGrid.style.cssText='display:flex;flex-direction:column;gap:10px;';
-  function refreshTeams(){
-    teamGrid.innerHTML='';
-    TEAMS.forEach(function(team){
-      var isSel=selTeam===team.id;
-      var card=document.createElement('div');
-      card.className='team-card'+(isSel?' selected':'');
-      card.style.padding='15px';
-      card.innerHTML=
-        '<div style="flex:1;">'+
-          '<div class="team-name" style="color:'+team.accent+';font-size:28px;line-height:0.9;">'+team.name+'</div>'+
-          '<div style="font-family:\'Press Start 2P\',monospace;font-size:7px;color:var(--white);opacity:0.9;line-height:1.6;margin-top:6px;">'+
-            'OFFENSE: '+team.style+'<br>'+
-            'DEFENSE: '+team.defStyle+
-          '</div>'+
-        '</div>'+
-        '<div class="team-icon" style="font-size:55px;filter:drop-shadow(0 0 12px '+team.accent+'); margin-left:10px;">'+team.icon+'</div>';
-      card.onclick=function(){SND.select();selTeam=team.id;GS.team=team.id;refreshTeams();refreshBoard();refreshGo();};
-      teamGrid.appendChild(card);
-    });
-  }
-  teamContainer.appendChild(teamGrid);
-  content.appendChild(teamContainer);
   content.appendChild(sideContainer);
+
+  // 3. Scoreboard (context for scenario)
+  var sbContainer = document.createElement('div');
+  function refreshBoard(){
+    sbContainer.innerHTML='';
+    sbContainer.appendChild(buildScoreboard(selSide, selTeam));
+  }
+  refreshBoard();
+  content.appendChild(sbContainer);
 
   var goWrap=document.createElement('div');goWrap.style.cssText='padding:10px 0 20px;';
   var goBtn=document.createElement('button');

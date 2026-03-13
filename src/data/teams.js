@@ -2,7 +2,7 @@ export const TEAMS = [
   {id:'iron_ridge',name:'IRON RIDGE',abbr:'IR',icon:'\uD83D\uDD31',
    color:'#CC1A1A',accent:'#ff4444',bg:'#1a0000',
    style:'TRIPLE OPTION',desc:'Give. Keep. Pitch.',
-   defStyle:'MULTIPLE D',defDesc:'Trust the system.',
+   defStyle:'MULTIPLE D',defDesc:'Hard nosed.',
    coach:{name:'Coach Mack Harmon',voice:'Old school. Option football. Three yards and a cloud of dust.'},
    players:[
      {id:'ir_q1',name:'Bo Kendrick',nick:'The Conductor',pos:'QB',ovr:80,desc:'Reads the DE like a book. Never makes the wrong call.',cat:'qb'},
