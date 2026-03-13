@@ -50,7 +50,7 @@ export function buildSetup(){
   var sideLabel=document.createElement('div');
   sideLabel.className='chrome-header';
   sideLabel.style.fontSize='22px';
-  sideLabel.textContent='1. PICK YOUR SIDE OF THE BALL';
+  sideLabel.textContent='2. PICK YOUR SIDE OF THE BALL';
   sideContainer.appendChild(sideLabel);
   
   var sideRow=document.createElement('div');sideRow.style.cssText='display:flex;gap:10px;';
@@ -71,13 +71,12 @@ export function buildSetup(){
     });
   }
   sideContainer.appendChild(sideRow);
-  content.appendChild(sideContainer);
 
   var teamContainer = document.createElement('div');
   var pageInst=document.createElement('div');
   pageInst.className='chrome-header';
   pageInst.style.fontSize='22px';
-  pageInst.textContent='2. CHOOSE YOUR TEAM';
+  pageInst.textContent='1. CHOOSE YOUR TEAM';
   teamContainer.appendChild(pageInst);
 
   var teamGrid=document.createElement('div');teamGrid.style.cssText='display:flex;flex-direction:column;gap:10px;';
@@ -103,6 +102,7 @@ export function buildSetup(){
   }
   teamContainer.appendChild(teamGrid);
   content.appendChild(teamContainer);
+  content.appendChild(sideContainer);
 
   var goWrap=document.createElement('div');goWrap.style.cssText='padding:10px 0 20px;';
   var goBtn=document.createElement('button');

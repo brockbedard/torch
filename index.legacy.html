@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#07050e">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>🔥 TORCH — The Football Card Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Press+Start+2P&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050015; --f-purple: #bb00ff; --l-green: #00ff44; --a-gold: #ffcc00;
+  --white: #ffffff; --glass: rgba(255, 255, 255, 0.1);
+  --chrome: linear-gradient(to bottom, #fff 0%, #888 50%, #fff 100%);
+  --p-red: #ff0040; --text: #fff; --muted: #888; --cyan: #00eaff; --orange: #ff4d00; --danger: #ff0040;
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html,body { 
+  background: var(--bg); width: 100%; height: 100%; overflow: hidden; 
+  user-select: none; -webkit-user-select: none; touch-action: manipulation;
+}
+body { color: white; font-family: 'Barlow Condensed', sans-serif; display: flex; justify-content: center; font-size: 18px; }
+#root { 
+  width: 100%; max-width: 430px; height: 100vh; background: #080020; position: relative; 
+  overflow-y: auto; overflow-x: hidden; box-shadow: 0 0 100px rgba(187, 0, 255, 0.2);
+  padding-top: var(--safe-top); padding-bottom: var(--safe-bottom);
+  user-select: none; -webkit-user-select: none; touch-action: manipulation;
+}
+#root::after {
+  content: ""; position: fixed; inset: 0; width: 100%; max-width: 430px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 3px, 3px 100%; z-index: 9999; pointer-events: none; opacity: 0.6;
+}
+.px { font-family: 'Press Start 2P', monospace; }
+.bn { font-family: 'Bebas Neue', sans-serif; }
+
+@keyframes sup{from{transform:translateY(26px);opacity:0;}to{transform:none;opacity:1;}}
+@keyframes pop{0%{transform:scale(.2);opacity:0;}65%{transform:scale(1.16);}100%{transform:scale(1);opacity:1;}}
+@keyframes fi{from{opacity:0;}to{opacity:1;}}
+@keyframes flicker{from{opacity:0.8;transform:scale(1);}to{opacity:1;transform:scale(1.1);}}
+@keyframes ballPass{
+  0%{transform:translate(-250px, 120px) rotate(0deg);opacity:0;}
+  15%{transform:translate(-180px, 80px) rotate(60deg);opacity:1;}
+  50%{transform:translate(0px, 0px) rotate(360deg);opacity:1;}
+  85%{transform:translate(180px, -80px) rotate(660deg);opacity:1;}
+  100%{transform:translate(250px, -120px) rotate(720deg);opacity:0;}
+}
+@keyframes ignite{
+  0%,48%{opacity:0;transform:scale(0.4) rotate(-20deg);filter:blur(5px);}
+  50%{opacity:1;transform:scale(1.8) rotate(0deg);filter:blur(0px);}
+  55%{transform:scale(1.4) rotate(10deg);}
+  60%,100%{opacity:1;transform:scale(1.3) rotate(0deg);filter:drop-shadow(0 0 15px var(--orange));}
+}
+
+.sup{animation:sup .38s ease-out both;}
+.pop{animation:pop .48s cubic-bezier(.34,1.56,.64,1) both;}
+.fi{animation:fi .45s ease-out both;}
+.flicker{animation:flicker 0.1s infinite alternate;}
+
+.btn-blitz {
+  background: #fff; border: 4px solid var(--f-purple); padding: 15px;
+  font-family: 'Press Start 2P', monospace; font-size: 14px; color: var(--f-purple);
+  box-shadow: 6px 6px 0 var(--f-purple), 10px 10px 0 #000; cursor: pointer;
+  text-transform: uppercase; width: 100%; transition: all 0.1s; display: block; line-height: 1.2;
+}
+.btn-blitz:active:not(:disabled) { transform: translate(4px, 4px); box-shadow: 2px 2px 0 var(--f-purple), 4px 4px 0 #000; }
+.btn-blitz:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.chrome-header {
+  color: var(--a-gold); font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px; letter-spacing: 2px; font-style: italic;
+  transform: skewX(-10deg); display: inline-block; margin-bottom: 20px;
+  text-shadow: 2px 2px 0 #000, 0 0 10px var(--a-gold);
+}
+
+.team-card {
+  background: linear-gradient(135deg, #1a0033 0%, #05051a 100%);
+  border: 4px solid var(--white); padding: 20px; margin-bottom: 10px;
+  position: relative; box-shadow: 8px 8px 0 rgba(0,0,0,0.5); cursor: pointer; transition: all 0.1s;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.team-card.selected { border-color: var(--l-green); box-shadow: 0 0 20px var(--l-green); transform: scale(1.02); }
+.team-name { font-family: 'Bebas Neue', sans-serif; font-size: 32px; font-style: italic; line-height: 1; margin-bottom: 5px; color: white; }
+.team-icon { font-size: 50px; opacity: 1; margin-left: 15px; }
+.play-card-blitz {
+  background: var(--glass); border: 2px solid var(--white); padding: 10px;
+  text-align: center; position: relative; overflow: hidden; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 90px;
+}
+.play-card-blitz.selected { background: var(--f-purple); border-color: var(--a-gold); box-shadow: 0 0 15px var(--f-purple); transform: scale(1.05); }
+
+.clash-card {
+  width: 100px; height: 140px; border: 4px solid var(--white); background: #111;
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  box-shadow: 0 0 20px rgba(255,255,255,0.2); padding: 6px; text-align: center;
+}
+.vs-circle {
+  width: 50px; height: 50px; border-radius: 50%; background: var(--p-red);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 24px; font-style: italic;
+  box-shadow: 0 0 30px var(--p-red); z-index: 2; color: white; margin: 0 -15px; flex-shrink: 0;
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="crt-overlay"></div>
+<script>
+// ===== SOUND ENGINE =====
+var SND=(function(){
+  var ctx=null;var crowdNode=null;var crowdGain=null;
+  function ac(){if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume();return ctx;}
+  function tone(f,dur,type,vol,t0){
+    try{var c=ac(),now=c.currentTime,o=c.createOscillator(),g=c.createGain();
+      o.connect(g);g.connect(c.destination);o.type=type||'square';o.frequency.value=f;
+      g.gain.setValueAtTime(vol||.1,now+(t0||0));
+      g.gain.exponentialRampToValueAtTime(0.001,now+(t0||0)+dur);
+      o.start(now+(t0||0));o.stop(now+(t0||0)+dur+.02);}catch(e){}}
+  function noise(dur,vol,t0){
+    try{var c=ac(),sr=c.sampleRate,buf=c.createBuffer(1,Math.floor(sr*dur),sr),data=buf.getChannelData(0);
+      for(var i=0;i<data.length;i++)data[i]=Math.random()*2-1;
+      var s=c.createBufferSource(),g=c.createGain();s.buffer=buf;s.connect(g);g.connect(c.destination);
+      g.gain.setValueAtTime(vol||.1,c.currentTime+(t0||0));
+      g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+(t0||0)+dur);
+      s.start(c.currentTime+(t0||0));}catch(e){}}
+  function whistle(dur, vol, t0) {
+    try {
+      var c = ac(), now = c.currentTime + (t0 || 0), g = c.createGain();
+      g.connect(c.destination); g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(vol || 0.2, now + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      [2500, 2515].forEach(function(f) {
+        var o = c.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+        var mod = c.createOscillator(); mod.frequency.value = 30;
+        var modG = c.createGain(); modG.gain.value = 15;
+        mod.connect(modG); modG.connect(o.frequency);
+        o.connect(g); mod.start(now); o.start(now); o.stop(now + dur); mod.stop(now + dur);
+      });
+    } catch(e) {}
+  }
+  function grunt(vol, t0) {
+    try {
+      var c = ac(), now = c.currentTime + (t0 || 0), o = c.createOscillator(), g = c.createGain();
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(120, now);
+      o.frequency.exponentialRampToValueAtTime(60, now + 0.15);
+      g.gain.setValueAtTime(vol || 0.1, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      o.connect(g); g.connect(c.destination); o.start(now); o.stop(now + 0.15);
+    } catch(e) {}
+  }
+  return{
+    click:function(){tone(440,.06,'square',.08);tone(880,.04,'square',.05,.05);},
+    select:function(){tone(523,.05,'triangle',.1);tone(659,.07,'triangle',.11,.06);},
+    snap:function(){grunt(0.3); noise(0.1, 0.2, 0.05); tone(80, 0.2, 'sawtooth', 0.2);},
+    menu:function(){[262,330,392,523].forEach(function(f,i){tone(f,.14,'square',.12,i*.1);});},
+    td:function(){whistle(0.5, 0.25); whistle(0.5, 0.25, 0.6); [523,659,784,1047].forEach(function(f,i){tone(f,.2,'square',.15,i*.1 + 0.2);});},
+    turnover:function(){whistle(0.8, 0.3); [330,247,196,147,110].forEach(function(f,i){tone(f,.2,'sawtooth',.18-i*.02,i*.13 + 0.1);});},
+    clash:function(){grunt(0.4); noise(0.15, 0.4); tone(60, 0.2, 'sawtooth', 0.3);},
+    draft:function(){tone(330,.04,'square',.1);tone(550,.05,'square',.12,.05);tone(880,.1,'square',.14,.1);},
+    flip:function(){for(var i=0;i<4;i++)tone(1200+i*200,.02,'square',.04,i*.04);},
+    crowdStart:function(){},
+    crowdStop:function(){},
+    };
+    })();
+
+    // ===== TEAMS (v0.7: 2 teams) =====
+var TEAMS=[
+  {id:'iron_ridge',name:'IRON RIDGE',abbr:'IR',icon:'\uD83D\uDD31',
+   color:'#CC1A1A',accent:'#ff4444',bg:'#1a0000',
+   style:'TRIPLE OPTION',desc:'Give. Keep. Pitch.',
+   defStyle:'MULTIPLE D',defDesc:'Trust the system.',
+   coach:{name:'Coach Mack Harmon',voice:'Old school. Option football. Three yards and a cloud of dust.'},
+   players:[
+     {id:'ir_q1',name:'Bo Kendrick',nick:'The Conductor',pos:'QB',ovr:80,desc:'Reads the DE like a book. Never makes the wrong call.',cat:'qb'},
+     {id:'ir_q2',name:'Tate Larkin',nick:'Wild Horse',pos:'QB',ovr:74,desc:'More athlete than QB. Will outrun your safety.',cat:'qb'},
+     {id:'ir_s1',name:'Mack Torres',nick:'The Anvil',pos:'FB',ovr:82,desc:"5'10 230. Built to run through linebackers.",cat:'skill'},
+     {id:'ir_s2',name:'Jaylen Sims',nick:'Jet',pos:'RB',ovr:78,desc:'Pitch man. Once he hits the edge, it\'s over.',cat:'skill'},
+     {id:'ir_s3',name:'Duke Owens',nick:'Plow',pos:'RB',ovr:76,desc:'Between the tackles. Three yards. Every time.',cat:'skill'},
+     {id:'ir_s4',name:'Cade Buckley',nick:'Big Country',pos:'TE',ovr:74,desc:'Blocking TE who can leak out for a play-action surprise.',cat:'skill'},
+   ],
+   defPlayers:[
+     {id:'ir_dl1',name:'Dez Lawson',nick:'The Professor',pos:'LB',ovr:80,desc:'Reads the offense\'s mail. Knows where the ball is going before the QB does.',cat:'lb'},
+     {id:'ir_dl2',name:'Knox Barrett',nick:'The Eraser',pos:'LB',ovr:76,desc:'You think you have a first down. Then Knox shows up.',cat:'lb'},
+     {id:'ir_db1',name:'Terrance Gill',nick:'Lockdown',pos:'CB',ovr:82,desc:'He\'s on your best receiver. Good luck.',cat:'skill'},
+     {id:'ir_db2',name:'Aiden Kemp',nick:'The Mirror',pos:'CB',ovr:74,desc:'Runs every route with the receiver. Like a shadow that tackles.',cat:'skill'},
+     {id:'ir_db3',name:'Roman Slade',nick:'The Quarterback',pos:'S',ovr:78,desc:'Calls the coverage. Makes the rotation. Sets the defense.',cat:'skill'},
+     {id:'ir_db4',name:'Malik Ware',nick:'Downhill',pos:'S',ovr:72,desc:'If you run it, he\'s the first one there. Every time.',cat:'skill'},
+   ]},
+  {id:'canyon_tech',name:'CANYON TECH',abbr:'CT',icon:'\uD83C\uDF35',
+   color:'#FF5E1A',accent:'#ff8844',bg:'#1a0800',
+   style:'AIR RAID',desc:'Sling it. Every play.',
+   defStyle:'SEND EVERYBODY',defDesc:'Blitz or bust.',
+   coach:{name:'Coach Hank McCord',voice:'Aggressive. Loves the deep ball. Always attacking.'},
+   players:[
+     {id:'ct_q1',name:'Colt Avery',nick:'The Gunslinger',pos:'QB',ovr:78,desc:'Throws 50 times a game and smiles about it.',cat:'qb'},
+     {id:'ct_q2',name:'Dash Meyers',nick:'Neon Arm',pos:'QB',ovr:74,desc:'His release is so fast you don\'t see the ball leave.',cat:'qb'},
+     {id:'ct_s1',name:'Quez Sampson',nick:'Smoke',pos:'WR',ovr:80,desc:'4.3 speed. Runs one route: past you.',cat:'skill'},
+     {id:'ct_s2',name:'Dante Liu',nick:'The Route Tree',pos:'WR',ovr:76,desc:'Can run all 9 routes and breaks on a dime.',cat:'skill'},
+     {id:'ct_s3',name:'Rio Vasquez',nick:'Slot Machine',pos:'SLOT',ovr:82,desc:'Lives in the seams. Catches everything.',cat:'skill'},
+     {id:'ct_s4',name:'Kirby Walsh',nick:'Checkdown',pos:'RB',ovr:72,desc:'Screen game specialist. Sneaky yards after catch.',cat:'skill'},
+   ],
+   defPlayers:[
+     {id:'ct_dl1',name:'Jace Wilder',nick:'The Missile',pos:'LB',ovr:78,desc:'Lines up in the A-gap and doesn\'t stop until he finds the quarterback.',cat:'lb'},
+     {id:'ct_dl2',name:'Darius Moon',nick:'Moonshot',pos:'LB',ovr:74,desc:'Sometimes he blitzes. Sometimes he drops. Good luck guessing.',cat:'lb'},
+     {id:'ct_db1',name:'Zion Crews',nick:'Island Boy',pos:'CB',ovr:82,desc:'No safety help? No problem. He lives on the island.',cat:'skill'},
+     {id:'ct_db2',name:'Ty Bishop',nick:'The Gambler',pos:'CB',ovr:76,desc:'Jumps every route. Picks off two. Gets burned once. Worth it.',cat:'skill'},
+     {id:'ct_db3',name:'Andre Knox',nick:'Heat Seeker',pos:'S',ovr:80,desc:'Blitzes more than any safety in the league. The QB hears his footsteps.',cat:'skill'},
+     {id:'ct_db4',name:'Kai Orozco',nick:'Ghost',pos:'S',ovr:72,desc:'You don\'t see him until the ball is in the air. Then it\'s his.',cat:'skill'},
+   ]},
+];
+
+// ===== SCHEME-SPECIFIC OFFENSIVE CARDS =====
+var CT_OFF_CARDS=[
+  {id:'mesh',         name:'MESH',           type:'pass',cat:'Pass - Short', icon:'\u2194',  desc:'Two receivers cross in traffic at 5-7 yards. Man coverage killer.'},
+  {id:'four_verts',   name:'FOUR VERTS',     type:'pass',cat:'Pass - Deep',  icon:'\u2B06',  desc:'All receivers go deep. Stretches safeties horizontally.'},
+  {id:'shallow_cross',name:'SHALLOW CROSS',  type:'pass',cat:'Pass - Quick', icon:'\u27A1',  desc:'WR drags across underneath at 4 yards. Quick, reliable.'},
+  {id:'y_corner',     name:'Y-CORNER',       type:'pass',cat:'Pass - Deep',  icon:'\u2196',  desc:'Slot receiver fakes in then breaks to the corner at 15 yards. Cover 2 beater.'},
+  {id:'stick',        name:'STICK',          type:'pass',cat:'Pass - Quick', icon:'\uD83D\uDCCD',desc:'Quick 3-step concept. Hitch at 6 yards with a flat option.'},
+  {id:'slant',        name:'SLANT',          type:'pass',cat:'Pass - Quick', icon:'\u26A1',  desc:'Quick inside break at 5 yards. Timing route.'},
+  {id:'go_route',     name:'GO ROUTE',       type:'pass',cat:'Pass - Bomb',  icon:'\uD83D\uDE80',desc:'Straight vertical bomb. Home run or bust.'},
+  {id:'bubble_screen',name:'BUBBLE SCREEN',  type:'pass',cat:'Pass - Screen',icon:'\uD83D\uDCA8',desc:'Quick lateral to the WR with blockers. Blitz beater.'},
+  {id:'draw',         name:'DRAW',           type:'run', cat:'Run',          icon:'\uD83C\uDCCF',desc:'Fake pass, hand to RB. Only run play that makes sense in Air Raid.'},
+  {id:'qb_sneak',     name:'QB SNEAK',       type:'run', cat:'Run - Short',  icon:'\uD83C\uDFC3',desc:'Short yardage push. Universal.'},
+];
+
+var IR_OFF_CARDS=[
+  {id:'triple_option',name:'TRIPLE OPTION',  type:'run', cat:'Run - Option', icon:'\uD83D\uDD25',desc:'Give, keep, or pitch. The signature play. QB reads the DE.'},
+  {id:'midline',      name:'MIDLINE',        type:'run', cat:'Run - Inside', icon:'\u23EC',  desc:'QB reads the DT instead of the DE. Fullback dive inside.'},
+  {id:'rocket_toss',  name:'ROCKET TOSS',    type:'run', cat:'Run - Outside',icon:'\uD83D\uDE80',desc:'Quick pitch sweep to the outside. Speed to the edge.'},
+  {id:'trap',         name:'TRAP',           type:'run', cat:'Run - Inside', icon:'\uD83E\uDE9C',desc:'Offensive lineman pulls to block the unblocked defender. Deceptive.'},
+  {id:'qb_keeper',    name:'QB KEEPER',      type:'run', cat:'Run - Option', icon:'\uD83C\uDFC3',desc:'QB keeps on the option read and turns upfield.'},
+  {id:'power',        name:'POWER',          type:'run', cat:'Run - Power',  icon:'\uD83D\uDCAA',desc:'Lead blocker through the gap. Downhill physical.'},
+  {id:'zone_read',    name:'ZONE READ',      type:'run', cat:'Run - Option', icon:'\uD83D\uDC41',desc:'Spread formation option. QB reads end, gives or keeps.'},
+  {id:'qb_sneak',     name:'QB SNEAK',       type:'run', cat:'Run - Short',  icon:'\u270A',  desc:'Short yardage push. Universal.'},
+  {id:'pa_post',      name:'PA POST',        type:'pass',cat:'Pass - Deep',  icon:'\uD83C\uDFAF',desc:'Fake the triple, throw deep post. The constraint play.'},
+  {id:'pa_flat',      name:'PA FLAT',        type:'pass',cat:'Pass - Short', icon:'\uD83D\uDEE1',desc:'Fake the dive, dump to the flat. Safe play-action.'},
+];
+
+// ===== SCHEME-SPECIFIC DEFENSIVE CARDS =====
+// Iron Ridge (Saban-inspired): Pattern-matching zone, discipline, gap integrity
+var IR_DEF_CARDS=[
+  {id:'rip_liz',   name:'RIP/LIZ MATCH', type:'con',cat:'Zone Match',      icon:'\uD83E\uDDE0',desc:'Pattern-matching Cover 3. Safety rotates to strength. Stops crossers and verticals.'},
+  {id:'cov4_match',name:'COVER 4 MATCH', type:'con',cat:'Zone Match',      icon:'4\uFE0F\u20E3',desc:'Quarters coverage. Four deep, pattern-match routes. Best run-stopping zone.'},
+  {id:'mod',       name:'MOD COVERAGE',  type:'con',cat:'Zone Shell',      icon:'\uD83D\uDEE1',desc:'Two-high base. Both safeties deep, CBs play off-man/zone hybrid. The vanilla look.'},
+  {id:'cover_6',   name:'COVER 6',       type:'con',cat:'Split-Field',     icon:'\u2194',  desc:'Cover 4 to passing strength, Cover 2 to boundary. Forces QB to read two coverages.'},
+  {id:'bracket',   name:'BRACKET',       type:'con',cat:'Man/Zone Hybrid', icon:'\uD83D\uDD12',desc:'Double-team the best weapon. Inside-outside leverage. Shuts down one receiver completely.'},
+  {id:'skinny',    name:'SKINNY',        type:'agg',cat:'Man/Zone Hybrid', icon:'\u2702',  desc:'Trips check. Man on the iso receiver, pattern-match the trips side. Stops overloads.'},
+  {id:'meg',       name:'MEG',           type:'agg',cat:'Man Coverage',    icon:'\uD83D\uDCAA',desc:'Man Everywhere in the Gap. Press-man, everyone has an assignment. Win your matchup.'},
+  {id:'gap_int',   name:'GAP INTEGRITY', type:'agg',cat:'Run Defense',     icon:'\uD83E\uDDF1',desc:'Every defender owns a gap. No freelancing. Built to stop option football and power runs.'},
+  {id:'fire_zone', name:'FIRE ZONE',     type:'agg',cat:'Zone Blitz',      icon:'\uD83D\uDD25',desc:'Send 5, drop 3 into zone behind it. Calculated pressure with coverage underneath.'},
+  {id:'robber',    name:'ROBBER',        type:'agg',cat:'Zone/Man Hybrid', icon:'\uD83D\uDD75',desc:'Safety reads the QB\'s eyes and jumps the route. Guess right = INT. Guess wrong = TD.'},
+];
+
+// Canyon Tech (Williams-inspired): Blitz from everywhere, zero coverage, high risk/reward
+var CT_DEF_CARDS=[
+  {id:'overload',  name:'OVERLOAD BLITZ',type:'agg',cat:'Pressure',        icon:'\uD83D\uDCA5',desc:'Stack extra rushers to one side. OL can\'t sort out the numbers. Pure chaos.'},
+  {id:'db_blitz',  name:'DB BLITZ',      type:'agg',cat:'Exotic Pressure', icon:'\u26A1',  desc:'Safety AND corner blitz off the edge. Zero coverage behind it. Pure aggression.'},
+  {id:'zero_cov',  name:'ZERO COVER',    type:'agg',cat:'Man / Zero',      icon:'\uD83C\uDFAF',desc:'All-out man coverage, no safety help. Every defender on an island. Win or get burned.'},
+  {id:'a_gap_mug', name:'A-GAP MUG',     type:'agg',cat:'Simulated Press.', icon:'\uD83D\uDC7B',desc:'Two defenders in both A-gaps. Sometimes both come. Sometimes neither. Creates hesitation.'},
+  {id:'edge_crash',name:'EDGE CRASH',    type:'agg',cat:'Pressure',        icon:'\uD83C\uDF2A',desc:'Both edges pin ears back. Speed rush outside. Interior holds gaps. Pure pass rush.'},
+  {id:'cov2_buc',  name:'COVER 2 BUC',   type:'con',cat:'Zone',            icon:'2\uFE0F\u20E3',desc:'Tampa 2 variant. Two deep, LB drops to cover the seam. The changeup to set up blitzes.'},
+  {id:'man_press', name:'MAN PRESS',     type:'con',cat:'Man Coverage',    icon:'\uD83E\uDD1D',desc:'Press coverage at the line. Jam receivers to break timing. No safety help.'},
+  {id:'zone_drop', name:'ZONE BLITZ DROP',type:'con',cat:'Zone Blitz',     icon:'\uD83C\uDCCF',desc:'Show blitz, drop the edge into coverage. QB throws to the flat, the dropped DE picks it off.'},
+  {id:'spy',       name:'SPY',           type:'con',cat:'Assignment',      icon:'\uD83D\uDD75',desc:'One defender shadows the QB. Contains scrambles, watches for the draw.'},
+  {id:'prevent',   name:'PREVENT',       type:'con',cat:'Zone - Max Depth',icon:'\uD83E\uDDF1',desc:'Everyone drops deep. Nothing over the top. Gives up 5+ yards every snap.'},
+];
+
+// ===== MATCHUP TABLES (4 grids) =====
+// Tier key: O+ (8-20 yds), N (2-6), D+ (-2 to 2), TO (turnover risk), OT (boom w/ turnover risk)
+
+// Canyon Tech Offense vs Iron Ridge Defense
+var MT_CT_IR={
+  mesh:          {rip_liz:'D+',cov4_match:'N', mod:'N', cover_6:'D+',bracket:'O+',skinny:'D+',meg:'O+',gap_int:'O+',fire_zone:'N', robber:'D+'},
+  four_verts:    {rip_liz:'D+',cov4_match:'D+',mod:'D+',cover_6:'N', bracket:'D+',skinny:'N', meg:'N', gap_int:'O+',fire_zone:'N', robber:'O+'},
+  shallow_cross: {rip_liz:'N', cov4_match:'O+',mod:'O+',cover_6:'O+',bracket:'N', skinny:'D+',meg:'N', gap_int:'O+',fire_zone:'O+',robber:'N'},
+  y_corner:      {rip_liz:'N', cov4_match:'D+',mod:'N', cover_6:'N', bracket:'TO',skinny:'O+',meg:'N', gap_int:'O+',fire_zone:'N', robber:'O+'},
+  stick:         {rip_liz:'N', cov4_match:'O+',mod:'O+',cover_6:'O+',bracket:'N', skinny:'D+',meg:'D+',gap_int:'O+',fire_zone:'O+',robber:'D+'},
+  slant:         {rip_liz:'D+',cov4_match:'N', mod:'O+',cover_6:'N', bracket:'N', skinny:'O+',meg:'O+',gap_int:'O+',fire_zone:'O+',robber:'TO'},
+  go_route:      {rip_liz:'D+',cov4_match:'TO',mod:'D+',cover_6:'N', bracket:'TO',skinny:'OT',meg:'N', gap_int:'O+',fire_zone:'N', robber:'OT'},
+  bubble_screen: {rip_liz:'O+',cov4_match:'O+',mod:'N', cover_6:'O+',bracket:'N', skinny:'N', meg:'N', gap_int:'D+',fire_zone:'O+',robber:'N'},
+  draw:          {rip_liz:'N', cov4_match:'O+',mod:'O+',cover_6:'N', bracket:'O+',skinny:'N', meg:'D+',gap_int:'D+',fire_zone:'D+',robber:'N'},
+  qb_sneak:      {rip_liz:'N', cov4_match:'N', mod:'O+',cover_6:'N', bracket:'N', skinny:'N', meg:'D+',gap_int:'D+',fire_zone:'N', robber:'N'},
+};
+
+// Iron Ridge Offense vs Canyon Tech Defense
+var MT_IR_CT={
+  triple_option: {overload:'D+',db_blitz:'D+',zero_cov:'D+',a_gap_mug:'N', edge_crash:'O+',cov2_buc:'N', man_press:'N', zone_drop:'N', spy:'D+',prevent:'O+'},
+  midline:       {overload:'D+',db_blitz:'N', zero_cov:'N', a_gap_mug:'D+',edge_crash:'O+',cov2_buc:'N', man_press:'N', zone_drop:'N', spy:'D+',prevent:'O+'},
+  rocket_toss:   {overload:'N', db_blitz:'N', zero_cov:'N', a_gap_mug:'O+',edge_crash:'N', cov2_buc:'N', man_press:'N', zone_drop:'D+',spy:'N', prevent:'O+'},
+  trap:          {overload:'D+',db_blitz:'O+',zero_cov:'O+',a_gap_mug:'D+',edge_crash:'O+',cov2_buc:'N', man_press:'N', zone_drop:'N', spy:'N', prevent:'O+'},
+  qb_keeper:     {overload:'N', db_blitz:'N', zero_cov:'N', a_gap_mug:'N', edge_crash:'N', cov2_buc:'N', man_press:'O+',zone_drop:'N', spy:'D+',prevent:'O+'},
+  power:         {overload:'D+',db_blitz:'N', zero_cov:'N', a_gap_mug:'D+',edge_crash:'O+',cov2_buc:'N', man_press:'O+',zone_drop:'N', spy:'N', prevent:'O+'},
+  zone_read:     {overload:'D+',db_blitz:'N', zero_cov:'N', a_gap_mug:'N', edge_crash:'O+',cov2_buc:'N', man_press:'N', zone_drop:'N', spy:'D+',prevent:'O+'},
+  qb_sneak:      {overload:'N', db_blitz:'N', zero_cov:'N', a_gap_mug:'D+',edge_crash:'N', cov2_buc:'O+',man_press:'N', zone_drop:'N', spy:'N', prevent:'O+'},
+  pa_post:       {overload:'D+',db_blitz:'OT',zero_cov:'OT',a_gap_mug:'N', edge_crash:'D+',cov2_buc:'O+',man_press:'N', zone_drop:'N', spy:'N', prevent:'D+'},
+  pa_flat:       {overload:'O+',db_blitz:'O+',zero_cov:'N', a_gap_mug:'O+',edge_crash:'N', cov2_buc:'N', man_press:'D+',zone_drop:'D+',spy:'N', prevent:'N'},
+};
+
+// Canyon Tech Offense vs Canyon Tech Defense (mirror)
+var MT_CT_CT={
+  mesh:          {overload:'O+',db_blitz:'O+',zero_cov:'O+',a_gap_mug:'N', edge_crash:'N', cov2_buc:'N', man_press:'O+',zone_drop:'N', spy:'N', prevent:'N'},
+  four_verts:    {overload:'OT',db_blitz:'OT',zero_cov:'N', a_gap_mug:'N', edge_crash:'D+',cov2_buc:'D+',man_press:'N', zone_drop:'O+',spy:'N', prevent:'D+'},
+  shallow_cross: {overload:'O+',db_blitz:'O+',zero_cov:'N', a_gap_mug:'O+',edge_crash:'N', cov2_buc:'N', man_press:'D+',zone_drop:'O+',spy:'N', prevent:'N'},
+  y_corner:      {overload:'O+',db_blitz:'OT',zero_cov:'N', a_gap_mug:'N', edge_crash:'D+',cov2_buc:'O+',man_press:'N', zone_drop:'N', spy:'N', prevent:'D+'},
+  stick:         {overload:'O+',db_blitz:'O+',zero_cov:'N', a_gap_mug:'O+',edge_crash:'N', cov2_buc:'N', man_press:'D+',zone_drop:'O+',spy:'N', prevent:'N'},
+  slant:         {overload:'O+',db_blitz:'O+',zero_cov:'N', a_gap_mug:'N', edge_crash:'N', cov2_buc:'D+',man_press:'TO',zone_drop:'N', spy:'O+',prevent:'N'},
+  go_route:      {overload:'OT',db_blitz:'OT',zero_cov:'N', a_gap_mug:'N', edge_crash:'D+',cov2_buc:'D+',man_press:'N', zone_drop:'O+',spy:'N', prevent:'D+'},
+  bubble_screen: {overload:'O+',db_blitz:'O+',zero_cov:'N', a_gap_mug:'O+',edge_crash:'N', cov2_buc:'D+',man_press:'D+',zone_drop:'D+',spy:'N', prevent:'N'},
+  draw:          {overload:'D+',db_blitz:'D+',zero_cov:'D+',a_gap_mug:'D+',edge_crash:'O+',cov2_buc:'O+',man_press:'O+',zone_drop:'N', spy:'N', prevent:'O+'},
+  qb_sneak:      {overload:'N', db_blitz:'N', zero_cov:'N', a_gap_mug:'D+',edge_crash:'N', cov2_buc:'O+',man_press:'N', zone_drop:'N', spy:'N', prevent:'O+'},
+};
+
+// Iron Ridge Offense vs Iron Ridge Defense (mirror)
+var MT_IR_IR={
+  triple_option: {rip_liz:'N', cov4_match:'O+',mod:'N', cover_6:'N', bracket:'O+',skinny:'N', meg:'N', gap_int:'D+',fire_zone:'D+',robber:'O+'},
+  midline:       {rip_liz:'N', cov4_match:'N', mod:'N', cover_6:'N', bracket:'O+',skinny:'N', meg:'N', gap_int:'D+',fire_zone:'D+',robber:'N'},
+  rocket_toss:   {rip_liz:'N', cov4_match:'N', mod:'N', cover_6:'O+',bracket:'N', skinny:'O+',meg:'N', gap_int:'D+',fire_zone:'N', robber:'N'},
+  trap:          {rip_liz:'O+',cov4_match:'N', mod:'N', cover_6:'N', bracket:'N', skinny:'N', meg:'D+',gap_int:'D+',fire_zone:'D+',robber:'O+'},
+  qb_keeper:     {rip_liz:'O+',cov4_match:'N', mod:'N', cover_6:'N', bracket:'N', skinny:'N', meg:'N', gap_int:'D+',fire_zone:'N', robber:'O+'},
+  power:         {rip_liz:'N', cov4_match:'N', mod:'N', cover_6:'N', bracket:'N', skinny:'N', meg:'N', gap_int:'D+',fire_zone:'N', robber:'N'},
+  zone_read:     {rip_liz:'N', cov4_match:'O+',mod:'N', cover_6:'N', bracket:'O+',skinny:'N', meg:'D+',gap_int:'D+',fire_zone:'N', robber:'N'},
+  qb_sneak:      {rip_liz:'O+',cov4_match:'N', mod:'O+',cover_6:'N', bracket:'N', skinny:'N', meg:'D+',gap_int:'D+',fire_zone:'N', robber:'N'},
+  pa_post:       {rip_liz:'N', cov4_match:'D+',mod:'D+',cover_6:'D+',bracket:'N', skinny:'N', meg:'N', gap_int:'O+',fire_zone:'N', robber:'TO'},
+  pa_flat:       {rip_liz:'O+',cov4_match:'O+',mod:'O+',cover_6:'O+',bracket:'N', skinny:'N', meg:'D+',gap_int:'N', fire_zone:'O+',robber:'N'},
+};
+
+// ===== YARD/TURNOVER RESOLUTION =====
+function rollYards(tier){
+  if(tier==='O+') return 8+Math.floor(Math.random()*13);
+  if(tier==='N')  return 2+Math.floor(Math.random()*5);
+  if(tier==='D+') return -2+Math.floor(Math.random()*5);
+  if(tier==='TO') return -2+Math.floor(Math.random()*5);
+  if(tier==='OT') return Math.random()<0.7?(8+Math.floor(Math.random()*13)):(-2+Math.floor(Math.random()*3));
+  return 3;
+}
+function isTurnover(tier){
+  if(tier==='TO') return Math.random()<0.2;
+  if(tier==='OT') return Math.random()<0.2;
+  return false;
+}
+
+// ===== AI PLAY-CALLING =====
+function aiPickDefense(defTeamId,hand,lastPlayId){
+  if(hand.length===0) return null;
+  if(hand.length===1) return hand[0];
+  var pool=hand.slice();
+  // Iron Ridge (Saban): 60% zone, 25% adjustment, 15% aggressive
+  if(defTeamId==='iron_ridge'){
+    // Never call same play twice in a row
+    if(lastPlayId) pool=pool.filter(function(c){return c.id!==lastPlayId;});
+    if(pool.length===0) pool=hand.slice();
+    var zone=['rip_liz','cov4_match','mod','cover_6'];
+    var adjust=['skinny','bracket','meg'];
+    var aggr=['fire_zone','robber','gap_int'];
+    var r=Math.random();
+    var bucket=r<0.6?zone:r<0.85?adjust:aggr;
+    var avail=pool.filter(function(c){return bucket.indexOf(c.id)!==-1;});
+    if(avail.length>0) return avail[Math.floor(Math.random()*avail.length)];
+  }
+  // Canyon Tech (Williams): 50% blitz, 30% coverage, 15% specialty, 5% random
+  if(defTeamId==='canyon_tech'){
+    var blitz=['overload','db_blitz','zero_cov','a_gap_mug','edge_crash'];
+    var cov=['cov2_buc','man_press','zone_drop'];
+    var spec=['spy','prevent'];
+    var r2=Math.random();
+    var bucket2=r2<0.5?blitz:r2<0.8?cov:r2<0.95?spec:null;
+    if(bucket2){
+      var avail2=pool.filter(function(c){return bucket2.indexOf(c.id)!==-1;});
+      if(avail2.length>0) return avail2[Math.floor(Math.random()*avail2.length)];
+    }
+  }
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function aiPickOffense(offTeamId,hand,lastPlayId){
+  if(hand.length===0) return null;
+  if(hand.length===1) return hand[0];
+  var pool=hand.slice();
+  // Canyon Tech AI (Air Raid): 70% short pass, 20% deep, 10% run
+  if(offTeamId==='canyon_tech'){
+    var short=['mesh','slant','shallow_cross','stick','bubble_screen'];
+    var deep=['four_verts','go_route','y_corner'];
+    var run=['draw','qb_sneak'];
+    var r=Math.random();
+    var bucket=r<0.7?short:r<0.9?deep:run;
+    var avail=pool.filter(function(c){return bucket.indexOf(c.id)!==-1;});
+    if(avail.length>0) return avail[Math.floor(Math.random()*avail.length)];
+  }
+  // Iron Ridge AI (Triple Option): 70% run, 20% option/misdirection, 10% play-action
+  if(offTeamId==='iron_ridge'){
+    var mainRun=['triple_option','zone_read','power'];
+    var optMis=['midline','qb_keeper','trap','rocket_toss'];
+    var pa=['pa_post','pa_flat'];
+    var r2=Math.random();
+    var bucket2=r2<0.7?mainRun:r2<0.9?optMis:pa;
+    var avail2=pool.filter(function(c){return bucket2.indexOf(c.id)!==-1;});
+    if(avail2.length>0) return avail2[Math.floor(Math.random()*avail2.length)];
+  }
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+// ===== CARD INTEL OVERLAY =====
+function showCardIntel(card, teamId, side){
+  var overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fi .3s ease-out both;';
+  
+  var modal=document.createElement('div');
+  modal.style.cssText='width:100%;max-width:340px;background:var(--bg2);border:2px solid var(--cyan);border-radius:12px;padding:24px;position:relative;box-shadow:0 0 40px rgba(0,212,255,.2);';
+  
+  var close=document.createElement('div');
+  close.style.cssText='position:absolute;top:12px;right:12px;font-size:24px;color:var(--muted);cursor:pointer;line-height:1;';
+  close.textContent='\u00D7';
+  close.onclick=function(){overlay.remove();};
+  
+  var title=document.createElement('div');
+  title.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--cyan);letter-spacing:2px;margin-bottom:4px;";
+  title.textContent=card.name;
+  
+  var type=document.createElement('div');
+  type.className='px';
+  type.style.cssText='font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:16px;';
+  type.textContent=card.cat.toUpperCase();
+  
+  var body=document.createElement('div');
+  body.style.cssText='font-size:15px;color:var(--text);line-height:1.6;font-weight:600;';
+  body.textContent=card.desc;
+  
+  var intel=document.createElement('div');
+  intel.style.cssText='margin-top:20px;padding-top:16px;border-top:1px solid var(--bdr);';
+  
+  var intelH=document.createElement('div');
+  intelH.className='px';
+  intelH.style.cssText='font-size:6px;color:var(--gold);margin-bottom:10px;letter-spacing:1px;';
+  intelH.textContent='STRATEGIC INTEL';
+  
+  var intelText=document.createElement('div');
+  intelText.style.cssText='font-size:14px;color:var(--text);opacity:.8;font-style:italic;';
+  
+  // Logic-based intel
+  var text = '';
+  var isOffense = side==='offense';
+  if(isOffense){
+    if(card.type==='pass'){
+      if(card.cat.includes('Quick') || card.cat.includes('Short')) text='Effective against heavy pressure and blitzes. Harder to pick off, but lower yardage ceiling.';
+      else if(card.cat.includes('Deep') || card.cat.includes('Bomb')) text='High risk, high reward. Beats soft zone but very vulnerable to deep coverage and "Robber" looks.';
+      else if(card.id.includes('pa_')) text='Play-action constraints. Punishes aggressive run-stuffing defenses by faking the dive.';
+    } else {
+      if(card.id==='triple_option') text='The core engine. QB reads the end. Devastates soft zones, but dies to "Spy" and "Gap Integrity".';
+      else if(card.cat.includes('Inside')) text='Safe yards between the tackles. Beats speed-rushers, but struggles against "A-Gap Mug".';
+      else if(card.cat.includes('Outside')) text='Attacks the perimeter. Beats slow interior defenses, but loses to "DB Blitz" and speed on the edge.';
+    }
+  } else {
+    if(card.type==='agg'){
+      if(card.cat.includes('Pressure')) text='High pressure. Creates sacks and turnovers, but leaves huge holes against quick-game passing.';
+      else if(card.id==='robber' || card.id==='gap_int') text='Discipline over chaos. Counters specific concepts like deep shots or option runs.';
+    } else {
+      if(card.cat.includes('Zone')) text='Safe coverage. Keeps the play in front of you. Weak against "Mesh" and short, high-percentage throws.';
+      else if(card.id==='spy') text='Hard counter to mobile QBs and Triple Option keepers. Sacrifice pressure for containment.';
+    }
+  }
+  intelText.textContent=text || 'Versatile call. Use based on situational field position and down/distance.';
+  
+  intel.append(intelH,intelText);
+  modal.append(close,title,type,body,intel);
+  overlay.appendChild(modal);
+  root.appendChild(overlay);
+}
+
+// ===== INIT SCENARIO =====
+function getInitialScenario(){
+  return {down:2,dist:10,ballOn:35,clock:165,timeouts:1,offScore:14,defScore:21};
+}
+
+// ===== STATE =====
+var GS=null;
+var root=document.getElementById('root');
+function setGs(fn){
+  GS=typeof fn==='function'?fn(GS):fn;
+  render();
+}
+
+// ===== HELPERS =====
+function getTeam(id){return TEAMS.find(function(t){return t.id===id;})||TEAMS[0];}
+function getOtherTeam(id){return TEAMS.find(function(t){return t.id!==id;})||TEAMS[1];}
+function getOffCards(teamId){return teamId==='canyon_tech'?CT_OFF_CARDS:IR_OFF_CARDS;}
+function getDefCards(teamId){return teamId==='canyon_tech'?CT_DEF_CARDS:IR_DEF_CARDS;}
+function getMatchupTable(offTeamId,defTeamId){
+  if(offTeamId==='canyon_tech'&&defTeamId==='iron_ridge') return MT_CT_IR;
+  if(offTeamId==='iron_ridge'&&defTeamId==='canyon_tech') return MT_IR_CT;
+  if(offTeamId==='canyon_tech'&&defTeamId==='canyon_tech') return MT_CT_CT;
+  return MT_IR_IR;
+}
+function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function fmtClock(sec){var m=Math.floor(sec/60);var s=sec%60;return m+':'+(s<10?'0':'')+s;}
+
+// ===== PLAY DIAGRAM DATA =====
+// PD[cardId] = [dots, lines, dashes]
+// ViewBox "0 0 60 50". Offense: ball at bottom (y~46), routes go up. Defense: players at top (y~8-14).
+var PD={
+  // CT Offense
+  mesh:           [[[30,46],[20,46],[40,46],[12,46],[48,46]],[[20,46,35,34],[40,46,25,34]],[[12,46,12,38],[48,46,48,38]]],
+  four_verts:     [[[30,46],[15,46],[25,46],[35,46],[45,46]],[[15,46,15,10],[25,46,25,10],[35,46,35,10],[45,46,45,10]],[]],
+  shallow_cross:  [[[30,46],[15,46],[45,46],[20,46],[40,46]],[[15,46,15,36,45,36]],[[45,46,45,38],[20,46,20,40],[40,46,40,40]]],
+  y_corner:       [[[30,46],[25,46],[35,46],[15,46],[45,46]],[[25,46,25,28,15,14]],[[35,46,35,30],[15,46,15,38],[45,46,45,38]]],
+  stick:          [[[30,46],[20,46],[40,46],[12,46],[48,46]],[[20,46,20,34],[40,46,48,38]],[[12,46,12,38],[48,46,48,40]]],
+  slant:          [[[30,46],[18,46],[42,46],[10,46],[50,46]],[[18,46,30,32]],[[42,46,42,38],[10,46,10,40],[50,46,50,40]]],
+  go_route:       [[[30,46],[15,46],[45,46],[25,46],[35,46]],[[15,46,15,8]],[[45,46,45,30],[25,46,25,38],[35,46,35,38]]],
+  bubble_screen:  [[[30,46],[42,46],[48,46],[20,46],[12,46]],[[30,46,42,46]],[[48,46,55,40],[20,46,20,38],[12,46,12,38]]],
+  draw:           [[[30,46],[22,46],[38,46],[14,46],[46,46]],[[30,46,30,28]],[[22,46,22,42],[38,46,38,42],[14,46,14,42],[46,46,46,42]]],
+  qb_sneak:       [[[30,46],[22,46],[38,46],[14,46],[46,46]],[[30,46,30,40]],[[22,46,22,42],[38,46,38,42]]],
+  // IR Offense
+  triple_option:  [[[30,46],[22,46],[38,46],[14,46],[46,46]],[[30,46,22,38],[22,38,22,28]],[[30,46,46,38]]],
+  midline:        [[[30,46],[22,46],[38,46],[14,46],[46,46]],[[22,46,22,28]],[[30,46,30,38],[38,46,38,42]]],
+  rocket_toss:    [[[30,46],[20,46],[40,46],[10,46],[50,46]],[[30,46,10,38,10,28]],[[20,46,14,42],[40,46,34,42]]],
+  trap:           [[[30,46],[22,46],[38,46],[14,46],[46,46]],[[22,46,22,28]],[[38,46,30,40],[14,46,14,42],[46,46,46,42]]],
+  qb_keeper:      [[[30,46],[22,46],[38,46],[14,46],[46,46]],[[30,46,40,34,46,28]],[[22,46,22,38],[38,46,38,42]]],
+  power:          [[[30,46],[22,46],[38,46],[14,46],[46,46]],[[22,46,22,28]],[[38,46,30,42],[14,46,22,40]]],
+  zone_read:      [[[30,46],[22,46],[38,46],[14,46],[46,46]],[[30,46,22,38],[22,38,22,28]],[[30,46,40,36]]],
+  pa_post:        [[[30,46],[18,46],[42,46],[10,46],[50,46]],[[18,46,18,24,30,12]],[[30,46,22,42],[42,46,42,38]]],
+  pa_flat:        [[[30,46],[18,46],[42,46],[10,46],[50,46]],[[42,46,52,38]],[[30,46,22,42],[18,46,18,38]]],
+  // IR Defense
+  rip_liz:        [[[30,10],[15,8],[45,8],[20,16],[40,16],[30,22]],[[30,22,30,40]],[[15,8,15,28],[45,8,45,28],[20,16,30,28],[40,16,30,28]]],
+  cov4_match:     [[[10,8],[20,8],[40,8],[50,8],[30,16]],[[10,8,10,28],[20,8,20,28],[40,8,40,28],[50,8,50,28]],[[30,16,30,34]]],
+  mod:            [[[20,8],[40,8],[15,16],[30,16],[45,16]],[[20,8,20,28],[40,8,40,28]],[[15,16,15,32],[30,16,30,32],[45,16,45,32]]],
+  cover_6:        [[[15,8],[45,8],[10,16],[25,16],[40,16],[50,16]],[[15,8,15,28],[45,8,45,28]],[[10,16,10,32],[25,16,25,32],[40,16,40,32],[50,16,50,32]]],
+  bracket:        [[[30,10],[20,14],[40,14],[10,8],[50,8]],[[20,14,30,20],[40,14,30,20]],[[10,8,10,28],[50,8,50,28]]],
+  skinny:         [[[15,12],[30,12],[45,12],[20,20],[40,20]],[[15,12,15,32],[45,12,45,32]],[[30,12,30,32],[20,20,20,36],[40,20,40,36]]],
+  meg:            [[[10,14],[20,14],[30,14],[40,14],[50,14]],[[10,14,10,40],[20,14,20,40],[30,14,30,40],[40,14,40,40],[50,14,50,40]],[]],
+  gap_int:        [[[15,18],[25,18],[35,18],[45,18],[30,12]],[[15,18,15,40],[25,18,25,40],[35,18,35,40],[45,18,45,40]],[[30,12,30,28]]],
+  fire_zone:      [[[10,14],[22,14],[30,14],[38,14],[50,14]],[[10,14,10,40],[50,14,50,40]],[[22,14,22,32],[30,14,30,32],[38,14,38,32]]],
+  robber:         [[[30,10],[15,14],[45,14],[20,20],[40,20]],[[30,10,30,32]],[[15,14,15,30],[45,14,45,30],[20,20,20,36],[40,20,40,36]]],
+  // CT Defense
+  overload:       [[[10,14],[18,14],[26,14],[34,14],[42,14],[50,14]],[[10,14,10,40],[18,14,18,40],[26,14,26,40]],[[34,14,34,32],[42,14,42,32],[50,14,50,32]]],
+  db_blitz:       [[[10,10],[50,10],[20,14],[30,14],[40,14]],[[10,10,10,40],[50,10,50,40]],[[20,14,20,32],[30,14,30,32],[40,14,40,32]]],
+  zero_cov:       [[[10,14],[20,14],[30,14],[40,14],[50,14]],[[10,14,10,40],[20,14,20,40],[30,14,30,40],[40,14,40,40],[50,14,50,40]],[]],
+  a_gap_mug:      [[[25,18],[35,18],[15,14],[45,14],[30,10]],[[25,18,25,40],[35,18,35,40]],[[15,14,15,30],[45,14,45,30],[30,10,30,28]]],
+  edge_crash:     [[[8,14],[52,14],[20,14],[30,14],[40,14]],[[8,14,8,40],[52,14,52,40]],[[20,14,20,32],[30,14,30,32],[40,14,40,32]]],
+  cov2_buc:       [[[15,8],[45,8],[10,16],[30,16],[50,16]],[[15,8,15,28],[45,8,45,28]],[[10,16,10,34],[30,16,30,34],[50,16,50,34]]],
+  man_press:      [[[10,18],[20,18],[30,18],[40,18],[50,18]],[[10,18,10,40],[20,18,20,40],[30,18,30,40],[40,18,40,40],[50,18,50,40]],[]],
+  zone_drop:      [[[10,14],[20,14],[30,14],[40,14],[50,14]],[[10,14,10,40]],[[20,14,30,28],[30,14,30,32],[40,14,40,32],[50,14,50,32]]],
+  spy:            [[[30,16],[15,14],[45,14],[20,20],[40,20]],[[30,16,30,40]],[[15,14,15,30],[45,14,45,30],[20,20,20,36],[40,20,40,36]]],
+  prevent:        [[[10,8],[20,8],[30,8],[40,8],[50,8]],[[10,8,10,20],[20,8,20,20],[30,8,30,20],[40,8,40,20],[50,8,50,20]],[]],
+};
+
+function playSvg(id,color){
+  var d=PD[id];
+  if(!d) return '<div style="width:60px;height:50px;"></div>';
+  var dots=d[0],lines=d[1],dashes=d[2];
+  var svg='<svg viewBox="0 0 60 50" width="60" height="50" xmlns="http://www.w3.org/2000/svg" style="display:block;">';
+  // dashes
+  for(var i=0;i<dashes.length;i++){
+    var dl=dashes[i];
+    if(dl.length===4) svg+='<line x1="'+dl[0]+'" y1="'+dl[1]+'" x2="'+dl[2]+'" y2="'+dl[3]+'" stroke="'+color+'" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>';
+    else if(dl.length===6) svg+='<polyline points="'+dl[0]+','+dl[1]+' '+dl[2]+','+dl[3]+' '+dl[4]+','+dl[5]+'" fill="none" stroke="'+color+'" stroke-width="1" stroke-dasharray="3,2" opacity="0.5"/>';
+  }
+  // lines
+  for(var j=0;j<lines.length;j++){
+    var ln=lines[j];
+    if(ln.length===4) svg+='<line x1="'+ln[0]+'" y1="'+ln[1]+'" x2="'+ln[2]+'" y2="'+ln[3]+'" stroke="'+color+'" stroke-width="1.5" opacity="0.8"/>';
+    else if(ln.length===6) svg+='<polyline points="'+ln[0]+','+ln[1]+' '+ln[2]+','+ln[3]+' '+ln[4]+','+ln[5]+'" fill="none" stroke="'+color+'" stroke-width="1.5" opacity="0.8"/>';
+  }
+  // dots
+  for(var k=0;k<dots.length;k++){
+    var r=k===0?3.5:2.5;
+    svg+='<circle cx="'+dots[k][0]+'" cy="'+dots[k][1]+'" r="'+r+'" fill="'+color+'" opacity="'+(k===0?'1':'0.7')+'"/>';
+  }
+  svg+='</svg>';
+  return svg;
+}
+
+function clockCost(cardId){
+  var quick={slant:1,stick:1,shallow_cross:1,bubble_screen:1};
+  var short={mesh:1,pa_flat:1};
+  var deep={four_verts:1,y_corner:1,go_route:1,pa_post:1};
+  if(quick[cardId]) return 8+Math.floor(Math.random()*5);
+  if(short[cardId]) return 12+Math.floor(Math.random()*5);
+  if(deep[cardId]) return 16+Math.floor(Math.random()*7);
+  return 10+Math.floor(Math.random()*9);
+}
+
+// ===== RENDER =====
+
+// ===== RENDER =====
+function render(){
+  SND.crowdStop();
+  root.innerHTML='';
+  var content;
+  if(!GS) content=buildHome();
+  else if(GS.screen==='setup') content=buildSetup();
+  else if(GS.screen==='players') content=buildPlayers();
+  else if(GS.screen==='draft') content=buildDraft();
+  else if(GS.screen==='under_construction') content=buildUnderConstruction();
+  else if(GS.screen==='play') content=buildPlay();
+  else if(GS.screen==='result') content=buildResult();
+  else content=buildHome();
+  if(content) root.appendChild(content);
+  root.scrollTop=0;
+}
+
+// ===== SCREEN: UNDER CONSTRUCTION =====
+function buildUnderConstruction(){
+  var el=document.createElement('div');
+  el.className='sup';
+  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;background:radial-gradient(circle at 50% 50%,#1a0033 0%,#050015 100%);text-align:center;';
+  
+  var icon=document.createElement('div');
+  icon.style.cssText='font-size:60px;margin-bottom:20px;animation:flicker 0.15s infinite alternate;filter:drop-shadow(0 0 20px var(--a-gold));';
+  icon.textContent='\uD83D\uDEA7';
+
+  var title=document.createElement('div');
+  title.className='chrome-header';
+  title.style.fontSize='42px';
+  title.textContent='BROADCAST OFFLINE';
+  
+  var msg=document.createElement('div');
+  msg.style.cssText="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--white);line-height:1.8;margin:20px 0 40px;opacity:0.8;max-width:300px;";
+  msg.innerHTML='ENCRYPTED GAMEPLAY UPLINK PENDING...<br><br>OUR ENGINEERS ARE CALIBRATING THE CLASH ENGINE FOR PEAK ARCADE PERFORMANCE.<br><br><span style="color:var(--a-gold)">STADIUM GATES OPEN SOON.</span>';
+
+  var btn=document.createElement('button');
+  btn.className='btn-blitz';
+  btn.style.cssText='width:auto;padding:15px 30px;font-size:12px;';
+  btn.textContent='RETURN TO HUB';
+  btn.onclick=function(){SND.click();GS=null;render();};
+
+  var devLink=document.createElement('div');
+  devLink.style.cssText='margin-top:40px;font-family:\'Press Start 2P\',monospace;font-size:6px;color:var(--muted);cursor:pointer;';
+  devLink.textContent='DEV ACCESS: BYPASS ENCRYPTION';
+  devLink.onclick=function(){
+    if(confirm('Developer Authorization required. Proceed to Gameplay?')){
+      SND.snap();
+      setGs(function(s){return Object.assign({},s,{screen:'play'});});
+    }
+  };
+
+  el.append(icon,title,msg,btn,devLink);
+  return el;
+}
+
+// ===== SCOREBOARD BUILDER =====
+function buildScoreboard(selSide, selTeamId){
+  var sb=document.createElement('div');
+  sb.style.cssText='background:#000;border:4px solid var(--white);border-image:var(--chrome) 1;padding:25px 10px;display:grid;grid-template-columns:1fr 1.2fr 1fr;align-items:center;margin-bottom:20px;box-shadow:0 0 40px rgba(255,255,255,0.1);';
+  
+  var scen = GS.scenario;
+  function getScoreName(id){ if(id==='iron_ridge') return 'IRON'; if(id==='canyon_tech') return 'CANYON'; return '---'; }
+
+  var leftAbbr = '---'; var leftPts = '--'; var leftColor = 'var(--white)';
+  var rightAbbr = '---'; var rightPts = '--'; var rightColor = 'var(--white)';
+  var defName = 'DEF'; var defColor = 'var(--white)';
+
+  if (selSide && selTeamId) {
+    var myTeam = getTeam(selTeamId);
+    var oppTeam = getOtherTeam(selTeamId);
+    var defTeam = selSide === 'offense' ? oppTeam : myTeam;
+    defName = getScoreName(defTeam.id);
+    defColor = defTeam.accent;
+
+    if (selSide === 'offense') {
+      leftAbbr = getScoreName(myTeam.id); leftPts = scen.offScore; leftColor = myTeam.accent;
+      rightAbbr = getScoreName(oppTeam.id); rightPts = scen.defScore; rightColor = oppTeam.accent;
+    } else {
+      leftAbbr = getScoreName(oppTeam.id); leftPts = scen.offScore; leftColor = oppTeam.accent;
+      rightAbbr = getScoreName(myTeam.id); rightPts = scen.defScore; rightColor = myTeam.accent;
+    }
+  }
+
+  var left=document.createElement('div');
+  left.style.textAlign='center';
+  left.innerHTML=
+    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:'+leftColor+';font-style:italic;line-height:1;">'+leftAbbr+'</div>'+
+    '<div class="px" style="font-size:28px;color:var(--a-gold);margin-top:5px;line-height:1;">'+leftPts+'</div>';
+  
+  var center=document.createElement('div');
+  center.style.textAlign='center';
+  center.innerHTML='<div class="px" style="font-size:14px;color:var(--white);margin-bottom:6px;text-shadow:0 0 5px white;">'+fmtClock(scen.clock)+'</div>'+
+    '<div class="px" style="font-size:7px;color:var(--l-green);margin-bottom:4px;">'+scen.down+'& '+scen.dist+'</div>'+
+    '<div class="px" style="font-size:7px;color:var(--white);opacity:0.8;margin-bottom:4px;">TIMEOUTS: '+scen.timeouts+'</div>'+
+    '<div class="px" style="font-size:7px;color:var(--white);">BALL ON: <span style="color:'+defColor+';">'+defName+'</span> '+scen.ballOn+'</div>';
+
+  var right=document.createElement('div');
+  right.style.textAlign='center';
+  right.innerHTML=
+    '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:'+rightColor+';font-style:italic;line-height:1;">'+rightAbbr+'</div>'+
+    '<div class="px" style="font-size:28px;color:var(--a-gold);margin-top:5px;line-height:1;">'+rightPts+'</div>';
+  
+  sb.append(left,center,right);
+  sb._update=function(s,t){}; 
+  return sb;
+}// ===== SCREEN 1: HOME =====
+function buildHome(){
+  SND.menu();
+  var el=document.createElement('div');
+  el.className='sup';
+  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;background:radial-gradient(circle at 50% 30%,#330066 0%,#080020 70%);';
+  var today=new Date().toDateString();
+  var lastPlay=localStorage.getItem('torch_last_play');
+  var lastResult=localStorage.getItem('torch_last_result');
+  var streak=localStorage.getItem('torch_streak')||'0';
+  var isLocked=lastPlay===today&&lastResult==='loss';
+  var logoWrap=document.createElement('div');
+  logoWrap.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;height:140px;width:100%;margin-bottom:20px;';
+
+  var fireEl=document.createElement('div');
+  fireEl.style.cssText='font-size:80px;animation:flicker 0.1s infinite alternate;z-index:1;';
+  fireEl.textContent='\uD83D\uDD25';
+
+  var ballCont=document.createElement('div');
+  ballCont.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;pointer-events:none;animation:ballPass 2.5s ease-in-out infinite;';
+  var ballIcon=document.createElement('div');
+  ballIcon.style.cssText='font-size:40px;filter:drop-shadow(0 0 10px rgba(0,0,0,0.5));';
+  ballIcon.textContent='\uD83C\uDFC8';
+  var ballFire=document.createElement('div');
+  ballFire.style.cssText='position:absolute;inset:0;font-size:40px;animation:ignite 2.5s infinite;filter:drop-shadow(0 0 15px var(--orange));mix-blend-mode:screen;';
+  ballFire.textContent='\uD83D\uDD25';
+  ballCont.append(ballIcon,ballFire);
+  
+  logoWrap.append(fireEl, ballCont);
+  el.appendChild(logoWrap);
+
+  var title=document.createElement('h1');
+  title.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:120px;line-height:0.8;color:var(--a-gold);text-shadow:8px 8px 0 #000, 0 0 40px var(--a-gold);font-style:italic;transform:rotate(-5deg) scale(1.1);margin-bottom:40px;text-align:center;";
+  title.innerHTML='TORCH<span style="display:block;color:white;font-size:40px;letter-spacing:15px;text-shadow:4px 4px 0 #000;margin-left:10px;">THE GAME</span>';
+  el.append(title);
+  var playWrap=document.createElement('div');
+  playWrap.style.cssText='width:100%;margin-top:40px;z-index:2;position:relative;display:flex;flex-direction:column;gap:20px;';
+  var playBtn=document.createElement('button');
+  playBtn.className='btn-blitz';
+  playBtn.disabled=isLocked;
+  playBtn.style.cssText='border-color:var(--white);color:var(--f-purple);background:var(--white);';
+  playBtn.textContent=isLocked?'LOCKED: RETURN TMW':"PLAY TODAY'S TORCH";
+  playBtn.onclick=function(){
+    SND.click();
+    setGs(function(s){ return Object.assign({}, s, {screen:'setup', team:null, side:null, scenario:getInitialScenario()}); });
+  };
+  
+  var freeBtn=document.createElement('button');
+  freeBtn.className='btn-blitz';
+  freeBtn.disabled=true;
+  freeBtn.style.opacity='0.4';
+  freeBtn.style.filter='grayscale(1)';
+  freeBtn.textContent='FREE PLAY';
+
+  var devBtn=document.createElement('button');
+  devBtn.className='btn-blitz';
+  devBtn.style.cssText='border-color:var(--muted);color:var(--muted);background:transparent;box-shadow:none;font-size:8px;padding:10px;margin-top:20px;';
+  devBtn.textContent='DEV: RESET DAILY LOCK';
+  devBtn.onclick=function(){localStorage.clear();render();};
+
+  playWrap.append(playBtn,freeBtn,devBtn);
+  el.appendChild(playWrap);
+  return el;
+}
+// ===== SCREEN 2: SETUP =====
+function buildSetup(){
+  var el=document.createElement('div');el.className='sup';
+  el.style.cssText='height:100vh;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;';
+  var hdr=document.createElement('div');
+  hdr.style.cssText='background:rgba(0,0,0,0.5);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-bottom:2px solid var(--f-purple);';
+  hdr.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;color:var(--a-gold);letter-spacing:2px;font-style:italic;transform:skewX(-10deg);text-shadow:2px 2px 0 #000, 0 0 10px var(--a-gold); cursor:pointer;">\uD83D\uDD25 TORCH</div>';
+  hdr.onclick=function(){GS=null;render();};
+  var backBtn=document.createElement('button');
+  backBtn.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:6px;padding:6px 10px;cursor:pointer;background:#000;color:var(--white);border:2px solid #333;';
+  backBtn.textContent='\u2190 BACK';
+  backBtn.onclick=function(){SND.click();GS=null;render();};
+  hdr.appendChild(backBtn);
+  el.appendChild(hdr);
+  var content=document.createElement('div');
+  content.style.cssText='flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:20px;position:relative;z-index:2;';
+
+  var selTeam=GS.team;
+  var selSide=GS.side;
+
+  // Scenario Modal
+  var modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:3000;display:flex;align-items:center;justify-content:center;padding:30px;animation:fi .4s ease-out both;';
+  var mBox=document.createElement('div');
+  mBox.className='team-card';
+  mBox.style.cssText+='width:100%;max-width:360px;padding:30px;text-align:center;border-color:var(--a-gold);box-shadow:0 0 40px rgba(255,204,0,0.3);display:block;';
+  mBox.innerHTML='<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:22px;line-height:1.5;margin-bottom:30px;font-weight:700;">WE\'RE LATE IN THE 4TH QUARTER. THE SCORE IS 14-21. IT\'S 2ND & 10 FROM THE 35 YARD LINE.<br><br>ONE DRIVE REMAINS. CHOOSE OFFENSE TO SCORE THE TYING TOUCHDOWN, OR CHOOSE DEFENSE TO GET THE STOP AND WIN.</div>';
+  var mBtn=document.createElement('button');
+  mBtn.className='btn-blitz';
+  mBtn.style.cssText='background:var(--a-gold);color:#000;border-color:var(--a-gold);';
+  mBtn.textContent='I\'M READY';
+  mBtn.onclick=function(){modal.remove();};
+  mBox.appendChild(mBtn);
+  modal.appendChild(mBox);
+  el.appendChild(modal);
+
+  var sbContainer = document.createElement('div');
+  function refreshBoard(){
+    sbContainer.innerHTML='';
+    sbContainer.appendChild(buildScoreboard(selSide, selTeam));
+  }
+  refreshBoard();
+  content.appendChild(sbContainer);
+
+  var sideContainer = document.createElement('div');
+  var sideLabel=document.createElement('div');
+  sideLabel.className='chrome-header';
+  sideLabel.style.fontSize='22px';
+  sideLabel.textContent='1. PICK YOUR SIDE OF THE BALL';
+  sideContainer.appendChild(sideLabel);
+  
+  var sideRow=document.createElement('div');sideRow.style.cssText='display:flex;gap:10px;';
+  function refreshSides(){
+    sideRow.innerHTML='';
+    var sides=[
+      {id:'offense',label:'OFFENSE',color:'var(--l-green)',glow:'rgba(0,255,68,0.6)'},
+      {id:'defense',label:'DEFENSE',color:'var(--p-red)',glow:'rgba(255,0,64,0.6)'}
+    ];
+    sides.forEach(function(s){
+      var isSel=selSide===s.id;
+      var opt=document.createElement('button');
+      opt.className='btn-blitz';
+      opt.style.cssText='flex:1;font-size:12px;text-align:center;padding:15px 5px;'+(isSel?'background:'+s.color+';color:#000;border-color:'+s.color+';box-shadow:0 0 25px '+s.glow+';':'background:transparent;border-color:'+s.color+';color:'+s.color+';opacity:0.5;');
+      opt.textContent=s.label;
+      opt.onclick=function(){SND.select();selSide=s.id;GS.side=s.id;refreshSides();refreshBoard();refreshGo();};
+      sideRow.appendChild(opt);
+    });
+  }
+  sideContainer.appendChild(sideRow);
+  content.appendChild(sideContainer);
+
+  var teamContainer = document.createElement('div');
+  var pageInst=document.createElement('div');
+  pageInst.className='chrome-header';
+  pageInst.style.fontSize='22px';
+  pageInst.textContent='2. CHOOSE YOUR TEAM';
+  teamContainer.appendChild(pageInst);
+
+  var teamGrid=document.createElement('div');teamGrid.style.cssText='display:flex;flex-direction:column;gap:10px;';
+  function refreshTeams(){
+    teamGrid.innerHTML='';
+    TEAMS.forEach(function(team){
+      var isSel=selTeam===team.id;
+      var card=document.createElement('div');
+      card.className='team-card'+(isSel?' selected':'');
+      card.style.padding='15px';
+      card.innerHTML=
+        '<div style="flex:1;">'+
+          '<div class="team-name" style="color:'+team.accent+';font-size:28px;line-height:0.9;">'+team.name+'</div>'+
+          '<div style="font-family:\'Press Start 2P\',monospace;font-size:7px;color:var(--white);opacity:0.9;line-height:1.6;margin-top:6px;">'+
+            'OFFENSE: '+team.style+'<br>'+
+            'DEFENSE: '+team.defStyle+
+          '</div>'+
+        '</div>'+
+        '<div class="team-icon" style="font-size:55px;filter:drop-shadow(0 0 12px '+team.accent+'); margin-left:10px;">'+team.icon+'</div>';
+      card.onclick=function(){SND.select();selTeam=team.id;GS.team=team.id;refreshTeams();refreshBoard();refreshGo();};
+      teamGrid.appendChild(card);
+    });
+  }
+  teamContainer.appendChild(teamGrid);
+  content.appendChild(teamContainer);
+
+  var goWrap=document.createElement('div');goWrap.style.cssText='padding:10px 0 20px;';
+  var goBtn=document.createElement('button');
+  function refreshGo(){
+    var ready=selTeam&&selSide;
+    goBtn.className='btn-blitz';
+    goBtn.disabled=!ready;
+    goBtn.style.cssText = ready ? 'background:var(--a-gold);border-color:var(--a-gold);color:#000;box-shadow:0 0 30px rgba(255,204,0,0.6);font-size:16px;' : 'opacity:0.3;';
+    goBtn.textContent=ready?'LOCK IN TEAM \u2192':'SELECT TEAM & SIDE';
+    goBtn.onclick=ready?function(){SND.snap();setGs(function(s){ return Object.assign({}, s, {screen:'players', team:selTeam, side:selSide, roster:null}); });}:null;
+  }
+  goWrap.appendChild(goBtn);
+  content.appendChild(goWrap);
+  el.appendChild(content);
+  refreshTeams();refreshSides();refreshGo();
+  return el;
+}
+// ===== SCREEN 3: PLAYERS =====
+function buildPlayers(){
+  var el=document.createElement('div');el.className='sup';
+  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;background:var(--bg);';
+  var team=getTeam(GS.team);
+  var hdr=document.createElement('div');
+  hdr.style.cssText='background:rgba(0,0,0,0.5);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-bottom:2px solid var(--f-purple);';
+  hdr.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;color:var(--a-gold);letter-spacing:2px;font-style:italic;transform:skewX(-10deg);text-shadow:2px 2px 0 #000, 0 0 10px var(--a-gold); cursor:pointer;">\uD83D\uDD25 TORCH</div>';
+  hdr.onclick=function(){GS=null;render();};
+  var backBtn=document.createElement('button');
+  backBtn.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:6px;padding:6px 10px;cursor:pointer;background:#000;color:var(--white);border:2px solid #333;';
+  backBtn.textContent='\u2190 BACK';
+  backBtn.onclick=function(){SND.click();setGs({screen:'setup',team:GS.team,side:GS.side});};
+  hdr.appendChild(backBtn);
+  el.appendChild(hdr);
+  var content=document.createElement('div');
+  content.style.cssText='flex:1;overflow-y:auto;padding:25px;display:flex;flex-direction:column;gap:30px;position:relative;z-index:2;';
+  var isDef=GS.side==='defense';
+  var playerPool=isDef?team.defPlayers:team.players;
+  
+  var primaryLabel=isDef?'3. DRAFT LINEBACKER':'3. DRAFT QUARTERBACK';
+  var pageInst=document.createElement('div');
+  pageInst.className='chrome-header';
+  pageInst.style.fontSize='22px';
+  pageInst.textContent=primaryLabel;
+  content.appendChild(pageInst);
+  
+  var qbs=playerPool.filter(function(p){return p.cat===(isDef?'lb':'qb');});
+  var skills=playerPool.filter(function(p){return p.cat==='skill';});
+  var selQB=null;
+  var selSkill={};
+  var qbGrid=document.createElement('div');qbGrid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:15px;';
+  function renderPlayerCard(pl,isSel){
+    var c=document.createElement('div');
+    c.className='play-card-blitz'+(isSel?' selected':'');
+    c.innerHTML='<div style="font-family:\'Press Start 2P\',monospace;font-size:6px;color:var(--l-green);margin-bottom:6px;">'+pl.pos+' '+pl.ovr+'</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;line-height:1;">'+pl.name+'</div><div style="font-family:\'Press Start 2P\',monospace;font-size:5px;color:var(--a-gold);margin-top:4px;">'+pl.nick+'</div>';
+    return c;
+  }
+  function refreshQBs(){
+    qbGrid.innerHTML='';
+    qbs.forEach(function(pl){
+      var isSel=selQB===pl.id;
+      var c=renderPlayerCard(pl,isSel);
+      c.onclick=function(){SND.select();selQB=pl.id;refreshQBs();refreshGoBtn();};
+      qbGrid.appendChild(c);
+    });
+  }
+  content.appendChild(qbGrid);
+  var skillLabel=document.createElement('div');
+  skillLabel.className='chrome-header';
+  skillLabel.style.fontSize='22px';
+  skillLabel.textContent=isDef?'4. DRAFT DEFENSE':'4. DRAFT SKILL';
+  content.appendChild(skillLabel);
+  var skillGrid=document.createElement('div');skillGrid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:15px;';
+  function refreshSkills(){
+    skillGrid.innerHTML='';
+    var count=Object.keys(selSkill).length;
+    skills.forEach(function(pl){
+      var isSel=!!selSkill[pl.id];
+      var c=renderPlayerCard(pl,isSel);
+      if(!isSel&&count>=3) c.style.opacity='.4';
+      c.onclick=function(){SND.select();if(selSkill[pl.id]){delete selSkill[pl.id];}else if(Object.keys(selSkill).length<3){selSkill[pl.id]=true;}refreshSkills();refreshGoBtn();};
+      skillGrid.appendChild(c);
+    });
+  }
+  content.appendChild(skillGrid);
+  var btnRow=document.createElement('div');btnRow.style.cssText='display:flex;gap:15px;padding:20px 0;';
+  var pickForMe=document.createElement('button');
+  pickForMe.className='btn-blitz';
+  pickForMe.style.cssText+='flex:1;font-size:12px;border-color:var(--white);color:#000;background:var(--white);box-shadow:4px 4px 0 #000;';
+  pickForMe.textContent='AUTO DRAFT';
+  pickForMe.onclick=function(){SND.draft();selQB=qbs[Math.floor(Math.random()*qbs.length)].id;selSkill={};var shuffled=shuffle(skills);for(var i=0;i<3;i++) selSkill[shuffled[i].id]=true;refreshQBs();refreshSkills();refreshGoBtn();};
+  var goBtn=document.createElement('button');
+  function refreshGoBtn(){
+    var ready=selQB&&Object.keys(selSkill).length===3;
+    goBtn.className='btn-blitz';
+    goBtn.style.cssText+='flex:1.5;font-size:14px;';
+    goBtn.disabled=!ready;
+    if(ready) goBtn.style.cssText+='background:var(--a-gold);border-color:var(--a-gold);color:#000;box-shadow:0 0 30px rgba(255,204,0,0.6);';
+    goBtn.textContent=ready?'CONFIRM SQUAD \u2192':'PICK SQUAD';
+    goBtn.onclick=ready?function(){SND.snap();var roster=[selQB].concat(Object.keys(selSkill));setGs({screen:'draft',team:GS.team,side:GS.side,roster:roster});}:null;
+  }
+  btnRow.append(pickForMe,goBtn);
+  content.appendChild(btnRow);
+  el.appendChild(content);
+  refreshQBs();refreshSkills();refreshGoBtn();
+  return el;
+}
+// ===== SCREEN 4: DRAFT =====
+function buildDraft(){
+  var el=document.createElement('div');el.className='sup';
+  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;background:var(--bg);';
+  var team=getTeam(GS.team);
+  var isOffense=GS.side==='offense';
+  var pool=isOffense?getOffCards(GS.team):getDefCards(GS.team);
+  
+  var hdr=document.createElement('div');
+  hdr.style.cssText='background:rgba(0,0,0,0.5);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-bottom:2px solid var(--f-purple);';
+  hdr.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:28px;color:var(--a-gold);letter-spacing:2px;font-style:italic;transform:skewX(-10deg);text-shadow:2px 2px 0 #000, 0 0 10px var(--a-gold); cursor:pointer;">\uD83D\uDD25 TORCH</div>';
+  hdr.onclick=function(){GS=null;render();};
+  var backBtn=document.createElement('button');
+  backBtn.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:6px;padding:6px 10px;cursor:pointer;background:#000;color:var(--white);border:2px solid #333;';
+  backBtn.textContent='\u2190 BACK';
+  backBtn.onclick=function(){SND.click();setGs({screen:'players',team:GS.team,side:GS.side,roster:GS.roster});};
+  hdr.appendChild(backBtn);
+  el.appendChild(hdr);
+  var content=document.createElement('div');
+  content.style.cssText='flex:1;overflow-y:auto;padding:25px;display:flex;flex-direction:column;gap:14px;position:relative;z-index:2;';
+  
+  var pageInst=document.createElement('div');
+  pageInst.className='chrome-header';
+  pageInst.style.fontSize='22px';
+  pageInst.textContent='5. DRAFT GAMEPLAN';
+  content.appendChild(pageInst);
+  
+  var counter=document.createElement('div');
+  counter.style.cssText="font-family:'Press Start 2P',monospace;font-size:10px;text-align:center;color:var(--a-gold);margin-bottom:10px;";
+  content.appendChild(counter);
+  var selected={};
+  var cardGrid=document.createElement('div');
+  cardGrid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:15px;';
+  function refreshCards(){
+    cardGrid.innerHTML='';
+    var count=Object.keys(selected).length;
+    counter.textContent=count+' / 5 SELECTED';
+    pool.forEach(function(card,idx){
+      var isSel=!!selected[card.id+'_'+idx];
+      var cel=document.createElement('div');
+      cel.className='play-card-blitz'+(isSel?' selected':'');
+      cel.innerHTML='<div style="font-family:\'Press Start 2P\',monospace;font-size:6px;color:var(--l-green);margin-bottom:10px;width:100%;display:flex;justify-content:space-between;"><span>'+card.type.toUpperCase()+'</span><span style="cursor:pointer;border:1px solid var(--white);border-radius:50%;width:12px;height:12px;display:flex;align-items:center;justify-content:center;" onclick="event.stopPropagation();SND.click();showCardIntel('+JSON.stringify(card).replace(/"/g,'&quot;')+','+JSON.stringify(GS.team).replace(/"/g,'&quot;')+','+JSON.stringify(GS.side).replace(/"/g,'&quot;')+')">?</span></div><div style="font-size:32px;margin:10px 0;">'+card.icon+'</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;line-height:1;">'+card.name+'</div>';
+      if(!isSel&&count>=5) cel.style.opacity='.3';
+      cel.onclick=function(){SND.click();var key=card.id+'_'+idx;if(selected[key]) delete selected[key];else if(Object.keys(selected).length<5) selected[key]=card;refreshCards();refreshGoBtn();};
+      cardGrid.appendChild(cel);
+    });
+  }
+  content.appendChild(cardGrid);
+  var btnRow=document.createElement('div');btnRow.style.cssText='display:flex;gap:15px;padding:20px 0;';
+  var pickForMe=document.createElement('button');
+  pickForMe.className='btn-blitz';
+  pickForMe.style.cssText+='flex:1;font-size:12px;border-color:var(--white);color:#000;background:var(--white);box-shadow:4px 4px 0 #000;';
+  pickForMe.textContent='AUTO DRAFT';
+  pickForMe.onclick=function(){SND.draft();selected={};var indices=shuffle(pool.map(function(_,i){return i;})).slice(0,5);indices.forEach(function(i){selected[pool[i].id+'_'+i]=pool[i];});refreshCards();refreshGoBtn();};
+  var goBtn=document.createElement('button');
+  function refreshGoBtn(){
+    var ready=Object.keys(selected).length===5;
+    goBtn.className='btn-blitz';
+    goBtn.style.cssText+='flex:1.5;font-size:14px;';
+    goBtn.disabled=!ready;
+    if(ready) goBtn.style.cssText+='background:var(--a-gold);border-color:var(--a-gold);color:#000;box-shadow:0 0 30px rgba(255,204,0,0.6);';
+    goBtn.textContent=ready?'START MATCH \u2192':'PICK 5 PLAYS';
+    goBtn.onclick=ready?function(){SND.snap();var hand=Object.keys(selected).map(function(k){return selected[k];});setGs({screen:'under_construction',team:GS.team,side:GS.side,roster:GS.roster,hand:hand});}:null;
+  }
+  btnRow.append(pickForMe,goBtn);
+  content.appendChild(btnRow);
+  el.appendChild(content);
+  refreshCards();refreshGoBtn();
+  return el;
+}
+// ===== SCREEN 4: GAMEPLAY =====
+function buildPlay(){
+  var el=document.createElement('div');
+  el.style.cssText='height:100vh;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;';
+  var isOff=GS.side==='offense';
+  var team=getTeam(GS.team);
+  var opp=getOtherTeam(GS.team);
+  var playerPool=isOff?team.players:team.defPlayers;
+  
+  var scen = GS.scenario;
+  var down = scen.down;
+  var dist = scen.dist;
+  var ballOn = scen.ballOn;
+  var clock = scen.clock;
+  var offScore = scen.offScore;
+  var defScore = scen.defScore;
+  var myHand=GS.hand.slice();
+  var myDeck=shuffle((isOff?getOffCards(GS.team):getDefCards(GS.team)).filter(function(c){return !myHand.some(function(h){return h.id===c.id;});}));
+  var aiCards=isOff?getDefCards(opp.id):getOffCards(opp.id);
+  var aiHand=shuffle(aiCards.slice()).slice(0,5);
+  var aiDeck=shuffle(aiCards.filter(function(c){return !aiHand.some(function(h){return h.id===c.id;});}));
+  var lastAiPlay=null;
+  var selIdx=-1;
+  var animating=false;
+  var playNum=0;
+  var totalYards=0;
+  var turnovers=0;
+  var newCardIndices={};
+  var qb=null; var skill1=null;
+  if(GS.roster){
+    for(var i=0;i<GS.roster.length;i++){
+      var p=playerPool.find(function(pl){return pl.id===GS.roster[i];});
+      if(p&&(p.cat==='qb'||p.cat==='lb')) qb=p;
+      if(p&&p.cat==='skill'&&!skill1) skill1=p;
+    }
+  }
+  function getScoreName(id){
+    if(id==='iron_ridge') return 'IRON';
+    if(id==='canyon_tech') return 'CANYON';
+    return '---';
+  }
+  var scorebug=document.createElement('div');
+  scorebug.style.cssText='background:linear-gradient(to right,#000,#330066,#000);border-bottom:4px solid var(--white);padding:10px;display:grid;grid-template-columns:1fr 1.2fr 1fr;align-items:center;flex-shrink:0;';
+
+  var homeColor=isOff?team.accent:opp.accent;
+  var awayColor=isOff?opp.accent:team.accent;
+  var homeName=getScoreName(isOff?team.id:opp.id);
+  var awayName=getScoreName(isOff?opp.id:team.id);
+  var defTeam = isOff ? opp : team;
+  var defName = getScoreName(defTeam.id);
+  var defColor = defTeam.accent;
+
+  var sbLeft=document.createElement('div');
+  sbLeft.style.cssText='text-align:center;color:'+homeColor+';text-shadow:0 0 10px '+homeColor+';';
+  sbLeft.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;font-style:italic;line-height:1;">'+homeName+'</div>';
+  var sbHomeScore=document.createElement('div');
+  sbHomeScore.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:24px;color:var(--a-gold);text-shadow:none;margin-top:4px;';
+  sbHomeScore.textContent=String(offScore);
+  sbLeft.appendChild(sbHomeScore);
+
+  var sbCenter=document.createElement('div');
+  sbCenter.style.textAlign='center';
+  var sbClock=document.createElement('div');
+  sbClock.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:14px;color:var(--white);text-shadow:0 0 5px white;';
+  sbClock.textContent=fmtClock(clock);
+  var sbDown=document.createElement('div');
+  sbDown.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:7px;color:var(--l-green);margin-top:4px;';
+  var downs=['','1ST','2ND','3RD','4TH'];
+  sbDown.textContent=downs[down]+' & '+dist;
+  var sbBall = document.createElement('div');
+  sbBall.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:6px;color:white;margin-top:4px;opacity:0.8;';
+  sbBall.innerHTML='BALL ON: <span style="color:'+defColor+';">'+defName+'</span> '+ballOn;
+  sbCenter.append(sbClock,sbDown,sbBall);
+
+  var sbRight=document.createElement('div');
+  sbRight.style.cssText='text-align:center;color:'+awayColor+';text-shadow:0 0 10px '+awayColor+';';
+  sbRight.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;font-style:italic;line-height:1;">'+awayName+'</div>';
+  var sbAwayScore=document.createElement('div');
+  sbAwayScore.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:24px;color:var(--a-gold);text-shadow:none;margin-top:4px;';
+  sbAwayScore.textContent=String(defScore);
+  sbRight.appendChild(sbAwayScore);
+
+  scorebug.append(sbLeft,sbCenter,sbRight);
+  el.appendChild(scorebug);
+
+  function updateScoreBug(){
+    sbClock.textContent=fmtClock(clock);
+    sbDown.textContent=downs[down]+' & '+dist;
+    sbBall.innerHTML='BALL ON: <span style="color:'+defColor+';">'+defName+'</span> '+ballOn;
+    sbHomeScore.textContent=String(offScore);
+    sbAwayScore.textContent=String(defScore);
+  }
+  var field=document.createElement('div');
+  field.style.cssText='flex:1;background:linear-gradient(#004422,#002211);position:relative;border-bottom:4px solid var(--f-purple);overflow:hidden;';
+  var fieldGrid=document.createElement('div');
+  fieldGrid.style.cssText='position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.1) 1px,transparent 1px);background-size:100% 40px;';
+  field.appendChild(fieldGrid);
+  var losX=Math.max(5,Math.min(85,(100-ballOn*100/60)));
+  var losLine=document.createElement('div');
+  losLine.style.cssText='position:absolute;top:0;bottom:0;width:2px;background:var(--a-gold);box-shadow:0 0 8px var(--a-gold);left:'+losX+'%;z-index:2;';
+  field.appendChild(losLine);
+  var fdX=Math.max(5,Math.min(85,(100-(ballOn-dist)*100/60)));
+  var fdLine=document.createElement('div');
+  fdLine.style.cssText='position:absolute;top:0;bottom:0;width:2px;background:var(--cyan);box-shadow:0 0 8px var(--cyan);left:'+fdX+'%;z-index:2;';
+  field.appendChild(fdLine);
+  var dotEls=[];
+  function renderDots(){
+    var offDots=[{x:losX-2,y:40},{x:losX-2,y:55},{x:losX-2,y:70},{x:losX-5,y:45},{x:losX-5,y:65}];
+    var defDots=[{x:losX+3,y:40},{x:losX+3,y:55},{x:losX+3,y:70},{x:losX+6,y:45},{x:losX+6,y:65}];
+    offDots.forEach(function(d){
+      var dot=document.createElement('div');
+      dot.style.cssText='position:absolute;width:12px;height:12px;border-radius:50%;background:var(--l-green);box-shadow:0 0 10px var(--l-green);left:'+d.x+'%;top:'+d.y+'%;transform:translate(-50%,-50%);z-index:3;transition:left .6s;';
+      field.appendChild(dot);
+      dotEls.push({el:dot,isOff:true});
+    });
+    defDots.forEach(function(d){
+      var dot=document.createElement('div');
+      dot.style.cssText='position:absolute;width:12px;height:12px;border-radius:50%;background:var(--p-red);box-shadow:0 0 10px var(--p-red);left:'+d.x+'%;top:'+d.y+'%;transform:translate(-50%,-50%);z-index:3;transition:left .6s;';
+      field.appendChild(dot);
+      dotEls.push({el:dot,isOff:false});
+    });
+  }
+  renderDots();
+  var pill=document.createElement('div');
+  pill.style.cssText='position:absolute;bottom:10px;width:100%;text-align:center;font-family:\'Press Start 2P\',monospace;font-size:8px;z-index:4;color:var(--white);text-shadow:0 0 4px #000;';
+  pill.innerHTML='BALL ON: <span style="color:'+defColor+';">'+defName+'</span> '+ballOn;
+  field.appendChild(pill);
+  el.appendChild(field);
+  function updateField(){
+    losX=Math.max(5,Math.min(85,(100-ballOn*100/60)));
+    losLine.style.left=losX+'%';
+    fdX=Math.max(5,Math.min(85,(100-(ballOn-dist)*100/60)));
+    fdLine.style.left=fdX+'%';
+    pill.innerHTML='BALL ON: <span style="color:'+defColor+';">'+defName+'</span> '+ballOn;
+    dotEls.forEach(function(obj){
+      var offset=obj.isOff?-2:3;
+      obj.el.style.left=(losX+offset)+'%';
+    });
+  }
+  var clash=document.createElement('div');
+  clash.style.cssText='flex:1.5;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;flex-shrink:0;';
+  var pickPrompt=document.createElement('div');
+  pickPrompt.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--cyan);letter-spacing:4px;text-shadow:0 0 12px var(--cyan);text-align:center;margin-bottom:10px;";
+  pickPrompt.textContent='PICK YOUR PLAY';
+  var cardRow=document.createElement('div');
+  cardRow.style.cssText='display:flex;gap:20px;align-items:center;justify-content:center;width:100%;';
+  var mySlot=document.createElement('div');
+  mySlot.className='clash-card';
+  mySlot.innerHTML='<div style="font-family:\'Press Start 2P\',monospace;font-size:6px;color:var(--muted);">YOU</div>';
+  var vsLabel=document.createElement('div');
+  vsLabel.className='vs-circle';
+  vsLabel.textContent='VS';
+  var aiSlot=document.createElement('div');
+  aiSlot.className='clash-card';
+  aiSlot.style.opacity='0.5';
+  aiSlot.style.borderStyle='dashed';
+  aiSlot.innerHTML='<div style="font-family:\'Press Start 2P\',monospace;font-size:6px;color:var(--muted);">AI</div>';
+  cardRow.append(mySlot,vsLabel,aiSlot);
+  var resultArea=document.createElement('div');
+  resultArea.style.cssText='text-align:center;min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;margin-top:10px;';
+
+  var commBox=document.createElement('div');
+  commBox.style.cssText='width:100%;max-width:320px;padding:8px 12px;background:rgba(0,0,0,0.4);border:1px solid var(--a-gold);border-radius:4px;font-family:\'Barlow Condensed\',sans-serif;font-style:italic;color:var(--a-gold);font-size:13px;opacity:0;transition:opacity 0.4s;min-height:40px;';
+  commBox.textContent='... BROADCAST BOOTH ...';
+  resultArea.appendChild(commBox);
+
+  var nextBtn=document.createElement('button');
+  nextBtn.className='btn-blitz';
+  nextBtn.style.cssText='padding:10px 24px;font-size:10px;opacity:0;pointer-events:none;width:auto;margin-top:10px;';
+  nextBtn.textContent='NEXT PLAY \u25B6';
+
+  clash.append(pickPrompt,cardRow,resultArea,nextBtn);
+  el.appendChild(clash);
+  var snapWrap=document.createElement('div');
+  snapWrap.style.cssText='padding:10px;background:#000;flex-shrink:0;';
+  var snapBtn=document.createElement('button');
+  snapBtn.className='btn-blitz';
+  snapBtn.textContent='SELECT A PLAY';
+  snapBtn.disabled=true;
+  snapWrap.appendChild(snapBtn);
+  el.appendChild(snapWrap);
+  var handArea=document.createElement('div');
+  handArea.style.cssText='padding:10px;background:#000;border-top:4px solid #333;display:flex;gap:5px;overflow-x:auto;flex-shrink:0;';
+  el.appendChild(handArea);
+  function typeColor(card){
+    if(card.type==='run') return {border:'var(--orange)'};
+    if(card.type==='pass') return {border:'var(--cyan)'};
+    if(card.type==='agg') return {border:'var(--p-red)'};
+    return {border:'var(--l-green)'};
+  }
+  function renderHand(){
+    handArea.innerHTML='';
+    myHand.forEach(function(card,i){
+      var tc=typeColor(card);
+      var isSel=selIdx===i;
+      var cel=document.createElement('div');
+      cel.className='play-card-blitz'+(isSel?' selected':'');
+      cel.style.cssText+='width:80px;flex-shrink:0;transform:scale('+(isSel?0.9:0.8)+');border-color:'+tc.border+';';
+      if(newCardIndices[i]){
+        var n=document.createElement('div');
+        n.style.cssText='position:absolute;top:2px;right:2px;font-family:\'Press Start 2P\',monospace;font-size:4px;color:var(--white);background:var(--l-green);padding:2px;';
+        n.textContent='NEW';
+        cel.appendChild(n);
+      }
+      var nameEl=document.createElement('div');
+      nameEl.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:16px;line-height:1;";
+      nameEl.textContent=card.name;
+      var iconEl=document.createElement('div');
+      iconEl.style.cssText='font-size:24px;margin:5px 0;';
+      iconEl.textContent=card.icon;
+      var helpBtn=document.createElement('div');
+      helpBtn.style.cssText='position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;border:1px solid '+tc.border+';color:'+tc.border+';font-size:7px;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;';
+      helpBtn.textContent='?';
+      helpBtn.onclick=function(e){e.stopPropagation();SND.click();showCardIntel(card,GS.team,GS.side);};
+      cel.appendChild(helpBtn);
+      cel.append(nameEl,iconEl);
+      cel.onclick=function(){if(animating) return;SND.select();selIdx=selIdx===i?-1:i;renderHand();updateSnapBtn();};
+      handArea.appendChild(cel);
+    });
+  }
+  function updateSnapBtn(){
+    if(selIdx>=0&&!animating){snapBtn.disabled=false;snapBtn.textContent='SNAP BALL!';}
+    else {snapBtn.disabled=true;snapBtn.textContent='SELECT A PLAY';}
+  }
+  function renderClashCard(card,faceUp,color){
+    var c=document.createElement('div');
+    c.className='clash-card';
+    if(!faceUp){c.innerHTML='<div style="font-size:28px;opacity:.4;">\uD83C\uDFC8</div>';return c;}
+    c.style.borderColor=color||'var(--white)';
+    c.innerHTML='<div style="font-size:32px;margin-bottom:10px;">'+card.icon+'</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;line-height:1;">'+card.name+'</div>';
+    return c;
+  }
+  function genNarrative(tier,yards,myCard,aiCard,isTurnoverResult){
+    var qbNick=qb?('\u201C'+qb.nick+'\u201D'):'The QB';
+    var skillNick=skill1?('\u201C'+skill1.nick+'\u201D'):'the receiver';
+    if(isTurnoverResult){if(isOff) return 'TURNOVER! The defense reads it all the way!';else return 'TURNOVER! '+qbNick+' jumps the route!';}
+    if(isOff){if(tier==='O+') return qbNick+' hits '+skillNick+' for '+yards+' yards!';if(tier==='N') return myCard.name+' picks up '+yards+' yards.';return 'Stuffed! Minimal gain.';}
+    else {if(tier==='O+') return 'Offense breaks through for '+yards+'!';if(tier==='N') return 'Solid tackle. '+yards+' yard gain.';return myCard.name+' locks it down!';}
+  }
+  function endDrive(result){
+    var stats={plays:playNum,yards:totalYards,turnovers:turnovers};
+    if(result==='td'){
+      animating=true;
+      offScore+=6;
+      updateScoreBug();
+      setTimeout(function(){
+        resetClash();
+        pickPrompt.textContent='TOUCHDOWN!';
+        var convArea=document.createElement('div');
+        convArea.style.cssText='display:flex;flex-direction:column;gap:10px;width:100%;max-width:240px;animation:fi .4s both;';
+        var xpBtn=document.createElement('button');
+        xpBtn.className='btn-blitz';
+        xpBtn.style.padding='10px';
+        xpBtn.innerHTML='EXTRA POINT (TIE)<br><span style="font-size:6px;opacity:.7;">95% CHANCE</span>';
+        var tpBtn=document.createElement('button');
+        tpBtn.className='btn-blitz';
+        tpBtn.style.padding='10px';
+        tpBtn.style.borderColor='var(--a-gold)';
+        tpBtn.style.color='var(--a-gold)';
+        tpBtn.innerHTML='2-POINT TRY (WIN)<br><span style="font-size:6px;opacity:.7;">45% CHANCE</span>';
+        function resolve(two){
+          SND.snap();
+          convArea.innerHTML='';
+          var win=Math.random()<(two?0.45:0.95);
+          if(win) offScore+=(two?2:1);
+          updateScoreBug();
+          var r=document.createElement('div');
+          r.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:28px;color:"+(win?'var(--l-green)':'var(--p-red)')+";animation:pop .4s both;";
+          r.textContent=win?(two?'2-PT GOOD!':'XP GOOD!'):(two?'2-PT FAILED!':'XP MISSED!');
+          convArea.appendChild(r);
+          setTimeout(function(){
+            var fin;
+            if(isOff) fin=offScore>defScore?'win':'loss';
+            else fin=offScore<defScore?'win':'loss';
+            setGs({screen:'result',team:GS.team,side:GS.side,roster:GS.roster,hand:GS.hand,result:fin,finalScore:{off:offScore,def:defScore},driveStats:stats});
+          },1500);
+        }
+        xpBtn.onclick=function(){resolve(false);};
+        tpBtn.onclick=function(){resolve(true);};
+        convArea.append(xpBtn,tpBtn);
+        resultArea.appendChild(convArea);
+      },1000);
+      return;
+    }
+    var finalResult;
+    if(isOff) finalResult=result==='td'?'win':'loss';
+    else finalResult=result==='td'?'loss':'win';
+    setTimeout(function(){setGs({screen:'result',team:GS.team,side:GS.side,roster:GS.roster,hand:GS.hand,result:finalResult,finalScore:{off:offScore,def:defScore},driveStats:stats});},1200);
+  }
+  snapBtn.onclick=function(){
+    if(selIdx<0||animating) return;
+    animating=true;
+    playNum++;
+    SND.snap();
+    var myCard=myHand[selIdx];
+    var playedIdx=selIdx;
+    selIdx=-1;
+    var aiCard;
+    if(isOff) aiCard=aiPickDefense(opp.id,aiHand,lastAiPlay);
+    else aiCard=aiPickOffense(opp.id,aiHand,lastAiPlay);
+    lastAiPlay=aiCard?aiCard.id:null;
+    var mt,tier,offCard,defCard;
+    if(isOff){offCard=myCard;defCard=aiCard;mt=getMatchupTable(team.id,opp.id);}
+    else {offCard=aiCard;defCard=myCard;mt=getMatchupTable(opp.id,team.id);}
+    tier=mt[offCard.id][defCard.id];
+    var yards=rollYards(tier);
+    var turnover=isTurnover(tier);
+    snapBtn.style.display='none';
+    pickPrompt.style.display='none';
+    resultArea.innerHTML='';
+    mySlot.innerHTML='';
+    var myClash=renderClashCard(myCard,true,team.accent);
+    myClash.style.cssText+=';animation:sup .3s ease-out both;';
+    mySlot.appendChild(myClash);
+    setTimeout(function(){aiSlot.innerHTML='';var aiDown=renderClashCard(aiCard,false);aiDown.style.cssText+=';animation:sup .3s ease-out both;';aiSlot.appendChild(aiDown);},300);
+    setTimeout(function(){SND.clash();aiSlot.innerHTML='';var aiUp=renderClashCard(aiCard,true,opp.accent);aiUp.style.cssText+=';animation:pop .35s ease-out both;';aiSlot.appendChild(aiUp);},800);
+    setTimeout(function(){var yardEl=document.createElement('div');yardEl.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:36px;color:"+(turnover?'var(--p-red)':yards>0?'var(--l-green)':'var(--white)')+';letter-spacing:3px;text-shadow:0 0 16px '+(turnover?'var(--p-red)':'var(--l-green)')+';animation:pop .35s ease-out both;';yardEl.textContent=turnover?'TURNOVER!':(yards>0?'+':'')+yards+' YDS';resultArea.prepend(yardEl);},1100);
+    setTimeout(function(){
+      var narrText=genNarrative(tier,yards,myCard,aiCard,turnover);
+      var narrEl=document.createElement('div');
+      narrEl.style.cssText='font-size:13px;color:white;opacity:0;animation:fi .4s ease-out both;max-width:280px;text-align:center;margin-bottom:10px;';
+      narrEl.textContent=narrText;
+      resultArea.insertBefore(narrEl, commBox);
+      
+      // Call AI Commentary
+      const oId = isOff ? team.id : opp.id;
+      const dId = isOff ? opp.id : team.id;
+      getAiCommentary(oId, dId, offCard, defCard, yards, turnover).then(commentary => {
+        if(commentary) {
+          commBox.style.opacity = '1';
+          commBox.textContent = '\u201C' + commentary + '\u201D';
+        }
+      });
+    },1400);
+    setTimeout(function(){
+      if(!turnover){totalYards+=yards;ballOn=Math.max(0,ballOn-yards);}else turnovers++;
+      var cost=clockCost(offCard.id);
+      clock=Math.max(0,clock-cost);
+      var driveOver=false;
+      if(ballOn<=0){SND.td();endDrive('td');driveOver=true;}
+      else if(turnover){endDrive('turnover');driveOver=true;}
+      else if(clock<=0){endDrive('clock');driveOver=true;}
+      else {if(yards>=dist){down=1;dist=Math.min(10,ballOn);}else {dist=Math.max(1,dist-Math.max(0,yards));down++;if(down>4){endDrive('downs');driveOver=true;}}}
+      if(!driveOver){
+        nextBtn.style.opacity='1';nextBtn.style.pointerEvents='auto';
+        nextBtn.onclick=function(){
+          SND.click();animating=false;
+          if(newCardIndices[playedIdx]) delete newCardIndices[playedIdx];
+          if(myDeck.length>0){myHand[playedIdx]=myDeck.shift();newCardIndices[playedIdx]=true;}
+          else myHand.splice(playedIdx,1);
+          var aiIdx=aiHand.indexOf(aiCard);
+          if(aiIdx>=0){if(aiDeck.length>0) aiHand[aiIdx]=aiDeck.shift();else aiHand.splice(aiIdx,1);}
+          updateScoreBug();updateField();resetClash();renderHand();updateSnapBtn();snapBtn.style.display='block';
+        };
+      }
+    },1700);
+  };
+  function resetClash(){
+    pickPrompt.style.display='block';resultArea.innerHTML='';nextBtn.style.opacity='0';nextBtn.style.pointerEvents='none';
+    mySlot.innerHTML='<div style="font-family:\'Press Start 2P\',monospace;font-size:6px;color:var(--muted);">YOU</div>';
+    aiSlot.innerHTML='<div style="font-family:\'Press Start 2P\',monospace;font-size:6px;color:var(--muted);">AI</div>';
+  }
+  renderHand();updateSnapBtn();
+  return el;
+}
+
+// ===== SCREEN 5: RESULT =====
+function buildResult(){
+  var el=document.createElement('div');
+  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;background:radial-gradient(circle at 50% 50%,#440088 0%,#050015 100%);position:relative;overflow:hidden;';
+  var isWin=GS.result==='win';
+  var stats=GS.driveStats||{plays:0,yards:0,turnovers:0};
+  var score=GS.finalScore||{off:GS.scenario.offScore,def:GS.scenario.defScore};
+  var team=getTeam(GS.team);
+  var opp=getOtherTeam(GS.team);
+  var streakKey='torch_streak';
+  var lastPlayKey='torch_last_play';
+  var lastResultKey='torch_last_result';
+  var today=new Date().toDateString();
+  var lastPlay=localStorage.getItem(lastPlayKey);
+  var streak=parseInt(localStorage.getItem(streakKey)||'0',10);
+  if(lastPlay!==today){
+    if(isWin){streak++;localStorage.setItem(lastResultKey,'win');}
+    else{streak=0;localStorage.setItem(lastResultKey,'loss');}
+    localStorage.setItem(streakKey,String(streak));localStorage.setItem(lastPlayKey,today);
+  }
+  var bonusKey='torch_bonus_'+today;
+  var bonusSide=GS.side==='offense'?'defense':'offense';
+  var alreadyPlayedBonus=localStorage.getItem(bonusKey)==='played';
+  var status=document.createElement('div');
+  status.style.cssText="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--a-gold);margin-bottom:10px;";
+  status.textContent='DRIVE COMPLETE';
+  el.appendChild(status);
+  var title=document.createElement('div');
+  if(isWin){
+    SND.td();title.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:80px;font-style:italic;color:var(--l-green);text-shadow:0 0 30px var(--l-green), 4px 4px 0 #000;margin-bottom:20px;animation:pop .5s ease-out both;";
+    title.textContent='TORCH LIT';
+  } else {
+    SND.turnover();title.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:80px;font-style:italic;color:var(--p-red);text-shadow:0 0 30px var(--p-red), 4px 4px 0 #000;margin-bottom:20px;animation:pop .5s ease-out both;";
+    title.textContent='TORCH OUT';
+  }
+  el.appendChild(title);
+  var sub=document.createElement('div');
+  sub.style.cssText="font-family:'Press Start 2P',monospace;font-size:8px;color:var(--white);opacity:0.8;margin-bottom:30px;";
+  sub.textContent=GS.side==='offense'?(isWin?'TOUCHDOWN SCORED':'DEFENSE HELD'):(isWin?'DEFENSE HELD':'TOUCHDOWN ALLOWED');
+  el.appendChild(sub);
+  function getScoreName(id){
+    if(id==='iron_ridge') return 'IRON';
+    if(id==='canyon_tech') return 'CANYON';
+    return '---';
+  }
+  var homeTeamName=GS.side==='offense'?getScoreName(team.id):getScoreName(opp.id);
+  var awayTeamName=GS.side==='offense'?getScoreName(opp.id):getScoreName(team.id);
+  var statsBox=document.createElement('div');
+  statsBox.style.cssText='width:100%;max-width:300px;margin-bottom:30px;';
+  function makeRow(lbl,val,color){
+    var r=document.createElement('div');
+    r.style.cssText='display:flex;justify-content:space-between;padding:15px;border-bottom:1px solid var(--glass);font-family:\'Press Start 2P\',monospace;font-size:10px;';
+    r.innerHTML='<span>'+lbl+'</span><span style="color:'+(color||'white')+';">'+val+'</span>';
+    return r;
+  }
+  statsBox.appendChild(makeRow('FINAL SCORE',homeTeamName+' '+score.off+' - '+score.def+' '+awayTeamName,'var(--a-gold)'));
+  statsBox.appendChild(makeRow('TOTAL YARDS',((stats.yards>0?'+':'')+stats.yards+' YDS')));
+  statsBox.appendChild(makeRow('PLAYS',String(stats.plays)));
+  if(streak>0) statsBox.appendChild(makeRow('STREAK','+1 ('+streak+')','var(--l-green)'));
+  else statsBox.appendChild(makeRow('STREAK','RESET','var(--p-red)'));
+  el.appendChild(statsBox);
+  var btnWrap=document.createElement('div');
+  btnWrap.style.cssText='width:100%;max-width:300px;display:flex;flex-direction:column;gap:15px;';
+  var shareBtn=document.createElement('button');
+  shareBtn.className='btn-blitz';
+  shareBtn.textContent='SHARE RESULT';
+  shareBtn.onclick=function(){
+    SND.click();
+    var emoji=isWin?'\uD83D\uDD25':'\uD83D\uDCA8';
+    var shareText='TORCH '+emoji+' '+(isWin?'LIT':'OUT')+'\n'+homeTeamName+' '+score.off+' - '+score.def+' '+awayTeamName+'\n'+stats.plays+' plays | '+stats.yards+' yds | '+stats.turnovers+' TO\n'+(streak>0?'\uD83D\uDD25 Streak: '+streak+'\n':'')+'torch-two.vercel.app';
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(shareText).then(function(){shareBtn.textContent='COPIED!';setTimeout(function(){shareBtn.textContent='SHARE RESULT';},2000);});}
+    else{var ta=document.createElement('textarea');ta.value=shareText;ta.style.cssText='position:fixed;left:-9999px;';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();shareBtn.textContent='COPIED!';setTimeout(function(){shareBtn.textContent='SHARE RESULT';},2000);}
+  };
+  btnWrap.appendChild(shareBtn);
+  if(isWin&&!alreadyPlayedBonus){
+    var bonusBtn=document.createElement('button');
+    bonusBtn.className='btn-blitz';
+    bonusBtn.style.cssText='border-color:var(--a-gold);color:var(--a-gold);box-shadow:4px 4px 0 var(--a-gold);';
+    bonusBtn.textContent='BONUS: PLAY '+bonusSide.toUpperCase();
+    bonusBtn.onclick=function(){SND.snap();localStorage.setItem(bonusKey,'played');setGs({screen:'setup',team:null,side:null,bonusSide:bonusSide});};
+    btnWrap.appendChild(bonusBtn);
+  }
+  var homeBtn=document.createElement('button');
+  homeBtn.className='btn-blitz';
+  homeBtn.style.cssText='background:transparent;color:#fff;border-color:#444;box-shadow:none;';
+  homeBtn.textContent='HOME';
+  homeBtn.onclick=function(){SND.click();GS=null;render();};
+  btnWrap.appendChild(homeBtn);
+  el.appendChild(btnWrap);
+  return el;
+}
+
+// ===== AI COMMENTARY SYSTEM =====
+async function getAiCommentary(offTeamId, defTeamId, offCard, defCard, yards, isTurnover) {
+  try {
+    const offTeam = getTeam(offTeamId);
+    const defTeam = getTeam(defTeamId);
+    
+    const systemPrompt = `You are a legendary 90s arcade football announcer. 
+    Exciting, punchy, high energy. One short sentence of play-by-play and one short sentence of expert analysis. 
+    Reference the specific play cards used: ${offCard.name} and ${defCard.name}. 
+    Result was ${yards} yards ${isTurnover ? 'and a TURNOVER!' : ''}.`;
+
+    const response = await fetch('/api/commentary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: systemPrompt,
+        messages: [{ role: 'user', content: 'Call the play.' }]
+      })
+    });
+
+    if (!response.ok) throw new Error('API failed');
+    const data = await response.json();
+    return data.content[0].text;
+  } catch (err) {
+    console.error('Commentary error:', err);
+    return null;
+  }
+}
+
+// ===== INIT =====
+render();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js');}
+</script>
+</body>
+</html>

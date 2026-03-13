@@ -1,90 +1,70 @@
 # TORCH — The Football Card Game
 
 ## What This Is
-TORCH is a daily football card game. You pick offense or defense, draft your hand, and play cards one snap at a time against an AI opponent. Neither side knows what the other called. Cards clash, results reveal, and the drive plays out with real down-and-distance, a ticking clock, and a scoreboard.
+TORCH is a daily football card game. You pick offense or defense, draft your hand, and play cards one snap at a time against an AI opponent. 
 
-The core question every snap: **"What would you call here?"**
-
-Built as a mobile-first single-page app (430px max-width). Single HTML file with vanilla JS, no framework.
+**v0.9.0 Update:** The project has been modularized using **Vite**. Logic is no longer in a single HTML file but split into ES6 modules in `src/`.
 
 ## Version Status
-- **v0.9.0** — "Broadcast Ready Build." Re-integrated AI Commentary via `api/commentary.js`, restored the 2-point conversion strategic choice, overhauled state management to eliminate global variables, added the "Broadcast Offline" under construction screen, and implemented mobile app CSS optimizations (safe areas, touch actions) for app store readiness.
+- **v0.9.0** — "Broadcast Ready Build." Modularized architecture via Vite. Re-integrated AI Commentary, 2-point conversion choice, and mobile app optimizations (safe areas, touch-action). Added "Broadcast Offline" placeholder.
 
 ## Project Structure
 ```
 torch-football/
-├── public/
-│   ├── index.html              ← The entire game (~1200 lines: HTML + CSS + JS)
-│   ├── manifest.json           ← PWA manifest (home screen install)
-│   └── sw.js                   ← Service worker (offline caching)
-├── api/
-│   └── commentary.js           ← Vercel serverless function (not used currently)
-├── TORCH-GDD-v0.7.md           ← Game design document (legacy UI notes)
-├── TORCH-MATCHUP-TABLE-v0.7.md ← Card matchup logic reference
-├── package.json
-├── vercel.json
-└── CLAUDE.md                   ← You are here
+├── src/
+│   ├── data/           # Teams, Cards, Matchup Tables, Play Diagrams
+│   ├── engine/         # Sound engine, AI logic, Yard resolution
+│   ├── ui/
+│   │   ├── components/ # Scoreboard, Intel Modal
+│   │   └── screens/    # buildHome, buildPlay, buildSetup, etc.
+│   ├── state.js        # Global state (GS) and setGs management
+│   ├── style.css       # Unified arcade broadcast styles
+│   └── main.js         # Entry point & Render loop
+├── public/             # Static assets (manifest.json, sw.js)
+├── index.html          # Vite entry shell
+├── index.legacy.html   # Backup of the v0.8.x monolith
+├── package.json        # Vite/Vercel configuration
+└── CLAUDE.md           # You are here
 ```
 
 ## How to Run
-- **Local dev:** `npx serve public -l 3000`
-- **Deploy:** `vercel --prod`
-- **Production URL:** https://torch-two.vercel.app/
+- **Local dev:** `npm run dev` (Runs Vite on http://localhost:5173)
+- **Build:** `npm run build`
+- **Deploy:** `vercel --prod` 
+  - *Note:* If Vercel throws a "Git author must have access" error, ensure your local git email matches your Vercel account: `git config --global user.email "your.email@example.com"` and then `git commit --amend --reset-author --no-edit` before deploying.
 
-## Architecture (v0.8 Arcade Redesign)
+## Architecture (v0.9.0 Vite Modular)
 
-### Visual Philosophy: "Arcade Broadcast"
-The UI is styled like a 1998 arcade machine mixed with a high-end TV sports graphic. 
-- **Global VFX:** `.crt-overlay` applies a persistent scanline and vignette overlay (`pointer-events: none`).
-- **CSS:** Heavy use of `box-shadow` for neon glows, `linear-gradient` for chrome/metallic bevels, and CSS keyframe animations (`flicker`, `pop`, `sup`).
-- **Fonts:** `Bebas Neue` (large headers), `Press Start 2P` (pixel data/buttons), `Barlow Condensed` (body).
-- **Colors:** Deep purple/navy background (`--bg: #050015`), vivid accents (`--l-green`, `--a-gold`, `--p-red`, `--f-purple`).
+### State Management (`src/state.js`)
+- All state lives in the `GS` object. 
+- `setGs(updates)` handles state transitions and triggers a re-render.
+- **Scenario:** Initial game state (down/dist/clock) is now stored in `GS.scenario`.
 
-### Screen Flow
-Home → Setup (Side & Team) → Player Draft → Card Draft → **Gameplay** → Result
+### UI Rendering (`src/main.js`)
+- The `render()` function in `main.js` is the central router. 
+- It wipes `#root` and appends the result of the current screen's `build*` function.
+- All screens are located in `src/ui/screens/`.
 
-### Implemented Screens (v0.8)
-1. **Home** — Giant skewed `TORCH` logo, animated flame, "PLAY TODAY'S TORCH" button, grayed-out "FREE PLAY", and a hidden "DEV: RESET DAILY LOCK" button.
-2. **Setup** — Scenario Brief Modal pops up first (late 4th quarter, score 14-21). 3-column Proportional Scoreboard. Step 1: Pick Side (Offense/Defense). Step 2: Choose Team (Iron Ridge / Canyon Tech). "LOCK IN TEAM" button.
-3. **Player Draft** — Pick 1 QB/LB + 3 skill players from team-specific pool of 6. Side-aware. Cards use the `.play-card-blitz` class.
-4. **Card Draft** — Pick 5 play cards from team-specific pool of 10. Side-aware. 
-5. **Gameplay** — Widescreen broadcast Scorebug (dynamic team names/colors based on Side choice), Field Visualization (neon green/red player dots), Clash Zone (VS circle with red plasma glow), Hand Management.
-6. **Result** — Win ("TORCH LIT") or loss ("TORCH OUT"). Includes final score, drive stats, streak counter, and share-to-clipboard button.
-
-### Teams & Schemes
-- **Iron Ridge (IRON)**
-  - Offense: TRIPLE OPTION
-  - Defense: MULTIPLE D
-  - Colors: Red/Black
-- **Canyon Tech (CANYON)**
-  - Offense: AIR RAID
-  - Defense: SEND EVERYBODY
-  - Colors: Orange/Black
-
-### Key Game Systems
-- **Matchup Tables** — 4 grids for all team combinations: `MT_CT_IR`, `MT_IR_CT`, `MT_CT_CT`, `MT_IR_IR`.
-- **Yard resolution** — `rollYards(tier)` returns randomized yards per tier. `isTurnover(tier)`.
-- **AI Play-Calling** — Scheme-appropriate weighted selection in `aiPickDefense()` and `aiPickOffense()`.
-- **Streak Tracking** — localStorage (`torch_streak`, `torch_last_play`). Increments on win, resets on loss. Displayed on result screen. Locked out on loss until next day.
-- **Sound engine (`SND`)** — Web Audio synth. Football-specific sounds: `snap()` (grunt + noise), `td()` and `turnover()` (modulated whistles), `clash()` (heavy hit). 
+### Sound Engine (`src/engine/sound.js`)
+- Web Audio API synth. Functions: `snap()`, `td()`, `clash()`, `whistle()`, `grunt()`.
 
 ## Coding Conventions
-- Vanilla JS, no transpilation, no build step.
-- DOM construction via `document.createElement` chains.
-- CSS-in-JS via `el.style.cssText` strings.
-- All state in the `GS` object; `setGs()` triggers full re-render.
-- Gameplay screen uses local state + manual DOM updates for animations (no setGs during play).
-- localStorage keys prefixed with `torch_`.
+- **ES6 Modules:** Use `import`/`export` for all logic.
+- **Functional State:** Prefer `setGs(s => Object.assign({}, s, { ... }))` to preserve nested state like `scenario`.
+- **Vanilla DOM:** Screens use `document.createElement`.
 
-## Recent Changes (Gemini CLI - v0.9.0 Broadcast Ready Build)
-- Re-integrated `api/commentary.js` AI system with a functional "Broadcast Booth" UI during play resolution.
-- Restored the 2-point conversion strategic choice following a touchdown.
-- Centralized game state by moving `SCENARIO` into the dynamic `GS.scenario` object to fix session reset bugs.
-- Implemented mobile-specific CSS optimizations (`user-select: none`, `touch-action: manipulation`, safe area insets).
-- Added a "BROADCAST OFFLINE" Under Construction screen after "START MATCH" with a hidden dev bypass.
-- Fixed opening screen ball alignment so it perfectly crosses the flame logo.
+## Recent Changes (Gemini CLI - v0.9.0)
+- **Modularization:** Successfully broke the 1,500-line `index.html` into a Vite project structure.
+- **AI Commentary:** Re-integrated `api/commentary.js` with a "Broadcast Booth" UI box.
+- **2-Point Conversion:** Restored the strategic choice logic after touchdowns.
+- **Home Screen Fix:** Corrected ball animation to perfectly cross and "ignite" over the flame logo.
+- **Mobile Optimizations:** Added `env(safe-area-inset-*)` and `touch-action: manipulation` for App Store readiness.
+- **Under Construction:** Added "BROADCAST OFFLINE" screen with a hidden "DEV ACCESS" bypass.
+- **Deployment:** Linked modular build to Vercel and resolved Git author validation errors for seamless `--prod` pushes.
+- **Cleanup:** Cleaned up `public/` folder; moved legacy monolith to `index.legacy.html`.
 
 ## What's Next
-- Preparing for native packaging and Android/iOS app store deployment.
-- Adding specific defensive playbook logic for "Multiple D".
-- Implementing "FREE PLAY" mode.
+- **Prototype Expansion:** Implementing the currently grayed-out "FREE PLAY" mode.
+- **Defensive Logic:** Fine-tuning "Multiple D" weights and scheme-specific AI for Iron Ridge.
+- **Vercel Refinement:** Adding better analytics or social sharing previews for the web version.
+- **App Store Readiness:** Continual focus on mobile-friendly UI/performance, keeping native packaging (Capacitor) as a long-term goal.

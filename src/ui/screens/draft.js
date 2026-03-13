@@ -11,16 +11,13 @@ function getPlayerImage(player, team, side) {
 
 function buildPlayerCard(player, team, side, isSel, size) {
   var isLarge = size === 'large';
-  var artH = isLarge ? 140 : 110;
+  var artH = isLarge ? 200 : 160;
   var nameSize = isLarge ? 19 : 16;
   var imgSrc = getPlayerImage(player, team, side);
-  var names = player.name.split(' ');
-  var firstName = names[0];
-  var lastName = names.slice(1).join(' ');
 
   var card = document.createElement('div');
   card.style.cssText =
-    'background:linear-gradient(180deg, #0a1a0a 0%, #050d05 60%, #020802 100%);' +
+    'background:#12101e;' +
     'border:2px solid ' + (isSel ? '#00ff88' : '#00ff8844') + ';' +
     'border-radius:6px;' +
     'padding:0;' +
@@ -54,14 +51,14 @@ function buildPlayerCard(player, team, side, isSel, size) {
   var posEl = document.createElement('div');
   posEl.style.cssText =
     'font-family:"Courier New",monospace;font-size:14px;font-weight:bold;' +
-    'color:#00ff88;letter-spacing:2px;line-height:1;';
+    'color:#ff0040;letter-spacing:2px;line-height:1;';
   posEl.textContent = player.pos;
 
   var nameEl = document.createElement('div');
   nameEl.style.cssText =
     'font-family:"Bebas Neue",sans-serif;font-size:' + nameSize + 'px;' +
     'color:#ffffff;line-height:1.05;margin-top:2px;';
-  nameEl.innerHTML = firstName + '<br>' + lastName;
+  nameEl.textContent = player.name;
 
   leftCol.appendChild(posEl);
   leftCol.appendChild(nameEl);
@@ -73,14 +70,14 @@ function buildPlayerCard(player, team, side, isSel, size) {
   var ovrNum = document.createElement('div');
   ovrNum.style.cssText =
     'font-family:"Courier New",monospace;font-size:' + (isLarge ? 36 : 30) + 'px;' +
-    'font-weight:bold;color:#00ff88;line-height:1;' +
-    'text-shadow:0 0 10px rgba(0,255,136,0.6), 0 0 20px rgba(0,255,136,0.3);';
+    'font-weight:bold;color:#00eaff;line-height:1;' +
+    'text-shadow:0 0 10px rgba(0,234,255,0.6), 0 0 20px rgba(0,234,255,0.3);';
   ovrNum.textContent = player.ovr;
 
   var ovrLabel = document.createElement('div');
   ovrLabel.style.cssText =
     'font-family:"Courier New",monospace;font-size:7px;font-weight:bold;' +
-    'color:#00ff8888;letter-spacing:2px;line-height:1;margin-top:1px;';
+    'color:#00eaff;opacity:0.5;letter-spacing:2px;line-height:1;margin-top:1px;';
   ovrLabel.textContent = 'OVR';
 
   rightCol.appendChild(ovrNum);
@@ -107,7 +104,7 @@ function buildPlayerCard(player, team, side, isSel, size) {
   var fade = document.createElement('div');
   fade.style.cssText =
     'position:absolute;bottom:0;left:0;right:0;height:40%;z-index:2;' +
-    'background:linear-gradient(to bottom, transparent 0%, #020802 100%);pointer-events:none;';
+    'background:linear-gradient(to bottom, transparent 0%, #12101e 100%);pointer-events:none;';
 
   artWrap.appendChild(img);
   artWrap.appendChild(fade);
@@ -120,20 +117,12 @@ function buildPlayerCard(player, team, side, isSel, size) {
 
   var nickEl = document.createElement('div');
   nickEl.style.cssText =
-    'font-family:"Courier New",monospace;font-size:' + (isLarge ? 11 : 10) + 'px;' +
+    'font-family:"Courier New",monospace;font-size:' + (isLarge ? 13 : 12) + 'px;' +
     'color:#ffcc00;font-weight:bold;letter-spacing:1px;line-height:1;' +
     'text-shadow:0 0 6px rgba(255,204,0,0.4);';
   nickEl.textContent = '"' + player.nick + '"';
 
-  var descEl = document.createElement('div');
-  descEl.style.cssText =
-    'font-family:"Courier New",monospace;font-size:7px;' +
-    'color:#00ff8866;line-height:1.3;margin-top:3px;' +
-    'overflow:hidden;white-space:nowrap;text-overflow:ellipsis;';
-  descEl.textContent = player.desc;
-
   footer.appendChild(nickEl);
-  footer.appendChild(descEl);
   card.appendChild(footer);
 
   return card;
@@ -180,26 +169,11 @@ export function buildDraft() {
     'position:relative;z-index:2;';
 
   // Page header
-  var stepLabel = document.createElement('div');
-  stepLabel.style.cssText =
-    'font-family:"Press Start 2P",monospace;font-size:7px;color:#00ff88;' +
-    'text-align:center;letter-spacing:1px;margin-bottom:2px;';
-  stepLabel.textContent = 'STEP 5';
-  content.appendChild(stepLabel);
-
   var title = document.createElement('div');
   title.className = 'chrome-header';
-  title.style.cssText +=
-    'font-size:26px;text-align:center;display:block;margin-bottom:4px;';
-  title.textContent = 'DRAFT YOUR SQUAD';
+  title.style.fontSize = '22px';
+  title.textContent = '3. DRAFT YOUR SQUAD';
   content.appendChild(title);
-
-  var subtitle = document.createElement('div');
-  subtitle.style.cssText =
-    'font-family:"Courier New",monospace;font-size:9px;color:#888;' +
-    'text-align:center;letter-spacing:1px;margin-bottom:14px;';
-  subtitle.textContent = team.name + ' \u2022 ' + (isDef ? 'DEFENSE' : 'OFFENSE');
-  content.appendChild(subtitle);
 
   // State
   var selPrimary = null;
@@ -208,10 +182,10 @@ export function buildDraft() {
   // Primary section (QB or LB)
   var primaryLabel = document.createElement('div');
   primaryLabel.style.cssText =
-    'font-family:"Press Start 2P",monospace;font-size:8px;color:#00ff88;' +
+    'font-family:"Press Start 2P",monospace;font-size:11px;color:#00ff88;' +
     'letter-spacing:1px;margin-bottom:8px;' +
     'border-bottom:1px solid #00ff8833;padding-bottom:6px;';
-  primaryLabel.textContent = (isDef ? 'LINEBACKER' : 'QUARTERBACK') + ' \u2014 PICK 1';
+  primaryLabel.textContent = (isDef ? 'LINEBACKERS' : 'QUARTERBACK') + ' \u2014 PICK 1';
   content.appendChild(primaryLabel);
 
   var primaryGrid = document.createElement('div');
@@ -221,23 +195,16 @@ export function buildDraft() {
   // Skill section
   var skillLabel = document.createElement('div');
   skillLabel.style.cssText =
-    'font-family:"Press Start 2P",monospace;font-size:8px;color:#00ff88;' +
+    'font-family:"Press Start 2P",monospace;font-size:11px;color:#00ff88;' +
     'letter-spacing:1px;margin-bottom:8px;' +
     'border-bottom:1px solid #00ff8833;padding-bottom:6px;';
-  skillLabel.textContent = 'SKILL PLAYERS \u2014 PICK 3';
+  skillLabel.textContent = (isDef ? 'DEFENSIVE BACKS' : 'SKILL PLAYERS') + ' \u2014 PICK 3';
   content.appendChild(skillLabel);
 
   var skillGrid = document.createElement('div');
   skillGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;';
   content.appendChild(skillGrid);
 
-  // Counter row
-  var counterRow = document.createElement('div');
-  counterRow.style.cssText =
-    'display:flex;align-items:center;justify-content:center;gap:12px;' +
-    'font-family:"Press Start 2P",monospace;font-size:8px;color:#aaa;' +
-    'padding:8px 0;';
-  content.appendChild(counterRow);
 
   function refreshPrimary() {
     primaryGrid.innerHTML = '';
@@ -250,7 +217,6 @@ export function buildDraft() {
         selPrimary = (selPrimary === pl.id) ? null : pl.id;
         refreshPrimary();
         refreshSkills();
-        refreshCounter();
         refreshGoBtn();
       };
       primaryGrid.appendChild(card);
@@ -272,52 +238,10 @@ export function buildDraft() {
           selSkill[pl.id] = true;
         }
         refreshSkills();
-        refreshCounter();
         refreshGoBtn();
       };
       skillGrid.appendChild(card);
     });
-  }
-
-  function refreshCounter() {
-    var qbCount = selPrimary ? 1 : 0;
-    var skCount = Object.keys(selSkill).length;
-    var priAbbr = isDef ? 'LB' : 'QB';
-
-    counterRow.innerHTML = '';
-
-    // QB/LB indicator
-    var qbDot = document.createElement('span');
-    qbDot.style.cssText =
-      'display:inline-block;width:6px;height:6px;border-radius:50%;' +
-      'background:' + (qbCount ? '#00ff88' : '#333') + ';margin-right:4px;vertical-align:middle;';
-    var qbText = document.createElement('span');
-    qbText.style.color = qbCount ? '#00ff88' : '#666';
-    qbText.textContent = priAbbr + ': ' + qbCount + '/1';
-
-    var sep = document.createElement('span');
-    sep.style.color = '#333';
-    sep.textContent = ' \u00b7 ';
-
-    // Skill indicators
-    var skDots = document.createElement('span');
-    skDots.style.cssText = 'margin-right:4px;';
-    for (var i = 0; i < 3; i++) {
-      var d = document.createElement('span');
-      d.style.cssText =
-        'display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:2px;' +
-        'background:' + (i < skCount ? '#00ff88' : '#333') + ';vertical-align:middle;';
-      skDots.appendChild(d);
-    }
-    var skText = document.createElement('span');
-    skText.style.color = skCount === 3 ? '#00ff88' : '#666';
-    skText.textContent = 'SKILL: ' + skCount + '/3';
-
-    counterRow.appendChild(qbDot);
-    counterRow.appendChild(qbText);
-    counterRow.appendChild(sep);
-    counterRow.appendChild(skDots);
-    counterRow.appendChild(skText);
   }
 
   // Lock in button
@@ -352,7 +276,6 @@ export function buildDraft() {
   // Initial render
   refreshPrimary();
   refreshSkills();
-  refreshCounter();
   refreshGoBtn();
 
   return el;
