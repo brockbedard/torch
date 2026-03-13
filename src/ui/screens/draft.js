@@ -168,7 +168,7 @@ export function buildDraft() {
   backBtn.textContent = '\u2190 BACK';
   backBtn.onclick = function() {
     SND.click();
-    setGs(function(s) { return Object.assign({}, s, { screen: 'players', team: GS.team, side: GS.side }); });
+    setGs(function(s) { return Object.assign({}, s, { screen: 'setup', team: GS.team, side: GS.side }); });
   };
   hdr.appendChild(backBtn);
   el.appendChild(hdr);
