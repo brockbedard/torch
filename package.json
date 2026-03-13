@@ -1,6 +1,6 @@
 {
   "name": "torch-football",
-  "version": "0.6.1",
+  "version": "0.9.0",
   "description": "TORCH — The Football Card Game",
   "scripts": {
     "dev": "npx serve public -l 3000 -C",

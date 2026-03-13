@@ -17,11 +17,21 @@
   --white: #ffffff; --glass: rgba(255, 255, 255, 0.1);
   --chrome: linear-gradient(to bottom, #fff 0%, #888 50%, #fff 100%);
   --p-red: #ff0040; --text: #fff; --muted: #888; --cyan: #00eaff; --orange: #ff4d00; --danger: #ff0040;
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html,body { background: var(--bg); width: 100%; height: 100%; overflow: hidden; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html,body { 
+  background: var(--bg); width: 100%; height: 100%; overflow: hidden; 
+  user-select: none; -webkit-user-select: none; touch-action: manipulation;
+}
 body { color: white; font-family: 'Barlow Condensed', sans-serif; display: flex; justify-content: center; font-size: 18px; }
-#root { width: 100%; max-width: 430px; height: 100vh; background: #080020; position: relative; overflow-y: auto; overflow-x: hidden; box-shadow: 0 0 100px rgba(187, 0, 255, 0.2); }
+#root { 
+  width: 100%; max-width: 430px; height: 100vh; background: #080020; position: relative; 
+  overflow-y: auto; overflow-x: hidden; box-shadow: 0 0 100px rgba(187, 0, 255, 0.2);
+  padding-top: var(--safe-top); padding-bottom: var(--safe-bottom);
+  user-select: none; -webkit-user-select: none; touch-action: manipulation;
+}
 #root::after {
   content: ""; position: fixed; inset: 0; width: 100%; max-width: 430px; left: 50%; transform: translateX(-50%);
   background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
@@ -34,6 +44,19 @@ body { color: white; font-family: 'Barlow Condensed', sans-serif; display: flex;
 @keyframes pop{0%{transform:scale(.2);opacity:0;}65%{transform:scale(1.16);}100%{transform:scale(1);opacity:1;}}
 @keyframes fi{from{opacity:0;}to{opacity:1;}}
 @keyframes flicker{from{opacity:0.8;transform:scale(1);}to{opacity:1;transform:scale(1.1);}}
+@keyframes ballPass{
+  0%{transform:translate(-250px, 120px) rotate(0deg);opacity:0;}
+  15%{transform:translate(-180px, 80px) rotate(60deg);opacity:1;}
+  50%{transform:translate(0px, 0px) rotate(360deg);opacity:1;}
+  85%{transform:translate(180px, -80px) rotate(660deg);opacity:1;}
+  100%{transform:translate(250px, -120px) rotate(720deg);opacity:0;}
+}
+@keyframes ignite{
+  0%,48%{opacity:0;transform:scale(0.4) rotate(-20deg);filter:blur(5px);}
+  50%{opacity:1;transform:scale(1.8) rotate(0deg);filter:blur(0px);}
+  55%{transform:scale(1.4) rotate(10deg);}
+  60%,100%{opacity:1;transform:scale(1.3) rotate(0deg);filter:drop-shadow(0 0 15px var(--orange));}
+}
 
 .sup{animation:sup .38s ease-out both;}
 .pop{animation:pop .48s cubic-bezier(.34,1.56,.64,1) both;}
@@ -449,13 +472,18 @@ function showCardIntel(card, teamId, side){
   root.appendChild(overlay);
 }
 
-// ===== SCENARIO =====
-var SCENARIO={down:2,dist:10,ballOn:35,clock:165,timeouts:1,offScore:14,defScore:21};
+// ===== INIT SCENARIO =====
+function getInitialScenario(){
+  return {down:2,dist:10,ballOn:35,clock:165,timeouts:1,offScore:14,defScore:21};
+}
 
 // ===== STATE =====
 var GS=null;
 var root=document.getElementById('root');
-function setGs(fn){GS=typeof fn==='function'?fn(GS):fn;render();}
+function setGs(fn){
+  GS=typeof fn==='function'?fn(GS):fn;
+  render();
+}
 
 // ===== HELPERS =====
 function getTeam(id){return TEAMS.find(function(t){return t.id===id;})||TEAMS[0];}
@@ -567,6 +595,7 @@ function render(){
   else if(GS.screen==='setup') content=buildSetup();
   else if(GS.screen==='players') content=buildPlayers();
   else if(GS.screen==='draft') content=buildDraft();
+  else if(GS.screen==='under_construction') content=buildUnderConstruction();
   else if(GS.screen==='play') content=buildPlay();
   else if(GS.screen==='result') content=buildResult();
   else content=buildHome();
@@ -574,11 +603,51 @@ function render(){
   root.scrollTop=0;
 }
 
+// ===== SCREEN: UNDER CONSTRUCTION =====
+function buildUnderConstruction(){
+  var el=document.createElement('div');
+  el.className='sup';
+  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;background:radial-gradient(circle at 50% 50%,#1a0033 0%,#050015 100%);text-align:center;';
+  
+  var icon=document.createElement('div');
+  icon.style.cssText='font-size:60px;margin-bottom:20px;animation:flicker 0.15s infinite alternate;filter:drop-shadow(0 0 20px var(--a-gold));';
+  icon.textContent='\uD83D\uDEA7';
+
+  var title=document.createElement('div');
+  title.className='chrome-header';
+  title.style.fontSize='42px';
+  title.textContent='BROADCAST OFFLINE';
+  
+  var msg=document.createElement('div');
+  msg.style.cssText="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--white);line-height:1.8;margin:20px 0 40px;opacity:0.8;max-width:300px;";
+  msg.innerHTML='ENCRYPTED GAMEPLAY UPLINK PENDING...<br><br>OUR ENGINEERS ARE CALIBRATING THE CLASH ENGINE FOR PEAK ARCADE PERFORMANCE.<br><br><span style="color:var(--a-gold)">STADIUM GATES OPEN SOON.</span>';
+
+  var btn=document.createElement('button');
+  btn.className='btn-blitz';
+  btn.style.cssText='width:auto;padding:15px 30px;font-size:12px;';
+  btn.textContent='RETURN TO HUB';
+  btn.onclick=function(){SND.click();GS=null;render();};
+
+  var devLink=document.createElement('div');
+  devLink.style.cssText='margin-top:40px;font-family:\'Press Start 2P\',monospace;font-size:6px;color:var(--muted);cursor:pointer;';
+  devLink.textContent='DEV ACCESS: BYPASS ENCRYPTION';
+  devLink.onclick=function(){
+    if(confirm('Developer Authorization required. Proceed to Gameplay?')){
+      SND.snap();
+      setGs(function(s){return Object.assign({},s,{screen:'play'});});
+    }
+  };
+
+  el.append(icon,title,msg,btn,devLink);
+  return el;
+}
+
 // ===== SCOREBOARD BUILDER =====
 function buildScoreboard(selSide, selTeamId){
   var sb=document.createElement('div');
   sb.style.cssText='background:#000;border:4px solid var(--white);border-image:var(--chrome) 1;padding:25px 10px;display:grid;grid-template-columns:1fr 1.2fr 1fr;align-items:center;margin-bottom:20px;box-shadow:0 0 40px rgba(255,255,255,0.1);';
   
+  var scen = GS.scenario;
   function getScoreName(id){ if(id==='iron_ridge') return 'IRON'; if(id==='canyon_tech') return 'CANYON'; return '---'; }
 
   var leftAbbr = '---'; var leftPts = '--'; var leftColor = 'var(--white)';
@@ -593,11 +662,11 @@ function buildScoreboard(selSide, selTeamId){
     defColor = defTeam.accent;
 
     if (selSide === 'offense') {
-      leftAbbr = getScoreName(myTeam.id); leftPts = SCENARIO.offScore; leftColor = myTeam.accent;
-      rightAbbr = getScoreName(oppTeam.id); rightPts = SCENARIO.defScore; rightColor = oppTeam.accent;
+      leftAbbr = getScoreName(myTeam.id); leftPts = scen.offScore; leftColor = myTeam.accent;
+      rightAbbr = getScoreName(oppTeam.id); rightPts = scen.defScore; rightColor = oppTeam.accent;
     } else {
-      leftAbbr = getScoreName(oppTeam.id); leftPts = SCENARIO.offScore; leftColor = oppTeam.accent;
-      rightAbbr = getScoreName(myTeam.id); rightPts = SCENARIO.defScore; rightColor = myTeam.accent;
+      leftAbbr = getScoreName(oppTeam.id); leftPts = scen.offScore; leftColor = oppTeam.accent;
+      rightAbbr = getScoreName(myTeam.id); rightPts = scen.defScore; rightColor = myTeam.accent;
     }
   }
 
@@ -609,10 +678,10 @@ function buildScoreboard(selSide, selTeamId){
   
   var center=document.createElement('div');
   center.style.textAlign='center';
-  center.innerHTML='<div class="px" style="font-size:14px;color:var(--white);margin-bottom:6px;text-shadow:0 0 5px white;">'+fmtClock(SCENARIO.clock)+'</div>'+
-    '<div class="px" style="font-size:7px;color:var(--l-green);margin-bottom:4px;">2ND & 10</div>'+
-    '<div class="px" style="font-size:7px;color:var(--white);opacity:0.8;margin-bottom:4px;">TIMEOUTS: '+SCENARIO.timeouts+'</div>'+
-    '<div class="px" style="font-size:7px;color:var(--white);">BALL ON: <span style="color:'+defColor+';">'+defName+'</span> '+SCENARIO.ballOn+'</div>';
+  center.innerHTML='<div class="px" style="font-size:14px;color:var(--white);margin-bottom:6px;text-shadow:0 0 5px white;">'+fmtClock(scen.clock)+'</div>'+
+    '<div class="px" style="font-size:7px;color:var(--l-green);margin-bottom:4px;">'+scen.down+'& '+scen.dist+'</div>'+
+    '<div class="px" style="font-size:7px;color:var(--white);opacity:0.8;margin-bottom:4px;">TIMEOUTS: '+scen.timeouts+'</div>'+
+    '<div class="px" style="font-size:7px;color:var(--white);">BALL ON: <span style="color:'+defColor+';">'+defName+'</span> '+scen.ballOn+'</div>';
 
   var right=document.createElement('div');
   right.style.textAlign='center';
@@ -634,13 +703,30 @@ function buildHome(){
   var lastResult=localStorage.getItem('torch_last_result');
   var streak=localStorage.getItem('torch_streak')||'0';
   var isLocked=lastPlay===today&&lastResult==='loss';
+  var logoWrap=document.createElement('div');
+  logoWrap.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;height:140px;width:100%;margin-bottom:20px;';
+
   var fireEl=document.createElement('div');
-  fireEl.style.cssText='font-size:80px;animation:flicker 0.1s infinite alternate;margin-bottom:-20px;z-index:1;';
+  fireEl.style.cssText='font-size:80px;animation:flicker 0.1s infinite alternate;z-index:1;';
   fireEl.textContent='\uD83D\uDD25';
+
+  var ballCont=document.createElement('div');
+  ballCont.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;pointer-events:none;animation:ballPass 2.5s ease-in-out infinite;';
+  var ballIcon=document.createElement('div');
+  ballIcon.style.cssText='font-size:40px;filter:drop-shadow(0 0 10px rgba(0,0,0,0.5));';
+  ballIcon.textContent='\uD83C\uDFC8';
+  var ballFire=document.createElement('div');
+  ballFire.style.cssText='position:absolute;inset:0;font-size:40px;animation:ignite 2.5s infinite;filter:drop-shadow(0 0 15px var(--orange));mix-blend-mode:screen;';
+  ballFire.textContent='\uD83D\uDD25';
+  ballCont.append(ballIcon,ballFire);
+  
+  logoWrap.append(fireEl, ballCont);
+  el.appendChild(logoWrap);
+
   var title=document.createElement('h1');
   title.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:120px;line-height:0.8;color:var(--a-gold);text-shadow:8px 8px 0 #000, 0 0 40px var(--a-gold);font-style:italic;transform:rotate(-5deg) scale(1.1);margin-bottom:40px;text-align:center;";
   title.innerHTML='TORCH<span style="display:block;color:white;font-size:40px;letter-spacing:15px;text-shadow:4px 4px 0 #000;margin-left:10px;">THE GAME</span>';
-  el.append(fireEl,title);
+  el.append(title);
   var playWrap=document.createElement('div');
   playWrap.style.cssText='width:100%;margin-top:40px;z-index:2;position:relative;display:flex;flex-direction:column;gap:20px;';
   var playBtn=document.createElement('button');
@@ -648,7 +734,10 @@ function buildHome(){
   playBtn.disabled=isLocked;
   playBtn.style.cssText='border-color:var(--white);color:var(--f-purple);background:var(--white);';
   playBtn.textContent=isLocked?'LOCKED: RETURN TMW':"PLAY TODAY'S TORCH";
-  playBtn.onclick=function(){SND.click();setGs({screen:'setup',team:null,side:null});};
+  playBtn.onclick=function(){
+    SND.click();
+    setGs(function(s){ return Object.assign({}, s, {screen:'setup', team:null, side:null, scenario:getInitialScenario()}); });
+  };
   
   var freeBtn=document.createElement('button');
   freeBtn.className='btn-blitz';
@@ -777,7 +866,7 @@ function buildSetup(){
     goBtn.disabled=!ready;
     goBtn.style.cssText = ready ? 'background:var(--a-gold);border-color:var(--a-gold);color:#000;box-shadow:0 0 30px rgba(255,204,0,0.6);font-size:16px;' : 'opacity:0.3;';
     goBtn.textContent=ready?'LOCK IN TEAM \u2192':'SELECT TEAM & SIDE';
-    goBtn.onclick=ready?function(){SND.snap();setGs({screen:'players',team:selTeam,side:selSide,roster:null});}:null;
+    goBtn.onclick=ready?function(){SND.snap();setGs(function(s){ return Object.assign({}, s, {screen:'players', team:selTeam, side:selSide, roster:null}); });}:null;
   }
   goWrap.appendChild(goBtn);
   content.appendChild(goWrap);
@@ -935,7 +1024,7 @@ function buildDraft(){
     goBtn.disabled=!ready;
     if(ready) goBtn.style.cssText+='background:var(--a-gold);border-color:var(--a-gold);color:#000;box-shadow:0 0 30px rgba(255,204,0,0.6);';
     goBtn.textContent=ready?'START MATCH \u2192':'PICK 5 PLAYS';
-    goBtn.onclick=ready?function(){SND.snap();var hand=Object.keys(selected).map(function(k){return selected[k];});setGs({screen:'play',team:GS.team,side:GS.side,roster:GS.roster,hand:hand});}:null;
+    goBtn.onclick=ready?function(){SND.snap();var hand=Object.keys(selected).map(function(k){return selected[k];});setGs({screen:'under_construction',team:GS.team,side:GS.side,roster:GS.roster,hand:hand});}:null;
   }
   btnRow.append(pickForMe,goBtn);
   content.appendChild(btnRow);
@@ -951,12 +1040,14 @@ function buildPlay(){
   var team=getTeam(GS.team);
   var opp=getOtherTeam(GS.team);
   var playerPool=isOff?team.players:team.defPlayers;
-  var down=SCENARIO.down;
-  var dist=SCENARIO.dist;
-  var ballOn=SCENARIO.ballOn;
-  var clock=SCENARIO.clock;
-  var offScore=SCENARIO.offScore;
-  var defScore=SCENARIO.defScore;
+  
+  var scen = GS.scenario;
+  var down = scen.down;
+  var dist = scen.dist;
+  var ballOn = scen.ballOn;
+  var clock = scen.clock;
+  var offScore = scen.offScore;
+  var defScore = scen.defScore;
   var myHand=GS.hand.slice();
   var myDeck=shuffle((isOff?getOffCards(GS.team):getDefCards(GS.team)).filter(function(c){return !myHand.some(function(h){return h.id===c.id;});}));
   var aiCards=isOff?getDefCards(opp.id):getOffCards(opp.id);
@@ -1102,6 +1193,11 @@ function buildPlay(){
   var resultArea=document.createElement('div');
   resultArea.style.cssText='text-align:center;min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;margin-top:10px;';
 
+  var commBox=document.createElement('div');
+  commBox.style.cssText='width:100%;max-width:320px;padding:8px 12px;background:rgba(0,0,0,0.4);border:1px solid var(--a-gold);border-radius:4px;font-family:\'Barlow Condensed\',sans-serif;font-style:italic;color:var(--a-gold);font-size:13px;opacity:0;transition:opacity 0.4s;min-height:40px;';
+  commBox.textContent='... BROADCAST BOOTH ...';
+  resultArea.appendChild(commBox);
+
   var nextBtn=document.createElement('button');
   nextBtn.className='btn-blitz';
   nextBtn.style.cssText='padding:10px 24px;font-size:10px;opacity:0;pointer-events:none;width:auto;margin-top:10px;';
@@ -1177,7 +1273,49 @@ function buildPlay(){
   }
   function endDrive(result){
     var stats={plays:playNum,yards:totalYards,turnovers:turnovers};
-    if(result==='td') offScore+=7;
+    if(result==='td'){
+      animating=true;
+      offScore+=6;
+      updateScoreBug();
+      setTimeout(function(){
+        resetClash();
+        pickPrompt.textContent='TOUCHDOWN!';
+        var convArea=document.createElement('div');
+        convArea.style.cssText='display:flex;flex-direction:column;gap:10px;width:100%;max-width:240px;animation:fi .4s both;';
+        var xpBtn=document.createElement('button');
+        xpBtn.className='btn-blitz';
+        xpBtn.style.padding='10px';
+        xpBtn.innerHTML='EXTRA POINT (TIE)<br><span style="font-size:6px;opacity:.7;">95% CHANCE</span>';
+        var tpBtn=document.createElement('button');
+        tpBtn.className='btn-blitz';
+        tpBtn.style.padding='10px';
+        tpBtn.style.borderColor='var(--a-gold)';
+        tpBtn.style.color='var(--a-gold)';
+        tpBtn.innerHTML='2-POINT TRY (WIN)<br><span style="font-size:6px;opacity:.7;">45% CHANCE</span>';
+        function resolve(two){
+          SND.snap();
+          convArea.innerHTML='';
+          var win=Math.random()<(two?0.45:0.95);
+          if(win) offScore+=(two?2:1);
+          updateScoreBug();
+          var r=document.createElement('div');
+          r.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:28px;color:"+(win?'var(--l-green)':'var(--p-red)')+";animation:pop .4s both;";
+          r.textContent=win?(two?'2-PT GOOD!':'XP GOOD!'):(two?'2-PT FAILED!':'XP MISSED!');
+          convArea.appendChild(r);
+          setTimeout(function(){
+            var fin;
+            if(isOff) fin=offScore>defScore?'win':'loss';
+            else fin=offScore<defScore?'win':'loss';
+            setGs({screen:'result',team:GS.team,side:GS.side,roster:GS.roster,hand:GS.hand,result:fin,finalScore:{off:offScore,def:defScore},driveStats:stats});
+          },1500);
+        }
+        xpBtn.onclick=function(){resolve(false);};
+        tpBtn.onclick=function(){resolve(true);};
+        convArea.append(xpBtn,tpBtn);
+        resultArea.appendChild(convArea);
+      },1000);
+      return;
+    }
     var finalResult;
     if(isOff) finalResult=result==='td'?'win':'loss';
     else finalResult=result==='td'?'loss':'win';
@@ -1210,8 +1348,24 @@ function buildPlay(){
     mySlot.appendChild(myClash);
     setTimeout(function(){aiSlot.innerHTML='';var aiDown=renderClashCard(aiCard,false);aiDown.style.cssText+=';animation:sup .3s ease-out both;';aiSlot.appendChild(aiDown);},300);
     setTimeout(function(){SND.clash();aiSlot.innerHTML='';var aiUp=renderClashCard(aiCard,true,opp.accent);aiUp.style.cssText+=';animation:pop .35s ease-out both;';aiSlot.appendChild(aiUp);},800);
-    setTimeout(function(){var yardEl=document.createElement('div');yardEl.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:36px;color:"+(turnover?'var(--p-red)':yards>0?'var(--l-green)':'var(--white)')+';letter-spacing:3px;text-shadow:0 0 16px '+(turnover?'var(--p-red)':'var(--l-green)')+';animation:pop .35s ease-out both;';yardEl.textContent=turnover?'TURNOVER!':(yards>0?'+':'')+yards+' YDS';resultArea.appendChild(yardEl);},1100);
-    setTimeout(function(){var narrText=genNarrative(tier,yards,myCard,aiCard,turnover);var narrEl=document.createElement('div');narrEl.style.cssText='font-size:13px;color:white;opacity:0;animation:fi .4s ease-out both;max-width:280px;text-align:center;';narrEl.textContent=narrText;resultArea.appendChild(narrEl);},1400);
+    setTimeout(function(){var yardEl=document.createElement('div');yardEl.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:36px;color:"+(turnover?'var(--p-red)':yards>0?'var(--l-green)':'var(--white)')+';letter-spacing:3px;text-shadow:0 0 16px '+(turnover?'var(--p-red)':'var(--l-green)')+';animation:pop .35s ease-out both;';yardEl.textContent=turnover?'TURNOVER!':(yards>0?'+':'')+yards+' YDS';resultArea.prepend(yardEl);},1100);
+    setTimeout(function(){
+      var narrText=genNarrative(tier,yards,myCard,aiCard,turnover);
+      var narrEl=document.createElement('div');
+      narrEl.style.cssText='font-size:13px;color:white;opacity:0;animation:fi .4s ease-out both;max-width:280px;text-align:center;margin-bottom:10px;';
+      narrEl.textContent=narrText;
+      resultArea.insertBefore(narrEl, commBox);
+      
+      // Call AI Commentary
+      const oId = isOff ? team.id : opp.id;
+      const dId = isOff ? opp.id : team.id;
+      getAiCommentary(oId, dId, offCard, defCard, yards, turnover).then(commentary => {
+        if(commentary) {
+          commBox.style.opacity = '1';
+          commBox.textContent = '\u201C' + commentary + '\u201D';
+        }
+      });
+    },1400);
     setTimeout(function(){
       if(!turnover){totalYards+=yards;ballOn=Math.max(0,ballOn-yards);}else turnovers++;
       var cost=clockCost(offCard.id);
@@ -1250,7 +1404,7 @@ function buildResult(){
   el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;background:radial-gradient(circle at 50% 50%,#440088 0%,#050015 100%);position:relative;overflow:hidden;';
   var isWin=GS.result==='win';
   var stats=GS.driveStats||{plays:0,yards:0,turnovers:0};
-  var score=GS.finalScore||{off:SCENARIO.offScore,def:SCENARIO.defScore};
+  var score=GS.finalScore||{off:GS.scenario.offScore,def:GS.scenario.defScore};
   var team=getTeam(GS.team);
   var opp=getOtherTeam(GS.team);
   var streakKey='torch_streak';
@@ -1334,6 +1488,35 @@ function buildResult(){
   btnWrap.appendChild(homeBtn);
   el.appendChild(btnWrap);
   return el;
+}
+
+// ===== AI COMMENTARY SYSTEM =====
+async function getAiCommentary(offTeamId, defTeamId, offCard, defCard, yards, isTurnover) {
+  try {
+    const offTeam = getTeam(offTeamId);
+    const defTeam = getTeam(defTeamId);
+    
+    const systemPrompt = `You are a legendary 90s arcade football announcer. 
+    Exciting, punchy, high energy. One short sentence of play-by-play and one short sentence of expert analysis. 
+    Reference the specific play cards used: ${offCard.name} and ${defCard.name}. 
+    Result was ${yards} yards ${isTurnover ? 'and a TURNOVER!' : ''}.`;
+
+    const response = await fetch('/api/commentary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: systemPrompt,
+        messages: [{ role: 'user', content: 'Call the play.' }]
+      })
+    });
+
+    if (!response.ok) throw new Error('API failed');
+    const data = await response.json();
+    return data.content[0].text;
+  } catch (err) {
+    console.error('Commentary error:', err);
+    return null;
+  }
 }
 
 // ===== INIT =====
