@@ -59,7 +59,7 @@ export function buildPlay(){
   sbLeft.style.cssText='text-align:center;color:'+homeColor+';text-shadow:0 0 10px '+homeColor+';';
   sbLeft.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;font-style:italic;line-height:1;">'+homeName+'</div>';
   var sbHomeScore=document.createElement('div');
-  sbHomeScore.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:24px;color:var(--a-gold);text-shadow:none;margin-top:4px;';
+  sbHomeScore.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:24px;color:var(--white);text-shadow:none;margin-top:4px;';
   sbHomeScore.textContent=String(offScore);
   sbLeft.appendChild(sbHomeScore);
 
@@ -69,7 +69,7 @@ export function buildPlay(){
   sbClock.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:14px;color:var(--white);text-shadow:0 0 5px white;';
   sbClock.textContent=fmtClock(clock);
   var sbDown=document.createElement('div');
-  sbDown.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:7px;color:var(--l-green);margin-top:4px;';
+  sbDown.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:7px;color:var(--cyan);margin-top:4px;';
   var downs=['','1ST','2ND','3RD','4TH'];
   sbDown.textContent=downs[down]+' & '+dist;
   var sbBall = document.createElement('div');
@@ -81,7 +81,7 @@ export function buildPlay(){
   sbRight.style.cssText='text-align:center;color:'+awayColor+';text-shadow:0 0 10px '+awayColor+';';
   sbRight.innerHTML='<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;font-style:italic;line-height:1;">'+awayName+'</div>';
   var sbAwayScore=document.createElement('div');
-  sbAwayScore.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:24px;color:var(--a-gold);text-shadow:none;margin-top:4px;';
+  sbAwayScore.style.cssText='font-family:\'Press Start 2P\',monospace;font-size:24px;color:var(--white);text-shadow:none;margin-top:4px;';
   sbAwayScore.textContent=String(defScore);
   sbRight.appendChild(sbAwayScore);
 
@@ -320,7 +320,7 @@ export function buildPlay(){
     mySlot.appendChild(myClash);
     setTimeout(function(){aiSlot.innerHTML='';var aiDown=renderClashCard(aiCard,false);aiDown.style.cssText+=';animation:sup .3s ease-out both;';aiSlot.appendChild(aiDown);},300);
     setTimeout(function(){SND.clash();aiSlot.innerHTML='';var aiUp=renderClashCard(aiCard,true,opp.accent);aiUp.style.cssText+=';animation:pop .35s ease-out both;';aiSlot.appendChild(aiUp);},800);
-    setTimeout(function(){var yardEl=document.createElement('div');yardEl.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:36px;color:"+(turnover?'var(--p-red)':yards>0?'var(--l-green)':'var(--white)')+';letter-spacing:3px;text-shadow:0 0 16px '+(turnover?'var(--p-red)':'var(--l-green)')+';animation:pop .35s ease-out both;';yardEl.textContent=turnover?'TURNOVER!':(yards>0?'+':'')+yards+' YDS';resultArea.prepend(yardEl);},1100);
+    setTimeout(function(){var yardEl=document.createElement('div');yardEl.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:36px;color:"+(turnover?'var(--p-red)':yards>0?'var(--a-gold)':'var(--white)')+';letter-spacing:3px;text-shadow:0 0 16px '+(turnover?'var(--p-red)':'var(--a-gold)')+';animation:pop .35s ease-out both;';yardEl.textContent=turnover?'TURNOVER!':(yards>0?'+':'')+yards+' YDS';resultArea.prepend(yardEl);},1100);
     setTimeout(function(){
       var narrText=genNarrative(tier,yards,myCard,aiCard,turnover);
       var narrEl=document.createElement('div');

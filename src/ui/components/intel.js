@@ -4,7 +4,7 @@ export function showCardIntel(card, teamId, side){
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(4px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fi .3s ease-out both;';
   
   var modal=document.createElement('div');
-  modal.style.cssText='width:100%;max-width:340px;background:#0a0020;border:2px solid var(--cyan);border-radius:12px;padding:24px;position:relative;box-shadow:0 0 40px rgba(0,212,255,.2);';
+  modal.style.cssText='width:100%;max-width:340px;background:var(--bg-surface);border:2px solid var(--cyan);border-radius:12px;padding:24px;position:relative;box-shadow:0 0 40px rgba(0,212,255,.2);';
   
   var close=document.createElement('div');
   close.style.cssText='position:absolute;top:12px;right:12px;font-size:24px;color:var(--muted);cursor:pointer;line-height:1;';

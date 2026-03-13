@@ -17,14 +17,14 @@ function buildPlayerCard(player, team, side, isSel, size) {
 
   var card = document.createElement('div');
   card.style.cssText =
-    'background:#12101e;' +
+    'background:var(--bg-surface);' +
     'border:2px solid ' + (isSel ? '#00ff88' : '#00ff8866') + ';' +
     'border-radius:6px;' +
     'padding:0;' +
     'cursor:pointer;' +
     'position:relative;' +
     'overflow:hidden;' +
-    'opacity:' + (isSel ? '1' : '0.7') + ';' +
+    'opacity:' + (isSel ? '1' : '0.8') + ';' +
     'transition:all 0.15s ease;' +
     (isSel ? 'box-shadow:0 0 18px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08);' : '');
 
@@ -104,13 +104,13 @@ function buildPlayerCard(player, team, side, isSel, size) {
   var fade = document.createElement('div');
   fade.style.cssText =
     'position:absolute;bottom:0;left:0;right:0;height:40%;z-index:2;' +
-    'background:linear-gradient(to bottom, transparent 0%, #12101e 100%);pointer-events:none;';
+    'background:linear-gradient(to bottom, transparent 0%, #0f0d1a 100%);pointer-events:none;';
 
   // Watermark cover (bottom-right corner)
   var wmCover = document.createElement('div');
   wmCover.style.cssText =
     'position:absolute;bottom:0;right:0;width:40px;height:40px;z-index:3;' +
-    'background:radial-gradient(circle at bottom right, #12101e 60%, transparent 100%);pointer-events:none;';
+    'background:radial-gradient(circle at bottom right, #0f0d1a 60%, transparent 100%);pointer-events:none;';
 
   artWrap.appendChild(img);
   artWrap.appendChild(fade);
@@ -125,8 +125,8 @@ function buildPlayerCard(player, team, side, isSel, size) {
   var nickEl = document.createElement('div');
   nickEl.style.cssText =
     'font-family:"Courier New",monospace;font-size:' + (isLarge ? 14 : 13) + 'px;' +
-    'color:#ffcc00;font-weight:bold;letter-spacing:1px;line-height:1;' +
-    'text-align:center;text-shadow:0 0 6px rgba(255,204,0,0.4);';
+    'color:var(--white);font-weight:bold;letter-spacing:1px;line-height:1;' +
+    'text-align:center;opacity:0.8;';
   nickEl.textContent = '"' + player.nick + '"';
 
   footer.appendChild(nickEl);

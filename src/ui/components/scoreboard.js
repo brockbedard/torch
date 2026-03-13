@@ -3,7 +3,7 @@ import { GS, getTeam, getOtherTeam, fmtClock } from '../../state.js';
 export function buildScoreboard(selSide, selTeamId){
   var sb=document.createElement('div');
   sb.style.cssText=
-    'background:#0a0818;border:2px solid #00ff8844;border-radius:6px;' +
+    'background:var(--bg-surface);border:2px solid #00ff8844;border-radius:6px;' +
     'padding:0;overflow:hidden;';
 
   var scen = GS.scenario;
@@ -46,8 +46,8 @@ export function buildScoreboard(selSide, selTeamId){
   leftInfo.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
   leftInfo.innerHTML =
     '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:' + leftColor + ';font-style:italic;line-height:1;letter-spacing:1px;">' + leftAbbr + '</div>' +
-    '<div class="px" style="font-size:30px;color:var(--a-gold);line-height:1;margin-top:3px;">' + leftPts + '</div>' +
-    '<div class="px" style="font-size:8px;color:var(--f-purple);margin-top:4px;letter-spacing:1px;">TO: ' + scen.timeouts + '</div>';
+    '<div class="px" style="font-size:30px;color:var(--white);line-height:1;margin-top:3px;">' + leftPts + '</div>' +
+    '<div class="px" style="font-size:8px;color:#cc66ff;margin-top:4px;letter-spacing:1px;">TO: ' + scen.timeouts + '</div>';
 
   // Center clock
   var centerBlock = document.createElement('div');
@@ -63,8 +63,8 @@ export function buildScoreboard(selSide, selTeamId){
   rightInfo.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
   rightInfo.innerHTML =
     '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:' + rightColor + ';font-style:italic;line-height:1;letter-spacing:1px;">' + rightAbbr + '</div>' +
-    '<div class="px" style="font-size:30px;color:var(--a-gold);line-height:1;margin-top:3px;">' + rightPts + '</div>' +
-    '<div class="px" style="font-size:8px;color:var(--f-purple);margin-top:4px;letter-spacing:1px;">TO: ' + scen.timeouts + '</div>';
+    '<div class="px" style="font-size:30px;color:var(--white);line-height:1;margin-top:3px;">' + rightPts + '</div>' +
+    '<div class="px" style="font-size:8px;color:#cc66ff;margin-top:4px;letter-spacing:1px;">TO: ' + scen.timeouts + '</div>';
 
   // Right icon (centered between score and border)
   var rightIconEl = document.createElement('div');
@@ -82,7 +82,7 @@ export function buildScoreboard(selSide, selTeamId){
 
   var downs = ['', '1ST', '2ND', '3RD', '4TH'];
   sitBar.innerHTML =
-    '<div class="px" style="font-size:12px;color:var(--l-green);letter-spacing:1px;">' + downs[scen.down] + ' & ' + scen.dist + '</div>' +
+    '<div class="px" style="font-size:12px;color:var(--cyan);letter-spacing:1px;">' + downs[scen.down] + ' & ' + scen.dist + '</div>' +
     '<div style="width:1px;height:14px;background:rgba(255,255,255,0.15);"></div>' +
     '<div class="px" style="font-size:12px;color:var(--white);opacity:0.8;letter-spacing:1px;">BALL ON <span style="color:' + defColor + ';">' + defName + '</span> ' + scen.ballOn + '</div>';
 

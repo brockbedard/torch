@@ -62,11 +62,11 @@ export function buildSetup(){
       var isSel=selTeam===team.id;
       var card=document.createElement('div');
       card.style.cssText=
-        'flex:1;background:linear-gradient(160deg, #1a1030 0%, #0d0820 50%, #12101e 100%);' +
+        'flex:1;background:linear-gradient(160deg, var(--bg-raised) 0%, #0d0820 50%, var(--bg-surface) 100%);' +
         'border:2px solid '+(isSel?'#00ff88':team.accent+'55')+';'+
         'border-radius:8px;padding:10px 8px;cursor:pointer;text-align:center;'+
         'transition:all 0.15s ease;position:relative;overflow:hidden;'+
-        'opacity:'+(isSel?'1':'0.8')+';'+
+        'opacity:'+(isSel?'1':'0.85')+';'+
         (isSel
           ?'box-shadow:0 0 20px rgba(0,255,136,0.4), inset 0 0 15px rgba(0,255,136,0.08);'
           :'box-shadow:0 4px 20px rgba(0,0,0,0.5);');
@@ -110,7 +110,7 @@ export function buildSetup(){
         'width:30px;height:1px;background:linear-gradient(to right,transparent,'+team.accent+'66,transparent);'+
         'margin:0 auto 6px;position:relative;z-index:1;';
       var schemeEl=document.createElement('div');
-      schemeEl.style.cssText='font-family:"Courier New",monospace;font-size:10px;color:#ffcc00;font-weight:bold;letter-spacing:1px;line-height:1.8;position:relative;z-index:1;';
+      schemeEl.style.cssText='font-family:"Courier New",monospace;font-size:10px;color:var(--muted);font-weight:bold;letter-spacing:1px;line-height:1.8;position:relative;z-index:1;';
       schemeEl.innerHTML='OFF: '+team.style+'<br>DEF: '+team.defStyle;
       card.append(iconEl,nameEl,divider,schemeEl);
       card.onclick=function(){SND.select();selTeam=team.id;GS.team=team.id;refreshTeams();refreshBoard();refreshGo();};

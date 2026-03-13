@@ -77,7 +77,7 @@ export function buildCardDraft() {
 
       var cel = document.createElement('div');
       cel.style.cssText =
-        'background:' + (isSel ? tc.bg : '#12101e') + ';' +
+        'background:' + (isSel ? tc.bg : 'var(--bg-surface)') + ';' +
         'border:2px solid ' + (isSel ? tc.border : 'rgba(255,255,255,0.15)') + ';' +
         'border-radius:6px;padding:14px 10px;text-align:center;position:relative;' +
         'overflow:hidden;cursor:pointer;display:flex;flex-direction:column;' +

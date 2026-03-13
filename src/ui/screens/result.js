@@ -29,7 +29,7 @@ export function buildResult(){
   el.appendChild(status);
   var title=document.createElement('div');
   if(isWin){
-    SND.td();title.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:80px;font-style:italic;color:var(--l-green);text-shadow:0 0 30px var(--l-green), 4px 4px 0 #000;margin-bottom:20px;animation:pop .5s ease-out both;";
+    SND.td();title.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:80px;font-style:italic;color:var(--a-gold);text-shadow:0 0 30px var(--orange), 0 0 60px var(--a-gold), 4px 4px 0 #000;margin-bottom:20px;animation:pop .5s ease-out both;";
     title.textContent='TORCH LIT';
   } else {
     SND.turnover();title.style.cssText="font-family:'Bebas Neue',sans-serif;font-size:80px;font-style:italic;color:var(--p-red);text-shadow:0 0 30px var(--p-red), 4px 4px 0 #000;margin-bottom:20px;animation:pop .5s ease-out both;";
@@ -58,7 +58,7 @@ export function buildResult(){
   statsBox.appendChild(makeRow('FINAL SCORE',homeTeamName+' '+score.off+' - '+score.def+' '+awayTeamName,'var(--a-gold)'));
   statsBox.appendChild(makeRow('TOTAL YARDS',((stats.yards>0?'+':'')+stats.yards+' YDS')));
   statsBox.appendChild(makeRow('PLAYS',String(stats.plays)));
-  if(streak>0) statsBox.appendChild(makeRow('STREAK','+1 ('+streak+')','var(--l-green)'));
+  if(streak>0) statsBox.appendChild(makeRow('STREAK','+1 ('+streak+')','var(--a-gold)'));
   else statsBox.appendChild(makeRow('STREAK','RESET','var(--p-red)'));
   el.appendChild(statsBox);
   var btnWrap=document.createElement('div');
