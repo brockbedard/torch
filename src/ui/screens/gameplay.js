@@ -25,24 +25,29 @@ const CSS = `
 /* root */
 .T{height:100vh;display:flex;flex-direction:column;background:#06050f;overflow:hidden;position:relative;font-family:'Barlow Condensed',sans-serif}
 
-/* scoreboard (broadcast style from v0.10.0 scenario modal) */
+/* scoreboard */
 .T-sb{background:#0a0916;border-bottom:1px solid #1a183a;flex-shrink:0;z-index:60;overflow:hidden}
-.T-sb-row{display:grid;grid-template-columns:1fr 1.2fr auto 1.2fr 1fr;align-items:center;padding:10px 10px 8px}
-.T-sb-icon{font-size:28px;line-height:1;text-align:center}
-.T-sb-team{display:flex;flex-direction:column;align-items:center;padding:4px 6px;border-radius:6px}
-.T-sb-team-glow{background:radial-gradient(ellipse,rgba(255,204,0,.2) 0%,rgba(255,204,0,.06) 50%,transparent 75%);box-shadow:0 0 20px rgba(255,204,0,.18)}
-.T-sb-name{font-family:'Bebas Neue';font-size:14px;font-style:italic;line-height:1;letter-spacing:1px}
-.T-sb-pts{font-family:'Press Start 2P';font-size:24px;color:#e8e6ff;line-height:1;margin-top:2px}
-.T-sb-pts-glow{text-shadow:0 0 14px rgba(255,204,0,.5)}
-.T-sb-to{font-family:'Press Start 2P';font-size:6px;color:#9060e0;margin-top:3px;letter-spacing:.5px}
-.T-sb-center{text-align:center;padding:0 8px;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);min-width:70px}
-.T-sb-qtr{font-family:'Press Start 2P';font-size:8px;color:#554f80;letter-spacing:1px;margin-bottom:3px}
-.T-sb-clock{font-family:'Press Start 2P';font-size:16px;color:#e8e6ff;text-shadow:0 0 6px rgba(255,255,255,.3);line-height:1}
-.T-sb-clock-urgent{color:#e03050;text-shadow:0 0 10px rgba(224,48,80,.5)}
-.T-sb-sit{display:flex;justify-content:center;align-items:center;gap:12px;padding:6px 10px;background:rgba(0,0,0,.4);border-top:1px solid rgba(255,255,255,.04)}
-.T-sb-sit-down{font-family:'Press Start 2P';font-size:9px;color:#30c0e0;letter-spacing:.5px}
-.T-sb-sit-div{width:1px;height:12px;background:rgba(255,255,255,.1)}
-.T-sb-sit-ball{font-family:'Press Start 2P';font-size:9px;color:#e8e6ff;opacity:.7;letter-spacing:.5px}
+/* score row: 3 columns — left team, center half/clock, right team */
+.T-sb-row{display:flex;align-items:center;padding:6px 10px 4px}
+.T-sb-side{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;padding:2px 4px;border-radius:6px}
+.T-sb-side-glow{background:radial-gradient(ellipse,rgba(255,204,0,.18) 0%,transparent 70%)}
+.T-sb-name{font-family:'Bebas Neue';font-size:13px;font-style:italic;line-height:1;letter-spacing:1px;white-space:nowrap}
+.T-sb-pts{font-family:'Press Start 2P';font-size:22px;color:#e8e6ff;line-height:1;margin-top:1px}
+.T-sb-pts-glow{text-shadow:0 0 12px rgba(255,204,0,.5)}
+.T-sb-pos{position:absolute;bottom:-10px;font-family:'Press Start 2P';font-size:5px;color:#c8a030;letter-spacing:.5px;display:flex;flex-direction:column;align-items:center;line-height:1}
+.T-sb-pos-arrow{font-size:10px;line-height:1}
+.T-sb-center{width:90px;text-align:center;padding:0 6px;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06)}
+.T-sb-half{font-family:'Bebas Neue';font-size:13px;color:#c8a030;letter-spacing:2px;line-height:1}
+.T-sb-snap{margin-top:3px;display:flex;gap:1px;justify-content:center}
+.T-sb-dot{width:4px;height:4px;border-radius:50%;background:#222;transition:background .2s}
+.T-sb-dot-on{background:#c8a030;box-shadow:0 0 3px #c8a030}
+.T-sb-clock{font-family:'Press Start 2P';font-size:14px;color:#e03050;text-shadow:0 0 8px rgba(224,48,80,.4);line-height:1;margin-top:2px}
+/* situation bar: down & distance | ball | TORCH pts */
+.T-sb-sit{display:flex;align-items:center;padding:4px 10px;background:rgba(0,0,0,.4);border-top:1px solid rgba(255,255,255,.04);gap:8px}
+.T-sb-sit-down{font-family:'Press Start 2P';font-size:8px;color:#30c0e0;letter-spacing:.5px}
+.T-sb-sit-div{width:1px;height:10px;background:rgba(255,255,255,.08);flex-shrink:0}
+.T-sb-sit-ball{font-family:'Press Start 2P';font-size:8px;color:#e8e6ff;opacity:.6;letter-spacing:.5px}
+.T-sb-sit-torch{margin-left:auto;font-family:'Press Start 2P';font-size:7px;color:#c8a030;letter-spacing:.5px}
 
 /* field strip */
 .T-strip{flex:0 0 28%;position:relative;background:linear-gradient(180deg,#072a07 0%,#0a3a0a 40%,#072a07 100%);overflow:hidden;border-bottom:1px solid #1a183a}
@@ -276,48 +281,65 @@ export function buildGameplay() {
   el.className = 'T';
   const sty = document.createElement('style'); sty.textContent = CSS; el.appendChild(sty);
 
-  // ── SCOREBOARD (broadcast style) ──
+  // ── SCOREBOARD ──
   const bug = document.createElement('div'); bug.className = 'T-sb'; el.appendChild(bug);
   function drawBug() {
     const s = gs.getSummary();
     const ct = getTeam('canyon_tech'), ir = getTeam('iron_ridge');
     const dn = ['','1ST','2ND','3RD','4TH'][s.down]||'';
     const ctHasBall = s.possession === 'CT';
-    const halfLabel = s.twoMinActive ? '2-MIN' : ('H'+s.half);
-    const clockStr = s.twoMinActive ? fmtClock(Math.max(0,s.clockSeconds)) : 'SNAP '+ s.playsUsed +'/20';
-    const clockClass = s.twoMinActive ? 'T-sb-clock T-sb-clock-urgent' : 'T-sb-clock';
-
-    // Ball position display
-    const ydsToEz = s.yardsToEndzone;
     const possTeam = ctHasBall ? ct : ir;
     const defTeam = ctHasBall ? ir : ct;
-    const ballLabel = ydsToEz <= 50
-      ? defTeam.abbr + ' ' + ydsToEz
-      : possTeam.abbr + ' ' + (100-ydsToEz);
+
+    // Ball label
+    const ydsToEz = s.yardsToEndzone;
+    const ballLabel = ydsToEz <= 50 ? defTeam.abbr + ' ' + ydsToEz : possTeam.abbr + ' ' + (100-ydsToEz);
+
+    // TORCH points for human
+    const hTorch = hAbbr === 'CT' ? s.ctTorchPts : s.irTorchPts;
+
+    // Center: half label + snap dots OR 2-min clock
+    let centerHTML;
+    if (s.twoMinActive) {
+      centerHTML =
+        `<div class="T-sb-half" style="color:#e03050">2-MINUTE DRILL</div>` +
+        `<div class="T-sb-clock">${fmtClock(Math.max(0, s.clockSeconds))}</div>`;
+    } else {
+      const halfName = s.half === 1 ? 'FIRST HALF' : 'SECOND HALF';
+      let dots = '';
+      for (let i = 0; i < 20; i++) dots += `<div class="T-sb-dot${i < s.playsUsed ? ' T-sb-dot-on' : ''}"></div>`;
+      centerHTML =
+        `<div class="T-sb-half">${halfName}</div>` +
+        `<div class="T-sb-snap">${dots}</div>`;
+    }
+
+    // Possession arrow
+    const ctPosArrow = ctHasBall ? '<div class="T-sb-pos"><div class="T-sb-pos-arrow">\u25BC</div>POS</div>' : '';
+    const irPosArrow = !ctHasBall ? '<div class="T-sb-pos"><div class="T-sb-pos-arrow">\u25BC</div>POS</div>' : '';
 
     bug.innerHTML =
-      // Score row: icon | team+score | clock | team+score | icon
-      `<div class="T-sb-row">`+
-        `<div class="T-sb-icon">${ct.icon}</div>`+
-        `<div class="T-sb-team${ctHasBall?' T-sb-team-glow':''}">`+
-          `<div class="T-sb-name" style="color:${ct.accent}${ctHasBall?';text-shadow:0 0 12px '+ct.accent:''}">${ct.name}</div>`+
-          `<div class="T-sb-pts${ctHasBall?' T-sb-pts-glow':''}">${s.ctScore}</div>`+
-        `</div>`+
-        `<div class="T-sb-center">`+
-          `<div class="T-sb-qtr">${halfLabel}</div>`+
-          `<div class="${clockClass}">${clockStr}</div>`+
-        `</div>`+
-        `<div class="T-sb-team${!ctHasBall?' T-sb-team-glow':''}">`+
-          `<div class="T-sb-name" style="color:${ir.accent}${!ctHasBall?';text-shadow:0 0 12px '+ir.accent:''}">${ir.name}</div>`+
-          `<div class="T-sb-pts${!ctHasBall?' T-sb-pts-glow':''}">${s.irScore}</div>`+
-        `</div>`+
-        `<div class="T-sb-icon">${ir.icon}</div>`+
-      `</div>`+
-      // Situation bar: down & distance | ball position
-      `<div class="T-sb-sit">`+
-        `<div class="T-sb-sit-down">${dn} & ${s.distance}</div>`+
-        `<div class="T-sb-sit-div"></div>`+
-        `<div class="T-sb-sit-ball">BALL ON <span style="color:${possTeam.accent}">${ballLabel}</span></div>`+
+      `<div class="T-sb-row">` +
+        // Left team
+        `<div class="T-sb-side${ctHasBall ? ' T-sb-side-glow' : ''}">` +
+          `<div class="T-sb-name" style="color:${ct.accent}">${ct.name}</div>` +
+          `<div class="T-sb-pts${ctHasBall ? ' T-sb-pts-glow' : ''}">${s.ctScore}</div>` +
+          ctPosArrow +
+        `</div>` +
+        // Center
+        `<div class="T-sb-center">${centerHTML}</div>` +
+        // Right team
+        `<div class="T-sb-side${!ctHasBall ? ' T-sb-side-glow' : ''}">` +
+          `<div class="T-sb-name" style="color:${ir.accent}">${ir.name}</div>` +
+          `<div class="T-sb-pts${!ctHasBall ? ' T-sb-pts-glow' : ''}">${s.irScore}</div>` +
+          irPosArrow +
+        `</div>` +
+      `</div>` +
+      // Situation bar
+      `<div class="T-sb-sit">` +
+        `<div class="T-sb-sit-down">${dn} & ${s.distance}</div>` +
+        `<div class="T-sb-sit-div"></div>` +
+        `<div class="T-sb-sit-ball">BALL ON <span style="color:${possTeam.accent}">${ballLabel}</span></div>` +
+        `<div class="T-sb-sit-torch">\uD83D\uDD25 ${hTorch}</div>` +
       `</div>`;
   }
 
