@@ -43,7 +43,6 @@ TORCH is a football card game. Full game, starts 0-0, you play both sides of the
 │   └── torch_sim.py                       # Balance simulation engine (Python, reference only)
 ├── CLAUDE.md           # This file
 ├── DEV_LOG.md          # Changelog per local commit
-├── vite.config.js
 ├── package.json
 └── vercel.json
 ```
