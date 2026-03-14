@@ -7,6 +7,9 @@ import { buildCardDraft } from './ui/screens/cardDraft.js';
 import { buildUnderConstruction } from './ui/screens/under_construction.js';
 import { buildPlay } from './ui/screens/play.js';
 import { buildResult } from './ui/screens/result.js';
+import { buildCoinToss } from './ui/screens/coinToss.js';
+import { buildGameplay } from './ui/screens/gameplay.js';
+import { buildEndGame } from './ui/screens/endGame.js';
 
 const root = document.getElementById('root');
 
@@ -25,6 +28,9 @@ function render() {
       case 'under_construction': content = buildUnderConstruction(); break;
       case 'play': content = buildPlay(); break;
       case 'result': content = buildResult(); break;
+      case 'coin_toss': content = buildCoinToss(); break;
+      case 'gameplay': content = buildGameplay(); break;
+      case 'end_game': content = buildEndGame(); break;
       default: content = buildHome();
     }
   }

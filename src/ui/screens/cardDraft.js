@@ -391,13 +391,29 @@ export function buildCardDraft() {
       SND.click();
       var hand = Object.keys(selected).map(function(k) { return selected[k]; });
       setGs(function(s) {
-        return Object.assign({}, s, {
-          screen: 'under_construction',
-          team: GS.team,
-          side: GS.side,
-          roster: GS.roster,
-          hand: hand
-        });
+        var next = Object.assign({}, s);
+        // Store current draft results by side
+        if (GS.side === 'offense') {
+          next.offRoster = GS.roster;
+          next.offHand = hand;
+        } else {
+          next.defRoster = GS.roster;
+          next.defHand = hand;
+        }
+        // Check if we need to draft the other side
+        if (!next.offRoster || !next.offHand) {
+          next.screen = 'draft';
+          next.side = 'offense';
+          next.roster = null;
+        } else if (!next.defRoster || !next.defHand) {
+          next.screen = 'draft';
+          next.side = 'defense';
+          next.roster = null;
+        } else {
+          // Both sides drafted — go to coin toss
+          next.screen = 'coin_toss';
+        }
+        return next;
       });
     } : null;
   }

@@ -144,14 +144,14 @@ export class GameState {
 
   /**
    * Execute a snap with the given selections.
-   * For human snaps, offPlay/featuredOff are provided.
-   * For AI snaps, they are auto-selected.
-   * Defense is always AI-selected.
-   * @param {object} [offPlay] - Offensive play (human provides, AI auto-selects)
+   * Human selections are provided via options; AI auto-selects the rest.
+   * @param {object} [offPlay] - Offensive play (human provides on offense, AI auto-selects)
    * @param {object} [featuredOff] - Featured offensive player
+   * @param {object} [defPlay] - Defensive play (human provides on defense, AI auto-selects)
+   * @param {object} [featuredDef] - Featured defensive player
    * @returns {object} { result, offPlay, defPlay, featuredOff, featuredDef, gotFirstDown, gameEvent }
    */
-  executeSnap(offPlay, featuredOff) {
+  executeSnap(offPlay, featuredOff, defPlay, featuredDef) {
     if (this.gameOver) return null;
 
     const sides = this.getCurrentSides();
@@ -161,17 +161,21 @@ export class GameState {
       scoreDiff: this.getScoreDiff(),
     };
 
-    // AI selects defense always
-    const defPlay = aiSelectPlay(sides.defHand, 'defense', this.difficulty, situation);
+    // AI selects defense if not provided
+    if (!defPlay) {
+      defPlay = aiSelectPlay(sides.defHand, 'defense', this.difficulty, situation);
+    }
 
-    // AI selects offense if not human or no play provided
+    // AI selects offense if not provided
     if (!offPlay) {
       offPlay = aiSelectPlay(sides.offHand, 'offense', this.difficulty, situation);
     }
     if (!featuredOff) {
       featuredOff = aiSelectPlayer(sides.offPlayers, offPlay, this.difficulty, true);
     }
-    const featuredDef = aiSelectPlayer(sides.defPlayers, defPlay, this.difficulty, false);
+    if (!featuredDef) {
+      featuredDef = aiSelectPlayer(sides.defPlayers, defPlay, this.difficulty, false);
+    }
 
     // Track red zone entry
     const ydsToEz = this.yardsToEndzone();
