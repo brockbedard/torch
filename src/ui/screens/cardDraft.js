@@ -230,10 +230,65 @@ function buildPlayCard(card, isSel, staggerIdx) {
   return cel;
 }
 
+/* Play review screen — all 10 play cards fly in, fills screen */
+function showPlayReview(team, offHand, defHand, onContinue) {
+  var root = document.getElementById('root');
+  var ov = document.createElement('div');
+  ov.style.cssText =
+    'position:absolute;inset:0;z-index:100;background:var(--bg);' +
+    'display:flex;flex-direction:column;padding:12px 14px;overflow:hidden;';
+
+  var sty = document.createElement('style');
+  sty.textContent = '@keyframes playFlyIn{from{opacity:0;transform:translateY(30px) scale(.85)}to{opacity:1;transform:none}}';
+  ov.appendChild(sty);
+
+  // Header
+  var hdr = document.createElement('div');
+  hdr.style.cssText = 'flex-shrink:0;text-align:center;margin-bottom:8px;';
+  hdr.innerHTML =
+    "<div style=\"font-family:'Bebas Neue';font-size:30px;color:var(--a-gold);letter-spacing:3px\">YOUR PLAYBOOK</div>" +
+    "<div style=\"font-family:'Courier New';font-size:8px;color:var(--muted)\">" + team.name + " \u2014 10 PLAYS</div>";
+  ov.appendChild(hdr);
+
+  function miniCard(play, idx) {
+    var cat = catLabel(play);
+    var catColor = CAT_COLORS[cat] || '#aaa';
+    return '<div style="background:var(--bg-surface);border:2px solid #00ff8844;border-radius:6px;padding:10px 12px;' +
+      'display:flex;align-items:center;justify-content:space-between;flex:1;min-height:0;' +
+      'animation:playFlyIn 0.35s ease-out ' + (idx * 0.05) + 's both">' +
+      "<span style=\"font-family:'Bebas Neue';font-size:18px;color:#fff;letter-spacing:1px\">" + play.name + "</span>" +
+      "<span style=\"font-family:'Courier New';font-size:7px;font-weight:bold;color:" + catColor + ";border:1px solid " + catColor + "44;padding:2px 6px;border-radius:8px;letter-spacing:.5px\">" + cat + "</span>" +
+    '</div>';
+  }
+
+  // Offense label + grid
+  ov.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Press Start 2P';font-size:7px;color:#00ff88;letter-spacing:1px;margin-bottom:4px;flex-shrink:0\">OFFENSE</div>");
+  var offGrid = document.createElement('div');
+  offGrid.style.cssText = 'display:flex;flex-direction:column;gap:4px;flex:1;min-height:0;margin-bottom:6px;';
+  offHand.forEach(function(p, i) { offGrid.insertAdjacentHTML('beforeend', miniCard(p, i)); });
+  ov.appendChild(offGrid);
+
+  // Defense label + grid
+  ov.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Press Start 2P';font-size:7px;color:#00ff88;letter-spacing:1px;margin-bottom:4px;flex-shrink:0\">DEFENSE</div>");
+  var defGrid = document.createElement('div');
+  defGrid.style.cssText = 'display:flex;flex-direction:column;gap:4px;flex:1;min-height:0;margin-bottom:8px;';
+  defHand.forEach(function(p, i) { defGrid.insertAdjacentHTML('beforeend', miniCard(p, i + 5)); });
+  ov.appendChild(defGrid);
+
+  var btn = document.createElement('button');
+  btn.className = 'btn-blitz';
+  btn.style.cssText = 'background:var(--a-gold);border-color:var(--a-gold);color:#000;font-size:14px;flex-shrink:0;';
+  btn.textContent = 'CONTINUE \u2192';
+  btn.onclick = function() { SND.snap(); ov.remove(); onContinue(); };
+  ov.appendChild(btn);
+
+  root.appendChild(ov);
+}
+
 export function buildCardDraft() {
   var el = document.createElement('div');
   el.className = 'sup';
-  el.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;background:var(--bg);';
+  el.style.cssText = 'height:100vh;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;';
 
   var team = getTeam(GS.team);
   var isOff = GS.side === 'offense';
@@ -287,20 +342,16 @@ export function buildCardDraft() {
     SND.click();
     setGs(function(s) {
       if (isOff) {
-        return Object.assign({}, s, { 
-          screen: 'draft', 
-          side: 'offense',
-          roster: null,
-          offRoster: null,
-          offHand: null
+        // Back from offense plays → re-pick defense players
+        return Object.assign({}, s, {
+          screen: 'draft', side: 'defense',
+          roster: null, offHand: null
         });
       } else {
+        // Back from defense plays → re-pick offense plays
         return Object.assign({}, s, {
-          screen: 'draft',
-          side: 'defense',
-          roster: null,
-          defRoster: null,
-          defHand: null
+          screen: 'card_draft', side: 'offense',
+          roster: null, defHand: null
         });
       }
     });
@@ -308,23 +359,20 @@ export function buildCardDraft() {
   hdr.appendChild(backBtn);
   el.appendChild(hdr);
 
-  // Content area
+  // Content — fills remaining space, no scroll
   var content = document.createElement('div');
-  content.style.cssText =
-    'flex:1;overflow-y:auto;padding:20px 16px 80px;display:flex;flex-direction:column;gap:10px;' +
-    'position:relative;z-index:2;';
+  content.style.cssText = 'flex:1;display:flex;flex-direction:column;padding:8px 12px;overflow:hidden;';
 
-  // Title — Renamed and numbering removed
+  // Title row with auto-pick inline
+  var titleRow = document.createElement('div');
+  titleRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-shrink:0;margin-bottom:4px;';
   var title = document.createElement('div');
   title.className = 'chrome-header';
-  title.style.fontSize = '22px';
-  title.textContent = isOff ? 'PICK OFFENSIVE PLAYS' : 'PICK DEFENSIVE PLAYS';
-  content.appendChild(title);
-
-  // Auto-pick
+  title.style.cssText = 'font-size:20px;margin-bottom:0;';
+  title.textContent = isOff ? 'PICK OFFENSE PLAYS' : 'PICK DEFENSE PLAYS';
   var autoBtn = document.createElement('button');
-  autoBtn.style.cssText = 'font-family:"Press Start 2P",monospace; font-size:7px; color:var(--cyan); background:none; border:1px solid var(--cyan); padding:6px 10px; cursor:pointer; align-self:flex-end; margin-bottom:10px; border-radius:15px; opacity:0.7;';
-  autoBtn.textContent = '\u26A1 AUTO-PICK';
+  autoBtn.style.cssText = "font-family:'Press Start 2P';font-size:6px;color:var(--cyan);background:none;border:1px solid var(--cyan);padding:5px 8px;cursor:pointer;border-radius:12px;opacity:.7;";
+  autoBtn.textContent = '\u26A1 AUTO';
   autoBtn.onclick = function() {
     SND.click();
     selected = {};
@@ -336,45 +384,29 @@ export function buildCardDraft() {
     refreshCards();
     refreshGoBtn();
   };
-  content.appendChild(autoBtn);
+  titleRow.append(title, autoBtn);
+  content.appendChild(titleRow);
 
-  // Section label — matches "QUARTERBACK — PICK 1" on player draft
-  var sectionLabel = document.createElement('div');
-  sectionLabel.style.cssText =
-    'font-family:"Press Start 2P",monospace;font-size:10px;color:#00ff88;' +
-    'letter-spacing:1px;margin-bottom:8px;' +
-    'border-bottom:1px solid #00ff8833;padding-bottom:6px;';
-  sectionLabel.textContent = 'PLAYS \u2014 PICK 5';
-  content.appendChild(sectionLabel);
-
-  // Counter with dot indicators
+  // Counter: dots + text
   var counterRow = document.createElement('div');
-  counterRow.style.cssText =
-    'font-family:"Press Start 2P",monospace;font-size:10px;' +
-    'letter-spacing:1px;margin-bottom:8px;' +
-    'display:flex;align-items:center;gap:8px;';
-
+  counterRow.style.cssText = "font-family:'Press Start 2P';font-size:8px;letter-spacing:1px;margin-bottom:4px;display:flex;align-items:center;gap:6px;flex-shrink:0;";
   var dots = [];
   for (var d = 0; d < 5; d++) {
     var dot = document.createElement('div');
-    dot.style.cssText =
-      'width:8px;height:8px;border-radius:50%;background:#333;border:1px solid #555;' +
-      'transition:background 0.2s, border-color 0.2s, box-shadow 0.2s;flex-shrink:0;';
+    dot.style.cssText = 'width:7px;height:7px;border-radius:50%;background:#333;border:1px solid #555;transition:all 0.2s;flex-shrink:0;';
     dots.push(dot);
     counterRow.appendChild(dot);
   }
-
   var counterText = document.createElement('div');
-  counterText.style.cssText =
-    'color:var(--a-gold);margin-left:4px;transition:color 0.2s;white-space:nowrap;';
+  counterText.style.cssText = 'color:var(--a-gold);margin-left:2px;white-space:nowrap;';
   counterRow.appendChild(counterText);
   content.appendChild(counterRow);
 
   var selected = {};
 
-  // Card grid
+  // Card grid — fills remaining space
   var cardGrid = document.createElement('div');
-  cardGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;';
+  cardGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr 1fr 1fr;gap:6px;flex:1;min-height:0;';
 
   function refreshCards() {
     cardGrid.innerHTML = '';
@@ -430,7 +462,7 @@ export function buildCardDraft() {
     var ready = Object.keys(selected).length === 5;
     goBtn.className = 'btn-blitz';
     goBtn.style.cssText =
-      'width:100%;font-size:14px;margin-top:12px;' +
+      'width:100%;font-size:14px;margin-top:6px;flex-shrink:0;' +
       (ready
         ? 'background:#ffcc00;border-color:#ffcc00;color:#000;box-shadow:6px 6px 0 #997a00, 0 0 30px rgba(255,204,0,0.4);animation:lockGlow 2s ease-in-out infinite;'
         : 'opacity:0.35;');
@@ -444,13 +476,11 @@ export function buildCardDraft() {
         setGs(function(s) {
           var next = Object.assign({}, s);
           if (GS.side === 'offense') {
-            next.offRoster = GS.roster;
             next.offHand = hand;
-            next.screen = 'draft';
+            next.screen = 'card_draft';
             next.side = 'defense';
             next.roster = null;
           } else {
-            next.defRoster = GS.roster;
             next.defHand = hand;
             next.screen = 'coin_toss';
           }
@@ -459,14 +489,15 @@ export function buildCardDraft() {
       }
 
       if (GS.side === 'offense') {
+        var rr = document.getElementById('root');
         var overlay = document.createElement('div');
-        overlay.style.cssText = 'position:fixed;inset:0;background:#000;z-index:5000;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.4s;';
+        overlay.style.cssText = 'position:absolute;inset:0;background:#000;z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.4s;';
         var msg = document.createElement('div');
-        msg.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--a-gold);letter-spacing:4px;font-style:italic;";
-        msg.textContent = 'OFFENSE LOCKED. SWITCHING TO DEFENSE...';
+        msg.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--a-gold);letter-spacing:3px;font-style:italic;text-align:center;padding:20px;";
+        msg.textContent = 'OFFENSE PLAYS LOCKED. PICK YOUR DEFENSE...';
         overlay.appendChild(msg);
-        document.body.appendChild(overlay);
-        
+        rr.appendChild(overlay);
+
         setTimeout(() => overlay.style.opacity = '1', 10);
         setTimeout(() => {
           proceed();
@@ -476,7 +507,11 @@ export function buildCardDraft() {
           }, 800);
         }, 1200);
       } else {
-        proceed();
+        // Defense plays locked — show all 10 plays fly-in review
+        var offHand = GS.offHand || [];
+        showPlayReview(team, offHand, hand, function() {
+          proceed();
+        });
       }
     } : null;
   }

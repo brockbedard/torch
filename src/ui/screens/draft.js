@@ -11,14 +11,20 @@ function getPlayerImage(player, team, side) {
 }
 
 /* Compact player card — no badge icon, no nickname, fits on one screen */
-function buildPlayerCard(player, team, side, isSel) {
+function buildPlayerCard(player, team, side, isSel, small) {
   var tierColor = '#CD7F32';
   if (player.ovr >= 85) tierColor = 'var(--a-gold)';
   else if (player.ovr >= 75) tierColor = '#aaa';
 
+  var posSize = small ? '10px' : '14px';
+  var nameSize = small ? '15px' : '22px';
+  var ovrSize = small ? '20px' : '30px';
+  var ovrLbl = small ? '6px' : '8px';
+  var pad = small ? '5px 6px 0' : '8px 10px 0';
+
   var card = document.createElement('div');
   card.style.cssText =
-    'background:var(--bg-surface);' +
+    'background:var(--bg-surface);display:flex;flex-direction:column;' +
     'border:2px solid ' + (isSel ? '#00ff88' : tierColor + '44') + ';' +
     'border-radius:6px;padding:0;cursor:pointer;position:relative;overflow:hidden;' +
     'opacity:' + (isSel ? '1' : '0.8') + ';transition:all 0.15s ease;' +
@@ -26,29 +32,29 @@ function buildPlayerCard(player, team, side, isSel) {
 
   if (isSel) {
     var bar = document.createElement('div');
-    bar.style.cssText = 'position:absolute;top:0;left:50%;transform:translateX(-50%);width:30px;height:3px;background:#00ff88;border-radius:0 0 3px 3px;z-index:3;';
+    bar.style.cssText = 'position:absolute;top:0;left:50%;transform:translateX(-50%);width:' + (small?'20':'30') + 'px;height:3px;background:#00ff88;border-radius:0 0 3px 3px;z-index:3;';
     card.appendChild(bar);
   }
 
   // Header: POS + NAME left, OVR right
   var header = document.createElement('div');
   header.style.cssText =
-    'display:flex;justify-content:space-between;align-items:flex-start;padding:6px 8px 0;' +
+    'display:flex;justify-content:space-between;align-items:flex-start;padding:' + pad + ';' +
     (isSel ? 'background:linear-gradient(180deg, rgba(0,255,136,0.1) 0%, transparent 100%);' : '');
   header.innerHTML =
     '<div>' +
-      "<div style=\"font-family:'Courier New';font-size:11px;font-weight:bold;color:#ff0040;letter-spacing:1px;line-height:1\">" + player.pos + "</div>" +
-      "<div style=\"font-family:'Bebas Neue';font-size:16px;color:#fff;line-height:1;margin-top:1px\">" + player.name + "</div>" +
+      "<div style=\"font-family:'Courier New';font-size:" + posSize + ";font-weight:bold;color:#ff0040;letter-spacing:" + (small?'1':'2') + "px;line-height:1\">" + player.pos + "</div>" +
+      "<div style=\"font-family:'Bebas Neue';font-size:" + nameSize + ";color:#fff;line-height:1;margin-top:" + (small?'1':'2') + "px\">" + player.name + "</div>" +
     '</div>' +
     '<div style="text-align:right">' +
-      "<div style=\"font-family:'Courier New';font-size:26px;font-weight:bold;color:" + tierColor + ";line-height:1;text-shadow:0 0 8px " + tierColor + "66\">" + player.ovr + "</div>" +
-      "<div style=\"font-family:'Courier New';font-size:7px;font-weight:bold;color:" + tierColor + ";opacity:.7;letter-spacing:1px\">OVR</div>" +
+      "<div style=\"font-family:'Courier New';font-size:" + ovrSize + ";font-weight:bold;color:" + tierColor + ";line-height:1;text-shadow:0 0 8px " + tierColor + "66\">" + player.ovr + "</div>" +
+      "<div style=\"font-family:'Courier New';font-size:" + ovrLbl + ";font-weight:bold;color:" + tierColor + ";opacity:.7;letter-spacing:1px\">OVR</div>" +
     '</div>';
   card.appendChild(header);
 
-  // Art (compact height)
+  // Art (fills remaining card space)
   var artWrap = document.createElement('div');
-  artWrap.style.cssText = 'position:relative;height:100px;overflow:hidden;';
+  artWrap.style.cssText = 'position:relative;flex:1;min-height:0;overflow:hidden;';
   var imgSrc = getPlayerImage(player, team, side);
   artWrap.innerHTML =
     '<img src="' + imgSrc + '" alt="' + player.name + '" draggable="false" style="height:100%;width:100%;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7))">' +
@@ -60,9 +66,10 @@ function buildPlayerCard(player, team, side, isSel) {
 
 /* Explanation modal overlay */
 function showDraftModal(isDef, onDismiss) {
+  var root = document.getElementById('root');
   var ov = document.createElement('div');
   ov.style.cssText =
-    'position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,0.85);' +
+    'position:absolute;inset:0;z-index:100;background:rgba(0,0,0,0.85);' +
     'display:flex;align-items:center;justify-content:center;padding:20px;';
 
   var box = document.createElement('div');
@@ -87,43 +94,47 @@ function showDraftModal(isDef, onDismiss) {
   box.appendChild(btn);
   ov.appendChild(box);
   ov.onclick = function(e) { if (e.target === ov) { ov.remove(); if (onDismiss) onDismiss(); } };
-  document.body.appendChild(ov);
+  root.appendChild(ov);
 }
 
-/* Roster review screen — all 8 cards fly in */
+/* Roster review screen — all 8 cards fly in, fills screen */
 function showRosterReview(team, offRoster, defRoster, onContinue) {
+  var root = document.getElementById('root');
   var ov = document.createElement('div');
   ov.style.cssText =
-    'position:fixed;inset:0;z-index:5000;background:var(--bg);' +
-    'display:flex;flex-direction:column;align-items:center;padding:16px;overflow-y:auto;';
+    'position:absolute;inset:0;z-index:100;background:var(--bg);' +
+    'display:flex;flex-direction:column;padding:12px 14px;overflow:hidden;';
 
-  ov.innerHTML =
-    "<div style=\"font-family:'Bebas Neue';font-size:32px;color:var(--a-gold);letter-spacing:3px;margin-bottom:4px\">YOUR ROSTER</div>" +
-    "<div style=\"font-family:'Courier New';font-size:9px;color:var(--muted);margin-bottom:12px\">" + team.name + " \u2014 8 PLAYERS LOCKED IN</div>";
-
-  // Injected animation
   var sty = document.createElement('style');
   sty.textContent = '@keyframes draftFlyIn{from{opacity:0;transform:translateY(40px) scale(.8)}to{opacity:1;transform:none}}';
   ov.appendChild(sty);
 
-  // Offense row
-  ov.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Press Start 2P';font-size:7px;color:#00ff88;letter-spacing:1px;margin-bottom:6px;align-self:flex-start\">OFFENSE</div>");
+  // Header
+  var hdr = document.createElement('div');
+  hdr.style.cssText = 'flex-shrink:0;text-align:center;margin-bottom:8px;';
+  hdr.innerHTML =
+    "<div style=\"font-family:'Bebas Neue';font-size:30px;color:var(--a-gold);letter-spacing:3px\">YOUR ROSTER</div>" +
+    "<div style=\"font-family:'Courier New';font-size:8px;color:var(--muted)\">" + team.name + " \u2014 8 PLAYERS</div>";
+  ov.appendChild(hdr);
+
+  // Offense label + grid
+  ov.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Press Start 2P';font-size:7px;color:#00ff88;letter-spacing:1px;margin-bottom:4px;flex-shrink:0\">OFFENSE</div>");
   var offGrid = document.createElement('div');
-  offGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;width:100%;margin-bottom:12px;';
+  offGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;flex:1;min-height:0;margin-bottom:6px;';
   offRoster.forEach(function(p, i) {
-    var card = buildPlayerCard(p, team, 'offense', true);
+    var card = buildPlayerCard(p, team, 'offense', true, true);
     card.style.animation = 'draftFlyIn 0.4s ease-out ' + (i * 0.08) + 's both';
     card.style.cursor = 'default';
     offGrid.appendChild(card);
   });
   ov.appendChild(offGrid);
 
-  // Defense row
-  ov.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Press Start 2P';font-size:7px;color:#00ff88;letter-spacing:1px;margin-bottom:6px;align-self:flex-start\">DEFENSE</div>");
+  // Defense label + grid
+  ov.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Press Start 2P';font-size:7px;color:#00ff88;letter-spacing:1px;margin-bottom:4px;flex-shrink:0\">DEFENSE</div>");
   var defGrid = document.createElement('div');
-  defGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;width:100%;margin-bottom:16px;';
+  defGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;flex:1;min-height:0;margin-bottom:8px;';
   defRoster.forEach(function(p, i) {
-    var card = buildPlayerCard(p, team, 'defense', true);
+    var card = buildPlayerCard(p, team, 'defense', true, true);
     card.style.animation = 'draftFlyIn 0.4s ease-out ' + ((i + 4) * 0.08) + 's both';
     card.style.cursor = 'default';
     defGrid.appendChild(card);
@@ -132,12 +143,12 @@ function showRosterReview(team, offRoster, defRoster, onContinue) {
 
   var btn = document.createElement('button');
   btn.className = 'btn-blitz';
-  btn.style.cssText = 'background:var(--a-gold);border-color:var(--a-gold);color:#000;font-size:14px;max-width:300px;';
+  btn.style.cssText = 'background:var(--a-gold);border-color:var(--a-gold);color:#000;font-size:14px;flex-shrink:0;';
   btn.textContent = 'CONTINUE \u2192';
   btn.onclick = function() { SND.snap(); ov.remove(); onContinue(); };
   ov.appendChild(btn);
 
-  document.body.appendChild(ov);
+  root.appendChild(ov);
 }
 
 /* ═══════════════════════════════════════════
@@ -179,23 +190,23 @@ export function buildDraft() {
       if (!isDef) {
         return Object.assign({}, s, { screen:'setup', side:null, roster:null, offRoster:null, offHand:null });
       } else {
-        return Object.assign({}, s, { screen:'card_draft', side:'offense', roster:s.offRoster });
+        return Object.assign({}, s, { screen:'draft', side:'offense', roster:null });
       }
     });
   };
   hdr.appendChild(backBtn);
   el.appendChild(hdr);
 
-  // Content (no scroll — fits on one screen)
+  // Content — fills all remaining space, no scroll
   var content = document.createElement('div');
-  content.style.cssText = 'flex:1;display:flex;flex-direction:column;padding:8px 12px;gap:4px;overflow:hidden;';
+  content.style.cssText = 'flex:1;display:flex;flex-direction:column;padding:10px 14px;overflow:hidden;';
 
   // Title row with auto-pick inline
   var titleRow = document.createElement('div');
-  titleRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-shrink:0;';
+  titleRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-shrink:0;margin-bottom:6px;';
   var title = document.createElement('div');
   title.className = 'chrome-header';
-  title.style.cssText = 'font-size:20px;margin-bottom:0;';
+  title.style.cssText = 'font-size:22px;margin-bottom:0;';
   title.textContent = isDef ? 'PICK DEFENSE' : 'PICK OFFENSE';
   var autoBtn = document.createElement('button');
   autoBtn.style.cssText = "font-family:'Press Start 2P';font-size:6px;color:var(--cyan);background:none;border:1px solid var(--cyan);padding:5px 8px;cursor:pointer;border-radius:12px;opacity:.7;";
@@ -209,24 +220,24 @@ export function buildDraft() {
 
   // Primary label
   var primaryLabel = document.createElement('div');
-  primaryLabel.style.cssText = "font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;margin-top:2px;flex-shrink:0;";
+  primaryLabel.style.cssText = "font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:4px;";
   primaryLabel.textContent = (isDef ? 'LINEBACKERS' : 'QUARTERBACK') + ' \u2014 PICK 1';
   content.appendChild(primaryLabel);
 
-  // Primary grid
+  // Primary grid — takes ~30% of remaining space
   var primaryGrid = document.createElement('div');
-  primaryGrid.style.cssText = 'display:flex;gap:6px;flex-shrink:0;';
+  primaryGrid.style.cssText = 'display:flex;gap:8px;flex:3;min-height:0;margin-bottom:8px;';
   content.appendChild(primaryGrid);
 
   // Skill label
   var skillLabel = document.createElement('div');
-  skillLabel.style.cssText = "font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;margin-top:4px;flex-shrink:0;";
+  skillLabel.style.cssText = "font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:4px;";
   skillLabel.textContent = (isDef ? 'DEFENSIVE BACKS' : 'SKILL PLAYERS') + ' \u2014 PICK 3';
   content.appendChild(skillLabel);
 
-  // Skill grid
+  // Skill grid — takes ~60% of remaining space, rows stretch to fill
   var skillGrid = document.createElement('div');
-  skillGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;align-content:start;';
+  skillGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;flex:6;min-height:0;';
   content.appendChild(skillGrid);
 
   function refreshPrimary() {
@@ -270,9 +281,9 @@ export function buildDraft() {
     refreshPrimary(); refreshSkills(); refreshGoBtn();
   };
 
-  // Go button
+  // Go button — directly below cards
   var goBtn = document.createElement('button');
-  goBtn.style.cssText = 'flex-shrink:0;margin-top:4px;';
+  goBtn.style.cssText = 'flex-shrink:0;margin-top:6px;';
   function refreshGoBtn() {
     var ready = selPrimary && Object.keys(selSkill).length === 3;
     goBtn.className = 'btn-blitz';
@@ -293,14 +304,15 @@ export function buildDraft() {
       var roster = [selPrimary].concat(Object.keys(selSkill));
 
       if (!isDef) {
-        // Offense locked — go to offense plays
+        // Offense locked — go to defense player draft
         setGs(function(s) {
           return Object.assign({}, s, {
-            screen: 'card_draft', team: GS.team, side: 'offense', roster: roster
+            screen: 'draft', team: GS.team, side: 'defense',
+            offRoster: roster, roster: null
           });
         });
       } else {
-        // Defense locked — show full roster review, then go to defense plays
+        // Defense locked — show full roster review, then go to play drafts
         var offPlayers = (GS.offRoster || []).map(function(id) {
           return team.players.find(function(p) { return p.id === id; });
         }).filter(Boolean);
@@ -311,8 +323,8 @@ export function buildDraft() {
         showRosterReview(team, offPlayers, defPlayers, function() {
           setGs(function(s) {
             return Object.assign({}, s, {
-              screen: 'card_draft', team: GS.team, side: 'defense',
-              defRoster: roster, roster: roster
+              screen: 'card_draft', team: GS.team, side: 'offense',
+              defRoster: roster, roster: null
             });
           });
         });
