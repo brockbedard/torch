@@ -1,0 +1,142 @@
+/**
+ * TORCH — Canyon Tech Offensive Plays (Air Raid)
+ * 10 plays, pass-heavy. Values from TORCH-PLAY-DATA-TABLE / torch_sim.py.
+ */
+
+export const CT_OFF_PLAYS = [
+  {
+    id: 'mesh', name: 'MESH', playType: 'SHORT',
+    mean: 9, variance: 5, completionRate: 0.78, sackRate: 0.06, intRate: 0.015, fumbleRate: 0.005,
+    coverageMods: {
+      cover_0: { mean: 5, var: 4, int: -0.01 },
+      cover_1: { mean: 3, var: 2, int: -0.005 },
+      cover_2: { mean: 0, var: 0, int: 0 },
+      cover_3: { mean: 1, var: 1, int: 0 },
+      cover_4: { mean: -1, var: -1, int: 0.005 },
+      cover_6: { mean: 0, var: 0, int: 0 },
+      man_free: { mean: 4, var: 3, int: -0.01 },
+    },
+  },
+  {
+    id: 'four_verts', name: 'FOUR VERTS', playType: 'DEEP',
+    mean: 15, variance: 14, completionRate: 0.43, sackRate: 0.09, intRate: 0.055, fumbleRate: 0.003,
+    coverageMods: {
+      cover_0: { mean: 6, var: 5, int: -0.02 },
+      cover_1: { mean: 3, var: 3, int: 0.01 },
+      cover_2: { mean: 2, var: 2, int: 0.01 },
+      cover_3: { mean: -2, var: -2, int: 0.02 },
+      cover_4: { mean: -4, var: -3, int: 0.03 },
+      cover_6: { mean: 0, var: 1, int: 0.01 },
+      man_free: { mean: 2, var: 3, int: 0.01 },
+    },
+    minDistance: 3,
+  },
+  {
+    id: 'slant', name: 'SLANT', playType: 'QUICK',
+    mean: 8, variance: 4, completionRate: 0.75, sackRate: 0.04, intRate: 0.02, fumbleRate: 0.005,
+    coverageMods: {
+      cover_0: { mean: 3, var: 2, int: -0.01 },
+      cover_1: { mean: 1, var: 1, int: 0 },
+      cover_2: { mean: 2, var: 1, int: -0.005 },
+      cover_3: { mean: 1, var: 0, int: 0 },
+      cover_4: { mean: 0, var: 0, int: 0 },
+      cover_6: { mean: 1, var: 0, int: 0 },
+      man_free: { mean: 1, var: 1, int: 0 },
+    },
+  },
+  {
+    id: 'shallow_cross', name: 'SHALLOW CROSS', playType: 'QUICK',
+    mean: 7, variance: 3, completionRate: 0.80, sackRate: 0.04, intRate: 0.01, fumbleRate: 0.005,
+    coverageMods: {
+      cover_0: { mean: 4, var: 3, int: -0.005 },
+      cover_1: { mean: 2, var: 1, int: 0 },
+      cover_2: { mean: 1, var: 1, int: 0 },
+      cover_3: { mean: 0, var: 0, int: 0 },
+      cover_4: { mean: 0, var: 0, int: 0 },
+      cover_6: { mean: 1, var: 0, int: 0 },
+      man_free: { mean: 3, var: 2, int: 0 },
+    },
+  },
+  {
+    id: 'y_corner', name: 'Y-CORNER', playType: 'DEEP',
+    mean: 15, variance: 10, completionRate: 0.47, sackRate: 0.08, intRate: 0.04, fumbleRate: 0.003,
+    coverageMods: {
+      cover_0: { mean: 3, var: 2, int: -0.01 },
+      cover_1: { mean: 2, var: 1, int: 0 },
+      cover_2: { mean: 5, var: 3, int: -0.02 },
+      cover_3: { mean: -1, var: 0, int: 0.01 },
+      cover_4: { mean: -2, var: -1, int: 0.015 },
+      cover_6: { mean: 2, var: 1, int: -0.01 },
+      man_free: { mean: 1, var: 1, int: 0 },
+    },
+    minDistance: 3,
+  },
+  {
+    id: 'stick', name: 'STICK', playType: 'SHORT',
+    mean: 6, variance: 2, completionRate: 0.83, sackRate: 0.03, intRate: 0.01, fumbleRate: 0.005,
+    coverageMods: {
+      cover_0: { mean: 2, var: 1, int: -0.005 },
+      cover_1: { mean: 1, var: 0, int: 0 },
+      cover_2: { mean: 1, var: 1, int: 0 },
+      cover_3: { mean: 0, var: 0, int: 0 },
+      cover_4: { mean: 0, var: 0, int: 0 },
+      cover_6: { mean: 1, var: 0, int: 0 },
+      man_free: { mean: 1, var: 1, int: 0 },
+    },
+  },
+  {
+    id: 'go_route', name: 'GO ROUTE', playType: 'DEEP',
+    mean: 18, variance: 18, completionRate: 0.38, sackRate: 0.10, intRate: 0.06, fumbleRate: 0.002,
+    coverageMods: {
+      cover_0: { mean: 8, var: 5, int: -0.03 },
+      cover_1: { mean: 2, var: 2, int: 0.01 },
+      cover_2: { mean: 1, var: 2, int: 0.01 },
+      cover_3: { mean: -3, var: -2, int: 0.03 },
+      cover_4: { mean: -4, var: -3, int: 0.04 },
+      cover_6: { mean: 1, var: 1, int: 0.01 },
+      man_free: { mean: -2, var: -2, int: 0.03 },
+    },
+    minDistance: 5,
+  },
+  {
+    id: 'bubble_screen', name: 'BUBBLE SCREEN', playType: 'SCREEN',
+    mean: 6, variance: 5, completionRate: 0.90, sackRate: 0.01, intRate: 0.003, fumbleRate: 0.008,
+    coverageMods: {
+      cover_0: { mean: 6, var: 5, int: 0 },
+      cover_1: { mean: 1, var: 1, int: 0 },
+      cover_2: { mean: -1, var: -1, int: 0 },
+      cover_3: { mean: 1, var: 2, int: 0 },
+      cover_4: { mean: 0, var: 0, int: 0 },
+      cover_6: { mean: 0, var: 1, int: 0 },
+      man_free: { mean: -1, var: 0, int: 0 },
+    },
+    neverInsideOwn: 5,
+  },
+  {
+    id: 'draw', name: 'DRAW', playType: 'RUN',
+    mean: 5, variance: 4, completionRate: null, sackRate: null, intRate: null, fumbleRate: 0.018,
+    coverageMods: {
+      cover_0: { mean: 3, var: 2 },
+      cover_1: { mean: 1, var: 1 },
+      cover_2: { mean: 2, var: 1 },
+      cover_3: { mean: -1, var: 0 },
+      cover_4: { mean: 0, var: 0 },
+      cover_6: { mean: 1, var: 0 },
+      man_free: { mean: 1, var: 1 },
+    },
+  },
+  {
+    id: 'qb_sneak', name: 'QB SNEAK', playType: 'RUN',
+    mean: 2, variance: 1.5, completionRate: null, sackRate: null, intRate: null, fumbleRate: 0.01,
+    coverageMods: {
+      cover_0: { mean: 1, var: 1 },
+      cover_1: { mean: 0, var: 0 },
+      cover_2: { mean: 0, var: 0 },
+      cover_3: { mean: 0, var: 0 },
+      cover_4: { mean: 0, var: 0 },
+      cover_6: { mean: 0, var: 0 },
+      man_free: { mean: 0, var: 0 },
+    },
+    maxDistance: 2,
+  },
+];
