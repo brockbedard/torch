@@ -1,9 +1,11 @@
 import { TEAMS } from './data/teams.js';
-import { CT_OFF_CARDS, IR_OFF_CARDS, IR_DEF_CARDS, CT_DEF_CARDS } from './data/cards.js';
-import { MT_CT_IR, MT_IR_CT, MT_CT_CT, MT_IR_IR } from './data/matchups.js';
+import { IR_OFF_PLAYS } from './data/irOffensePlays.js';
+import { IR_DEF_PLAYS } from './data/irDefensePlays.js';
+import { CT_OFF_PLAYS } from './data/ctOffensePlays.js';
+import { CT_DEF_PLAYS } from './data/ctDefensePlays.js';
 
-export var VERSION = '0.10.0';
-export var VERSION_NAME = 'Gameday Edition';
+export var VERSION = '0.16.0';
+export var VERSION_NAME = 'Team Selection Overhaul';
 
 export var GS = null;
 
@@ -15,10 +17,6 @@ export function setGs(fn) {
 export var render = () => {};
 export function setRender(fn) { render = fn; }
 
-export function getInitialScenario() {
-  return { down: 2, dist: 10, ballOn: 35, clock: 165, timeouts: 1, offScore: 14, defScore: 21 };
-}
-
 export function getTeam(id) {
   return TEAMS.find(function(t) { return t.id === id; }) || TEAMS[0];
 }
@@ -28,18 +26,11 @@ export function getOtherTeam(id) {
 }
 
 export function getOffCards(teamId) {
-  return teamId === 'canyon_tech' ? CT_OFF_CARDS : IR_OFF_CARDS;
+  return teamId === 'canyon_tech' ? CT_OFF_PLAYS : IR_OFF_PLAYS;
 }
 
 export function getDefCards(teamId) {
-  return teamId === 'canyon_tech' ? CT_DEF_CARDS : IR_DEF_CARDS;
-}
-
-export function getMatchupTable(offTeamId, defTeamId) {
-  if (offTeamId === 'canyon_tech' && defTeamId === 'iron_ridge') return MT_CT_IR;
-  if (offTeamId === 'iron_ridge' && defTeamId === 'canyon_tech') return MT_IR_CT;
-  if (offTeamId === 'canyon_tech' && defTeamId === 'canyon_tech') return MT_CT_CT;
-  return MT_IR_IR;
+  return teamId === 'canyon_tech' ? CT_DEF_PLAYS : IR_DEF_PLAYS;
 }
 
 export function shuffle(arr) {
