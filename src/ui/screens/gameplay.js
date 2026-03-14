@@ -1,932 +1,719 @@
 /**
- * TORCH — Gameplay Screen (Landscape)
- * Top: scorebug. Right panel: player cards + play cards + SNAP. Bottom: narrative.
- * Left: field placeholder (yard line + ball marker).
+ * TORCH — Gameplay Screen v3
+ * Complete rewrite. Portrait bottom-stack.
+ * Fresh visual language — no reuse from prior versions.
  */
 
 import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam, getOtherTeam, fmtClock } from '../../state.js';
-import { TEAMS } from '../../data/teams.js';
+import { badgeSvg, BADGE_LABELS } from '../../data/badges.js';
 import { GameState } from '../../engine/gameState.js';
+import { CT_OFFENSE, CT_DEFENSE, IR_OFFENSE, IR_DEFENSE } from '../../data/players.js';
 import { CT_OFF_PLAYS } from '../../data/ctOffensePlays.js';
-import { IR_OFF_PLAYS } from '../../data/irOffensePlays.js';
 import { CT_DEF_PLAYS } from '../../data/ctDefensePlays.js';
+import { IR_OFF_PLAYS } from '../../data/irOffensePlays.js';
 import { IR_DEF_PLAYS } from '../../data/irDefensePlays.js';
-import { badgeSvg } from '../../data/badges.js';
+import { checkOffensiveBadgeCombo, checkDefensiveBadgeCombo } from '../../engine/badgeCombos.js';
+import { getPlayHistoryBonus } from '../../engine/playHistory.js';
+import { playSvg } from '../../data/playDiagrams.js';
+import { TORCH_CARDS } from '../../data/torchCards.js';
 
-// === HELPERS ===
+/* ═══════════════════════════════════════════
+   CSS
+   ═══════════════════════════════════════════ */
+const CSS = `
+/* root */
+.T{height:100vh;display:flex;flex-direction:column;background:#06050f;overflow:hidden;position:relative;font-family:'Barlow Condensed',sans-serif}
 
-/** Map drafted player IDs to engine-compatible player objects */
-function mapRoster(playerIds, teamData, side) {
-  var pool = side === 'offense' ? teamData.players : teamData.defPlayers;
-  var mapped = [];
-  // Add drafted starters first
-  playerIds.forEach(function(id) {
-    var p = pool.find(function(pl) { return pl.id === id; });
-    if (p) {
-      mapped.push({
-        name: p.name.split(' ').pop(), // Last name for engine
-        pos: p.pos, ovr: p.ovr, badge: p.badge,
-        fullName: p.name, nick: p.nick, id: p.id,
-      });
-    }
-  });
-  // Add remaining as bench
-  pool.forEach(function(p) {
-    if (playerIds.indexOf(p.id) < 0) {
-      mapped.push({
-        name: p.name.split(' ').pop(),
-        pos: p.pos, ovr: p.ovr, badge: p.badge,
-        fullName: p.name, nick: p.nick, id: p.id,
-      });
-    }
-  });
-  return mapped;
+/* scoreboard (broadcast style from v0.10.0 scenario modal) */
+.T-sb{background:#0a0916;border-bottom:1px solid #1a183a;flex-shrink:0;z-index:60;overflow:hidden}
+.T-sb-row{display:grid;grid-template-columns:1fr 1.2fr auto 1.2fr 1fr;align-items:center;padding:10px 10px 8px}
+.T-sb-icon{font-size:28px;line-height:1;text-align:center}
+.T-sb-team{display:flex;flex-direction:column;align-items:center;padding:4px 6px;border-radius:6px}
+.T-sb-team-glow{background:radial-gradient(ellipse,rgba(255,204,0,.2) 0%,rgba(255,204,0,.06) 50%,transparent 75%);box-shadow:0 0 20px rgba(255,204,0,.18)}
+.T-sb-name{font-family:'Bebas Neue';font-size:14px;font-style:italic;line-height:1;letter-spacing:1px}
+.T-sb-pts{font-family:'Press Start 2P';font-size:24px;color:#e8e6ff;line-height:1;margin-top:2px}
+.T-sb-pts-glow{text-shadow:0 0 14px rgba(255,204,0,.5)}
+.T-sb-to{font-family:'Press Start 2P';font-size:6px;color:#9060e0;margin-top:3px;letter-spacing:.5px}
+.T-sb-center{text-align:center;padding:0 8px;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);min-width:70px}
+.T-sb-qtr{font-family:'Press Start 2P';font-size:8px;color:#554f80;letter-spacing:1px;margin-bottom:3px}
+.T-sb-clock{font-family:'Press Start 2P';font-size:16px;color:#e8e6ff;text-shadow:0 0 6px rgba(255,255,255,.3);line-height:1}
+.T-sb-clock-urgent{color:#e03050;text-shadow:0 0 10px rgba(224,48,80,.5)}
+.T-sb-sit{display:flex;justify-content:center;align-items:center;gap:12px;padding:6px 10px;background:rgba(0,0,0,.4);border-top:1px solid rgba(255,255,255,.04)}
+.T-sb-sit-down{font-family:'Press Start 2P';font-size:9px;color:#30c0e0;letter-spacing:.5px}
+.T-sb-sit-div{width:1px;height:12px;background:rgba(255,255,255,.1)}
+.T-sb-sit-ball{font-family:'Press Start 2P';font-size:9px;color:#e8e6ff;opacity:.7;letter-spacing:.5px}
+
+/* field strip */
+.T-strip{flex:0 0 28%;position:relative;background:linear-gradient(180deg,#072a07 0%,#0a3a0a 40%,#072a07 100%);overflow:hidden;border-bottom:1px solid #1a183a}
+.T-yard{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.06)}
+.T-los{position:absolute;top:0;bottom:0;width:2px;z-index:5;transition:left .4s ease-out}
+.T-ltg{position:absolute;top:0;bottom:0;width:1px;opacity:.5;z-index:4;transition:left .4s ease-out;border-left:2px dashed}
+.T-marker{position:absolute;top:4px;font-family:'Press Start 2P';font-size:5px;z-index:6;transition:left .4s ease-out;transform:translateX(-50%);letter-spacing:.5px}
+.T-zone{position:absolute;top:0;bottom:0;width:6%}
+.T-zone-l{left:0;background:linear-gradient(90deg,rgba(255,60,60,.12),transparent)}
+.T-zone-r{right:0;background:linear-gradient(270deg,rgba(60,100,255,.12),transparent)}
+.T-hash{position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,.03)}
+
+/* bottom panel */
+.T-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;transition:background .5s}
+.T-panel-off{background:linear-gradient(180deg,#120e00 0%,#06050f 50%)}
+.T-panel-def{background:linear-gradient(180deg,#00080e 0%,#06050f 50%)}
+
+/* instruction */
+.T-inst{text-align:center;padding:8px 0 2px;font-family:'Press Start 2P';font-size:6px;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
+
+/* player cards (draft-style adapted for gameplay) */
+.T-prow{display:flex;gap:6px;padding:4px 8px;flex-shrink:0;overflow-x:auto}
+.T-p{flex:1;min-width:0;border-radius:6px;cursor:pointer;background:var(--bg-surface);overflow:hidden;position:relative;transition:all .12s}
+.T-p:active{transform:scale(.97)}
+.T-p-sel{box-shadow:0 0 18px rgba(0,255,136,.35),inset 0 0 12px rgba(0,255,136,.08)}
+.T-p-sel .T-p-selbar{display:block}
+.T-p-hurt{opacity:.25;pointer-events:none}
+.T-p-selbar{display:none;position:absolute;top:0;left:50%;transform:translateX(-50%);width:30px;height:3px;background:#00ff88;border-radius:0 0 3px 3px;z-index:3}
+.T-p-hdr{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 8px 0;position:relative;z-index:2}
+.T-p-sel .T-p-hdr{background:linear-gradient(180deg,rgba(0,255,136,.1),transparent)}
+.T-p-left{display:flex;flex-direction:column;gap:1px}
+.T-p-pos{font-family:'Courier New';font-size:11px;font-weight:700;color:#e03050;letter-spacing:1px;line-height:1}
+.T-p-name{font-family:'Bebas Neue';font-size:16px;color:#fff;line-height:1}
+.T-p-ovr{font-family:'Courier New';font-size:24px;font-weight:700;line-height:1}
+.T-p-ovrlbl{font-family:'Courier New';font-size:7px;font-weight:700;opacity:.7;letter-spacing:.5px}
+.T-p-art{height:80px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.T-p-art img{height:100%;width:100%;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7))}
+.T-p-art-fade{position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(transparent,#0f0d1a);pointer-events:none;z-index:1}
+.T-p-nick{font-family:'Courier New';font-size:8px;color:#fff;font-weight:700;text-align:center;opacity:.7;padding:0 4px 4px;letter-spacing:.5px}
+.T-p-badge{position:absolute;bottom:4px;left:5px;width:14px;height:14px;z-index:4}
+
+/* play cards (draft-style with diagram, adapted for gameplay) */
+.T-plays{flex:1;overflow-y:auto;padding:2px 8px 4px;display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.T-plays-hidden{display:none}
+.T-pl{border-radius:6px;cursor:pointer;background:var(--bg-surface);overflow:hidden;position:relative;display:flex;flex-direction:column;transition:all .12s}
+.T-pl:active{transform:scale(.97)}
+.T-pl-sel{box-shadow:0 0 18px rgba(0,255,136,.35),inset 0 0 12px rgba(0,255,136,.08)}
+.T-pl-sel .T-pl-selbar{display:block}
+.T-pl-selbar{display:none;position:absolute;top:0;left:50%;transform:translateX(-50%);width:30px;height:3px;background:#00ff88;border-radius:0 0 3px 3px;z-index:3}
+.T-pl-hdr{display:flex;justify-content:space-between;align-items:center;padding:6px 8px 4px}
+.T-pl-sel .T-pl-hdr{background:linear-gradient(180deg,rgba(0,255,136,.1),transparent)}
+.T-pl-name{font-family:'Bebas Neue';font-size:14px;color:#fff;line-height:1;flex:1;margin-right:4px}
+.T-pl-tag{font-family:'Courier New';font-size:6px;font-weight:700;padding:2px 5px;border-radius:8px;border:1px solid;letter-spacing:.5px;white-space:nowrap;flex-shrink:0}
+.T-pl-diag{height:55px;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse,#1a1030,#0a0818);margin:0 6px;border-radius:3px;overflow:hidden}
+.T-pl-foot{padding:3px 8px 5px;display:flex;align-items:center;justify-content:space-between}
+.T-pl-desc{font-family:'Courier New';font-size:7px;color:#554f80;flex:1}
+.T-mq{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* snap bar (hidden until ready) */
+.T-snap{padding:6px 10px 8px;flex-shrink:0;display:flex;flex-direction:column;gap:5px}
+.T-snap-hidden{display:none}
+.T-combo{display:flex;align-items:center;gap:6px;padding:6px 10px;background:#0a0916;border:1px solid #1a183a;border-radius:8px;font-size:13px}
+.T-combo-lbl{font-family:'Bebas Neue';color:#c8a030}
+.T-combo-sig{font-family:'Courier New';font-size:6px;font-weight:700;padding:2px 5px;border-radius:4px;margin-left:auto}
+.T-go{width:100%;padding:12px;font-family:'Bebas Neue';font-size:26px;letter-spacing:5px;color:#06050f;border:none;border-radius:8px;cursor:pointer;background:linear-gradient(180deg,#f0c020,#c8a010);box-shadow:0 4px 20px rgba(200,160,16,.25)}
+.T-go:active{transform:scale(.97);box-shadow:none}
+@keyframes T-pulse{0%,100%{box-shadow:0 4px 20px rgba(200,160,16,.25)}50%{box-shadow:0 4px 30px rgba(200,160,16,.5)}}
+.T-go{animation:T-pulse 1.8s ease-in-out infinite}
+
+/* 2min buttons */
+.T-2btns{display:flex;gap:5px}
+.T-2btn{flex:1;padding:8px;font-family:'Press Start 2P';font-size:6px;border-radius:6px;cursor:pointer;text-align:center;background:none;letter-spacing:.5px}
+.T-spike{color:#30c0e0;border:1.5px solid #30c0e0}
+.T-kneel{color:#554f80;border:1.5px solid #554f80}
+
+/* narrative */
+.T-narr{padding:6px 14px;background:#0a0916;border-top:1px solid #1a183a;flex-shrink:0;min-height:38px}
+.T-narr-1{font-size:13px;color:#e8e6ff;font-weight:600;line-height:1.2}
+.T-narr-2{font-family:'Courier New';font-size:8px;color:#554f80;margin-top:1px}
+
+/* overlays */
+.T-ov{position:absolute;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;pointer-events:none}
+.T-ov-dark{background:rgba(6,5,15,.92)}
+.T-ov-black{background:#06050f;pointer-events:auto}
+@keyframes T-fade{from{opacity:0}to{opacity:1}}
+@keyframes T-pop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+.T-ov-result .T-r-play{font-family:'Courier New';font-size:9px;color:#554f80;letter-spacing:1px;margin-bottom:6px}
+.T-ov-result .T-r-big{font-family:'Bebas Neue';font-size:44px;letter-spacing:3px;line-height:1;animation:T-pop .3s ease-out}
+.T-ov-result .T-r-sub{font-family:'Courier New';font-size:9px;color:#8a86b0;margin-top:10px;max-width:300px;line-height:1.5}
+
+/* possession cut */
+.T-ov-poss .T-poss-score{font-family:'Press Start 2P';font-size:22px;color:#e8e6ff}
+.T-ov-poss .T-poss-who{font-family:'Bebas Neue';font-size:22px;letter-spacing:3px;margin:10px 0}
+.T-ov-poss .T-poss-tag{font-family:'Courier New';font-size:9px;color:#554f80;font-style:italic}
+
+/* conversion */
+.T-conv{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px}
+.T-conv-hdr{font-family:'Bebas Neue';font-size:36px;color:#3df58a;letter-spacing:3px}
+.T-conv-btn{width:100%;max-width:260px;padding:14px;font-family:'Press Start 2P';font-size:7px;border-radius:8px;cursor:pointer;text-align:center;background:none;letter-spacing:.5px;line-height:1.6}
+
+/* drive summary */
+.T-drv{padding:10px 14px;text-align:center}
+.T-drv-hdr{font-family:'Press Start 2P';font-size:7px;letter-spacing:1px;margin-bottom:4px}
+.T-drv-stat{font-family:'Courier New';font-size:9px;color:#554f80}
+
+/* 2-min transformation */
+.T-urgent .T-strip{border-bottom-color:#e03050}
+.T-urgent .T-sb{border-bottom-color:#e03050}
+@keyframes T-breathe{0%,100%{background-color:#06050f}50%{background-color:#0f0510}}
+.T-urgent .T-panel{animation:T-breathe 3s ease-in-out infinite}
+@keyframes T-coin{0%{transform:rotateY(0)}100%{transform:rotateY(1080deg)}}
+`;
+
+/* ═══════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════ */
+function mqColor(q) { return q === 'green' ? '#3df58a' : q === 'red' ? '#e03050' : '#c8a030'; }
+function typeColor(t) {
+  return { SHORT:'#3df58a',QUICK:'#30c0e0',DEEP:'#e03050',RUN:'#e07020',SCREEN:'#e060a0',
+    OPTION:'#e07020',BLITZ:'#e03050',ZONE:'#30c0a0',PRESSURE:'#c8a030',HYBRID:'#9060e0' }[t] || '#8a86b0';
 }
 
-/** Map drafted play card IDs to engine play data */
-function mapPlayHand(draftedCards, enginePlays) {
-  var used = {};
-  return draftedCards.map(function(card) {
-    // 1. Exact ID match
-    var eng = enginePlays.find(function(ep) { return ep.id === card.id && !used[ep.id]; });
-    // 2. Card ID as suffix (e.g. 'overload' matches 'ct_overload_blitz')
-    if (!eng) {
-      eng = enginePlays.find(function(ep) {
-        return !used[ep.id] && ep.id.indexOf(card.id) >= 0;
-      });
-    }
-    // 3. Match by name (case-insensitive)
-    if (!eng) {
-      var cardName = card.name.toUpperCase();
-      eng = enginePlays.find(function(ep) {
-        return !used[ep.id] && ep.name.toUpperCase() === cardName;
-      });
-    }
-    // 4. If card is already an engine play object (Quick Play path), use directly
-    if (!eng && card.playType !== undefined || card.cardType !== undefined && card.baseCoverage !== undefined) {
-      eng = card;
-    }
-    // 5. Last resort: first unused engine play
-    if (!eng) {
-      eng = enginePlays.find(function(ep) { return !used[ep.id]; }) || enginePlays[0];
-    }
-    used[eng.id] = true;
-    return eng;
-  });
+function matchupQ(player, play, history, isOff) {
+  if (!player || !play) return null;
+  if (isOff) {
+    const c = checkOffensiveBadgeCombo(player.badge, play, false, false);
+    const h = getPlayHistoryBonus(history, play);
+    if (c.yardBonus > 0) return 'green';
+    if (h < -2) return 'red';
+    return h < 0 ? 'yellow' : 'yellow';
+  }
+  const c = checkDefensiveBadgeCombo(player.badge, play, { playType:'RUN', id:'power' });
+  return c.yardMod < 0 ? 'green' : 'yellow';
 }
 
-// === MAIN BUILD ===
+function breakdown(op, dp, r, fo, fd) {
+  const cov = (dp.baseCoverage || '').replace(/_/g,' ').toUpperCase();
+  const L = [];
+  if (r.isSack) L.push(dp.sackRateBonus >= .06 ? dp.name+' brought the heat.' : 'Protection collapsed vs '+cov+'.');
+  else if (r.isInterception) L.push(cov+' read the route. Picked.');
+  else if (r.isIncomplete) L.push(dp.passCompMod < -.03 ? dp.name+' jammed the timing.' : 'Tight window. Couldn\'t connect.');
+  else if (r.isTouchdown) L.push('Exploited '+cov+'. End zone.');
+  else if (r.yards >= 10) { const cv = op.coverageMods?.[dp.baseCoverage]; L.push(cv && cv.mean >= 2 ? op.name+' eats '+cov+'.' : fo.name+' made it happen.'); }
+  else if (r.yards <= 0) L.push(dp.name+' walled it off.');
+  if (r.offComboPts > 0) L.push(BADGE_LABELS[fo.badge]+' combo! +'+r.offComboYards+' yds.');
+  if (r.defComboPts > 0) L.push('Def combo: '+BADGE_LABELS[fd.badge]+'.');
+  if (r.historyBonus > 0) L.push('Play mix bonus +'+r.historyBonus+'.');
+  if (r.historyBonus < -2) L.push('Predictable. Penalty.');
+  return L.length ? L.join(' ') : op.name+' vs '+dp.name+'.';
+}
 
+const TAGS = {
+  touchdown:['SIX POINTS.','FIND THE HOUSE.','TOUCHDOWN.'],
+  turnover_td:['PICK SIX.','SCOOP AND SCORE.','HOUSE CALL.'],
+  interception:['PICKED OFF.','TURNOVER.','BALL DON\'T LIE.'],
+  fumble_lost:['STRIPPED.','LOOSE BALL.','TURNOVER.'],
+  turnover_on_downs:['STOPPED.','FOURTH DOWN FAILURE.','CHANGE OF POSSESSION.'],
+  safety:['SAFETY.','CAUGHT IN THE END ZONE.'],
+  score:['NEW DRIVE.','BALL AT THE 50.'],
+};
+function tag(ev) { const p = TAGS[ev] || TAGS.score; return p[Math.floor(Math.random()*p.length)]; }
+
+const PLAY_DESC = {
+  mesh:'Man killer',four_verts:'Stretch deep',shallow_cross:'Quick reliable',y_corner:'Beats Cover 2',
+  stick:'Safe short',slant:'Timing route',go_route:'One-on-one deep',bubble_screen:'Fast lateral',
+  draw:'Fake pass, run',qb_sneak:'Short yardage push',triple_option:'Give keep pitch',
+  midline:'FB dive inside',rocket_toss:'Speed to edge',trap:'Pulling guard',qb_keeper:'QB turns corner',
+  power:'Downhill physical',zone_read:'Read the end',pa_post:'Fake run, deep',pa_flat:'Fake dive, dump',
+  ir_qb_sneak:'Short yardage push',
+  ct_corner_blitz:'All-out pressure',ct_safety_blitz:'Extra sack heat',ct_agap_mug:'A-gap mind games',
+  ct_fire_zone:'Send 5, drop 3',ct_db_blitz:'Max pressure',ct_press_man:'Jam at the line',
+  ct_edge_crash:'Speed rush edges',ct_zone_blitz_drop:'Show blitz, drop',ct_overload_blitz:'Numbers to one side',
+  ct_prevent:'Nothing over top',ir_robber:'Jump the route',ir_bracket:'Double best WR',
+  ir_qb_spy:'Shadow the QB',ir_gap_integrity:'Every gap covered',ir_cover2_buc:'Tampa 2 seam',
+  ir_mod:'Two-high vanilla',ir_press_man:'Jam at the line',ir_line_stunt:'Pressure no blitz',
+  ir_cover6:'Split field cov',ir_blitz_call:'Rare IR blitz',
+};
+
+function playerImg(p, team, isOff) {
+  var pre = team.abbr.toLowerCase();
+  var s = isOff ? 'off' : 'def';
+  var last = p.name.split(' ').pop().toLowerCase();
+  return '/img/players/' + pre + '-' + s + '-' + p.pos.toLowerCase() + '-' + last + '.png';
+}
+
+function tierColor(ovr) { return ovr >= 85 ? '#c8a030' : ovr >= 75 ? '#aaa' : '#CD7F32'; }
+
+function resolveRoster(ids, pool) {
+  if (!ids || !Array.isArray(ids)) return pool;
+  if (ids.length > 0 && typeof ids[0] === 'object') return ids;
+  return ids.map(id => pool.find(p => p.id === id)).filter(Boolean);
+}
+
+/* ═══════════════════════════════════════════
+   BUILDER
+   ═══════════════════════════════════════════ */
 export function buildGameplay() {
-  var el = document.createElement('div');
-  el.className = 'sup';
-  el.style.cssText =
-    'height:100vh;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;' +
-    'user-select:none;-webkit-user-select:none;';
-
-  // Activate landscape mode on #root
-  var root = document.getElementById('root');
-  root.classList.add('gameplay-active');
-
-  // Try to lock orientation to landscape (Android/Chrome — iOS ignores)
-  (async function() {
-    try {
-      await screen.orientation.lock('landscape-primary');
-    } catch (e) {
-      // iOS doesn't support this — the overlay handles it
-    }
-  })();
-
-  // Portrait rotation overlay (CSS shows/hides via media query)
-  var rotateOverlay = document.createElement('div');
-  rotateOverlay.className = 'rotate-overlay';
-  var rotatePhone = document.createElement('div');
-  rotatePhone.className = 'rotate-phone';
-  var rotateArrow = document.createElement('div');
-  rotateArrow.className = 'rotate-arrow';
-  rotateArrow.textContent = '\u21BB';
-  var rotateText = document.createElement('div');
-  rotateText.className = 'rotate-text';
-  rotateText.textContent = 'ROTATE YOUR PHONE TO PLAY';
-  var rotateSub = document.createElement('div');
-  rotateSub.className = 'rotate-sub';
-  rotateSub.textContent = 'Landscape mode required';
-  rotateOverlay.append(rotatePhone, rotateArrow, rotateText, rotateSub);
-  el.appendChild(rotateOverlay);
-
-  // Inject gameplay animations
-  var styleEl = document.createElement('style');
-  styleEl.textContent =
-    '@keyframes snapPulse { 0%,100% { box-shadow:0 0 10px rgba(255,204,0,0.3); } 50% { box-shadow:0 0 30px rgba(255,204,0,0.7); } }' +
-    '@keyframes resultFlash { 0% { opacity:0;transform:scale(0.7); } 50% { opacity:1;transform:scale(1.1); } 100% { opacity:1;transform:scale(1); } }' +
-    '@keyframes slideDown { from { opacity:0;transform:translateY(-20px); } to { opacity:1;transform:translateY(0); } }' +
-    '@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }' +
-    '@keyframes cardPop { from { opacity:0;transform:scale(0.9); } to { opacity:1;transform:scale(1); } }' +
-    '@keyframes yardFlash { 0%,100% { color:var(--a-gold); } 50% { color:#fff; } }';
-  el.appendChild(styleEl);
-
-  // === INITIALIZE GAME STATE ===
-  var team = getTeam(GS.team);
-  var opp = getOtherTeam(GS.team);
-  var isHumanCT = GS.team === 'canyon_tech';
-  var humanAbbr = isHumanCT ? 'CT' : 'IR';
-  var cpuAbbr = isHumanCT ? 'IR' : 'CT';
-
-  // Map rosters
-  var humanOffRoster = mapRoster(GS.offRoster, team, 'offense');
-  var humanDefRoster = mapRoster(GS.defRoster, team, 'defense');
-  var cpuOffRoster = mapRoster(opp.players.map(function(p) { return p.id; }).slice(0, 4), opp, 'offense');
-  var cpuDefRoster = mapRoster(opp.defPlayers.map(function(p) { return p.id; }).slice(0, 4), opp, 'defense');
-
-  // Map play hands
-  var humanOffEngPlays = isHumanCT ? CT_OFF_PLAYS : IR_OFF_PLAYS;
-  var humanDefEngPlays = isHumanCT ? CT_DEF_PLAYS : IR_DEF_PLAYS;
-  var cpuOffEngPlays = isHumanCT ? IR_OFF_PLAYS : CT_OFF_PLAYS;
-  var cpuDefEngPlays = isHumanCT ? CT_DEF_PLAYS : IR_DEF_PLAYS;
-
-  var humanOffHand = mapPlayHand(GS.offHand, humanOffEngPlays);
-  var humanDefHand = mapPlayHand(GS.defHand, humanDefEngPlays);
-  var cpuOffHand = cpuOffEngPlays.slice(0, 5);
-  var cpuDefHand = cpuDefEngPlays.slice(0, 5);
-
-  // Create GameState
-  var gs = new GameState({
-    humanTeam: humanAbbr,
-    difficulty: 'MEDIUM',
-    ctOffHand: isHumanCT ? humanOffHand : cpuOffHand,
-    ctDefHand: isHumanCT ? humanDefHand : cpuDefHand,
-    irOffHand: isHumanCT ? cpuOffHand : humanOffHand,
-    irDefHand: isHumanCT ? cpuDefHand : humanDefHand,
-    ctOffRoster: isHumanCT ? humanOffRoster : cpuOffRoster,
-    ctDefRoster: isHumanCT ? humanDefRoster : cpuDefRoster,
-    irOffRoster: isHumanCT ? cpuOffRoster : humanOffRoster,
-    irDefRoster: isHumanCT ? cpuDefRoster : humanDefRoster,
-  });
-
-  // If human receives, flip so human has ball first
-  if (GS.humanReceives) {
-    gs.possession = humanAbbr;
-    gs.ballPosition = 50;
-  }
-
-  // UI state
-  var selectedPlayer = null;
-  var selectedPlay = null;
-  var waitingForTap = false;
-  var lastResult = null;
-
-  // === SCOREBUG (top) ===
-  var scorebug = document.createElement('div');
-  scorebug.style.cssText =
-    'background:rgba(0,0,0,0.85);padding:8px 12px;display:flex;justify-content:space-between;' +
-    'align-items:center;flex-shrink:0;border-bottom:2px solid var(--bdr);z-index:10;';
-
-  function renderScorebug() {
-    scorebug.innerHTML = '';
-    var sum = gs.getSummary();
-    var ctTeam = getTeam('canyon_tech');
-    var irTeam = getTeam('iron_ridge');
-
-    // CT score
-    var ctBlock = document.createElement('div');
-    ctBlock.style.cssText = 'display:flex;align-items:center;gap:6px;';
-    var ctName = document.createElement('div');
-    ctName.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:18px;color:" + ctTeam.accent + ";letter-spacing:1px;";
-    ctName.textContent = 'CT';
-    var ctScore = document.createElement('div');
-    ctScore.style.cssText = "font-family:'Press Start 2P',monospace;font-size:16px;color:#fff;";
-    ctScore.textContent = sum.ctScore;
-    ctBlock.append(ctName, ctScore);
-
-    // Center info
-    var center = document.createElement('div');
-    center.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;';
-    var downDist = document.createElement('div');
-    downDist.style.cssText = "font-family:'Press Start 2P',monospace;font-size:8px;color:var(--a-gold);letter-spacing:1px;";
-    var downStr = sum.down === 1 ? '1ST' : sum.down === 2 ? '2ND' : sum.down === 3 ? '3RD' : '4TH';
-    downDist.textContent = downStr + ' & ' + sum.distance;
-
-    var halfClock = document.createElement('div');
-    halfClock.style.cssText = "font-family:'Courier New',monospace;font-size:7px;color:var(--muted);letter-spacing:0.5px;";
-    if (sum.twoMinActive) {
-      halfClock.textContent = (sum.half === 1 ? 'H1' : 'H2') + ' 2MIN ' + fmtClock(sum.clockSeconds);
-    } else {
-      halfClock.textContent = (sum.half === 1 ? 'H1' : 'H2') + ' PLAY ' + sum.playsUsed + '/' + 20;
-    }
-
-    var possession = document.createElement('div');
-    possession.style.cssText = "font-family:'Courier New',monospace;font-size:7px;color:" +
-      (sum.possession === humanAbbr ? '#00ff88' : '#ff4444') + ";letter-spacing:0.5px;";
-    possession.textContent = (sum.possession === humanAbbr ? 'YOUR' : 'OPP') + ' BALL @ ' + sum.ballPosition;
-
-    center.append(downDist, halfClock, possession);
-
-    // IR score
-    var irBlock = document.createElement('div');
-    irBlock.style.cssText = 'display:flex;align-items:center;gap:6px;';
-    var irName = document.createElement('div');
-    irName.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:18px;color:" + irTeam.accent + ";letter-spacing:1px;";
-    irName.textContent = 'IR';
-    var irScore = document.createElement('div');
-    irScore.style.cssText = "font-family:'Press Start 2P',monospace;font-size:16px;color:#fff;";
-    irScore.textContent = sum.irScore;
-    irBlock.append(irScore, irName);
-
-    scorebug.append(ctBlock, center, irBlock);
-  }
-
-  el.appendChild(scorebug);
-
-  // === MAIN AREA (field + hand) ===
-  var mainArea = document.createElement('div');
-  mainArea.style.cssText = 'flex:1;display:flex;overflow:hidden;position:relative;';
-
-  // === LEFT: Field (placeholder) ===
-  var fieldArea = document.createElement('div');
-  fieldArea.style.cssText =
-    'flex:0 0 60%;background:#0a3d0a;position:relative;overflow:hidden;' +
-    'display:flex;align-items:center;justify-content:center;';
-
-  function renderField() {
-    fieldArea.innerHTML = '';
-    var sum = gs.getSummary();
-
-    // Yard lines
-    for (var yd = 10; yd <= 90; yd += 10) {
-      var line = document.createElement('div');
-      line.style.cssText =
-        'position:absolute;top:0;bottom:0;width:1px;' +
-        'background:rgba(255,255,255,0.12);left:' + yd + '%;';
-      fieldArea.appendChild(line);
-
-      if (yd % 10 === 0 && yd !== 50) {
-        var label = document.createElement('div');
-        label.style.cssText =
-          "position:absolute;top:4px;font-family:'Courier New',monospace;" +
-          "font-size:8px;color:rgba(255,255,255,0.2);left:" + yd + "%;transform:translateX(-50%);";
-        label.textContent = yd <= 50 ? yd : 100 - yd;
-        fieldArea.appendChild(label);
-      }
-    }
-
-    // 50 yard line
-    var midline = document.createElement('div');
-    midline.style.cssText =
-      'position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,0.25);left:50%;';
-    fieldArea.appendChild(midline);
-
-    // End zones
-    var leftEZ = document.createElement('div');
-    leftEZ.style.cssText =
-      'position:absolute;top:0;bottom:0;left:0;width:5%;' +
-      'background:rgba(255,0,0,0.15);border-right:2px solid rgba(255,0,0,0.3);';
-    var rightEZ = document.createElement('div');
-    rightEZ.style.cssText =
-      'position:absolute;top:0;bottom:0;right:0;width:5%;' +
-      'background:rgba(0,100,255,0.15);border-left:2px solid rgba(0,100,255,0.3);';
-    fieldArea.append(leftEZ, rightEZ);
-
-    // Line of scrimmage
-    var losLeft = 5 + sum.ballPosition * 0.9; // 5-95% range
-    var los = document.createElement('div');
-    los.style.cssText =
-      'position:absolute;top:0;bottom:0;width:2px;background:#ffcc00;' +
-      'left:' + losLeft + '%;box-shadow:0 0 8px rgba(255,204,0,0.5);';
-    fieldArea.appendChild(los);
-
-    // First down marker
-    var fdYards = sum.possession === 'CT' ?
-      Math.min(sum.ballPosition + sum.distance, 100) :
-      Math.max(sum.ballPosition - sum.distance, 0);
-    var fdLeft = 5 + fdYards * 0.9;
-    var fdLine = document.createElement('div');
-    fdLine.style.cssText =
-      'position:absolute;top:0;bottom:0;width:2px;background:#ff4444;' +
-      'left:' + fdLeft + '%;opacity:0.6;';
-    fieldArea.appendChild(fdLine);
-
-    // Ball marker
-    var ball = document.createElement('div');
-    ball.style.cssText =
-      'position:absolute;top:50%;left:' + losLeft + '%;transform:translate(-50%,-50%);' +
-      'font-size:20px;filter:drop-shadow(0 0 8px var(--a-gold));z-index:2;';
-    ball.textContent = '\uD83C\uDFC8';
-    fieldArea.appendChild(ball);
-
-    // Yard line label
-    var yardLabel = document.createElement('div');
-    yardLabel.style.cssText =
-      "position:absolute;bottom:8px;left:50%;transform:translateX(-50%);" +
-      "font-family:'Press Start 2P',monospace;font-size:8px;color:rgba(255,255,255,0.4);";
-    yardLabel.textContent = sum.yardsToEndzone + ' YDS TO GO';
-    fieldArea.appendChild(yardLabel);
-  }
-
-  mainArea.appendChild(fieldArea);
-
-  // === RIGHT: Hand Panel ===
-  var handPanel = document.createElement('div');
-  handPanel.style.cssText =
-    'flex:1;display:flex;flex-direction:column;overflow:hidden;' +
-    'background:var(--bg);padding:8px;gap:6px;';
-
-  // Player cards area (fixed at top, never scrolls)
-  var playerArea = document.createElement('div');
-  playerArea.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:4px;flex-shrink:0;';
-
-  // Scrollable middle: play cards
-  var playScrollArea = document.createElement('div');
-  playScrollArea.style.cssText = 'flex:1;overflow-y:auto;min-height:0;';
-  var playArea = document.createElement('div');
-  playArea.style.cssText = 'display:flex;flex-direction:column;gap:3px;';
-  playScrollArea.appendChild(playArea);
-
-  // Combo preview + SNAP (fixed at bottom)
-  var comboArea = document.createElement('div');
-  comboArea.style.cssText =
-    'flex-shrink:0;padding-top:6px;border-top:1px solid var(--bdr);';
-
-  // Narrative bar
-  var narrativeBar = document.createElement('div');
-  narrativeBar.style.cssText =
-    'background:rgba(0,0,0,0.9);padding:8px 12px;flex-shrink:0;' +
-    'border-top:1px solid var(--bdr);min-height:44px;';
-
-  function getPlayTypeColor(pt) {
-    var colors = {
-      SHORT: '#00ff44', QUICK: '#00eaff', DEEP: '#ff0040', RUN: '#ff4d00',
-      SCREEN: '#ff66aa', OPTION: '#ff4d00',
-    };
-    return colors[pt] || '#aaa';
-  }
-
-  function renderHand() {
-    playerArea.innerHTML = '';
-    playArea.innerHTML = '';
-    comboArea.innerHTML = '';
-
-    var sum = gs.getSummary();
-    var isOnOffense = sum.possession === humanAbbr;
-    var players, plays;
-
-    if (isOnOffense) {
-      players = gs[humanAbbr === 'CT' ? 'ctOffRoster' : 'irOffRoster'].slice(0, 4);
-      plays = gs[humanAbbr === 'CT' ? 'ctOffHand' : 'irOffHand'];
-    } else {
-      players = gs[humanAbbr === 'CT' ? 'ctDefRoster' : 'irDefRoster'].slice(0, 4);
-      plays = gs[humanAbbr === 'CT' ? 'ctDefHand' : 'irDefHand'];
-    }
-
-    // Section label — remove existing one first
-    var oldLabel = handPanel.querySelector('.side-label');
-    if (oldLabel) oldLabel.remove();
-    var sideLabel = document.createElement('div');
-    sideLabel.className = 'side-label';
-    sideLabel.style.cssText =
-      "font-family:'Press Start 2P',monospace;font-size:7px;letter-spacing:1px;" +
-      "color:" + (isOnOffense ? '#00ff88' : '#ff4444') + ";margin-bottom:4px;text-align:center;";
-    sideLabel.textContent = isOnOffense ? 'YOUR OFFENSE' : 'YOUR DEFENSE';
-    handPanel.insertBefore(sideLabel, playerArea);
-
-    // Player cards (2x2)
-    players.forEach(function(p) {
-      var isSel = selectedPlayer === p;
-      var card = document.createElement('div');
-      card.style.cssText =
-        'background:var(--bg-surface);border:2px solid ' + (isSel ? '#00ff88' : 'var(--bdr)') + ';' +
-        'border-radius:4px;padding:6px;cursor:pointer;position:relative;' +
-        'transition:all 0.1s;' +
-        (p.injured ? 'opacity:0.35;pointer-events:none;' : '') +
-        (isSel ? 'box-shadow:0 0 12px rgba(0,255,136,0.3);' : '');
-
-      var nameRow = document.createElement('div');
-      nameRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;';
-
-      var nameEl = document.createElement('div');
-      nameEl.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:13px;color:#fff;line-height:1;";
-      nameEl.textContent = p.name;
-
-      var ovrEl = document.createElement('div');
-      ovrEl.style.cssText = "font-family:'Courier New',monospace;font-size:11px;font-weight:bold;color:#00eaff;";
-      ovrEl.textContent = p.ovr;
-
-      nameRow.append(nameEl, ovrEl);
-      card.appendChild(nameRow);
-
-      var bottomRow = document.createElement('div');
-      bottomRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-top:2px;';
-
-      var posEl = document.createElement('div');
-      posEl.style.cssText = "font-family:'Courier New',monospace;font-size:8px;font-weight:bold;color:#ff0040;letter-spacing:1px;";
-      posEl.textContent = p.pos;
-
-      var badgeEl = document.createElement('div');
-      badgeEl.style.cssText = 'width:12px;height:12px;';
-      badgeEl.innerHTML = badgeSvg(p.badge, team.accent);
-
-      bottomRow.append(posEl, badgeEl);
-      card.appendChild(bottomRow);
-
-      if (p.injured) {
-        var injLabel = document.createElement('div');
-        injLabel.style.cssText = "position:absolute;top:2px;right:2px;font-family:'Courier New',monospace;font-size:6px;color:#ff0040;";
-        injLabel.textContent = 'INJ';
-        card.appendChild(injLabel);
-      }
-
-      card.onclick = function() {
-        if (waitingForTap || p.injured) return;
-        SND.click();
-        selectedPlayer = selectedPlayer === p ? null : p;
-        renderHand();
-      };
-
-      playerArea.appendChild(card);
-    });
-
-    // Play cards
-    plays.forEach(function(play) {
-      var isSel = selectedPlay === play;
-      var card = document.createElement('div');
-      var ptColor = getPlayTypeColor(play.playType || play.cardType || 'RUN');
-      card.style.cssText =
-        'background:var(--bg-surface);border:2px solid ' + (isSel ? '#00ff88' : 'var(--bdr)') + ';' +
-        'border-radius:4px;padding:5px 8px;cursor:pointer;' +
-        'display:flex;align-items:center;gap:6px;transition:all 0.1s;' +
-        (isSel ? 'box-shadow:0 0 10px rgba(0,255,136,0.3);' : '');
-
-      var ptBadge = document.createElement('div');
-      ptBadge.style.cssText =
-        "font-family:'Courier New',monospace;font-size:6px;font-weight:bold;" +
-        "color:" + ptColor + ";border:1px solid " + ptColor + "44;" +
-        "padding:1px 4px;border-radius:6px;letter-spacing:0.5px;flex-shrink:0;";
-      ptBadge.textContent = play.playType || play.cardType || '';
-
-      var nameEl = document.createElement('div');
-      nameEl.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:13px;color:#fff;line-height:1;flex:1;";
-      nameEl.textContent = play.name;
-
-      card.append(ptBadge, nameEl);
-
-      card.onclick = function() {
-        if (waitingForTap) return;
-        SND.click();
-        selectedPlay = selectedPlay === play ? null : play;
-        renderHand();
-      };
-
-      playArea.appendChild(card);
-    });
-
-    // Combo preview + SNAP button
-    var snapReady = selectedPlayer && selectedPlay;
-
-    if (snapReady) {
-      var preview = document.createElement('div');
-      preview.style.cssText =
-        'display:flex;align-items:center;gap:6px;margin-bottom:6px;' +
-        'animation:cardPop 0.2s ease-out;';
-
-      var prevPlayer = document.createElement('div');
-      prevPlayer.style.cssText =
-        "font-family:'Courier New',monospace;font-size:9px;color:#00eaff;display:flex;align-items:center;gap:3px;";
-      var prevBadgeIcon = document.createElement('span');
-      prevBadgeIcon.style.cssText = 'display:inline-flex;width:12px;height:12px;';
-      prevBadgeIcon.innerHTML = badgeSvg(selectedPlayer.badge, '#00eaff');
-      prevPlayer.textContent = selectedPlayer.name + ' ';
-      prevPlayer.appendChild(prevBadgeIcon);
-
-      var prevPlus = document.createElement('div');
-      prevPlus.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--muted);";
-      prevPlus.textContent = '+';
-
-      var prevPlay = document.createElement('div');
-      prevPlay.style.cssText =
-        "font-family:'Courier New',monospace;font-size:9px;color:" +
-        getPlayTypeColor(selectedPlay.playType || selectedPlay.cardType) + ";";
-      prevPlay.textContent = selectedPlay.name;
-
-      preview.append(prevPlayer, prevPlus, prevPlay);
-      comboArea.appendChild(preview);
-    }
-
-    // SNAP / SPIKE / KNEEL buttons
-    var btnRow = document.createElement('div');
-    btnRow.style.cssText = 'display:flex;gap:4px;';
-
-    var snapBtn = document.createElement('button');
-    snapBtn.className = 'btn-blitz';
-    snapBtn.style.cssText =
-      'flex:1;font-size:12px;padding:10px;' +
-      (snapReady
-        ? 'background:var(--a-gold);border-color:var(--a-gold);color:#000;animation:snapPulse 1.5s infinite;'
-        : 'opacity:0.3;');
-    snapBtn.disabled = !snapReady;
-    snapBtn.textContent = 'SNAP';
-    snapBtn.onclick = snapReady ? function() { executeHumanSnap(); } : null;
-    btnRow.appendChild(snapBtn);
-
-    // 2-minute drill: spike + kneel
-    if (gs.twoMinActive && gs.possession === humanAbbr) {
-      var spikeBtn = document.createElement('button');
-      spikeBtn.className = 'btn-blitz';
-      spikeBtn.style.cssText = 'font-size:9px;padding:10px 8px;background:#333;border-color:#555;color:#fff;';
-      spikeBtn.textContent = 'SPIKE';
-      spikeBtn.onclick = function() { executeSpike(); };
-      btnRow.appendChild(spikeBtn);
-
-      var humanScore = humanAbbr === 'CT' ? gs.ctScore : gs.irScore;
-      var cpuScore = humanAbbr === 'CT' ? gs.irScore : gs.ctScore;
-      if (humanScore > cpuScore) {
-        var kneelBtn = document.createElement('button');
-        kneelBtn.className = 'btn-blitz';
-        kneelBtn.style.cssText = 'font-size:9px;padding:10px 8px;background:#333;border-color:#555;color:#fff;';
-        kneelBtn.textContent = 'KNEEL';
-        kneelBtn.onclick = function() { executeKneel(); };
-        btnRow.appendChild(kneelBtn);
-      }
-    }
-
-    comboArea.appendChild(btnRow);
-
-    // TORCH points display
-    var torchRow = document.createElement('div');
-    torchRow.style.cssText =
-      'display:flex;justify-content:space-between;margin-top:4px;' +
-      "font-family:'Courier New',monospace;font-size:7px;color:var(--muted);";
-    var humanPts = humanAbbr === 'CT' ? gs.ctTorchPts : gs.irTorchPts;
-    var cpuPts = humanAbbr === 'CT' ? gs.irTorchPts : gs.ctTorchPts;
-    torchRow.innerHTML =
-      '<span style="color:var(--a-gold);">TORCH ' + humanPts + '</span>' +
-      '<span>OPP TORCH ' + cpuPts + '</span>';
-    comboArea.appendChild(torchRow);
-  }
-
-  function renderNarrative(text, subtext) {
-    narrativeBar.innerHTML = '';
-    if (text) {
-      var line1 = document.createElement('div');
-      line1.style.cssText =
-        "font-family:'Barlow Condensed',sans-serif;font-size:14px;color:#fff;line-height:1.3;";
-      line1.textContent = text;
-      narrativeBar.appendChild(line1);
-    }
-    if (subtext) {
-      var line2 = document.createElement('div');
-      line2.style.cssText =
-        "font-family:'Courier New',monospace;font-size:8px;color:var(--muted);margin-top:2px;";
-      line2.textContent = subtext;
-      narrativeBar.appendChild(line2);
-    }
-  }
-
-  // === GAME ACTIONS ===
-
-  function executeHumanSnap() {
-    if (!selectedPlayer || !selectedPlay) return;
-    waitingForTap = true;
-
-    var isOnOffense = gs.possession === humanAbbr;
-    var snapResult;
-
-    if (isOnOffense) {
-      // Human on offense: pass offPlay + featuredOff, AI picks defense
-      snapResult = gs.executeSnap(selectedPlay, selectedPlayer, null, null);
-    } else {
-      // Human on defense: pass defPlay + featuredDef, AI picks offense
-      snapResult = gs.executeSnap(null, null, selectedPlay, selectedPlayer);
-    }
-
-    lastResult = snapResult;
-    selectedPlayer = null;
-    selectedPlay = null;
-
-    // Show result
-    showResult(snapResult);
-  }
-
-  function executeCPUSnap() {
-    waitingForTap = true;
-    var snapResult = gs.executeSnap(); // AI picks everything
-    lastResult = snapResult;
-    showResult(snapResult);
-  }
-
-  function executeSpike() {
-    waitingForTap = true;
-    gs.clockSeconds -= 3;
-    renderScorebug();
-    renderField();
-    renderNarrative('Spike! Clock stops.', 'Clock: ' + fmtClock(gs.clockSeconds));
-    showTapToContinue(function() {
-      waitingForTap = false;
-      afterSnap(null);
+  const hAbbr = GS.team === 'canyon_tech' ? 'CT' : 'IR';
+  const hTeam = getTeam(GS.team);
+  const oTeam = getOtherTeam(GS.team);
+  const isCT = GS.team === 'canyon_tech';
+
+  // engine
+  if (!GS.engine) {
+    const hOH = GS.offHand || (isCT ? CT_OFF_PLAYS.slice(0,5) : IR_OFF_PLAYS.slice(0,5));
+    const hDH = GS.defHand || (isCT ? CT_DEF_PLAYS.slice(0,5) : IR_DEF_PLAYS.slice(0,5));
+    const hOR = resolveRoster(GS.offRoster, hTeam.players);
+    const hDR = resolveRoster(GS.defRoster, hTeam.defPlayers);
+    const cOH = isCT ? IR_OFF_PLAYS.slice(0,5) : CT_OFF_PLAYS.slice(0,5);
+    const cDH = isCT ? IR_DEF_PLAYS.slice(0,5) : CT_DEF_PLAYS.slice(0,5);
+    const cOR = isCT ? IR_OFFENSE : CT_OFFENSE;
+    const cDR = isCT ? IR_DEFENSE : CT_DEFENSE;
+    GS.engine = new GameState({
+      humanTeam: hAbbr, difficulty: GS.difficulty||'MEDIUM', coachBadge: GS.coachBadge||'SCHEMER',
+      ctOffHand: isCT?hOH:cOH, ctDefHand: isCT?hDH:cDH,
+      irOffHand: isCT?cOH:hOH, irDefHand: isCT?cDH:hDH,
+      ctOffRoster: isCT?hOR:cOR, ctDefRoster: isCT?hDR:cDR,
+      irOffRoster: isCT?cOR:hOR, irDefRoster: isCT?cDR:hDR,
     });
   }
+  const gs = GS.engine;
 
-  function executeKneel() {
-    waitingForTap = true;
-    gs.clockSeconds -= 30;
-    renderScorebug();
-    renderField();
-    renderNarrative('Kneel. Clock runs.', 'Clock: ' + fmtClock(Math.max(0, gs.clockSeconds)));
-    showTapToContinue(function() {
-      waitingForTap = false;
-      afterSnap(null);
+  // ui state
+  let selP = null, selPl = null;
+  let phase = 'player'; // player | play | ready | busy
+  let driveSnaps = [];
+  let prev2min = gs.twoMinActive;
+
+  // dom
+  const el = document.createElement('div');
+  el.className = 'T';
+  const sty = document.createElement('style'); sty.textContent = CSS; el.appendChild(sty);
+
+  // ── SCOREBOARD (broadcast style) ──
+  const bug = document.createElement('div'); bug.className = 'T-sb'; el.appendChild(bug);
+  function drawBug() {
+    const s = gs.getSummary();
+    const ct = getTeam('canyon_tech'), ir = getTeam('iron_ridge');
+    const dn = ['','1ST','2ND','3RD','4TH'][s.down]||'';
+    const ctHasBall = s.possession === 'CT';
+    const halfLabel = s.twoMinActive ? '2-MIN' : ('H'+s.half);
+    const clockStr = s.twoMinActive ? fmtClock(Math.max(0,s.clockSeconds)) : 'SNAP '+ s.playsUsed +'/20';
+    const clockClass = s.twoMinActive ? 'T-sb-clock T-sb-clock-urgent' : 'T-sb-clock';
+
+    // Ball position display
+    const ydsToEz = s.yardsToEndzone;
+    const possTeam = ctHasBall ? ct : ir;
+    const defTeam = ctHasBall ? ir : ct;
+    const ballLabel = ydsToEz <= 50
+      ? defTeam.abbr + ' ' + ydsToEz
+      : possTeam.abbr + ' ' + (100-ydsToEz);
+
+    bug.innerHTML =
+      // Score row: icon | team+score | clock | team+score | icon
+      `<div class="T-sb-row">`+
+        `<div class="T-sb-icon">${ct.icon}</div>`+
+        `<div class="T-sb-team${ctHasBall?' T-sb-team-glow':''}">`+
+          `<div class="T-sb-name" style="color:${ct.accent}${ctHasBall?';text-shadow:0 0 12px '+ct.accent:''}">${ct.name}</div>`+
+          `<div class="T-sb-pts${ctHasBall?' T-sb-pts-glow':''}">${s.ctScore}</div>`+
+        `</div>`+
+        `<div class="T-sb-center">`+
+          `<div class="T-sb-qtr">${halfLabel}</div>`+
+          `<div class="${clockClass}">${clockStr}</div>`+
+        `</div>`+
+        `<div class="T-sb-team${!ctHasBall?' T-sb-team-glow':''}">`+
+          `<div class="T-sb-name" style="color:${ir.accent}${!ctHasBall?';text-shadow:0 0 12px '+ir.accent:''}">${ir.name}</div>`+
+          `<div class="T-sb-pts${!ctHasBall?' T-sb-pts-glow':''}">${s.irScore}</div>`+
+        `</div>`+
+        `<div class="T-sb-icon">${ir.icon}</div>`+
+      `</div>`+
+      // Situation bar: down & distance | ball position
+      `<div class="T-sb-sit">`+
+        `<div class="T-sb-sit-down">${dn} & ${s.distance}</div>`+
+        `<div class="T-sb-sit-div"></div>`+
+        `<div class="T-sb-sit-ball">BALL ON <span style="color:${possTeam.accent}">${ballLabel}</span></div>`+
+      `</div>`;
+  }
+
+  // ── FIELD STRIP ──
+  const strip = document.createElement('div'); strip.className = 'T-strip'; el.appendChild(strip);
+  function drawField() {
+    const s = gs.getSummary();
+    const lp = 6 + s.ballPosition * .88;
+    const td = s.possession==='CT' ? s.ballPosition+s.distance : s.ballPosition-s.distance;
+    const tp = 6 + Math.max(0,Math.min(100,td)) * .88;
+    const pc = s.possession==='CT' ? getTeam('canyon_tech').accent : getTeam('iron_ridge').accent;
+    let h = '<div class="T-zone T-zone-l"></div><div class="T-zone T-zone-r"></div>';
+    for (let i=10;i<=90;i+=10) h += `<div class="T-yard" style="left:${6+i*.88}%"></div>`;
+    h += `<div class="T-hash" style="top:33%"></div><div class="T-hash" style="top:67%"></div>`;
+    h += `<div class="T-los" style="left:${lp}%;background:${pc};box-shadow:0 0 10px ${pc}"></div>`;
+    h += `<div class="T-ltg" style="left:${tp}%;border-color:#c8a030"></div>`;
+    h += `<div class="T-marker" style="left:${lp}%;color:${pc}">${s.possession} \u00b7 ${s.yardsToEndzone} TO GO</div>`;
+    strip.innerHTML = h;
+  }
+
+  // ── PANEL ──
+  const panel = document.createElement('div'); panel.className = 'T-panel'; el.appendChild(panel);
+
+  // ── NARRATIVE ──
+  const narr = document.createElement('div'); narr.className = 'T-narr';
+  narr.innerHTML = '<div class="T-narr-1">Ready to play.</div><div class="T-narr-2">Tap a player to start.</div>';
+  el.appendChild(narr);
+  function setNarr(a, b) { narr.innerHTML = `<div class="T-narr-1">${a}</div><div class="T-narr-2">${b||''}</div>`; }
+
+  // ── RENDER PANEL ──
+  function drawPanel() {
+    panel.innerHTML = '';
+    const isOff = gs.possession === hAbbr;
+    const sides = gs.getCurrentSides();
+    const players = isOff ? sides.offPlayers.slice(0,4) : sides.defPlayers.slice(0,4);
+    const plays = isOff ? sides.offHand : sides.defHand;
+    panel.className = 'T-panel ' + (isOff ? 'T-panel-off' : 'T-panel-def');
+
+    // 2min check
+    if (gs.twoMinActive && !prev2min) { prev2min = true; el.classList.add('T-urgent'); show2MinWarn(); }
+
+    // instruction
+    const inst = document.createElement('div'); inst.className = 'T-inst';
+    inst.style.color = isOff ? '#c8a030' : '#30c0e0';
+    if (phase==='player') inst.textContent = isOff ? 'Feature a player' : 'Choose your defender';
+    else if (phase==='play') inst.textContent = isOff ? 'Call your play' : 'Set your scheme';
+    else inst.textContent = '';
+    panel.appendChild(inst);
+
+    // players (draft-style cards with art, OVR, badge)
+    const pr = document.createElement('div'); pr.className = 'T-prow';
+    players.forEach(p => {
+      const isSel = selP === p;
+      const tc = tierColor(p.ovr);
+      const borderCol = isSel ? '#00ff88' : tc + '44';
+      const c = document.createElement('div');
+      c.className = 'T-p' + (isSel?' T-p-sel':'') + (p.injured?' T-p-hurt':'');
+      c.style.border = '2px solid ' + borderCol;
+
+      // Selected bar
+      let selbar = '<div class="T-p-selbar"></div>';
+      // Header: POS+NAME left, OVR right
+      let hdr = `<div class="T-p-hdr"><div class="T-p-left"><div class="T-p-pos">${p.pos}</div><div class="T-p-name">${p.name}</div></div><div style="text-align:right"><div class="T-p-ovr" style="color:${tc};text-shadow:0 0 8px ${tc}66">${p.ovr}</div><div class="T-p-ovrlbl" style="color:${tc}">OVR</div></div></div>`;
+      // Art
+      const imgSrc = playerImg(p, hTeam, isOff);
+      let art = `<div class="T-p-art"><img src="${imgSrc}" alt="${p.name}" draggable="false"><div class="T-p-art-fade"></div></div>`;
+      // Nick
+      const nick = p.nick ? `<div class="T-p-nick">"${p.nick}"</div>` : '';
+      // Badge
+      let badge = p.badge ? `<div class="T-p-badge" style="filter:drop-shadow(0 0 ${isSel?'3px':'2px'} ${hTeam.accent}${isSel?'66':'4d'})">${badgeSvg(p.badge, isSel?'#00ff88':hTeam.accent)}</div>` : '';
+
+      c.innerHTML = selbar + hdr + art + nick + badge;
+      c.onclick = () => { if (p.injured || phase==='busy') return; SND.click(); selP = p; if (phase==='player') phase='play'; drawPanel(); };
+      pr.appendChild(c);
     });
-  }
+    panel.appendChild(pr);
 
-  function showResult(snapResult) {
-    var r = snapResult.result;
+    // plays (draft-style cards with diagram, hidden until player picked)
+    const pw = document.createElement('div'); pw.className = 'T-plays' + (phase==='player'?' T-plays-hidden':'');
+    plays.forEach(play => {
+      const isSel = selPl === play;
+      const mq = matchupQ(selP, play, gs.drivePlayHistory, isOff);
+      const tc = typeColor(play.playType || play.cardType);
+      const borderCol = isSel ? '#00ff88' : '#00ff8833';
+      const c = document.createElement('div');
+      c.className = 'T-pl' + (isSel?' T-pl-sel':'');
+      c.style.border = '2px solid ' + borderCol;
 
-    // Flash result text on field
-    var resultOverlay = document.createElement('div');
-    resultOverlay.style.cssText =
-      'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
-      'z-index:20;pointer-events:none;';
+      // Selected bar
+      let selbar = '<div class="T-pl-selbar"></div>';
+      // Header: name + type tag
+      let hdr = `<div class="T-pl-hdr"><div class="T-pl-name">${play.name}</div><div class="T-pl-tag" style="color:${tc};border-color:${tc}44">${play.playType||play.cardType}</div></div>`;
+      // Route diagram (zoomed like draft)
+      let svg = playSvg(play.id, isSel ? '#00ff88' : '#c8a030');
+      svg = svg.replace('viewBox="0 0 60 50"','viewBox="4 4 52 44"').replace('width="60" height="50"','width="100%" height="100%" preserveAspectRatio="xMidYMid meet"').replace(/stroke-width="1.5"/g,'stroke-width="2.5"').replace(/stroke-width="1"/g,'stroke-width="2"').replace(/r="3.5"/g,'r="4.5"').replace(/r="2.5"/g,'r="3.5"');
+      let diag = `<div class="T-pl-diag">${svg}</div>`;
+      // Footer: description + matchup dot
+      const desc = PLAY_DESC[play.id] || '';
+      const mqDot = mq ? `<span class="T-mq" style="background:${mqColor(mq)};box-shadow:0 0 4px ${mqColor(mq)}"></span>` : '';
+      let foot = `<div class="T-pl-foot"><span class="T-pl-desc">${desc}</span>${mqDot}</div>`;
 
-    var resultText = document.createElement('div');
-    resultText.style.cssText =
-      "font-family:'Bebas Neue',sans-serif;font-size:28px;text-align:center;" +
-      "padding:12px 20px;border-radius:8px;animation:resultFlash 0.5s ease-out;max-width:90%;";
-
-    if (r.isTouchdown) {
-      resultText.style.color = '#00ff44';
-      resultText.style.textShadow = '0 0 20px rgba(0,255,68,0.6)';
-      resultText.textContent = 'TOUCHDOWN!';
-    } else if (r.isInterception) {
-      resultText.style.color = '#ff0040';
-      resultText.style.textShadow = '0 0 20px rgba(255,0,64,0.6)';
-      resultText.textContent = 'INTERCEPTED!';
-    } else if (r.isFumbleLost) {
-      resultText.style.color = '#ff0040';
-      resultText.style.textShadow = '0 0 20px rgba(255,0,64,0.6)';
-      resultText.textContent = 'FUMBLE LOST!';
-    } else if (r.isSack) {
-      resultText.style.color = '#ff4d00';
-      resultText.style.textShadow = '0 0 20px rgba(255,77,0,0.6)';
-      resultText.textContent = 'SACK! ' + r.yards + ' YDS';
-    } else if (r.isSafety) {
-      resultText.style.color = '#ff0040';
-      resultText.style.textShadow = '0 0 20px rgba(255,0,64,0.6)';
-      resultText.textContent = 'SAFETY!';
-    } else if (r.isIncomplete) {
-      resultText.style.color = '#aaa';
-      resultText.textContent = 'INCOMPLETE';
-    } else if (r.yards >= 15) {
-      resultText.style.color = 'var(--a-gold)';
-      resultText.style.textShadow = '0 0 20px rgba(255,204,0,0.6)';
-      resultText.textContent = 'EXPLOSIVE! +' + r.yards;
-    } else if (r.yards >= 8) {
-      resultText.style.color = '#00eaff';
-      resultText.textContent = 'BIG GAIN +' + r.yards;
-    } else if (r.yards > 0) {
-      resultText.style.color = '#fff';
-      resultText.textContent = '+' + r.yards + ' YARDS';
-    } else {
-      resultText.style.color = '#ff4d00';
-      resultText.textContent = r.yards + ' YARDS';
-    }
-
-    resultOverlay.appendChild(resultText);
-    fieldArea.appendChild(resultOverlay);
-
-    // Narrative
-    var comboText = '';
-    if (r.offComboPts > 0) comboText += 'OFF COMBO +' + r.offComboYards + 'y ';
-    if (r.defComboPts > 0) comboText += 'DEF COMBO ' + r.defComboYards + 'y ';
-    if (r.historyBonus > 0) comboText += 'HISTORY +' + r.historyBonus;
-    else if (r.historyBonus < 0) comboText += 'REPEAT ' + r.historyBonus;
-
-    renderNarrative(
-      r.description,
-      (snapResult.offPlay.name + ' + ' + snapResult.featuredOff.name +
-       ' vs ' + snapResult.defPlay.name + ' + ' + snapResult.featuredDef.name +
-       (comboText ? '  |  ' + comboText : ''))
-    );
-
-    renderScorebug();
-    renderField();
-
-    // Fade out hand panel during result
-    handPanel.style.opacity = '0.15';
-    handPanel.style.pointerEvents = 'none';
-
-    showTapToContinue(function() {
-      resultOverlay.remove();
-      handPanel.style.opacity = '1';
-      handPanel.style.pointerEvents = 'auto';
-      waitingForTap = false;
-      afterSnap(snapResult);
+      c.innerHTML = selbar + hdr + diag + foot;
+      c.onclick = () => { if (phase==='busy') return; SND.click(); selPl = play; phase = 'ready'; drawPanel(); };
+      pw.appendChild(c);
     });
-  }
+    panel.appendChild(pw);
 
-  function showTapToContinue(callback) {
-    var tapHint = document.createElement('div');
-    tapHint.style.cssText =
-      "position:absolute;bottom:12px;left:50%;transform:translateX(-50%);" +
-      "font-family:'Press Start 2P',monospace;font-size:7px;color:var(--muted);" +
-      "letter-spacing:1px;z-index:25;animation:fadeIn 0.5s 0.8s both;cursor:pointer;";
-    tapHint.textContent = 'TAP TO CONTINUE';
-    fieldArea.appendChild(tapHint);
+    // snap zone
+    const sz = document.createElement('div'); sz.className = 'T-snap' + (phase!=='ready'?' T-snap-hidden':'');
+    if (selP && selPl) {
+      const mq = matchupQ(selP, selPl, gs.drivePlayHistory, isOff);
+      const mqL = mq==='green'?'COMBO':mq==='red'?'RISKY':'NEUTRAL';
+      const mqC = mqColor(mq);
+      const cb = document.createElement('div'); cb.className = 'T-combo';
+      cb.innerHTML =
+        `<span class="T-combo-lbl">${selP.name}</span>`+
+        `<span style="color:#554f80;font-size:10px">\u00b7</span>`+
+        `<span class="T-combo-lbl">${selPl.name}</span>`+
+        `<span class="T-combo-sig" style="color:${mqC};background:${mqC}12;border:1px solid ${mqC}30">${mqL}</span>`;
+      sz.appendChild(cb);
 
-    var handler = function() {
-      tapHint.remove();
-      fieldArea.removeEventListener('click', handler);
-      el.removeEventListener('click', elHandler);
-      callback();
-    };
-    var elHandler = function(e) {
-      if (e.target === tapHint || fieldArea.contains(e.target)) return;
-      tapHint.remove();
-      fieldArea.removeEventListener('click', handler);
-      el.removeEventListener('click', elHandler);
-      callback();
-    };
-    // Delay to prevent immediate tap
-    setTimeout(function() {
-      fieldArea.addEventListener('click', handler);
-      el.addEventListener('click', elHandler);
-    }, 500);
-  }
-
-  function afterSnap(snapResult) {
-    // Check for game events
-    if (snapResult && snapResult.gameEvent === 'touchdown') {
-      showConversionChoice(snapResult.scoringTeam);
-      return;
-    }
-
-    if (gs.gameOver) {
-      showEndGame();
-      return;
-    }
-
-    // Check half transition
-    var sum = gs.getSummary();
-
-    // Possession change announcement
-    if (snapResult && (snapResult.gameEvent === 'interception' ||
-        snapResult.gameEvent === 'fumble_lost' ||
-        snapResult.gameEvent === 'turnover_on_downs' ||
-        snapResult.gameEvent === 'safety' ||
-        snapResult.gameEvent === 'turnover_td')) {
-      showPossessionChange();
-      return;
-    }
-
-    // Continue game
-    continueGame();
-  }
-
-  function showPossessionChange() {
-    var isHumanBall = gs.possession === humanAbbr;
-    var transText = isHumanBall ? 'YOUR BALL' : "OPPONENT'S BALL";
-    var transColor = isHumanBall ? '#00ff88' : '#ff4444';
-
-    renderNarrative(transText, 'Ball at the ' + gs.ballPosition);
-
-    var overlay = document.createElement('div');
-    overlay.style.cssText =
-      'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:20;';
-    var txt = document.createElement('div');
-    txt.style.cssText =
-      "font-family:'Bebas Neue',sans-serif;font-size:32px;color:" + transColor + ";" +
-      "letter-spacing:3px;animation:resultFlash 0.5s ease-out;" +
-      "text-shadow:0 0 20px " + transColor + ";";
-    txt.textContent = transText;
-    overlay.appendChild(txt);
-    fieldArea.appendChild(overlay);
-
-    showTapToContinue(function() {
-      overlay.remove();
-      continueGame();
-    });
-  }
-
-  function showConversionChoice(scoringTeam) {
-    var isHumanScoring = scoringTeam === humanAbbr;
-
-    if (!isHumanScoring) {
-      // CPU auto-picks XP
-      gs.handleConversion('xp');
-      renderScorebug();
-      renderNarrative('Extra point is GOOD.', scoringTeam + ' adds the free point.');
-      showTapToContinue(function() {
-        if (gs.gameOver) { showEndGame(); return; }
-        showPossessionChange();
-      });
-      return;
-    }
-
-    // Human chooses
-    waitingForTap = false;
-    handPanel.style.opacity = '1';
-    handPanel.style.pointerEvents = 'auto';
-
-    comboArea.innerHTML = '';
-    playerArea.innerHTML = '';
-    playArea.innerHTML = '';
-
-    var choiceLabel = document.createElement('div');
-    choiceLabel.style.cssText =
-      "font-family:'Press Start 2P',monospace;font-size:8px;color:var(--a-gold);" +
-      "letter-spacing:1px;text-align:center;margin-bottom:8px;";
-    choiceLabel.textContent = 'CONVERSION';
-    comboArea.appendChild(choiceLabel);
-
-    var choices = [
-      { id: 'xp', label: 'EXTRA POINT', sub: 'FREE 1 PT', color: '#00ff88' },
-      { id: '2pt', label: '2-POINT', sub: 'FROM THE 5', color: '#00eaff' },
-      { id: '3pt', label: '3-POINT', sub: 'FROM THE 10', color: 'var(--a-gold)' },
-    ];
-
-    choices.forEach(function(ch) {
-      var btn = document.createElement('button');
-      btn.className = 'btn-blitz';
-      btn.style.cssText =
-        'width:100%;font-size:11px;margin-bottom:4px;padding:10px;' +
-        'background:transparent;border-color:' + ch.color + ';color:' + ch.color + ';';
-      btn.innerHTML = ch.label + ' <span style="font-size:8px;opacity:0.6;">' + ch.sub + '</span>';
-      btn.onclick = function() {
-        SND.snap();
-        var convResult = gs.handleConversion(ch.id);
-        renderScorebug();
-        if (ch.id === 'xp') {
-          renderNarrative('Extra point is GOOD.', '+1 point');
-        } else {
-          var pts = ch.id === '2pt' ? 2 : 3;
-          if (convResult.success) {
-            renderNarrative(pts + '-POINT CONVERSION GOOD!', '+' + pts + ' points');
-          } else {
-            renderNarrative(pts + '-point conversion FAILED.', 'No good.');
-          }
+      // 2min buttons
+      if (gs.twoMinActive && isOff) {
+        const btns = document.createElement('div'); btns.className = 'T-2btns';
+        const spk = document.createElement('button'); spk.className = 'T-2btn T-spike'; spk.textContent = 'SPIKE';
+        spk.onclick = () => { SND.click(); gs.spike(); selP=null;selPl=null;phase='player'; drawBug();drawField(); setNarr('Ball spiked.',fmtClock(Math.max(0,gs.clockSeconds))+' left'); if(!checkEnd()) drawPanel(); };
+        btns.appendChild(spk);
+        const hS = hAbbr==='CT'?gs.ctScore:gs.irScore, cS = hAbbr==='CT'?gs.irScore:gs.ctScore;
+        if (hS > cS) {
+          const kn = document.createElement('button'); kn.className = 'T-2btn T-kneel'; kn.textContent = 'KNEEL';
+          kn.onclick = () => { SND.click(); gs.kneel(); selP=null;selPl=null;phase='player'; drawBug();drawField(); setNarr('QB kneels.',fmtClock(Math.max(0,gs.clockSeconds))+' left'); if(!checkEnd()) drawPanel(); };
+          btns.appendChild(kn);
         }
-        waitingForTap = true;
-        showTapToContinue(function() {
-          waitingForTap = false;
-          if (gs.gameOver) { showEndGame(); return; }
-          showPossessionChange();
-        });
-      };
-      comboArea.appendChild(btn);
-    });
+        sz.appendChild(btns);
+      }
 
-    renderScorebug();
+      const go = document.createElement('button'); go.className = 'T-go'; go.textContent = 'SNAP';
+      go.onclick = () => doSnap();
+      sz.appendChild(go);
+    }
+    panel.appendChild(sz);
   }
 
-  function showEndGame() {
-    // Clean up landscape mode
-    root.classList.remove('gameplay-active');
-    try { screen.orientation.unlock(); } catch (e) {}
-    setGs(function(s) {
-      return Object.assign({}, s, {
-        screen: 'end_game',
-        finalState: gs,
-        humanAbbr: humanAbbr,
-      });
+  // ── SNAP ──
+  function doSnap() {
+    phase = 'busy';
+    const isOff = gs.possession === hAbbr;
+    const prevPoss = gs.possession;
+    const res = isOff ? gs.executeSnap(selPl, selP, null, null) : gs.executeSnap(null, null, selPl, selP);
+    driveSnaps.push(res);
+    selP = null; selPl = null;
+
+    showResult(res, () => {
+      drawBug(); drawField();
+      if (res.gameEvent === 'touchdown') { showConv(res.scoringTeam); return; }
+      if (posChanged(res.gameEvent, prevPoss)) {
+        showPossCut(res.gameEvent, () => { showDrive(driveSnaps, prevPoss, () => { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
+      } else { if(!checkEnd()) nextSnap(); }
     });
   }
 
-  function continueGame() {
-    if (gs.gameOver) {
-      showEndGame();
+  function nextSnap() {
+    phase = 'player';
+    drawPanel();
+    // Human always picks cards — on offense they pick offPlay+player,
+    // on defense they pick defPlay+player. doSnap() passes them in the right slots.
+    // No auto-CPU here — the human taps SNAP every time.
+  }
+
+  // ── RESULT OVERLAY ──
+  function showResult(res, done) {
+    const r = res.result;
+    const col = r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
+    const txt = r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE' : r.isIncomplete?'INCOMPLETE' : r.isSafety?'SAFETY' : (r.yards>=0?'+':'')+r.yards+' YDS';
+    const bd = breakdown(res.offPlay, res.defPlay, r, res.featuredOff, res.featuredDef);
+    setNarr(r.description, bd);
+
+    const ov = document.createElement('div'); ov.className = 'T-ov T-ov-dark T-ov-result';
+    ov.style.cssText = 'opacity:0;transition:opacity .25s';
+    ov.innerHTML =
+      `<div class="T-r-play">${res.offPlay.name} vs ${res.defPlay.name}</div>`+
+      `<div class="T-r-big" style="color:${col}">${txt}</div>`+
+      `<div class="T-r-sub">${bd}</div>`;
+    el.appendChild(ov);
+    requestAnimationFrame(() => ov.style.opacity='1');
+    setTimeout(() => { ov.style.opacity='0'; setTimeout(() => { ov.remove(); done(); }, 250); }, 2400);
+  }
+
+  // ── POSSESSION CUT ──
+  function posChanged(ev, prev) {
+    if (ev && ['interception','fumble_lost','turnover_on_downs','safety','turnover_td'].includes(ev)) return true;
+    return gs.possession !== prev;
+  }
+
+  function showPossCut(ev, done) {
+    const s = gs.getSummary();
+    const nt = s.possession==='CT' ? getTeam('canyon_tech') : getTeam('iron_ridge');
+    const ov = document.createElement('div'); ov.className = 'T-ov T-ov-black T-ov-poss';
+    ov.style.cssText = 'opacity:0;transition:opacity .25s';
+    ov.innerHTML =
+      `<div class="T-poss-score">${s.ctScore} \u2013 ${s.irScore}</div>`+
+      `<div class="T-poss-who" style="color:${nt.accent}">${nt.name} BALL</div>`+
+      `<div class="T-poss-tag">${tag(ev)}</div>`;
+    el.appendChild(ov);
+    requestAnimationFrame(() => ov.style.opacity='1');
+    setTimeout(() => { ov.style.opacity='0'; setTimeout(() => { ov.remove(); done(); }, 250); }, 2000);
+  }
+
+  // ── DRIVE SUMMARY ──
+  function showDrive(log, poss, done) {
+    if (log.length < 2) { done(); return; }
+    const yds = log.reduce((s,r) => s + (r.result.yards||0), 0);
+    const td = log.some(r => r.result.isTouchdown);
+    const to = log.some(r => r.result.isInterception || r.result.isFumbleLost);
+    const dt = poss==='CT' ? getTeam('canyon_tech') : getTeam('iron_ridge');
+
+    panel.innerHTML = '';
+    const d = document.createElement('div'); d.className = 'T-drv';
+    d.style.cssText = 'opacity:0;transition:opacity .3s';
+    d.innerHTML =
+      `<div class="T-drv-hdr" style="color:${dt.accent}">${dt.abbr} DRIVE \u2014 ${log.length} PLAYS, ${yds} YDS</div>`+
+      (td ? '<div class="T-drv-stat" style="color:#3df58a">TOUCHDOWN</div>' : '')+
+      (to ? '<div class="T-drv-stat" style="color:#e03050">TURNOVER</div>' : '')+
+      (!td && !to ? '<div class="T-drv-stat">Drive over.</div>' : '');
+    panel.appendChild(d);
+    requestAnimationFrame(() => d.style.opacity='1');
+    setTimeout(done, 1800);
+  }
+
+  // ── CONVERSION ──
+  function showConv(team) {
+    const isH = team === hAbbr;
+    if (!isH) {
+      gs.handleConversion('xp'); drawBug(); setNarr('Extra point good.', '+1');
+      showPossCut('score', () => { showDrive(driveSnaps, team, () => { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
       return;
     }
-
-    renderScorebug();
-    renderField();
-
-    var isHumanBall = gs.possession === humanAbbr;
-    if (isHumanBall) {
-      // Human's turn on offense — show hand
-      renderHand();
-      renderNarrative(
-        gs.down + (gs.down === 1 ? 'st' : gs.down === 2 ? 'nd' : gs.down === 3 ? 'rd' : 'th') +
-        ' & ' + gs.distance + ' at the ' + gs.ballPosition,
-        'Select a player and a play, then SNAP.'
-      );
-    } else {
-      // CPU's turn on offense, human on defense — show defense hand
-      renderHand();
-      renderNarrative(
-        'Opponent ball. ' + gs.down + (gs.down === 1 ? 'st' : gs.down === 2 ? 'nd' : gs.down === 3 ? 'rd' : 'th') +
-        ' & ' + gs.distance,
-        'Select a defender and a defensive call, then SNAP.'
-      );
-    }
+    panel.innerHTML = '';
+    const w = document.createElement('div'); w.className = 'T-conv';
+    w.innerHTML = '<div class="T-conv-hdr">TOUCHDOWN</div>';
+    [{id:'xp',lbl:'EXTRA POINT +1',sub:'Automatic',col:'#3df58a'},
+     {id:'2pt',lbl:'2-PT CONV +2',sub:'From the 5',col:'#c8a030'},
+     {id:'3pt',lbl:'3-PT CONV +3',sub:'From the 10',col:'#e03050'}].forEach(c => {
+      const b = document.createElement('button'); b.className = 'T-conv-btn';
+      b.style.cssText = `color:${c.col};border:1.5px solid ${c.col}`;
+      b.innerHTML = `${c.lbl}<br><span style="font-size:6px;color:#554f80">${c.sub}</span>`;
+      b.onclick = () => {
+        SND.snap();
+        const r = gs.handleConversion(c.id); drawBug();
+        setNarr(c.id==='xp'?'Extra point good.':(r.success?c.lbl+' GOOD!':c.lbl+' NO GOOD.'), r.success?'+'+r.points:'Failed.');
+        showPossCut('score', () => { showDrive(driveSnaps, team, () => { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
+      };
+      w.appendChild(b);
+    });
+    panel.appendChild(w);
   }
 
-  // === ASSEMBLE ===
-  handPanel.append(playerArea, playScrollArea, comboArea);
-  mainArea.append(fieldArea, handPanel);
-  el.append(mainArea, narrativeBar);
+  // ── 2-MIN WARNING ──
+  function show2MinWarn() {
+    const ov = document.createElement('div'); ov.className = 'T-ov T-ov-black T-ov-poss';
+    ov.style.cssText = 'opacity:0;transition:opacity .25s';
+    ov.innerHTML =
+      '<div class="T-poss-score" style="color:#e03050">2:00</div>'+
+      '<div class="T-poss-who" style="color:#e03050">2-MINUTE WARNING</div>'+
+      '<div class="T-poss-tag">Every second counts.</div>';
+    el.appendChild(ov);
+    requestAnimationFrame(() => ov.style.opacity='1');
+    setTimeout(() => { ov.style.opacity='0'; setTimeout(() => ov.remove(), 250); }, 2000);
+  }
 
-  // Initial render
-  renderScorebug();
-  renderField();
-  continueGame();
+  // ── COIN TOSS OVERLAY ──
+  function showCoinToss(onDone) {
+    var pool = TORCH_CARDS.filter(function(c) { return c.tier !== 'GOLD'; });
+    var shuffled = pool.slice().sort(function() { return Math.random() - 0.5; });
+    var offers = shuffled.slice(0, 3);
+    var humanWins = Math.random() < 0.5;
+
+    var ov = document.createElement('div');
+    ov.className = 'T-ov T-ov-black';
+    ov.style.cssText += 'pointer-events:auto;flex-direction:column;gap:14px;padding:20px;opacity:0;transition:opacity .3s;';
+
+    // Coin animation
+    ov.innerHTML =
+      "<div style='width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#FFD700,#B8860B);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 0 25px rgba(255,204,0,.4);animation:T-coin 1.5s ease-out forwards'>\uD83C\uDFC8</div>" +
+      "<div style=\"font-family:'Bebas Neue';font-size:24px;color:#fff;letter-spacing:2px\">COIN TOSS...</div>";
+
+    el.appendChild(ov);
+    requestAnimationFrame(function() { ov.style.opacity = '1'; });
+
+    setTimeout(function() {
+      var winner = humanWins ? hTeam.name : oTeam.name;
+      ov.innerHTML = '';
+
+      // Result
+      var resultDiv = document.createElement('div');
+      resultDiv.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:340px;';
+      resultDiv.innerHTML =
+        "<div style=\"font-family:'Bebas Neue';font-size:26px;color:var(--a-gold);letter-spacing:2px\">" + winner + " WINS THE TOSS</div>";
+
+      if (humanWins) {
+        resultDiv.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Press Start 2P';font-size:7px;color:var(--muted);letter-spacing:1px\">CHOOSE YOUR REWARD</div>");
+
+        var cardRow = document.createElement('div');
+        cardRow.style.cssText = 'display:flex;gap:6px;width:100%;';
+        offers.forEach(function(card) {
+          var ce = document.createElement('div');
+          var tierCol = card.tier === 'SILVER' ? '#aaa' : '#CD7F32';
+          ce.style.cssText = 'flex:1;background:var(--bg-surface);border:2px solid ' + tierCol + ';border-radius:6px;padding:10px 6px;cursor:pointer;text-align:center;transition:all .15s;';
+          ce.innerHTML =
+            "<div style=\"font-family:'Courier New';font-size:7px;font-weight:bold;color:" + tierCol + ";letter-spacing:1px;margin-bottom:3px\">" + card.tier + "</div>" +
+            "<div style=\"font-family:'Bebas Neue';font-size:14px;color:#fff;line-height:1.1;margin-bottom:3px\">" + card.name + "</div>" +
+            "<div style=\"font-family:'Courier New';font-size:7px;color:var(--muted);line-height:1.3\">" + card.effect + "</div>";
+          ce.onclick = function() {
+            SND.snap();
+            ce.style.transform = 'scale(1.1)';
+            ce.style.boxShadow = '0 0 30px var(--a-gold)';
+            setTimeout(function() { ov.style.opacity = '0'; setTimeout(function() { ov.remove(); onDone([card]); }, 250); }, 400);
+          };
+          cardRow.appendChild(ce);
+        });
+        resultDiv.appendChild(cardRow);
+
+        resultDiv.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Press Start 2P';font-size:7px;color:var(--muted);letter-spacing:2px\">\u2014 OR \u2014</div>");
+
+        var recBtn = document.createElement('button');
+        recBtn.className = 'btn-blitz';
+        recBtn.style.cssText = 'width:100%;font-size:11px;background:var(--a-gold);border-color:var(--a-gold);color:#000;';
+        recBtn.textContent = 'RECEIVE AT THE 50';
+        recBtn.onclick = function() { SND.snap(); ov.style.opacity = '0'; setTimeout(function() { ov.remove(); onDone([], true); }, 250); };
+        resultDiv.appendChild(recBtn);
+      } else {
+        var cpuCard = offers[0];
+        resultDiv.innerHTML +=
+          "<div style=\"font-family:'Barlow Condensed';font-size:14px;color:var(--muted);line-height:1.4;text-align:center\">" +
+            oTeam.name + " takes a " + cpuCard.tier + " Torch Card.<br>You receive at the 50." +
+          "</div>";
+        var playBtn = document.createElement('button');
+        playBtn.className = 'btn-blitz';
+        playBtn.style.cssText = 'width:100%;font-size:14px;background:var(--a-gold);border-color:var(--a-gold);color:#000;margin-top:8px;';
+        playBtn.textContent = 'PLAY BALL';
+        playBtn.onclick = function() { SND.snap(); ov.style.opacity = '0'; setTimeout(function() { ov.remove(); onDone([], true); }, 250); };
+        resultDiv.appendChild(playBtn);
+      }
+
+      ov.appendChild(resultDiv);
+    }, 1800);
+  }
+
+  // ── RULES OVERLAY ──
+  function showRules(onDone) {
+    var ov = document.createElement('div');
+    ov.className = 'T-ov T-ov-dark';
+    ov.style.cssText += 'pointer-events:auto;flex-direction:column;gap:12px;padding:24px;opacity:0;transition:opacity .3s;cursor:pointer;';
+    ov.innerHTML =
+      "<div style=\"font-family:'Bebas Neue';font-size:30px;color:var(--a-gold);letter-spacing:3px\">HOW TO PLAY</div>" +
+      "<div style=\"font-family:'Barlow Condensed';font-size:16px;color:#ccc;line-height:1.6;text-align:center;max-width:300px\">" +
+        "20 snaps per half<br>" +
+        "2-minute warning after snap 20<br>" +
+        "Real countdown clock<br>" +
+        "Both teams go for it on 4th down<br>" +
+      "</div>" +
+      "<div style=\"font-family:'Press Start 2P';font-size:7px;color:var(--muted);letter-spacing:1px;margin-top:8px\">TAP TO START</div>";
+    el.appendChild(ov);
+    requestAnimationFrame(function() { ov.style.opacity = '1'; });
+    ov.onclick = function() { SND.click(); ov.style.opacity = '0'; setTimeout(function() { ov.remove(); onDone(); }, 250); };
+  }
+
+  // ── TRANSITIONS ──
+  function checkEnd() {
+    if (gs.gameOver) { setTimeout(() => setGs(s => ({...s, screen:'end_game', finalEngine:gs, humanAbbr:hAbbr})), 1200); return true; }
+    if (gs.needsHalftime) { setTimeout(() => setGs(s => ({...s, screen:'halftime'})), 1200); return true; }
+    return false;
+  }
+
+  // ── INIT ──
+  drawBug(); drawField();
+  if (gs.twoMinActive) { prev2min = true; el.classList.add('T-urgent'); }
+
+  // First load: coin toss overlay → rules overlay → then enable play
+  if (!GS._coinTossDone) {
+    GS._coinTossDone = true;
+    // Show empty panel behind overlay
+    drawPanel();
+    showCoinToss(function(torchCards, humanReceives) {
+      // Store torch cards from coin toss
+      if (torchCards && torchCards.length) {
+        torchCards.forEach(function(c) { gs.humanTorchCards.push(c.id); });
+      }
+      showRules(function() {
+        phase = 'player';
+        drawPanel();
+      });
+    });
+  } else {
+    drawPanel();
+  }
 
   return el;
 }

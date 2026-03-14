@@ -129,6 +129,7 @@ export function buildHome(){
           offHand:offHand,
           defHand:defHand,
           humanReceives:true,
+          _coinTossDone:true,
         };
       });
     };

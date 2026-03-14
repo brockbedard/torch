@@ -482,7 +482,7 @@ export function buildCardDraft() {
             next.roster = null;
           } else {
             next.defHand = hand;
-            next.screen = 'coin_toss';
+            next.screen = 'gameplay';
           }
           return next;
         });
