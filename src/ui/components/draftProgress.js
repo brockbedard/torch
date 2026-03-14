@@ -21,7 +21,7 @@ export function buildDraftProgress(currentStep) {
     const pill = document.createElement('div');
     pill.style.cssText =
       'display:flex;align-items:center;gap:4px;' +
-      'font-family:"Press Start 2P",monospace;font-size:6px;letter-spacing:.5px;' +
+      'font-family:"Press Start 2P",monospace;font-size:8px;letter-spacing:.5px;' +
       'color:' + (isCurrent ? 'var(--a-gold,#ffcc00)' : isPast ? '#aaa' : '#444') + ';' +
       'transition:color 0.3s;';
 
@@ -33,8 +33,8 @@ export function buildDraftProgress(currentStep) {
     } else {
       indicator.textContent = stepIdx;
       indicator.style.cssText =
-        'width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;' +
-        'font-size:6px;flex-shrink:0;' +
+        'width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;' +
+        'font-size:7px;flex-shrink:0;' +
         (isCurrent
           ? 'background:var(--a-gold,#ffcc00);color:#000;box-shadow:0 0 8px rgba(255,204,0,0.4);'
           : 'background:#222;color:#555;');
