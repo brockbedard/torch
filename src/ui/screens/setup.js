@@ -1,29 +1,12 @@
 import { SND } from '../../engine/sound.js';
 import { GS, setGs } from '../../state.js';
+import { TEAMS } from '../../data/teams.js';
+import { buildDraftProgress } from '../components/draftProgress.js';
 
 /* ═══════════════════════════════════════════
-   SVG ASSETS
+   SVG ASSETS (coaches + stadiums)
    ═══════════════════════════════════════════ */
 
-// CT Helmet — burnt orange, angular, cactus icon
-const SVG_CT_HELMET = `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
-  <defs><linearGradient id="cth" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ff7a30"/><stop offset="100%" stop-color="#cc4a00"/></linearGradient></defs>
-  <path d="M25,75 L20,40 Q18,15 45,10 L80,8 Q105,8 108,30 L110,50 L112,60 L100,62 L98,55 L95,75 Z" fill="url(#cth)" stroke="#8a3500" stroke-width="1.5"/>
-  <rect x="95" y="38" width="18" height="8" rx="2" fill="#8a3500" opacity=".4"/>
-  <path d="M108,35 L115,42 M108,42 L115,35 M108,48 L115,55 M108,55 L115,48" stroke="#cc4a00" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M55,25 L55,45 M50,35 L55,25 L60,35 M48,45 L55,45 L62,45 M48,45 L48,50 M62,45 L62,50" stroke="#fff" stroke-width="1.5" fill="none" opacity=".6"/>
-</svg>`;
-
-// IR Helmet — navy blue, bulky, trident icon
-const SVG_IR_HELMET = `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
-  <defs><linearGradient id="irh" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2a4a7a"/><stop offset="100%" stop-color="#0a1a3a"/></linearGradient></defs>
-  <path d="M22,78 L18,42 Q15,12 48,8 L82,6 Q112,6 115,35 L115,55 L118,65 L105,68 L102,58 L100,78 Z" fill="url(#irh)" stroke="#0a1a3a" stroke-width="2"/>
-  <rect x="100" y="40" width="20" height="10" rx="3" fill="#0a1a3a" opacity=".4"/>
-  <path d="M112,38 L120,46 M112,46 L120,38 M112,52 L120,60 M112,60 L120,52" stroke="#1a3a6a" stroke-width="3" stroke-linecap="round"/>
-  <path d="M55,20 L55,48 M55,20 L48,28 M55,20 L62,28 M55,20 L55,14 L52,10 M55,14 L58,10 M55,14 L55,8" stroke="#8ab4e8" stroke-width="2" fill="none" stroke-linecap="round" opacity=".7"/>
-</svg>`;
-
-// CT Coach Ricky Vance — lean, aviators, burnt orange polo, yelling, pointing
 const SVG_CT_COACH = `<svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
   <ellipse cx="50" cy="108" rx="35" ry="12" fill="#1a0800" opacity=".3"/>
   <path d="M35,65 L30,110 L70,110 L65,65 Z" fill="#e05a10"/>
@@ -40,7 +23,6 @@ const SVG_CT_COACH = `<svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/s
   <path d="M47,73 L47,65 L53,65 L53,73" fill="#d4a574"/>
 </svg>`;
 
-// IR Coach Dale Burris — stocky, stone-faced, navy windbreaker, arms crossed, flat-top
 const SVG_IR_COACH = `<svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
   <ellipse cx="50" cy="108" rx="38" ry="12" fill="#000a1a" opacity=".3"/>
   <path d="M28,68 L22,112 L78,112 L72,68 Z" fill="#1a2a4a"/>
@@ -59,7 +41,6 @@ const SVG_IR_COACH = `<svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/s
   <path d="M47,70 L47,65 L53,65 L53,70" fill="#c49a70"/>
 </svg>`;
 
-// CT Stadium "The Furnace" — desert bowl interior, warm tones
 const SVG_CT_STADIUM = `<svg viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/svg">
   <rect width="200" height="90" fill="#1a0800"/>
   <path d="M0,20 Q50,0 100,5 Q150,0 200,20 L200,50 L0,50 Z" fill="#cc4a00" opacity=".25"/>
@@ -73,7 +54,6 @@ const SVG_CT_STADIUM = `<svg viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/
   <rect x="0" y="85" width="200" height="5" fill="#0a0400"/>
 </svg>`;
 
-// IR Stadium "The Forge" — industrial fortress interior, cold/dark
 const SVG_IR_STADIUM = `<svg viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/svg">
   <rect width="200" height="90" fill="#060a14"/>
   <path d="M0,18 Q50,2 100,6 Q150,2 200,18 L200,50 L0,50 Z" fill="#1a2a4a" opacity=".3"/>
@@ -86,43 +66,32 @@ const SVG_IR_STADIUM = `<svg viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/
   <rect x="55" y="5" width="4" height="45" fill="#2a3a5a" opacity=".3"/>
   <rect x="141" y="5" width="4" height="45" fill="#2a3a5a" opacity=".3"/>
   <rect x="181" y="10" width="4" height="40" fill="#2a3a5a" opacity=".3"/>
-  <rect x="0" y="50" width="200" height="1" fill="#3a5a8a" opacity=".2"/>
   <rect x="0" y="85" width="200" height="5" fill="#020610"/>
 </svg>`;
 
 /* ═══════════════════════════════════════════
-   TEAM DATA (extended, not in src/data/)
+   EXTENDED TEAM DATA
    ═══════════════════════════════════════════ */
-const TEAM_DATA = {
+const XDATA = {
   canyon_tech: {
-    id: 'canyon_tech', fullName: 'CANYON TECH CACTI', color: '#FF5E1A', accent: '#ff8844',
     coach: 'COACH RICKY VANCE', quote: '"If we\'re not scoring, we\'re not trying."',
-    scheme: 'AIR RAID OFFENSE \u00b7 SEND EVERYBODY DEFENSE',
-    motto: 'BURN THE COVERAGE', est: 'Est. 1974 \u2014 3x Conference Champions',
-    sigPlay: 'FOUR VERTS', stars: 'Avery 78 QB \u00b7 Vasquez 82 SLOT',
+    motto: 'BURN THE COVERAGE', est: 'Est. 1974 \u2014 3x Conf. Champs',
+    sigPlay: 'FOUR VERTS', starPlayers: 'Avery 78 QB \u00b7 Vasquez 82 SLOT',
     stadium: 'THE FURNACE',
-    ratings: { off: 4, def: 3, spd: 5, tgh: 2, ovr: 4 },
-    helmetSvg: SVG_CT_HELMET, coachSvg: SVG_CT_COACH, stadiumSvg: SVG_CT_STADIUM,
-    bg: 'linear-gradient(180deg, #1a0800 0%, #0d0400 100%)',
+    ratings: { OFF:4, DEF:3, SPD:5, TGH:2, OVR:4 },
+    coachSvg: SVG_CT_COACH, stadiumSvg: SVG_CT_STADIUM,
   },
   iron_ridge: {
-    id: 'iron_ridge', fullName: 'IRON RIDGE TRIDENTS', color: '#4488cc', accent: '#8ab4e8',
-    coach: 'COACH DALE BURRIS', quote: '"You don\'t need to throw the ball. You need to want it more."',
-    scheme: 'TRIPLE OPTION OFFENSE \u00b7 HARD NOSED DEFENSE',
-    motto: 'CONTROL THE LINE', est: 'Est. 1961 \u2014 5x Conference Champions',
-    sigPlay: 'TRIPLE OPTION', stars: 'Kendrick 80 QB \u00b7 Torres 82 FB',
+    coach: 'COACH DALE BURRIS', quote: '"You don\'t need to throw. You need to want it more."',
+    motto: 'CONTROL THE LINE', est: 'Est. 1961 \u2014 5x Conf. Champs',
+    sigPlay: 'TRIPLE OPTION', starPlayers: 'Kendrick 80 QB \u00b7 Torres 82 FB',
     stadium: 'THE FORGE',
-    ratings: { off: 3, def: 4, spd: 2, tgh: 5, ovr: 4 },
-    helmetSvg: SVG_IR_HELMET, coachSvg: SVG_IR_COACH, stadiumSvg: SVG_IR_STADIUM,
-    bg: 'linear-gradient(180deg, #060a14 0%, #020610 100%)',
+    ratings: { OFF:3, DEF:4, SPD:2, TGH:5, OVR:4 },
+    coachSvg: SVG_IR_COACH, stadiumSvg: SVG_IR_STADIUM,
   },
 };
 
-function stars(n) {
-  let s = '';
-  for (let i = 0; i < 5; i++) s += i < n ? '\u2605' : '\u2606';
-  return s;
-}
+function starStr(n) { var s=''; for(var i=0;i<5;i++) s += i<n?'\u2605':'\u2606'; return s; }
 
 /* ═══════════════════════════════════════════
    BUILD
@@ -133,182 +102,193 @@ export function buildSetup() {
   var selDiff = GS.difficulty;
 
   var el = document.createElement('div');
-  el.style.cssText = 'height:100vh;display:flex;flex-direction:column;background:#06050f;overflow:hidden;';
+  el.className = 'sup';
+  el.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;background:var(--bg);';
 
-  // inject styles
-  var sty = document.createElement('style');
-  sty.textContent = `
-    .su-back{font-family:'Bebas Neue';font-size:22px;padding:8px 18px;cursor:pointer;background:#fff;color:#000;border:none;border-radius:6px;display:flex;align-items:center;gap:6px;letter-spacing:1px}
-    .su-back:active{transform:scale(.96)}
-    .su-cards{flex:1;display:flex;gap:8px;padding:8px;overflow:hidden}
-    .su-card{flex:1;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;display:flex;flex-direction:column;transition:all .15s;border:2px solid transparent}
-    .su-card-sel{border-color:#00ff88;box-shadow:0 0 24px rgba(0,255,136,.3)}
-    .su-card:active{transform:scale(.98)}
-    .su-card-inner{flex:1;padding:10px 10px 6px;display:flex;flex-direction:column;overflow-y:auto;gap:4px}
-    .su-helmet{width:60px;height:50px;margin:0 auto}
-    .su-name{font-family:'Bebas Neue';font-size:18px;letter-spacing:2px;text-align:center;line-height:1}
-    .su-coach-row{display:flex;gap:6px;align-items:center}
-    .su-coach-svg{width:36px;height:44px;flex-shrink:0}
-    .su-coach-info{flex:1}
-    .su-coach-name{font-family:'Courier New';font-size:7px;font-weight:700;letter-spacing:.5px}
-    .su-quote{font-family:'Barlow Condensed';font-size:10px;font-style:italic;opacity:.6;line-height:1.2}
-    .su-stadium{width:100%;height:36px;border-radius:4px;overflow:hidden;margin:2px 0}
-    .su-stadium-lbl{font-family:'Press Start 2P';font-size:5px;text-align:center;letter-spacing:1px;opacity:.5;margin-top:1px}
-    .su-detail{font-family:'Courier New';font-size:7px;opacity:.6;line-height:1.5}
-    .su-ratings{display:grid;grid-template-columns:1fr 1fr;gap:1px 8px;margin-top:2px}
-    .su-rat{font-family:'Courier New';font-size:7px;display:flex;justify-content:space-between}
-    .su-rat-lbl{opacity:.5}
-    .su-rat-stars{letter-spacing:-1px}
-    .su-bottom{padding:6px 8px 10px;flex-shrink:0;display:flex;flex-direction:column;gap:6px}
-    .su-diff-row{display:flex;gap:6px}
-    .su-diff{flex:1;padding:10px 4px;font-family:'Press Start 2P';font-size:9px;text-align:center;border-radius:6px;cursor:pointer;border:2px solid;transition:all .12s;background:none}
-    .su-diff:active{transform:scale(.96)}
-    .su-go{width:100%;padding:14px;font-family:'Bebas Neue';font-size:22px;letter-spacing:4px;color:#000;border:none;border-radius:8px;cursor:pointer;background:linear-gradient(180deg,#f0c020,#c8a010);box-shadow:0 4px 20px rgba(200,160,16,.25)}
-    .su-go:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
-    .su-go:active:not(:disabled){transform:scale(.97)}
-  `;
-  el.appendChild(sty);
+  // ── Progress bar (step 1) ──
+  el.appendChild(buildDraftProgress(1));
 
-  // ── HEADER (back button only) ──
+  // ── Header bar (matches draft/cardDraft pattern) ──
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'padding:8px 10px;flex-shrink:0;display:flex;align-items:center;';
+  hdr.style.cssText =
+    'background:rgba(0,0,0,0.5);padding:10px 14px;display:flex;justify-content:space-between;' +
+    'align-items:center;flex-shrink:0;border-bottom:2px solid var(--f-purple);';
+
+  var hdrTitle = document.createElement('div');
+  hdrTitle.style.cssText =
+    'display:flex;align-items:baseline;gap:0;font-style:italic;transform:skewX(-10deg);';
+  var hdrName = document.createElement('span');
+  hdrName.style.cssText =
+    "font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--a-gold);" +
+    "letter-spacing:2px;text-shadow:2px 2px 0 #000, 0 0 10px var(--a-gold);";
+  hdrName.textContent = 'TORCH';
+  var hdrSub = document.createElement('span');
+  hdrSub.style.cssText =
+    "font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--muted);" +
+    "letter-spacing:1px;margin-left:6px;";
+  hdrSub.textContent = '\u00b7 TEAM SELECT';
+  hdrTitle.append(hdrName, hdrSub);
+  hdr.appendChild(hdrTitle);
+
   var backBtn = document.createElement('button');
-  backBtn.className = 'su-back';
-  backBtn.innerHTML = '\u2190 BACK';
+  backBtn.style.cssText =
+    "font-family:'Press Start 2P',monospace;font-size:8px;padding:10px 16px;" +
+    "cursor:pointer;background:#000;color:var(--white);border:2px solid #333;";
+  backBtn.textContent = '\u2190 BACK';
   backBtn.onclick = function() { SND.click(); setGs(null); };
   hdr.appendChild(backBtn);
   el.appendChild(hdr);
 
-  // ── TEAM CARDS ──
-  var cardsRow = document.createElement('div');
-  cardsRow.className = 'su-cards';
+  // ── Content (fills remaining space) ──
+  var content = document.createElement('div');
+  content.style.cssText =
+    'flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px;';
 
-  function buildTeamCard(td) {
-    var isSel = selTeam === td.id;
-    var card = document.createElement('div');
-    card.className = 'su-card' + (isSel ? ' su-card-sel' : '');
-    card.style.background = td.bg;
+  // Section header
+  var teamTitle = document.createElement('div');
+  teamTitle.className = 'chrome-header';
+  teamTitle.style.cssText = 'font-size:22px;margin-bottom:4px;';
+  teamTitle.textContent = 'SELECT YOUR TEAM';
+  content.appendChild(teamTitle);
 
-    var inner = document.createElement('div');
-    inner.className = 'su-card-inner';
-
-    // Helmet
-    inner.innerHTML =
-      `<div class="su-helmet">${td.helmetSvg}</div>` +
-      `<div class="su-name" style="color:${td.color}">${td.fullName}</div>` +
-      // Coach row
-      `<div class="su-coach-row">` +
-        `<div class="su-coach-svg">${td.coachSvg}</div>` +
-        `<div class="su-coach-info">` +
-          `<div class="su-coach-name" style="color:${td.accent}">${td.coach}</div>` +
-          `<div class="su-quote" style="color:${td.accent}">${td.quote}</div>` +
-        `</div>` +
-      `</div>` +
-      // Stadium
-      `<div class="su-stadium">${td.stadiumSvg}</div>` +
-      `<div class="su-stadium-lbl" style="color:${td.accent}">HOME: ${td.stadium}</div>` +
-      // Details
-      `<div class="su-detail" style="color:${td.accent}">` +
-        `${td.scheme}<br>` +
-        `<span style="font-weight:700">${td.motto}</span><br>` +
-        `${td.est}<br>` +
-        `Signature: ${td.sigPlay}<br>` +
-        `${td.stars}` +
-      `</div>` +
-      // Ratings
-      `<div class="su-ratings">` +
-        `<div class="su-rat"><span class="su-rat-lbl">OFF</span><span class="su-rat-stars" style="color:${td.color}">${stars(td.ratings.off)}</span></div>` +
-        `<div class="su-rat"><span class="su-rat-lbl">DEF</span><span class="su-rat-stars" style="color:${td.color}">${stars(td.ratings.def)}</span></div>` +
-        `<div class="su-rat"><span class="su-rat-lbl">SPD</span><span class="su-rat-stars" style="color:${td.color}">${stars(td.ratings.spd)}</span></div>` +
-        `<div class="su-rat"><span class="su-rat-lbl">TGH</span><span class="su-rat-stars" style="color:${td.color}">${stars(td.ratings.tgh)}</span></div>` +
-        `<div class="su-rat"><span class="su-rat-lbl">OVR</span><span class="su-rat-stars" style="color:${td.color}">${stars(td.ratings.ovr)}</span></div>` +
-      `</div>`;
-
-    card.appendChild(inner);
-    card.onclick = function() {
-      SND.select();
-      selTeam = td.id;
-      GS.team = td.id;
-      refreshCards();
-      refreshGo();
-    };
-    return card;
-  }
-
-  function refreshCards() {
-    cardsRow.innerHTML = '';
-    cardsRow.appendChild(buildTeamCard(TEAM_DATA.canyon_tech));
-    cardsRow.appendChild(buildTeamCard(TEAM_DATA.iron_ridge));
-  }
-
-  el.appendChild(cardsRow);
-
-  // ── BOTTOM: difficulty + go ──
-  var bottom = document.createElement('div');
-  bottom.className = 'su-bottom';
-
-  // Difficulty row (no labels, no descriptions)
+  // Difficulty row (compact)
   var diffRow = document.createElement('div');
-  diffRow.className = 'su-diff-row';
-
+  diffRow.style.cssText = 'display:flex;gap:8px;margin-bottom:6px;';
   var diffs = [
-    { id: 'EASY', color: '#00ff44' },
-    { id: 'MEDIUM', color: '#ffcc00' },
-    { id: 'HARD', color: '#ff0040' },
+    { id:'EASY', color:'var(--l-green)', glow:'rgba(0,255,68,0.4)' },
+    { id:'MEDIUM', color:'var(--a-gold)', glow:'rgba(255,204,0,0.4)' },
+    { id:'HARD', color:'var(--p-red)', glow:'rgba(255,0,64,0.4)' },
   ];
-
   function refreshDiffs() {
     diffRow.innerHTML = '';
     diffs.forEach(function(d) {
       var isSel = selDiff === d.id;
-      var btn = document.createElement('button');
-      btn.className = 'su-diff';
-      btn.style.cssText = isSel
-        ? 'background:' + d.color + ';color:#000;border-color:' + d.color + ';box-shadow:0 0 12px ' + d.color + '44;'
-        : 'color:' + d.color + ';border-color:' + d.color + '55;opacity:.5;';
-      btn.textContent = d.id;
-      btn.onclick = function() {
-        SND.select();
-        selDiff = d.id;
-        GS.difficulty = d.id;
-        refreshDiffs();
-        refreshGo();
-      };
-      diffRow.appendChild(btn);
+      var opt = document.createElement('button');
+      opt.className = 'btn-blitz';
+      opt.style.cssText = 'flex:1;font-size:10px;text-align:center;padding:10px 2px;' +
+        (isSel
+          ? 'background:'+d.color+';color:#000;border-color:'+d.color+';box-shadow:0 0 15px '+d.glow+';'
+          : 'background:transparent;border-color:'+d.color+';color:'+d.color+';opacity:0.5;');
+      opt.textContent = d.id;
+      opt.onclick = function() { SND.select(); selDiff=d.id; GS.difficulty=d.id; refreshDiffs(); refreshGo(); };
+      diffRow.appendChild(opt);
     });
   }
+  content.appendChild(diffRow);
 
-  bottom.appendChild(diffRow);
+  // Team cards (stacked, each fills ~half remaining space)
+  var teamGrid = document.createElement('div');
+  teamGrid.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:8px;';
 
-  // Go button
+  function ratingRow(label, val, color) {
+    return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">' +
+      "<span style=\"font-family:'Courier New';font-size:9px;font-weight:bold;color:#8a86b0\">" + label + "</span>" +
+      "<span style=\"font-family:'Courier New';font-size:11px;color:"+color+";letter-spacing:-1px\">" + starStr(val) + "</span>" +
+    '</div>';
+  }
+
+  function refreshTeams() {
+    teamGrid.innerHTML = '';
+    TEAMS.forEach(function(team) {
+      var isSel = selTeam === team.id;
+      var x = XDATA[team.id];
+
+      var card = document.createElement('div');
+      card.style.cssText =
+        'flex:1;background:var(--bg-surface);position:relative;' +
+        'border:2px solid ' + (isSel ? '#00ff88' : team.accent+'44') + ';' +
+        'border-radius:8px;cursor:pointer;overflow:hidden;' +
+        'transition:all 0.15s ease;display:flex;flex-direction:column;' +
+        'opacity:' + (isSel ? '1' : '0.8') + ';' +
+        (isSel
+          ? 'box-shadow:0 0 20px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08);'
+          : 'box-shadow:0 4px 20px rgba(0,0,0,0.5);');
+
+      if (isSel) {
+        var bar = document.createElement('div');
+        bar.style.cssText = 'position:absolute;top:0;left:50%;transform:translateX(-50%);width:36px;height:3px;background:#00ff88;border-radius:0 0 3px 3px;z-index:3;';
+        card.appendChild(bar);
+      }
+
+      // ── TOP HALF: Team identity ──
+      var top = document.createElement('div');
+      top.style.cssText =
+        'display:flex;gap:10px;padding:10px 12px 8px;' +
+        (isSel ? 'background:linear-gradient(180deg, rgba(0,255,136,0.08) 0%, transparent 100%);' : '');
+
+      // Icon + coach
+      top.innerHTML =
+        '<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;width:60px;">' +
+          '<div style="font-size:44px;line-height:1;filter:drop-shadow(0 0 12px '+team.accent+')">' + team.icon + '</div>' +
+          '<div style="width:44px;height:52px">' + x.coachSvg + '</div>' +
+        '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          // Big team name
+          "<div style=\"font-family:'Bebas Neue';font-size:26px;color:"+team.accent+";line-height:1;letter-spacing:2px;" +
+          (isSel ? "text-shadow:0 0 12px "+team.accent+";" : "") +
+          "\">" + team.name + " " + (team.id==='canyon_tech'?'CACTI':'TRIDENTS') + "</div>" +
+          // Coach + quote
+          "<div style=\"font-family:'Courier New';font-size:8px;font-weight:bold;color:"+team.accent+";margin-top:3px\">" + x.coach + "</div>" +
+          "<div style=\"font-family:'Barlow Condensed';font-size:12px;font-style:italic;color:"+team.accent+";opacity:.6;line-height:1.2\">" + x.quote + "</div>" +
+          // Scheme + details
+          "<div style=\"font-family:'Courier New';font-size:8px;color:"+team.accent+";opacity:.5;margin-top:4px;line-height:1.5\">" +
+            team.style + " OFFENSE \u00b7 " + team.defStyle + " DEFENSE<br>" +
+            "<span style='font-weight:bold;opacity:1'>" + x.motto + "</span> \u00b7 " + x.est + "<br>" +
+            "Sig: " + x.sigPlay + " \u00b7 " + x.starPlayers +
+          "</div>" +
+        '</div>';
+      card.appendChild(top);
+
+      // ── BOTTOM HALF: Stadium + Ratings ──
+      var botWrap = document.createElement('div');
+      botWrap.style.cssText =
+        'flex:1;padding:6px 12px 8px;border-top:1px solid rgba(255,255,255,0.04);' +
+        'display:flex;flex-direction:column;justify-content:center;gap:4px;';
+
+      // Stadium
+      botWrap.innerHTML =
+        '<div style="width:100%;height:30px;border-radius:4px;overflow:hidden">' + x.stadiumSvg + '</div>' +
+        "<div style=\"font-family:'Press Start 2P';font-size:5px;color:"+team.accent+";opacity:.5;letter-spacing:.5px\">HOME: " + x.stadium + "</div>" +
+        // Ratings with full labels and stars
+        "<div style='margin-top:4px'>" +
+          ratingRow('OFFENSE', x.ratings.OFF, team.accent) +
+          ratingRow('DEFENSE', x.ratings.DEF, team.accent) +
+          ratingRow('SPEED', x.ratings.SPD, team.accent) +
+          ratingRow('TOUGHNESS', x.ratings.TGH, team.accent) +
+          ratingRow('OVERALL', x.ratings.OVR, team.accent) +
+        "</div>";
+      card.appendChild(botWrap);
+
+      card.onclick = function() { SND.select(); selTeam=team.id; GS.team=team.id; refreshTeams(); refreshGo(); };
+      teamGrid.appendChild(card);
+    });
+  }
+  content.appendChild(teamGrid);
+
+  // Go button (pinned at bottom)
   var goBtn = document.createElement('button');
-  goBtn.className = 'su-go';
-
   function refreshGo() {
     var ready = selTeam && selDiff;
+    goBtn.className = 'btn-blitz';
     goBtn.disabled = !ready;
+    goBtn.style.cssText = 'margin-top:6px;' + (ready
+      ? 'background:var(--a-gold);border-color:var(--a-gold);color:#000;box-shadow:0 0 30px rgba(255,204,0,0.6);font-size:16px;'
+      : 'opacity:0.3;');
     goBtn.textContent = ready ? 'START DRAFT \u2192' : 'SELECT A TEAM';
     goBtn.onclick = ready ? function() {
       SND.snap();
       setGs(function(s) {
         return Object.assign({}, s, {
-          screen: 'draft',
-          team: selTeam,
-          difficulty: selDiff,
-          coachBadge: 'SCHEMER', // default since coach selector removed
-          side: 'offense',
-          roster: null, offRoster: null, offHand: null,
-          defRoster: null, defHand: null
+          screen:'draft', team:selTeam, difficulty:selDiff, coachBadge:'SCHEMER',
+          side:'offense', roster:null, offRoster:null, offHand:null, defRoster:null, defHand:null
         });
       });
     } : null;
   }
+  content.appendChild(goBtn);
+  el.appendChild(content);
 
-  bottom.appendChild(goBtn);
-  el.appendChild(bottom);
-
-  // init
-  refreshCards();
+  refreshTeams();
   refreshDiffs();
   refreshGo();
 

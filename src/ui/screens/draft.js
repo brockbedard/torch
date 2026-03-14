@@ -1,6 +1,7 @@
 import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam, shuffle } from '../../state.js';
 import { badgeSvg } from '../../data/badges.js';
+import { buildDraftProgress } from '../components/draftProgress.js';
 
 function getPlayerImage(player, team, side) {
   var prefix = team.abbr.toLowerCase();
@@ -15,11 +16,16 @@ function buildPlayerCard(player, team, side, isSel, size) {
   var artH = isLarge ? 200 : 160;
   var nameSize = isLarge ? 22 : 18;
   var imgSrc = getPlayerImage(player, team, side);
+  
+  // Tier color logic
+  var tierColor = '#CD7F32'; // Bronze
+  if (player.ovr >= 85) tierColor = 'var(--a-gold)';
+  else if (player.ovr >= 75) tierColor = '#aaa';
 
   var card = document.createElement('div');
   card.style.cssText =
     'background:var(--bg-surface);' +
-    'border:2px solid ' + (isSel ? '#00ff88' : '#00ff8866') + ';' +
+    'border:2px solid ' + (isSel ? '#00ff88' : tierColor + '44') + ';' +
     'border-radius:6px;' +
     'padding:0;' +
     'cursor:pointer;' +
@@ -70,16 +76,16 @@ function buildPlayerCard(player, team, side, isSel, size) {
 
   var ovrNum = document.createElement('div');
   ovrNum.style.cssText =
-    'font-family:"Courier New",monospace;font-size:' + (isLarge ? 36 : 30) + 'px;' +
-    'font-weight:bold;color:#00eaff;line-height:1;' +
-    'text-shadow:0 0 10px rgba(0,234,255,0.6), 0 0 20px rgba(0,234,255,0.3);';
+    'font-family:"Courier New",monospace;font-size:' + (isLarge ? 38 : 32) + 'px;' +
+    'font-weight:bold;color:' + tierColor + ';line-height:1;' +
+    'text-shadow:0 0 10px ' + tierColor + '66;';
   ovrNum.textContent = player.ovr;
 
   var ovrLabel = document.createElement('div');
   ovrLabel.style.cssText =
-    'font-family:"Courier New",monospace;font-size:8px;font-weight:bold;' +
-    'color:#00eaff;opacity:0.5;letter-spacing:2px;line-height:1;margin-top:1px;';
-  ovrLabel.textContent = 'OVERALL';
+    'font-family:"Courier New",monospace;font-size:9px;font-weight:bold;' +
+    'color:' + tierColor + ';opacity:0.8;letter-spacing:1px;line-height:1;margin-top:1px;';
+  ovrLabel.textContent = 'OVR';
 
   rightCol.appendChild(ovrNum);
   rightCol.appendChild(ovrLabel);
@@ -157,11 +163,14 @@ export function buildDraft() {
   var primaryPlayers = playerPool.filter(function(p) { return p.cat === (isDef ? 'lb' : 'qb'); });
   var skillPlayers = playerPool.filter(function(p) { return p.cat === 'skill'; });
 
+  // Progress Bar
+  el.appendChild(buildDraftProgress(2));
+
   // Header bar
   var hdr = document.createElement('div');
   hdr.style.cssText =
     'background:rgba(0,0,0,0.5);padding:10px 14px;display:flex;justify-content:space-between;' +
-    'align-items:center;flex-shrink:0;border-bottom:2px solid var(--f-purple);';
+    'align-items:center;flex-shrink:0;border-bottom:3px solid ' + team.accent + ';';
   var schemeName = isDef ? team.defStyle : team.style;
   var teamBrand = document.createElement('div');
   teamBrand.style.cssText =
@@ -187,7 +196,23 @@ export function buildDraft() {
   backBtn.textContent = '\u2190 BACK';
   backBtn.onclick = function() {
     SND.click();
-    setGs(function(s) { return Object.assign({}, s, { screen: 'setup', team: GS.team, side: GS.side }); });
+    setGs(function(s) {
+      if (!isDef) {
+        return Object.assign({}, s, { 
+          screen: 'setup', 
+          side: null,
+          roster: null,
+          offRoster: null,
+          offHand: null
+        });
+      } else {
+        return Object.assign({}, s, {
+          screen: 'card_draft',
+          side: 'offense',
+          roster: s.offRoster // Keep offense roster
+        });
+      }
+    });
   };
   hdr.appendChild(backBtn);
   el.appendChild(hdr);
@@ -202,8 +227,24 @@ export function buildDraft() {
   var title = document.createElement('div');
   title.className = 'chrome-header';
   title.style.fontSize = '22px';
-  title.textContent = '4. DRAFT YOUR SQUAD';
+  title.textContent = isDef ? 'PICK DEFENSIVE PLAYERS' : 'PICK OFFENSIVE PLAYERS';
   content.appendChild(title);
+
+  // Auto-pick
+  var autoBtn = document.createElement('button');
+  autoBtn.style.cssText = 'font-family:"Press Start 2P",monospace; font-size:7px; color:var(--cyan); background:none; border:1px solid var(--cyan); padding:6px 10px; cursor:pointer; align-self:flex-end; margin-bottom:10px; border-radius:15px; opacity:0.7;';
+  autoBtn.textContent = '\u26A1 AUTO-PICK';
+  autoBtn.onclick = function() {
+    SND.click();
+    selPrimary = primaryPlayers.reduce((best, p) => p.ovr > best.ovr ? p : best).id;
+    var topSkills = [...skillPlayers].sort((a,b) => b.ovr - a.ovr).slice(0, 3);
+    selSkill = {};
+    topSkills.forEach(s => selSkill[s.id] = true);
+    refreshPrimary();
+    refreshSkills();
+    refreshGoBtn();
+  };
+  content.appendChild(autoBtn);
 
   // State
   var selPrimary = null;

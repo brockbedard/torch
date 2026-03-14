@@ -1,6 +1,7 @@
 import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam, getOffCards, getDefCards, shuffle } from '../../state.js';
 import { playSvg } from '../../data/playDiagrams.js';
+import { buildDraftProgress } from '../components/draftProgress.js';
 
 var HIGH_RISK = ['four_verts','go_route','y_corner','zero_cov','db_blitz'];
 var MED_RISK = ['mesh','slant','overload','fire_zone','a_gap_mug','edge_crash','pa_post','pa_flat','man_press','zone_drop','triple_option','zone_read'];
@@ -214,6 +215,18 @@ function buildPlayCard(card, isSel, staggerIdx) {
   footer.textContent = SHORT_DESC[card.id] || card.desc;
   cel.appendChild(footer);
 
+  // Matchup Intel Badge
+  var intel = document.createElement('div');
+  intel.style.cssText = 'position:absolute;top:40px;right:8px;font-family:"Press Start 2P";font-size:5px;background:rgba(0,234,255,0.15);color:var(--cyan);padding:3px 5px;border-radius:4px;border:1px solid rgba(0,234,255,0.3);z-index:5;';
+  var beats = {
+    'mesh': 'BEATS MAN', 'slant': 'BEATS BLITZ', 'four_verts': 'BEATS COV 2', 
+    'triple_option': 'BEATS EDGE', 'ir_robber': 'STOPS SLANT', 'ct_corner_blitz': 'STOPS DEEP'
+  };
+  if (beats[card.id]) {
+    intel.textContent = 'ADV: ' + beats[card.id];
+    cel.appendChild(intel);
+  }
+
   return cel;
 }
 
@@ -226,6 +239,9 @@ export function buildCardDraft() {
   var isOff = GS.side === 'offense';
   var pool = isOff ? getOffCards(GS.team) : getDefCards(GS.team);
   var schemeName = isOff ? team.style : team.defStyle;
+
+  // Progress Bar
+  el.appendChild(buildDraftProgress(3));
 
   // Inject animations
   var styleEl = document.createElement('style');
@@ -243,7 +259,7 @@ export function buildCardDraft() {
   var hdr = document.createElement('div');
   hdr.style.cssText =
     'background:rgba(0,0,0,0.5);padding:10px 14px;display:flex;justify-content:space-between;' +
-    'align-items:center;flex-shrink:0;border-bottom:2px solid var(--f-purple);';
+    'align-items:center;flex-shrink:0;border-bottom:3px solid ' + team.accent + ';';
 
   var teamBrand = document.createElement('div');
   teamBrand.style.cssText =
@@ -270,7 +286,23 @@ export function buildCardDraft() {
   backBtn.onclick = function() {
     SND.click();
     setGs(function(s) {
-      return Object.assign({}, s, { screen: 'draft', team: GS.team, side: GS.side });
+      if (isOff) {
+        return Object.assign({}, s, { 
+          screen: 'draft', 
+          side: 'offense',
+          roster: null,
+          offRoster: null,
+          offHand: null
+        });
+      } else {
+        return Object.assign({}, s, {
+          screen: 'draft',
+          side: 'defense',
+          roster: null,
+          defRoster: null,
+          defHand: null
+        });
+      }
     });
   };
   hdr.appendChild(backBtn);
@@ -282,12 +314,29 @@ export function buildCardDraft() {
     'flex:1;overflow-y:auto;padding:20px 16px 80px;display:flex;flex-direction:column;gap:10px;' +
     'position:relative;z-index:2;';
 
-  // Title — "5. DRAFT YOUR PLAYS" matching chrome-header style from draft.js
+  // Title — Renamed and numbering removed
   var title = document.createElement('div');
   title.className = 'chrome-header';
   title.style.fontSize = '22px';
-  title.textContent = '5. DRAFT YOUR PLAYS';
+  title.textContent = isOff ? 'PICK OFFENSIVE PLAYS' : 'PICK DEFENSIVE PLAYS';
   content.appendChild(title);
+
+  // Auto-pick
+  var autoBtn = document.createElement('button');
+  autoBtn.style.cssText = 'font-family:"Press Start 2P",monospace; font-size:7px; color:var(--cyan); background:none; border:1px solid var(--cyan); padding:6px 10px; cursor:pointer; align-self:flex-end; margin-bottom:10px; border-radius:15px; opacity:0.7;';
+  autoBtn.textContent = '\u26A1 AUTO-PICK';
+  autoBtn.onclick = function() {
+    SND.click();
+    selected = {};
+    var indices = pool.map(function(_, i) { return i; });
+    var shuffledIndices = shuffle(indices);
+    shuffledIndices.slice(0, 5).forEach(function(i) {
+      selected[pool[i].id + '_' + i] = pool[i];
+    });
+    refreshCards();
+    refreshGoBtn();
+  };
+  content.appendChild(autoBtn);
 
   // Section label — matches "QUARTERBACK — PICK 1" on player draft
   var sectionLabel = document.createElement('div');
@@ -390,31 +439,45 @@ export function buildCardDraft() {
     goBtn.onclick = ready ? function() {
       SND.click();
       var hand = Object.keys(selected).map(function(k) { return selected[k]; });
-      setGs(function(s) {
-        var next = Object.assign({}, s);
-        // Store current draft results by side
-        if (GS.side === 'offense') {
-          next.offRoster = GS.roster;
-          next.offHand = hand;
-        } else {
-          next.defRoster = GS.roster;
-          next.defHand = hand;
-        }
-        // Check if we need to draft the other side
-        if (!next.offRoster || !next.offHand) {
-          next.screen = 'draft';
-          next.side = 'offense';
-          next.roster = null;
-        } else if (!next.defRoster || !next.defHand) {
-          next.screen = 'draft';
-          next.side = 'defense';
-          next.roster = null;
-        } else {
-          // Both sides drafted — go to coin toss
-          next.screen = 'coin_toss';
-        }
-        return next;
-      });
+      
+      function proceed() {
+        setGs(function(s) {
+          var next = Object.assign({}, s);
+          if (GS.side === 'offense') {
+            next.offRoster = GS.roster;
+            next.offHand = hand;
+            next.screen = 'draft';
+            next.side = 'defense';
+            next.roster = null;
+          } else {
+            next.defRoster = GS.roster;
+            next.defHand = hand;
+            next.screen = 'coin_toss';
+          }
+          return next;
+        });
+      }
+
+      if (GS.side === 'offense') {
+        var overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:#000;z-index:5000;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.4s;';
+        var msg = document.createElement('div');
+        msg.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--a-gold);letter-spacing:4px;font-style:italic;";
+        msg.textContent = 'OFFENSE LOCKED. SWITCHING TO DEFENSE...';
+        overlay.appendChild(msg);
+        document.body.appendChild(overlay);
+        
+        setTimeout(() => overlay.style.opacity = '1', 10);
+        setTimeout(() => {
+          proceed();
+          setTimeout(() => {
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.remove(), 400);
+          }, 800);
+        }, 1200);
+      } else {
+        proceed();
+      }
     } : null;
   }
 
