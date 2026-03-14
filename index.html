@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <meta name="theme-color" content="#07050e">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#09081A">
   <link rel="manifest" href="/manifest.json">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>🔥 TORCH — The Football Card Game</title>
@@ -16,6 +17,8 @@
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
+  <div id="fs-banner" onclick="document.documentElement.requestFullscreen().then(()=>this.remove()).catch(()=>this.remove())" style="display:none;background:#F5B800;color:#000;text-align:center;padding:10px;font-family:'Press Start 2P',monospace;font-size:10px;cursor:pointer;letter-spacing:1px;position:relative;z-index:10000;">TAP TO GO FULLSCREEN</div>
+  <script>if(window.innerWidth<=1024&&document.fullscreenEnabled&&!document.fullscreenElement)document.getElementById('fs-banner').style.display='block';</script>
   <div id="root"></div>
   <!-- Modularized JS Entry Point -->
   <script type="module" src="/src/main.js"></script>

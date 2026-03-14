@@ -15,6 +15,9 @@ const root = document.getElementById('root');
 function render() {
   SND.crowdStop();
   root.innerHTML = '';
+  // Clean up gameplay landscape mode when leaving
+  root.classList.remove('gameplay-active');
+  try { screen.orientation.unlock(); } catch (e) {}
   let content;
 
   if (!GS) {

@@ -82,3 +82,81 @@ body { color: white; font-family: 'Barlow Condensed', sans-serif; display: flex;
   font-family: 'Bebas Neue', sans-serif; font-size: 24px; font-style: italic;
   box-shadow: 0 0 30px var(--p-red); z-index: 2; color: white; margin: 0 -15px; flex-shrink: 0;
 }
+
+/* === GAMEPLAY LANDSCAPE MODE === */
+#root.gameplay-active {
+  max-width: none;
+}
+#root.gameplay-active::after {
+  max-width: none;
+}
+
+/* Portrait rotation overlay — hidden by default */
+.rotate-overlay { display: none; }
+
+@keyframes rotatePhone {
+  0%, 15% { transform: rotate(0deg); }
+  40%, 60% { transform: rotate(-90deg); }
+  85%, 100% { transform: rotate(0deg); }
+}
+@keyframes arrowPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  .rotate-overlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--bg);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+  }
+  .rotate-phone {
+    width: 48px; height: 80px;
+    border: 3px solid var(--a-gold);
+    border-radius: 10px;
+    position: relative;
+    animation: rotatePhone 3s ease-in-out infinite;
+  }
+  .rotate-phone::before {
+    content: '';
+    position: absolute;
+    bottom: 6px; left: 50%; transform: translateX(-50%);
+    width: 8px; height: 8px;
+    border: 2px solid var(--a-gold);
+    border-radius: 50%;
+  }
+  .rotate-phone::after {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%; transform: translateX(-50%);
+    width: 16px; height: 2px;
+    background: var(--a-gold);
+    border-radius: 1px;
+    opacity: 0.5;
+  }
+  .rotate-arrow {
+    font-size: 32px;
+    color: var(--a-gold);
+    animation: arrowPulse 2s ease-in-out infinite;
+    margin-top: -12px;
+  }
+  .rotate-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--a-gold);
+    letter-spacing: 3px;
+    text-align: center;
+  }
+  .rotate-sub {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    color: var(--muted);
+    margin-top: -16px;
+  }
+}

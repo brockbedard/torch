@@ -1,17 +1,13 @@
 import { SND } from '../../engine/sound.js';
-import { render, setGs, getInitialScenario, VERSION, VERSION_NAME } from '../../state.js';
+import { render, setGs, getInitialScenario, getOffCards, getDefCards, VERSION, VERSION_NAME } from '../../state.js';
 
 var DEV_LOG = [
-  "Remove emojis from player draft cards",
-  "Fix modal offense/defense preview — not interactive, stop confusing testers",
-  "Add specialty badges to all 24 player cards",
-  "Fix play card selection visibility and add section label",
-  "Polish play card draft — sizing, readability, scheme in nav bar, consistency with player cards",
-  "Play diagram SVG test page with 4 sample formations",
-  "Play card draft screen with X's and O's diagrams and risk meters",
+  "v0.10.0+ — Gameplay engine built: snap resolver, AI opponent, game state manager, badge combos, play history, TORCH points, injuries. UI integration complete.",
+  "Codebase cleanup: removed dead files, untracked dist/, deduplicated badgeSvg, cleaned dead CSS",
+  "Phase 3 — UI integration: coin toss, gameplay screen, conversion choice, end game screen",
+  "Phase 2 — Engine core: snapResolver, gameState, aiOpponent, ovrSystem, redZone, playHistory",
+  "Phase 1 — Data layer: players, plays (offense+defense per team), torchCards, badges",
   "0.10.0 — Gameday Edition: arcade broadcast redesign, player art, Vite modular architecture",
-  "0.9.0 — Vite modularization, Vercel deploy, AI commentary",
-  "0.8.0 — Arcade Broadcast visual redesign",
 ];
 
 export function buildHome(){
@@ -22,7 +18,8 @@ export function buildHome(){
 
   // Dev changelog banner — localhost only
   var host=window.location.hostname;
-  if(host==='localhost'||host==='127.0.0.1'){
+  var isDev=host==='localhost'||host==='127.0.0.1'||/^192\.168\.\d+\.\d+$/.test(host)||/^10\.\d+\.\d+\.\d+$/.test(host);
+  if(isDev){
     var dismissed=false;
     var expanded=false;
     var banner=document.createElement('div');
@@ -107,6 +104,48 @@ export function buildHome(){
 
   playWrap.append(playBtn,freeBtn,devBtn);
   el.appendChild(playWrap);
+
+  // DEV-ONLY: Quick Play — skip all drafts, straight to gameplay
+  if(isDev){
+    var quickBtn=document.createElement('button');
+    quickBtn.style.cssText=
+      'position:fixed;bottom:12px;right:12px;z-index:9999;'+
+      'background:rgba(0,0,0,0.85);border:1px solid var(--cyan);border-radius:20px;'+
+      'padding:5px 10px;cursor:pointer;'+
+      'font-family:"Courier New",monospace;font-size:9px;color:var(--cyan);'+
+      'letter-spacing:0.5px;opacity:0.6;transition:opacity 0.15s;';
+    quickBtn.textContent='\u26A1 QP';
+    quickBtn.onmouseenter=function(){quickBtn.style.opacity='1';};
+    quickBtn.onmouseleave=function(){quickBtn.style.opacity='0.6';};
+    quickBtn.onclick=function(){
+      SND.click();
+      // CT starters per CLAUDE.md spec
+      var offRoster=['ct_q1','ct_s1','ct_s3','ct_s4']; // Avery, Sampson, Vasquez, Walsh
+      var defRoster=['ct_db1','ct_db3','ct_dl1','ct_db4']; // Crews, Knox, Wilder, Orozco
+      var offHand=getOffCards('canyon_tech').slice(0,5);
+      var defHand=getDefCards('canyon_tech').slice(0,5);
+      setGs(function(){
+        return {
+          screen:'gameplay',
+          team:'canyon_tech',
+          offRoster:offRoster,
+          defRoster:defRoster,
+          offHand:offHand,
+          defHand:defHand,
+          humanReceives:true,
+        };
+      });
+    };
+    document.body.appendChild(quickBtn);
+    // Clean up when home screen is removed from DOM
+    var observer = new MutationObserver(function() {
+      if (!document.body.contains(el)) {
+        quickBtn.remove();
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.getElementById('root'), { childList: true });
+  }
 
   var buildLabel=document.createElement('div');
   buildLabel.style.cssText='position:absolute;bottom:12px;width:100%;text-align:center;font-family:"Courier New",monospace;font-size:8px;color:#ffffff22;letter-spacing:1px;';

@@ -46,16 +46,33 @@ function mapRoster(playerIds, teamData, side) {
 
 /** Map drafted play card IDs to engine play data */
 function mapPlayHand(draftedCards, enginePlays) {
+  var used = {};
   return draftedCards.map(function(card) {
-    // Match by card.id to engine play id
-    var eng = enginePlays.find(function(ep) { return ep.id === card.id; });
-    if (eng) return eng;
-    // Fallback: try matching IR QB sneak
-    if (card.id === 'qb_sneak') {
-      var irSneak = enginePlays.find(function(ep) { return ep.id === 'ir_qb_sneak'; });
-      if (irSneak) return irSneak;
+    // 1. Exact ID match
+    var eng = enginePlays.find(function(ep) { return ep.id === card.id && !used[ep.id]; });
+    // 2. Card ID as suffix (e.g. 'overload' matches 'ct_overload_blitz')
+    if (!eng) {
+      eng = enginePlays.find(function(ep) {
+        return !used[ep.id] && ep.id.indexOf(card.id) >= 0;
+      });
     }
-    return enginePlays[0]; // Last resort
+    // 3. Match by name (case-insensitive)
+    if (!eng) {
+      var cardName = card.name.toUpperCase();
+      eng = enginePlays.find(function(ep) {
+        return !used[ep.id] && ep.name.toUpperCase() === cardName;
+      });
+    }
+    // 4. If card is already an engine play object (Quick Play path), use directly
+    if (!eng && card.playType !== undefined || card.cardType !== undefined && card.baseCoverage !== undefined) {
+      eng = card;
+    }
+    // 5. Last resort: first unused engine play
+    if (!eng) {
+      eng = enginePlays.find(function(ep) { return !used[ep.id]; }) || enginePlays[0];
+    }
+    used[eng.id] = true;
+    return eng;
   });
 }
 
@@ -67,6 +84,36 @@ export function buildGameplay() {
   el.style.cssText =
     'height:100vh;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;' +
     'user-select:none;-webkit-user-select:none;';
+
+  // Activate landscape mode on #root
+  var root = document.getElementById('root');
+  root.classList.add('gameplay-active');
+
+  // Try to lock orientation to landscape (Android/Chrome — iOS ignores)
+  (async function() {
+    try {
+      await screen.orientation.lock('landscape-primary');
+    } catch (e) {
+      // iOS doesn't support this — the overlay handles it
+    }
+  })();
+
+  // Portrait rotation overlay (CSS shows/hides via media query)
+  var rotateOverlay = document.createElement('div');
+  rotateOverlay.className = 'rotate-overlay';
+  var rotatePhone = document.createElement('div');
+  rotatePhone.className = 'rotate-phone';
+  var rotateArrow = document.createElement('div');
+  rotateArrow.className = 'rotate-arrow';
+  rotateArrow.textContent = '\u21BB';
+  var rotateText = document.createElement('div');
+  rotateText.className = 'rotate-text';
+  rotateText.textContent = 'ROTATE YOUR PHONE TO PLAY';
+  var rotateSub = document.createElement('div');
+  rotateSub.className = 'rotate-sub';
+  rotateSub.textContent = 'Landscape mode required';
+  rotateOverlay.append(rotatePhone, rotateArrow, rotateText, rotateSub);
+  el.appendChild(rotateOverlay);
 
   // Inject gameplay animations
   var styleEl = document.createElement('style');
@@ -198,7 +245,7 @@ export function buildGameplay() {
   // === LEFT: Field (placeholder) ===
   var fieldArea = document.createElement('div');
   fieldArea.style.cssText =
-    'flex:0 0 45%;background:#0a3d0a;position:relative;overflow:hidden;' +
+    'flex:0 0 60%;background:#0a3d0a;position:relative;overflow:hidden;' +
     'display:flex;align-items:center;justify-content:center;';
 
   function renderField() {
@@ -281,21 +328,24 @@ export function buildGameplay() {
   // === RIGHT: Hand Panel ===
   var handPanel = document.createElement('div');
   handPanel.style.cssText =
-    'flex:1;display:flex;flex-direction:column;overflow-y:auto;' +
+    'flex:1;display:flex;flex-direction:column;overflow:hidden;' +
     'background:var(--bg);padding:8px;gap:6px;';
 
-  // Player cards area
+  // Player cards area (fixed at top, never scrolls)
   var playerArea = document.createElement('div');
-  playerArea.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:4px;';
+  playerArea.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:4px;flex-shrink:0;';
 
-  // Play cards area
+  // Scrollable middle: play cards
+  var playScrollArea = document.createElement('div');
+  playScrollArea.style.cssText = 'flex:1;overflow-y:auto;min-height:0;';
   var playArea = document.createElement('div');
   playArea.style.cssText = 'display:flex;flex-direction:column;gap:3px;';
+  playScrollArea.appendChild(playArea);
 
-  // Combo preview + SNAP
+  // Combo preview + SNAP (fixed at bottom)
   var comboArea = document.createElement('div');
   comboArea.style.cssText =
-    'margin-top:auto;padding-top:6px;border-top:1px solid var(--bdr);';
+    'flex-shrink:0;padding-top:6px;border-top:1px solid var(--bdr);';
 
   // Narrative bar
   var narrativeBar = document.createElement('div');
@@ -440,8 +490,12 @@ export function buildGameplay() {
 
       var prevPlayer = document.createElement('div');
       prevPlayer.style.cssText =
-        "font-family:'Courier New',monospace;font-size:9px;color:#00eaff;";
-      prevPlayer.textContent = selectedPlayer.name + ' (' + selectedPlayer.badge + ')';
+        "font-family:'Courier New',monospace;font-size:9px;color:#00eaff;display:flex;align-items:center;gap:3px;";
+      var prevBadgeIcon = document.createElement('span');
+      prevBadgeIcon.style.cssText = 'display:inline-flex;width:12px;height:12px;';
+      prevBadgeIcon.innerHTML = badgeSvg(selectedPlayer.badge, '#00eaff');
+      prevPlayer.textContent = selectedPlayer.name + ' ';
+      prevPlayer.appendChild(prevBadgeIcon);
 
       var prevPlus = document.createElement('div');
       prevPlus.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--muted);";
@@ -823,6 +877,9 @@ export function buildGameplay() {
   }
 
   function showEndGame() {
+    // Clean up landscape mode
+    root.classList.remove('gameplay-active');
+    try { screen.orientation.unlock(); } catch (e) {}
     setGs(function(s) {
       return Object.assign({}, s, {
         screen: 'end_game',
@@ -862,7 +919,7 @@ export function buildGameplay() {
   }
 
   // === ASSEMBLE ===
-  handPanel.append(playerArea, playArea, comboArea);
+  handPanel.append(playerArea, playScrollArea, comboArea);
   mainArea.append(fieldArea, handPanel);
   el.append(mainArea, narrativeBar);
 
