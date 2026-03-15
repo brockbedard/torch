@@ -4,8 +4,8 @@ import { IR_DEF_PLAYS } from './data/irDefensePlays.js';
 import { CT_OFF_PLAYS } from './data/ctOffensePlays.js';
 import { CT_DEF_PLAYS } from './data/ctDefensePlays.js';
 
-export var VERSION = '0.16.0';
-export var VERSION_NAME = 'Team Selection Overhaul';
+export var VERSION = '0.17.0';
+export var VERSION_NAME = 'Complete Gameplay Rebuild';
 
 export var GS = null;
 

@@ -85,10 +85,16 @@ const CSS = `
 .T-drop-active .T-drop-lbl{color:#c8a030}
 
 /* cards section — hidden during play-by-play */
-.T-panel{display:flex;flex-direction:column;overflow:hidden;transition:background .5s;flex-shrink:0}
+.T-panel{display:flex;flex-direction:column;overflow:hidden;transition:background .6s,border-color .6s;flex-shrink:0;border-top:2px solid transparent}
 .T-panel-hidden{display:none}
-.T-panel-off{background:linear-gradient(180deg,#120e00 0%,#06050f 50%)}
-.T-panel-def{background:linear-gradient(180deg,#00080e 0%,#06050f 50%)}
+/* offense: warm amber energy */
+.T-panel-off{background:linear-gradient(180deg,#1a1000 0%,#06050f 60%);border-top-color:#c8a03044}
+.T-panel-off .T-inst{color:#c8a030}
+.T-panel-off .T-card{border-color:#c8a03022}
+/* defense: cold blue/red danger */
+.T-panel-def{background:linear-gradient(180deg,#00101a 0%,#06050f 60%);border-top-color:#30c0e044}
+.T-panel-def .T-inst{color:#30c0e0}
+.T-panel-def .T-card{border-color:#30c0e022}
 
 /* instruction */
 .T-inst{text-align:center;padding:6px 0 2px;font-family:'Press Start 2P';font-size:7px;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
@@ -171,10 +177,16 @@ const CSS = `
 .T-drv-stat{font-family:'Courier New';font-size:9px;color:#554f80}
 
 /* 2-min transformation */
-.T-urgent .T-strip{border-bottom-color:#e03050}
+/* 2-minute drill — full urgency transformation */
+.T-urgent .T-strip{border-bottom-color:#e03050;box-shadow:inset 0 0 30px rgba(224,48,80,.1)}
 .T-urgent .T-sb{border-bottom-color:#e03050}
-@keyframes T-breathe{0%,100%{background-color:#06050f}50%{background-color:#0f0510}}
-.T-urgent .T-panel{animation:T-breathe 3s ease-in-out infinite}
+.T-urgent .T-sb-sit{background:rgba(224,48,80,.08)}
+@keyframes T-breathe{0%,100%{background-color:#06050f}50%{background-color:#140008}}
+.T-urgent .T-panel{animation:T-breathe 2s ease-in-out infinite;border-top-color:#e0305066}
+.T-urgent .T-narr{border-top-color:#e0305044;background:#0a0008}
+@keyframes T-urgent-border{0%,100%{border-color:#e0305044}50%{border-color:#e03050}}
+.T-urgent .T-card{animation:T-urgent-border 1.5s ease-in-out infinite}
+.T-urgent .T-inst{color:#e03050 !important}
 @keyframes T-coin{0%{transform:rotateY(0)}100%{transform:rotateY(1080deg)}}
 `;
 
@@ -1041,13 +1053,19 @@ export function buildGameplay() {
     // 2min check
     if (gs.twoMinActive && !prev2min) { prev2min = true; el.classList.add('T-urgent'); show2MinWarn(); }
 
-    // Instruction
+    // Side indicator + instruction
+    if (phase === 'play' || phase === 'player' || phase === 'torch') {
+      var sideBar = document.createElement('div');
+      sideBar.style.cssText = "text-align:center;padding:3px 0;font-family:'Bebas Neue';font-size:16px;letter-spacing:3px;flex-shrink:0;" +
+        (isOff ? 'color:#c8a030;background:linear-gradient(90deg,transparent,rgba(200,160,48,.08),transparent)' : 'color:#30c0e0;background:linear-gradient(90deg,transparent,rgba(48,192,224,.08),transparent)');
+      sideBar.textContent = isOff ? 'YOUR OFFENSE' : 'YOUR DEFENSE';
+      panel.appendChild(sideBar);
+    }
     const inst = document.createElement('div'); inst.className = 'T-inst';
-    inst.style.color = isOff ? '#c8a030' : '#30c0e0';
     if (phase === 'play') inst.textContent = isOff ? 'Drag a play onto the field' : 'Drag a scheme onto the field';
     else if (phase === 'player') inst.textContent = 'Drag a player onto the field';
     else if (phase === 'torch') inst.textContent = 'Play a Torch card or skip';
-    else if (phase === 'ready') inst.textContent = '';
+    else inst.textContent = '';
     panel.appendChild(inst);
 
     // Card tray — show one card type at a time based on phase
@@ -1305,17 +1323,20 @@ export function buildGameplay() {
     }, 1500);
   }
 
-  // ── 2-MIN WARNING ──
+  // ── 2-MIN WARNING (dramatic overlay) ──
   function show2MinWarn() {
+    shakeScreen();
+    flashField('rgba(224,48,80,.3)');
     const ov = document.createElement('div'); ov.className = 'T-ov T-ov-black T-ov-poss';
     ov.style.cssText = 'opacity:0;transition:opacity .25s';
     ov.innerHTML =
-      '<div class="T-poss-score" style="color:#e03050">2:00</div>'+
-      '<div class="T-poss-who" style="color:#e03050">2-MINUTE WARNING</div>'+
-      '<div class="T-poss-tag">Every second counts.</div>';
+      '<div class="T-poss-score" style="color:#e03050;font-size:28px">2:00</div>'+
+      '<div class="T-poss-who" style="color:#e03050;font-size:24px;letter-spacing:4px">2-MINUTE WARNING</div>'+
+      "<div class=\"T-poss-tag\" style=\"color:#e03050;opacity:.7\">The clock is live. SPIKE and KNEEL available.</div>"+
+      "<div style=\"font-family:'Courier New';font-size:9px;color:#554f80;margin-top:8px\">Every second counts from here.</div>";
     el.appendChild(ov);
     requestAnimationFrame(() => ov.style.opacity='1');
-    setTimeout(() => { ov.style.opacity='0'; setTimeout(() => ov.remove(), 250); }, 2000);
+    setTimeout(() => { ov.style.opacity='0'; setTimeout(() => ov.remove(), 250); }, 2500);
   }
 
   // ── COIN TOSS OVERLAY ──
