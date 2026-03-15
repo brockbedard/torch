@@ -499,73 +499,97 @@ export function buildGameplay() {
 
   function runPlayByPlay(res, onDone) {
     const r = res.result;
-    const off = res.featuredOff;
+    const off = res.featuredOff; // featured skill player (WR, RB, TE, etc.)
     const def = res.featuredDef;
     const op = res.offPlay;
     const dp = res.defPlay;
     const isPass = op.completionRate !== null;
 
+    // QB and skill player from the 4 drafted starters on the field
+    const sides = gs.getCurrentSides();
+    const starters = sides.offPlayers.slice(0, 4);
+    const qb = starters.find(function(p) { return p.pos === 'QB'; }) || off;
+    const qbName = qb.name;
+    // Featured player — if they picked the QB as featured, use the first non-QB as skill
+    const skillPlayer = (off.pos === 'QB') ? (starters.find(function(p) { return p.pos !== 'QB'; }) || off) : off;
+    const skillName = skillPlayer.name;
+    const skillPos = skillPlayer.pos;
+    // Defender is from the 4 drafted defensive starters
+    const defName = def.name;
+    const defPos = def.pos;
+
     showClashOnField(res);
 
-    // Broadcast-style play-by-play — 5 lines, each one sentence, outcome last
+    // Real football PBP — QB throws/hands off, skill player catches/runs, defender tackles
     const lines = [];
     if (isPass) {
-      // Line 1: formation/personnel
-      lines.push(op.name + ' called, ' + off.name + ' in the shotgun');
-      // Line 2: defense shows
-      lines.push(def.name + ' showing ' + dp.name + ', daring them to throw');
-      // Line 3: the snap
-      lines.push(off.name + ' takes the snap, drops back, looking...');
+      // Line 1: the play call
+      lines.push(op.name + ' is the call — ' + qbName + ' under center, ' + skillName + ' split wide');
+      // Line 2: the defense
+      lines.push(def.name + ' showing ' + dp.name + ' — ' + def.pos + ' ' + def.name + ' in coverage');
+      // Line 3: the snap and drop
+      lines.push(qbName + ' takes the snap, drops back, looking...');
       if (r.isSack) {
-        lines.push('PRESSURE! The blitz gets home in a hurry!');
-        lines.push('BURIED! ' + def.name + ' levels ' + off.name + ' — never had a chance');
+        lines.push('PRESSURE! ' + def.name + ' blows past the tackle!');
+        lines.push('SACKED! ' + def.name + ' buries ' + qbName + ' behind the line!');
       } else if (r.isIncomplete) {
-        lines.push(off.name + ' steps up, fires to the sideline');
-        lines.push('Broken up! ' + def.name + ' was stride for stride and got a hand in');
+        lines.push(qbName + ' fires toward ' + skillName + ' on the sideline');
+        lines.push('Broken up! ' + def.name + ' was stride for stride with ' + skillName);
       } else if (r.isInterception) {
-        lines.push(off.name + ' loads up, lets it fly...');
-        lines.push('PICKED OFF! ' + def.name + ' jumped the route — read it the whole way!');
+        lines.push(qbName + ' throws for ' + skillName + ' — OH NO!');
+        lines.push('PICKED OFF! ' + def.name + ' undercuts ' + skillName + ' and takes it!');
       } else if (r.isTouchdown) {
-        lines.push(off.name + ' steps up, launches it deep!');
-        lines.push('CAUGHT! TOUCHDOWN! ' + def.name + ' got a step behind — it is SIX!');
+        lines.push(qbName + ' sees ' + skillName + ' breaking free, lets it fly!');
+        lines.push(skillName + ' CATCHES IT IN THE END ZONE! TOUCHDOWN!');
       } else if (r.yards >= 15) {
-        lines.push(off.name + ' climbs the pocket, lets it go deep!');
-        lines.push('CAUGHT IN STRIDE! ' + r.yards + ' yards — ' + def.name + ' got burned!');
+        lines.push(qbName + ' steps up, launches it deep to ' + skillName + '!');
+        lines.push(skillName + ' HAULS IT IN! ' + r.yards + ' yards — ' + def.name + ' got burned!');
       } else if (r.yards >= 8) {
-        lines.push(off.name + ' finds his man, fires!');
-        lines.push('Complete for ' + r.yards + '! ' + def.name + ' makes the tackle after the catch');
+        lines.push(qbName + ' finds ' + skillName + ' over the middle, fires!');
+        lines.push('Caught by ' + skillName + ' for ' + r.yards + '! ' + def.name + ' makes the tackle');
       } else if (r.yards >= 1) {
-        lines.push(off.name + ' checks it down to the flat');
-        lines.push('Caught, gain of ' + r.yards + '. ' + def.name + ' wraps him up right away');
+        lines.push(qbName + ' checks down to ' + skillName + ' in the flat');
+        lines.push(skillName + ' catches it, gain of ' + r.yards + '. ' + def.name + ' wraps him up');
       } else {
-        lines.push(off.name + ' can\'t find anyone open');
-        lines.push('Throws it away. ' + def.name + ' had the coverage locked down');
+        lines.push(qbName + ' looks for ' + skillName + ' — nothing there');
+        lines.push('Throws it away. ' + def.name + ' had ' + skillName + ' locked down');
       }
     } else {
-      // Line 1: formation
-      lines.push(op.name + ' formation, ' + off.name + ' is the ball carrier');
-      // Line 2: defense
-      lines.push(def.name + ' reading ' + dp.name + ', setting the edge');
-      // Line 3: handoff
-      lines.push(off.name + ' takes the handoff, hits the hole...');
-      if (r.isFumbleLost) {
-        lines.push('He\'s HIT — AND THE BALL IS OUT!');
-        lines.push(def.name + ' pounces on it! Fumble recovery — what a play!');
-      } else if (r.isTouchdown) {
-        lines.push(off.name + ' breaks a tackle, still on his feet...');
-        lines.push('HE COULD GO ALL THE WAY! TOUCHDOWN! ' + def.name + ' can\'t catch him!');
-      } else if (r.yards >= 15) {
-        lines.push(off.name + ' bounces it outside — daylight!');
-        lines.push('He hit the afterburners! ' + r.yards + ' yards before ' + def.name + ' drags him down!');
-      } else if (r.yards >= 8) {
-        lines.push(off.name + ' sheds a tackler, still moving!');
-        lines.push('Good run, gain of ' + r.yards + '. ' + def.name + ' finally brings him down');
-      } else if (r.yards >= 1) {
-        lines.push(off.name + ' pushes the pile, falls forward');
-        lines.push('Gain of ' + r.yards + '. ' + def.name + ' cleans it up at the second level');
+      // Run play — QB hands off to the featured back
+      var isOption = op.playType === 'OPTION';
+      // Line 1: personnel and play call
+      lines.push(op.name + ' — ' + qbName + ' under center, ' + skillName + ' lined up at ' + skillPos);
+      // Line 2: defense reading
+      lines.push(def.name + ' in ' + dp.name + ' — reading the backfield');
+      // Line 3: the handoff/option
+      if (isOption) {
+        lines.push(qbName + ' takes the snap, reads the end... gives it to ' + skillName + '!');
+      } else if (op.id === 'qb_sneak' || op.id === 'ir_qb_sneak') {
+        lines.push(qbName + ' takes the snap and pushes forward behind the center...');
       } else {
-        lines.push(def.name + ' is right there in the hole!');
-        lines.push('STUFFED! ' + off.name + ' met at the line — ' + def.name + ' made a great read');
+        lines.push(qbName + ' hands it off to ' + skillName + '...');
+      }
+      if (r.isFumbleLost) {
+        lines.push(skillName + ' is HIT — AND THE BALL IS OUT!');
+        lines.push(def.name + ' pounces on the loose ball! Fumble recovery!');
+      } else if (r.isTouchdown) {
+        lines.push(skillName + ' hits the hole and breaks through!');
+        lines.push(skillName + ' IS GONE! TOUCHDOWN! ' + def.name + ' can\'t catch him!');
+      } else if (r.yards >= 15) {
+        lines.push(skillName + ' bursts through the line — daylight!');
+        lines.push('EXPLOSIVE! ' + r.yards + ' yards before ' + def.name + ' drags him down!');
+      } else if (r.yards >= 8) {
+        lines.push(skillName + ' finds a crease and hits it hard!');
+        lines.push('Good run by ' + skillName + ', ' + r.yards + ' yards. ' + def.name + ' brings him down');
+      } else if (r.yards >= 1) {
+        lines.push(skillName + ' pushes into traffic, falls forward');
+        lines.push('Gain of ' + r.yards + ' for ' + skillName + '. ' + def.name + ' makes the stop');
+      } else if (op.id === 'qb_sneak' || op.id === 'ir_qb_sneak') {
+        lines.push(def.name + ' plugs the gap!');
+        lines.push(qbName + ' is stopped cold. ' + def.name + ' was right there');
+      } else {
+        lines.push(def.name + ' shoots the gap — nowhere to go!');
+        lines.push('STUFFED! ' + skillName + ' met at the line by ' + def.name);
       }
     }
 
