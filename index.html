@@ -17,8 +17,6 @@
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
-  <div id="fs-banner" onclick="document.documentElement.requestFullscreen().then(()=>this.remove()).catch(()=>this.remove())" style="display:none;background:#F5B800;color:#000;text-align:center;padding:10px;font-family:'Press Start 2P',monospace;font-size:10px;cursor:pointer;letter-spacing:1px;position:relative;z-index:10000;">TAP TO GO FULLSCREEN</div>
-  <script>if(window.innerWidth<=1024&&document.fullscreenEnabled&&!document.fullscreenElement)document.getElementById('fs-banner').style.display='block';</script>
   <div id="root"></div>
   <!-- Modularized JS Entry Point -->
   <script type="module" src="/src/main.js"></script>
