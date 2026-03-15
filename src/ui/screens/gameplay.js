@@ -154,7 +154,7 @@ const CSS = `
 @keyframes T-crash-right{0%{transform:translateX(120%)}60%{transform:translateX(-8%)}80%{transform:translateX(3%)}100%{transform:translateX(0)}}
 .T-clash-left{animation:T-crash-left .5s cubic-bezier(.2,.8,.3,1) forwards}
 .T-clash-right{animation:T-crash-right .5s cubic-bezier(.2,.8,.3,1) forwards}
-.T-clash-card{width:100%;background:var(--bg-surface);border-radius:4px;border:2px solid;overflow:hidden;display:flex;flex-direction:column;max-height:48%}
+.T-clash-card{width:100%;background:var(--bg-surface);border-radius:6px;border:2px solid;overflow:hidden}
 .T-clash-center{display:flex;flex-direction:column;align-items:center;justify-content:center;width:20%;z-index:2}
 .T-clash-vs{font-family:'Bebas Neue';font-size:22px;color:#c8a030;font-style:italic}
 @keyframes T-crash-spark{0%{opacity:1;transform:scale(0)}50%{opacity:1}100%{opacity:0;transform:scale(2)}}
@@ -538,14 +538,21 @@ export function buildGameplay() {
       torchCard = TORCH_CARDS.find(function(c) { return c.id === tcId; });
     }
 
-    var isOff = res._preSnap ? res._preSnap.possession === hAbbr : true;
+    // Build compact clash cards that fit the field strip
+    function clashCard(name, sub, color) {
+      return '<div class="T-clash-card" style="border-color:' + color + '">' +
+        "<div style=\"padding:6px 8px 4px\">" +
+          "<div style=\"font-family:'Bebas Neue';font-size:16px;color:#fff;line-height:1\">" + name + "</div>" +
+          "<div style=\"font-family:'Courier New';font-size:8px;color:" + color + ";margin-top:2px\">" + sub + "</div>" +
+        "</div></div>";
+    }
 
-    // Left: offense full cards (play + player) — crash in from left
+    // Left: offense (play + player) — crash in from left
     var left = document.createElement('div');
     left.className = 'T-clash-side T-clash-left';
     left.innerHTML =
-      '<div class="T-clash-card" style="border-color:' + offColor + '">' + mkPlayCard(res.offPlay) + '</div>' +
-      '<div class="T-clash-card" style="border-color:' + offColor + '66">' + mkPlayerCard(res.featuredOff, hTeam, true) + '</div>';
+      clashCard(res.offPlay.name, res.offPlay.playType || res.offPlay.cardType, offColor) +
+      clashCard(res.featuredOff.name, res.featuredOff.pos + ' \u00b7 OVR ' + res.featuredOff.ovr, offColor);
 
     // Center: VS + spark (or torch overlay)
     var center = document.createElement('div');
@@ -561,12 +568,12 @@ export function buildGameplay() {
       center.innerHTML = '<div class="T-clash-spark"></div><div class="T-clash-vs">VS</div>';
     }
 
-    // Right: defense full cards (play + player) — crash in from right
+    // Right: defense (play + player) — crash in from right
     var right = document.createElement('div');
     right.className = 'T-clash-side T-clash-right';
     right.innerHTML =
-      '<div class="T-clash-card" style="border-color:' + defColor + '">' + mkPlayCard(res.defPlay) + '</div>' +
-      '<div class="T-clash-card" style="border-color:' + defColor + '66">' + mkPlayerCard(res.featuredDef, oTeam, false) + '</div>';
+      clashCard(res.defPlay.name, res.defPlay.cardType || 'DEF', defColor) +
+      clashCard(res.featuredDef.name, res.featuredDef.pos + ' \u00b7 OVR ' + res.featuredDef.ovr, defColor);
 
     clash.append(left, center, right);
     strip.appendChild(clash);
