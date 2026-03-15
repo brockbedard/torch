@@ -52,15 +52,19 @@ const CSS = `
 .T-sb-sit-torch{font-family:'Press Start 2P';font-size:9px;color:#c8a030;letter-spacing:.5px}
 
 /* field strip */
-/* field strip — compressed, just fits card outlines */
-.T-strip{height:166px;flex-shrink:0;position:relative;background:linear-gradient(180deg,#072a07 0%,#0a3a0a 40%,#072a07 100%);overflow:hidden;border-bottom:1px solid #1a183a}
-.T-yard{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.06)}
+/* field strip */
+.T-strip{height:166px;flex-shrink:0;position:relative;background:#0a3a0a;overflow:hidden;border-bottom:1px solid #1a183a}
+.T-field-turf{position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.02) 0px,rgba(255,255,255,.02) 1px,transparent 1px,transparent 10%),repeating-linear-gradient(0deg,rgba(0,0,0,.06) 0%,rgba(0,0,0,.06) 50%,transparent 50%,transparent 100%);background-size:100% 100%,100% 20%}
+.T-yard{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.08)}
+.T-yard-num{position:absolute;top:3px;font-family:'Courier New';font-size:7px;color:rgba(255,255,255,.15);transform:translateX(-50%);font-weight:bold}
 .T-los{position:absolute;top:0;bottom:0;width:2px;z-index:5;transition:left .4s ease-out}
 .T-ltg{position:absolute;top:0;bottom:0;width:1px;opacity:.5;z-index:4;transition:left .4s ease-out;border-left:2px dashed}
-.T-zone{position:absolute;top:0;bottom:0;width:6%}
-.T-zone-l{left:0;background:linear-gradient(90deg,rgba(255,60,60,.12),transparent)}
-.T-zone-r{right:0;background:linear-gradient(270deg,rgba(60,100,255,.12),transparent)}
-.T-hash{position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,.03)}
+.T-ez{position:absolute;top:0;bottom:0;width:6%;display:flex;align-items:center;justify-content:center}
+.T-ez-l{left:0;background:linear-gradient(90deg,rgba(255,60,60,.15),transparent);border-right:2px solid rgba(255,255,255,.1)}
+.T-ez-r{right:0;background:linear-gradient(270deg,rgba(60,100,255,.15),transparent);border-left:2px solid rgba(255,255,255,.1)}
+.T-ez-logo{font-size:20px;opacity:.4;filter:saturate(.7)}
+.T-midfield-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px;opacity:.12;z-index:1}
+.T-hash{position:absolute;left:6%;right:6%;height:1px;background:rgba(255,255,255,.04)}
 /* placed cards on field — 150px to match tray cards exactly */
 .T-placed{position:absolute;bottom:8px;height:150px;z-index:8;border-radius:6px;overflow:hidden;background:var(--bg-surface);border:2px solid #00ff88;box-shadow:0 0 12px rgba(0,255,136,.2);display:flex;flex-direction:column}
 .T-placed-play{left:3%;width:30%}
@@ -114,8 +118,11 @@ const CSS = `
 .T-pbp{display:flex;flex-direction:column;gap:5px}
 .T-pbp-line{font-family:'Courier New',monospace;font-size:13px;color:#554f80;line-height:1.4;letter-spacing:.3px}
 .T-pbp-live{color:#30c0e0}
-.T-pbp-result{font-family:'Press Start 2P';font-size:10px;letter-spacing:.5px;line-height:1;margin-top:10px;display:flex;align-items:center;flex-wrap:wrap;gap:0}
+.T-pbp-result{font-family:'Press Start 2P';font-size:14px;letter-spacing:.5px;line-height:1;margin-top:10px}
+.T-pbp-down{font-family:'Courier New';font-size:11px;color:#554f80;margin-top:6px;letter-spacing:.5px}
 .T-pbp-idle{font-family:'Courier New',monospace;font-size:11px;color:#333;letter-spacing:.5px}
+.T-next{margin-top:10px;padding:10px;font-family:'Bebas Neue';font-size:20px;letter-spacing:3px;color:#06050f;border:none;border-radius:6px;cursor:pointer;background:linear-gradient(180deg,#30c0e0,#2090a0);box-shadow:0 3px 12px rgba(48,192,224,.2);width:100%;text-align:center}
+.T-next:active{transform:scale(.97)}
 .T-pbp-cursor{display:inline-block;width:6px;height:12px;background:#30c0e0;margin-left:2px;animation:T-blink .6s step-end infinite}
 @keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
 /* card matchup display on field during play */
@@ -398,13 +405,29 @@ export function buildGameplay() {
   function drawField() {
     const s = gs.getSummary();
     const isOff = gs.possession === hAbbr;
+    const ct = getTeam('canyon_tech'), ir = getTeam('iron_ridge');
+    const homeTeam = getTeam(GS.team);
     const lp = 6 + s.ballPosition * .88;
     const td = s.possession==='CT' ? s.ballPosition+s.distance : s.ballPosition-s.distance;
     const tp = 6 + Math.max(0,Math.min(100,td)) * .88;
-    const pc = s.possession==='CT' ? getTeam('canyon_tech').accent : getTeam('iron_ridge').accent;
-    let h = '<div class="T-zone T-zone-l"></div><div class="T-zone T-zone-r"></div>';
-    for (let i=10;i<=90;i+=10) h += `<div class="T-yard" style="left:${6+i*.88}%"></div>`;
-    h += `<div class="T-hash" style="top:33%"></div><div class="T-hash" style="top:67%"></div>`;
+    const pc = s.possession==='CT' ? ct.accent : ir.accent;
+    // Turf texture
+    let h = '<div class="T-field-turf"></div>';
+    // Endzones with team logos
+    h += '<div class="T-ez T-ez-l"><span class="T-ez-logo">' + ir.icon + '</span></div>';
+    h += '<div class="T-ez T-ez-r"><span class="T-ez-logo">' + ct.icon + '</span></div>';
+    // Midfield logo (home team)
+    h += '<div class="T-midfield-logo">' + homeTeam.icon + '</div>';
+    // Yard lines with numbers
+    var yardNums = {10:'10',20:'20',30:'30',40:'40',50:'50',60:'40',70:'30',80:'20',90:'10'};
+    for (let i=10;i<=90;i+=10) {
+      var xp = 6+i*.88;
+      h += '<div class="T-yard" style="left:'+xp+'%"></div>';
+      h += '<div class="T-yard-num" style="left:'+xp+'%">'+(yardNums[i]||'')+'</div>';
+    }
+    // Hash marks
+    h += '<div class="T-hash" style="top:30%"></div><div class="T-hash" style="top:70%"></div>';
+    // LOS and LTG
     h += `<div class="T-los" style="left:${lp}%;background:${pc};box-shadow:0 0 10px ${pc}"></div>`;
     h += `<div class="T-ltg" style="left:${tp}%;border-color:#c8a030"></div>`;
 
@@ -477,59 +500,65 @@ export function buildGameplay() {
 
     showClashOnField(res);
 
-    // 5 dramatic single-line updates — like hanging on every word
+    // Broadcast-style play-by-play — 5 lines, each one sentence, outcome last
     const lines = [];
     if (isPass) {
-      lines.push(op.name + ' called — ' + off.name + ' under center');
-      lines.push(def.name + ' in ' + dp.name + ' — he\'s reading the quarterback');
-      lines.push(off.name + ' drops back...');
+      // Line 1: formation/personnel
+      lines.push(op.name + ' called, ' + off.name + ' in the shotgun');
+      // Line 2: defense shows
+      lines.push(def.name + ' showing ' + dp.name + ', daring them to throw');
+      // Line 3: the snap
+      lines.push(off.name + ' takes the snap, drops back, looking...');
       if (r.isSack) {
-        lines.push('PRESSURE! ' + def.name + ' comes flying off the edge!');
-        lines.push(def.name + ' BURIES him! ' + off.name + ' never had a chance');
+        lines.push('PRESSURE! The blitz gets home in a hurry!');
+        lines.push('BURIED! ' + def.name + ' levels ' + off.name + ' — never had a chance');
       } else if (r.isIncomplete) {
-        lines.push(off.name + ' fires — ' + def.name + ' is right there in coverage!');
-        lines.push('Ball hits the turf. ' + def.name + ' breaks it up');
+        lines.push(off.name + ' steps up, fires to the sideline');
+        lines.push('Broken up! ' + def.name + ' was stride for stride and got a hand in');
       } else if (r.isInterception) {
-        lines.push(off.name + ' throws — OH NO!');
-        lines.push(def.name + ' PICKS IT OFF! He read that the entire way!');
+        lines.push(off.name + ' loads up, lets it fly...');
+        lines.push('PICKED OFF! ' + def.name + ' jumped the route — read it the whole way!');
       } else if (r.isTouchdown) {
-        lines.push(off.name + ' sees it — fires downfield!');
-        lines.push('CAUGHT! IN THE END ZONE! ' + def.name + ' can\'t get there in time!');
+        lines.push(off.name + ' steps up, launches it deep!');
+        lines.push('CAUGHT! TOUCHDOWN! ' + def.name + ' got a step behind — it is SIX!');
       } else if (r.yards >= 15) {
-        lines.push(off.name + ' launches it — receiver is WIDE OPEN!');
-        lines.push('WHAT A THROW! ' + r.yards + ' yards! ' + def.name + ' got burned');
+        lines.push(off.name + ' climbs the pocket, lets it go deep!');
+        lines.push('CAUGHT IN STRIDE! ' + r.yards + ' yards — ' + def.name + ' got burned!');
       } else if (r.yards >= 8) {
-        lines.push(off.name + ' finds an opening — throws!');
-        lines.push('COMPLETE! Nice grab, ' + r.yards + ' yards before ' + def.name + ' makes the stop');
+        lines.push(off.name + ' finds his man, fires!');
+        lines.push('Complete for ' + r.yards + '! ' + def.name + ' makes the tackle after the catch');
       } else if (r.yards >= 1) {
-        lines.push(off.name + ' checks down — short throw');
-        lines.push('Caught for ' + r.yards + '. ' + def.name + ' wraps him up quickly');
+        lines.push(off.name + ' checks it down to the flat');
+        lines.push('Caught, gain of ' + r.yards + '. ' + def.name + ' wraps him up right away');
       } else {
-        lines.push(off.name + ' scrambles — nothing there!');
-        lines.push(def.name + ' meets him at the line. Going nowhere');
+        lines.push(off.name + ' can\'t find anyone open');
+        lines.push('Throws it away. ' + def.name + ' had the coverage locked down');
       }
     } else {
-      lines.push(op.name + ' formation — ' + off.name + ' in the backfield');
-      lines.push(def.name + ' lines up in ' + dp.name + ' — watching the mesh point');
-      lines.push(off.name + ' takes the handoff...');
+      // Line 1: formation
+      lines.push(op.name + ' formation, ' + off.name + ' is the ball carrier');
+      // Line 2: defense
+      lines.push(def.name + ' reading ' + dp.name + ', setting the edge');
+      // Line 3: handoff
+      lines.push(off.name + ' takes the handoff, hits the hole...');
       if (r.isFumbleLost) {
-        lines.push('Contact! The ball is OUT!');
-        lines.push(def.name + ' RECOVERS! What a play by the defense!');
+        lines.push('He\'s HIT — AND THE BALL IS OUT!');
+        lines.push(def.name + ' pounces on it! Fumble recovery — what a play!');
       } else if (r.isTouchdown) {
-        lines.push(off.name + ' hits the hole — DAYLIGHT!');
-        lines.push('HE\'S GONE! ' + def.name + ' can\'t catch him! TOUCHDOWN!');
+        lines.push(off.name + ' breaks a tackle, still on his feet...');
+        lines.push('HE COULD GO ALL THE WAY! TOUCHDOWN! ' + def.name + ' can\'t catch him!');
       } else if (r.yards >= 15) {
-        lines.push(off.name + ' explodes through the gap!');
-        lines.push('HUGE run! ' + r.yards + ' yards before ' + def.name + ' can bring him down!');
+        lines.push(off.name + ' bounces it outside — daylight!');
+        lines.push('He hit the afterburners! ' + r.yards + ' yards before ' + def.name + ' drags him down!');
       } else if (r.yards >= 8) {
-        lines.push(off.name + ' finds a crease and hits it hard!');
-        lines.push('Good run — ' + r.yards + ' yards. ' + def.name + ' finally drags him down');
+        lines.push(off.name + ' sheds a tackler, still moving!');
+        lines.push('Good run, gain of ' + r.yards + '. ' + def.name + ' finally brings him down');
       } else if (r.yards >= 1) {
-        lines.push(off.name + ' pushes forward into traffic');
-        lines.push(def.name + ' makes the tackle after a gain of ' + r.yards);
+        lines.push(off.name + ' pushes the pile, falls forward');
+        lines.push('Gain of ' + r.yards + '. ' + def.name + ' cleans it up at the second level');
       } else {
-        lines.push(def.name + ' BLOWS IT UP in the backfield!');
-        lines.push(off.name + ' is stopped cold. ' + def.name + ' was all over it');
+        lines.push(def.name + ' is right there in the hole!');
+        lines.push('STUFFED! ' + off.name + ' met at the line — ' + def.name + ' made a great read');
       }
     }
 
@@ -566,22 +595,40 @@ export function buildGameplay() {
       } else {
         if (cursor.parentNode) cursor.remove();
         pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { el.classList.remove('T-pbp-live'); });
-        // Result line — all same size, one line
+        // Result: yards + torch on one line
         const rl = document.createElement('div');
         rl.className = 'T-pbp-result';
         let parts = '<span style="color:' + resColor + '">' + yardLabel + '</span>';
-        if (!r.isTouchdown && !r.isInterception && !r.isFumbleLost) {
-          parts += '<span style="color:#554f80;margin:0 6px">\u00b7</span><span style="color:#8a86b0">BALL ON ' + ballSideLabel() + '</span>';
-        }
         if (torchEarned > 0) {
-          parts += '<span style="color:#554f80;margin:0 6px">\u00b7</span><span style="color:#c8a030">\uD83D\uDD25 +' + torchEarned + '</span>';
+          parts += '<span style="color:#c8a030;margin-left:10px">\uD83D\uDD25 +' + torchEarned + '</span>';
         }
         rl.innerHTML = parts;
         pbp.appendChild(rl);
+        // Down & distance + ball position on next line
+        const s2 = gs.getSummary();
+        const dn2 = ['','1ST','2ND','3RD','4TH'][s2.down]||'';
+        const dd = document.createElement('div');
+        dd.className = 'T-pbp-down';
+        if (r.isTouchdown) {
+          dd.textContent = 'TOUCHDOWN \u2014 CONVERSION ATTEMPT';
+        } else if (r.isInterception || r.isFumbleLost) {
+          dd.textContent = 'TURNOVER \u2014 BALL ON ' + ballSideLabel();
+        } else {
+          dd.textContent = dn2 + ' & ' + s2.distance + ' \u2014 BALL ON ' + ballSideLabel();
+        }
+        pbp.appendChild(dd);
+        // "NEXT PLAY" button — user reviews result before continuing
+        var nextBtn = document.createElement('button');
+        nextBtn.className = 'T-next';
+        nextBtn.textContent = 'NEXT PLAY \u2192';
+        nextBtn.onclick = function() {
+          SND.click();
+          var clashEl = strip.querySelector('.T-clash');
+          if (clashEl) clashEl.remove();
+          onDone();
+        };
+        pbp.appendChild(nextBtn);
         narr.scrollTop = narr.scrollHeight;
-        var clashEl = strip.querySelector('.T-clash');
-        if (clashEl) clashEl.remove();
-        setTimeout(onDone, 1400);
       }
     }
     showNext();
