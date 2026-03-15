@@ -28,7 +28,8 @@ export function buildCoinToss() {
   styleEl.textContent =
     '@keyframes coinSpin { 0% { transform:rotateY(0deg); } 100% { transform:rotateY(1080deg); } }' +
     '@keyframes fadeSlideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }' +
-    '@keyframes pulseGold { 0%,100% { box-shadow:0 0 20px rgba(255,204,0,0.3); } 50% { box-shadow:0 0 40px rgba(255,204,0,0.6); } }';
+    '@keyframes pulseGold { 0%,100% { box-shadow:0 0 20px rgba(255,204,0,0.3); } 50% { box-shadow:0 0 40px rgba(255,204,0,0.6); } }' +
+    '@keyframes cardStolen { 0% { transform:scale(1); opacity:1; } 100% { transform:translateY(-100px) scale(0.5); opacity:0; } }';
   el.appendChild(styleEl);
 
   // Header
@@ -41,7 +42,7 @@ export function buildCoinToss() {
     "font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--a-gold);" +
     "letter-spacing:3px;font-style:italic;transform:skewX(-10deg);" +
     "text-shadow:2px 2px 0 #000, 0 0 10px var(--a-gold);";
-  hdrTitle.textContent = 'COIN TOSS';
+  hdrTitle.textContent = '6. COIN TOSS';
   hdr.appendChild(hdrTitle);
   el.appendChild(hdr);
 
@@ -131,7 +132,11 @@ export function buildCoinToss() {
 
         cardEl.onclick = function() {
           SND.snap();
-          startGame([card]);
+          cardEl.style.transition = 'all 0.5s cubic-bezier(.34,1.56,.64,1)';
+          cardEl.style.transform = 'scale(1.2) translateY(-20px)';
+          cardEl.style.boxShadow = '0 0 50px var(--a-gold)';
+          cardEl.style.zIndex = '100';
+          setTimeout(() => startGame([card]), 600);
         };
 
         cardRow.appendChild(cardEl);
@@ -161,23 +166,37 @@ export function buildCoinToss() {
     } else {
       // CPU won — CPU picks a random card, human gets the ball
       var cpuCard = getRandomCards(1)[0];
+      
+      var cpuChoiceWrap = document.createElement('div');
+      cpuChoiceWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:12px;';
+      
+      var cardPreview = document.createElement('div');
+      cardPreview.style.cssText = 'width:120px;background:var(--bg-surface);border:2px solid var(--p-red);border-radius:6px;padding:12px;text-align:center;position:relative;animation:cardStolen 1.5s ease-in-out forwards;';
+      cardPreview.innerHTML = `<div style="font-size:8px;color:var(--p-red);margin-bottom:4px;">${cpuCard.tier}</div><div style="font-size:14px;font-family:'Bebas Neue';color:#fff;">${cpuCard.name}</div>`;
+      cpuChoiceWrap.appendChild(cardPreview);
+
       var cpuMsg = document.createElement('div');
       cpuMsg.style.cssText =
-        "font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);line-height:1.5;";
+        "font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--muted);line-height:1.5;opacity:0;transition:opacity 0.5s;";
       cpuMsg.textContent = opp.name + ' takes a ' + cpuCard.tier + ' Torch Card. You receive at the 50.';
-      choicePhase.appendChild(cpuMsg);
+      cpuChoiceWrap.appendChild(cpuMsg);
+      
+      setTimeout(() => cpuMsg.style.opacity = '1', 800);
 
       var continueBtn = document.createElement('button');
       continueBtn.className = 'btn-blitz';
       continueBtn.style.cssText =
         'width:100%;font-size:14px;margin-top:8px;background:var(--a-gold);' +
-        'border-color:var(--a-gold);color:#000;animation:pulseGold 2s infinite;';
+        'border-color:var(--a-gold);color:#000;animation:pulseGold 2s infinite;opacity:0;transition:opacity 0.5s;';
       continueBtn.textContent = 'PLAY BALL';
       continueBtn.onclick = function() {
         SND.snap();
         startGame([], true);
       };
-      choicePhase.appendChild(continueBtn);
+      cpuChoiceWrap.appendChild(continueBtn);
+      setTimeout(() => continueBtn.style.opacity = '1', 1500);
+
+      choicePhase.appendChild(cpuChoiceWrap);
     }
 
     content.appendChild(choicePhase);

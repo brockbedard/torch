@@ -11,14 +11,25 @@ import { calcOffenseTorchPoints, calcDefenseTorchPoints } from './torchPoints.js
 import { calcReturnYards } from './turnoverReturns.js';
 import { checkInjury, healInjuries } from './injuries.js';
 import { aiSelectPlay, aiSelectPlayer } from './aiOpponent.js';
+import { TORCH_CARDS } from '../data/torchCards.js';
+import { CT_OFF_PLAYS } from '../data/ctOffensePlays.js';
+import { CT_DEF_PLAYS } from '../data/ctDefensePlays.js';
+import { IR_OFF_PLAYS } from '../data/irOffensePlays.js';
+import { IR_DEF_PLAYS } from '../data/irDefensePlays.js';
 
 export class GameState {
   constructor({ humanTeam = 'CT', difficulty = 'MEDIUM', ctOffHand, ctDefHand, irOffHand, irDefHand,
-                ctOffRoster, ctDefRoster, irOffRoster, irDefRoster }) {
+                ctOffRoster, ctDefRoster, irOffRoster, irDefRoster, coachBadge = 'SCHEMER' }) {
     // Teams
     this.humanTeam = humanTeam;
     this.cpuTeam = humanTeam === 'CT' ? 'IR' : 'CT';
     this.difficulty = difficulty;
+    this.coachBadge = coachBadge; // SCHEMER, IRON_CURTAIN, SPEED_DEMON
+
+    // Environmental
+    const weathers = ['CLEAR', 'CLEAR', 'RAIN', 'WINDY', 'SNOW'];
+    this.weather = weathers[Math.floor(Math.random() * weathers.length)];
+    this.momentum = 50; // 0-100 scale
 
     // Hands (5 cards each)
     this.ctOffHand = ctOffHand;
@@ -72,6 +83,8 @@ export class GameState {
       ctFirstDowns: 0, irFirstDowns: 0,
       ctDrives: 0, irDrives: 0,
       ctIncompletions: 0, irIncompletions: 0,
+      ctTorchPlays: 0, irTorchPlays: 0,
+      ctTorchYards: 0, irTorchYards: 0,
       explosivePlays: 0, bigPlays: 0,
       leadChanges: 0, tiesBroken: 0,
       sackCount: 0, safeties: 0,
@@ -80,11 +93,13 @@ export class GameState {
       badgeCombos: 0, historyBonuses: 0,
       redZoneTrips: 0, redZoneTDs: 0,
       twoMinScores: 0, turnoverTDs: 0,
+      audiblesUsed: 0,
     };
 
     // Game over flag
     this.gameOver = false;
-    this.snapLog = [];
+    this.snapLog = []; // [{ half, team, down, ballPos, desc, yards }]
+    this.needsHalftime = false;
 
     // Initialize drives count
     if (this.possession === 'CT') this.stats.ctDrives = 1;
@@ -149,9 +164,11 @@ export class GameState {
    * @param {object} [featuredOff] - Featured offensive player
    * @param {object} [defPlay] - Defensive play (human provides on defense, AI auto-selects)
    * @param {object} [featuredDef] - Featured defensive player
-   * @returns {object} { result, offPlay, defPlay, featuredOff, featuredDef, gotFirstDown, gameEvent }
+   * @param {string} [offCard] - Offensive Torch Card ID
+   * @param {string} [defCard] - Defensive Torch Card ID
+   * @returns {object} { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent }
    */
-  executeSnap(offPlay, featuredOff, defPlay, featuredDef) {
+  executeSnap(offPlay, featuredOff, defPlay, featuredDef, offCard, defCard) {
     if (this.gameOver) return null;
 
     const sides = this.getCurrentSides();
@@ -161,19 +178,47 @@ export class GameState {
       scoreDiff: this.getScoreDiff(),
     };
 
+    const offInv = sides.offenseIsHuman ? this.humanTorchCards : this.cpuTorchCards;
+    const defInv = sides.offenseIsHuman ? this.cpuTorchCards : this.humanTorchCards;
+
+    // AI selects Torch Cards if not provided
+    if (offCard === undefined || offCard === null) {
+      if (this.difficulty === 'RANDOM') {
+        if (offInv.length > 0 && Math.random() < 0.20) {
+          offCard = offInv.splice(Math.floor(Math.random() * offInv.length), 1)[0];
+        }
+      } else if (offInv.length > 0 && (this.down >= 3 || this.twoMinActive)) {
+        offCard = offInv.shift();
+      }
+    }
+    if (defCard === undefined || defCard === null) {
+      if (this.difficulty === 'RANDOM') {
+        if (defInv.length > 0 && Math.random() < 0.20) {
+          defCard = defInv.splice(Math.floor(Math.random() * defInv.length), 1)[0];
+        }
+      } else if (defInv.length > 0 && (this.down >= 3 || this.twoMinActive)) {
+        defCard = defInv.shift();
+      }
+    }
+
     // AI selects defense if not provided
-    if (!defPlay) {
+    if (defPlay === undefined || defPlay === null) {
       defPlay = aiSelectPlay(sides.defHand, 'defense', this.difficulty, situation);
     }
 
     // AI selects offense if not provided
-    if (!offPlay) {
-      offPlay = aiSelectPlay(sides.offHand, 'offense', this.difficulty, situation);
+    if (offPlay === undefined || offPlay === null) {
+      // Reveal Card Sim-Benefits
+      let oppPlay = null;
+      if (['SCOUT_TEAM', 'FILM_LEAK', 'SIDELINE_PHONE', 'PERSONNEL_REPORT'].includes(offCard)) {
+        oppPlay = defPlay;
+      }
+      offPlay = aiSelectPlay(sides.offHand, 'offense', this.difficulty, { ...situation, oppPlay });
     }
-    if (!featuredOff) {
+    if (featuredOff === undefined || featuredOff === null) {
       featuredOff = aiSelectPlayer(sides.offPlayers, offPlay, this.difficulty, true);
     }
-    if (!featuredDef) {
+    if (featuredDef === undefined || featuredDef === null) {
       featuredDef = aiSelectPlayer(sides.defPlayers, defPlay, this.difficulty, false);
     }
 
@@ -200,6 +245,12 @@ export class GameState {
       distance: this.distance,
       isConversion: false,
       scoreDiff: this.getScoreDiff(),
+      offCard,
+      defCard,
+      twoMinActive: this.twoMinActive,
+      weather: this.weather,
+      momentum: this.momentum,
+      coachBadge: this.coachBadge,
     };
 
     const result = resolveSnap(offPlay, defPlay, featuredOff, featuredDef,
@@ -221,8 +272,26 @@ export class GameState {
     this.drivePlayHistory.push(offPlay.playType);
 
     // Track moments
-    if (result.yards >= 15) this.stats.explosivePlays++;
+    if (offCard || defCard) {
+      if (this.possession === 'CT') {
+        this.stats.ctTorchPlays++;
+        this.stats.ctTorchYards += result.yards;
+      } else {
+        this.stats.irTorchPlays++;
+        this.stats.irTorchYards += result.yards;
+      }
+    }
+
+    if (result.yards >= 15) {
+      this.stats.explosivePlays++;
+      this.momentum = Math.min(100, this.momentum + 10);
+    }
     if (result.yards >= 10) this.stats.bigPlays++;
+    if (result.isSack) this.momentum = Math.min(100, this.momentum + 5);
+    
+    // Momentum decay
+    this.momentum = Math.max(0, this.momentum - 1);
+
     if (result.offComboPts > 0 || result.defComboPts > 0) this.stats.badgeCombos++;
     if (result.historyBonus !== 0) this.stats.historyBonuses++;
     if (result.isIncomplete) {
@@ -252,8 +321,8 @@ export class GameState {
       gameEvent = 'safety';
       this.flipPossession(50);
       this._checkHalfEnd();
-      this.snapLog.push({ play: this.totalPlays, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent });
-      return { result, offPlay, defPlay, featuredOff, featuredDef, gotFirstDown, gameEvent };
+      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent });
+      return { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent };
     }
 
     if (result.isInterception) {
@@ -285,8 +354,8 @@ export class GameState {
       const defPts = calcDefenseTorchPoints(result, false);
       this._awardTorchPts(offPts, defPts);
       this._checkHalfEnd();
-      this.snapLog.push({ play: this.totalPlays, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent });
-      return { result, offPlay, defPlay, featuredOff, featuredDef, gotFirstDown, gameEvent };
+      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent });
+      return { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent };
     }
 
     if (result.isFumbleLost) {
@@ -321,8 +390,8 @@ export class GameState {
       const defPts = calcDefenseTorchPoints(result, false);
       this._awardTorchPts(offPts, defPts);
       this._checkHalfEnd();
-      this.snapLog.push({ play: this.totalPlays, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent });
-      return { result, offPlay, defPlay, featuredOff, featuredDef, gotFirstDown, gameEvent };
+      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent });
+      return { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent };
     }
 
     // Sack stat tracking
@@ -353,8 +422,10 @@ export class GameState {
       this._awardTorchPts(offPts, defPts);
 
       gameEvent = 'touchdown';
-      this.snapLog.push({ play: this.totalPlays, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent });
-      // Don't flip yet — conversion happens next
+      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent });
+      // Possession flip will happen in handleConversion, but we should ensure ball resets to 50 there too.
+      // However, if it's a turnover TD, it's already handled.
+      // For a regular TD, we don't flip yet because of the conversion attempt.
       return { result, offPlay, defPlay, featuredOff, featuredDef, gotFirstDown, gameEvent, scoringTeam };
     }
 
@@ -401,8 +472,44 @@ export class GameState {
 
     this._checkHalfEnd();
 
-    this.snapLog.push({ play: this.totalPlays, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent });
-    return { result, offPlay, defPlay, featuredOff, featuredDef, gotFirstDown, gameEvent };
+    this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent });
+    return { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent };
+  }
+
+  /** Use a one-time audible to swap the current play for a new random one from the deck */
+  useAudible(isOffense) {
+    if (this.stats.audiblesUsed >= 1) return null;
+
+    const pool = isOffense
+      ? (this.possession === 'CT' ? CT_OFF_PLAYS : IR_OFF_PLAYS)
+      : (this.possession === 'CT' ? CT_DEF_PLAYS : IR_DEF_PLAYS);
+    const newPlay = pool[Math.floor(Math.random() * pool.length)];
+
+    this.stats.audiblesUsed++;
+    return newPlay;
+  }
+
+  /** Spike the ball — 2-minute drill only, 3 seconds off clock, 0 yards */
+  spike() {
+    if (!this.twoMinActive) return null;
+    this.clockSeconds -= 3;
+    this.totalPlays++;
+    if (!this.twoMinActive) this.playsUsed++;
+    this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: 'SPIKE', defPlay: '-', result: 'Ball spiked. Clock stops.', event: 'spike' });
+    this._checkHalfEnd();
+    return { event: 'spike', description: 'Ball spiked. Clock stops.' };
+  }
+
+  /** Kneel the ball — 2-minute drill only, 30 seconds off clock, 0 yards */
+  kneel() {
+    if (!this.twoMinActive) return null;
+    this.clockSeconds -= 30;
+    this.totalPlays++;
+    if (!this.twoMinActive) this.playsUsed++;
+    healInjuries([this.ctOffRoster, this.ctDefRoster, this.irOffRoster, this.irDefRoster]);
+    this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: 'KNEEL', defPlay: '-', result: 'Quarterback kneels. Clock running.', event: 'kneel' });
+    this._checkHalfEnd();
+    return { event: 'kneel', description: 'Quarterback kneels. Clock running.' };
   }
 
   /**
@@ -455,6 +562,82 @@ export class GameState {
     return { success, points: success ? points : 0, result };
   }
 
+  /** Halftime Booster Shop — port of halftime_booster logic from sim */
+  halftimeShop() {
+    for (const teamAbbr of ['CT', 'IR']) {
+      const isHuman = this.humanTeam === teamAbbr;
+      const pts = teamAbbr === 'CT' ? this.ctTorchPts : this.irTorchPts;
+      const inv = isHuman ? this.humanTorchCards : this.cpuTorchCards;
+
+      const purchased = this._halftimeBooster(pts, isHuman);
+      for (const cardId of purchased) {
+        if (inv.length < 3) {
+          inv.push(cardId);
+          const card = TORCH_CARDS.find(c => c.id === cardId);
+          if (teamAbbr === 'CT') this.ctTorchPts -= card.cost;
+          else this.irTorchPts -= card.cost;
+        }
+      }
+    }
+  }
+
+  _halftimeBooster(currentPts, isHuman) {
+    const purchased = [];
+    const pool = TORCH_CARDS.map(c => c.id);
+    // Rough weighted choice
+    const getOffer = () => {
+      const r = Math.random();
+      let tierPool;
+      if (r < 0.50) tierPool = TORCH_CARDS.filter(c => c.tier === 'BRONZE');
+      else if (r < 0.85) tierPool = TORCH_CARDS.filter(c => c.tier === 'SILVER');
+      else tierPool = TORCH_CARDS.filter(c => c.tier === 'GOLD');
+      return tierPool[Math.floor(Math.random() * tierPool.length)].id;
+    };
+
+    const offers = [getOffer(), getOffer(), getOffer()];
+
+    if (isHuman && this.difficulty !== 'RANDOM') {
+      const affordable = offers.filter(id => {
+        const card = TORCH_CARDS.find(c => c.id === id);
+        return card.cost <= currentPts;
+      });
+      if (affordable.length > 0 && Math.random() < 0.5) {
+        // Buy most expensive affordable
+        purchased.push(affordable.reduce((a, b) => {
+          const cardA = TORCH_CARDS.find(c => c.id === a);
+          const cardB = TORCH_CARDS.find(c => c.id === b);
+          return cardA.cost > cardB.cost ? a : b;
+        }));
+      }
+    } else {
+      if (this.difficulty === 'RANDOM') {
+        const affordable = offers.filter(id => TORCH_CARDS.find(c => c.id === id).cost <= currentPts);
+        if (affordable.length > 0 && Math.random() < 0.5) {
+          purchased.push(affordable[Math.floor(Math.random() * affordable.length)]);
+        }
+      } else if (this.difficulty === 'MEDIUM') {
+        const affordable = offers.filter(id => TORCH_CARDS.find(c => c.id === id).cost <= currentPts);
+        if (affordable.length > 0) {
+          purchased.push(affordable.reduce((a, b) => {
+            const cardA = TORCH_CARDS.find(c => c.id === a);
+            const cardB = TORCH_CARDS.find(c => c.id === b);
+            return cardA.cost < cardB.cost ? a : b;
+          }));
+        }
+      } else if (this.difficulty === 'HARD') {
+        const affordable = offers.filter(id => TORCH_CARDS.find(c => c.id === id).cost <= currentPts);
+        if (affordable.length > 0) {
+          purchased.push(affordable.reduce((a, b) => {
+            const cardA = TORCH_CARDS.find(c => c.id === a);
+            const cardB = TORCH_CARDS.find(c => c.id === b);
+            return cardA.cost > cardB.cost ? a : b;
+          }));
+        }
+      }
+    }
+    return purchased;
+  }
+
   /** Award TORCH points to the correct teams */
   _awardTorchPts(offPts, defPts) {
     if (this.possession === 'CT') {
@@ -474,18 +657,25 @@ export class GameState {
     }
     if (this.twoMinActive && this.clockSeconds <= 0) {
       if (this.half === 1) {
-        this.half = 2;
-        this.playsUsed = 0;
-        this.twoMinActive = false;
-        this.clockSeconds = 120;
-        this.flipPossession(50);
+        this.needsHalftime = true;
       } else {
         this._endGame();
       }
     }
-    if (this.totalPlays > 120) {
+    // Hard cap total plays to prevent infinite loops
+    if (this.totalPlays > 150) {
       this._endGame();
     }
+  }
+
+  /** Transition to the second half */
+  startSecondHalf() {
+    this.half = 2;
+    this.playsUsed = 0;
+    this.twoMinActive = false;
+    this.clockSeconds = 120;
+    this.needsHalftime = false;
+    this.flipPossession(50);
   }
 
   /** End the game */

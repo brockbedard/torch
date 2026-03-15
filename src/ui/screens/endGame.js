@@ -18,7 +18,7 @@ export function buildEndGame() {
     '@keyframes victoryPulse { 0%,100% { text-shadow:0 0 20px rgba(0,255,68,0.4); } 50% { text-shadow:0 0 40px rgba(0,255,68,0.8); } }';
   el.appendChild(styleEl);
 
-  var gs = GS.finalState;
+  var gs = GS.finalEngine;
   var humanAbbr = GS.humanAbbr;
   var team = getTeam(GS.team);
   var opp = getOtherTeam(GS.team);
@@ -115,18 +115,19 @@ export function buildEndGame() {
   statLabel.textContent = 'GAME STATS';
   statsBlock.appendChild(statLabel);
 
+  var st = gs.stats;
   var stats = [
     ['Total Plays', gs.totalPlays],
-    ['First Downs', (humanAbbr === 'CT' ? gs.stats.ctFirstDowns : gs.stats.irFirstDowns) +
-      ' - ' + (humanAbbr === 'CT' ? gs.stats.irFirstDowns : gs.stats.ctFirstDowns)],
-    ['Total Yards', (humanAbbr === 'CT' ? gs.stats.ctTotalYards : gs.stats.irTotalYards) +
-      ' - ' + (humanAbbr === 'CT' ? gs.stats.irTotalYards : gs.stats.ctTotalYards)],
-    ['Sacks', gs.stats.sackCount],
-    ['Turnovers', (humanAbbr === 'CT' ? gs.stats.ctTurnovers : gs.stats.irTurnovers) +
-      ' - ' + (humanAbbr === 'CT' ? gs.stats.irTurnovers : gs.stats.ctTurnovers)],
-    ['Badge Combos', gs.stats.badgeCombos],
-    ['Explosive Plays', gs.stats.explosivePlays],
-    ['4th Down Conv', gs.stats.fourthDownConversions + '/' + gs.stats.fourthDownAttempts],
+    ['First Downs', (humanAbbr === 'CT' ? st.ctFirstDowns : st.irFirstDowns) +
+      ' - ' + (humanAbbr === 'CT' ? st.irFirstDowns : st.ctFirstDowns)],
+    ['Total Yards', (humanAbbr === 'CT' ? st.ctTotalYards : st.irTotalYards) +
+      ' - ' + (humanAbbr === 'CT' ? st.irTotalYards : st.ctTotalYards)],
+    ['Sacks', st.sackCount],
+    ['Turnovers', (humanAbbr === 'CT' ? st.ctTurnovers : st.irTurnovers) +
+      ' - ' + (humanAbbr === 'CT' ? st.irTurnovers : st.ctTurnovers)],
+    ['Badge Combos', st.badgeCombos],
+    ['Explosive Plays', st.explosivePlays],
+    ['4th Down Conv', st.fourthDownConversions + '/' + st.fourthDownAttempts],
   ];
 
   stats.forEach(function(s) {
@@ -145,6 +146,26 @@ export function buildEndGame() {
   });
 
   content.appendChild(statsBlock);
+
+  // Game Recap Log
+  var logLabel = document.createElement('div');
+  logLabel.style.cssText = "font-family:'Press Start 2P',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:10px;align-self:flex-start;width:100%;max-width:300px;";
+  logLabel.textContent = 'GAME RECAP';
+  content.appendChild(logLabel);
+
+  var logBox = document.createElement('div');
+  logBox.style.cssText = 'width:100%;max-width:300px;height:120px;overflow-y:auto;background:rgba(0,0,0,0.3);border:1px solid #333;padding:8px;display:flex;flex-direction:column;gap:6px;';
+  
+  if (gs.snapLog && gs.snapLog.length > 0) {
+    gs.snapLog.forEach((log, i) => {
+      var item = document.createElement('div');
+      item.style.cssText = "font-family:'Courier New',monospace;font-size:9px;color:#fff;line-height:1.2;border-bottom:1px solid #ffffff08;padding-bottom:4px;";
+      var teamColor = getTeam(log.team === 'CT' ? 'canyon_tech' : 'iron_ridge').accent;
+      item.innerHTML = `<span style="color:${teamColor};font-weight:bold;">${log.team}:</span> ${log.result}`;
+      logBox.appendChild(item);
+    });
+  }
+  content.appendChild(logBox);
 
   // Return button
   var returnBtn = document.createElement('button');

@@ -10,15 +10,15 @@ export const IR_DEF_PLAYS = [
     isCover0Blitz: false, isManCoverage: true,
     passEffect: 'MESH/SLANT/SHALLOW +4% INT. Disguised as Cover 2',
     runEffect: 'No special run effect',
-    passMeanMod: 0, runMeanMod: 0, passCompMod: 0,
+    passMeanMod: -1, runMeanMod: 0, passCompMod: 0,
   },
   {
     id: 'ir_bracket', name: 'BRACKET', cardType: 'ZONE',
-    baseCoverage: 'cover_2', sackRateBonus: 0, intRateBonus: 0.02, runDefMod: -1,
+    baseCoverage: 'cover_2', sackRateBonus: 0, intRateBonus: 0.03, runDefMod: -1,
     isCover0Blitz: false, isManCoverage: true,
-    passEffect: 'Featured player -3 mean, +3% INT',
+    passEffect: 'Featured player -3 mean, +4% INT',
     runEffect: 'No special run effect',
-    passMeanMod: -3, runMeanMod: 0, passCompMod: 0,
+    passMeanMod: -5, runMeanMod: 0, passCompMod: 0,
   },
   {
     id: 'ir_qb_spy', name: 'QB SPY', cardType: 'HYBRID',
@@ -42,7 +42,7 @@ export const IR_DEF_PLAYS = [
     isCover0Blitz: false, isManCoverage: false,
     passEffect: 'SEAM/POST -3 mean. CORNER +2 mean',
     runEffect: 'No special run effect',
-    passMeanMod: 0, runMeanMod: 0, passCompMod: 0,
+    passMeanMod: -1, runMeanMod: 0, passCompMod: -0.04,
   },
   {
     id: 'ir_mod', name: 'MOD', cardType: 'ZONE',
@@ -50,7 +50,7 @@ export const IR_DEF_PLAYS = [
     isCover0Blitz: false, isManCoverage: false,
     passEffect: 'FOUR VERTS/GO -4 mean, +3% INT. SHORT +2 mean',
     runEffect: 'No special run effect',
-    passMeanMod: 0, runMeanMod: 0, passCompMod: 0,
+    passMeanMod: -2, runMeanMod: 0, passCompMod: 0,
   },
   {
     id: 'ir_press_man', name: 'PRESS MAN', cardType: 'PRESSURE',

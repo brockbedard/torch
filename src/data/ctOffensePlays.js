@@ -6,7 +6,7 @@
 export const CT_OFF_PLAYS = [
   {
     id: 'mesh', name: 'MESH', playType: 'SHORT',
-    mean: 9, variance: 5, completionRate: 0.78, sackRate: 0.06, intRate: 0.015, fumbleRate: 0.005,
+    mean: 9, variance: 5, completionRate: 0.78, sackRate: 0.12, intRate: 0.01, fumbleRate: 0.005,
     coverageMods: {
       cover_0: { mean: 5, var: 4, int: -0.01 },
       cover_1: { mean: 3, var: 2, int: -0.005 },
@@ -19,7 +19,7 @@ export const CT_OFF_PLAYS = [
   },
   {
     id: 'four_verts', name: 'FOUR VERTS', playType: 'DEEP',
-    mean: 15, variance: 14, completionRate: 0.43, sackRate: 0.09, intRate: 0.055, fumbleRate: 0.003,
+    mean: 16, variance: 14, completionRate: 0.40, sackRate: 0.12, intRate: 0.045, fumbleRate: 0.003,
     coverageMods: {
       cover_0: { mean: 6, var: 5, int: -0.02 },
       cover_1: { mean: 3, var: 3, int: 0.01 },
@@ -33,7 +33,7 @@ export const CT_OFF_PLAYS = [
   },
   {
     id: 'slant', name: 'SLANT', playType: 'QUICK',
-    mean: 8, variance: 4, completionRate: 0.75, sackRate: 0.04, intRate: 0.02, fumbleRate: 0.005,
+    mean: 8, variance: 4, completionRate: 0.75, sackRate: 0.08, intRate: 0.02, fumbleRate: 0.005,
     coverageMods: {
       cover_0: { mean: 3, var: 2, int: -0.01 },
       cover_1: { mean: 1, var: 1, int: 0 },
@@ -46,7 +46,7 @@ export const CT_OFF_PLAYS = [
   },
   {
     id: 'shallow_cross', name: 'SHALLOW CROSS', playType: 'QUICK',
-    mean: 7, variance: 3, completionRate: 0.80, sackRate: 0.04, intRate: 0.01, fumbleRate: 0.005,
+    mean: 7, variance: 3, completionRate: 0.78, sackRate: 0.10, intRate: 0.01, fumbleRate: 0.005,
     coverageMods: {
       cover_0: { mean: 4, var: 3, int: -0.005 },
       cover_1: { mean: 2, var: 1, int: 0 },
@@ -59,7 +59,7 @@ export const CT_OFF_PLAYS = [
   },
   {
     id: 'y_corner', name: 'Y-CORNER', playType: 'DEEP',
-    mean: 15, variance: 10, completionRate: 0.47, sackRate: 0.08, intRate: 0.04, fumbleRate: 0.003,
+    mean: 13, variance: 10, completionRate: 0.45, sackRate: 0.10, intRate: 0.035, fumbleRate: 0.003,
     coverageMods: {
       cover_0: { mean: 3, var: 2, int: -0.01 },
       cover_1: { mean: 2, var: 1, int: 0 },
@@ -73,7 +73,7 @@ export const CT_OFF_PLAYS = [
   },
   {
     id: 'stick', name: 'STICK', playType: 'SHORT',
-    mean: 6, variance: 2, completionRate: 0.83, sackRate: 0.03, intRate: 0.01, fumbleRate: 0.005,
+    mean: 7, variance: 2, completionRate: 0.78, sackRate: 0.06, intRate: 0.01, fumbleRate: 0.005,
     coverageMods: {
       cover_0: { mean: 2, var: 1, int: -0.005 },
       cover_1: { mean: 1, var: 0, int: 0 },
@@ -86,7 +86,7 @@ export const CT_OFF_PLAYS = [
   },
   {
     id: 'go_route', name: 'GO ROUTE', playType: 'DEEP',
-    mean: 18, variance: 18, completionRate: 0.38, sackRate: 0.10, intRate: 0.06, fumbleRate: 0.002,
+    mean: 20, variance: 18, completionRate: 0.38, sackRate: 0.10, intRate: 0.035, fumbleRate: 0.002,
     coverageMods: {
       cover_0: { mean: 8, var: 5, int: -0.03 },
       cover_1: { mean: 2, var: 2, int: 0.01 },

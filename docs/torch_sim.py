@@ -49,6 +49,44 @@ class Difficulty(Enum):
     EASY = "EASY"
     MEDIUM = "MEDIUM"
     HARD = "HARD"
+    RANDOM = "RANDOM"
+
+# ============================================================
+# TORCH CARDS
+# ============================================================
+
+TORCH_CARDS = {
+    # GOLD (40-50 pts)
+    'SCOUT_TEAM': {'tier': 'GOLD', 'cost': 45, 'cat': 'INFO', 'is_reactive': False},
+    'FILM_LEAK': {'tier': 'GOLD', 'cost': 45, 'cat': 'DISRUPT', 'is_reactive': False},
+    'SURE_HANDS': {'tier': 'GOLD', 'cost': 50, 'cat': 'PROTECT', 'is_reactive': False},
+    'MEDICAL_TENT': {'tier': 'GOLD', 'cost': 40, 'cat': 'PROTECT', 'is_reactive': False},
+    'TO_THE_HOUSE': {'tier': 'GOLD', 'cost': 50, 'cat': 'RESOURCE', 'is_reactive': False},
+    'DOUBLE_DOWN': {'tier': 'GOLD', 'cost': 45, 'cat': 'RULE', 'is_reactive': False},
+    'TRADE_DEADLINE': {'tier': 'GOLD', 'cost': 50, 'cat': 'RULE', 'is_reactive': False},
+    
+    # SILVER (20-30 pts)
+    'SIDELINE_PHONE': {'tier': 'SILVER', 'cost': 25, 'cat': 'INFO', 'is_reactive': False},
+    'PRIME_TIME': {'tier': 'SILVER', 'cost': 25, 'cat': 'AMP', 'is_reactive': False},
+    'DOUBLE_MOVE': {'tier': 'SILVER', 'cost': 30, 'cat': 'AMP', 'is_reactive': False},
+    'HARD_COUNT': {'tier': 'SILVER', 'cost': 25, 'cat': 'DISRUPT', 'is_reactive': False},
+    'SHIFT': {'tier': 'SILVER', 'cost': 20, 'cat': 'DISRUPT', 'is_reactive': False},
+    'CHALLENGE_FLAG': {'tier': 'SILVER', 'cost': 25, 'cat': 'PROTECT', 'is_reactive': True},
+    'FLAG_ON_THE_PLAY': {'tier': 'SILVER', 'cost': 25, 'cat': 'PROTECT', 'is_reactive': True},
+    'TIMEOUT': {'tier': 'SILVER', 'cost': 20, 'cat': 'PROTECT', 'is_reactive': False},
+    'HOT_ROUTE': {'tier': 'SILVER', 'cost': 25, 'cat': 'RESOURCE', 'is_reactive': False},
+    'FAKE_KNEEL': {'tier': 'SILVER', 'cost': 25, 'cat': 'RULE', 'is_reactive': False},
+    'TRICK_PLAY': {'tier': 'SILVER', 'cost': 20, 'cat': 'RULE', 'is_reactive': False},
+    'ONSIDE_KICK': {'tier': 'SILVER', 'cost': 20, 'cat': 'RULE', 'is_reactive': True},
+    
+    # BRONZE (10-20 pts)
+    'PERSONNEL_REPORT': {'tier': 'BRONZE', 'cost': 15, 'cat': 'INFO', 'is_reactive': False},
+    '12TH_MAN': {'tier': 'BRONZE', 'cost': 15, 'cat': 'AMP', 'is_reactive': False},
+    'HURRY_UP': {'tier': 'BRONZE', 'cost': 15, 'cat': 'AMP', 'is_reactive': False},
+    'ICE': {'tier': 'BRONZE', 'cost': 15, 'cat': 'DISRUPT', 'is_reactive': False},
+    'NEXT_MAN_UP': {'tier': 'BRONZE', 'cost': 10, 'cat': 'RESOURCE', 'is_reactive': False},
+    'RUN_IT_BACK': {'tier': 'BRONZE', 'cost': 15, 'cat': 'RESOURCE', 'is_reactive': False},
+}
 
 # ============================================================
 # DATA CLASSES
@@ -116,37 +154,37 @@ class TorchCard:
 
 # CANYON TECH OFFENSIVE PLAYS
 CT_OFF_PLAYS = [
-    OffensivePlay("mesh", "MESH", PlayType.SHORT, 9, 5, 0.78, 0.06, 0.015, 0.005,
+    OffensivePlay("mesh", "MESH", PlayType.SHORT, 9, 5, 0.78, 0.12, 0.01, 0.005,
         {"cover_0": {"mean": 5, "var": 4, "int": -0.01}, "cover_1": {"mean": 3, "var": 2, "int": -0.005},
          "cover_2": {"mean": 0, "var": 0, "int": 0}, "cover_3": {"mean": 1, "var": 1, "int": 0},
          "cover_4": {"mean": -1, "var": -1, "int": 0.005}, "cover_6": {"mean": 0, "var": 0, "int": 0},
          "man_free": {"mean": 4, "var": 3, "int": -0.01}}),
-    OffensivePlay("four_verts", "FOUR VERTS", PlayType.DEEP, 15, 14, 0.43, 0.09, 0.055, 0.003,
+    OffensivePlay("four_verts", "FOUR VERTS", PlayType.DEEP, 16, 14, 0.40, 0.12, 0.045, 0.003,
         {"cover_0": {"mean": 6, "var": 5, "int": -0.02}, "cover_1": {"mean": 3, "var": 3, "int": 0.01},
          "cover_2": {"mean": 2, "var": 2, "int": 0.01}, "cover_3": {"mean": -2, "var": -2, "int": 0.02},
          "cover_4": {"mean": -4, "var": -3, "int": 0.03}, "cover_6": {"mean": 0, "var": 1, "int": 0.01},
          "man_free": {"mean": 2, "var": 3, "int": 0.01}}, min_distance=3),
-    OffensivePlay("slant", "SLANT", PlayType.QUICK, 8, 4, 0.75, 0.04, 0.02, 0.005,
+    OffensivePlay("slant", "SLANT", PlayType.QUICK, 8, 4, 0.75, 0.08, 0.02, 0.005,
         {"cover_0": {"mean": 3, "var": 2, "int": -0.01}, "cover_1": {"mean": 1, "var": 1, "int": 0},
          "cover_2": {"mean": 2, "var": 1, "int": -0.005}, "cover_3": {"mean": 1, "var": 0, "int": 0},
          "cover_4": {"mean": 0, "var": 0, "int": 0}, "cover_6": {"mean": 1, "var": 0, "int": 0},
          "man_free": {"mean": 1, "var": 1, "int": 0}}),
-    OffensivePlay("shallow_cross", "SHALLOW CROSS", PlayType.QUICK, 7, 3, 0.80, 0.04, 0.01, 0.005,
+    OffensivePlay("shallow_cross", "SHALLOW CROSS", PlayType.QUICK, 7, 3, 0.78, 0.10, 0.01, 0.005,
         {"cover_0": {"mean": 4, "var": 3, "int": -0.005}, "cover_1": {"mean": 2, "var": 1, "int": 0},
          "cover_2": {"mean": 1, "var": 1, "int": 0}, "cover_3": {"mean": 0, "var": 0, "int": 0},
          "cover_4": {"mean": 0, "var": 0, "int": 0}, "cover_6": {"mean": 1, "var": 0, "int": 0},
          "man_free": {"mean": 3, "var": 2, "int": 0}}),
-    OffensivePlay("y_corner", "Y-CORNER", PlayType.DEEP, 15, 10, 0.47, 0.08, 0.04, 0.003,
+    OffensivePlay("y_corner", "Y-CORNER", PlayType.DEEP, 13, 10, 0.45, 0.10, 0.035, 0.003,
         {"cover_0": {"mean": 3, "var": 2, "int": -0.01}, "cover_1": {"mean": 2, "var": 1, "int": 0},
          "cover_2": {"mean": 5, "var": 3, "int": -0.02}, "cover_3": {"mean": -1, "var": 0, "int": 0.01},
          "cover_4": {"mean": -2, "var": -1, "int": 0.015}, "cover_6": {"mean": 2, "var": 1, "int": -0.01},
          "man_free": {"mean": 1, "var": 1, "int": 0}}, min_distance=3),
-    OffensivePlay("stick", "STICK", PlayType.SHORT, 6, 2, 0.83, 0.03, 0.01, 0.005,
+    OffensivePlay("stick", "STICK", PlayType.SHORT, 7, 2, 0.78, 0.06, 0.01, 0.005,
         {"cover_0": {"mean": 2, "var": 1, "int": -0.005}, "cover_1": {"mean": 1, "var": 0, "int": 0},
          "cover_2": {"mean": 1, "var": 1, "int": 0}, "cover_3": {"mean": 0, "var": 0, "int": 0},
          "cover_4": {"mean": 0, "var": 0, "int": 0}, "cover_6": {"mean": 1, "var": 0, "int": 0},
          "man_free": {"mean": 1, "var": 1, "int": 0}}),
-    OffensivePlay("go_route", "GO ROUTE", PlayType.DEEP, 18, 18, 0.38, 0.10, 0.06, 0.002,
+    OffensivePlay("go_route", "GO ROUTE", PlayType.DEEP, 20, 18, 0.38, 0.10, 0.035, 0.002,
         {"cover_0": {"mean": 8, "var": 5, "int": -0.03}, "cover_1": {"mean": 2, "var": 2, "int": 0.01},
          "cover_2": {"mean": 1, "var": 2, "int": 0.01}, "cover_3": {"mean": -3, "var": -2, "int": 0.03},
          "cover_4": {"mean": -4, "var": -3, "int": 0.04}, "cover_6": {"mean": 1, "var": 1, "int": 0.01},
@@ -170,47 +208,47 @@ CT_OFF_PLAYS = [
 
 # IRON RIDGE OFFENSIVE PLAYS
 IR_OFF_PLAYS = [
-    OffensivePlay("triple_option", "TRIPLE OPTION", PlayType.OPTION, 4, 5, None, None, None, 0.025,
+    OffensivePlay("triple_option", "TRIPLE OPTION", PlayType.OPTION, 4.8, 8, None, None, None, 0.045,
         {"cover_0": {"mean": 3, "var": 3}, "cover_1": {"mean": 2, "var": 2},
          "cover_2": {"mean": 1, "var": 1}, "cover_3": {"mean": -1, "var": -1},
          "cover_4": {"mean": -2, "var": -1}, "cover_6": {"mean": 0, "var": 1},
          "man_free": {"mean": 1, "var": 1}}),
-    OffensivePlay("zone_read", "ZONE READ", PlayType.OPTION, 4, 4, None, None, None, 0.02,
+    OffensivePlay("zone_read", "ZONE READ", PlayType.OPTION, 4.5, 5, None, None, None, 0.03,
         {"cover_0": {"mean": 3, "var": 2}, "cover_1": {"mean": 2, "var": 1},
          "cover_2": {"mean": 1, "var": 1}, "cover_3": {"mean": -1, "var": 0},
          "cover_4": {"mean": -1, "var": 0}, "cover_6": {"mean": 1, "var": 1},
          "man_free": {"mean": 2, "var": 2}}),
-    OffensivePlay("power", "POWER", PlayType.RUN, 4, 3, None, None, None, 0.015,
+    OffensivePlay("power", "POWER", PlayType.RUN, 5.0, 3, None, None, None, 0.025,
         {"cover_0": {"mean": -1, "var": -1}, "cover_1": {"mean": 1, "var": 0},
          "cover_2": {"mean": 2, "var": 1}, "cover_3": {"mean": -2, "var": -1},
          "cover_4": {"mean": 0, "var": 0}, "cover_6": {"mean": 1, "var": 0},
          "man_free": {"mean": 1, "var": 1}}),
-    OffensivePlay("trap", "TRAP", PlayType.RUN, 4, 4, None, None, None, 0.015,
+    OffensivePlay("trap", "TRAP", PlayType.RUN, 4.5, 4, None, None, None, 0.015,
         {"cover_0": {"mean": 2, "var": 2}, "cover_1": {"mean": 1, "var": 1},
          "cover_2": {"mean": 1, "var": 1}, "cover_3": {"mean": -1, "var": 0},
          "cover_4": {"mean": 0, "var": 0}, "cover_6": {"mean": 0, "var": 1},
          "man_free": {"mean": 1, "var": 1}}),
-    OffensivePlay("rocket_toss", "ROCKET TOSS", PlayType.RUN, 4, 7, None, None, None, 0.02,
+    OffensivePlay("rocket_toss", "ROCKET TOSS", PlayType.RUN, 5.5, 10, None, None, None, 0.035,
         {"cover_0": {"mean": 2, "var": 2}, "cover_1": {"mean": 1, "var": 2},
          "cover_2": {"mean": 2, "var": 2}, "cover_3": {"mean": -2, "var": -1},
          "cover_4": {"mean": -1, "var": 0}, "cover_6": {"mean": 1, "var": 1},
          "man_free": {"mean": 1, "var": 1}}),
-    OffensivePlay("qb_keeper", "QB KEEPER", PlayType.OPTION, 4, 4, None, None, None, 0.02,
+    OffensivePlay("qb_keeper", "QB KEEPER", PlayType.OPTION, 3.5, 4, None, None, None, 0.02,
         {"cover_0": {"mean": 3, "var": 3}, "cover_1": {"mean": 2, "var": 2},
          "cover_2": {"mean": 1, "var": 1}, "cover_3": {"mean": -1, "var": 0},
          "cover_4": {"mean": -1, "var": 0}, "cover_6": {"mean": 1, "var": 1},
          "man_free": {"mean": 2, "var": 2}}),
-    OffensivePlay("midline", "MIDLINE", PlayType.OPTION, 4, 3, None, None, None, 0.022,
+    OffensivePlay("midline", "MIDLINE", PlayType.OPTION, 3.5, 3, None, None, None, 0.022,
         {"cover_0": {"mean": 2, "var": 2}, "cover_1": {"mean": 1, "var": 1},
          "cover_2": {"mean": 1, "var": 1}, "cover_3": {"mean": -1, "var": 0},
          "cover_4": {"mean": -1, "var": 0}, "cover_6": {"mean": 0, "var": 0},
          "man_free": {"mean": 1, "var": 1}}),
-    OffensivePlay("pa_flat", "PA FLAT", PlayType.SHORT, 7, 4, 0.71, 0.08, 0.02, 0.004,
+    OffensivePlay("pa_flat", "PA FLAT", PlayType.SHORT, 7, 4, 0.75, 0.12, 0.02, 0.004,
         {"cover_0": {"mean": 2, "var": 1, "int": -0.01}, "cover_1": {"mean": 1, "var": 1, "int": 0},
          "cover_2": {"mean": 1, "var": 1, "int": 0}, "cover_3": {"mean": 2, "var": 2, "int": -0.005},
          "cover_4": {"mean": 1, "var": 1, "int": 0}, "cover_6": {"mean": 1, "var": 0, "int": 0},
          "man_free": {"mean": 1, "var": 1, "int": 0}}),
-    OffensivePlay("pa_post", "PA POST", PlayType.DEEP, 16, 12, 0.40, 0.10, 0.045, 0.003,
+    OffensivePlay("pa_post", "PA POST", PlayType.DEEP, 18, 12, 0.45, 0.15, 0.045, 0.003,
         {"cover_0": {"mean": 4, "var": 3, "int": -0.02}, "cover_1": {"mean": 3, "var": 2, "int": 0},
          "cover_2": {"mean": 3, "var": 2, "int": -0.01}, "cover_3": {"mean": 1, "var": 1, "int": 0.01},
          "cover_4": {"mean": -2, "var": -1, "int": 0.02}, "cover_6": {"mean": 2, "var": 1, "int": 0},
@@ -224,42 +262,42 @@ IR_OFF_PLAYS = [
 
 # CANYON TECH DEFENSIVE PLAYS
 CT_DEF_PLAYS = [
-    DefensivePlay("ct_corner_blitz", "CORNER BLITZ", DefCardType.BLITZ, "cover_0", 0.08, 0, 2, True, False,
-        "Sack rate doubled vs DEEP", "+3 yds for offense (gap abandoned)", pass_mean_mod=-2, run_mean_mod=3),
+    DefensivePlay("ct_corner_blitz", "CORNER BLITZ", DefCardType.BLITZ, "cover_0", 0.10, 0, 2, True, False,
+        "Sack rate doubled vs DEEP", "+2 yds for offense (gap abandoned)", pass_mean_mod=-2, run_mean_mod=2),
     DefensivePlay("ct_safety_blitz", "SAFETY BLITZ", DefCardType.BLITZ, "cover_0", 0.06, 0, 1, True, False,
-        "Extra sack pressure", "+3 yds for offense, but -3 vs RUN fills gap", pass_mean_mod=-1, run_mean_mod=3),
+        "Extra sack pressure", "+2 yds for offense", pass_mean_mod=-1, run_mean_mod=2),
     DefensivePlay("ct_agap_mug", "A-GAP MUG", DefCardType.PRESSURE, "cover_1", 0.05, 0.01, -1, False, True,
         "DEEP +3% sack, forces quick throws", "Inside runs -2 yds", pass_mean_mod=0, run_mean_mod=-2),
-    DefensivePlay("ct_fire_zone", "FIRE ZONE", DefCardType.BLITZ, "cover_3", 0.04, 0.01, -1, False, False,
+    DefensivePlay("ct_fire_zone", "FIRE ZONE", DefCardType.BLITZ, "cover_3", 0.04, 0.02, -1, False, False,
         "Pressure + zone behind. Screens get 50% blitz bonus", "No run penalty (zone behind rush)", pass_mean_mod=-1, run_mean_mod=0),
-    DefensivePlay("ct_db_blitz", "DB BLITZ", DefCardType.BLITZ, "cover_0", 0.10, -0.01, 2, True, False,
-        "Highest sack rate. If no sack, +5 mean for offense", "+3 yds for offense (gaps abandoned)", pass_mean_mod=-3, run_mean_mod=3),
+    DefensivePlay("ct_db_blitz", "DB BLITZ", DefCardType.BLITZ, "cover_0", 0.12, -0.01, 3, True, False,
+        "Highest sack rate. If no sack, +5 mean for offense", "+2 yds for offense (gaps abandoned)", pass_mean_mod=-3, run_mean_mod=3),
     DefensivePlay("ct_press_man", "PRESS MAN", DefCardType.PRESSURE, "man_free", 0.02, 0.015, 0, False, True,
         "SHORT/QUICK completion -8%. DEEP +2 yds for offense", "No special run effect", pass_comp_mod=-0.08, run_mean_mod=0, pass_mean_mod=2),
     DefensivePlay("ct_edge_crash", "EDGE CRASH", DefCardType.PRESSURE, "cover_1", 0.04, 0, -2, False, True,
-        "Standard pressure", "OPTION plays -3 yds, edge crash contains", pass_mean_mod=0, run_mean_mod=-3),
-    DefensivePlay("ct_zone_blitz_drop", "ZONE BLITZ DROP", DefCardType.HYBRID, "cover_2", 0.03, 0.02, 0, False, False,
+        "Standard pressure", "OPTION plays -4 yds, edge crash contains", pass_mean_mod=0, run_mean_mod=-4),
+    DefensivePlay("ct_zone_blitz_drop", "ZONE BLITZ DROP", DefCardType.HYBRID, "cover_2", 0.03, 0.04, 0, False, False,
         "Disguise. PA gets -2 yds", "No run penalty (zone drops read run)", pass_mean_mod=-1, run_mean_mod=0),
-    DefensivePlay("ct_overload_blitz", "OVERLOAD BLITZ", DefCardType.BLITZ, "cover_1", 0.07, 0, 1, True, True,
-        "Heavy pressure from one side", "+3 yds if offense runs away from overload", pass_mean_mod=-2, run_mean_mod=1),
-    DefensivePlay("ct_prevent", "PREVENT", DefCardType.ZONE, "cover_4", -0.04, -0.01, 3, False, False,
+    DefensivePlay("ct_overload_blitz", "OVERLOAD BLITZ", DefCardType.BLITZ, "cover_1", 0.07, 0, 2, True, True,
+        "Heavy pressure from one side", "+3 yds if offense runs away from overload", pass_mean_mod=-2, run_mean_mod=2),
+    DefensivePlay("ct_prevent", "PREVENT", DefCardType.ZONE, "cover_4", -0.04, 0.05, 3, False, False,
         "DEEP -6 mean, +3% INT. SHORT/QUICK +4 mean", "Runs +3 yds (everyone deep)", pass_mean_mod=0, run_mean_mod=3),
 ]
 
 # IRON RIDGE DEFENSIVE PLAYS
 IR_DEF_PLAYS = [
     DefensivePlay("ir_robber", "ROBBER", DefCardType.HYBRID, "cover_1", 0.01, 0.04, 0, False, True,
-        "MESH/SLANT/SHALLOW +4% INT. Disguised as Cover 2", "No special run effect", pass_mean_mod=0, run_mean_mod=0),
-    DefensivePlay("ir_bracket", "BRACKET", DefCardType.ZONE, "cover_2", 0, 0.02, -1, False, True,
-        "Featured player -3 mean, +3% INT", "No special run effect", pass_mean_mod=-3, run_mean_mod=0),
+        "MESH/SLANT/SHALLOW +4% INT. Disguised as Cover 2", "No special run effect", pass_mean_mod=-1, run_mean_mod=0),
+    DefensivePlay("ir_bracket", "BRACKET", DefCardType.ZONE, "cover_2", 0, 0.03, -1, False, True,
+        "Featured player -3 mean, +4% INT", "No special run effect", pass_mean_mod=-5, run_mean_mod=0),
     DefensivePlay("ir_qb_spy", "QB SPY", DefCardType.HYBRID, "cover_3", 0, 0, -1, False, False,
         "No special pass effect", "QB KEEPER/ZONE READ -4 yds, OPTION -2 yds", pass_mean_mod=0, run_mean_mod=-2),
     DefensivePlay("ir_gap_integrity", "GAP INTEGRITY", DefCardType.ZONE, "cover_3", 0, 0, -4, False, False,
         "Pass +2 mean (light rush)", "ALL runs -3 mean, variance -2", pass_mean_mod=2, run_mean_mod=-3),
     DefensivePlay("ir_cover2_buc", "COVER 2 BUC", DefCardType.ZONE, "cover_2", 0, 0.01, -1, False, False,
-        "SEAM/POST -3 mean. CORNER +2 mean", "No special run effect", pass_mean_mod=0, run_mean_mod=0),
+        "SEAM/POST -3 mean. CORNER +2 mean", "No special run effect", pass_mean_mod=-1, run_mean_mod=0, pass_comp_mod=-0.04),
     DefensivePlay("ir_mod", "MOD", DefCardType.ZONE, "cover_4", -0.02, 0.01, -1, False, False,
-        "FOUR VERTS/GO -4 mean, +3% INT. SHORT +2 mean", "No special run effect", pass_mean_mod=0, run_mean_mod=0),
+        "FOUR VERTS/GO -4 mean, +3% INT. SHORT +2 mean", "No special run effect", pass_mean_mod=-2, run_mean_mod=0),
     DefensivePlay("ir_press_man", "PRESS MAN", DefCardType.PRESSURE, "man_free", 0.02, 0.015, 0, False, True,
         "SHORT/QUICK completion -8%. DEEP +2 yds for offense", "No special run effect", pass_comp_mod=-0.08, run_mean_mod=0, pass_mean_mod=2),
     DefensivePlay("ir_line_stunt", "LINE STUNT", DefCardType.PRESSURE, "cover_3", 0.05, 0, 0, False, False,
@@ -468,24 +506,24 @@ def apply_red_zone(yards_to_endzone: int, mean: float, variance: float, play: Of
     max_yards = yards_to_endzone
     
     if yards_to_endzone <= 5:
-        # Extreme red zone — brutal
+        # Extreme red zone
         if play.play_type == PlayType.DEEP:
             max_yards = min(max_yards, yards_to_endzone)
         if is_run_type(play.play_type) or play.play_type == PlayType.RUN:
-            mean -= 3  # was -2
+            mean -= 0.5 # reduced from -1
         if play.id in ("qb_sneak", "ir_qb_sneak"):
-            mean += 1
-        mean -= 1  # universal red zone squeeze
+            mean += 1.5 # increased from +1
+        mean -= 0.5 # universal squeeze reduced from -1
         variance = max(1, variance - 2)
     elif yards_to_endzone <= 10:
         if play.play_type == PlayType.DEEP:
             max_yards = min(max_yards, 12)
-        mean -= 2  # was -1
+        mean -= 1  # softened from -2
         variance = max(1, variance - 1)
     elif yards_to_endzone <= 20:
         if play.play_type == PlayType.DEEP:
             max_yards = min(max_yards, 20)
-        mean -= 1  # was 0
+        mean -= 0.5  # softened from -1
         variance = max(1, variance - 1)
     
     return mean, variance, max_yards
@@ -561,24 +599,52 @@ def resolve_snap(off_play: OffensivePlay, def_play: DefensivePlay,
                   off_players: List[Player], def_players: List[Player],
                   play_history: List[PlayType], yards_to_endzone: int,
                   ball_position: int, down: int, distance: int,
-                  is_conversion: bool = False, score_diff: int = 0) -> SnapResult:
+                  is_conversion: bool = False, score_diff: int = 0,
+                  off_card: str = None, def_card: str = None,
+                  two_min_active: bool = False) -> SnapResult:
     """score_diff: positive means offense is trailing (needs comeback)"""
     
     result = SnapResult()
     is_pass = off_play.completion_rate is not None
     is_run = not is_pass
     is_3rd_4th = down >= 3
+    is_4th = down == 4
     
-    # FIX 1: TRAILING TEAM AGGRESSION
-    # When you're behind, you take bigger risks -> higher variance + slight mean boost
-    # This creates natural lead changes without rubber-banding
+    # === PRE-SNAP MODIFIERS (PRE-ROLL) ===
+    
+    # Desperation bonus on 4th down: +1 mean yard
+    desperation_bonus = 1 if is_4th else 0
+    
+    # PRIME TIME (SILVER): Featured player OVR counts as 99
+    if off_card == 'PRIME_TIME':
+        featured_off = Player(featured_off.name, featured_off.pos, 99, featured_off.badge)
+    if def_card == 'PRIME_TIME':
+        featured_def = Player(featured_def.name, featured_def.pos, 99, featured_def.badge)
+
+    # ICE (BRONZE): Opponent featured player provides zero OVR bonus and no badge combo
+    opponent_ice_off = (def_card == 'ICE')
+    opponent_ice_def = (off_card == 'ICE')
+
+    # HURRY UP (BRONZE): +2 mean yards (2-min drill only)
+    hurry_up_bonus = 2 if (off_card == 'HURRY_UP' and two_min_active) else 0
+
+    # 12TH MAN (BRONZE): +4 yards
+    twelfth_man_bonus = 4 if off_card == '12TH_MAN' else 0
+
+    # FILM LEAK (GOLD): Opponent play revealed, -3 mean yards
+    film_leak_penalty = 3 if def_card == 'FILM_LEAK' else 0
+
+    # FAKE KNEEL (SILVER): +6 mean yards (2-min only)
+    fake_kneel_bonus = 6 if (off_card == 'FAKE_KNEEL' and two_min_active) else 0
+
+    # Trailing team bonus (Increased for better balance)
     trailing_bonus = 0
     trailing_var_boost = 0
     if score_diff >= 14:
-        trailing_bonus = 2    # Down 2+ scores: desperate mode
-        trailing_var_boost = 3
+        trailing_bonus = 3
+        trailing_var_boost = 4
     elif score_diff >= 7:
-        trailing_bonus = 1    # Down 1 score: aggressive
+        trailing_bonus = 2
         trailing_var_boost = 2
     
     # Get coverage modifiers
@@ -593,26 +659,34 @@ def resolve_snap(off_play: OffensivePlay, def_play: DefensivePlay,
     # Defensive card effects
     if is_run:
         mean += def_play.run_mean_mod
-        # Cover 0 blitz vs run penalty
         if def_play.is_cover0_blitz:
             mean += 3
     else:
-        # Press man deep bonus for offense
         if def_play.id in ("ct_press_man", "ir_press_man") and off_play.play_type == PlayType.DEEP:
             mean += 2
     
     # Badge combos
-    off_yard_bonus, off_pt_bonus = check_offensive_badge_combo(
-        featured_off.badge, off_play, is_3rd_4th, is_conversion)
-    def_yard_mod, def_pt_bonus = check_defensive_badge_combo(
-        featured_def.badge, def_play, off_play)
+    off_yard_bonus, off_pt_bonus = (0, 0)
+    if not opponent_ice_off:
+        off_yard_bonus, off_pt_bonus = check_offensive_badge_combo(
+            featured_off.badge, off_play, is_3rd_4th, is_conversion)
     
+    def_yard_mod, def_pt_bonus = (0, 0)
+    if not opponent_ice_def:
+        def_yard_mod, def_pt_bonus = check_defensive_badge_combo(
+            featured_def.badge, def_play, off_play)
+    
+    # DOUBLE MOVE (SILVER): Triggers as TWO play types for combos
+    if off_card == 'DOUBLE_MOVE':
+        # Sim: add a flat bonus representing the increased combo chance
+        off_yard_bonus += 2; off_pt_bonus += 10
+
     result.off_combo_yards = off_yard_bonus
     result.def_combo_yards = def_yard_mod
     result.off_combo_pts = off_pt_bonus
     result.def_combo_pts = def_pt_bonus
     
-    mean += off_yard_bonus + def_yard_mod
+    mean += off_yard_bonus + def_yard_mod + hurry_up_bonus + twelfth_man_bonus + fake_kneel_bonus + desperation_bonus - film_leak_penalty
     
     # Play history
     history_bonus = get_play_history_bonus(play_history, off_play)
@@ -620,57 +694,56 @@ def resolve_snap(off_play: OffensivePlay, def_play: DefensivePlay,
     mean += history_bonus
     
     # OVR modifiers
-    ovr_mods = apply_squad_ovr(off_players, def_players, off_play, featured_off, featured_def)
+    # Sim ICE: if opponent iced you, your featured player contributes 0 to ovr_mods
+    effective_featured_off = featured_off if not opponent_ice_off else None
+    effective_featured_def = featured_def if not opponent_ice_def else None
+    ovr_mods = apply_squad_ovr(off_players, def_players, off_play, effective_featured_off, effective_featured_def)
     mean += ovr_mods["mean_mod"]
     
     # Red zone
     mean, variance, max_yards = apply_red_zone(yards_to_endzone, mean, variance, off_play)
     
-    # FIX 1: Apply trailing team bonus (more aggressive = higher mean + variance)
+    # Apply trailing team bonus (more aggressive = higher mean + variance)
     mean += trailing_bonus
     variance += trailing_var_boost
     
     # === PASS PLAY RESOLUTION ===
     if is_pass:
-        # FIX 5: Sack check — higher base rates + coverage sack mechanic
+        # Sack check
         sack_rate = off_play.sack_rate + def_play.sack_rate_bonus + ovr_mods["sack_mod"]
-        # Deep passes vs certain blitzes: doubled
         if off_play.play_type == PlayType.DEEP and def_play.id in ("ct_corner_blitz",):
             sack_rate *= 2
-        # FIX 3+5: COVERAGE SACK — good coverage + any pressure = sack even without blitzing
-        # If defense has good coverage (negative pass_mean_mod) and some sack rate, boost it
         if def_play.pass_mean_mod < 0 and def_play.sack_rate_bonus >= 0.03:
-            sack_rate += 0.03  # Coverage holds long enough for rush to get home
-        # FIX 5: Red zone sack bump (less room to escape)
+            sack_rate += 0.03
         if yards_to_endzone <= 20:
             sack_rate += 0.02
         if yards_to_endzone <= 10:
             sack_rate += 0.02
-        # FIX 5: Global sack rate bump — sacks are high-dopamine moments
         sack_rate += 0.02
         sack_rate = max(0, min(0.30, sack_rate))
         
         if random.random() < sack_rate:
             result.is_sack = True
             result.yards = random.randint(-10, -4)
-            # Safety check
             if ball_position + result.yards <= 0:
                 result.is_safety = True
-                result.yards = 0  # safety, no field position change
+                result.yards = 0
             result.description = f"SACK! {featured_off.name} goes down."
             return result
         
         # Completion check
         comp_rate = off_play.completion_rate + ovr_mods["comp_mod"] + def_play.pass_comp_mod
-        # FIX 3: Bad matchup completion penalty — strong coverage counters make passes harder
-        # This creates three-and-outs when offense picks wrong vs defense
+        
+        # SURE HANDS (GOLD): 0 drops (100% completion cap for sim purpose)
+        if off_card == 'SURE_HANDS': comp_rate = 1.0
+
+        # Bad matchup completion penalty
         if cov_mean <= -2:
-            comp_rate -= 0.08  # Strong counter: -8% completion
+            comp_rate -= 0.08
         elif cov_mean <= -1:
-            comp_rate -= 0.04  # Moderate counter: -4% completion
-        # FIX 3: Red zone completion squeeze
+            comp_rate -= 0.04
         if yards_to_endzone <= 10:
-            comp_rate -= 0.05  # Tighter windows in the red zone
+            comp_rate -= 0.05
         comp_rate = max(0.15, min(0.95, comp_rate))
         
         if random.random() > comp_rate:
@@ -686,20 +759,21 @@ def resolve_snap(off_play: OffensivePlay, def_play: DefensivePlay,
         
         # INT check
         int_rate = off_play.int_rate + cov_int + def_play.int_rate_bonus + ovr_mods["int_mod"]
-        # Global INT reduction: passes generate too many turnovers vs runs
         int_rate -= 0.005
-        # Special defensive effects on INT
         if def_play.id == "ir_robber" and off_play.id in ("mesh", "slant", "shallow_cross"):
             int_rate += 0.04
         if def_play.id == "ir_mod" and off_play.id in ("four_verts", "go_route"):
             int_rate += 0.03
-        # EYE badge INT bonus
         if featured_def.badge == Badge.EYE and (off_play.id in ("pa_flat", "pa_post") or off_play.play_type == PlayType.OPTION):
             int_rate += 0.02
-        
         int_rate = max(0, min(0.20, int_rate))
         
         if random.random() < int_rate:
+            # SURE HANDS (GOLD): Cancel interception
+            if off_card == 'SURE_HANDS':
+                result.description = "SURE HANDS: Receiver rips the ball back from the DB!"
+                result.is_complete = False; result.yards = 0; return result
+
             result.is_interception = True
             result.is_complete = False
             result.yards = 0
@@ -708,6 +782,11 @@ def resolve_snap(off_play: OffensivePlay, def_play: DefensivePlay,
         
         # Fumble after catch
         if random.random() < off_play.fumble_rate:
+            # SURE HANDS (GOLD): Cancel fumble
+            if off_card == 'SURE_HANDS': 
+                result.description = "SURE HANDS: Ball popped out but he recovered immediately!"
+                return result
+            
             result.is_fumble = True
             result.is_fumble_lost = random.random() < 0.5
             if result.is_fumble_lost:
@@ -717,30 +796,23 @@ def resolve_snap(off_play: OffensivePlay, def_play: DefensivePlay,
         
     # === RUN PLAY RESOLUTION ===
     else:
-        # Stuff rate: chance the run is blown up for 0 or negative yards
-        stuff_rate = 0.30
-        # Good run defense increases stuff rate
-        if def_play.run_def_mod < -2:
-            stuff_rate += 0.10
-        elif def_play.run_def_mod < 0:
-            stuff_rate += 0.05
-        # Cover 0 blitz = fewer stuffs (gaps abandoned)
-        if def_play.is_cover0_blitz:
-            stuff_rate -= 0.12
-        # FIX 3: Bad matchup stuff boost (strong coverage counter = more stuffs)
-        if cov_mean <= -2:
-            stuff_rate += 0.08
-        elif cov_mean <= -1:
-            stuff_rate += 0.04
-        # FIX 4: Red zone stuff boost — harder to punch it in
-        if yards_to_endzone <= 10:
-            stuff_rate += 0.08
-        elif yards_to_endzone <= 20:
-            stuff_rate += 0.04
+        # Stuff rate check: LOWERED from 0.30 to 0.20
+        stuff_rate = 0.20
+        if def_play.run_def_mod < -2: stuff_rate += 0.10
+        elif def_play.run_def_mod < 0: stuff_rate += 0.05
+        if def_play.is_cover0_blitz: stuff_rate -= 0.12
+        if cov_mean <= -2: stuff_rate += 0.08
+        elif cov_mean <= -1: stuff_rate += 0.04
+        if yards_to_endzone <= 10: stuff_rate += 0.08
+        elif yards_to_endzone <= 20: stuff_rate += 0.04
+        
+        # SCOUT TEAM (GOLD): SIM as +8% stuff rate for sim purposes if provided on defense
+        if def_card == 'SCOUT_TEAM': stuff_rate += 0.08
+        
         stuff_rate = max(0.05, min(0.50, stuff_rate))
         
         if random.random() < stuff_rate:
-            # Stuffed: -2 to +1 yards
+            # Stuffed
             result.yards = random.randint(-2, 1)
             if ball_position + result.yards <= 0:
                 result.is_safety = True
@@ -749,8 +821,12 @@ def resolve_snap(off_play: OffensivePlay, def_play: DefensivePlay,
                 result.description = f"STUFFED! {featured_off.name} hit in the backfield."
             else:
                 result.description = f"{featured_off.name} squeezed for {result.yards}."
-            # Still check fumble on stuffs
-            if random.random() < off_play.fumble_rate * 1.5:  # Higher fumble rate on stuffs
+            
+            # Higher fumble rate on stuffs
+            if random.random() < off_play.fumble_rate * 1.5:
+                # SURE HANDS (GOLD): Cancel fumble
+                if off_card == 'SURE_HANDS': return result
+                
                 result.is_fumble = True
                 result.is_fumble_lost = random.random() < 0.5
                 if result.is_fumble_lost:
@@ -765,9 +841,12 @@ def resolve_snap(off_play: OffensivePlay, def_play: DefensivePlay,
             result.is_safety = True
             result.yards = 0
         
-        # Fumble (runs fumble slightly more than catches to balance turnover differential)
+        # Fumble
         run_fumble_rate = off_play.fumble_rate + 0.005
         if random.random() < run_fumble_rate:
+            # SURE HANDS (GOLD): Cancel fumble
+            if off_card == 'SURE_HANDS': return result
+            
             result.is_fumble = True
             result.is_fumble_lost = random.random() < 0.5
             if result.is_fumble_lost:
@@ -775,6 +854,27 @@ def resolve_snap(off_play: OffensivePlay, def_play: DefensivePlay,
             else:
                 result.description = f"Fumble but {featured_off.name} falls on it."
     
+    # === POST-SNAP OVERRIDES (REACTIVE SIM) ===
+    
+    # TO THE HOUSE (GOLD): Turnover becomes TD
+    if def_card == 'TO_THE_HOUSE' and (result.is_interception or result.is_fumble_lost):
+        result.is_touchdown = True
+        result.yards = yards_to_endzone
+        result.description = "TO THE HOUSE: Defensive touchdown on the return!"
+
+    # FLAG ON THE PLAY (SILVER): 75% chance to negate big gain
+    if def_card == 'FLAG_ON_THE_PLAY' and result.yards >= 10 and not result.is_touchdown:
+        if random.random() < 0.75:
+            result.yards = 0
+            result.description = "FLAG ON THE PLAY: Gain nullified by penalty."
+
+    # CHALLENGE FLAG (SILVER): SIM as 75% chance to overturn turnover/failed conversion
+    if off_card == 'CHALLENGE_FLAG' and (result.is_interception or result.is_fumble_lost or (is_conversion and not result.is_touchdown)):
+        if random.random() < 0.75:
+            result.is_interception = False; result.is_fumble_lost = False; result.is_touchdown = is_conversion
+            result.yards = 0 if not is_conversion else yards_to_endzone
+            result.description = "CHALLENGE FLAG: Play overturned by booth review!"
+
     # TD check
     if result.yards >= yards_to_endzone and not result.is_fumble_lost and not result.is_interception:
         result.is_touchdown = True
@@ -852,6 +952,40 @@ def calc_torch_pts_defense(result: SnapResult, allowed_first_down: bool) -> int:
     pts += int(result.def_combo_pts)
     return pts
 
+def halftime_booster(current_pts: int, difficulty: Difficulty, is_human: bool) -> List[str]:
+    """Simulate the Booster shop offering 3 random cards."""
+    # 50% Bronze, 35% Silver, 15% Gold
+    pool = list(TORCH_CARDS.keys())
+    weights = [50 if TORCH_CARDS[k]['tier'] == 'BRONZE' else 35 if TORCH_CARDS[k]['tier'] == 'SILVER' else 15 for k in pool]
+    
+    offers = random.choices(pool, weights=weights, k=3)
+    purchased = []
+    
+    if is_human and difficulty != Difficulty.RANDOM:
+        # Human sim: 50% chance to buy best card if affordable
+        affordable = [o for o in offers if TORCH_CARDS[o]['cost'] <= current_pts]
+        if affordable and random.random() < 0.5:
+            purchased.append(max(affordable, key=lambda x: TORCH_CARDS[x]['cost']))
+    else:
+        if difficulty == Difficulty.RANDOM:
+            # Random AI: 50% chance to buy random affordable card
+            affordable = [o for o in offers if TORCH_CARDS[o]['cost'] <= current_pts]
+            if affordable and random.random() < 0.5:
+                purchased.append(random.choice(affordable))
+        elif difficulty == Difficulty.MEDIUM:
+            # Medium AI: Buys 1 cheapest card
+            affordable = [o for o in offers if TORCH_CARDS[o]['cost'] <= current_pts]
+            if affordable:
+                purchased.append(min(affordable, key=lambda x: TORCH_CARDS[x]['cost']))
+        elif difficulty == Difficulty.HARD:
+            # Hard AI: Buys 2 best-value (expensive) cards
+            affordable = [o for o in offers if TORCH_CARDS[o]['cost'] <= current_pts]
+            if affordable:
+                affordable.sort(key=lambda x: TORCH_CARDS[x]['cost'], reverse=True)
+                purchased = affordable[:2]
+                
+    return purchased
+
 # ============================================================
 # AI PLAY SELECTION
 # ============================================================
@@ -859,13 +993,18 @@ def calc_torch_pts_defense(result: SnapResult, allowed_first_down: bool) -> int:
 def ai_select_play(hand: List, play_type: str, difficulty: Difficulty,
                    down: int, distance: int, ball_pos: int, 
                    play_history: List[PlayType], score_diff: int,
-                   clock_seconds: int = None, is_human: bool = False) -> object:
+                   clock_seconds: int = None, is_human: bool = False,
+                   opp_play: object = None) -> object:
     """Select a play card for AI. play_type is 'offense' or 'defense'
     is_human simulates an average human player: follows basic football logic,
-    sometimes picks badge combos, but makes suboptimal choices ~30% of the time."""
+    sometimes picks badge combos, but makes suboptimal choices ~30% of the time.
+    opp_play: if provided (via FILM LEAK), AI picks the mathematically best counter."""
     
     available = [p for p in hand]
     
+    if difficulty == Difficulty.RANDOM:
+        return random.choice(available)
+
     if play_type == "offense":
         # Filter by situation — ALL levels including human use basic filters
         filtered = []
@@ -880,6 +1019,11 @@ def ai_select_play(hand: List, play_type: str, difficulty: Difficulty,
         
         if not filtered:
             filtered = available
+
+        # OPTIMAL COUNTER (FILM LEAK)
+        if opp_play and not is_human:
+            # Pick play with highest mean vs this coverage
+            return max(filtered, key=lambda p: p.mean + p.coverage_mods.get(opp_play.base_coverage, {}).get("mean", 0))
         
         if is_human:
             # Average human: 70% makes a reasonable pick, 30% picks randomly
@@ -929,6 +1073,11 @@ def ai_select_play(hand: List, play_type: str, difficulty: Difficulty,
         return random.choices(filtered, weights=weights, k=1)[0]
     
     else:  # defense
+        # OPTIMAL COUNTER (FILM LEAK)
+        if opp_play and not is_human:
+            # Pick defense with lowest mean against this offensive play
+            return min(available, key=lambda p: opp_play.coverage_mods.get(p.base_coverage, {}).get("mean", 0) + p.run_mean_mod if is_run_type(opp_play.play_type) else opp_play.coverage_mods.get(p.base_coverage, {}).get("mean", 0) + p.pass_mean_mod)
+
         if is_human:
             # Average human on defense: 70% reasonable, 30% random
             if random.random() < 0.30:
@@ -964,44 +1113,41 @@ def ai_select_play(hand: List, play_type: str, difficulty: Difficulty,
         return random.choices(available, weights=weights, k=1)[0]
 
 def ai_select_player(roster: List[Player], play, difficulty: Difficulty, is_offense: bool, is_human: bool = False) -> Player:
-    """Select featured player"""
+    """Select featured player based on situational value and OVR."""
     available = [p for p in roster[:4] if p.is_available()]
     if not available:
         available = [p for p in roster if p.is_available()]
     
-    if is_human:
-        # Average human: 50% tries to badge match, 50% picks favorite/highest OVR
-        if random.random() < 0.50:
-            return max(available, key=lambda p: p.ovr)  # Picks best player regardless
-        # Try badge match
-        if is_offense:
-            best = None
-            best_bonus = -1
-            for p in available:
-                bonus, _ = check_offensive_badge_combo(p.badge, play, False, False)
-                if bonus > best_bonus:
-                    best_bonus = bonus
-                    best = p
-            return best or random.choice(available)
-        else:
-            return max(available, key=lambda p: p.ovr)
-    
-    if difficulty == Difficulty.EASY:
-        return random.choice(available)
-    
-    if difficulty == Difficulty.MEDIUM and random.random() < 0.4:
+    if difficulty == Difficulty.RANDOM:
         return random.choice(available)
     
     if is_offense:
+        # Offense: prioritize badge combo bonus
         best = None
         best_bonus = -1
         for p in available:
-            bonus, _ = check_offensive_badge_combo(p.badge, play, False, False)
+            # Check for 3rd/4th down since Flame badge triggers there
+            bonus, _ = check_offensive_badge_combo(p.badge, play, True, False)
             if bonus > best_bonus:
                 best_bonus = bonus
                 best = p
-        return best or random.choice(available)
+            elif bonus == best_bonus:
+                if best is None or p.ovr > best.ovr:
+                    best = p
+        return best or max(available, key=lambda x: x.ovr)
+    
     else:
+        # Defense: situationally pick best defender
+        is_pass = play.completion_rate is not None if hasattr(play, 'completion_rate') else False
+        if is_pass:
+            # Secondary/Safeties better for pass
+            dbs = [p for p in available if p.pos in ('CB', 'S')]
+            if dbs: return max(dbs, key=lambda x: x.ovr)
+        else:
+            # Linebackers better for run
+            lbs = [p for p in available if p.pos == 'LB']
+            if lbs: return max(lbs, key=lambda x: x.ovr)
+            
         return max(available, key=lambda p: p.ovr)
 
 # ============================================================
@@ -1019,6 +1165,27 @@ def calc_return_yards(featured_def: Player) -> int:
     else:
         badge_bonus = random.randint(1, 5)
     return base + ovr_bonus + badge_bonus
+
+# ============================================================
+# BOX SCORE DATA
+# ============================================================
+
+@dataclass
+class PlayerStats:
+    pass_att: int = 0
+    pass_comp: int = 0
+    pass_yds: int = 0
+    pass_tds: int = 0
+    pass_ints: int = 0
+    rush_att: int = 0
+    rush_yds: int = 0
+    rush_tds: int = 0
+    rush_long: int = 0
+    rec_att: int = 0
+    rec_caught: int = 0
+    rec_yds: int = 0
+    rec_tds: int = 0
+    rec_long: int = 0
 
 # ============================================================
 # GAME ENGINE
@@ -1043,6 +1210,8 @@ class GameState:
     # History
     drive_play_history: List[PlayType] = field(default_factory=list)
     total_plays: int = 0
+    ct_total_plays: int = 0
+    ir_total_plays: int = 0
     # TORCH points
     ct_torch_pts: int = 0
     ir_torch_pts: int = 0
@@ -1063,6 +1232,46 @@ class GameState:
     ir_incompletions: int = 0
     ct_stuffs: int = 0
     ir_stuffs: int = 0
+    
+    # DETAILED TEAM STATS
+    ct_pass_att: int = 0
+    ct_pass_comp: int = 0
+    ct_pass_yds: int = 0
+    ct_rush_att: int = 0
+    ct_rush_yds: int = 0
+    ir_pass_att: int = 0
+    ir_pass_comp: int = 0
+    ir_pass_yds: int = 0
+    ir_rush_att: int = 0
+    ir_rush_yds: int = 0
+    
+    ct_third_att: int = 0
+    ct_third_conv: int = 0
+    ir_third_att: int = 0
+    ir_third_conv: int = 0
+    ct_fourth_att: int = 0
+    ct_fourth_conv: int = 0
+    ir_fourth_att: int = 0
+    ir_fourth_conv: int = 0
+    
+    # TORCH PLAY TRACKING
+    ct_torch_plays: int = 0
+    ct_torch_yards: int = 0
+    ir_torch_plays: int = 0
+    ir_torch_yards: int = 0
+    
+    # OFFENSIVE PLAY TRACKING (Play ID -> (Calls, Yards))
+    play_stats: Dict[str, List[int]] = field(default_factory=dict)
+    
+    # Player Stats Maps
+    player_stats: Dict[str, PlayerStats] = field(default_factory=dict)
+    
+    # TORCH CARDS INVENTORY
+    ct_inventory: List[str] = field(default_factory=list)
+    ir_inventory: List[str] = field(default_factory=list)
+    
+    # TORCH CARD USAGE TRACKING (Card ID -> (Used, Won))
+    card_stats: Dict[str, List[int]] = field(default_factory=lambda: {k: [0, 0] for k in TORCH_CARDS.keys()})
     
     # MOMENT TRACKING
     explosive_plays: int = 0  # 15+ yards
@@ -1142,20 +1351,25 @@ class GameState:
 
 def play_game(ct_is_human: bool, difficulty: Difficulty, verbose: bool = False, cpu_vs_cpu: bool = False) -> GameState:
     gs = GameState()
-    
     human_team = "CT" if ct_is_human else "IR"
     cpu_team = "IR" if ct_is_human else "CT"
     
-    ct_off_hand = CT_OFF_PLAYS[:5]
-    ct_def_hand = CT_DEF_PLAYS[:5]
-    ir_off_hand = IR_OFF_PLAYS[:5]
-    ir_def_hand = IR_DEF_PLAYS[:5]
+    # Track playbook for Trade Deadline
+    ct_playbook = CT_OFF_PLAYS[:]
+    ir_playbook = IR_OFF_PLAYS[:]
     
-    # CPU vs CPU: IR receives first half
-    if cpu_vs_cpu:
-        gs.possession = "IR"
-    else:
-        gs.possession = cpu_team
+    # Coin Toss: Starting Cards
+    if not cpu_vs_cpu:
+        # Hard AI starts with random Silver, Medium with Bronze
+        if difficulty == Difficulty.HARD:
+            gs.ir_inventory.append(random.choice([k for k, v in TORCH_CARDS.items() if v['tier'] == 'SILVER']))
+        elif difficulty == Difficulty.MEDIUM:
+            gs.ir_inventory.append(random.choice([k for k, v in TORCH_CARDS.items() if v['tier'] == 'BRONZE']))
+        # Human (sim) always takes a Bronze
+        gs.ct_inventory.append(random.choice([k for k, v in TORCH_CARDS.items() if v['tier'] == 'BRONZE']))
+    
+    # Receive kickoff
+    gs.possession = "IR" if cpu_vs_cpu else cpu_team
     gs.ball_position = 50
     gs.ir_drives = 1 if gs.possession == "IR" else 0
     gs.ct_drives = 1 if gs.possession == "CT" else 0
@@ -1167,9 +1381,24 @@ def play_game(ct_is_human: bool, difficulty: Difficulty, verbose: bool = False, 
         gs.clock_seconds = 120
         
         if half == 2:
+            # Halftime Booster Shop
+            for team_abbr in ["CT", "IR"]:
+                pts = gs.ct_torch_pts if team_abbr == "CT" else gs.ir_torch_pts
+                inv = gs.ct_inventory if team_abbr == "CT" else gs.ir_inventory
+                is_human = (team_abbr == human_team and not cpu_vs_cpu)
+                
+                buys = halftime_booster(pts, difficulty, is_human)
+                for b in buys:
+                    if len(inv) < 3:
+                        inv.append(b)
+                        if team_abbr == "CT": gs.ct_torch_pts -= TORCH_CARDS[b]['cost']
+                        else: gs.ir_torch_pts -= TORCH_CARDS[b]['cost']
+            
             gs.flip_possession(50)
         
         while True:
+            old_ct, old_ir = gs.ct_score, gs.ir_score
+            
             if not gs.two_min_active and gs.plays_used >= gs.plays_per_half:
                 gs.two_min_active = True
                 gs.clock_seconds = 120
@@ -1177,105 +1406,209 @@ def play_game(ct_is_human: bool, difficulty: Difficulty, verbose: bool = False, 
             if gs.two_min_active and gs.clock_seconds <= 0:
                 break
             
-            # Determine offense/defense hands and rosters
+            # Determine hands
             if gs.possession == "CT":
-                off_hand, def_hand = ct_off_hand, ir_def_hand
+                off_hand, def_hand = ct_playbook[:], IR_DEF_PLAYS[:]
                 off_players, def_players = CT_OFFENSE, IR_DEFENSE
+                off_inv, def_inv = gs.ct_inventory, gs.ir_inventory
             else:
-                off_hand, def_hand = ir_off_hand, ct_def_hand
+                off_hand, def_hand = ir_playbook[:], CT_DEF_PLAYS[:]
                 off_players, def_players = IR_OFFENSE, CT_DEFENSE
+                off_inv, def_inv = gs.ir_inventory, gs.ct_inventory
             
-            # Is the current side human or CPU?
-            if cpu_vs_cpu:
-                offense_is_human = False
-                defense_is_human = False
+            # Select Torch Cards for this snap
+            off_card = None; def_card = None
+            
+            if difficulty == Difficulty.RANDOM:
+                # 20% chance to use a card if available
+                if off_inv and random.random() < 0.20:
+                    off_card = off_inv.pop(random.randint(0, len(off_inv)-1))
+                    gs.card_stats[off_card][0] += 1
+                if def_inv and random.random() < 0.20:
+                    def_card = def_inv.pop(random.randint(0, len(def_inv)-1))
+                    gs.card_stats[def_card][0] += 1
             else:
-                offense_is_human = (gs.possession == human_team)
-                defense_is_human = (gs.possession != human_team)
+                # AI Usage Logic: Prioritize Gold/Silver on 3rd/4th
+                if off_inv and (gs.down >= 3 or gs.two_min_active):
+                    off_card = off_inv.pop(0)
+                    gs.card_stats[off_card][0] += 1
+                if def_inv and (gs.down >= 3 or gs.two_min_active):
+                    def_card = def_inv.pop(0)
+                    gs.card_stats[def_card][0] += 1
+
+            # === STATE MANIPULATORS (PRE-SNAP) ===
             
+            # TRADE DEADLINE: Steal a play
+            if off_card == 'TRADE_DEADLINE':
+                if gs.possession == "CT" and ir_playbook:
+                    p = ir_playbook.pop(random.randint(0, len(ir_playbook)-1))
+                    ct_playbook.append(p)
+                elif gs.possession == "IR" and ct_playbook:
+                    p = ct_playbook.pop(random.randint(0, len(ct_playbook)-1))
+                    ir_playbook.append(p)
+
             # Select plays
-            off_play = ai_select_play(off_hand, "offense", difficulty,
-                gs.down, gs.distance, gs.ball_position, 
-                gs.drive_play_history, 0, is_human=offense_is_human)
+            offense_is_human = (gs.possession == human_team and not cpu_vs_cpu)
+            defense_is_human = (gs.possession != human_team and not cpu_vs_cpu)
+            
             def_play = ai_select_play(def_hand, "defense", difficulty,
                 gs.down, gs.distance, gs.ball_position,
                 gs.drive_play_history, 0, is_human=defense_is_human)
-            
-            featured_off = ai_select_player(off_players, off_play, difficulty, True, is_human=offense_is_human)
-            featured_def = ai_select_player(def_players, def_play, difficulty, False, is_human=defense_is_human)
-            
-            # Track red zone entry
-            yds_to_ez = gs.yards_to_endzone()
-            if yds_to_ez <= 20 and not gs._in_red_zone:
-                gs._in_red_zone = True
-                gs.red_zone_trips += 1
-            
-            # Track 4th down
-            is_4th = gs.down == 4
-            if is_4th:
-                gs.fourth_down_attempts += 1
-            
-            # FIX 1: Calculate score differential from offense's perspective
-            # Positive = offense is trailing (needs comeback)
-            if gs.possession == "CT":
-                score_diff = gs.ir_score - gs.ct_score
+
+            # DOUBLE DOWN: AI picks 2 plays and uses the best one
+            if off_card == 'DOUBLE_DOWN':
+                off_play1 = ai_select_play(off_hand, "offense", difficulty, gs.down, gs.distance, gs.ball_position, gs.drive_play_history, 0, is_human=offense_is_human)
+                off_play2 = ai_select_play(off_hand, "offense", difficulty, gs.down, gs.distance, gs.ball_position, gs.drive_play_history, 0, is_human=offense_is_human)
+                
+                featured_off1 = ai_select_player(off_players, off_play1, difficulty, True, is_human=offense_is_human)
+                featured_off2 = ai_select_player(off_players, off_play2, difficulty, True, is_human=offense_is_human)
+                featured_def = ai_select_player(def_players, def_play, difficulty, False, is_human=defense_is_human)
+                
+                score_diff = (gs.ir_score - gs.ct_score) if gs.possession == "CT" else (gs.ct_score - gs.ir_score)
+                res1 = resolve_snap(off_play1, def_play, featured_off1, featured_def, off_players, def_players, gs.drive_play_history, gs.yards_to_endzone(), gs.ball_position, gs.down, gs.distance, off_card=off_card, def_card=def_card, two_min_active=gs.two_min_active, score_diff=score_diff)
+                res2 = resolve_snap(off_play2, def_play, featured_off2, featured_def, off_players, def_players, gs.drive_play_history, gs.yards_to_endzone(), gs.ball_position, gs.down, gs.distance, off_card=off_card, def_card=def_card, two_min_active=gs.two_min_active, score_diff=score_diff)
+                
+                # Keep the better result
+                if res1.is_touchdown or res1.yards > res2.yards:
+                    result, off_play, featured_off = res1, off_play1, featured_off1
+                else:
+                    result, off_play, featured_off = res2, off_play2, featured_off2
             else:
-                score_diff = gs.ct_score - gs.ir_score
+                # Normal play selection
+                off_play = ai_select_play(off_hand, "offense", difficulty, gs.down, gs.distance, gs.ball_position, gs.drive_play_history, 0, is_human=offense_is_human)
+                
+                # Reveal Card Sim-Benefits
+                reveal_bonus = 0
+                if off_card in ('SCOUT_TEAM', 'FILM_LEAK', 'SIDELINE_PHONE', 'PERSONNEL_REPORT'):
+                    # AI re-selects with optimal counter (representing reveal advantage)
+                    off_play = ai_select_play(off_hand, "offense", difficulty, gs.down, gs.distance, gs.ball_position, gs.drive_play_history, 0, opp_play=def_play)
+                    reveal_bonus = 1 # Passive +1 yard sim benefit for information
+
+                featured_off = ai_select_player(off_players, off_play, difficulty, True, is_human=offense_is_human)
+                featured_def = ai_select_player(def_players, def_play, difficulty, False, is_human=defense_is_human)
+                
+                score_diff = (gs.ir_score - gs.ct_score) if gs.possession == "CT" else (gs.ct_score - gs.ir_score)
+                result = resolve_snap(off_play, def_play, featured_off, featured_def,
+                    off_players, def_players, gs.drive_play_history,
+                    gs.yards_to_endzone(), gs.ball_position, gs.down, gs.distance,
+                    False, score_diff=score_diff, off_card=off_card, def_card=def_card, two_min_active=gs.two_min_active)
+                
+                if reveal_bonus and not result.is_incomplete and not result.is_sack:
+                    result.yards += reveal_bonus
             
-            # Resolve
-            old_ct, old_ir = gs.ct_score, gs.ir_score
-            result = resolve_snap(off_play, def_play, featured_off, featured_def,
-                off_players, def_players, gs.drive_play_history,
-                gs.yards_to_endzone(), gs.ball_position, gs.down, gs.distance,
-                False, score_diff=score_diff)
+            # TRACK PLAY STATS
+            if off_play.id not in gs.play_stats:
+                gs.play_stats[off_play.id] = [0, 0] # [Calls, Yards]
+            gs.play_stats[off_play.id][0] += 1
+            gs.play_stats[off_play.id][1] += result.yards
             
-            # FIX 6: Easy difficulty human bonus — "home field advantage"
-            # On Easy, human's plays get a small yard boost, CPU's plays get penalized
-            # Skip in CPU vs CPU mode
-            if difficulty == Difficulty.EASY and not cpu_vs_cpu:
-                if offense_is_human and not result.is_sack and not result.is_incomplete and not result.is_interception and not result.is_fumble_lost:
-                    result.yards = min(result.yards + 2, gs.yards_to_endzone())  # +2 yard bonus
-                elif not offense_is_human and not result.is_sack and not result.is_incomplete:
-                    result.yards = max(result.yards - 1, -5)  # CPU gets -1 penalty
+            # === TRACK BOX SCORE STATS ===
+            pos = gs.possession
+            # Ensure player stats objects exist
+            for p in off_players:
+                if p.name not in gs.player_stats: gs.player_stats[p.name] = PlayerStats()
             
-            gs.total_plays += 1
-            gs._drive_plays += 1
-            if not gs.two_min_active:
-                gs.plays_used += 1
+            # Find QB for passing stats
+            qb = next(p for p in off_players if p.pos == "QB")
+            qbs = gs.player_stats[qb.name]
+            pfs = gs.player_stats[featured_off.name]
             
+            is_pass = off_play.completion_rate is not None
+            
+            if pos == "CT":
+                if gs.down == 3: gs.ct_third_att += 1
+                if gs.down == 4: gs.ct_fourth_att += 1
+                if is_pass:
+                    gs.ct_pass_att += 1
+                    qbs.pass_att += 1
+                    pfs.rec_att += 1
+                    if result.is_complete:
+                        gs.ct_pass_comp += 1
+                        gs.ct_pass_yds += result.yards
+                        qbs.pass_comp += 1
+                        qbs.pass_yds += result.yards
+                        pfs.rec_caught += 1
+                        pfs.rec_yds += result.yards
+                        pfs.rec_long = max(pfs.rec_long, result.yards)
+                        if result.is_touchdown: 
+                            qbs.pass_tds += 1
+                            pfs.rec_tds += 1
+                    if result.is_interception:
+                        qbs.pass_ints += 1
+                else:
+                    gs.ct_rush_att += 1
+                    pfs.rush_att += 1
+                    gs.ct_rush_yds += result.yards
+                    pfs.rush_yds += result.yards
+                    pfs.rush_long = max(pfs.rush_long, result.yards)
+                    if result.is_touchdown: pfs.rush_tds += 1
+            else:
+                if gs.down == 3: gs.ir_third_att += 1
+                if gs.down == 4: gs.ir_fourth_att += 1
+                if is_pass:
+                    gs.ir_pass_att += 1
+                    qbs.pass_att += 1
+                    pfs.rec_att += 1
+                    if result.is_complete:
+                        gs.ir_pass_comp += 1
+                        gs.ir_pass_yds += result.yards
+                        qbs.pass_comp += 1
+                        qbs.pass_yds += result.yards
+                        pfs.rec_caught += 1
+                        pfs.rec_yds += result.yards
+                        pfs.rec_long = max(pfs.rec_long, result.yards)
+                        if result.is_touchdown: 
+                            qbs.pass_tds += 1
+                            pfs.rec_tds += 1
+                    if result.is_interception:
+                        qbs.pass_ints += 1
+                else:
+                    gs.ir_rush_att += 1
+                    pfs.rush_att += 1
+                    gs.ir_rush_yds += result.yards
+                    pfs.rush_yds += result.yards
+                    pfs.rush_long = max(pfs.rush_long, result.yards)
+                    if result.is_touchdown: pfs.rush_tds += 1
+
+            # 12TH MAN: Double TORCH points on this snap
+            torch_mult = 2 if off_card == '12TH_MAN' else 1
+            
+            gs.total_plays += 1; gs._drive_plays += 1
+            if gs.possession == "CT": gs.ct_total_plays += 1
+            else: gs.ir_total_plays += 1
+            
+            if not gs.two_min_active: gs.plays_used += 1
             gs.drive_play_history.append(off_play.play_type)
             
-            # Track moments
-            if result.yards >= 15:
-                gs.explosive_plays += 1
-            if result.yards >= 10:
-                gs.big_plays += 1
-            if abs(result.yards) > gs.max_play_yards:
-                gs.max_play_yards = abs(result.yards)
-            if result.off_combo_pts > 0 or result.def_combo_pts > 0:
-                gs.badge_combos_fired += 1
-            if result.history_bonus != 0:
-                gs.history_bonuses_fired += 1
-            if result.is_incomplete:
+            # TRACK TORCH PLAYS
+            if off_card or def_card:
                 if gs.possession == "CT":
-                    gs.ct_incompletions += 1
+                    gs.ct_torch_plays += 1
+                    gs.ct_torch_yards += result.yards
                 else:
-                    gs.ir_incompletions += 1
+                    gs.ir_torch_plays += 1
+                    gs.ir_torch_yards += result.yards
             
-            if verbose:
-                side = gs.possession
-                extras = []
-                if result.off_combo_pts > 0:
-                    extras.append(f"OFF COMBO +{result.off_combo_yards:.0f}y +{result.off_combo_pts:.0f}pts")
-                if result.def_combo_pts > 0:
-                    extras.append(f"DEF COMBO {result.def_combo_yards:.0f}y +{result.def_combo_pts:.0f}pts")
-                if result.history_bonus != 0:
-                    extras.append(f"HISTORY {'+' if result.history_bonus > 0 else ''}{result.history_bonus:.0f}")
-                extra_str = f" | {'  '.join(extras)}" if extras else ""
-                h_marker = "🎮" if (side == human_team) else "🤖"
-                print(f"  P{gs.total_plays} | {gs.down}&{gs.distance} @ {gs.ball_position} | "
-                      f"{h_marker}{side}: {off_play.name} + {featured_off.name} vs {def_play.name} + {featured_def.name} | "
-                      f"{result.description}{extra_str}")
+            # TRICK PLAY: Double points on 10+ yards
+            if off_card == 'TRICK_PLAY' and result.yards >= 10: torch_mult *= 2
+
+            # Track moments
+            if result.yards >= 15: gs.explosive_plays += 1
+            if result.yards >= 10: gs.big_plays += 1
+            if abs(result.yards) > gs.max_play_yards: gs.max_play_yards = abs(result.yards)
+            if result.off_combo_pts > 0 or result.def_combo_pts > 0: gs.badge_combos_fired += 1
+            if result.history_bonus != 0: gs.history_bonuses_fired += 1
+            if result.is_incomplete:
+                if gs.possession == "CT": gs.ct_incompletions += 1
+                else: gs.ir_incompletions += 1
+            
+            # ONSIDE KICK (Reactive Sim)
+            if result.is_touchdown and off_card == 'ONSIDE_KICK':
+                if random.random() < 0.35:
+                    # Keep ball at 50
+                    gs.ball_position = 50; gs.down = 1; gs.distance = 10
+                    if verbose: print("  ONSIDE KICK RECOVERED!")
+                    continue
             
             # 2-minute clock
             if gs.two_min_active:
@@ -1287,8 +1620,10 @@ def play_game(ct_is_human: bool, difficulty: Difficulty, verbose: bool = False, 
                     gs.clock_seconds -= random.randint(25, 30)
             
             # TORCH points
-            off_pts = calc_torch_pts_offense(result, False)
+            off_pts = calc_torch_pts_offense(result, False) * torch_mult
             def_pts = calc_torch_pts_defense(result, False)
+            
+            old_ct, old_ir = gs.ct_score, gs.ir_score
             
             # === HANDLE RESULT ===
             
@@ -1391,35 +1726,24 @@ def play_game(ct_is_human: bool, difficulty: Difficulty, verbose: bool = False, 
                     gs.red_zone_tds += 1
                 if gs._drive_plays >= 6:
                     gs.long_drives += 1
-                if is_4th:
-                    gs.fourth_down_conversions += 1
                 
                 # Conversion
                 conv_roll = random.random()
                 if conv_roll < 0.65:
-                    # XP
-                    if scoring_team == "CT":
-                        gs.ct_score += 1
-                    else:
-                        gs.ir_score += 1
+                    if scoring_team == "CT": gs.ct_score += 1
+                    else: gs.ir_score += 1
                 elif conv_roll < 0.85:
-                    # 2-pt attempt
                     gs.conversion_attempts_2pt += 1
                     if random.random() < 0.52:
                         gs.conversion_made_2pt += 1
-                        if scoring_team == "CT":
-                            gs.ct_score += 2
-                        else:
-                            gs.ir_score += 2
+                        if scoring_team == "CT": gs.ct_score += 2
+                        else: gs.ir_score += 2
                 elif conv_roll < 1.0:
-                    # 3-pt attempt
                     gs.conversion_attempts_3pt += 1
                     if random.random() < 0.33:
                         gs.conversion_made_3pt += 1
-                        if scoring_team == "CT":
-                            gs.ct_score += 3
-                        else:
-                            gs.ir_score += 3
+                        if scoring_team == "CT": gs.ct_score += 3
+                        else: gs.ir_score += 3
                 
                 gs.check_lead_change(old_ct, old_ir)
                 gs.flip_possession(50)
@@ -1429,6 +1753,13 @@ def play_game(ct_is_human: bool, difficulty: Difficulty, verbose: bool = False, 
             gs.ball_position = max(1, min(99, gs.ball_position))
             
             if result.yards >= gs.distance:
+                if pos == "CT":
+                    if gs.down == 3: gs.ct_third_conv += 1
+                    if gs.down == 4: gs.ct_fourth_conv += 1
+                else:
+                    if gs.down == 3: gs.ir_third_conv += 1
+                    if gs.down == 4: gs.ir_fourth_conv += 1
+                
                 gs.down = 1
                 gs.distance = min(10, gs.yards_to_endzone())
                 if gs.possession == "CT":
@@ -1437,15 +1768,11 @@ def play_game(ct_is_human: bool, difficulty: Difficulty, verbose: bool = False, 
                 else:
                     gs.ir_first_downs += 1
                     gs.ir_torch_pts += 10
-                if is_4th:
-                    gs.fourth_down_conversions += 1
             else:
                 gs.distance -= max(0, result.yards)
                 gs.down += 1
                 
                 if gs.down > 4:
-                    # "Three and out" = failed to get a first down in first set of downs
-                    # Since we always go for it on 4th, that's 4 plays with no first down
                     if gs._drive_plays <= 4:
                         gs.three_and_outs += 1
                     gs.flip_possession(gs.ball_position)
@@ -1464,43 +1791,106 @@ def play_game(ct_is_human: bool, difficulty: Difficulty, verbose: bool = False, 
                     if not injured.injured:
                         injured.injured = True
                         severity = random.random()
-                        if severity < 0.5:
-                            injured.injury_snaps_remaining = random.randint(2, 3)
-                        elif severity < 0.85:
-                            injured.injury_snaps_remaining = 20
-                        else:
-                            injured.injury_snaps_remaining = 100
+                        if severity < 0.5: injured.injury_snaps_remaining = random.randint(2, 3)
+                        elif severity < 0.85: injured.injury_snaps_remaining = 20
+                        else: injured.injury_snaps_remaining = 100
             
             for roster in [CT_OFFENSE, CT_DEFENSE, IR_OFFENSE, IR_DEFENSE]:
                 for p in roster:
                     if p.injured and p.injury_snaps_remaining > 0:
                         p.injury_snaps_remaining -= 1
-                        if p.injury_snaps_remaining <= 0:
-                            p.injured = False
+                        if p.injury_snaps_remaining <= 0: p.injured = False
             
-            if gs.total_plays > 120:
+            if verbose:
+                side = gs.possession
+                h_marker = "🎮" if (side == human_team) else "🤖"
+                print(f"  P{gs.total_plays} | {gs.down}&{gs.distance} @ {gs.ball_position} | "
+                      f"{h_marker}{side}: {off_play.name} vs {def_play.name} | {result.description}")
+
+            if gs.total_plays > 150:
                 break
     
-    # Win bonus
-    if gs.ct_score > gs.ir_score:
-        gs.ct_torch_pts += 100
-    elif gs.ir_score > gs.ct_score:
-        gs.ir_torch_pts += 100
+    if gs.ct_score > gs.ir_score: gs.ct_torch_pts += 100
+    elif gs.ir_score > gs.ct_score: gs.ir_torch_pts += 100
     
-    # Post-game moment analysis
     margin = abs(gs.ct_score - gs.ir_score)
-    if margin <= 8:
-        gs.one_score_finishes += 1
-    if margin >= 21:
-        gs.blowouts += 1
-    if gs.ct_score == 0 or gs.ir_score == 0:
-        gs.shutouts += 1
+    if margin <= 8: gs.one_score_finishes += 1
+    if margin >= 21: gs.blowouts += 1
+    if gs.ct_score == 0 or gs.ir_score == 0: gs.shutouts += 1
     
     winner = "CT" if gs.ct_score > gs.ir_score else "IR" if gs.ir_score > gs.ct_score else "TIE"
-    if winner != "TIE" and gs._ever_trailing.get(winner, False):
-        gs.comeback_wins += 1
+    if winner != "TIE" and gs._ever_trailing.get(winner, False): gs.comeback_wins += 1
     
     return gs
+
+def print_box_score(gs: GameState):
+    print(f"\n{'='*60}")
+    print(f"FINAL BOX SCORE: {'CANYON TECH' if gs.ct_score > gs.ir_score else 'IRON RIDGE'} WINS {gs.ct_score}-{gs.ir_score}")
+    print(f"{'='*60}")
+    
+    print(f"\nTEAM STATS")
+    print(f"{'':30} {'CT':>10} {'IR':>10}")
+    print(f"{'-'*52}")
+    print(f"{'1st Downs':30} {gs.ct_first_downs:>10} {gs.ir_first_downs:>10}")
+    print(f"{'3rd down efficiency':30} {gs.ct_third_conv:>2}-{gs.ct_third_att:<2} {gs.ir_third_conv:>2}-{gs.ir_third_att:<2}")
+    print(f"{'4th down efficiency':30} {gs.ct_fourth_conv:>2}-{gs.ct_fourth_att:<2} {gs.ir_fourth_conv:>2}-{gs.ir_fourth_att:<2}")
+    print(f"{'Total Yards':30} {gs.ct_total_yards:>10} {gs.ir_total_yards:>10}")
+    
+    cp = f"{gs.ct_pass_comp}/{gs.ct_pass_att}"
+    ip = f"{gs.ir_pass_comp}/{gs.ir_pass_att}"
+    print(f"{'Passing':30} {gs.ct_pass_yds:>10} {gs.ir_pass_yds:>10}")
+    print(f"{'  Comp/Att':30} {cp:>10} {ip:>10}")
+    
+    print(f"{'Rushing':30} {gs.ct_rush_yds:>10} {gs.ir_rush_yds:>10}")
+    print(f"{'  Rushing Attempts':30} {gs.ct_rush_att:>10} {gs.ir_rush_att:>10}")
+    
+    ct_avg_r = (gs.ct_rush_yds / gs.ct_rush_att) if gs.ct_rush_att else 0
+    ir_avg_r = (gs.ir_rush_yds / gs.ir_rush_att) if gs.ir_rush_att else 0
+    print(f"{'  Yards per rush':30} {ct_avg_r:>10.1f} {ir_avg_r:>10.1f}")
+    
+    print(f"{'Turnovers':30} {gs.ct_turnovers:>10} {gs.ir_turnovers:>10}")
+    
+    print(f"{'Torch Plays':30} {gs.ct_torch_plays:>10} {gs.ir_torch_plays:>10}")
+    print(f"{'Torch Yards':30} {gs.ct_torch_yards:>10} {gs.ir_torch_yards:>10}")
+    
+    print(f"\nOFFENSIVE PLAY BREAKDOWN")
+    print(f"{'PLAY ID':20} {'CALLS':6} {'YDS':6} {'AVG':6}")
+    print("-" * 45)
+    for team_plays in [CT_OFF_PLAYS, IR_OFF_PLAYS]:
+        for play in team_plays:
+            stats = gs.play_stats.get(play.id, [0, 0])
+            avg = stats[1] / stats[0] if stats[0] > 0 else 0
+            print(f"{play.id:20} {stats[0]:<6} {stats[1]:<6} {avg:<6.1f}")
+    
+    print(f"\nPLAYER STATS")
+    
+    for team_name, roster in [("CANYON TECH", CT_OFFENSE), ("IRON RIDGE", IR_OFFENSE)]:
+        print(f"\n{team_name} Passing")
+        print(f"{'PLAYER':20} {'C/ATT':8} {'YDS':6} {'TD':4} {'INT':4}")
+        print(f"{'-'*45}")
+        for p in roster:
+            if p.name in gs.player_stats:
+                s = gs.player_stats[p.name]
+                if s.pass_att > 0:
+                    print(f"{p.name:20} {s.pass_comp}/{s.pass_att:<6} {s.pass_yds:<6} {s.pass_tds:<4} {s.pass_ints:<4}")
+        
+        print(f"\n{team_name} Rushing")
+        print(f"{'PLAYER':20} {'CAR':6} {'YDS':6} {'TD':4} {'LONG':4}")
+        print(f"{'-'*45}")
+        for p in roster:
+            if p.name in gs.player_stats:
+                s = gs.player_stats[p.name]
+                if s.rush_att > 0:
+                    print(f"{p.name:20} {s.rush_att:<6} {s.rush_yds:<6} {s.rush_tds:<4} {s.rush_long:<4}")
+
+        print(f"\n{team_name} Receiving")
+        print(f"{'PLAYER':20} {'REC':6} {'YDS':6} {'TD':4} {'LONG':4}")
+        print(f"{'-'*45}")
+        for p in roster:
+            if p.name in gs.player_stats:
+                s = gs.player_stats[p.name]
+                if s.rec_att > 0:
+                    print(f"{p.name:20} {s.rec_caught:<6} {s.rec_yds:<6} {s.rec_tds:<4} {s.rec_long:<4}")
 
 # ============================================================
 # SIMULATION RUNNER
@@ -1508,9 +1898,8 @@ def play_game(ct_is_human: bool, difficulty: Difficulty, verbose: bool = False, 
 
 def run_simulation(num_games: int = 10, difficulty: str = "MEDIUM", verbose: bool = False, cpu_vs_cpu: bool = False):
     diff = Difficulty[difficulty.upper()]
+    results = []; all_states = []
     
-    results = []
-    all_states = []
     for i in range(num_games):
         for roster in [CT_OFFENSE, CT_DEFENSE, IR_OFFENSE, IR_DEFENSE]:
             for p in roster:
@@ -1518,191 +1907,69 @@ def run_simulation(num_games: int = 10, difficulty: str = "MEDIUM", verbose: boo
                 p.injury_snaps_remaining = 0
         
         ct_is_human = (i % 2 == 0)
-        
-        if verbose:
-            if cpu_vs_cpu:
-                print(f"\n{'='*60}")
-                print(f"GAME {i+1} | CPU CT vs CPU IR | Difficulty: {difficulty}")
-                print(f"{'='*60}")
-            else:
-                human = "CT" if ct_is_human else "IR"
-                print(f"\n{'='*60}")
-                print(f"GAME {i+1} | You: {human} | CPU: {'IR' if ct_is_human else 'CT'} | Difficulty: {difficulty}")
-                print(f"{'='*60}")
-        
         gs = play_game(ct_is_human, diff, verbose, cpu_vs_cpu=cpu_vs_cpu)
         all_states.append(gs)
+        if verbose: print_box_score(gs)
         
+        winner_team = "CT" if gs.ct_score > gs.ir_score else "IR" if gs.ir_score > gs.ct_score else "TIE"
         results.append({
-            "game": i + 1,
-            "human_team": "CPU" if cpu_vs_cpu else ("CT" if ct_is_human else "IR"),
-            "ct_score": gs.ct_score,
-            "ir_score": gs.ir_score,
-            "winner": "CT" if gs.ct_score > gs.ir_score else "IR" if gs.ir_score > gs.ct_score else "TIE",
+            "game": i + 1, "ct_score": gs.ct_score, "ir_score": gs.ir_score, "winner": winner_team,
             "human_won": False if cpu_vs_cpu else ((ct_is_human and gs.ct_score > gs.ir_score) or (not ct_is_human and gs.ir_score > gs.ct_score)),
-            "total_plays": gs.total_plays,
-            "ct_torch_pts": gs.ct_torch_pts,
-            "ir_torch_pts": gs.ir_torch_pts,
-            "ct_turnovers": gs.ct_turnovers,
-            "ir_turnovers": gs.ir_turnovers,
-            "ct_touchdowns": gs.ct_touchdowns,
-            "ir_touchdowns": gs.ir_touchdowns,
-            "ct_total_yards": gs.ct_total_yards,
-            "ir_total_yards": gs.ir_total_yards,
-            "ct_sacks": gs.ct_sacks,
-            "ir_sacks": gs.ir_sacks,
-            "ct_first_downs": gs.ct_first_downs,
-            "ir_first_downs": gs.ir_first_downs,
+            "total_plays": gs.total_plays, "ct_torch_pts": gs.ct_torch_pts, "ir_torch_pts": gs.ir_torch_pts,
+            "ct_turnovers": gs.ct_turnovers, "ir_turnovers": gs.ir_turnovers, "ct_touchdowns": gs.ct_touchdowns, "ir_touchdowns": gs.ir_touchdowns,
+            "ct_total_yards": gs.ct_total_yards, "ir_total_yards": gs.ir_total_yards, "ct_sacks": gs.ct_sacks, "ir_sacks": gs.ir_sacks,
+            "ct_first_downs": gs.ct_first_downs, "ir_first_downs": gs.ir_first_downs,
         })
-        
-        if verbose:
-            print(f"\nFINAL: CT {gs.ct_score} - IR {gs.ir_score} | "
-                  f"Plays: {gs.total_plays} | "
-                  f"CT TORCH: {gs.ct_torch_pts} | IR TORCH: {gs.ir_torch_pts}")
     
-    # =========================================
-    # SUMMARY
-    # =========================================
-    print(f"\n{'='*80}")
-    mode = "CPU vs CPU" if cpu_vs_cpu else "Human vs CPU"
-    print(f"SIMULATION SUMMARY: {num_games} games on {difficulty} ({mode})")
-    print(f"{'='*80}")
+    print(f"\n{'='*80}\nSIMULATION SUMMARY: {num_games} games on {difficulty}\n{'='*80}")
     
     human_wins = sum(1 for r in results if r["human_won"])
-    ties = sum(1 for r in results if r["winner"] == "TIE")
     ct_wins = sum(1 for r in results if r["winner"] == "CT")
     ir_wins = sum(1 for r in results if r["winner"] == "IR")
+    ties = sum(1 for r in results if r["winner"] == "TIE")
     
-    if not cpu_vs_cpu:
-        print(f"\nHuman Win Rate: {human_wins}/{num_games} ({human_wins/num_games*100:.0f}%)")
+    if not cpu_vs_cpu: print(f"\nHuman Win Rate: {human_wins}/{num_games} ({human_wins/num_games*100:.0f}%)")
     print(f"CT Wins: {ct_wins} | IR Wins: {ir_wins} | Ties: {ties}")
     
     avg = lambda key: sum(r[key] for r in results) / num_games
     avg_plays = avg("total_plays")
-    
+
     print(f"\n{'':25} {'CT':>10} {'IR':>10}")
     print(f"{'Avg Score':25} {avg('ct_score'):>10.1f} {avg('ir_score'):>10.1f}")
     print(f"{'Avg TDs':25} {avg('ct_touchdowns'):>10.1f} {avg('ir_touchdowns'):>10.1f}")
     print(f"{'Avg Yards':25} {avg('ct_total_yards'):>10.1f} {avg('ir_total_yards'):>10.1f}")
-    print(f"{'Avg First Downs':25} {avg('ct_first_downs'):>10.1f} {avg('ir_first_downs'):>10.1f}")
-    print(f"{'Avg Turnovers':25} {avg('ct_turnovers'):>10.1f} {avg('ir_turnovers'):>10.1f}")
-    print(f"{'Avg Sacks':25} {avg('ct_sacks'):>10.1f} {avg('ir_sacks'):>10.1f}")
     print(f"{'Avg TORCH pts':25} {avg('ct_torch_pts'):>10.1f} {avg('ir_torch_pts'):>10.1f}")
-    print(f"{'Avg Total Plays':25} {avg_plays:>10.1f}")
-    
-    all_scores = [r["ct_score"] for r in results] + [r["ir_score"] for r in results]
-    print(f"\nScore Range: {min(all_scores)}-{max(all_scores)}")
-    print(f"Avg Combined Score: {(avg('ct_score') + avg('ir_score')):.1f}")
-    
-    # =========================================
-    # MOMENT ANALYSIS
-    # =========================================
-    print(f"\n{'='*80}")
-    print(f"MOMENT ANALYSIS (per game averages)")
-    print(f"{'='*80}")
-    
-    n = num_games
-    avg_s = lambda attr: sum(getattr(gs, attr) for gs in all_states) / n
-    tot_s = lambda attr: sum(getattr(gs, attr) for gs in all_states)
-    
-    print(f"\n--- BIG PLAYS ---")
-    print(f"  Explosive plays (15+ yds):   {avg_s('explosive_plays'):.1f}/game  (target: 4-8)")
-    print(f"  Big plays (10+ yds):         {avg_s('big_plays'):.1f}/game  (target: 8-14)")
-    print(f"  Longest play avg:            {avg_s('max_play_yards'):.0f} yds")
-    print(f"  Sacks:                       {avg_s('sack_count'):.1f}/game  (target: 2-5)")
-    
-    print(f"\n--- DRAMA & TENSION ---")
-    print(f"  Lead changes:                {avg_s('lead_changes'):.1f}/game  (target: 1-3)")
-    print(f"  Ties broken:                 {avg_s('ties_broken'):.1f}/game")
-    pct_one_score = sum(1 for gs in all_states if gs.one_score_finishes > 0) / n * 100
-    pct_blowout = sum(1 for gs in all_states if gs.blowouts > 0) / n * 100
-    pct_comeback = sum(1 for gs in all_states if gs.comeback_wins > 0) / n * 100
-    pct_shutout = sum(1 for gs in all_states if gs.shutouts > 0) / n * 100
-    print(f"  One-score finishes (≤8):     {pct_one_score:.0f}%     (target: 40-60%)")
-    print(f"  Blowouts (21+ margin):       {pct_blowout:.0f}%     (target: 5-15%)")
-    print(f"  Comeback wins:               {pct_comeback:.0f}%     (target: 20-40%)")
-    print(f"  Shutouts:                    {pct_shutout:.0f}%     (target: 5-15%)")
-    print(f"  2-minute drill scores:       {avg_s('two_min_scores'):.1f}/game  (target: 0.3-0.8)")
-    
-    print(f"\n--- STRATEGIC DEPTH ---")
-    print(f"  Badge combos fired:          {avg_s('badge_combos_fired'):.1f}/game  (target: 15-25)")
-    print(f"  History bonuses fired:       {avg_s('history_bonuses_fired'):.1f}/game  (target: 8-15)")
-    print(f"  4th down attempts:           {avg_s('fourth_down_attempts'):.1f}/game")
-    conv_att = tot_s('fourth_down_attempts')
-    conv_made = tot_s('fourth_down_conversions')
-    pct_4th = conv_made / conv_att * 100 if conv_att > 0 else 0
-    print(f"  4th down conversion rate:    {pct_4th:.0f}%     (target: 35-50%)")
-    print(f"  Three and outs:              {avg_s('three_and_outs'):.1f}/game  (target: 1-3)")
-    print(f"  Long scoring drives (6+):    {avg_s('long_drives'):.1f}/game  (target: 1-3)")
-    
-    print(f"\n--- RED ZONE ---")
-    rz_trips = tot_s('red_zone_trips')
-    rz_tds = tot_s('red_zone_tds')
-    rz_pct = rz_tds / rz_trips * 100 if rz_trips > 0 else 0
-    print(f"  Red zone trips:              {avg_s('red_zone_trips'):.1f}/game")
-    print(f"  Red zone TD rate:            {rz_pct:.0f}%     (target: 55-65%)")
-    
-    print(f"\n--- CONVERSIONS ---")
-    att_2 = tot_s('conversion_attempts_2pt')
-    made_2 = tot_s('conversion_made_2pt')
-    att_3 = tot_s('conversion_attempts_3pt')
-    made_3 = tot_s('conversion_made_3pt')
-    pct_2 = made_2/att_2*100 if att_2 > 0 else 0
-    pct_3 = made_3/att_3*100 if att_3 > 0 else 0
-    print(f"  2-pt attempts: {att_2}, made: {made_2} ({pct_2:.0f}%)")
-    print(f"  3-pt attempts: {att_3}, made: {made_3} ({pct_3:.0f}%)")
-    print(f"  Safeties:                    {tot_s('safeties')} total ({avg_s('safeties'):.2f}/game)")
-    print(f"  Turnover TDs:                {tot_s('turnover_tds')} total ({avg_s('turnover_tds'):.2f}/game)")
-    
-    print(f"\n--- FAILURE MECHANICS ---")
-    ct_inc = sum(gs.ct_incompletions for gs in all_states)
-    ir_inc = sum(gs.ir_incompletions for gs in all_states)
-    ct_stuff = sum(gs.ct_stuffs for gs in all_states)
-    ir_stuff = sum(gs.ir_stuffs for gs in all_states)
-    print(f"  CT incompletions total:      {ct_inc} ({ct_inc/n:.1f}/game)")
-    print(f"  IR incompletions total:      {ir_inc} ({ir_inc/n:.1f}/game)")
-    print(f"  CT stuffed runs total:       {ct_stuff} ({ct_stuff/n:.1f}/game)")
-    print(f"  IR stuffed runs total:       {ir_stuff} ({ir_stuff/n:.1f}/game)")
-    
-    # =========================================
-    # BENCHMARKS
-    # =========================================
-    print(f"\n{'='*80}")
-    print(f"BENCHMARK COMPARISON")
-    print(f"{'='*80}")
-    print(f"""
-  TORCH targets vs comparable games:
-  
-  | Metric                  | TORCH Now | Balatro    | Slay Spire | NFL Avg  | Target   |
-  |-------------------------|-----------|------------|------------|----------|----------|
-  | Big moments / game      | {avg_s('explosive_plays') + avg_s('lead_changes') + avg_s('sack_count') + tot_s('turnover_tds')/n:.1f}       | ~8-12/run  | ~5-8/run   | ~12/game | 8-15     |
-  | "I almost lost" rate    | {pct_one_score:.0f}%       | ~60%       | ~40%       | ~30%     | 40-60%   |
-  | Comeback rate           | {pct_comeback:.0f}%       | ~25%       | ~20%       | ~25%     | 20-40%   |
-  | Blowout rate            | {pct_blowout:.0f}%       | ~10%       | ~15%       | ~15%     | 5-15%    |
-  | Avg game length (plays) | {avg_plays:.0f}        | ~15 min    | ~30 min    | ~130     | 45-55    |
-  | Strategy matters?       | badge+hist | joker+deck | relic+card | scheme   | YES      |""")
-    
-    # =========================================
-    # GAME BY GAME
-    # =========================================
-    print(f"\nGAME-BY-GAME (first 20):")
-    print(f"{'#':>3} {'Human':>6} {'CT':>5} {'IR':>5} {'Win':>4} {'Plays':>6} {'Explo':>6} {'LeadΔ':>6} {'1-scr':>6}")
-    for r, gs in zip(results[:20], all_states[:20]):
-        w = "✓" if r["human_won"] else "✗" if r["winner"] != "TIE" else "T"
-        one = "Y" if gs.one_score_finishes > 0 else "N"
-        print(f"{r['game']:>3} {r['human_team']:>6} {r['ct_score']:>5} {r['ir_score']:>5} {w:>4} "
-              f"{r['total_plays']:>6} {gs.explosive_plays:>6} {gs.lead_changes:>6} {one:>6}")
-    
-    return results
 
-# ============================================================
-# MAIN
-# ============================================================
+    ct_plays = sum(gs.ct_total_plays for gs in all_states) / num_games
+    ir_plays = sum(gs.ir_total_plays for gs in all_states) / num_games
+    print(f"{'Avg Plays/Game':25} {ct_plays:>10.1f} {ir_plays:>10.1f}")
+    print(f"{'Avg Total Plays':25} {avg_plays:>10.1f}")
+
+    # Calculate games where score was changed by purchases
+    print(f"\n{'='*80}\nTORCH CARD WIN/LOSS ANALYSIS (Active Utilization)\n{'='*80}")
+    print(f"{'Card ID':20} {'Tier':8} {'Used':8} {'Wins':8} {'Win %':8}\n" + "-"*60)
+
+    global_card_stats = {k: [0, 0] for k in TORCH_CARDS.keys()}
+    for gs in all_states:
+        winner = "CT" if gs.ct_score > gs.ir_score else "IR" if gs.ir_score > gs.ct_score else "TIE"
+        for card_id, stats in gs.card_stats.items():
+            if stats[0] > 0:
+                global_card_stats[card_id][0] += stats[0]
+                if winner != "TIE":
+                    # Check if the team that won is the one that used the card
+                    # (Approximate based on global usage in this specific game)
+                    global_card_stats[card_id][1] += 1
+
+    sorted_cards = sorted(global_card_stats.items(), key=lambda x: x[1][0], reverse=True)
+    for card_id, stats in sorted_cards:
+        if stats[0] > 0:
+            win_pct = (stats[1] / stats[0] * 100)
+            print(f"{card_id:20} {TORCH_CARDS[card_id]['tier']:8} {stats[0]:<8} {stats[1]:<8} {win_pct:.1f}%")
+
 
 if __name__ == "__main__":
     num_games = int(sys.argv[1]) if len(sys.argv) > 1 else 10
     difficulty = sys.argv[2] if len(sys.argv) > 2 else "MEDIUM"
     verbose = "--verbose" in sys.argv or "-v" in sys.argv
     cpu_vs_cpu = "--cpu" in sys.argv
-    
     run_simulation(num_games, difficulty, verbose, cpu_vs_cpu=cpu_vs_cpu)

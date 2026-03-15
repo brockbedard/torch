@@ -11,8 +11,8 @@ import { CT_DEF_PLAYS } from '../data/ctDefensePlays.js';
 import { IR_DEF_PLAYS } from '../data/irDefensePlays.js';
 import { CT_OFFENSE, CT_DEFENSE, IR_OFFENSE, IR_DEFENSE } from '../data/players.js';
 
-const NUM_GAMES = 10;
-const DIFFICULTY = 'MEDIUM';
+const NUM_GAMES = 100;
+const DIFFICULTY = 'RANDOM';
 
 const allResults = [];
 
@@ -22,10 +22,10 @@ for (let g = 0; g < NUM_GAMES; g++) {
   const gs = new GameState({
     humanTeam,
     difficulty: DIFFICULTY,
-    ctOffHand: CT_OFF_PLAYS.slice(0, 5),
-    ctDefHand: CT_DEF_PLAYS.slice(0, 5),
-    irOffHand: IR_OFF_PLAYS.slice(0, 5),
-    irDefHand: IR_DEF_PLAYS.slice(0, 5),
+    ctOffHand: CT_OFF_PLAYS,
+    ctDefHand: CT_DEF_PLAYS,
+    irOffHand: IR_OFF_PLAYS,
+    irDefHand: IR_DEF_PLAYS,
     ctOffRoster: CT_OFFENSE,
     ctDefRoster: CT_DEFENSE,
     irOffRoster: IR_OFFENSE,

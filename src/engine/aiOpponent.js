@@ -33,6 +33,10 @@ export function aiSelectPlay(hand, playType, difficulty, situation) {
   const { down, distance, ballPos, playHistory } = situation;
   const available = [...hand];
 
+  if (difficulty === 'RANDOM') {
+    return available[Math.floor(Math.random() * available.length)];
+  }
+
   if (playType === 'offense') {
     // Filter by situation — ALL levels use basic football sense
     let filtered = available.filter(p => {
@@ -97,7 +101,7 @@ export function aiSelectPlayer(roster, play, difficulty, isOffense) {
   }
   if (available.length === 0) return roster[0]; // fallback
 
-  if (difficulty === 'EASY') {
+  if (difficulty === 'EASY' || difficulty === 'RANDOM') {
     return available[Math.floor(Math.random() * available.length)];
   }
 

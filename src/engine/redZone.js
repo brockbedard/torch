@@ -17,29 +17,29 @@ export function applyRedZone(yardsToEndzone, mean, variance, play) {
   let maxYards = yardsToEndzone;
 
   if (yardsToEndzone <= 5) {
-    // Extreme red zone — brutal
+    // Extreme red zone
     if (play.playType === 'DEEP') {
       maxYards = Math.min(maxYards, yardsToEndzone);
     }
-    if (isRunType(play.playType)) {
-      mean -= 3; // Runs get crushed inside the 5
+    if (isRunType(play.playType) || play.playType === 'RUN') {
+      mean -= 0.5; // reduced from -3
     }
     if (play.id === 'qb_sneak' || play.id === 'ir_qb_sneak') {
-      mean += 1; // QB sneak gets a small boost
+      mean += 1.5; // increased from +1
     }
-    mean -= 1; // Universal red zone squeeze
+    mean -= 0.5; // universal red zone squeeze softened from -1
     variance = Math.max(1, variance - 2);
   } else if (yardsToEndzone <= 10) {
     if (play.playType === 'DEEP') {
       maxYards = Math.min(maxYards, 12);
     }
-    mean -= 2;
+    mean -= 1; // softened from -2
     variance = Math.max(1, variance - 1);
   } else if (yardsToEndzone <= 20) {
     if (play.playType === 'DEEP') {
       maxYards = Math.min(maxYards, 20);
     }
-    mean -= 1;
+    mean -= 0.5; // softened from -1
     variance = Math.max(1, variance - 1);
   }
 

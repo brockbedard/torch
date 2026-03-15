@@ -3,17 +3,17 @@
 ## What This Is
 TORCH is a football card game. Full game, starts 0-0, you play both sides of the ball. Two teams (Canyon Tech air raid, Iron Ridge ground-and-pound) battle through 2 halves with card-based play selection, badge combos, and TORCH point scoring.
 
-## Current State (as of 2026-03-13)
-- **Version:** v0.10.0 "Gameday Edition" is live on Vercel
-- **Branch:** `refactor-vite` has 22 commits ahead of production (UI work: player draft, play card draft, badges, modal fix, emoji removal)
-- **Next version:** Will be v0.11.0 when gameplay engine ships with the UI work
-- **Stack:** Vite + vanilla JS, deployed on Vercel
-- **Local dev:** `npx vite --host` (port 5173)
+## Current State (as of 2026-03-15)
+- **Version:** v0.17.3 "Sound + Commentary + Polish" — full gameplay rebuild
+- **Branch:** `refactor-vite` — all work is here
+- **Stack:** Vite + vanilla JS + jsfxr (sounds), deployed on Vercel
+- **Local dev:** `npx vite --host` (port 5173) or `npx vercel dev` (AI commentary)
 - **Deploy:** `vercel --prod` from project root
 - **GitHub:** https://github.com/brockbedard/torch.git
+- **API:** `/api/commentary` — Vercel serverless → Claude Haiku for AI play-by-play (optional)
 
 ## Architecture
-- Mobile-first, landscape gameplay screen, portrait for menus/draft
+- Mobile-first, portrait gameplay screen, portrait for all screens
 - Single-page app, vanilla JS (no React/framework)
 - Vite for bundling and dev server
 - All game state in memory (no backend for v1 — daily puzzle seed from date)
@@ -73,7 +73,7 @@ The gameplay engine must be built from these specs. They are the source of truth
 - IR "Hard Nosed": disciplined, zone/hybrid, read-heavy
 
 ### TORCH-CARDS-CATALOG-v0.1.md
-- 21 Torch Cards: 7 Gold (40-50pts), 12 Silver (20-30pts), 5 Bronze (10-20pts)
+- 25 Torch Cards: 7 Gold (40-50pts), 12 Silver (20-30pts), 6 Bronze (10-20pts)
 - Pre-snap vs Reactive cards
 - The Booster (halftime shop) and Mini-Boosters (mid-game rewards)
 
@@ -191,29 +191,28 @@ Not a generic reroll. Challenges specific play elements:
 
 ## What's Built vs What Needs Building
 
-### Built (in refactor-vite branch)
-- Home screen with team selection
-- Player draft screen (pick 4 offense, 4 defense from roster)
-- Play card draft screen (pick 5 offense, 5 defense from 10-card playbook)
-- Player cards with badge SVG icons
-- Play cards with route diagram SVGs
-- Broadcast-style UI with scorebug, Bebas Neue fonts, team colors
-- Audio system (theme, click sounds)
-- Service worker for caching
-
-### Needs Building (THE GAMEPLAY ENGINE)
-1. **Game state manager** — tracks score, ball position, down/distance, half, clock, possession, drive history, TORCH points, Torch Card inventory, injuries
-2. **Snap sequence** — tap player → tap play → optional Torch Card → SNAP button → clash → result → narrative
-3. **Play result engine** — resolves offense vs defense using all modifiers (coverage matchup, badge combos, play history, OVR, red zone, trailing bonus, stuff rate, sack rate, completion rate, INT rate, fumble rate)
-4. **AI opponent** — selects plays and featured players based on difficulty, situational filters, tendency adaptation
-5. **Coin toss screen** — winner picks Torch Card or receives at 50
-6. **Halftime Booster shop** — buy Torch Cards with TORCH points
-7. **Mini-Boosters** — after TDs, turnovers, sacks, big plays
-8. **2-minute drill** — real clock, spike/kneel buttons, clock management
-9. **Conversion system** — XP (free) / 2pt (from 5) / 3pt (from 10) choice after TD
-10. **Injury system** — minor (2-3 snaps), moderate (rest of half), severe (rest of game)
-11. **End-of-game screen** — final score, TORCH points earned, stats, share card
-12. **Landscape gameplay layout** — left 60% field with All-22 animation, right 40% hand/combo panel
+### Built (v0.17.3)
+- **Team selection** — full team cards with SVG coach portraits, stadium cutouts, star ratings, mottos
+- **4-step progress stepper** — TEAM → PLAYERS → PLAYS → START GAME
+- **Player draft** — pick 1 QB/LB + 3 skill/DB per side, modal explanations, roster fly-in review
+- **Play draft** — pick 4 offense + 4 defense from 10-card playbook, playbook fly-in review
+- **Coin toss** — overlay on gameplay field, pick torch card or receive
+- **Gameplay engine** — full snap resolver, badge combos, play history, OVR, red zone, AI opponent, TORCH points, injuries, turnovers, spike/kneel
+- **Gameplay UI** — portrait bottom-stack layout, Tecmo-style field with endzones/yard markers/midfield logo
+- **Drag-and-drop cards** — play → player → torch → SNAP, pulsing drop zone outlines
+- **Helmet crash animation** — cards crash from sides on snap, spark burst at impact
+- **Broadcast play-by-play** — 256+ unique commentary combinations via synonym rotation, variable timing, context-aware analysis lines
+- **AI commentary** — optional Claude Haiku via /api/commentary for richer play calls
+- **Celebrations** — TD (footballs rain + green flash + screen shake), turnover (red crack), sack (impact burst)
+- **TORCH points** — fly animation to scoreboard, roll-up ticker with sound, user-team-only display with breakdown
+- **Scoreboard** — 5-column grid, team icons, possession arrow, AND GOAL, snap counter, 2-min clock
+- **Card deck cycling** — played card returns to deck, random replacement drawn
+- **Conversions** — XP (auto) / 2pt / 3pt with full card selection
+- **Sound effects** — jsfxr synthesized sounds for all interactions
+- **Offense/defense energy shift** — warm amber vs cold blue panel themes
+- **2-minute drill** — pulsing red UI, SPIKE/KNEEL buttons, urgent commentary
+- **Halftime shop** — buy torch cards with TORCH points
+- **End game** — stats, TORCH points, snap log, return to hub
 
 ## Code Organization for the Engine
 Build the engine as modular JS files under `src/`:

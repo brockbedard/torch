@@ -35,7 +35,7 @@ function gaussRandom(mean, stddev) {
  * @returns {object} SnapResult
  */
 export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlayers, defPlayers, context) {
-  const { playHistory, yardsToEndzone, ballPosition, down, distance, isConversion, scoreDiff } = context;
+  const { playHistory, yardsToEndzone, ballPosition, down, distance, isConversion, scoreDiff, weather, momentum, coachBadge } = context;
 
   const result = {
     yards: 0,
@@ -61,16 +61,25 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   const isRun = !isPass;
   const is3rd4th = down >= 3;
 
-  // Trailing team bonus — creates natural lead changes
+  // Trailing team bonus (Increased for better balance)
   let trailingBonus = 0;
   let trailingVarBoost = 0;
   if (scoreDiff >= 14) {
-    trailingBonus = 2;
-    trailingVarBoost = 3;
+    trailingBonus = 3;
+    trailingVarBoost = 4;
   } else if (scoreDiff >= 7) {
-    trailingBonus = 1;
+    trailingBonus = 2;
     trailingVarBoost = 2;
   }
+
+  // Reveal Card Sim-Benefits (represented as passive mean boost)
+  let revealBonus = 0;
+  if (context.offCard && ['SCOUT_TEAM', 'FILM_LEAK', 'SIDELINE_PHONE', 'PERSONNEL_REPORT'].includes(context.offCard)) {
+    revealBonus = 1;
+  }
+
+  // FAKE KNEEL (SILVER): +6 mean yards (2-min only)
+  let fakeKneelBonus = (context.offCard === 'FAKE_KNEEL' && context.twoMinActive) ? 6 : 0;
 
   // Coverage modifiers
   const cov = offPlay.coverageMods[defPlay.baseCoverage] || {};
@@ -99,6 +108,11 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   const offCombo = checkOffensiveBadgeCombo(featuredOff.badge, offPlay, is3rd4th, isConversion || false);
   const defCombo = checkDefensiveBadgeCombo(featuredDef.badge, defPlay, offPlay);
 
+  // SCHEMER Coach Badge: +1 mean on all badge combos
+  if (coachBadge === 'SCHEMER' && offCombo.yardBonus > 0) {
+    offCombo.yardBonus += 1;
+  }
+
   result.offComboYards = offCombo.yardBonus;
   result.defComboYards = defCombo.yardMod;
   result.offComboPts = offCombo.pointBonus;
@@ -122,8 +136,12 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   const maxYards = rz.maxYards;
 
   // Apply trailing team bonus
-  mean += trailingBonus;
+  mean += trailingBonus + revealBonus + fakeKneelBonus;
   variance += trailingVarBoost;
+
+  // Weather Modifiers
+  if (weather === 'WINDY' && isPass) mean -= 2.0;
+  if (weather === 'SNOW' && isRun) mean -= 1.0;
 
   // === PASS PLAY RESOLUTION ===
   if (isPass) {
@@ -144,8 +162,12 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     if (yardsToEndzone <= 20) sackRate += 0.02;
     if (yardsToEndzone <= 10) sackRate += 0.02;
 
-    // Global sack rate bump (+2%)
-    sackRate += 0.02;
+    // Global sack rate bump (+3% to match Python 0.03)
+    sackRate += 0.03;
+
+    // IRON_CURTAIN Coach Badge: +3% sack rate
+    if (coachBadge === 'IRON_CURTAIN') sackRate += 0.03;
+
     sackRate = Math.max(0, Math.min(0.30, sackRate));
 
     if (Math.random() < sackRate) {
@@ -174,6 +196,13 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     if (yardsToEndzone <= 10) {
       compRate -= 0.05;
     }
+
+    // RAIN: -5% completion rate
+    if (weather === 'RAIN') compRate -= 0.05;
+
+    // MOMENTUM: If opponent has high momentum (>75), -5% completion rate (Home noise)
+    if (momentum > 75) compRate -= 0.05;
+
     compRate = Math.max(0.15, Math.min(0.95, compRate));
 
     if (Math.random() > compRate) {
@@ -187,6 +216,11 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     result.isComplete = true;
     const rawYards = gaussRandom(mean, variance * 0.5);
     result.yards = Math.max(-5, Math.min(Math.round(rawYards), maxYards));
+
+    // SPEED_DEMON Coach Badge: +2 yards on explosive plays
+    if (coachBadge === 'SPEED_DEMON' && result.yards >= 15) {
+      result.yards = Math.min(result.yards + 2, maxYards);
+    }
 
     // INT check
     let intRate = offPlay.intRate + covInt + defPlay.intRateBonus + ovrMods.intMod;
@@ -217,7 +251,10 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     }
 
     // Fumble after catch
-    if (Math.random() < offPlay.fumbleRate) {
+    let fumbleRate = offPlay.fumbleRate;
+    if (weather === 'SNOW') fumbleRate += 0.01;
+
+    if (Math.random() < fumbleRate) {
       result.isFumble = true;
       result.isFumbleLost = Math.random() < 0.5;
       if (result.isFumbleLost) {
@@ -230,7 +267,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   // === RUN PLAY RESOLUTION ===
   else {
     // Stuff rate: chance the run is blown up
-    let stuffRate = 0.30; // base 30%
+    let stuffRate = 0.20; // base 20% (balanced from 30%)
 
     if (defPlay.runDefMod < -2) stuffRate += 0.10;
     else if (defPlay.runDefMod < 0) stuffRate += 0.05;
@@ -275,6 +312,11 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     const rawYards = gaussRandom(mean, variance * 0.5);
     result.yards = Math.max(-5, Math.min(Math.round(rawYards), maxYards));
 
+    // SPEED_DEMON Coach Badge: +2 yards on explosive plays
+    if (coachBadge === 'SPEED_DEMON' && result.yards >= 15) {
+      result.yards = Math.min(result.yards + 2, maxYards);
+    }
+
     // Safety check
     if (ballPosition + result.yards <= 0) {
       result.isSafety = true;
@@ -291,6 +333,25 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
       } else {
         result.description = `Fumble but ${featuredOff.name} falls on it.`;
       }
+    }
+  }
+
+  // FLAG ON THE PLAY (SILVER): 75% chance to nullify big gains
+  if (context.defCard === 'FLAG_ON_THE_PLAY' && result.yards >= 10 && !result.isTouchdown) {
+    if (Math.random() < 0.75) {
+      result.yards = 0;
+      result.description = "FLAG ON THE PLAY: Gain nullified by penalty.";
+    }
+  }
+
+  // CHALLENGE FLAG (SILVER): 75% chance to overturn turnover/failed conversion
+  if (context.offCard === 'CHALLENGE_FLAG' && (result.isInterception || result.isFumbleLost || (isConversion && !result.isTouchdown))) {
+    if (Math.random() < 0.75) {
+      result.isInterception = false;
+      result.isFumbleLost = false;
+      result.isTouchdown = isConversion;
+      result.yards = !isConversion ? 0 : yardsToEndzone;
+      result.description = "CHALLENGE FLAG: Play overturned by booth review!";
     }
   }
 
