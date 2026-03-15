@@ -93,13 +93,8 @@ function buildPlayCard(card, isSel, staggerIdx) {
     'border-radius:6px;padding:0;position:relative;overflow:hidden;' +
     'cursor:pointer;display:flex;flex-direction:column;' +
     'transition:all 0.15s ease;' +
-    'opacity:' + (isSel ? '1' : '0.55') + ';' +
-    (isSel
-      ? 'box-shadow:0 0 18px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08);transform:translateY(-4px);'
-      : 'transform:translateY(0);');
-
-  // Entrance animation
-  cel.style.animation = 'cardSlideUp 0.35s ease-out ' + (staggerIdx * 0.05) + 's both';
+    'opacity:' + (isSel ? '1' : '0.8') + ';' +
+    (isSel ? 'box-shadow:0 0 18px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08);' : '');
 
   // Selected bar
   if (isSel) {
@@ -399,42 +394,33 @@ export function buildCardDraft() {
   var cardGrid = document.createElement('div');
   cardGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr 1fr 1fr;gap:8px;flex:1;min-height:0;';
 
-  // Build cards ONCE, store references for style updates
-  var cardEls = [];
-  pool.forEach(function(card, idx) {
-    var key = card.id + '_' + idx;
-    var playCard = buildPlayCard(card, false, idx);
-    playCard._key = key;
-    playCard._card = card;
-    playCard.onclick = function() {
-      if (selected[key]) {
-        SND.select();
-        delete selected[key];
-      } else if (Object.keys(selected).length < 4) {
-        SND.select();
-        selected[key] = card;
-      }
-      updateCardStates();
-      refreshGoBtn();
-    };
-    cardEls.push(playCard);
-    cardGrid.appendChild(playCard);
-  });
-
-  function updateCardStates() {
+  function refreshCards() {
+    cardGrid.innerHTML = '';
     var count = Object.keys(selected).length;
     sectionLabel.textContent = 'PLAYS \u2014 ' + count + ' OF 4 SELECTED';
-    cardEls.forEach(function(el) {
-      var isSel = !!selected[el._key];
-      var maxed = count >= 4;
-      el.style.borderColor = isSel ? '#00ff88' : '#00ff8833';
-      el.style.opacity = isSel ? '1' : (maxed ? '0.3' : '0.55');
-      el.style.boxShadow = isSel ? '0 0 18px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08)' : 'none';
-      el.style.transform = isSel ? 'translateY(-4px)' : 'translateY(0)';
+
+    pool.forEach(function(card, idx) {
+      var key = card.id + '_' + idx;
+      var isSel = !!selected[key];
+      var playCard = buildPlayCard(card, isSel, idx);
+
+      if (!isSel && count >= 4) playCard.style.opacity = '0.3';
+
+      playCard.onclick = function() {
+        if (selected[key]) {
+          SND.select();
+          delete selected[key];
+        } else if (Object.keys(selected).length < 4) {
+          SND.select();
+          selected[key] = card;
+        }
+        refreshCards();
+        refreshGoBtn();
+      };
+
+      cardGrid.appendChild(playCard);
     });
   }
-
-  function refreshCards() { updateCardStates(); }
 
   content.appendChild(cardGrid);
 
@@ -471,23 +457,7 @@ export function buildCardDraft() {
       }
 
       if (GS.side === 'offense') {
-        var rr = document.getElementById('root');
-        var overlay = document.createElement('div');
-        overlay.style.cssText = 'position:absolute;inset:0;background:#000;z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.4s;';
-        var msg = document.createElement('div');
-        msg.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--a-gold);letter-spacing:3px;font-style:italic;text-align:center;padding:20px;";
-        msg.textContent = 'OFFENSE PLAYS LOCKED. PICK YOUR DEFENSE...';
-        overlay.appendChild(msg);
-        rr.appendChild(overlay);
-
-        setTimeout(() => overlay.style.opacity = '1', 10);
-        setTimeout(() => {
-          proceed();
-          setTimeout(() => {
-            overlay.style.opacity = '0';
-            setTimeout(() => overlay.remove(), 400);
-          }, 800);
-        }, 1200);
+        proceed();
       } else {
         // Defense plays locked — show all 10 plays fly-in review
         var offHand = GS.offHand || [];
