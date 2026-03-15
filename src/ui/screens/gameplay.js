@@ -789,6 +789,8 @@ export function buildGameplay() {
           nextBtn.textContent = 'NEXT PLAY \u2192';
           nextBtn.onclick = function() {
             SND.click();
+            nextBtn.remove();
+            narr.innerHTML = '<div class="T-pbp-idle">...<span class="T-pbp-cursor"></span></div>';
             var clashEl = strip.querySelector('.T-clash');
             if (clashEl) clashEl.remove();
             onDone();
