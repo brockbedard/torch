@@ -125,6 +125,20 @@ const CSS = `
 .T-torch-fly{position:fixed;z-index:9999;font-family:'Press Start 2P';font-size:12px;color:#c8a030;pointer-events:none;text-shadow:0 0 8px rgba(200,160,48,.5)}
 @keyframes T-flyup{0%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(.6)}}
 .T-pbp-cursor{display:inline-block;width:6px;height:12px;background:#30c0e0;margin-left:2px;animation:T-blink .6s step-end infinite}
+
+/* celebrations */
+@keyframes T-shake{0%,100%{transform:translateX(0)}10%{transform:translateX(-6px)}20%{transform:translateX(6px)}30%{transform:translateX(-4px)}40%{transform:translateX(4px)}50%{transform:translateX(-2px)}60%{transform:translateX(2px)}}
+.T-shaking{animation:T-shake .5s ease-out}
+@keyframes T-flash-green{0%{opacity:.6}100%{opacity:0}}
+@keyframes T-flash-red{0%{opacity:.6}100%{opacity:0}}
+.T-flash{position:absolute;inset:0;z-index:100;pointer-events:none}
+@keyframes T-rain-fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(200px) rotate(720deg);opacity:0}}
+.T-rain{position:absolute;font-size:16px;z-index:99;pointer-events:none;animation:T-rain-fall 2s ease-in forwards}
+@keyframes T-crack-in{0%{opacity:0;transform:scale(2)}100%{opacity:1;transform:scale(1)}}
+.T-crack{position:absolute;inset:0;z-index:100;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.T-crack-text{font-family:'Press Start 2P';font-size:18px;letter-spacing:2px;animation:T-crack-in .3s ease-out;text-shadow:0 0 20px currentColor}
+@keyframes T-impact{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(3)}}
+.T-impact{position:absolute;top:50%;left:50%;width:40px;height:40px;border-radius:50%;z-index:99;pointer-events:none;transform:translate(-50%,-50%);animation:T-impact .4s ease-out forwards}
 @keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
 /* card matchup display on field during play */
 .T-clash{position:absolute;inset:4px;z-index:9;display:flex;align-items:center;justify-content:center;gap:6px;pointer-events:none}
@@ -595,6 +609,84 @@ export function buildGameplay() {
     }, 650);
   }
 
+  /** Screen shake */
+  function shakeScreen() {
+    el.classList.add('T-shaking');
+    setTimeout(function() { el.classList.remove('T-shaking'); }, 500);
+  }
+
+  /** Color flash overlay on the field */
+  function flashField(color) {
+    var flash = document.createElement('div');
+    flash.className = 'T-flash';
+    flash.style.background = color;
+    flash.style.animation = (color.indexOf('green') >= 0 || color.indexOf('3df') >= 0) ? 'T-flash-green .6s ease-out forwards' : 'T-flash-red .6s ease-out forwards';
+    strip.appendChild(flash);
+    setTimeout(function() { flash.remove(); }, 600);
+  }
+
+  /** Impact burst on the field */
+  function impactBurst(color) {
+    var imp = document.createElement('div');
+    imp.className = 'T-impact';
+    imp.style.background = color;
+    imp.style.boxShadow = '0 0 30px ' + color;
+    strip.appendChild(imp);
+    setTimeout(function() { imp.remove(); }, 400);
+  }
+
+  /** Footballs raining from top of screen */
+  function rainFootballs() {
+    for (var i = 0; i < 12; i++) {
+      var fb = document.createElement('div');
+      fb.className = 'T-rain';
+      fb.textContent = '\uD83C\uDFC8';
+      fb.style.left = (5 + Math.random() * 90) + '%';
+      fb.style.top = '-20px';
+      fb.style.animationDelay = (Math.random() * 1.2) + 's';
+      fb.style.animationDuration = (1.5 + Math.random() * 1) + 's';
+      fb.style.fontSize = (12 + Math.floor(Math.random() * 10)) + 'px';
+      el.appendChild(fb);
+      (function(f) { setTimeout(function() { f.remove(); }, 3000); })(fb);
+    }
+  }
+
+  /** Big text slam on field (INTERCEPTED, FUMBLE, etc.) */
+  function slamText(text, color) {
+    var crack = document.createElement('div');
+    crack.className = 'T-crack';
+    crack.innerHTML = '<div class="T-crack-text" style="color:' + color + '">' + text + '</div>';
+    strip.appendChild(crack);
+    setTimeout(function() {
+      crack.style.transition = 'opacity .4s';
+      crack.style.opacity = '0';
+      setTimeout(function() { crack.remove(); }, 400);
+    }, 1200);
+  }
+
+  /** Touchdown celebration — green flash + footballs + shake + slam */
+  function celebrateTD() {
+    shakeScreen();
+    flashField('rgba(61,245,138,.5)');
+    rainFootballs();
+    setTimeout(function() { slamText('TOUCHDOWN', '#3df58a'); }, 200);
+  }
+
+  /** Turnover celebration — red flash + shake + slam */
+  function celebrateTurnover(text) {
+    shakeScreen();
+    flashField('rgba(224,48,80,.5)');
+    impactBurst('rgba(224,48,80,.6)');
+    setTimeout(function() { slamText(text, '#e03050'); }, 150);
+  }
+
+  /** Sack celebration — shake + impact + slam */
+  function celebrateSack() {
+    shakeScreen();
+    impactBurst('rgba(255,255,255,.4)');
+    setTimeout(function() { slamText('SACK', '#e03050'); }, 100);
+  }
+
   function runPlayByPlay(res, onDone) {
     const r = res.result;
     const off = res.featuredOff;
@@ -786,6 +878,12 @@ export function buildGameplay() {
         } else {
           if (cursor.parentNode) cursor.remove();
           pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { el.classList.remove('T-pbp-live'); });
+          // Fire celebrations at the climax
+          if (r.isTouchdown) celebrateTD();
+          else if (r.isInterception) celebrateTurnover('INTERCEPTED');
+          else if (r.isFumbleLost) celebrateTurnover('FUMBLE');
+          else if (r.isSack) celebrateSack();
+          else if (r.yards >= 15) { shakeScreen(); flashField('rgba(61,245,138,.3)'); }
           // Result: yards + torch (torch flies to scoreboard)
           const rl = document.createElement('div');
           rl.className = 'T-pbp-result';
