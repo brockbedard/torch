@@ -40,9 +40,9 @@ const CSS = `
 .T-sb-pts{font-family:'Press Start 2P';font-size:30px;color:#e8e6ff;line-height:1}
 .T-sb-pts-glow{text-shadow:0 0 14px rgba(255,204,0,.5)}
 .T-sb-center{text-align:center;padding:0 8px;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);min-width:80px}
-.T-sb-half{font-family:'Bebas Neue';font-size:17px;color:#c8a030;letter-spacing:2px;line-height:1}
+.T-sb-half{font-family:'Bebas Neue';font-size:15px;color:#c8a030;letter-spacing:2px;line-height:1;white-space:nowrap}
 .T-sb-snap{font-family:'Press Start 2P';font-size:12px;color:#e8e6ff;margin-top:3px;line-height:1;text-shadow:0 0 4px rgba(255,255,255,.2)}
-.T-sb-countdown{font-family:'Press Start 2P';font-size:9px;color:#554f80;margin-top:2px;line-height:1}
+.T-sb-countdown{font-family:'Press Start 2P';font-size:9px;color:#554f80;margin-top:5px;line-height:1}
 .T-sb-countdown-live{font-size:14px;color:#e03050;text-shadow:0 0 10px rgba(224,48,80,.5)}
 /* situation bar */
 .T-sb-sit{display:flex;align-items:center;justify-content:center;padding:6px 12px;background:rgba(0,0,0,.4);border-top:1px solid rgba(255,255,255,.04);gap:10px}
@@ -108,6 +108,10 @@ const CSS = `
 .T-card-hurt{opacity:.2;pointer-events:none}
 /* drag ghost */
 .T-drag-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.85;transform:scale(1.05);filter:drop-shadow(0 4px 12px rgba(0,0,0,.6))}
+/* CPU card placement animation */
+@keyframes T-cpu-place{0%{opacity:0;transform:translateY(60px) scale(.8)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.T-cpu-card{position:absolute;top:50%;transform:translateY(-50%);height:150px;z-index:8;border-radius:6px;overflow:hidden;background:var(--bg-surface);display:flex;flex-direction:column;pointer-events:none;border:2px solid #e0305066}
+.T-cpu-card-anim{animation:T-cpu-place .4s ease-out forwards}
 
 /* snap bar — uses btn-blitz style */
 .T-snap{padding:4px 6px;flex-shrink:0;display:flex;gap:4px;align-items:stretch;flex-direction:column}
@@ -155,8 +159,8 @@ const CSS = `
 .T-clash-left{animation:T-crash-left .5s cubic-bezier(.2,.8,.3,1) forwards}
 .T-clash-right{animation:T-crash-right .5s cubic-bezier(.2,.8,.3,1) forwards}
 .T-clash-card{width:100%;background:var(--bg-surface);border-radius:6px;border:2px solid;overflow:hidden}
-.T-clash-center{display:flex;flex-direction:column;align-items:center;justify-content:center;width:20%;z-index:2}
-.T-clash-vs{font-family:'Bebas Neue';font-size:32px;color:#c8a030;font-style:italic;text-shadow:0 0 15px rgba(200,160,48,.5),0 0 30px rgba(200,160,48,.2);letter-spacing:3px}
+.T-clash-center{display:flex;flex-direction:column;align-items:center;justify-content:center;width:20%;z-index:2;position:relative}
+.T-clash-vs{font-family:'Press Start 2P';font-size:18px;color:#fff;background:rgba(200,160,48,.9);padding:8px 12px;border-radius:6px;box-shadow:0 0 20px rgba(200,160,48,.6),0 0 40px rgba(200,160,48,.3);letter-spacing:2px}
 @keyframes T-crash-spark{0%{opacity:1;transform:scale(0)}50%{opacity:1}100%{opacity:0;transform:scale(2)}}
 .T-clash-spark{width:30px;height:30px;border-radius:50%;background:radial-gradient(#fff,#c8a030,transparent);animation:T-crash-spark .4s ease-out .45s forwards;opacity:0}
 
@@ -1311,11 +1315,40 @@ export function buildGameplay() {
       const go = document.createElement('button');
       go.className = 'btn-blitz';
       go.style.cssText = 'background:var(--a-gold);border-color:var(--a-gold);color:#000;font-size:16px;animation:T-pulse 1.8s ease-in-out infinite;';
-      go.textContent = conversionMode ? 'ATTEMPT' : 'SNAP';
+      go.textContent = conversionMode ? 'ATTEMPT' : 'READY TO SNAP';
       go.onclick = conversionMode ? () => { SND.snap(); doConversionSnap(); } : () => { SND.snap(); doSnap(); };
       sz.appendChild(go);
       panel.appendChild(sz);
     }
+  }
+
+  // ── Show CPU placing cards (face-down, animated) ──
+  function showCPUPlacement(res, isOff, callback) {
+    // Show opponent's cards sliding onto the empty field slots
+    // If human is on offense, CPU places defense cards (right 2 slots)
+    // If human is on defense, CPU places offense cards (left 2 slots)
+    var cpuPlayName = isOff ? res.defPlay.name : res.offPlay.name;
+    var cpuPlayerName = isOff ? res.featuredDef.name : res.featuredOff.name;
+
+    // Face-down cards (hidden content) sliding into position
+    var card1 = document.createElement('div');
+    card1.className = 'T-cpu-card T-cpu-card-anim';
+    card1.style.cssText += isOff ? 'left:35%;width:30%;' : 'left:3%;width:30%;';
+    card1.innerHTML = "<div style=\"height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a183a,#0a0916)\"><div style=\"font-family:'Press Start 2P';font-size:8px;color:#554f80\">?</div></div>";
+    strip.appendChild(card1);
+
+    var card2 = document.createElement('div');
+    card2.className = 'T-cpu-card';
+    card2.style.cssText += isOff ? 'right:3%;width:28%;' : 'left:35%;width:30%;';
+    card2.innerHTML = "<div style=\"height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a183a,#0a0916)\"><div style=\"font-family:'Press Start 2P';font-size:8px;color:#554f80\">?</div></div>";
+    setTimeout(function() { card2.classList.add('T-cpu-card-anim'); }, 200);
+    strip.appendChild(card2);
+
+    SND.cardSnap();
+    setTimeout(function() {
+      card1.remove(); card2.remove();
+      callback();
+    }, 800);
   }
 
   // ── SNAP ──
@@ -1323,14 +1356,12 @@ export function buildGameplay() {
     phase = 'busy';
     const isOff = gs.possession === hAbbr;
     const prevPoss = gs.possession;
-    // Capture pre-snap state for display during commentary
     const preSnap = gs.getSummary();
     const offCard = isOff ? selTorch : null;
     const defCard = isOff ? null : selTorch;
     var playedPlay = selPl;
     const res = isOff ? gs.executeSnap(selPl, selP, null, null, offCard, defCard) : gs.executeSnap(null, null, selPl, selP, offCard, defCard);
     driveSnaps.push(res);
-    // Cycle played card
     var sides = gs.getCurrentSides();
     var teamId = GS.team;
     if (isOff) {
@@ -1339,19 +1370,19 @@ export function buildGameplay() {
       cycleCard(playedPlay, sides.defHand, getDefCards(teamId));
     }
     selP = null; selPl = null; selTorch = null;
-
-    // Keep scorebug showing PRE-SNAP state during commentary
-    // Only update field (to clear placed cards) and hide panel
-    drawField(); drawPanel();
-    // Store pre-snap for commentary reference
+    drawPanel(); // hide card tray
     res._preSnap = preSnap;
-    runPlayByPlay(res, () => {
-      // NOW update scorebug with post-snap state
-      drawBug(); drawField();
-      if (res.gameEvent === 'touchdown') { showConv(res.scoringTeam); return; }
-      if (posChanged(res.gameEvent, prevPoss)) {
-        showPossCut(res.gameEvent, () => { showDrive(driveSnaps, prevPoss, () => { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
-      } else { if(!checkEnd()) nextSnap(); }
+
+    // Show CPU placing their cards (face-down), then resolve
+    showCPUPlacement(res, isOff, function() {
+      drawField();
+      runPlayByPlay(res, function() {
+        drawBug(); drawField();
+        if (res.gameEvent === 'touchdown') { showConv(res.scoringTeam); return; }
+        if (posChanged(res.gameEvent, prevPoss)) {
+          showPossCut(res.gameEvent, function() { showDrive(driveSnaps, prevPoss, function() { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
+        } else { if(!checkEnd()) nextSnap(); }
+      });
     });
   }
 
