@@ -52,8 +52,8 @@ const CSS = `
 .T-sb-sit-torch{font-family:'Press Start 2P';font-size:9px;color:#c8a030;letter-spacing:.5px}
 
 /* field strip */
-/* field strip — top third */
-.T-strip{flex:1;position:relative;background:linear-gradient(180deg,#072a07 0%,#0a3a0a 40%,#072a07 100%);overflow:hidden;border-bottom:1px solid #1a183a;min-height:0}
+/* field strip — compressed, just fits card outlines */
+.T-strip{height:166px;flex-shrink:0;position:relative;background:linear-gradient(180deg,#072a07 0%,#0a3a0a 40%,#072a07 100%);overflow:hidden;border-bottom:1px solid #1a183a}
 .T-yard{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.06)}
 .T-los{position:absolute;top:0;bottom:0;width:2px;z-index:5;transition:left .4s ease-out}
 .T-ltg{position:absolute;top:0;bottom:0;width:1px;opacity:.5;z-index:4;transition:left .4s ease-out;border-left:2px dashed}
@@ -61,30 +61,32 @@ const CSS = `
 .T-zone-l{left:0;background:linear-gradient(90deg,rgba(255,60,60,.12),transparent)}
 .T-zone-r{right:0;background:linear-gradient(270deg,rgba(60,100,255,.12),transparent)}
 .T-hash{position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,.03)}
-/* placed cards on field — fixed height matching pregame card proportions */
-.T-placed{position:absolute;bottom:4px;top:4px;z-index:8;border-radius:6px;overflow:hidden;background:var(--bg-surface);border:2px solid #00ff88;box-shadow:0 0 12px rgba(0,255,136,.2);display:flex;flex-direction:column}
+/* placed cards on field — 150px to match tray cards exactly */
+.T-placed{position:absolute;bottom:8px;height:150px;z-index:8;border-radius:6px;overflow:hidden;background:var(--bg-surface);border:2px solid #00ff88;box-shadow:0 0 12px rgba(0,255,136,.2);display:flex;flex-direction:column}
 .T-placed-play{left:3%;width:30%}
 .T-placed-player{left:35%;width:30%}
 .T-placed-torch{right:3%;width:28%}
-/* empty drop outlines */
-.T-drop{position:absolute;bottom:4px;top:4px;border:2px dashed #554f8066;border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:7;transition:all .2s}
+/* empty drop outlines — 150px to match cards exactly */
+.T-drop{position:absolute;bottom:8px;height:150px;border:2px dashed #554f8044;border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:7;transition:all .2s}
 .T-drop-play{left:3%;width:30%}
 .T-drop-player{left:35%;width:30%}
 .T-drop-torch{right:3%;width:28%}
-.T-drop-lbl{font-family:'Press Start 2P';font-size:6px;color:#554f8066;letter-spacing:.5px}
+.T-drop-lbl{font-family:'Press Start 2P';font-size:6px;color:#554f8055;letter-spacing:.5px}
 .T-drop-hover{border-color:#c8a030;background:rgba(200,160,48,.06)}
+@keyframes T-drop-pulse{0%,100%{border-color:#c8a03066;box-shadow:none}50%{border-color:#c8a030;box-shadow:inset 0 0 12px rgba(200,160,48,.08),0 0 8px rgba(200,160,48,.15)}}
+.T-drop-active{animation:T-drop-pulse 1.5s ease-in-out infinite}
+.T-drop-active .T-drop-lbl{color:#c8a030}
 
-/* middle third — cards */
-.T-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;transition:background .5s;min-height:0}
+/* cards section */
+.T-panel{display:flex;flex-direction:column;overflow:hidden;transition:background .5s;flex-shrink:0}
 .T-panel-off{background:linear-gradient(180deg,#120e00 0%,#06050f 50%)}
 .T-panel-def{background:linear-gradient(180deg,#00080e 0%,#06050f 50%)}
 
 /* instruction */
 .T-inst{text-align:center;padding:6px 0 2px;font-family:'Press Start 2P';font-size:7px;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
 
-/* card tray — cards at natural size, not stretched */
+/* card tray — cards at 150px, matching field outlines */
 .T-tray{display:flex;gap:6px;padding:6px 8px;flex-shrink:0}
-/* cards in tray — match draft screen proportions */
 .T-card{flex:1;height:150px;border-radius:6px;background:var(--bg-surface);overflow:hidden;display:flex;flex-direction:column;transition:all .12s;touch-action:none;position:relative;cursor:grab}
 .T-card:active{cursor:grabbing}
 .T-card-gone{opacity:.3;pointer-events:none}
@@ -106,13 +108,15 @@ const CSS = `
 .T-spike{color:#30c0e0;border:1.5px solid #30c0e0}
 .T-kneel{color:#554f80;border:1.5px solid #554f80}
 
-/* bottom third — play-by-play booth */
-.T-narr{flex:1;min-height:0;background:#0a0916;border-top:1px solid #1a183a;overflow-y:auto;display:flex;flex-direction:column;justify-content:flex-end}
-.T-pbp{padding:8px 14px;display:flex;flex-direction:column;gap:4px}
-.T-pbp-line{font-family:'Barlow Condensed';font-size:15px;color:#8a86b0;line-height:1.3}
-.T-pbp-live{color:#e8e6ff}
-.T-pbp-result{font-family:'Bebas Neue';font-size:20px;letter-spacing:1px;line-height:1;margin-top:4px}
-.T-pbp-idle{font-family:'Courier New';font-size:9px;color:#554f80;padding:10px 14px}
+/* play-by-play terminal — fills remaining space below cards */
+.T-narr{flex:1;min-height:0;background:#080812;border-top:1px solid #1a183a;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;justify-content:flex-end}
+.T-pbp{display:flex;flex-direction:column;gap:3px}
+.T-pbp-line{font-family:'Courier New',monospace;font-size:12px;color:#554f80;line-height:1.4;letter-spacing:.3px}
+.T-pbp-live{color:#30c0e0}
+.T-pbp-result{font-family:'Press Start 2P';font-size:12px;letter-spacing:1px;line-height:1;margin-top:6px}
+.T-pbp-idle{font-family:'Courier New',monospace;font-size:10px;color:#333;letter-spacing:.5px}
+.T-pbp-cursor{display:inline-block;width:6px;height:12px;background:#30c0e0;margin-left:2px;animation:T-blink .6s step-end infinite}
+@keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
 
 /* overlays */
 .T-ov{position:absolute;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;pointer-events:none}
@@ -400,17 +404,17 @@ export function buildGameplay() {
     h += `<div class="T-ltg" style="left:${tp}%;border-color:#c8a030"></div>`;
 
     // Drop zones — empty outlines for unfilled, actual card for filled
+    // Drop zones — active one pulses to guide the player
     if (selPl) {
-      h += `<div class="T-placed T-placed-play" style="display:flex;flex-direction:column">${mkPlayCard(selPl)}</div>`;
+      h += `<div class="T-placed T-placed-play">${mkPlayCard(selPl)}</div>`;
     } else {
-      h += '<div class="T-drop T-drop-play" data-drop="play"><span class="T-drop-lbl">PLAY</span></div>';
+      h += '<div class="T-drop T-drop-play' + (phase==='play'?' T-drop-active':'') + '" data-drop="play"><span class="T-drop-lbl">PLAY</span></div>';
     }
     if (selP) {
-      h += `<div class="T-placed T-placed-player" style="display:flex;flex-direction:column">${mkPlayerCard(selP, hTeam, isOff)}</div>`;
+      h += `<div class="T-placed T-placed-player">${mkPlayerCard(selP, hTeam, isOff)}</div>`;
     } else {
-      h += '<div class="T-drop T-drop-player" data-drop="player"><span class="T-drop-lbl">PLAYER</span></div>';
+      h += '<div class="T-drop T-drop-player' + (phase==='player'?' T-drop-active':'') + '" data-drop="player"><span class="T-drop-lbl">PLAYER</span></div>';
     }
-    // Torch always empty outline for now
     h += '<div class="T-drop T-drop-torch" data-drop="torch"><span class="T-drop-lbl">TORCH</span></div>';
 
     strip.innerHTML = h;
@@ -421,7 +425,7 @@ export function buildGameplay() {
 
   // ── PLAY-BY-PLAY BOOTH (bottom third) ──
   const narr = document.createElement('div'); narr.className = 'T-narr';
-  narr.innerHTML = '<div class="T-pbp-idle">Waiting for the snap...</div>';
+  narr.innerHTML = '<div class="T-pbp-idle">> SYSTEM READY<span class="T-pbp-cursor" style="display:inline-block;width:6px;height:10px;background:#333;margin-left:3px;animation:T-blink .6s step-end infinite"></span></div>';
   el.appendChild(narr);
 
   function setNarr(a, b) {
@@ -485,25 +489,39 @@ export function buildGameplay() {
     narr.appendChild(pbp);
     let idx = 0;
 
+    // Thinking cursor element
+    const cursor = document.createElement('span'); cursor.className = 'T-pbp-cursor';
+
     function showNext() {
       if (idx < lines.length) {
-        const line = document.createElement('div');
-        line.className = 'T-pbp-line';
-        line.textContent = lines[idx];
+        // Remove cursor from previous line
+        if (cursor.parentNode) cursor.remove();
+        // Dim previous lines
         pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { el.classList.remove('T-pbp-live'); });
-        line.classList.add('T-pbp-live');
-        pbp.appendChild(line);
+        // Add "thinking" cursor first
+        const thinkLine = document.createElement('div');
+        thinkLine.className = 'T-pbp-line T-pbp-live';
+        thinkLine.appendChild(cursor);
+        pbp.appendChild(thinkLine);
         narr.scrollTop = narr.scrollHeight;
-        idx++;
-        setTimeout(showNext, 500);
+        // After "thinking" pause, reveal the actual text
+        var delay = 400 + Math.floor(Math.random() * 400); // 400-800ms thinking
+        setTimeout(function() {
+          thinkLine.textContent = '> ' + lines[idx];
+          narr.scrollTop = narr.scrollHeight;
+          idx++;
+          setTimeout(showNext, 300);
+        }, delay);
       } else {
+        if (cursor.parentNode) cursor.remove();
+        pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { el.classList.remove('T-pbp-live'); });
         const rl = document.createElement('div');
         rl.className = 'T-pbp-result';
         rl.style.color = resColor;
         rl.textContent = resText;
         pbp.appendChild(rl);
         narr.scrollTop = narr.scrollHeight;
-        setTimeout(onDone, 1000);
+        setTimeout(onDone, 1200);
       }
     }
     showNext();
