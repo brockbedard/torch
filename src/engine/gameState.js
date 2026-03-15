@@ -445,7 +445,13 @@ export class GameState {
       }
       if (is4th) this.stats.fourthDownConversions++;
     } else {
-      this.distance -= Math.max(0, result.yards);
+      // Negative yards (sacks, stuffed runs) increase the distance
+      if (result.yards > 0) {
+        this.distance -= result.yards;
+      } else if (result.yards < 0) {
+        this.distance += Math.abs(result.yards);
+      }
+      // Incomplete passes: distance stays the same (yards = 0)
       this.down++;
 
       if (this.down > 4) {
