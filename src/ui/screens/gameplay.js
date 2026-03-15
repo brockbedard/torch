@@ -28,16 +28,16 @@ const CSS = `
 /* scoreboard */
 .T-sb{background:#0a0916;border-bottom:1px solid #1a183a;flex-shrink:0;z-index:60;overflow:hidden}
 /* score row: 5 columns — icon | team+score | center | team+score | icon */
-.T-sb-row{display:grid;grid-template-columns:1fr 1.2fr auto 1.2fr 1fr;align-items:center;padding:10px 12px}
-.T-sb-icon{font-size:38px;line-height:1;text-align:center;filter:drop-shadow(0 0 10px rgba(255,255,255,.25)) saturate(1.3)}
-.T-sb-side{display:flex;flex-direction:column;align-items:center;padding:4px 6px;border-radius:6px;position:relative}
+.T-sb-row{display:grid;grid-template-columns:30px 1fr auto 1fr 30px;align-items:center;padding:8px 8px;gap:4px}
+.T-sb-icon{font-size:28px;line-height:1;text-align:center;filter:drop-shadow(0 0 8px rgba(255,255,255,.2)) saturate(1.3)}
+.T-sb-side{display:flex;flex-direction:column;align-items:center;padding:4px 4px;border-radius:6px;position:relative}
 .T-sb-side-glow{background:radial-gradient(ellipse,rgba(255,204,0,.2) 0%,rgba(255,204,0,.06) 50%,transparent 75%);box-shadow:0 0 20px rgba(255,204,0,.18)}
-.T-sb-name{font-family:'Bebas Neue';font-size:20px;font-style:italic;line-height:1;letter-spacing:1px;white-space:nowrap}
+.T-sb-name{font-family:'Bebas Neue';font-size:16px;font-style:italic;line-height:1;letter-spacing:1px;white-space:nowrap}
 .T-sb-score-row{position:relative;margin-top:2px;display:flex;justify-content:center}
 .T-sb-pos-arrow{position:absolute;top:50%;transform:translateY(-50%);font-size:12px;color:#c8a030;line-height:1}
 .T-sb-pos-arrow-l{left:-14px}
 .T-sb-pos-arrow-r{right:-14px}
-.T-sb-pts{font-family:'Press Start 2P';font-size:30px;color:#e8e6ff;line-height:1}
+.T-sb-pts{font-family:'Press Start 2P';font-size:24px;color:#e8e6ff;line-height:1}
 .T-sb-pts-glow{text-shadow:0 0 14px rgba(255,204,0,.5)}
 .T-sb-center{text-align:center;padding:0 8px;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);min-width:80px}
 .T-sb-half{font-family:'Bebas Neue';font-size:15px;color:#c8a030;letter-spacing:2px;line-height:1;white-space:nowrap}
@@ -148,15 +148,15 @@ const CSS = `
 .T-impact{position:absolute;top:50%;left:50%;width:40px;height:40px;border-radius:50%;z-index:99;pointer-events:none;transform:translate(-50%,-50%);animation:T-impact .4s ease-out forwards}
 @keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
 /* card matchup display on field — helmet crash animation */
-.T-clash{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;pointer-events:none;overflow:hidden;padding:8px 4px}
-.T-clash-side{display:flex;flex-direction:column;gap:3px;align-items:center;justify-content:center;flex:1}
+.T-clash{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;pointer-events:none;overflow:hidden;padding:10px 8px}
+.T-clash-side{display:flex;flex-direction:column;gap:4px;align-items:stretch;justify-content:center;width:38%}
 @keyframes T-crash-left{0%{transform:translateX(-120%)}60%{transform:translateX(8%)}80%{transform:translateX(-3%)}100%{transform:translateX(0)}}
 @keyframes T-crash-right{0%{transform:translateX(120%)}60%{transform:translateX(-8%)}80%{transform:translateX(3%)}100%{transform:translateX(0)}}
 .T-clash-left{animation:T-crash-left .5s cubic-bezier(.2,.8,.3,1) forwards}
 .T-clash-right{animation:T-crash-right .5s cubic-bezier(.2,.8,.3,1) forwards}
-.T-clash-card{width:100%;background:var(--bg-surface);border-radius:6px;border:2px solid;overflow:hidden}
-.T-clash-center{display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;width:50px;z-index:2;margin:0 4px}
-.T-clash-vs{font-family:'Press Start 2P';font-size:16px;color:#fff;background:rgba(200,160,48,.9);padding:8px 10px;border-radius:8px;box-shadow:0 0 20px rgba(200,160,48,.6),0 0 40px rgba(200,160,48,.3);letter-spacing:2px;line-height:1}
+.T-clash-card{background:var(--bg-surface);border-radius:6px;border:2px solid;overflow:hidden}
+.T-clash-center{display:flex;align-items:center;justify-content:center;width:24%;z-index:2}
+.T-clash-vs{font-family:'Press Start 2P';font-size:14px;color:#fff;background:rgba(200,160,48,.9);padding:6px 10px;border-radius:8px;box-shadow:0 0 20px rgba(200,160,48,.6),0 0 40px rgba(200,160,48,.3);letter-spacing:2px;line-height:1}
 @keyframes T-crash-spark{0%{opacity:1;transform:scale(0)}50%{opacity:1}100%{opacity:0;transform:scale(2)}}
 .T-clash-spark{width:30px;height:30px;border-radius:50%;background:radial-gradient(#fff,#c8a030,transparent);animation:T-crash-spark .4s ease-out .45s forwards;opacity:0}
 
