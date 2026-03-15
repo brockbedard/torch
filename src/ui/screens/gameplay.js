@@ -5,7 +5,7 @@
  */
 
 import { SND } from '../../engine/sound.js';
-import { GS, setGs, getTeam, getOtherTeam, fmtClock } from '../../state.js';
+import { GS, setGs, getTeam, getOtherTeam, fmtClock, getOffCards, getDefCards } from '../../state.js';
 import { badgeSvg, BADGE_LABELS } from '../../data/badges.js';
 import { GameState } from '../../engine/gameState.js';
 import { CT_OFFENSE, CT_DEFENSE, IR_OFFENSE, IR_DEFENSE } from '../../data/players.js';
@@ -68,13 +68,13 @@ const CSS = `
 .T-ez-text{font-family:'Press Start 2P';font-size:6px;color:rgba(255,255,255,.5);writing-mode:vertical-lr;transform:rotate(180deg);letter-spacing:2px}
 .T-midfield-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:48px;opacity:.2;z-index:1;filter:saturate(1.3)}
 .T-hash{position:absolute;left:7%;right:7%;height:1px;background:rgba(255,255,255,.06)}
-/* placed cards on field — 150px to match tray cards exactly */
-.T-placed{position:absolute;bottom:8px;height:150px;z-index:8;border-radius:6px;overflow:hidden;background:var(--bg-surface);border:2px solid #00ff88;box-shadow:0 0 12px rgba(0,255,136,.2);display:flex;flex-direction:column}
+/* placed cards on field — centered vertically */
+.T-placed{position:absolute;top:50%;transform:translateY(-50%);height:150px;z-index:8;border-radius:6px;overflow:hidden;background:var(--bg-surface);border:2px solid #00ff88;box-shadow:0 0 12px rgba(0,255,136,.2);display:flex;flex-direction:column}
 .T-placed-play{left:3%;width:30%}
 .T-placed-player{left:35%;width:30%}
 .T-placed-torch{right:3%;width:28%}
-/* empty drop outlines — 150px to match cards exactly */
-.T-drop{position:absolute;bottom:8px;height:150px;border:2px dashed #554f8044;border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:7;transition:all .2s}
+/* empty drop outlines — centered vertically */
+.T-drop{position:absolute;top:50%;transform:translateY(-50%);height:150px;border:2px dashed #554f8044;border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:7;transition:all .2s}
 .T-drop-play{left:3%;width:30%}
 .T-drop-player{left:35%;width:30%}
 .T-drop-torch{right:3%;width:28%}
@@ -121,9 +121,9 @@ const CSS = `
 
 /* play-by-play terminal */
 .T-narr{flex:1;min-height:0;background:#080812;border-top:1px solid #1a183a;overflow-y:auto;padding:10px 14px}
-.T-pbp{display:flex;flex-direction:column;gap:5px}
-.T-pbp-line{font-family:'Courier New',monospace;font-size:13px;color:#554f80;line-height:1.4;letter-spacing:.3px}
-.T-pbp-live{color:#30c0e0}
+.T-pbp{display:flex;flex-direction:column;gap:6px}
+.T-pbp-line{font-family:'Courier New',monospace;font-size:14px;color:#6a6690;line-height:1.4;letter-spacing:.3px}
+.T-pbp-live{color:#e8e6ff;text-shadow:0 0 6px rgba(232,230,255,.15)}
 .T-pbp-result{font-family:'Press Start 2P';font-size:14px;letter-spacing:.5px;line-height:1;margin-top:10px}
 .T-pbp-down{font-family:'Press Start 2P';font-size:12px;color:#30c0e0;margin-top:6px;letter-spacing:.5px;line-height:1}
 .T-pbp-idle{font-family:'Courier New',monospace;font-size:11px;color:#333;letter-spacing:.5px}
@@ -146,10 +146,18 @@ const CSS = `
 @keyframes T-impact{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(3)}}
 .T-impact{position:absolute;top:50%;left:50%;width:40px;height:40px;border-radius:50%;z-index:99;pointer-events:none;transform:translate(-50%,-50%);animation:T-impact .4s ease-out forwards}
 @keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
-/* card matchup display on field during play */
-.T-clash{position:absolute;inset:4px;z-index:9;display:flex;align-items:center;justify-content:center;gap:6px;pointer-events:none}
-.T-clash-card{width:28%;background:var(--bg-surface);border-radius:6px;border:2px solid;overflow:hidden;display:flex;flex-direction:column;max-height:100%}
-.T-clash-vs{font-family:'Bebas Neue';font-size:20px;color:#c8a030;font-style:italic}
+/* card matchup display on field — helmet crash animation */
+.T-clash{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;gap:0;pointer-events:none;overflow:hidden}
+.T-clash-side{display:flex;flex-direction:column;gap:2px;align-items:center;width:38%}
+@keyframes T-crash-left{0%{transform:translateX(-120%)}60%{transform:translateX(8%)}80%{transform:translateX(-3%)}100%{transform:translateX(0)}}
+@keyframes T-crash-right{0%{transform:translateX(120%)}60%{transform:translateX(-8%)}80%{transform:translateX(3%)}100%{transform:translateX(0)}}
+.T-clash-left{animation:T-crash-left .5s cubic-bezier(.2,.8,.3,1) forwards}
+.T-clash-right{animation:T-crash-right .5s cubic-bezier(.2,.8,.3,1) forwards}
+.T-clash-card{width:100%;background:var(--bg-surface);border-radius:4px;border:2px solid;overflow:hidden;display:flex;flex-direction:column}
+.T-clash-center{display:flex;flex-direction:column;align-items:center;justify-content:center;width:24%;z-index:2}
+.T-clash-vs{font-family:'Bebas Neue';font-size:22px;color:#c8a030;font-style:italic}
+@keyframes T-crash-spark{0%{opacity:1;transform:scale(0)}50%{opacity:1}100%{opacity:0;transform:scale(2)}}
+.T-clash-spark{width:30px;height:30px;border-radius:50%;background:radial-gradient(#fff,#c8a030,transparent);animation:T-crash-spark .4s ease-out .45s forwards;opacity:0}
 
 /* overlays */
 .T-ov{position:absolute;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;pointer-events:none}
@@ -420,7 +428,7 @@ export function buildGameplay() {
       `</div>` +
       `<div class="T-sb-sit">` +
         (isHumanCT ? hTorchHTML + '<div class="T-sb-sit-div"></div>' : '') +
-        `<div class="T-sb-sit-down">${dn} & ${s.distance}</div>` +
+        `<div class="T-sb-sit-down">${dn} & ${distLabel(s.distance, s.yardsToEndzone)}</div>` +
         `<div class="T-sb-sit-div"></div>` +
         `<div class="T-sb-sit-ball">BALL ON <span style="color:${possTeam.accent}">${ballLabel}</span></div>` +
         (!isHumanCT ? '<div class="T-sb-sit-div"></div>' + hTorchHTML : '') +
@@ -504,6 +512,10 @@ export function buildGameplay() {
     narr.scrollTop = narr.scrollHeight;
   }
 
+  function distLabel(dist, ydsToEz) {
+    return (ydsToEz !== undefined ? ydsToEz : gs.getSummary().yardsToEndzone) <= dist ? 'GOAL' : dist;
+  }
+
   function ballSideLabel() {
     const s = gs.getSummary();
     const yds = s.yardsToEndzone;
@@ -514,6 +526,7 @@ export function buildGameplay() {
   }
 
   function showClashOnField(res) {
+    SND.hit();
     var clash = document.createElement('div'); clash.className = 'T-clash';
     var offColor = '#c8a030';
     var defColor = '#e03050';
@@ -524,46 +537,47 @@ export function buildGameplay() {
       torchCard = TORCH_CARDS.find(function(c) { return c.id === tcId; });
     }
 
-    // Left side: offense play + player stacked
-    var leftHTML =
-      '<div style="display:flex;flex-direction:column;gap:3px;align-items:center;width:36%">' +
-        '<div class="T-clash-card" style="border-color:' + offColor + ';width:100%">' +
-          "<div style=\"padding:3px 5px;font-family:'Bebas Neue';font-size:12px;color:#fff;line-height:1\">" + res.offPlay.name + "</div>" +
-        '</div>' +
-        '<div class="T-clash-card" style="border-color:' + offColor + '55;width:100%">' +
-          "<div style=\"padding:3px 5px;font-family:'Bebas Neue';font-size:11px;color:" + offColor + ";line-height:1\">" + res.featuredOff.name + "</div>" +
-          "<div style=\"padding:0 5px 2px;font-family:'Courier New';font-size:7px;color:#8a86b0\">" + res.featuredOff.pos + ' ' + res.featuredOff.ovr + "</div>" +
-        '</div>' +
+    // Left: offense cards (play + player) — crash in from left
+    var left = document.createElement('div');
+    left.className = 'T-clash-side T-clash-left';
+    left.innerHTML =
+      '<div class="T-clash-card" style="border-color:' + offColor + '">' +
+        "<div style=\"padding:4px 5px 2px;font-family:'Bebas Neue';font-size:11px;color:#fff;line-height:1\">" + res.offPlay.name + "</div>" +
+        "<div style=\"padding:0 5px 3px;font-family:'Courier New';font-size:6px;color:" + offColor + "\">" + (res.offPlay.playType||res.offPlay.cardType) + "</div>" +
+      '</div>' +
+      '<div class="T-clash-card" style="border-color:' + offColor + '66">' +
+        "<div style=\"padding:4px 5px 1px;font-family:'Bebas Neue';font-size:11px;color:" + offColor + ";line-height:1\">" + res.featuredOff.name + "</div>" +
+        "<div style=\"padding:0 5px 3px;font-family:'Courier New';font-size:6px;color:#8a86b0\">" + res.featuredOff.pos + ' OVR ' + res.featuredOff.ovr + "</div>" +
       '</div>';
 
-    // Center: VS (or torch card overlay)
-    var centerHTML;
+    // Center: VS + spark (or torch overlay)
+    var center = document.createElement('div');
+    center.className = 'T-clash-center';
     if (torchCard) {
-      centerHTML =
-        '<div style="display:flex;flex-direction:column;align-items:center;z-index:2">' +
-          "<div style=\"font-family:'Press Start 2P';font-size:6px;color:#c8a030;margin-bottom:2px\">" + torchCard.tier + "</div>" +
-          "<div style=\"background:#1a1030;border:2px solid #c8a030;border-radius:6px;padding:4px 8px;box-shadow:0 0 16px rgba(200,160,48,.4)\">" +
-            "<div style=\"font-family:'Bebas Neue';font-size:14px;color:#c8a030;line-height:1;text-align:center\">" + torchCard.name + "</div>" +
-          "</div>" +
-          "<div style=\"font-family:'Courier New';font-size:6px;color:#c8a030;margin-top:2px\">TORCH</div>" +
-        '</div>';
+      center.innerHTML =
+        '<div class="T-clash-spark"></div>' +
+        "<div style=\"background:#1a1030;border:2px solid #c8a030;border-radius:4px;padding:3px 6px;box-shadow:0 0 12px rgba(200,160,48,.4);z-index:3\">" +
+          "<div style=\"font-family:'Press Start 2P';font-size:5px;color:#c8a030;text-align:center\">" + torchCard.tier + "</div>" +
+          "<div style=\"font-family:'Bebas Neue';font-size:12px;color:#c8a030;line-height:1;text-align:center\">" + torchCard.name + "</div>" +
+        "</div>";
     } else {
-      centerHTML = '<div class="T-clash-vs">VS</div>';
+      center.innerHTML = '<div class="T-clash-spark"></div><div class="T-clash-vs">VS</div>';
     }
 
-    // Right side: defense play + player stacked
-    var rightHTML =
-      '<div style="display:flex;flex-direction:column;gap:3px;align-items:center;width:36%">' +
-        '<div class="T-clash-card" style="border-color:' + defColor + ';width:100%">' +
-          "<div style=\"padding:3px 5px;font-family:'Bebas Neue';font-size:12px;color:#fff;line-height:1\">" + res.defPlay.name + "</div>" +
-        '</div>' +
-        '<div class="T-clash-card" style="border-color:' + defColor + '55;width:100%">' +
-          "<div style=\"padding:3px 5px;font-family:'Bebas Neue';font-size:11px;color:" + defColor + ";line-height:1\">" + res.featuredDef.name + "</div>" +
-          "<div style=\"padding:0 5px 2px;font-family:'Courier New';font-size:7px;color:#8a86b0\">" + res.featuredDef.pos + ' ' + res.featuredDef.ovr + "</div>" +
-        '</div>' +
+    // Right: defense cards (play + player) — crash in from right
+    var right = document.createElement('div');
+    right.className = 'T-clash-side T-clash-right';
+    right.innerHTML =
+      '<div class="T-clash-card" style="border-color:' + defColor + '">' +
+        "<div style=\"padding:4px 5px 2px;font-family:'Bebas Neue';font-size:11px;color:#fff;line-height:1\">" + res.defPlay.name + "</div>" +
+        "<div style=\"padding:0 5px 3px;font-family:'Courier New';font-size:6px;color:" + defColor + "\">" + (res.defPlay.cardType||'DEF') + "</div>" +
+      '</div>' +
+      '<div class="T-clash-card" style="border-color:' + defColor + '66">' +
+        "<div style=\"padding:4px 5px 1px;font-family:'Bebas Neue';font-size:11px;color:" + defColor + ";line-height:1\">" + res.featuredDef.name + "</div>" +
+        "<div style=\"padding:0 5px 3px;font-family:'Courier New';font-size:6px;color:#8a86b0\">" + res.featuredDef.pos + ' OVR ' + res.featuredDef.ovr + "</div>" +
       '</div>';
 
-    clash.innerHTML = leftHTML + centerHTML + rightHTML;
+    clash.append(left, center, right);
     strip.appendChild(clash);
   }
 
@@ -721,15 +735,17 @@ export function buildGameplay() {
     var isBig = r.isTouchdown || r.isInterception || r.isFumbleLost || r.isSack || r.yards >= 15;
     var lineCount = isBig ? '7-9' : '5-6';
 
-    var prompt = 'You are a legendary college football radio play-by-play announcer. Call this play LIVE.\n\n' +
+    var distStr = s.yardsToEndzone <= s.distance ? 'goal' : s.distance;
+    var prompt = 'You are a legendary college football radio play-by-play announcer. Call this play LIVE. Be CREATIVE — never repeat the same phrasing twice in a game. Vary sentence structure, word choice, and energy.\n\n' +
       'RULES: Write ' + lineCount + ' lines. One sentence each. Build tension from snap to result.\n' +
       '- QB throws/hands off. Skill players catch/run. Defenders tackle.\n' +
-      '- Reference players by LAST NAME. Both featured players must appear but don\'t take every action.\n' +
-      '- Routine plays: professional, quick. Big plays: CAPS, excitement, escalation.\n' +
-      '- Include one post-play analysis line at the end.\n' +
-      '- Sound like Kevin Harlan or Gus Johnson.\n\n' +
+      '- Reference players by LAST NAME. Both featured players must appear.\n' +
+      '- VARY your language: use different verbs, sentence openers, rhythms each play.\n' +
+      '- Routine plays: professional, quick, matter-of-fact. Big plays: CAPS, excitement.\n' +
+      '- Include one post-play analysis line. Reference the play call or coverage scheme.\n' +
+      '- DO NOT start every call the same way. Mix up: start with the situation, the defense, the crowd, the stakes.\n\n' +
       'SITUATION: ' + possName + ' ' + s.ctScore + '-' + s.irScore + ' ' + defName + '\n' +
-      s.down + (s.down===1?'st':s.down===2?'nd':s.down===3?'rd':'th') + ' & ' + s.distance + ' at ' + ballSideLabel() + '\n' +
+      s.down + (s.down===1?'st':s.down===2?'nd':s.down===3?'rd':'th') + ' and ' + distStr + ' at the ' + ballSideLabel() + '\n' +
       'H' + s.half + ' Snap ' + s.playsUsed + '/20' + (s.playsUsed >= 18 ? ' LATE' : '') +
       (s.yardsToEndzone <= 20 ? ' RED ZONE' : '') + (s.down >= 3 ? ' MUST CONVERT' : '') + '\n\n' +
       'OFF: ' + oNames + '\nDEF: ' + dNames + '\n' +
@@ -1057,7 +1073,7 @@ export function buildGameplay() {
           } else if (r.isInterception || r.isFumbleLost) {
             dd.textContent = 'TURNOVER \u2014 BALL ON ' + ballSideLabel();
           } else {
-            dd.textContent = dn2 + ' & ' + s2.distance + ' \u2014 BALL ON ' + ballSideLabel();
+            dd.textContent = dn2 + ' & ' + distLabel(s2.distance, s2.yardsToEndzone) + ' \u2014 BALL ON ' + ballSideLabel();
           }
           pbp.appendChild(dd);
           // NEXT PLAY button (btn-blitz style)
@@ -1286,8 +1302,17 @@ export function buildGameplay() {
     const prevPoss = gs.possession;
     const offCard = isOff ? selTorch : null;
     const defCard = isOff ? null : selTorch;
+    var playedPlay = selPl; // save before clearing
     const res = isOff ? gs.executeSnap(selPl, selP, null, null, offCard, defCard) : gs.executeSnap(null, null, selPl, selP, offCard, defCard);
     driveSnaps.push(res);
+    // Cycle played card — return to deck, draw replacement
+    var sides = gs.getCurrentSides();
+    var teamId = GS.team;
+    if (isOff) {
+      cycleCard(playedPlay, sides.offHand, getOffCards(teamId));
+    } else {
+      cycleCard(playedPlay, sides.defHand, getDefCards(teamId));
+    }
     selP = null; selPl = null; selTorch = null;
 
     // Update field/scorebug immediately, then play-by-play in bottom third
@@ -1298,6 +1323,19 @@ export function buildGameplay() {
         showPossCut(res.gameEvent, () => { showDrive(driveSnaps, prevPoss, () => { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
       } else { if(!checkEnd()) nextSnap(); }
     });
+  }
+
+  /** Cycle a played card — return it to deck, draw a replacement */
+  function cycleCard(playedCard, hand, fullPool) {
+    if (!playedCard || !hand || !fullPool) return;
+    var idx = hand.indexOf(playedCard);
+    if (idx === -1) return;
+    // Cards NOT in hand
+    var available = fullPool.filter(function(c) { return hand.indexOf(c) === -1; });
+    if (available.length > 0) {
+      var replacement = available[Math.floor(Math.random() * available.length)];
+      hand[idx] = replacement;
+    }
   }
 
   function nextSnap() {
