@@ -118,8 +118,8 @@ export function buildHome(){
       // CT starters per CLAUDE.md spec
       var offRoster=['ct_q1','ct_s1','ct_s3','ct_s4']; // Avery, Sampson, Vasquez, Walsh
       var defRoster=['ct_db1','ct_db3','ct_dl1','ct_db4']; // Crews, Knox, Wilder, Orozco
-      var offHand=getOffCards('canyon_tech').slice(0,5);
-      var defHand=getDefCards('canyon_tech').slice(0,5);
+      var offHand=getOffCards('canyon_tech').slice(0,4);
+      var defHand=getDefCards('canyon_tech').slice(0,4);
       setGs(function(){
         return {
           screen:'gameplay',

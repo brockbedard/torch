@@ -29,76 +29,66 @@ const CSS = `
 .T-sb{background:#0a0916;border-bottom:1px solid #1a183a;flex-shrink:0;z-index:60;overflow:hidden}
 /* score row: 5 columns — icon | team+score | center | team+score | icon */
 .T-sb-row{display:grid;grid-template-columns:1fr 1.2fr auto 1.2fr 1fr;align-items:center;padding:6px 10px}
-.T-sb-icon{font-size:42px;line-height:1;text-align:center;filter:drop-shadow(0 0 12px rgba(255,255,255,.3)) saturate(1.4)}
+.T-sb-icon{font-size:34px;line-height:1;text-align:center;filter:drop-shadow(0 0 10px rgba(255,255,255,.25)) saturate(1.3)}
 .T-sb-side{display:flex;flex-direction:column;align-items:center;padding:4px 6px;border-radius:6px;position:relative}
 .T-sb-side-glow{background:radial-gradient(ellipse,rgba(255,204,0,.2) 0%,rgba(255,204,0,.06) 50%,transparent 75%);box-shadow:0 0 20px rgba(255,204,0,.18)}
-.T-sb-name{font-family:'Bebas Neue';font-size:17px;font-style:italic;line-height:1;letter-spacing:1px;white-space:nowrap}
+.T-sb-name{font-family:'Bebas Neue';font-size:18px;font-style:italic;line-height:1;letter-spacing:1px;white-space:nowrap}
 .T-sb-score-row{position:relative;margin-top:2px;display:flex;justify-content:center}
 .T-sb-pos-arrow{position:absolute;top:50%;transform:translateY(-50%);font-size:12px;color:#c8a030;line-height:1}
 .T-sb-pos-arrow-l{left:-14px}
 .T-sb-pos-arrow-r{right:-14px}
-.T-sb-pts{font-family:'Press Start 2P';font-size:24px;color:#e8e6ff;line-height:1}
+.T-sb-pts{font-family:'Press Start 2P';font-size:26px;color:#e8e6ff;line-height:1}
 .T-sb-pts-glow{text-shadow:0 0 14px rgba(255,204,0,.5)}
 .T-sb-center{text-align:center;padding:0 8px;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);min-width:80px}
-.T-sb-half{font-family:'Bebas Neue';font-size:14px;color:#c8a030;letter-spacing:2px;line-height:1}
-.T-sb-snap{font-family:'Press Start 2P';font-size:10px;color:#e8e6ff;margin-top:2px;line-height:1;text-shadow:0 0 4px rgba(255,255,255,.2)}
+.T-sb-half{font-family:'Bebas Neue';font-size:15px;color:#c8a030;letter-spacing:2px;line-height:1}
+.T-sb-snap{font-family:'Press Start 2P';font-size:11px;color:#e8e6ff;margin-top:2px;line-height:1;text-shadow:0 0 4px rgba(255,255,255,.2)}
 .T-sb-countdown{font-family:'Press Start 2P';font-size:9px;color:#554f80;margin-top:2px;line-height:1}
 .T-sb-countdown-live{font-size:14px;color:#e03050;text-shadow:0 0 10px rgba(224,48,80,.5)}
 /* situation bar */
 .T-sb-sit{display:flex;align-items:center;justify-content:center;padding:4px 10px;background:rgba(0,0,0,.4);border-top:1px solid rgba(255,255,255,.04);gap:8px}
-.T-sb-sit-down{font-family:'Press Start 2P';font-size:9px;color:#30c0e0;letter-spacing:.5px}
-.T-sb-sit-div{width:1px;height:12px;background:rgba(255,255,255,.12);flex-shrink:0}
-.T-sb-sit-ball{font-family:'Press Start 2P';font-size:9px;color:#e8e6ff;opacity:.7;letter-spacing:.5px}
-.T-sb-sit-torch{font-family:'Press Start 2P';font-size:8px;color:#c8a030;letter-spacing:.5px}
+.T-sb-sit-down{font-family:'Press Start 2P';font-size:10px;color:#30c0e0;letter-spacing:.5px}
+.T-sb-sit-div{width:1px;height:14px;background:rgba(255,255,255,.12);flex-shrink:0}
+.T-sb-sit-ball{font-family:'Press Start 2P';font-size:10px;color:#e8e6ff;opacity:.7;letter-spacing:.5px}
+.T-sb-sit-torch{font-family:'Press Start 2P';font-size:9px;color:#c8a030;letter-spacing:.5px}
 
 /* field strip */
-.T-strip{flex:0 0 28%;position:relative;background:linear-gradient(180deg,#072a07 0%,#0a3a0a 40%,#072a07 100%);overflow:hidden;border-bottom:1px solid #1a183a}
+/* field strip — top third */
+.T-strip{flex:1;position:relative;background:linear-gradient(180deg,#072a07 0%,#0a3a0a 40%,#072a07 100%);overflow:hidden;border-bottom:1px solid #1a183a;min-height:0}
 .T-yard{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.06)}
 .T-los{position:absolute;top:0;bottom:0;width:2px;z-index:5;transition:left .4s ease-out}
 .T-ltg{position:absolute;top:0;bottom:0;width:1px;opacity:.5;z-index:4;transition:left .4s ease-out;border-left:2px dashed}
-.T-marker{position:absolute;top:4px;font-family:'Press Start 2P';font-size:5px;z-index:6;transition:left .4s ease-out;transform:translateX(-50%);letter-spacing:.5px}
 .T-zone{position:absolute;top:0;bottom:0;width:6%}
 .T-zone-l{left:0;background:linear-gradient(90deg,rgba(255,60,60,.12),transparent)}
 .T-zone-r{right:0;background:linear-gradient(270deg,rgba(60,100,255,.12),transparent)}
 .T-hash{position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,.03)}
-/* drop zones on field */
-.T-drop{position:absolute;bottom:6px;height:36px;border:2px dashed #554f80;border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:8;transition:all .2s}
-.T-drop-player{left:8%;width:28%}
-.T-drop-play{left:38%;width:28%}
-.T-drop-torch{left:68%;width:26%}
-.T-drop-lbl{font-family:'Press Start 2P';font-size:5px;color:#554f80;letter-spacing:.5px;pointer-events:none}
-.T-drop-filled{border-color:#00ff88;background:rgba(0,255,136,.08)}
-.T-drop-filled .T-drop-lbl{color:#00ff88}
-.T-drop-hover{border-color:#c8a030;background:rgba(200,160,48,.1);transform:scale(1.03)}
+/* placed cards on field — fixed height matching pregame card proportions */
+.T-placed{position:absolute;bottom:4px;top:4px;z-index:8;border-radius:6px;overflow:hidden;background:var(--bg-surface);border:2px solid #00ff88;box-shadow:0 0 12px rgba(0,255,136,.2);display:flex;flex-direction:column}
+.T-placed-play{left:3%;width:30%}
+.T-placed-player{left:35%;width:30%}
+.T-placed-torch{right:3%;width:28%}
+/* empty drop outlines */
+.T-drop{position:absolute;bottom:4px;top:4px;border:2px dashed #554f8066;border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:7;transition:all .2s}
+.T-drop-play{left:3%;width:30%}
+.T-drop-player{left:35%;width:30%}
+.T-drop-torch{right:3%;width:28%}
+.T-drop-lbl{font-family:'Press Start 2P';font-size:6px;color:#554f8066;letter-spacing:.5px}
+.T-drop-hover{border-color:#c8a030;background:rgba(200,160,48,.06)}
 
-/* bottom panel */
-.T-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;transition:background .5s}
+/* middle third — cards */
+.T-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;transition:background .5s;min-height:0}
 .T-panel-off{background:linear-gradient(180deg,#120e00 0%,#06050f 50%)}
 .T-panel-def{background:linear-gradient(180deg,#00080e 0%,#06050f 50%)}
 
 /* instruction */
-.T-inst{text-align:center;padding:8px 0 2px;font-family:'Press Start 2P';font-size:6px;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
+.T-inst{text-align:center;padding:6px 0 2px;font-family:'Press Start 2P';font-size:7px;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
 
-/* card tray — players left, plays right, all visible at once */
-.T-tray{flex:1;display:flex;gap:4px;padding:4px 6px;overflow:hidden;min-height:0}
-.T-tray-col{flex:1;display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:0}
-.T-tray-lbl{font-family:'Press Start 2P';font-size:6px;color:#554f80;letter-spacing:.5px;padding:2px 0;flex-shrink:0;text-align:center}
-/* player mini-cards (compact for drag) */
-.T-p{border-radius:6px;cursor:grab;background:var(--bg-surface);border:2px solid #1a183a;padding:6px 8px;display:flex;align-items:center;gap:6px;transition:all .12s;touch-action:none;position:relative}
-.T-p:active{cursor:grabbing}
-.T-p-sel{border-color:#00ff88;box-shadow:0 0 12px rgba(0,255,136,.25);background:#00ff8808}
-.T-p-hurt{opacity:.25;pointer-events:none}
-.T-p-info{flex:1;min-width:0}
-.T-p-name{font-family:'Bebas Neue';font-size:15px;color:#fff;line-height:1}
-.T-p-pos{font-family:'Courier New';font-size:8px;font-weight:700;color:#e03050;letter-spacing:.5px}
-.T-p-ovr{font-family:'Courier New';font-size:18px;font-weight:700;line-height:1;flex-shrink:0}
-/* play mini-cards (compact for drag) */
-.T-pl{border-radius:6px;cursor:grab;background:var(--bg-surface);border:2px solid #1a183a;padding:6px 8px;display:flex;align-items:center;gap:6px;transition:all .12s;touch-action:none}
-.T-pl:active{cursor:grabbing}
-.T-pl-sel{border-color:#00ff88;box-shadow:0 0 12px rgba(0,255,136,.25);background:#00ff8808}
-.T-pl-name{font-family:'Bebas Neue';font-size:14px;color:#fff;line-height:1;flex:1}
-.T-pl-tag{font-family:'Courier New';font-size:6px;font-weight:700;padding:2px 5px;border-radius:8px;border:1px solid;letter-spacing:.5px;white-space:nowrap;flex-shrink:0}
-.T-mq{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-left:2px}
+/* card tray — cards at natural size, not stretched */
+.T-tray{display:flex;gap:6px;padding:6px 8px;flex-shrink:0}
+/* cards in tray — match draft screen proportions */
+.T-card{flex:1;height:150px;border-radius:6px;background:var(--bg-surface);overflow:hidden;display:flex;flex-direction:column;transition:all .12s;touch-action:none;position:relative;cursor:grab}
+.T-card:active{cursor:grabbing}
+.T-card-gone{opacity:.3;pointer-events:none}
+.T-card-hurt{opacity:.2;pointer-events:none}
 /* drag ghost */
 .T-drag-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.85;transform:scale(1.05);filter:drop-shadow(0 4px 12px rgba(0,0,0,.6))}
 
@@ -116,10 +106,13 @@ const CSS = `
 .T-spike{color:#30c0e0;border:1.5px solid #30c0e0}
 .T-kneel{color:#554f80;border:1.5px solid #554f80}
 
-/* narrative */
-.T-narr{padding:6px 14px;background:#0a0916;border-top:1px solid #1a183a;flex-shrink:0;min-height:38px}
-.T-narr-1{font-size:13px;color:#e8e6ff;font-weight:600;line-height:1.2}
-.T-narr-2{font-family:'Courier New';font-size:8px;color:#554f80;margin-top:1px}
+/* bottom third — play-by-play booth */
+.T-narr{flex:1;min-height:0;background:#0a0916;border-top:1px solid #1a183a;overflow-y:auto;display:flex;flex-direction:column;justify-content:flex-end}
+.T-pbp{padding:8px 14px;display:flex;flex-direction:column;gap:4px}
+.T-pbp-line{font-family:'Barlow Condensed';font-size:15px;color:#8a86b0;line-height:1.3}
+.T-pbp-live{color:#e8e6ff}
+.T-pbp-result{font-family:'Bebas Neue';font-size:20px;letter-spacing:1px;line-height:1;margin-top:4px}
+.T-pbp-idle{font-family:'Courier New';font-size:9px;color:#554f80;padding:10px 14px}
 
 /* overlays */
 .T-ov{position:absolute;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;pointer-events:none}
@@ -228,6 +221,65 @@ function playerImg(p, team, isOff) {
 
 function tierColor(ovr) { return ovr >= 85 ? '#c8a030' : ovr >= 75 ? '#aaa' : '#CD7F32'; }
 
+/* Build a player card matching the draft screen style exactly (slightly smaller) */
+function mkPlayerCard(p, team, isOff) {
+  var tc = p.ovr >= 85 ? 'var(--a-gold)' : p.ovr >= 75 ? '#aaa' : '#CD7F32';
+  var imgSrc = playerImg(p, team, isOff);
+  // Matches draft.js buildPlayerCard with small=true sizes
+  return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:5px 6px 0">' +
+    '<div>' +
+      "<div style=\"font-family:'Courier New';font-size:10px;font-weight:bold;color:#ff0040;letter-spacing:1px;line-height:1\">" + p.pos + '</div>' +
+      "<div style=\"font-family:'Bebas Neue';font-size:15px;color:#fff;line-height:1;margin-top:1px\">" + p.name + '</div>' +
+    '</div>' +
+    '<div style="text-align:right">' +
+      "<div style=\"font-family:'Courier New';font-size:20px;font-weight:bold;color:" + tc + ";line-height:1;text-shadow:0 0 8px " + tc + "66\">" + p.ovr + '</div>' +
+      "<div style=\"font-family:'Courier New';font-size:6px;font-weight:bold;color:" + tc + ";opacity:.7;letter-spacing:1px\">OVR</div>" +
+    '</div></div>' +
+    '<div style="flex:1;min-height:0;position:relative;overflow:hidden">' +
+      '<img src="' + imgSrc + '" alt="' + p.name + '" draggable="false" style="height:100%;width:100%;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7))">' +
+      '<div style="position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(transparent,var(--bg-surface));pointer-events:none"></div>' +
+    '</div>';
+}
+
+/* Risk classification matching cardDraft.js */
+var HIGH_RISK_IDS = ['four_verts','go_route','y_corner','zero_cov','db_blitz'];
+var MED_RISK_IDS = ['mesh','slant','overload','fire_zone','a_gap_mug','edge_crash','pa_post','pa_flat','man_press','zone_drop','triple_option','zone_read'];
+function getRisk(id) { return HIGH_RISK_IDS.indexOf(id)>=0?'high':MED_RISK_IDS.indexOf(id)>=0?'med':'low'; }
+
+/* Build a play card matching the draft screen style exactly (slightly smaller) */
+function mkPlayCard(play) {
+  var cat = {SHORT:'SHORT',QUICK:'QUICK',DEEP:'DEEP',RUN:'RUN',SCREEN:'SCREEN',OPTION:'OPTION',
+    BLITZ:'BLITZ',ZONE:'ZONE',PRESSURE:'PRESSURE',HYBRID:'HYBRID'}[play.playType||play.cardType] || 'RUN';
+  var cc = typeColor(cat);
+  var risk = getRisk(play.id);
+  var riskColor = risk==='high'?'#ff0040':risk==='med'?'#ff4d00':'#00ff44';
+  var riskLabel = risk==='high'?'HIGH VOLTAGE':risk==='med'?'CALCULATED':'STEADY HAND';
+  var riskWidth = risk==='high'?'90%':risk==='med'?'60%':'35%';
+  // SVG with zoomed viewBox, thicker strokes, bigger dots — matches cardDraft exactly
+  var svg = playSvg(play.id, '#00ff88');
+  svg = svg.replace('viewBox="0 0 60 50"','viewBox="4 4 52 44"')
+    .replace('width="60" height="50"','width="100%" height="100%" preserveAspectRatio="xMidYMid meet"')
+    .replace(/stroke-width="1.5"/g,'stroke-width="2.5"').replace(/stroke-width="1"/g,'stroke-width="2"')
+    .replace(/r="3.5"/g,'r="5"').replace(/r="2.5"/g,'r="4"')
+    .replace(/stroke="#00ff88"/g,'stroke="#ffcc00"');
+  // Header
+  return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 8px 4px">' +
+      "<div style=\"font-family:'Bebas Neue';font-size:14px;color:#fff;line-height:1.1;flex:1;margin-right:4px\">" + play.name + '</div>' +
+      "<div style=\"font-family:'Courier New';font-size:6px;font-weight:bold;color:" + cc + ";border:1px solid " + cc + "44;padding:2px 4px;border-radius:8px;letter-spacing:.5px\">" + cat + '</div>' +
+    '</div>' +
+    // Diagram
+    '<div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse,#1a1030,#0a0818);margin:0 6px;border-radius:4px;overflow:hidden">' + svg + '</div>' +
+    // Risk meter
+    '<div style="padding:4px 8px 2px">' +
+      '<div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden">' +
+        '<div style="width:' + riskWidth + ';height:100%;border-radius:3px;background:' + riskColor + '"></div>' +
+      '</div>' +
+      "<div style=\"font-family:'Courier New';font-size:7px;font-weight:bold;color:" + riskColor + ";letter-spacing:.5px;margin-top:2px\">" + riskLabel + '</div>' +
+    '</div>' +
+    // Description
+    "<div style=\"padding:2px 8px 6px;font-family:'Courier New';font-size:7px;color:var(--muted);opacity:.7\">" + (PLAY_DESC[play.id]||'') + '</div>';
+}
+
 function resolveRoster(ids, pool) {
   if (!ids || !Array.isArray(ids)) return pool;
   if (ids.length > 0 && typeof ids[0] === 'object') return ids;
@@ -245,12 +297,12 @@ export function buildGameplay() {
 
   // engine
   if (!GS.engine) {
-    const hOH = GS.offHand || (isCT ? CT_OFF_PLAYS.slice(0,5) : IR_OFF_PLAYS.slice(0,5));
-    const hDH = GS.defHand || (isCT ? CT_DEF_PLAYS.slice(0,5) : IR_DEF_PLAYS.slice(0,5));
+    const hOH = GS.offHand || (isCT ? CT_OFF_PLAYS.slice(0,4) : IR_OFF_PLAYS.slice(0,4));
+    const hDH = GS.defHand || (isCT ? CT_DEF_PLAYS.slice(0,4) : IR_DEF_PLAYS.slice(0,4));
     const hOR = resolveRoster(GS.offRoster, hTeam.players);
     const hDR = resolveRoster(GS.defRoster, hTeam.defPlayers);
-    const cOH = isCT ? IR_OFF_PLAYS.slice(0,5) : CT_OFF_PLAYS.slice(0,5);
-    const cDH = isCT ? IR_DEF_PLAYS.slice(0,5) : CT_DEF_PLAYS.slice(0,5);
+    const cOH = isCT ? IR_OFF_PLAYS.slice(0,4) : CT_OFF_PLAYS.slice(0,4);
+    const cDH = isCT ? IR_DEF_PLAYS.slice(0,4) : CT_DEF_PLAYS.slice(0,4);
     const cOR = isCT ? IR_OFFENSE : CT_OFFENSE;
     const cDR = isCT ? IR_DEFENSE : CT_DEFENSE;
     GS.engine = new GameState({
@@ -265,7 +317,7 @@ export function buildGameplay() {
 
   // ui state
   let selP = null, selPl = null;
-  let phase = 'idle'; // idle | busy
+  let phase = 'play'; // play | player | ready | busy
   let driveSnaps = [];
   let prev2min = gs.twoMinActive;
 
@@ -336,6 +388,7 @@ export function buildGameplay() {
   const strip = document.createElement('div'); strip.className = 'T-strip'; el.appendChild(strip);
   function drawField() {
     const s = gs.getSummary();
+    const isOff = gs.possession === hAbbr;
     const lp = 6 + s.ballPosition * .88;
     const td = s.possession==='CT' ? s.ballPosition+s.distance : s.ballPosition-s.distance;
     const tp = 6 + Math.max(0,Math.min(100,td)) * .88;
@@ -345,22 +398,116 @@ export function buildGameplay() {
     h += `<div class="T-hash" style="top:33%"></div><div class="T-hash" style="top:67%"></div>`;
     h += `<div class="T-los" style="left:${lp}%;background:${pc};box-shadow:0 0 10px ${pc}"></div>`;
     h += `<div class="T-ltg" style="left:${tp}%;border-color:#c8a030"></div>`;
-    h += `<div class="T-marker" style="left:${lp}%;color:${pc}">${s.possession} \u00b7 ${s.yardsToEndzone} TO GO</div>`;
-    // Drop zones
-    h += `<div class="T-drop T-drop-player${selP?' T-drop-filled':''}" data-drop="player"><span class="T-drop-lbl">${selP?selP.name:'PLAYER'}</span></div>`;
-    h += `<div class="T-drop T-drop-play${selPl?' T-drop-filled':''}" data-drop="play"><span class="T-drop-lbl">${selPl?selPl.name:'PLAY'}</span></div>`;
-    h += `<div class="T-drop T-drop-torch" data-drop="torch"><span class="T-drop-lbl">TORCH</span></div>`;
+
+    // Drop zones — empty outlines for unfilled, actual card for filled
+    if (selPl) {
+      h += `<div class="T-placed T-placed-play" style="display:flex;flex-direction:column">${mkPlayCard(selPl)}</div>`;
+    } else {
+      h += '<div class="T-drop T-drop-play" data-drop="play"><span class="T-drop-lbl">PLAY</span></div>';
+    }
+    if (selP) {
+      h += `<div class="T-placed T-placed-player" style="display:flex;flex-direction:column">${mkPlayerCard(selP, hTeam, isOff)}</div>`;
+    } else {
+      h += '<div class="T-drop T-drop-player" data-drop="player"><span class="T-drop-lbl">PLAYER</span></div>';
+    }
+    // Torch always empty outline for now
+    h += '<div class="T-drop T-drop-torch" data-drop="torch"><span class="T-drop-lbl">TORCH</span></div>';
+
     strip.innerHTML = h;
   }
 
   // ── PANEL ──
   const panel = document.createElement('div'); panel.className = 'T-panel'; el.appendChild(panel);
 
-  // ── NARRATIVE ──
+  // ── PLAY-BY-PLAY BOOTH (bottom third) ──
   const narr = document.createElement('div'); narr.className = 'T-narr';
-  narr.innerHTML = '<div class="T-narr-1">Ready to play.</div><div class="T-narr-2">Tap a player to start.</div>';
+  narr.innerHTML = '<div class="T-pbp-idle">Waiting for the snap...</div>';
   el.appendChild(narr);
-  function setNarr(a, b) { narr.innerHTML = `<div class="T-narr-1">${a}</div><div class="T-narr-2">${b||''}</div>`; }
+
+  function setNarr(a, b) {
+    narr.innerHTML = '<div class="T-pbp" style="padding:8px 14px"><div class="T-pbp-line T-pbp-live">' + a + '</div>' +
+      (b ? '<div class="T-pbp-line" style="color:#554f80;font-size:11px">' + b + '</div>' : '') + '</div>';
+    narr.scrollTop = narr.scrollHeight;
+  }
+
+  function runPlayByPlay(res, onDone) {
+    const r = res.result;
+    const off = res.featuredOff;
+    const def = res.featuredDef;
+    const op = res.offPlay;
+    const isPass = op.completionRate !== null;
+    const s = gs.getSummary();
+
+    const lines = [];
+    if (isPass) {
+      lines.push(off.name + ' takes the snap, drops back...');
+      lines.push('He surveys the field. ' + def.name + ' reading the play.');
+      if (r.isSack) {
+        lines.push('The pocket collapses!');
+        lines.push(def.name + ' gets there!');
+        lines.push('SACK! ' + off.name + ' brought down.');
+      } else if (r.isIncomplete) {
+        lines.push(off.name + ' sees an opening...');
+        lines.push('Throws!');
+        lines.push('Ball falls incomplete.');
+      } else if (r.isInterception) {
+        lines.push(off.name + ' loads up...');
+        lines.push('Fires!');
+        lines.push(def.name + ' jumps the route! INTERCEPTED!');
+      } else {
+        lines.push(off.name + ' sets his feet...');
+        lines.push('Throws to the ' + (op.playType==='DEEP'?'deep side':'flat') + '!');
+        lines.push(r.isTouchdown ? 'CAUGHT IN THE END ZONE!' : 'Caught! ' + r.yards + ' yards.');
+      }
+    } else {
+      lines.push(off.name + ' takes the handoff...');
+      lines.push('Hits the ' + (op.playType==='OPTION'?'read point':'hole') + '.');
+      if (r.yards <= 0 && !r.isTouchdown) {
+        lines.push(def.name + ' meets him there!');
+        lines.push('Nowhere to go.');
+        lines.push('Stuffed at the line.');
+      } else if (r.isFumbleLost) {
+        lines.push(off.name + ' fights for yards...');
+        lines.push('Ball is loose!');
+        lines.push('Defense recovers!');
+      } else {
+        lines.push(off.name + ' breaks through!');
+        lines.push(r.yards >= 10 ? 'Room to run!' : 'Pushing forward...');
+        lines.push(r.isTouchdown ? 'HE\'S IN! TOUCHDOWN!' : r.yards + ' yards. Ball at the ' + s.ballPosition + '.');
+      }
+    }
+
+    const resColor = r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
+    const resText = r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE LOST' : r.isIncomplete?'INCOMPLETE' : (r.yards>=0?'+':'')+r.yards+' YARDS';
+
+    narr.innerHTML = '';
+    const pbp = document.createElement('div'); pbp.className = 'T-pbp';
+    narr.appendChild(pbp);
+    let idx = 0;
+
+    function showNext() {
+      if (idx < lines.length) {
+        const line = document.createElement('div');
+        line.className = 'T-pbp-line';
+        line.textContent = lines[idx];
+        pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { el.classList.remove('T-pbp-live'); });
+        line.classList.add('T-pbp-live');
+        pbp.appendChild(line);
+        narr.scrollTop = narr.scrollHeight;
+        idx++;
+        setTimeout(showNext, 500);
+      } else {
+        const rl = document.createElement('div');
+        rl.className = 'T-pbp-result';
+        rl.style.color = resColor;
+        rl.textContent = resText;
+        pbp.appendChild(rl);
+        narr.scrollTop = narr.scrollHeight;
+        setTimeout(onDone, 1000);
+      }
+    }
+    showNext();
+  }
 
   // ── DRAG HANDLING ──
   let dragItem = null; // { type:'player'|'play', data: obj, ghost: el }
@@ -408,8 +555,8 @@ export function buildGameplay() {
       var hit = touch.clientX >= r.left && touch.clientX <= r.right && touch.clientY >= r.top && touch.clientY <= r.bottom;
       if (hit && dz.dataset.drop === dragItem.type) {
         SND.click();
-        if (dragItem.type === 'player') selP = dragItem.data;
-        else if (dragItem.type === 'play') selPl = dragItem.data;
+        if (dragItem.type === 'play') { selPl = dragItem.data; phase = 'player'; }
+        else if (dragItem.type === 'player') { selP = dragItem.data; phase = 'ready'; }
         drawField();
         drawPanel();
       }
@@ -434,77 +581,68 @@ export function buildGameplay() {
     // 2min check
     if (gs.twoMinActive && !prev2min) { prev2min = true; el.classList.add('T-urgent'); show2MinWarn(); }
 
-    // Card tray: players left, plays right
+    // Instruction
+    const inst = document.createElement('div'); inst.className = 'T-inst';
+    inst.style.color = isOff ? '#c8a030' : '#30c0e0';
+    if (phase === 'play') inst.textContent = isOff ? 'Drag a play onto the field' : 'Drag a scheme onto the field';
+    else if (phase === 'player') inst.textContent = 'Drag a player onto the field';
+    else if (phase === 'ready') inst.textContent = '';
+    panel.appendChild(inst);
+
+    // Card tray — show one card type at a time based on phase
     const tray = document.createElement('div'); tray.className = 'T-tray';
 
-    // Players column
-    const pCol = document.createElement('div'); pCol.className = 'T-tray-col';
-    pCol.insertAdjacentHTML('beforeend', '<div class="T-tray-lbl">PLAYERS</div>');
-    players.forEach(p => {
-      const isSel = selP === p;
-      const tc = tierColor(p.ovr);
-      const c = document.createElement('div');
-      c.className = 'T-p' + (isSel ? ' T-p-sel' : '') + (p.injured ? ' T-p-hurt' : '');
-      c.innerHTML =
-        `<div class="T-p-info"><div class="T-p-name">${p.name}</div><div class="T-p-pos">${p.pos}</div></div>` +
-        `<div class="T-p-ovr" style="color:${tc}">${p.ovr}</div>`;
-      // Tap to select (fallback for non-drag)
-      c.onclick = () => { if (p.injured || phase==='busy') return; SND.click(); selP = p; drawField(); drawPanel(); };
-      // Drag
-      c.onmousedown = function(e) { startDrag('player', p, c, e); };
-      c.ontouchstart = function(e) { startDrag('player', p, c, e); };
-      pCol.appendChild(c);
-    });
-    tray.appendChild(pCol);
-
-    // Plays column
-    const plCol = document.createElement('div'); plCol.className = 'T-tray-col';
-    plCol.insertAdjacentHTML('beforeend', '<div class="T-tray-lbl">PLAYS</div>');
-    plays.forEach(play => {
-      const isSel = selPl === play;
-      const mq = matchupQ(selP, play, gs.drivePlayHistory, isOff);
-      const tc = typeColor(play.playType || play.cardType);
-      const c = document.createElement('div');
-      c.className = 'T-pl' + (isSel ? ' T-pl-sel' : '');
-      c.innerHTML =
-        `<div class="T-pl-name">${play.name}</div>` +
-        (mq ? `<span class="T-mq" style="background:${mqColor(mq)};box-shadow:0 0 4px ${mqColor(mq)}"></span>` : '') +
-        `<span class="T-pl-tag" style="color:${tc};border-color:${tc}44">${play.playType||play.cardType}</span>`;
-      // Tap to select (fallback)
-      c.onclick = () => { if (phase==='busy') return; SND.click(); selPl = play; drawField(); drawPanel(); };
-      // Drag
-      c.onmousedown = function(e) { startDrag('play', play, c, e); };
-      c.ontouchstart = function(e) { startDrag('play', play, c, e); };
-      plCol.appendChild(c);
-    });
-    tray.appendChild(plCol);
+    if (phase === 'play') {
+      plays.forEach(play => {
+        const isSel = selPl === play;
+        const c = document.createElement('div');
+        c.className = 'T-card' + (isSel ? ' T-card-gone' : '');
+        c.style.border = '2px solid ' + (isSel ? '#00ff8844' : '#1a183a');
+        c.innerHTML = mkPlayCard(play);
+        c.onclick = () => { if (phase==='busy') return; SND.click(); selPl = play; phase = 'player'; drawField(); drawPanel(); };
+        c.onmousedown = function(e) { startDrag('play', play, c, e); };
+        c.ontouchstart = function(e) { startDrag('play', play, c, e); };
+        tray.appendChild(c);
+      });
+    } else if (phase === 'player') {
+      players.forEach(p => {
+        const isSel = selP === p;
+        const tc = tierColor(p.ovr);
+        const c = document.createElement('div');
+        c.className = 'T-card' + (isSel ? ' T-card-gone' : '') + (p.injured ? ' T-card-hurt' : '');
+        c.style.border = '2px solid ' + (isSel ? '#00ff8844' : tc + '44');
+        c.innerHTML = mkPlayerCard(p, hTeam, isOff);
+        c.onclick = () => { if (p.injured || phase==='busy') return; SND.click(); selP = p; phase = 'ready'; drawField(); drawPanel(); };
+        c.onmousedown = function(e) { if (!p.injured) startDrag('player', p, c, e); };
+        c.ontouchstart = function(e) { if (!p.injured) startDrag('player', p, c, e); };
+        tray.appendChild(c);
+      });
+    }
     panel.appendChild(tray);
 
-    // Snap bar — always visible, button disabled until both selected
-    const sz = document.createElement('div'); sz.className = 'T-snap';
-    const ready = selP && selPl;
+    // Snap bar — only appears when both cards placed
+    if (phase === 'ready') {
+      const sz = document.createElement('div'); sz.className = 'T-snap';
 
-    // 2min buttons
-    if (gs.twoMinActive) {
-      const btns = document.createElement('div'); btns.className = 'T-2btns';
-      const spk = document.createElement('button'); spk.className = 'T-2btn T-spike'; spk.textContent = 'SPIKE';
-      spk.onclick = () => { SND.click(); gs.spike(); selP=null;selPl=null; drawBug();drawField(); setNarr('Ball spiked.',fmtClock(Math.max(0,gs.clockSeconds))+' left'); if(!checkEnd()) drawPanel(); };
-      btns.appendChild(spk);
-      const isOff2 = gs.possession === hAbbr;
-      const hS = hAbbr==='CT'?gs.ctScore:gs.irScore, cS = hAbbr==='CT'?gs.irScore:gs.ctScore;
-      if (hS > cS && isOff2) {
-        const kn = document.createElement('button'); kn.className = 'T-2btn T-kneel'; kn.textContent = 'KNEEL';
-        kn.onclick = () => { SND.click(); gs.kneel(); selP=null;selPl=null; drawBug();drawField(); setNarr('QB kneels.',fmtClock(Math.max(0,gs.clockSeconds))+' left'); if(!checkEnd()) drawPanel(); };
-        btns.appendChild(kn);
+      if (gs.twoMinActive) {
+        const btns = document.createElement('div'); btns.className = 'T-2btns';
+        const spk = document.createElement('button'); spk.className = 'T-2btn T-spike'; spk.textContent = 'SPIKE';
+        spk.onclick = () => { SND.click(); gs.spike(); selP=null;selPl=null;phase='play'; drawBug();drawField(); setNarr('Ball spiked.',fmtClock(Math.max(0,gs.clockSeconds))+' left'); if(!checkEnd()) drawPanel(); };
+        btns.appendChild(spk);
+        const hS = hAbbr==='CT'?gs.ctScore:gs.irScore, cS = hAbbr==='CT'?gs.irScore:gs.ctScore;
+        if (hS > cS && isOff) {
+          const kn = document.createElement('button'); kn.className = 'T-2btn T-kneel'; kn.textContent = 'KNEEL';
+          kn.onclick = () => { SND.click(); gs.kneel(); selP=null;selPl=null;phase='play'; drawBug();drawField(); setNarr('QB kneels.',fmtClock(Math.max(0,gs.clockSeconds))+' left'); if(!checkEnd()) drawPanel(); };
+          btns.appendChild(kn);
+        }
+        sz.appendChild(btns);
       }
-      sz.appendChild(btns);
-    }
 
-    const go = document.createElement('button'); go.className = 'T-go'; go.textContent = 'SNAP';
-    go.disabled = !ready;
-    go.onclick = ready ? () => doSnap() : null;
-    sz.appendChild(go);
-    panel.appendChild(sz);
+      const go = document.createElement('button'); go.className = 'T-go'; go.textContent = 'SNAP';
+      go.onclick = () => doSnap();
+      sz.appendChild(go);
+      panel.appendChild(sz);
+    }
   }
 
   // ── SNAP ──
@@ -516,8 +654,9 @@ export function buildGameplay() {
     driveSnaps.push(res);
     selP = null; selPl = null;
 
-    showResult(res, () => {
-      drawBug(); drawField();
+    // Update field/scorebug immediately, then play-by-play in bottom third
+    drawBug(); drawField(); drawPanel();
+    runPlayByPlay(res, () => {
       if (res.gameEvent === 'touchdown') { showConv(res.scoringTeam); return; }
       if (posChanged(res.gameEvent, prevPoss)) {
         showPossCut(res.gameEvent, () => { showDrive(driveSnaps, prevPoss, () => { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
@@ -526,7 +665,7 @@ export function buildGameplay() {
   }
 
   function nextSnap() {
-    phase = 'idle';
+    phase = 'play';
     drawPanel();
     // Human always picks cards — on offense they pick offPlay+player,
     // on defense they pick defPlay+player. doSnap() passes them in the right slots.
@@ -753,7 +892,7 @@ export function buildGameplay() {
         torchCards.forEach(function(c) { gs.humanTorchCards.push(c.id); });
       }
       showRules(function() {
-        phase = 'idle';
+        phase = 'play';
         drawPanel();
       });
     });

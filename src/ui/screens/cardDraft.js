@@ -247,7 +247,7 @@ function showPlayReview(team, offHand, defHand, onContinue) {
   hdr.style.cssText = 'flex-shrink:0;text-align:center;margin-bottom:8px;';
   hdr.innerHTML =
     "<div style=\"font-family:'Bebas Neue';font-size:30px;color:var(--a-gold);letter-spacing:3px\">YOUR PLAYBOOK</div>" +
-    "<div style=\"font-family:'Courier New';font-size:8px;color:var(--muted)\">" + team.name + " \u2014 10 PLAYS</div>";
+    "<div style=\"font-family:'Courier New';font-size:8px;color:var(--muted)\">" + team.name + " \u2014 8 PLAYS</div>";
   ov.appendChild(hdr);
 
   function miniCard(play, idx) {
@@ -378,7 +378,7 @@ export function buildCardDraft() {
     selected = {};
     var indices = pool.map(function(_, i) { return i; });
     var shuffledIndices = shuffle(indices);
-    shuffledIndices.slice(0, 5).forEach(function(i) {
+    shuffledIndices.slice(0, 4).forEach(function(i) {
       selected[pool[i].id + '_' + i] = pool[i];
     });
     refreshCards();
@@ -391,7 +391,7 @@ export function buildCardDraft() {
   var counterRow = document.createElement('div');
   counterRow.style.cssText = "font-family:'Press Start 2P';font-size:8px;letter-spacing:1px;margin-bottom:4px;display:flex;align-items:center;gap:6px;flex-shrink:0;";
   var dots = [];
-  for (var d = 0; d < 5; d++) {
+  for (var d = 0; d < 4; d++) {
     var dot = document.createElement('div');
     dot.style.cssText = 'width:7px;height:7px;border-radius:50%;background:#333;border:1px solid #555;transition:all 0.2s;flex-shrink:0;';
     dots.push(dot);
@@ -413,8 +413,8 @@ export function buildCardDraft() {
     var count = Object.keys(selected).length;
 
     // Update counter
-    counterText.textContent = count + ' OF 5 SELECTED';
-    for (var i = 0; i < 5; i++) {
+    counterText.textContent = count + ' OF 4 SELECTED';
+    for (var i = 0; i < 4; i++) {
       if (i < count) {
         dots[i].style.background = '#00ff88';
         dots[i].style.borderColor = '#00ff88';
@@ -431,7 +431,7 @@ export function buildCardDraft() {
       var isSel = !!selected[key];
       var playCard = buildPlayCard(card, isSel, idx);
 
-      if (!isSel && count >= 5) playCard.style.opacity = '0.3';
+      if (!isSel && count >= 4) playCard.style.opacity = '0.3';
 
       playCard.onclick = function() {
         if (selected[key]) {
@@ -439,7 +439,7 @@ export function buildCardDraft() {
           delete selected[key];
           refreshCards();
           refreshGoBtn();
-        } else if (Object.keys(selected).length < 5) {
+        } else if (Object.keys(selected).length < 4) {
           SND.click();
           selected[key] = card;
           refreshCards();
@@ -459,7 +459,7 @@ export function buildCardDraft() {
   // Lock in button
   var goBtn = document.createElement('button');
   function refreshGoBtn() {
-    var ready = Object.keys(selected).length === 5;
+    var ready = Object.keys(selected).length === 4;
     goBtn.className = 'btn-blitz';
     goBtn.style.cssText =
       'width:100%;font-size:14px;margin-top:6px;flex-shrink:0;' +
@@ -467,7 +467,7 @@ export function buildCardDraft() {
         ? 'background:#ffcc00;border-color:#ffcc00;color:#000;box-shadow:6px 6px 0 #997a00, 0 0 30px rgba(255,204,0,0.4);animation:lockGlow 2s ease-in-out infinite;'
         : 'opacity:0.35;');
     goBtn.disabled = !ready;
-    goBtn.textContent = ready ? 'LOCK IN PLAYS \u2192' : 'PICK 5 PLAYS';
+    goBtn.textContent = ready ? 'LOCK IN PLAYS \u2192' : 'PICK 4 PLAYS';
     goBtn.onclick = ready ? function() {
       SND.click();
       var hand = Object.keys(selected).map(function(k) { return selected[k]; });
