@@ -28,27 +28,27 @@ const CSS = `
 /* scoreboard */
 .T-sb{background:#0a0916;border-bottom:1px solid #1a183a;flex-shrink:0;z-index:60;overflow:hidden}
 /* score row: 5 columns — icon | team+score | center | team+score | icon */
-.T-sb-row{display:grid;grid-template-columns:30px 1fr auto 1fr 30px;align-items:center;padding:8px 8px;gap:4px}
-.T-sb-icon{font-size:28px;line-height:1;text-align:center;filter:drop-shadow(0 0 8px rgba(255,255,255,.2)) saturate(1.3)}
-.T-sb-side{display:flex;flex-direction:column;align-items:center;padding:4px 4px;border-radius:6px;position:relative}
+.T-sb-row{display:grid;grid-template-columns:36px 1fr auto 1fr 36px;align-items:center;padding:10px 10px;gap:6px}
+.T-sb-icon{font-size:32px;line-height:1;text-align:center;filter:drop-shadow(0 0 8px rgba(255,255,255,.2)) saturate(1.3)}
+.T-sb-side{display:flex;flex-direction:column;align-items:center;padding:6px 6px;border-radius:6px;position:relative}
 .T-sb-side-glow{background:radial-gradient(ellipse,rgba(255,204,0,.2) 0%,rgba(255,204,0,.06) 50%,transparent 75%);box-shadow:0 0 20px rgba(255,204,0,.18)}
-.T-sb-name{font-family:'Bebas Neue';font-size:16px;font-style:italic;line-height:1;letter-spacing:1px;white-space:nowrap}
+.T-sb-name{font-family:'Bebas Neue';font-size:18px;font-style:italic;line-height:1;letter-spacing:1px;white-space:nowrap}
 .T-sb-score-row{position:relative;margin-top:2px;display:flex;justify-content:center}
 .T-sb-pos-arrow{position:absolute;top:50%;transform:translateY(-50%);font-size:12px;color:#c8a030;line-height:1}
 .T-sb-pos-arrow-l{left:-14px}
 .T-sb-pos-arrow-r{right:-14px}
-.T-sb-pts{font-family:'Press Start 2P';font-size:24px;color:#e8e6ff;line-height:1}
+.T-sb-pts{font-family:'Press Start 2P';font-size:28px;color:#e8e6ff;line-height:1}
 .T-sb-pts-glow{text-shadow:0 0 14px rgba(255,204,0,.5)}
 .T-sb-center{text-align:center;padding:0 8px;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);min-width:80px}
-.T-sb-half{font-family:'Bebas Neue';font-size:15px;color:#c8a030;letter-spacing:2px;line-height:1;white-space:nowrap}
+.T-sb-half{font-family:'Bebas Neue';font-size:17px;color:#c8a030;letter-spacing:2px;line-height:1;white-space:nowrap}
 .T-sb-snap{font-family:'Press Start 2P';font-size:12px;color:#e8e6ff;margin-top:3px;line-height:1;text-shadow:0 0 4px rgba(255,255,255,.2)}
 .T-sb-countdown{font-family:'Press Start 2P';font-size:9px;color:#554f80;margin-top:5px;line-height:1}
 .T-sb-countdown-live{font-size:14px;color:#e03050;text-shadow:0 0 10px rgba(224,48,80,.5)}
 /* situation bar */
-.T-sb-sit{display:flex;align-items:center;justify-content:center;padding:6px 12px;background:rgba(0,0,0,.4);border-top:1px solid rgba(255,255,255,.04);gap:10px}
-.T-sb-sit-down{font-family:'Press Start 2P';font-size:11px;color:#30c0e0;letter-spacing:.5px}
-.T-sb-sit-div{width:1px;height:16px;background:rgba(255,255,255,.12);flex-shrink:0}
-.T-sb-sit-ball{font-family:'Press Start 2P';font-size:11px;color:#e8e6ff;opacity:.7;letter-spacing:.5px}
+.T-sb-sit{display:flex;align-items:center;justify-content:center;padding:8px 12px;background:rgba(0,0,0,.4);border-top:1px solid rgba(255,255,255,.04);gap:12px}
+.T-sb-sit-down{font-family:'Press Start 2P';font-size:12px;color:#30c0e0;letter-spacing:.5px}
+.T-sb-sit-div{width:1px;height:18px;background:rgba(255,255,255,.12);flex-shrink:0}
+.T-sb-sit-ball{font-family:'Press Start 2P';font-size:12px;color:#e8e6ff;opacity:.7;letter-spacing:.5px}
 .T-sb-sit-torch{font-family:'Press Start 2P';font-size:9px;color:#c8a030;letter-spacing:.5px;transition:transform .08s,text-shadow .08s}
 
 /* field strip */
