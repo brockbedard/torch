@@ -834,106 +834,126 @@ export function buildGameplay() {
       if (s.yardsToEndzone <= 5 && r.yards >= 1) return 'Knocking on the door — inside the five';
       return '';
     }
+    // Synonym rotation — pick randomly from arrays for variety
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    var distStr2 = s.yardsToEndzone <= s.distance ? 'goal' : s.distance;
+    var downStr2 = ['','First','Second','Third','Fourth'][s.down] + ' and ' + distStr2;
+
     const lines = [];
     if (isPass) {
-      // Line 1: play call + key personnel (always mention featured off)
-      lines.push(op.name + ' is the call — ' + qb.name + ' under center, ' + off.name + ' key to the play');
-      // Line 2: defense setup (always mention featured def)
-      lines.push(dp.name + ' defense — ' + def.name + ' lined up at ' + def.pos + ', eyes on the backfield');
-      // Line 3: snap
-      lines.push(qb.name + ' takes the snap, drops back, looking...');
+      // Line 1: vary the opener (4 structures from research)
+      var openers = [
+        op.name + ' is the call — ' + qb.name + ' in the shotgun, ' + off.name + ' split wide',
+        downStr2 + ', ' + qb.name + ' under center with ' + off.name + ' key to the play',
+        qb.name + ' lines up in the shotgun, ' + op.name + ' dialed up, ' + off.name + ' in the formation',
+        possTeamName + ' comes to the line — ' + op.name + ' from the gun, ' + off.name + ' flanked out wide',
+      ];
+      lines.push(pick(openers));
+      // Line 2: defense (vary structure)
+      var defSetups = [
+        def.name + ' showing ' + dp.name + ' — reading the backfield from ' + def.pos,
+        dp.name + ' defense, ' + def.name + ' at ' + def.pos + ', eyes locked on ' + qb.name,
+        defTeamName + ' in ' + dp.name + ', ' + def.name + ' creeping up to the line',
+        def.name + ' in coverage, ' + dp.name + ' look — daring them to throw',
+      ];
+      lines.push(pick(defSetups));
+      // Line 3: snap (vary the drop back)
+      var drops = [
+        qb.name + ' takes the snap, drops back, looking...',
+        'Snap to ' + qb.name + ', he retreats into the pocket, surveys the field...',
+        qb.name + ' catches the snap and settles into the pocket...',
+        'Ball is snapped — ' + qb.name + ' with a quick three-step drop...',
+      ];
+      lines.push(pick(drops));
       if (r.isSack) {
-        lines.push('PRESSURE off the edge! ' + off.name + ' can\'t pick up the block!');
-        lines.push(tackler.name + ' is coming FREE!');
-        lines.push('SACKED! ' + tackler.name + ' BURIES ' + qb.name + ' behind the line!');
-        lines.push('That ' + dp.name + ' call was perfectly designed to get pressure');
-        lines.push(qb.name + ' held the ball way too long and paid for it');
+        lines.push(pick(['PRESSURE off the edge!','The rush is coming!','Here comes the blitz!']) + ' ' + off.name + ' can\'t pick it up!');
+        lines.push(tackler.name + pick([' is coming FREE!',' gets through untouched!',' beats the blocker!']));
+        lines.push(pick(['SACKED!','BROUGHT DOWN!','BURIED!']) + ' ' + tackler.name + ' ' + pick(['levels','buries','drops','plants']) + ' ' + qb.name + '!');
+        lines.push(pick(['That '+dp.name+' blitz was perfectly designed','The protection completely collapsed',''+qb.name+' held it too long and paid the price']));
       } else if (r.isIncomplete) {
-        lines.push(qb.name + ' fires toward ' + receiver.name + ' on the sideline');
-        lines.push('Broken up! ' + tackler.name + ' was stride for stride with the receiver');
-        lines.push('The ' + dp.name + ' coverage just smothered that route');
+        lines.push(qb.name + pick([' fires toward ',' throws for ',' targets ']) + receiver.name + pick([' on the sideline',' over the middle',' in the flat']));
+        lines.push(pick(['Broken up!','Batted away!','No catch!']) + ' ' + tackler.name + pick([' was stride for stride',' smothered the route',' got a hand in there']));
       } else if (r.isInterception) {
-        lines.push(qb.name + ' loads up, throws for ' + receiver.name + '...');
-        lines.push('OH! ' + def.name + ' jumps the route!');
-        lines.push('PICKED OFF! ' + def.name + ' read that the ENTIRE way!');
-        lines.push('What a TERRIBLE decision by ' + qb.name + ' — ' + def.name + ' was sitting on that route');
-        lines.push('That could be a season-defining turnover right there');
+        lines.push(qb.name + pick([' loads up, throws...',' lets it fly...',' fires downfield...']));
+        lines.push(pick(['OH!','NO!','WAIT!']) + ' ' + def.name + pick([' jumps the route!',' reads it all the way!',' undercuts the receiver!']));
+        lines.push('PICKED OFF! ' + def.name + pick([' saw it from the snap!',' was sitting on that the entire time!',' takes it away!']));
+        lines.push(pick(['What a terrible decision by '+qb.name,'That ball was telegraphed',''+def.name+' baited him into that throw']));
+        lines.push(pick(['Huge momentum shift right there','That turnover could change everything',''+defTeamName+' gets the ball back']));
       } else if (r.isTouchdown) {
-        lines.push(qb.name + ' sees ' + receiver.name + ' breaking free...');
-        lines.push('He lets it fly!');
-        if (s.yardsToEndzone > 20) {
-          lines.push(receiver.name + ' at the thirty, the twenty, the TEN...');
-        }
-        lines.push(receiver.name + ' CATCHES IT! TOUCHDOWN!');
-        lines.push(tackler.name + ' was a step too late — that throw was PERFECT');
-        lines.push(qb.name + ' to ' + receiver.name + ' — you cannot draw it up any better than that');
-        lines.push(possTeamName + ' finds the end zone!');
+        lines.push(qb.name + pick([' sees ',' spots ',' finds ']) + receiver.name + pick([' breaking free...',' wide open...',' streaking downfield...']));
+        lines.push(pick(['He lets it fly!','Throws!','Launches it!']));
+        if (s.yardsToEndzone > 20) lines.push(receiver.name + ' at the thirty, the twenty, the TEN...');
+        lines.push(receiver.name + pick([' CATCHES IT!',' HAULS IT IN!',' BRINGS IT DOWN!']) + ' TOUCHDOWN!');
+        lines.push(tackler.name + pick([' was a step too late',' couldn\'t close in time',' got turned around']) + pick([' — what a throw!',' — perfect ball!','!']));
+        lines.push(possTeamName + pick([' finds the end zone!',' puts six on the board!',' scores!']));
       } else if (r.yards >= 15) {
-        lines.push(qb.name + ' steps up in the pocket, launches it deep!');
-        lines.push(receiver.name + ' goes up and GETS IT!');
-        lines.push('HUGE play! ' + r.yards + ' yards! ' + tackler.name + ' got burned on that one!');
-        lines.push(off.name + '\'s blocking gave ' + qb.name + ' all day to throw');
+        lines.push(qb.name + pick([' steps up and launches it!',' fires deep!',' airs it out!']));
+        lines.push(receiver.name + pick([' goes up and GETS IT!',' hauls it in!',' HIGH-POINTS it!']));
+        lines.push(r.yards + pick([' yards! What a play!',' yards on the bomb!',' yards! '+tackler.name+' got burned!']));
       } else if (r.yards >= 8) {
-        lines.push(qb.name + ' finds ' + receiver.name + ' over the middle, fires!');
-        lines.push('Complete for ' + r.yards + '! ' + tackler.name + ' makes the tackle after the catch');
-        lines.push('Nice call with the ' + op.name + ' against that ' + dp.name + ' look');
+        lines.push(qb.name + pick([' finds ',' hits ',' delivers to ']) + receiver.name + pick([' over the middle',' on the crossing route',' in the seam']) + ', fires!');
+        lines.push(pick(['Complete for '+r.yards+'!','Caught! '+r.yards+' yard pickup!','Good throw, '+r.yards+' yards!']) + ' ' + tackler.name + pick([' makes the stop',' brings him down',' cleans it up']));
       } else if (r.yards >= 1) {
-        lines.push(qb.name + ' dumps it off to ' + receiver.name + ' in the flat');
-        lines.push('Caught, gain of ' + r.yards + '. ' + tackler.name + ' wraps him up right away');
+        lines.push(qb.name + pick([' dumps it off',' checks down',' flips it']) + ' to ' + receiver.name + pick([' in the flat',' underneath',' for a short gain']));
+        lines.push(pick(['Gain of '+r.yards+'.',''+r.yards+' yards, nothing more.','Caught for '+r.yards+'.']) + ' ' + tackler.name + pick([' wraps him up',' makes the tackle',' is right there']));
       } else {
-        lines.push(qb.name + ' looks for ' + receiver.name + ' — nothing there');
-        lines.push(def.name + ' had the coverage blanketed');
-        lines.push('Throwaway. The ' + dp.name + ' defense took away everything');
+        lines.push(qb.name + pick([' looks for '+receiver.name+' — nothing there',' can\'t find anyone open',' is under pressure, throws it away']));
+        lines.push(def.name + pick([' had it blanketed',' took everything away',' locked it down']) + '. ' + pick(['Throwaway','Incomplete','No gain on the play']));
       }
     } else {
       var isOption = op.playType === 'OPTION';
       var isSneakPlay = op.id === 'qb_sneak' || op.id === 'ir_qb_sneak';
       var ballCarrier = isSneakPlay ? qb : runner;
-      // Line 1: play call + featured player's role
-      lines.push(op.name + ' — ' + qb.name + ' under center, ' + off.name + ' lined up at ' + off.pos);
-      // Line 2: defense (always mention featured def)
-      lines.push(dp.name + ' — ' + def.name + ' reading the backfield from ' + def.pos);
-      // Line 3: snap + handoff
+      // Line 1: varied run opener
+      lines.push(pick([
+        op.name + ' — ' + qb.name + ' under center, ' + ballCarrier.name + ' in the backfield',
+        downStr2 + ', ' + possTeamName + ' in heavy personnel, ' + ballCarrier.name + ' the featured back',
+        qb.name + ' lines up under center, ' + op.name + ' called for ' + ballCarrier.name,
+        possTeamName + ' comes out in ' + op.name + ' — ' + off.name + ' key to the blocking',
+      ]));
+      // Line 2: defense
+      lines.push(pick([
+        dp.name + ' — ' + def.name + ' reading the backfield from ' + def.pos,
+        def.name + ' at ' + def.pos + ', ' + dp.name + ' — watching the mesh point',
+        defTeamName + ' in ' + dp.name + ', ' + def.name + ' stacking the box',
+        def.name + ' shows ' + dp.name + ' — keying on the run',
+      ]));
+      // Line 3: handoff
       if (isOption) {
-        lines.push(qb.name + ' takes the snap, reads the end... gives it to ' + runner.name + '!');
+        lines.push(qb.name + pick([' takes the snap, reads the end...',' gets the snap, eyes the DE...']) + pick([' gives it to ',' feeds ']) + runner.name + '!');
       } else if (isSneakPlay) {
-        lines.push(qb.name + ' takes the snap and pushes forward behind the center...');
+        lines.push(qb.name + pick([' takes the snap and pushes forward...',' sneaks it behind the center...',' dives ahead...']));
       } else {
-        lines.push(qb.name + ' hands it off to ' + runner.name + '...');
+        lines.push(pick([qb.name+' hands it off to '+ballCarrier.name+'...', 'Straight handoff to '+ballCarrier.name+'...', qb.name+' gives it to '+ballCarrier.name+' up the gut...']));
       }
       if (r.isFumbleLost) {
-        lines.push(ballCarrier.name + ' takes the hit...');
-        lines.push('THE BALL IS OUT! IT\'S ON THE GROUND!');
-        lines.push('Bodies diving for it!');
-        lines.push(def.name + ' comes up with it! FUMBLE RECOVERY!');
-        lines.push('A devastating turnover — ' + ballCarrier.name + ' just couldn\'t hold on');
+        lines.push(ballCarrier.name + pick([' takes the hit...',' absorbs contact...',' lowers his shoulder...']));
+        lines.push(pick(['THE BALL IS OUT!','HE LOST IT!','IT\'S ON THE GROUND!']));
+        lines.push(def.name + pick([' pounces on it!',' comes up with it!',' recovers!']) + ' FUMBLE!');
+        lines.push(pick(['Devastating turnover','What a play by the defense',''+ballCarrier.name+' just couldn\'t hold on']));
       } else if (r.isTouchdown) {
-        lines.push(ballCarrier.name + ' hits the hole and breaks through!');
+        lines.push(ballCarrier.name + pick([' hits the hole!',' breaks through!',' finds a crease!']));
         if (s.yardsToEndzone > 10) {
-          lines.push('He\'s got daylight! To the twenty, the ten...');
-          lines.push('NOBODY\'S GOING TO CATCH HIM!');
+          lines.push(pick(['Daylight!','He\'s got room!','Into the second level!']) + ' To the twenty, the ten...');
+          lines.push(pick(['NOBODY\'S CATCHING HIM!','HE\'S GONE!','SEE YOU LATER!']));
         } else {
-          lines.push('Breaks a tackle at the five!');
+          lines.push(pick(['Breaks a tackle!','Sheds the defender!','Powers through!']));
         }
         lines.push('TOUCHDOWN! ' + ballCarrier.name + '!');
-        lines.push(tackler.name + ' couldn\'t get an angle — the ' + op.name + ' was the perfect call');
-        lines.push(possTeamName + ' scores! What a drive!');
+        lines.push(possTeamName + pick([' finds the end zone!',' punches it in!',' scores!']));
       } else if (r.yards >= 15) {
-        lines.push(ballCarrier.name + ' bounces it outside — daylight!');
-        lines.push('He\'s got room to run! Into the second level!');
-        lines.push(tackler.name + ' finally drags him down after ' + r.yards + ' yards!');
-        lines.push('That ' + op.name + ' ripped right through the ' + dp.name + ' defense');
+        lines.push(ballCarrier.name + pick([' bounces it outside!',' bursts through!',' hits the afterburners!']));
+        lines.push(pick(['He\'s in the open field!','Room to run!','Daylight ahead!']));
+        lines.push(r.yards + ' yards! ' + tackler.name + pick([' finally drags him down!',' brings him down!',' makes the tackle!']));
       } else if (r.yards >= 8) {
-        lines.push(ballCarrier.name + ' finds a crease, sheds a tackler!');
-        lines.push('Nice run — ' + r.yards + ' yards. ' + tackler.name + ' brings him down');
-        lines.push(off.name + ' paved the way on that play');
+        lines.push(ballCarrier.name + pick([' finds a crease',' hits the hole hard',' sheds a tackler']));
+        lines.push(pick(['Good run, '+r.yards+'.','Solid carry for '+r.yards+'.',''+r.yards+' yard pickup.']) + ' ' + tackler.name + pick([' brings him down',' makes the stop',' wraps him up']));
       } else if (r.yards >= 1) {
-        lines.push(ballCarrier.name + ' pushes into the pile, falls forward');
-        lines.push('Gain of ' + r.yards + '. ' + tackler.name + ' cleans it up. Nothing fancy');
+        lines.push(ballCarrier.name + pick([' pushes ahead',' falls forward',' grinds out a few']));
+        lines.push(pick(['Gain of '+r.yards+'.',''+r.yards+' yards.','Short gain.']) + ' ' + tackler.name + pick([' cleans it up',' makes the tackle',' is right there']));
       } else {
-        lines.push(def.name + ' shoots the gap!');
-        lines.push('STUFFED! ' + tackler.name + ' had it read the whole way!');
-        lines.push('The ' + dp.name + ' defense was built to stop exactly that');
+        lines.push(def.name + pick([' shoots the gap!',' reads it perfectly!',' is all over it!']));
+        lines.push(pick(['STUFFED!','STOPPED!','NO GAIN!']) + ' ' + tackler.name + pick([' had it read',' blew it up',' met him at the line']));
       }
     }
 
