@@ -506,78 +506,6 @@ export function buildGameplay() {
     strip.appendChild(clash);
   }
 
-  /** Call AI for rich commentary, fall back to templates */
-  async function fetchAICommentary(res) {
-    const r = res.result;
-    const s = gs.getSummary();
-    const sides = gs.getCurrentSides();
-    const oStarters = sides.offPlayers.slice(0,4).map(function(p){return p.name+' '+p.pos+' '+p.ovr;}).join(', ');
-    const dStarters = sides.defPlayers.slice(0,4).map(function(p){return p.name+' '+p.pos+' '+p.ovr;}).join(', ');
-    const possTeam = s.possession === 'CT' ? 'Canyon Tech' : 'Iron Ridge';
-    const defTeamName = s.possession === 'CT' ? 'Iron Ridge' : 'Canyon Tech';
-
-    // Determine how many lines based on play significance
-    var isBigPlay = r.isTouchdown || r.isInterception || r.isFumbleLost || r.isSack || r.yards >= 15;
-    var isHugeMoment = r.isTouchdown && (s.ctScore + s.irScore > 20 || Math.abs(s.ctScore - s.irScore) <= 7);
-    var lineCount = isBigPlay ? (isHugeMoment ? '8-10' : '6-8') : '5-6';
-
-    const prompt = 'You are a legendary college football radio play-by-play announcer calling a game LIVE. Describe this play as it unfolds in real time — from snap to whistle — like the listener is hanging on every word.\n\n' +
-      'RULES:\n' +
-      '- Write ' + lineCount + ' lines, one sentence per line\n' +
-      '- Build from pre-snap tension through the action to the result\n' +
-      '- The QB is separate from the featured player. QB throws or hands off. Skill players catch or run.\n' +
-      '- Reference actual player LAST NAMES. Both featured players must appear.\n' +
-      '- For routine plays (short gains, incompletions): keep it professional, matter-of-fact\n' +
-      '- For big plays (15+ yards, TDs): escalate energy, use CAPS for the climax, let the excitement build\n' +
-      '- For turnovers/sacks: shock, disbelief, then analysis\n' +
-      '- Include post-play analysis: "That\'s the kind of throw that changes games" or "The coverage was just too tight"\n' +
-      '- Vary your cadence — some lines short and punchy, some longer and descriptive\n' +
-      '- Sound like Kevin Harlan, Gus Johnson, or Al Michaels — not a robot\n\n' +
-      'GAME SITUATION:\n' +
-      possTeam + ' ' + s.ctScore + ', ' + defTeamName + ' ' + s.irScore + '\n' +
-      s.down + (s.down===1?'st':s.down===2?'nd':s.down===3?'rd':'th') + ' and ' + s.distance + ' at the ' + ballSideLabel() + '\n' +
-      'Half ' + s.half + ', Snap ' + s.playsUsed + ' of 20' + (s.playsUsed >= 18 ? ' — LATE IN THE HALF' : '') + '\n' +
-      (Math.abs(s.ctScore - s.irScore) <= 7 ? 'CLOSE GAME — every play matters\n' : '') +
-      (s.yardsToEndzone <= 20 ? 'RED ZONE — inside the 20\n' : '') +
-      (s.down >= 3 ? 'MUST-CONVERT SITUATION\n' : '') +
-      '\nOFFENSE (' + possTeam + '): ' + oStarters + '\n' +
-      'DEFENSE (' + defTeamName + '): ' + dStarters + '\n' +
-      'Featured OFF: ' + res.featuredOff.name + ' (' + res.featuredOff.pos + ') — selected by the player for this snap\n' +
-      'Featured DEF: ' + res.featuredDef.name + ' (' + res.featuredDef.pos + ') — opponent\'s key defender\n\n' +
-      'PLAY CALL: ' + res.offPlay.name + ' (' + (res.offPlay.playType||res.offPlay.cardType||'') + ') vs ' + res.defPlay.name + ' defense\n\n' +
-      'RESULT: ' + r.description + '\n' +
-      'Yards: ' + r.yards + '\n' +
-      (r.isTouchdown?'TOUCHDOWN!\n':'') + (r.isSack?'SACK!\n':'') + (r.isInterception?'INTERCEPTION!\n':'') + (r.isFumbleLost?'FUMBLE LOST!\n':'') + (r.isIncomplete?'INCOMPLETE PASS\n':'') +
-      (r.offComboPts > 0 ? 'BADGE COMBO fired for offense (+' + r.offComboYards + ' yards)\n' : '') +
-      (r.defComboPts > 0 ? 'BADGE COMBO fired for defense\n' : '') +
-      (r.historyBonus > 0 ? 'Play-mix bonus: offense caught the defense off guard\n' : '') +
-      (r.historyBonus < -2 ? 'Repeat play penalty: defense read the tendency\n' : '');
-
-    try {
-      var controller = new AbortController();
-      var abortTimeout = setTimeout(function() { controller.abort(); }, 5000);
-      const resp = await fetch('/api/commentary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 350,
-          system: 'You are a legendary college football radio announcer. Write vivid, dramatic play-by-play. One sentence per line. Vary length based on play significance — routine plays get 5-6 lines, big plays get 7-10. Reference players by last name. Use CAPS for climactic moments. Include a post-play analysis line.',
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-      clearTimeout(abortTimeout);
-      if (!resp.ok) return null;
-      const data = await resp.json();
-      const text = data.content && data.content[0] && data.content[0].text;
-      if (!text) return null;
-      const lines = text.split('\n').filter(function(l) { return l.trim().length > 0; }).slice(0, 12);
-      return lines.length >= 3 ? lines : null;
-    } catch (e) {
-      return null;
-    }
-  }
 
   /** Animate torch points flying from commentary to scoreboard, then roll up the total */
   function animateTorchFly(sourceEl, pts) {
@@ -658,17 +586,7 @@ export function buildGameplay() {
     const tackler = Math.random() < 0.6 ? def : randDef;
 
     showClashOnField(res);
-
-    // Try AI commentary first, build templates as fallback
-    fetchAICommentary(res).then(function(aiLines) {
-      if (aiLines) {
-        renderPBPLines(aiLines, res, onDone);
-      } else {
-        renderPBPLines(buildTemplateLines(), res, onDone);
-      }
-    }).catch(function() {
-      renderPBPLines(buildTemplateLines(), res, onDone);
-    });
+    renderPBPLines(buildTemplateLines(), res, onDone);
 
     function buildTemplateLines() {
     const s = gs.getSummary();
