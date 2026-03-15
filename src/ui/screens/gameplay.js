@@ -699,6 +699,60 @@ export function buildGameplay() {
     setTimeout(function() { slamText('SACK', '#e03050'); }, 100);
   }
 
+  /** AI commentary — 4s timeout, returns lines array or null */
+  async function fetchAICommentary(res) {
+    var r = res.result;
+    var s = gs.getSummary();
+    var sides = gs.getCurrentSides();
+    var oNames = sides.offPlayers.slice(0,4).map(function(p){return p.name+' '+p.pos+' '+p.ovr;}).join(', ');
+    var dNames = sides.defPlayers.slice(0,4).map(function(p){return p.name+' '+p.pos+' '+p.ovr;}).join(', ');
+    var possName = s.possession === 'CT' ? 'Canyon Tech' : 'Iron Ridge';
+    var defName = s.possession === 'CT' ? 'Iron Ridge' : 'Canyon Tech';
+    var isBig = r.isTouchdown || r.isInterception || r.isFumbleLost || r.isSack || r.yards >= 15;
+    var lineCount = isBig ? '7-9' : '5-6';
+
+    var prompt = 'You are a legendary college football radio play-by-play announcer. Call this play LIVE.\n\n' +
+      'RULES: Write ' + lineCount + ' lines. One sentence each. Build tension from snap to result.\n' +
+      '- QB throws/hands off. Skill players catch/run. Defenders tackle.\n' +
+      '- Reference players by LAST NAME. Both featured players must appear but don\'t take every action.\n' +
+      '- Routine plays: professional, quick. Big plays: CAPS, excitement, escalation.\n' +
+      '- Include one post-play analysis line at the end.\n' +
+      '- Sound like Kevin Harlan or Gus Johnson.\n\n' +
+      'SITUATION: ' + possName + ' ' + s.ctScore + '-' + s.irScore + ' ' + defName + '\n' +
+      s.down + (s.down===1?'st':s.down===2?'nd':s.down===3?'rd':'th') + ' & ' + s.distance + ' at ' + ballSideLabel() + '\n' +
+      'H' + s.half + ' Snap ' + s.playsUsed + '/20' + (s.playsUsed >= 18 ? ' LATE' : '') +
+      (s.yardsToEndzone <= 20 ? ' RED ZONE' : '') + (s.down >= 3 ? ' MUST CONVERT' : '') + '\n\n' +
+      'OFF: ' + oNames + '\nDEF: ' + dNames + '\n' +
+      'Featured: ' + res.featuredOff.name + ' (' + res.featuredOff.pos + ') vs ' + res.featuredDef.name + ' (' + res.featuredDef.pos + ')\n' +
+      'Play: ' + res.offPlay.name + ' vs ' + res.defPlay.name + '\n' +
+      'Result: ' + r.description + ' (' + r.yards + ' yds)' +
+      (r.isTouchdown?' TD':'') + (r.isSack?' SACK':'') + (r.isInterception?' INT':'') + (r.isFumbleLost?' FUMBLE':'') + (r.isIncomplete?' INC':'') +
+      (r.offComboPts > 0 ? ' Badge combo +' + r.offComboYards + 'yds' : '') + '\n';
+
+    try {
+      var ac = new AbortController();
+      var to = setTimeout(function() { ac.abort(); }, 4000);
+      var resp = await fetch('/api/commentary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: ac.signal,
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 350,
+          system: 'College football radio PBP announcer. One sentence per line. ' + lineCount + ' lines. CAPS for big moments. Players by last name.',
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      clearTimeout(to);
+      if (!resp.ok) return null;
+      var data = await resp.json();
+      var text = data.content && data.content[0] && data.content[0].text;
+      if (!text) return null;
+      var lines = text.split('\n').filter(function(l) { return l.trim().length > 0; }).slice(0, 12);
+      return lines.length >= 3 ? lines : null;
+    } catch (e) { return null; }
+  }
+
   function runPlayByPlay(res, onDone) {
     const r = res.result;
     const off = res.featuredOff;
@@ -725,7 +779,13 @@ export function buildGameplay() {
     const tackler = Math.random() < 0.6 ? def : randDef;
 
     showClashOnField(res);
-    renderPBPLines(buildTemplateLines(), res, onDone);
+
+    // Try AI commentary, fall back to templates
+    fetchAICommentary(res).then(function(aiLines) {
+      renderPBPLines(aiLines || buildTemplateLines(), res, onDone);
+    }).catch(function() {
+      renderPBPLines(buildTemplateLines(), res, onDone);
+    });
 
     function buildTemplateLines() {
     const s = gs.getSummary();
