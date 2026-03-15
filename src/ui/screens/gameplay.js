@@ -156,7 +156,7 @@ const CSS = `
 .T-clash-right{animation:T-crash-right .5s cubic-bezier(.2,.8,.3,1) forwards}
 .T-clash-card{width:100%;background:var(--bg-surface);border-radius:6px;border:2px solid;overflow:hidden}
 .T-clash-center{display:flex;flex-direction:column;align-items:center;justify-content:center;width:20%;z-index:2}
-.T-clash-vs{font-family:'Bebas Neue';font-size:22px;color:#c8a030;font-style:italic}
+.T-clash-vs{font-family:'Bebas Neue';font-size:32px;color:#c8a030;font-style:italic;text-shadow:0 0 15px rgba(200,160,48,.5),0 0 30px rgba(200,160,48,.2);letter-spacing:3px}
 @keyframes T-crash-spark{0%{opacity:1;transform:scale(0)}50%{opacity:1}100%{opacity:0;transform:scale(2)}}
 .T-clash-spark{width:30px;height:30px;border-radius:50%;background:radial-gradient(#fff,#c8a030,transparent);animation:T-crash-spark .4s ease-out .45s forwards;opacity:0}
 
@@ -383,7 +383,12 @@ export function buildGameplay() {
   function drawBug() {
     const s = gs.getSummary();
     const ct = getTeam('canyon_tech'), ir = getTeam('iron_ridge');
-    const dn = ['','1ST','2ND','3RD','4TH'][s.down]||'';
+    var dn;
+    if (conversionMode) {
+      dn = conversionMode.choice === '2pt' ? '2PT CNV' : '3PT CNV';
+    } else {
+      dn = ['','1ST','2ND','3RD','4TH'][s.down]||'';
+    }
     const ctHasBall = s.possession === 'CT';
     const possTeam = ctHasBall ? ct : ir;
     const defTeam = ctHasBall ? ir : ct;
@@ -429,7 +434,7 @@ export function buildGameplay() {
       `</div>` +
       `<div class="T-sb-sit">` +
         (isHumanCT ? hTorchHTML + '<div class="T-sb-sit-div"></div>' : '') +
-        `<div class="T-sb-sit-down">${dn} & ${distLabel(s.distance, s.yardsToEndzone)}</div>` +
+        `<div class="T-sb-sit-down">${dn} & ${conversionMode ? 'GOAL' : distLabel(s.distance, s.yardsToEndzone)}</div>` +
         `<div class="T-sb-sit-div"></div>` +
         `<div class="T-sb-sit-ball">BALL ON <span style="color:${possTeam.accent}">${ballLabel}</span></div>` +
         (!isHumanCT ? '<div class="T-sb-sit-div"></div>' + hTorchHTML : '') +
@@ -541,9 +546,9 @@ export function buildGameplay() {
     // Build compact clash cards that fit the field strip
     function clashCard(name, sub, color) {
       return '<div class="T-clash-card" style="border-color:' + color + '">' +
-        "<div style=\"padding:6px 8px 4px\">" +
-          "<div style=\"font-family:'Bebas Neue';font-size:16px;color:#fff;line-height:1\">" + name + "</div>" +
-          "<div style=\"font-family:'Courier New';font-size:8px;color:" + color + ";margin-top:2px\">" + sub + "</div>" +
+        "<div style=\"padding:8px 10px 6px\">" +
+          "<div style=\"font-family:'Bebas Neue';font-size:18px;color:#fff;line-height:1\">" + name + "</div>" +
+          "<div style=\"font-family:'Courier New';font-size:11px;font-weight:bold;color:" + color + ";margin-top:3px;letter-spacing:.5px\">" + sub + "</div>" +
         "</div></div>";
     }
 
@@ -1485,19 +1490,48 @@ export function buildGameplay() {
     var cm = conversionMode;
     var offPlay = selPl;
     var featuredOff = selP;
-    var r = gs.handleConversion(cm.choice, offPlay, featuredOff);
+    var convResult = gs.handleConversion(cm.choice, offPlay, featuredOff);
     conversionMode = null;
     selP = null; selPl = null; selTorch = null;
-    drawBug(); drawField(); drawPanel();
 
-    var resultText = r.success ? cm.choice.toUpperCase() + ' CONVERSION GOOD! +' + r.points : cm.choice.toUpperCase() + ' CONVERSION NO GOOD';
-    var resultColor = r.success ? '#3df58a' : '#e03050';
-    if (r.success) { shakeScreen(); flashField('rgba(61,245,138,.3)'); }
+    // Build a fake result object for the play-by-play system
+    var fakeRes = {
+      offPlay: offPlay || { name: 'CONVERSION', playType: 'SHORT', completionRate: 0.5, coverageMods: {} },
+      defPlay: { name: 'GOAL LINE', cardType: 'ZONE', baseCoverage: 'cover_1' },
+      featuredOff: featuredOff || { name: 'QB', pos: 'QB', ovr: 78, badge: '' },
+      featuredDef: { name: 'Defense', pos: 'LB', ovr: 78, badge: '' },
+      result: {
+        yards: convResult.success ? (cm.choice === '2pt' ? 5 : 10) : 0,
+        isTouchdown: convResult.success,
+        isIncomplete: !convResult.success && offPlay && offPlay.completionRate !== null,
+        isSack: false, isInterception: false, isFumbleLost: false, isSafety: false,
+        offComboPts: 0, defComboPts: 0, historyBonus: 0,
+        description: convResult.success ? cm.choice.toUpperCase() + ' conversion is GOOD!' : cm.choice.toUpperCase() + ' conversion FAILED'
+      },
+      gotFirstDown: false,
+      _preSnap: {
+        down: 1, distance: cm.choice === '2pt' ? 5 : 10,
+        yardsToEndzone: cm.choice === '2pt' ? 5 : 10,
+        possession: cm.team, half: gs.half, playsUsed: gs.playsUsed,
+        ctScore: cm.team === 'CT' ? gs.ctScore - (convResult.success ? convResult.points : 0) : gs.ctScore,
+        irScore: cm.team === 'IR' ? gs.irScore - (convResult.success ? convResult.points : 0) : gs.irScore,
+      }
+    };
 
-    setNarr(resultText, r.success ? 'Points on the board!' : 'Failed conversion');
-    setTimeout(function() {
+    // Get actual defender from opponent roster
+    var defSides = gs.getCurrentSides();
+    if (defSides.defPlayers && defSides.defPlayers.length > 0) {
+      fakeRes.featuredDef = defSides.defPlayers[Math.floor(Math.random() * Math.min(4, defSides.defPlayers.length))];
+    }
+
+    drawField(); drawPanel();
+
+    // Show clash and run play-by-play like a normal snap
+    showClashOnField(fakeRes);
+    runPlayByPlay(fakeRes, function() {
+      drawBug(); drawField();
       showPossCut('score', function() { showDrive(driveSnaps, cm.team, function() { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
-    }, 1500);
+    });
   }
 
   // ── 2-MIN WARNING (dramatic overlay) ──
