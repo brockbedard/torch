@@ -1282,13 +1282,13 @@ export function buildGameplay() {
     if (phase === 'ready') {
       const sz = document.createElement('div'); sz.className = 'T-snap';
 
-      if (gs.twoMinActive) {
+      if (gs.twoMinActive && isOff) {
         const btns = document.createElement('div'); btns.className = 'T-2btns';
         const spk = document.createElement('button'); spk.className = 'T-2btn T-spike'; spk.textContent = 'SPIKE';
         spk.onclick = () => { SND.click(); gs.spike(); selP=null;selPl=null;phase='play'; drawBug();drawField(); setNarr('Ball spiked.',fmtClock(Math.max(0,gs.clockSeconds))+' left'); if(!checkEnd()) drawPanel(); };
         btns.appendChild(spk);
         const hS = hAbbr==='CT'?gs.ctScore:gs.irScore, cS = hAbbr==='CT'?gs.irScore:gs.ctScore;
-        if (hS > cS && isOff) {
+        if (hS > cS) {
           const kn = document.createElement('button'); kn.className = 'T-2btn T-kneel'; kn.textContent = 'KNEEL';
           kn.onclick = () => { SND.click(); gs.kneel(); selP=null;selPl=null;phase='play'; drawBug();drawField(); setNarr('QB kneels.',fmtClock(Math.max(0,gs.clockSeconds))+' left'); if(!checkEnd()) drawPanel(); };
           btns.appendChild(kn);
