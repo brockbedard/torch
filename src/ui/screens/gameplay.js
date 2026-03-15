@@ -148,15 +148,16 @@ const CSS = `
 .T-impact{position:absolute;top:50%;left:50%;width:40px;height:40px;border-radius:50%;z-index:99;pointer-events:none;transform:translate(-50%,-50%);animation:T-impact .4s ease-out forwards}
 @keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
 /* card matchup display on field — helmet crash animation */
-.T-clash{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;pointer-events:none;overflow:hidden;padding:10px 8px}
-.T-clash-side{display:flex;flex-direction:column;gap:4px;align-items:stretch;justify-content:center;width:38%}
+.T-clash{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:space-between;pointer-events:none;overflow:hidden;padding:8px}
+.T-clash-side{display:flex;flex-direction:column;gap:4px;width:38%}
 @keyframes T-crash-left{0%{transform:translateX(-120%)}60%{transform:translateX(8%)}80%{transform:translateX(-3%)}100%{transform:translateX(0)}}
 @keyframes T-crash-right{0%{transform:translateX(120%)}60%{transform:translateX(-8%)}80%{transform:translateX(3%)}100%{transform:translateX(0)}}
 .T-clash-left{animation:T-crash-left .5s cubic-bezier(.2,.8,.3,1) forwards}
 .T-clash-right{animation:T-crash-right .5s cubic-bezier(.2,.8,.3,1) forwards}
 .T-clash-card{background:var(--bg-surface);border-radius:6px;border:2px solid;overflow:hidden}
-.T-clash-center{display:flex;align-items:center;justify-content:center;width:24%;z-index:2}
-.T-clash-vs{font-family:'Press Start 2P';font-size:14px;color:#fff;background:rgba(200,160,48,.9);padding:6px 10px;border-radius:8px;box-shadow:0 0 20px rgba(200,160,48,.6),0 0 40px rgba(200,160,48,.3);letter-spacing:2px;line-height:1}
+/* VS — absolutely centered on the field, independent of card positions */
+.T-clash-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10}
+.T-clash-vs{font-family:'Press Start 2P';font-size:14px;color:#fff;background:rgba(200,160,48,.95);padding:8px 14px;border-radius:8px;box-shadow:0 0 24px rgba(200,160,48,.7),0 0 50px rgba(200,160,48,.3);letter-spacing:3px;line-height:1}
 @keyframes T-crash-spark{0%{opacity:1;transform:scale(0)}50%{opacity:1}100%{opacity:0;transform:scale(2)}}
 .T-clash-spark{width:30px;height:30px;border-radius:50%;background:radial-gradient(#fff,#c8a030,transparent);animation:T-crash-spark .4s ease-out .45s forwards;opacity:0}
 
