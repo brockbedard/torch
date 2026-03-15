@@ -726,16 +726,17 @@ export function buildGameplay() {
   /** AI commentary — 4s timeout, returns lines array or null */
   async function fetchAICommentary(res) {
     var r = res.result;
-    var s = gs.getSummary();
+    var pre = res._preSnap || gs.getSummary(); // use pre-snap for situation
+    var s = gs.getSummary(); // post-snap for results
     var sides = gs.getCurrentSides();
     var oNames = sides.offPlayers.slice(0,4).map(function(p){return p.name+' '+p.pos+' '+p.ovr;}).join(', ');
     var dNames = sides.defPlayers.slice(0,4).map(function(p){return p.name+' '+p.pos+' '+p.ovr;}).join(', ');
-    var possName = s.possession === 'CT' ? 'Canyon Tech' : 'Iron Ridge';
-    var defName = s.possession === 'CT' ? 'Iron Ridge' : 'Canyon Tech';
+    var possName = pre.possession === 'CT' ? 'Canyon Tech' : 'Iron Ridge';
+    var defName = pre.possession === 'CT' ? 'Iron Ridge' : 'Canyon Tech';
     var isBig = r.isTouchdown || r.isInterception || r.isFumbleLost || r.isSack || r.yards >= 15;
     var lineCount = isBig ? '7-9' : '5-6';
 
-    var distStr = s.yardsToEndzone <= s.distance ? 'goal' : s.distance;
+    var distStr = pre.yardsToEndzone <= pre.distance ? 'goal' : pre.distance;
     var prompt = 'You are a legendary college football radio play-by-play announcer. Call this play LIVE. Be CREATIVE — never repeat the same phrasing twice in a game. Vary sentence structure, word choice, and energy.\n\n' +
       'RULES: Write ' + lineCount + ' lines. One sentence each. Build tension from snap to result.\n' +
       '- QB throws/hands off. Skill players catch/run. Defenders tackle.\n' +
@@ -744,10 +745,10 @@ export function buildGameplay() {
       '- Routine plays: professional, quick, matter-of-fact. Big plays: CAPS, excitement.\n' +
       '- Include one post-play analysis line. Reference the play call or coverage scheme.\n' +
       '- DO NOT start every call the same way. Mix up: start with the situation, the defense, the crowd, the stakes.\n\n' +
-      'SITUATION: ' + possName + ' ' + s.ctScore + '-' + s.irScore + ' ' + defName + '\n' +
-      s.down + (s.down===1?'st':s.down===2?'nd':s.down===3?'rd':'th') + ' and ' + distStr + ' at the ' + ballSideLabel() + '\n' +
-      'H' + s.half + ' Snap ' + s.playsUsed + '/20' + (s.playsUsed >= 18 ? ' LATE' : '') +
-      (s.yardsToEndzone <= 20 ? ' RED ZONE' : '') + (s.down >= 3 ? ' MUST CONVERT' : '') + '\n\n' +
+      'SITUATION: ' + possName + ' ' + pre.ctScore + '-' + pre.irScore + ' ' + defName + '\n' +
+      pre.down + (pre.down===1?'st':pre.down===2?'nd':pre.down===3?'rd':'th') + ' and ' + distStr + ' at the ' + ballSideLabel() + '\n' +
+      'H' + pre.half + ' Snap ' + pre.playsUsed + '/20' + (pre.playsUsed >= 18 ? ' LATE' : '') +
+      (pre.yardsToEndzone <= 20 ? ' RED ZONE' : '') + (pre.down >= 3 ? ' MUST CONVERT' : '') + '\n\n' +
       'OFF: ' + oNames + '\nDEF: ' + dNames + '\n' +
       'Featured: ' + res.featuredOff.name + ' (' + res.featuredOff.pos + ') vs ' + res.featuredDef.name + ' (' + res.featuredDef.pos + ')\n' +
       'Play: ' + res.offPlay.name + ' vs ' + res.defPlay.name + '\n' +
@@ -814,9 +815,11 @@ export function buildGameplay() {
     });
 
     function buildTemplateLines() {
-    const s = gs.getSummary();
-    const possTeamName = s.possession === 'CT' ? 'Canyon Tech' : 'Iron Ridge';
-    const defTeamName = s.possession === 'CT' ? 'Iron Ridge' : 'Canyon Tech';
+    // Use pre-snap state for situation lines, post-snap for result/context
+    const pre = res._preSnap || gs.getSummary();
+    const s = gs.getSummary(); // post-snap for context lines
+    const possTeamName = pre.possession === 'CT' ? 'Canyon Tech' : 'Iron Ridge';
+    const defTeamName = pre.possession === 'CT' ? 'Iron Ridge' : 'Canyon Tech';
     // Context line — only on significant football moments, not every play
     function contextLine() {
       // Always on scores
@@ -836,8 +839,8 @@ export function buildGameplay() {
     }
     // Synonym rotation — pick randomly from arrays for variety
     function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-    var distStr2 = s.yardsToEndzone <= s.distance ? 'goal' : s.distance;
-    var downStr2 = ['','First','Second','Third','Fourth'][s.down] + ' and ' + distStr2;
+    var distStr2 = pre.yardsToEndzone <= pre.distance ? 'goal' : pre.distance;
+    var downStr2 = ['','First','Second','Third','Fourth'][pre.down] + ' and ' + distStr2;
 
     const lines = [];
     if (isPass) {
@@ -1320,12 +1323,14 @@ export function buildGameplay() {
     phase = 'busy';
     const isOff = gs.possession === hAbbr;
     const prevPoss = gs.possession;
+    // Capture pre-snap state for display during commentary
+    const preSnap = gs.getSummary();
     const offCard = isOff ? selTorch : null;
     const defCard = isOff ? null : selTorch;
-    var playedPlay = selPl; // save before clearing
+    var playedPlay = selPl;
     const res = isOff ? gs.executeSnap(selPl, selP, null, null, offCard, defCard) : gs.executeSnap(null, null, selPl, selP, offCard, defCard);
     driveSnaps.push(res);
-    // Cycle played card — return to deck, draw replacement
+    // Cycle played card
     var sides = gs.getCurrentSides();
     var teamId = GS.team;
     if (isOff) {
@@ -1335,9 +1340,14 @@ export function buildGameplay() {
     }
     selP = null; selPl = null; selTorch = null;
 
-    // Update field/scorebug immediately, then play-by-play in bottom third
-    drawBug(); drawField(); drawPanel();
+    // Keep scorebug showing PRE-SNAP state during commentary
+    // Only update field (to clear placed cards) and hide panel
+    drawField(); drawPanel();
+    // Store pre-snap for commentary reference
+    res._preSnap = preSnap;
     runPlayByPlay(res, () => {
+      // NOW update scorebug with post-snap state
+      drawBug(); drawField();
       if (res.gameEvent === 'touchdown') { showConv(res.scoringTeam); return; }
       if (posChanged(res.gameEvent, prevPoss)) {
         showPossCut(res.gameEvent, () => { showDrive(driveSnaps, prevPoss, () => { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
