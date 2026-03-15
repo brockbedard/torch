@@ -827,8 +827,8 @@ export function buildGameplay() {
       // Always on turnovers
       if (r.isInterception) return 'Turnover! ' + defTeamName + ' takes over';
       if (r.isFumbleLost) return 'Turnover! ' + defTeamName + ' recovers';
-      // Facing 4th down is significant
-      if (s.down >= 3 && r.yards < s.distance) return 'They\'ll face fourth down now — big decision coming up';
+      // Facing 4th down — only when the engine has actually moved to 4th down
+      if (s.down === 4) return 'Fourth down — they have to go for it';
       // Otherwise only occasionally — significant game situations
       if (s.playsUsed === 20) return 'That\'s play 20 — two-minute warning is next';
       if (s.yardsToEndzone <= 5 && r.yards >= 1) return 'Knocking on the door — inside the five';

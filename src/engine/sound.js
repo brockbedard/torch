@@ -1,20 +1,16 @@
-import { jsfxr } from 'jsfxr';
+import { sfxr } from 'jsfxr';
 
 /**
  * TORCH — Sound System (jsfxr)
  * Retro synthesized sounds, zero audio files.
- * Uses Audio elements for maximum browser compatibility.
  */
 
 const SOUNDS = {
-  // UI
   click:    [2,,0.1,,0.1,0.5,,,,,,,,,,,,,1,,,,,0.5],
   select:   [0,,0.05,,0.2,0.4,,0.3,,,,,,,,,,,1,,,,,0.5],
   snap:     [2,,0.15,,0.15,0.3,,0.5,,,,,,,,,,,1,,,0.1,,0.5],
   draft:    [0,,0.08,,0.3,0.5,,0.2,,,,0.3,0.5,,,,,,1,,,,,0.5],
   flip:     [0,,0.05,,0.1,0.6,,,,,,,,,,,,,1,,,,,0.5],
-
-  // Gameplay
   snapBall: [3,,0.05,,0.05,0.15,,-0.5,,,,,,,,,,,1,,,,,0.5],
   hit:      [3,,0.1,,0.1,0.08,,0.5,,,,,,,,,,,1,,,,,0.5],
   sack:     [3,,0.15,,0.2,0.05,,0.6,,,,,,,,,0.3,-0.3,1,,,,,0.5],
@@ -22,8 +18,6 @@ const SOUNDS = {
   td:       [0,,0.1,,0.4,0.4,,0.1,,,0.3,0.5,0.7,,,,,,1,,,,,0.5],
   turnover: [3,,0.2,,0.2,0.1,,-0.3,,,-0.3,,,,,0.6,0.3,-0.3,1,,,,,0.5],
   bigPlay:  [0,,0.08,,0.3,0.5,,0.3,,,0.2,0.3,0.5,,,,,,1,,,,,0.5],
-
-  // Card interactions
   cardSnap: [0,,0.03,,0.05,0.5,,0.4,,,,,,,,,,,1,,,,,0.5],
   cardDrag: [2,,0.02,,0.02,0.7,,,,,,,,,,,,,1,,,,,0.3],
   points:   [0,,0.02,,0.05,0.7,,0.3,,,,,,,,,,,1,,,,,0.3],
@@ -31,19 +25,10 @@ const SOUNDS = {
   chime:    [0,,0.1,,0.5,0.5,,0.1,,,0.4,0.6,0.8,,,,,,1,,,,,0.5],
 };
 
-// Pre-generate data URLs and cache them
-var urlCache = {};
-
-function getUrl(name) {
-  if (!urlCache[name]) {
-    urlCache[name] = jsfxr(SOUNDS[name] || SOUNDS.click);
-  }
-  return urlCache[name];
-}
-
 function play(name) {
   try {
-    var audio = new Audio(getUrl(name));
+    var params = SOUNDS[name] || SOUNDS.click;
+    var audio = sfxr.toAudio(params);
     audio.volume = 0.5;
     audio.play().catch(function() {});
   } catch (e) {}
