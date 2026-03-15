@@ -1,11 +1,11 @@
 import { jsfxr } from 'jsfxr';
 
 /**
- * TORCH — Sound System (jsfxr + Web Audio)
+ * TORCH — Sound System (jsfxr)
  * Retro synthesized sounds, zero audio files.
+ * Uses Audio elements for maximum browser compatibility.
  */
 
-// jsfxr parameter strings — each defines a unique sound
 const SOUNDS = {
   // UI
   click:    [2,,0.1,,0.1,0.5,,,,,,,,,,,,,1,,,,,0.5],
@@ -31,37 +31,21 @@ const SOUNDS = {
   chime:    [0,,0.1,,0.5,0.5,,0.1,,,0.4,0.6,0.8,,,,,,1,,,,,0.5],
 };
 
-// Cache audio buffers
-var cache = {};
-var ctx = null;
+// Pre-generate data URLs and cache them
+var urlCache = {};
 
-function getCtx() {
-  if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-  if (ctx.state === 'suspended') ctx.resume();
-  return ctx;
+function getUrl(name) {
+  if (!urlCache[name]) {
+    urlCache[name] = jsfxr(SOUNDS[name] || SOUNDS.click);
+  }
+  return urlCache[name];
 }
 
 function play(name) {
   try {
-    var c = getCtx();
-    if (!cache[name]) {
-      var url = jsfxr(SOUNDS[name] || SOUNDS.click);
-      // Fetch and decode the data URL
-      fetch(url).then(function(r) { return r.arrayBuffer(); }).then(function(buf) {
-        c.decodeAudioData(buf, function(decoded) {
-          cache[name] = decoded;
-          var src = c.createBufferSource();
-          src.buffer = decoded;
-          src.connect(c.destination);
-          src.start();
-        });
-      });
-    } else {
-      var src = c.createBufferSource();
-      src.buffer = cache[name];
-      src.connect(c.destination);
-      src.start();
-    }
+    var audio = new Audio(getUrl(name));
+    audio.volume = 0.5;
+    audio.play().catch(function() {});
   } catch (e) {}
 }
 
