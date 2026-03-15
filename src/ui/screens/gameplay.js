@@ -516,43 +516,63 @@ export function buildGameplay() {
     const possTeam = s.possession === 'CT' ? 'Canyon Tech' : 'Iron Ridge';
     const defTeamName = s.possession === 'CT' ? 'Iron Ridge' : 'Canyon Tech';
 
-    const prompt = 'You are a dramatic college football radio play-by-play announcer. Generate EXACTLY 5 short sentences (one per line) describing this play as it unfolds. Build tension. Reference the actual players by last name. The featured offensive player and featured defensive player should be mentioned but don\'t have to take every action. The QB throws/hands off, skill players catch/run, defenders tackle.\n\n' +
+    // Determine how many lines based on play significance
+    var isBigPlay = r.isTouchdown || r.isInterception || r.isFumbleLost || r.isSack || r.yards >= 15;
+    var isHugeMoment = r.isTouchdown && (s.ctScore + s.irScore > 20 || Math.abs(s.ctScore - s.irScore) <= 7);
+    var lineCount = isBigPlay ? (isHugeMoment ? '8-10' : '6-8') : '5-6';
+
+    const prompt = 'You are a legendary college football radio play-by-play announcer calling a game LIVE. Describe this play as it unfolds in real time — from snap to whistle — like the listener is hanging on every word.\n\n' +
+      'RULES:\n' +
+      '- Write ' + lineCount + ' lines, one sentence per line\n' +
+      '- Build from pre-snap tension through the action to the result\n' +
+      '- The QB is separate from the featured player. QB throws or hands off. Skill players catch or run.\n' +
+      '- Reference actual player LAST NAMES. Both featured players must appear.\n' +
+      '- For routine plays (short gains, incompletions): keep it professional, matter-of-fact\n' +
+      '- For big plays (15+ yards, TDs): escalate energy, use CAPS for the climax, let the excitement build\n' +
+      '- For turnovers/sacks: shock, disbelief, then analysis\n' +
+      '- Include post-play analysis: "That\'s the kind of throw that changes games" or "The coverage was just too tight"\n' +
+      '- Vary your cadence — some lines short and punchy, some longer and descriptive\n' +
+      '- Sound like Kevin Harlan, Gus Johnson, or Al Michaels — not a robot\n\n' +
       'GAME SITUATION:\n' +
-      'Score: CT ' + s.ctScore + ' - IR ' + s.irScore + '\n' +
-      s.down + (s.down===1?'st':s.down===2?'nd':s.down===3?'rd':'th') + ' & ' + s.distance + ', ball on ' + ballSideLabel() + '\n' +
-      'Half ' + s.half + ', Snap ' + s.playsUsed + '/20\n' +
-      possTeam + ' on offense vs ' + defTeamName + ' defense\n\n' +
-      'OFFENSE: ' + oStarters + '\n' +
-      'DEFENSE: ' + dStarters + '\n' +
-      'Featured OFF: ' + res.featuredOff.name + ' (' + res.featuredOff.pos + ')\n' +
-      'Featured DEF: ' + res.featuredDef.name + ' (' + res.featuredDef.pos + ')\n' +
-      'Play called: ' + res.offPlay.name + ' (' + (res.offPlay.playType||'') + ')\n' +
-      'Defense called: ' + res.defPlay.name + '\n\n' +
+      possTeam + ' ' + s.ctScore + ', ' + defTeamName + ' ' + s.irScore + '\n' +
+      s.down + (s.down===1?'st':s.down===2?'nd':s.down===3?'rd':'th') + ' and ' + s.distance + ' at the ' + ballSideLabel() + '\n' +
+      'Half ' + s.half + ', Snap ' + s.playsUsed + ' of 20' + (s.playsUsed >= 18 ? ' — LATE IN THE HALF' : '') + '\n' +
+      (Math.abs(s.ctScore - s.irScore) <= 7 ? 'CLOSE GAME — every play matters\n' : '') +
+      (s.yardsToEndzone <= 20 ? 'RED ZONE — inside the 20\n' : '') +
+      (s.down >= 3 ? 'MUST-CONVERT SITUATION\n' : '') +
+      '\nOFFENSE (' + possTeam + '): ' + oStarters + '\n' +
+      'DEFENSE (' + defTeamName + '): ' + dStarters + '\n' +
+      'Featured OFF: ' + res.featuredOff.name + ' (' + res.featuredOff.pos + ') — selected by the player for this snap\n' +
+      'Featured DEF: ' + res.featuredDef.name + ' (' + res.featuredDef.pos + ') — opponent\'s key defender\n\n' +
+      'PLAY CALL: ' + res.offPlay.name + ' (' + (res.offPlay.playType||res.offPlay.cardType||'') + ') vs ' + res.defPlay.name + ' defense\n\n' +
       'RESULT: ' + r.description + '\n' +
       'Yards: ' + r.yards + '\n' +
-      (r.isTouchdown?'TOUCHDOWN\n':'') + (r.isSack?'SACK\n':'') + (r.isInterception?'INTERCEPTION\n':'') + (r.isFumbleLost?'FUMBLE LOST\n':'') + (r.isIncomplete?'INCOMPLETE PASS\n':'') +
-      '\nWrite 5 lines only. One sentence each. Build from snap to result. Last line is the outcome. Use CAPS for big moments.';
+      (r.isTouchdown?'TOUCHDOWN!\n':'') + (r.isSack?'SACK!\n':'') + (r.isInterception?'INTERCEPTION!\n':'') + (r.isFumbleLost?'FUMBLE LOST!\n':'') + (r.isIncomplete?'INCOMPLETE PASS\n':'') +
+      (r.offComboPts > 0 ? 'BADGE COMBO fired for offense (+' + r.offComboYards + ' yards)\n' : '') +
+      (r.defComboPts > 0 ? 'BADGE COMBO fired for defense\n' : '') +
+      (r.historyBonus > 0 ? 'Play-mix bonus: offense caught the defense off guard\n' : '') +
+      (r.historyBonus < -2 ? 'Repeat play penalty: defense read the tendency\n' : '');
 
     try {
       var controller = new AbortController();
-      var timeout = setTimeout(function() { controller.abort(); }, 4000);
+      var abortTimeout = setTimeout(function() { controller.abort(); }, 5000);
       const resp = await fetch('/api/commentary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 200,
-          system: 'College football radio play-by-play. Dramatic, punchy, one sentence per line. 5 lines exactly. Reference players by last name.',
+          max_tokens: 350,
+          system: 'You are a legendary college football radio announcer. Write vivid, dramatic play-by-play. One sentence per line. Vary length based on play significance — routine plays get 5-6 lines, big plays get 7-10. Reference players by last name. Use CAPS for climactic moments. Include a post-play analysis line.',
           messages: [{ role: 'user', content: prompt }]
         })
       });
-      clearTimeout(timeout);
+      clearTimeout(abortTimeout);
       if (!resp.ok) return null;
       const data = await resp.json();
       const text = data.content && data.content[0] && data.content[0].text;
       if (!text) return null;
-      const lines = text.split('\n').filter(function(l) { return l.trim().length > 0; }).slice(0, 5);
+      const lines = text.split('\n').filter(function(l) { return l.trim().length > 0; }).slice(0, 12);
       return lines.length >= 3 ? lines : null;
     } catch (e) {
       return null;
@@ -661,28 +681,43 @@ export function buildGameplay() {
       lines.push(qb.name + ' takes the snap, drops back, looking...');
       if (r.isSack) {
         lines.push('PRESSURE off the edge! ' + off.name + ' can\'t pick up the block!');
-        lines.push(tackler.name + ' BURIES ' + qb.name + ' behind the line!');
+        lines.push(tackler.name + ' is coming FREE!');
+        lines.push('SACKED! ' + tackler.name + ' BURIES ' + qb.name + ' behind the line!');
+        lines.push('That ' + dp.name + ' call was perfectly designed to get pressure');
+        lines.push(qb.name + ' held the ball way too long and paid for it');
       } else if (r.isIncomplete) {
         lines.push(qb.name + ' fires toward ' + receiver.name + ' on the sideline');
         lines.push('Broken up! ' + tackler.name + ' was stride for stride with the receiver');
+        lines.push('The ' + dp.name + ' coverage just smothered that route');
       } else if (r.isInterception) {
-        lines.push(qb.name + ' throws for ' + receiver.name + ' — OH NO!');
-        lines.push('PICKED OFF! ' + def.name + ' undercuts the route and takes it away!');
+        lines.push(qb.name + ' loads up, throws for ' + receiver.name + '...');
+        lines.push('OH! ' + def.name + ' jumps the route!');
+        lines.push('PICKED OFF! ' + def.name + ' read that the ENTIRE way!');
+        lines.push('What a TERRIBLE decision by ' + qb.name + ' — ' + def.name + ' was sitting on that route');
+        lines.push('That could be a season-defining turnover right there');
       } else if (r.isTouchdown) {
-        lines.push(qb.name + ' sees ' + receiver.name + ' breaking free, lets it fly!');
-        lines.push(receiver.name + ' CATCHES IT IN THE END ZONE! TOUCHDOWN!');
+        lines.push(qb.name + ' sees ' + receiver.name + ' breaking free...');
+        lines.push('He lets it fly!');
+        lines.push(receiver.name + ' CATCHES IT!');
+        lines.push('TOUCHDOWN! TOUCHDOWN! ' + receiver.name + ' IN THE END ZONE!');
+        lines.push(tackler.name + ' was a step too late — that throw was PERFECT');
+        lines.push('What a moment! ' + qb.name + ' to ' + receiver.name + ' — you can\'t draw it up any better');
       } else if (r.yards >= 15) {
-        lines.push(qb.name + ' steps up, launches it deep!');
-        lines.push(receiver.name + ' HAULS IT IN for ' + r.yards + '! ' + tackler.name + ' got burned!');
+        lines.push(qb.name + ' steps up in the pocket, launches it deep!');
+        lines.push(receiver.name + ' goes up and GETS IT!');
+        lines.push('HUGE play! ' + r.yards + ' yards! ' + tackler.name + ' got burned on that one!');
+        lines.push(off.name + '\'s blocking gave ' + qb.name + ' all day to throw');
       } else if (r.yards >= 8) {
         lines.push(qb.name + ' finds ' + receiver.name + ' over the middle, fires!');
         lines.push('Complete for ' + r.yards + '! ' + tackler.name + ' makes the tackle after the catch');
+        lines.push('Nice call with the ' + op.name + ' against that ' + dp.name + ' look');
       } else if (r.yards >= 1) {
         lines.push(qb.name + ' dumps it off to ' + receiver.name + ' in the flat');
         lines.push('Caught, gain of ' + r.yards + '. ' + tackler.name + ' wraps him up right away');
       } else {
         lines.push(qb.name + ' looks for ' + receiver.name + ' — nothing there');
-        lines.push(def.name + ' had the coverage blanketed. Throwaway');
+        lines.push(def.name + ' had the coverage blanketed');
+        lines.push('Throwaway. The ' + dp.name + ' defense took away everything');
       }
     } else {
       var isOption = op.playType === 'OPTION';
@@ -701,23 +736,34 @@ export function buildGameplay() {
         lines.push(qb.name + ' hands it off to ' + runner.name + '...');
       }
       if (r.isFumbleLost) {
-        lines.push(ballCarrier.name + ' takes contact — AND THE BALL IS OUT!');
-        lines.push(def.name + ' pounces on the loose ball! Fumble recovery!');
+        lines.push(ballCarrier.name + ' takes the hit...');
+        lines.push('THE BALL IS OUT! IT\'S ON THE GROUND!');
+        lines.push('Bodies diving for it!');
+        lines.push(def.name + ' comes up with it! FUMBLE RECOVERY!');
+        lines.push('A devastating turnover — ' + ballCarrier.name + ' just couldn\'t hold on');
       } else if (r.isTouchdown) {
-        lines.push(ballCarrier.name + ' breaks through the line!');
-        lines.push(ballCarrier.name + ' IS GONE! TOUCHDOWN! Nobody catching him!');
+        lines.push(ballCarrier.name + ' hits the hole...');
+        lines.push('He breaks a tackle at the five!');
+        lines.push('He\'s into the end zone!');
+        lines.push('TOUCHDOWN! ' + ballCarrier.name + ' WALKS IN!');
+        lines.push(tackler.name + ' couldn\'t get there — the blocking was just too good');
+        lines.push('The ' + op.name + ' was the perfect call against that ' + dp.name + ' defense');
       } else if (r.yards >= 15) {
-        lines.push(ballCarrier.name + ' bounces it outside — daylight ahead!');
-        lines.push('EXPLOSIVE RUN! ' + r.yards + ' yards before ' + tackler.name + ' drags him down!');
+        lines.push(ballCarrier.name + ' bounces it outside — daylight!');
+        lines.push('He\'s got room to run! Into the second level!');
+        lines.push(tackler.name + ' finally drags him down after ' + r.yards + ' yards!');
+        lines.push('That ' + op.name + ' ripped right through the ' + dp.name + ' defense');
       } else if (r.yards >= 8) {
         lines.push(ballCarrier.name + ' finds a crease, sheds a tackler!');
-        lines.push('Gain of ' + r.yards + '. ' + tackler.name + ' finally brings him down');
+        lines.push('Nice run — ' + r.yards + ' yards. ' + tackler.name + ' brings him down');
+        lines.push(off.name + ' paved the way on that play');
       } else if (r.yards >= 1) {
         lines.push(ballCarrier.name + ' pushes into the pile, falls forward');
-        lines.push('Gain of ' + r.yards + '. ' + tackler.name + ' cleans it up');
+        lines.push('Gain of ' + r.yards + '. ' + tackler.name + ' cleans it up. Nothing fancy');
       } else {
         lines.push(def.name + ' shoots the gap!');
-        lines.push('STUFFED at the line! ' + tackler.name + ' was all over it');
+        lines.push('STUFFED! ' + tackler.name + ' had it read the whole way!');
+        lines.push('The ' + dp.name + ' defense was built to stop exactly that');
       }
     }
 
