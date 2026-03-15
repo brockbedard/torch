@@ -719,17 +719,21 @@ export function buildGameplay() {
     const s = gs.getSummary();
     const possTeamName = s.possession === 'CT' ? 'Canyon Tech' : 'Iron Ridge';
     const defTeamName = s.possession === 'CT' ? 'Iron Ridge' : 'Canyon Tech';
-    // Context-aware closing line
+    // Context line — only on significant football moments, not every play
     function contextLine() {
+      // Always on scores
       if (r.isTouchdown) {
         var newScore = s.possession === 'CT' ? (s.ctScore) + ' to ' + s.irScore : s.ctScore + ' to ' + (s.irScore);
         return possTeamName + ' scores! It\'s ' + newScore;
       }
-      if (s.down >= 3 && r.yards >= s.distance) return 'That\'s a first down! ' + possTeamName + ' keeps the chains moving';
-      if (s.down >= 3 && r.yards < s.distance && !r.isTouchdown) return 'They\'ll face fourth down now — big decision coming up';
-      if (s.playsUsed >= 18) return 'Late in the half — every snap counts from here';
-      if (s.yardsToEndzone <= 10) return 'Inside the ten — can they punch it in?';
-      if (Math.abs(s.ctScore - s.irScore) <= 3) return 'A one-possession game — the tension is building';
+      // Always on turnovers
+      if (r.isInterception) return 'Turnover! ' + defTeamName + ' takes over';
+      if (r.isFumbleLost) return 'Turnover! ' + defTeamName + ' recovers';
+      // Facing 4th down is significant
+      if (s.down >= 3 && r.yards < s.distance) return 'They\'ll face fourth down now — big decision coming up';
+      // Otherwise only occasionally — significant game situations
+      if (s.playsUsed === 20) return 'That\'s play 20 — two-minute warning is next';
+      if (s.yardsToEndzone <= 5 && r.yards >= 1) return 'Knocking on the door — inside the five';
       return '';
     }
     const lines = [];
@@ -1136,8 +1140,8 @@ export function buildGameplay() {
       const go = document.createElement('button');
       go.className = 'btn-blitz';
       go.style.cssText = 'background:var(--a-gold);border-color:var(--a-gold);color:#000;font-size:16px;animation:T-pulse 1.8s ease-in-out infinite;';
-      go.textContent = 'SNAP';
-      go.onclick = () => doSnap();
+      go.textContent = conversionMode ? 'ATTEMPT' : 'SNAP';
+      go.onclick = conversionMode ? () => doConversionSnap() : () => doSnap();
       sz.appendChild(go);
       panel.appendChild(sz);
     }
@@ -1234,31 +1238,71 @@ export function buildGameplay() {
   }
 
   // ── CONVERSION ──
+  var conversionMode = null; // null or {choice:'2pt'|'3pt', team:'CT'|'IR'}
+
   function showConv(team) {
     const isH = team === hAbbr;
     if (!isH) {
-      gs.handleConversion('xp'); drawBug(); setNarr('Extra point good.', '+1');
+      gs.handleConversion('xp'); drawBug();
+      setNarr('Extra point is good.', '+1 point');
       showPossCut('score', () => { showDrive(driveSnaps, team, () => { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
       return;
     }
+    // Show conversion choice in the panel
+    panel.className = 'T-panel T-panel-off';
     panel.innerHTML = '';
-    const w = document.createElement('div'); w.className = 'T-conv';
-    w.innerHTML = '<div class="T-conv-hdr">TOUCHDOWN</div>';
-    [{id:'xp',lbl:'EXTRA POINT +1',sub:'Automatic',col:'#3df58a'},
-     {id:'2pt',lbl:'2-PT CONV +2',sub:'From the 5',col:'#c8a030'},
-     {id:'3pt',lbl:'3-PT CONV +3',sub:'From the 10',col:'#e03050'}].forEach(c => {
-      const b = document.createElement('button'); b.className = 'T-conv-btn';
-      b.style.cssText = `color:${c.col};border:1.5px solid ${c.col}`;
-      b.innerHTML = `${c.lbl}<br><span style="font-size:6px;color:#554f80">${c.sub}</span>`;
-      b.onclick = () => {
+    var inst = document.createElement('div'); inst.className = 'T-inst';
+    inst.style.color = '#3df58a';
+    inst.textContent = 'TOUCHDOWN! CHOOSE CONVERSION';
+    panel.appendChild(inst);
+
+    var w = document.createElement('div');
+    w.style.cssText = 'display:flex;flex-direction:column;gap:8px;padding:8px;';
+
+    [{id:'xp',lbl:'EXTRA POINT',sub:'+1 (automatic)',col:'#3df58a'},
+     {id:'2pt',lbl:'2-POINT CONVERSION',sub:'+2 from the 5 yard line',col:'#c8a030'},
+     {id:'3pt',lbl:'3-POINT CONVERSION',sub:'+3 from the 10 yard line',col:'#e03050'}].forEach(function(c) {
+      var b = document.createElement('button');
+      b.className = 'btn-blitz';
+      b.style.cssText = 'background:transparent;color:' + c.col + ';border-color:' + c.col + ';font-size:11px;box-shadow:4px 4px 0 ' + c.col + '44, 6px 6px 0 #000;';
+      b.innerHTML = c.lbl + '<br><span style="font-size:7px;color:#554f80">' + c.sub + '</span>';
+      b.onclick = function() {
         SND.snap();
-        const r = gs.handleConversion(c.id); drawBug();
-        setNarr(c.id==='xp'?'Extra point good.':(r.success?c.lbl+' GOOD!':c.lbl+' NO GOOD.'), r.success?'+'+r.points:'Failed.');
-        showPossCut('score', () => { showDrive(driveSnaps, team, () => { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
+        if (c.id === 'xp') {
+          gs.handleConversion('xp'); drawBug();
+          setNarr('Extra point is GOOD!', '+1 point');
+          showPossCut('score', function() { showDrive(driveSnaps, team, function() { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
+        } else {
+          // Enter card selection for 2pt/3pt conversion
+          conversionMode = { choice: c.id, team: team };
+          setNarr(c.lbl + ' attempt', 'Select your play, player, and snap');
+          phase = 'play';
+          drawField(); drawPanel();
+        }
       };
       w.appendChild(b);
     });
     panel.appendChild(w);
+  }
+
+  function doConversionSnap() {
+    phase = 'busy';
+    var cm = conversionMode;
+    var offPlay = selPl;
+    var featuredOff = selP;
+    var r = gs.handleConversion(cm.choice, offPlay, featuredOff);
+    conversionMode = null;
+    selP = null; selPl = null; selTorch = null;
+    drawBug(); drawField(); drawPanel();
+
+    var resultText = r.success ? cm.choice.toUpperCase() + ' CONVERSION GOOD! +' + r.points : cm.choice.toUpperCase() + ' CONVERSION NO GOOD';
+    var resultColor = r.success ? '#3df58a' : '#e03050';
+    if (r.success) { shakeScreen(); flashField('rgba(61,245,138,.3)'); }
+
+    setNarr(resultText, r.success ? 'Points on the board!' : 'Failed conversion');
+    setTimeout(function() {
+      showPossCut('score', function() { showDrive(driveSnaps, cm.team, function() { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
+    }, 1500);
   }
 
   // ── 2-MIN WARNING ──
