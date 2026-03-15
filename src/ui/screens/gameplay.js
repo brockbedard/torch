@@ -526,9 +526,12 @@ export function buildGameplay() {
       '\nWrite 5 lines only. One sentence each. Build from snap to result. Last line is the outcome. Use CAPS for big moments.';
 
     try {
+      var controller = new AbortController();
+      var timeout = setTimeout(function() { controller.abort(); }, 4000);
       const resp = await fetch('/api/commentary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
           max_tokens: 200,
@@ -536,6 +539,7 @@ export function buildGameplay() {
           messages: [{ role: 'user', content: prompt }]
         })
       });
+      clearTimeout(timeout);
       if (!resp.ok) return null;
       const data = await resp.json();
       const text = data.content && data.content[0] && data.content[0].text;
@@ -782,7 +786,14 @@ export function buildGameplay() {
             onDone();
           };
           pbp.appendChild(nextBtn);
-          narr.scrollTop = narr.scrollHeight;
+          // Extra padding so button isn't clipped by box-shadow
+          var spacer = document.createElement('div');
+          spacer.style.height = '20px';
+          pbp.appendChild(spacer);
+          // Scroll after paint to ensure button is visible
+          requestAnimationFrame(function() {
+            narr.scrollTop = narr.scrollHeight;
+          });
         }
       }
       showNext();
