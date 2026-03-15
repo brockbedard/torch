@@ -49,7 +49,7 @@ const CSS = `
 .T-sb-sit-down{font-family:'Press Start 2P';font-size:10px;color:#30c0e0;letter-spacing:.5px}
 .T-sb-sit-div{width:1px;height:14px;background:rgba(255,255,255,.12);flex-shrink:0}
 .T-sb-sit-ball{font-family:'Press Start 2P';font-size:10px;color:#e8e6ff;opacity:.7;letter-spacing:.5px}
-.T-sb-sit-torch{font-family:'Press Start 2P';font-size:9px;color:#c8a030;letter-spacing:.5px}
+.T-sb-sit-torch{font-family:'Press Start 2P';font-size:9px;color:#c8a030;letter-spacing:.5px;transition:transform .08s,text-shadow .08s}
 
 /* field strip */
 /* field strip — Tecmo Bowl inspired */
@@ -57,14 +57,16 @@ const CSS = `
 .T-field-turf{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.04) 50%,transparent 50%,transparent 100%);background-size:100% 12px}
 .T-yard{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.2)}
 .T-yard-5{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.08)}
-.T-yard-num{position:absolute;top:4px;font-family:'Press Start 2P';font-size:9px;color:rgba(255,255,255,.25);transform:translateX(-50%);letter-spacing:1px}
+.T-yard-num{position:absolute;font-family:'Press Start 2P';font-size:9px;color:rgba(255,255,255,.25);transform:translateX(-50%);letter-spacing:1px}
+.T-yard-num-top{top:4px}
+.T-yard-num-bot{bottom:4px}
 .T-los{position:absolute;top:0;bottom:0;width:3px;z-index:5;transition:left .4s ease-out}
 .T-ltg{position:absolute;top:0;bottom:0;width:2px;opacity:.6;z-index:4;transition:left .4s ease-out;border-left:2px dashed}
 .T-ez{position:absolute;top:0;bottom:0;width:7%;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .T-ez-l{left:0;border-right:3px solid rgba(255,255,255,.3)}
 .T-ez-r{right:0;border-left:3px solid rgba(255,255,255,.3)}
 .T-ez-text{font-family:'Press Start 2P';font-size:6px;color:rgba(255,255,255,.5);writing-mode:vertical-lr;transform:rotate(180deg);letter-spacing:2px}
-.T-midfield-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:36px;opacity:.15;z-index:1}
+.T-midfield-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:48px;opacity:.2;z-index:1;filter:saturate(1.3)}
 .T-hash{position:absolute;left:7%;right:7%;height:1px;background:rgba(255,255,255,.06)}
 /* placed cards on field — 150px to match tray cards exactly */
 .T-placed{position:absolute;bottom:8px;height:150px;z-index:8;border-radius:6px;overflow:hidden;background:var(--bg-surface);border:2px solid #00ff88;box-shadow:0 0 12px rgba(0,255,136,.2);display:flex;flex-direction:column}
@@ -119,6 +121,9 @@ const CSS = `
 .T-pbp-result{font-family:'Press Start 2P';font-size:14px;letter-spacing:.5px;line-height:1;margin-top:10px}
 .T-pbp-down{font-family:'Press Start 2P';font-size:12px;color:#30c0e0;margin-top:6px;letter-spacing:.5px;line-height:1}
 .T-pbp-idle{font-family:'Courier New',monospace;font-size:11px;color:#333;letter-spacing:.5px}
+/* torch points fly animation */
+.T-torch-fly{position:fixed;z-index:9999;font-family:'Press Start 2P';font-size:12px;color:#c8a030;pointer-events:none;text-shadow:0 0 8px rgba(200,160,48,.5)}
+@keyframes T-flyup{0%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(.6)}}
 .T-pbp-cursor{display:inline-block;width:6px;height:12px;background:#30c0e0;margin-left:2px;animation:T-blink .6s step-end infinite}
 @keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
 /* card matchup display on field during play */
@@ -407,22 +412,23 @@ export function buildGameplay() {
     const td = s.possession==='CT' ? s.ballPosition+s.distance : s.ballPosition-s.distance;
     const tp = 7 + Math.max(0,Math.min(100,td)) * .86;
     const pc = s.possession==='CT' ? ct.accent : ir.accent;
-    // Turf texture (horizontal stripes like Tecmo)
+    // Turf texture
     let h = '<div class="T-field-turf"></div>';
-    // Colored endzones with mascot text
-    var irEzColor = ir.color || '#CC1A1A';
-    var ctEzColor = ct.color || '#FF5E1A';
-    h += '<div class="T-ez T-ez-l" style="background:' + irEzColor + '"><span class="T-ez-text">TRIDENTS</span></div>';
-    h += '<div class="T-ez T-ez-r" style="background:' + ctEzColor + '"><span class="T-ez-text">CACTI</span></div>';
-    // Midfield logo (home team, large and faded)
+    // Both endzones customized for home team
+    var homeColor = homeTeam.color || '#FF5E1A';
+    var homeMascot = GS.team === 'canyon_tech' ? 'CACTI' : 'TRIDENTS';
+    h += '<div class="T-ez T-ez-l" style="background:' + homeColor + '"><span class="T-ez-text">' + homeMascot + '</span></div>';
+    h += '<div class="T-ez T-ez-r" style="background:' + homeColor + '"><span class="T-ez-text">' + homeMascot + '</span></div>';
+    // Home team logo at midfield (large, featured)
     h += '<div class="T-midfield-logo">' + homeTeam.icon + '</div>';
-    // Yard lines every 10, minor lines every 5, numbers on 10s
+    // Yard lines with numbers at top AND bottom
     var yardNums = {10:'10',20:'20',30:'30',40:'40',50:'50',60:'40',70:'30',80:'20',90:'10'};
     for (let i=5;i<=95;i+=5) {
       var xp = 7+i*.86;
       if (i%10===0) {
         h += '<div class="T-yard" style="left:'+xp+'%"></div>';
-        h += '<div class="T-yard-num" style="left:'+xp+'%">'+(yardNums[i]||'')+'</div>';
+        h += '<div class="T-yard-num T-yard-num-top" style="left:'+xp+'%">'+(yardNums[i]||'')+'</div>';
+        h += '<div class="T-yard-num T-yard-num-bot" style="left:'+xp+'%">'+(yardNums[i]||'')+'</div>';
       } else {
         h += '<div class="T-yard-5" style="left:'+xp+'%"></div>';
       }
@@ -539,6 +545,59 @@ export function buildGameplay() {
     } catch (e) {
       return null;
     }
+  }
+
+  /** Animate torch points flying from commentary to scoreboard, then roll up the total */
+  function animateTorchFly(sourceEl, pts) {
+    if (!sourceEl) return;
+    var srcRect = sourceEl.getBoundingClientRect();
+    // Find the torch counter in the scoreboard
+    var torchTarget = bug.querySelector('.T-sb-sit-torch');
+    if (!torchTarget) return;
+    var tgtRect = torchTarget.getBoundingClientRect();
+
+    // Create flying element
+    var fly = document.createElement('div');
+    fly.className = 'T-torch-fly';
+    fly.textContent = '\uD83D\uDD25 +' + pts;
+    fly.style.left = srcRect.left + 'px';
+    fly.style.top = srcRect.top + 'px';
+    document.body.appendChild(fly);
+
+    // Animate to target position
+    var dx = tgtRect.left - srcRect.left;
+    var dy = tgtRect.top - srcRect.top;
+    fly.style.transition = 'all 0.6s cubic-bezier(0.2, 0.8, 0.3, 1)';
+    requestAnimationFrame(function() {
+      fly.style.left = tgtRect.left + 'px';
+      fly.style.top = tgtRect.top + 'px';
+      fly.style.opacity = '0.6';
+      fly.style.transform = 'scale(0.7)';
+    });
+
+    // After fly arrives, roll up the number in the scoreboard
+    setTimeout(function() {
+      fly.remove();
+      // Roll up the torch total — count from old to new
+      var oldTotal = parseInt(torchTarget.textContent.replace(/[^\d]/g, '')) || 0;
+      var newTotal = oldTotal + pts;
+      var current = oldTotal;
+      var step = Math.max(1, Math.ceil(pts / 15));
+      var rollInterval = setInterval(function() {
+        current += step;
+        if (current >= newTotal) {
+          current = newTotal;
+          clearInterval(rollInterval);
+        }
+        torchTarget.innerHTML = '\uD83D\uDD25 ' + current;
+        torchTarget.style.transform = 'scale(1.15)';
+        torchTarget.style.textShadow = '0 0 8px #c8a030';
+        setTimeout(function() {
+          torchTarget.style.transform = 'scale(1)';
+          torchTarget.style.textShadow = '';
+        }, 80);
+      }, 60);
+    }, 650);
   }
 
   function runPlayByPlay(res, onDone) {
@@ -683,15 +742,19 @@ export function buildGameplay() {
         } else {
           if (cursor.parentNode) cursor.remove();
           pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { el.classList.remove('T-pbp-live'); });
-          // Result: yards + torch
+          // Result: yards + torch (torch flies to scoreboard)
           const rl = document.createElement('div');
           rl.className = 'T-pbp-result';
           let parts = '<span style="color:' + resColor + '">' + yardLabel + '</span>';
           if (torchEarned > 0) {
-            parts += '<span style="color:#c8a030;margin-left:10px">\uD83D\uDD25 +' + torchEarned + '</span>';
+            parts += '<span class="T-torch-src" style="color:#c8a030;margin-left:10px">\uD83D\uDD25 +' + torchEarned + '</span>';
           }
           rl.innerHTML = parts;
           pbp.appendChild(rl);
+          // Animate torch points flying to scoreboard
+          if (torchEarned > 0) {
+            setTimeout(function() { animateTorchFly(rl.querySelector('.T-torch-src'), torchEarned); }, 400);
+          }
           // Down & distance
           const s2 = gs.getSummary();
           const dn2 = ['','1ST','2ND','3RD','4TH'][s2.down]||'';
