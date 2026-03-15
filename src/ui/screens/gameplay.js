@@ -634,6 +634,8 @@ export function buildGameplay() {
       } else {
         renderPBPLines(buildTemplateLines(), res, onDone);
       }
+    }).catch(function() {
+      renderPBPLines(buildTemplateLines(), res, onDone);
     });
 
     function buildTemplateLines() {
@@ -949,7 +951,8 @@ export function buildGameplay() {
 
   function nextSnap() {
     phase = 'play';
-    drawPanel();
+    selP = null; selPl = null;
+    drawBug(); drawField(); drawPanel();
     // Human always picks cards — on offense they pick offPlay+player,
     // on defense they pick defPlay+player. doSnap() passes them in the right slots.
     // No auto-CPU here — the human taps SNAP every time.
