@@ -28,7 +28,7 @@ const CSS = `
 /* scoreboard */
 .T-sb{background:#0a0916;border-bottom:1px solid #1a183a;flex-shrink:0;z-index:60;overflow:hidden}
 /* score row: 5 columns — icon | team+score | center | team+score | icon */
-.T-sb-row{display:grid;grid-template-columns:36px 1fr auto 1fr 36px;align-items:center;padding:10px 10px;gap:6px}
+.T-sb-row{display:grid;grid-template-columns:36px 1fr minmax(70px,auto) 1fr 36px;align-items:center;justify-items:center;padding:10px 10px;gap:6px}
 .T-sb-icon{font-size:32px;line-height:1;text-align:center;filter:drop-shadow(0 0 8px rgba(255,255,255,.2)) saturate(1.3)}
 .T-sb-side{display:flex;flex-direction:column;align-items:center;padding:6px 6px;border-radius:6px;position:relative}
 .T-sb-side-glow{background:radial-gradient(ellipse,rgba(255,204,0,.2) 0%,rgba(255,204,0,.06) 50%,transparent 75%);box-shadow:0 0 20px rgba(255,204,0,.18)}
