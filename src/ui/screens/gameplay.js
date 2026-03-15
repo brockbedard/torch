@@ -488,21 +488,56 @@ export function buildGameplay() {
   }
 
   function showClashOnField(res) {
-    // Show card matchup on the field: offense card vs defense card
     var clash = document.createElement('div'); clash.className = 'T-clash';
-    var offColor = res.offPlay.playType ? '#c8a030' : '#30c0e0';
+    var offColor = '#c8a030';
     var defColor = '#e03050';
-    // Offense card (play + player)
-    clash.innerHTML =
-      '<div class="T-clash-card" style="border-color:' + offColor + '">' +
-        "<div style=\"padding:4px 6px;font-family:'Bebas Neue';font-size:13px;color:#fff;line-height:1\">" + res.offPlay.name + "</div>" +
-        "<div style=\"padding:2px 6px 4px;font-family:'Courier New';font-size:8px;color:" + offColor + "\">" + res.featuredOff.name + ' ' + res.featuredOff.ovr + "</div>" +
-      '</div>' +
-      '<div class="T-clash-vs">VS</div>' +
-      '<div class="T-clash-card" style="border-color:' + defColor + '">' +
-        "<div style=\"padding:4px 6px;font-family:'Bebas Neue';font-size:13px;color:#fff;line-height:1\">" + res.defPlay.name + "</div>" +
-        "<div style=\"padding:2px 6px 4px;font-family:'Courier New';font-size:8px;color:" + defColor + "\">" + res.featuredDef.name + ' ' + res.featuredDef.ovr + "</div>" +
+    var hasTorch = res.offCard || res.defCard;
+    var torchCard = null;
+    if (hasTorch) {
+      var tcId = res.offCard || res.defCard;
+      torchCard = TORCH_CARDS.find(function(c) { return c.id === tcId; });
+    }
+
+    // Left side: offense play + player stacked
+    var leftHTML =
+      '<div style="display:flex;flex-direction:column;gap:3px;align-items:center;width:36%">' +
+        '<div class="T-clash-card" style="border-color:' + offColor + ';width:100%">' +
+          "<div style=\"padding:3px 5px;font-family:'Bebas Neue';font-size:12px;color:#fff;line-height:1\">" + res.offPlay.name + "</div>" +
+        '</div>' +
+        '<div class="T-clash-card" style="border-color:' + offColor + '55;width:100%">' +
+          "<div style=\"padding:3px 5px;font-family:'Bebas Neue';font-size:11px;color:" + offColor + ";line-height:1\">" + res.featuredOff.name + "</div>" +
+          "<div style=\"padding:0 5px 2px;font-family:'Courier New';font-size:7px;color:#8a86b0\">" + res.featuredOff.pos + ' ' + res.featuredOff.ovr + "</div>" +
+        '</div>' +
       '</div>';
+
+    // Center: VS (or torch card overlay)
+    var centerHTML;
+    if (torchCard) {
+      centerHTML =
+        '<div style="display:flex;flex-direction:column;align-items:center;z-index:2">' +
+          "<div style=\"font-family:'Press Start 2P';font-size:6px;color:#c8a030;margin-bottom:2px\">" + torchCard.tier + "</div>" +
+          "<div style=\"background:#1a1030;border:2px solid #c8a030;border-radius:6px;padding:4px 8px;box-shadow:0 0 16px rgba(200,160,48,.4)\">" +
+            "<div style=\"font-family:'Bebas Neue';font-size:14px;color:#c8a030;line-height:1;text-align:center\">" + torchCard.name + "</div>" +
+          "</div>" +
+          "<div style=\"font-family:'Courier New';font-size:6px;color:#c8a030;margin-top:2px\">TORCH</div>" +
+        '</div>';
+    } else {
+      centerHTML = '<div class="T-clash-vs">VS</div>';
+    }
+
+    // Right side: defense play + player stacked
+    var rightHTML =
+      '<div style="display:flex;flex-direction:column;gap:3px;align-items:center;width:36%">' +
+        '<div class="T-clash-card" style="border-color:' + defColor + ';width:100%">' +
+          "<div style=\"padding:3px 5px;font-family:'Bebas Neue';font-size:12px;color:#fff;line-height:1\">" + res.defPlay.name + "</div>" +
+        '</div>' +
+        '<div class="T-clash-card" style="border-color:' + defColor + '55;width:100%">' +
+          "<div style=\"padding:3px 5px;font-family:'Bebas Neue';font-size:11px;color:" + defColor + ";line-height:1\">" + res.featuredDef.name + "</div>" +
+          "<div style=\"padding:0 5px 2px;font-family:'Courier New';font-size:7px;color:#8a86b0\">" + res.featuredDef.pos + ' ' + res.featuredDef.ovr + "</div>" +
+        '</div>' +
+      '</div>';
+
+    clash.innerHTML = leftHTML + centerHTML + rightHTML;
     strip.appendChild(clash);
   }
 
@@ -763,6 +798,26 @@ export function buildGameplay() {
           // Animate torch points flying to scoreboard
           if (torchEarned > 0) {
             setTimeout(function() { animateTorchFly(rl.querySelector('.T-torch-src'), torchEarned); }, 400);
+          }
+          // TORCH points explanation
+          if (torchEarned !== 0) {
+            var reasons = [];
+            if (r.isTouchdown) reasons.push('Touchdown +50');
+            else if (r.isSack) reasons.push('Sack allowed -10');
+            else if (r.isInterception || r.isFumbleLost) reasons.push('Turnover -25');
+            else if (r.isIncomplete) reasons.push('Incompletion -5');
+            else if (r.yards >= 8) reasons.push('Big gain +30');
+            else if (r.yards >= 4) reasons.push('Solid gain +10');
+            else if (r.yards <= 0) reasons.push('No gain -10');
+            if (r.offComboPts > 0) reasons.push('Badge combo +' + Math.floor(r.offComboPts));
+            if (r.defComboPts > 0) reasons.push('Def combo +' + Math.floor(r.defComboPts));
+            if (r.historyBonus > 0) reasons.push('Play mix bonus');
+            if (r.historyBonus < -2) reasons.push('Predictable play call');
+            if (res.gotFirstDown) reasons.push('First down +10');
+            var torchExpl = document.createElement('div');
+            torchExpl.style.cssText = "font-family:'Courier New';font-size:9px;color:#8a86b0;margin-top:4px;line-height:1.4";
+            torchExpl.textContent = reasons.join(' \u00b7 ');
+            pbp.appendChild(torchExpl);
           }
           // Down & distance
           const s2 = gs.getSummary();
