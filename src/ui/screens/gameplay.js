@@ -609,6 +609,9 @@ export function buildGameplay() {
         if (current >= newTotal) {
           current = newTotal;
           clearInterval(rollInterval);
+          SND.chime();
+        } else {
+          SND.points();
         }
         torchTarget.innerHTML = '\uD83D\uDD25 ' + current;
         torchTarget.style.transform = 'scale(1.15)';
@@ -676,24 +679,27 @@ export function buildGameplay() {
     }, 1200);
   }
 
-  /** Touchdown celebration — green flash + footballs + shake + slam */
+  /** Touchdown celebration — green flash + footballs + shake + slam + sound */
   function celebrateTD() {
+    SND.td();
     shakeScreen();
     flashField('rgba(61,245,138,.5)');
     rainFootballs();
     setTimeout(function() { slamText('TOUCHDOWN', '#3df58a'); }, 200);
   }
 
-  /** Turnover celebration — red flash + shake + slam */
+  /** Turnover celebration — red flash + shake + slam + sound */
   function celebrateTurnover(text) {
+    SND.turnover();
     shakeScreen();
     flashField('rgba(224,48,80,.5)');
     impactBurst('rgba(224,48,80,.6)');
     setTimeout(function() { slamText(text, '#e03050'); }, 150);
   }
 
-  /** Sack celebration — shake + impact + slam */
+  /** Sack celebration — shake + impact + slam + sound */
   function celebrateSack() {
+    SND.sack();
     shakeScreen();
     impactBurst('rgba(255,255,255,.4)');
     setTimeout(function() { slamText('SACK', '#e03050'); }, 100);
@@ -920,7 +926,35 @@ export function buildGameplay() {
       const r = res.result;
       const resColor = r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
       const yardLabel = r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE LOST' : r.isIncomplete?'INCOMPLETE' : (r.yards>=0?'+':'')+r.yards+' YDS';
-      const torchEarned = Math.floor((r.offComboPts || 0) + (r.defComboPts || 0));
+      // TORCH points for the USER's team only
+      const userOnOff = (gs.possession === hAbbr) ? true : false; // was user on offense for this snap?
+      // Note: possession may have flipped on turnovers, so check what it was BEFORE the snap
+      var userTorchBase = 0;
+      if (userOnOff) {
+        // User was on offense — earn offensive points
+        if (r.isSack) userTorchBase = -10;
+        else if (r.isIncomplete) userTorchBase = -5;
+        else if (r.isInterception || r.isFumbleLost) userTorchBase = -25;
+        else if (r.yards >= 8) userTorchBase = 30;
+        else if (r.yards >= 4) userTorchBase = 10;
+        else if (r.yards <= 0) userTorchBase = -10;
+        if (r.isTouchdown) userTorchBase += 50;
+        if (res.gotFirstDown) userTorchBase += 10;
+        userTorchBase += Math.floor(r.offComboPts || 0);
+      } else {
+        // User was on defense — earn defensive points
+        if (r.isSack) userTorchBase = 25;
+        else if (r.isInterception || r.isFumbleLost) userTorchBase = 40;
+        else if (r.yards <= 0) userTorchBase = 20;
+        else if (r.yards <= 3) userTorchBase = 10;
+        else if (r.yards >= 15) userTorchBase = -15;
+        else if (r.yards >= 8) userTorchBase = -5;
+        if (r.isTouchdown) userTorchBase -= 30;
+        if (res.gotFirstDown) userTorchBase -= 10;
+        if (r.isSafety) userTorchBase += 30;
+        userTorchBase += Math.floor(r.defComboPts || 0);
+      }
+      const torchEarned = userTorchBase;
 
       narr.innerHTML = '';
       const pbp = document.createElement('div'); pbp.className = 'T-pbp';
@@ -959,35 +993,52 @@ export function buildGameplay() {
           else if (r.isInterception) celebrateTurnover('INTERCEPTED');
           else if (r.isFumbleLost) celebrateTurnover('FUMBLE');
           else if (r.isSack) celebrateSack();
-          else if (r.yards >= 15) { shakeScreen(); flashField('rgba(61,245,138,.3)'); }
+          else if (r.yards >= 15) { SND.bigPlay(); shakeScreen(); flashField('rgba(61,245,138,.3)'); }
           // Result: yards + torch (torch flies to scoreboard)
           const rl = document.createElement('div');
           rl.className = 'T-pbp-result';
           let parts = '<span style="color:' + resColor + '">' + yardLabel + '</span>';
-          if (torchEarned > 0) {
-            parts += '<span class="T-torch-src" style="color:#c8a030;margin-left:10px">\uD83D\uDD25 +' + torchEarned + '</span>';
+          if (torchEarned !== 0) {
+            var tColor = torchEarned > 0 ? '#c8a030' : '#e03050';
+            var tSign = torchEarned > 0 ? '+' : '';
+            parts += '<span class="T-torch-src" style="color:' + tColor + ';margin-left:10px">\uD83D\uDD25 ' + tSign + torchEarned + '</span>';
           }
           rl.innerHTML = parts;
           pbp.appendChild(rl);
           // Animate torch points flying to scoreboard
+          // Only fly positive torch points to the scoreboard
           if (torchEarned > 0) {
             setTimeout(function() { animateTorchFly(rl.querySelector('.T-torch-src'), torchEarned); }, 400);
           }
-          // TORCH points explanation
+          // TORCH points explanation (user's team only)
           if (torchEarned !== 0) {
             var reasons = [];
-            if (r.isTouchdown) reasons.push('Touchdown +50');
-            else if (r.isSack) reasons.push('Sack allowed -10');
-            else if (r.isInterception || r.isFumbleLost) reasons.push('Turnover -25');
-            else if (r.isIncomplete) reasons.push('Incompletion -5');
-            else if (r.yards >= 8) reasons.push('Big gain +30');
-            else if (r.yards >= 4) reasons.push('Solid gain +10');
-            else if (r.yards <= 0) reasons.push('No gain -10');
-            if (r.offComboPts > 0) reasons.push('Badge combo +' + Math.floor(r.offComboPts));
-            if (r.defComboPts > 0) reasons.push('Def combo +' + Math.floor(r.defComboPts));
+            if (userOnOff) {
+              // User on offense
+              if (r.isTouchdown) reasons.push('Touchdown +50');
+              else if (r.isSack) reasons.push('Sacked -10');
+              else if (r.isInterception || r.isFumbleLost) reasons.push('Turnover -25');
+              else if (r.isIncomplete) reasons.push('Incompletion -5');
+              else if (r.yards >= 8) reasons.push('Big gain +30');
+              else if (r.yards >= 4) reasons.push('Solid gain +10');
+              else if (r.yards <= 0) reasons.push('No gain -10');
+              if (r.offComboPts > 0) reasons.push('Badge combo +' + Math.floor(r.offComboPts));
+              if (res.gotFirstDown) reasons.push('First down +10');
+            } else {
+              // User on defense
+              if (r.isSack) reasons.push('Sack +25');
+              else if (r.isInterception || r.isFumbleLost) reasons.push('Forced turnover +40');
+              else if (r.yards <= 0) reasons.push('Stop for no gain +20');
+              else if (r.yards <= 3) reasons.push('Short gain +10');
+              else if (r.yards >= 15) reasons.push('Explosive allowed -15');
+              else if (r.yards >= 8) reasons.push('Big gain allowed -5');
+              if (r.isTouchdown) reasons.push('TD allowed -30');
+              if (r.isSafety) reasons.push('Safety +30');
+              if (r.defComboPts > 0) reasons.push('Badge combo +' + Math.floor(r.defComboPts));
+              if (res.gotFirstDown) reasons.push('First down allowed -10');
+            }
             if (r.historyBonus > 0) reasons.push('Play mix bonus');
-            if (r.historyBonus < -2) reasons.push('Predictable play call');
-            if (res.gotFirstDown) reasons.push('First down +10');
+            if (r.historyBonus < -2) reasons.push('Predictable calls');
             var torchExpl = document.createElement('div');
             torchExpl.style.cssText = "font-family:'Courier New';font-size:9px;color:#8a86b0;margin-top:4px;line-height:1.4";
             torchExpl.textContent = reasons.join(' \u00b7 ');
@@ -1079,7 +1130,7 @@ export function buildGameplay() {
       var r = dz.getBoundingClientRect();
       var hit = touch.clientX >= r.left && touch.clientX <= r.right && touch.clientY >= r.top && touch.clientY <= r.bottom;
       if (hit && dz.dataset.drop === dragItem.type) {
-        SND.click();
+        SND.cardSnap();
         if (dragItem.type === 'play') { selPl = dragItem.data; phase = 'player'; }
         else if (dragItem.type === 'player') { selP = dragItem.data; phase = gs.humanTorchCards.length > 0 ? 'torch' : 'ready'; }
         else if (dragItem.type === 'torch') {
@@ -1219,7 +1270,7 @@ export function buildGameplay() {
       go.className = 'btn-blitz';
       go.style.cssText = 'background:var(--a-gold);border-color:var(--a-gold);color:#000;font-size:16px;animation:T-pulse 1.8s ease-in-out infinite;';
       go.textContent = conversionMode ? 'ATTEMPT' : 'SNAP';
-      go.onclick = conversionMode ? () => doConversionSnap() : () => doSnap();
+      go.onclick = conversionMode ? () => { SND.snap(); doConversionSnap(); } : () => { SND.snap(); doSnap(); };
       sz.appendChild(go);
       panel.appendChild(sz);
     }
