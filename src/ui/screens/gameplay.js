@@ -44,16 +44,15 @@ const CSS = `
 .T-sb-snap{font-family:'Press Start 2P';font-size:12px;color:#e8e6ff;margin-top:3px;line-height:1;text-shadow:0 0 4px rgba(255,255,255,.2)}
 .T-sb-countdown{font-family:'Press Start 2P';font-size:9px;color:#554f80;margin-top:5px;line-height:1}
 .T-sb-countdown-live{font-size:14px;color:#e03050;text-shadow:0 0 10px rgba(224,48,80,.5)}
-/* situation bar */
-.T-sb-sit{display:flex;align-items:center;justify-content:center;padding:8px 12px;background:rgba(0,0,0,.4);border-top:1px solid rgba(255,255,255,.04);gap:12px}
-.T-sb-sit-down{font-family:'Press Start 2P';font-size:12px;color:#30c0e0;letter-spacing:.5px}
-.T-sb-sit-div{width:1px;height:18px;background:rgba(255,255,255,.12);flex-shrink:0}
-.T-sb-sit-ball{font-family:'Press Start 2P';font-size:12px;color:#e8e6ff;opacity:.7;letter-spacing:.5px}
-.T-sb-sit-torch{font-family:'Press Start 2P';font-size:9px;color:#c8a030;letter-spacing:.5px;transition:transform .08s,text-shadow .08s}
+/* situation bar — always one line, never wraps */
+.T-sb-sit{display:flex;align-items:center;justify-content:center;padding:6px 8px;background:rgba(0,0,0,.4);border-top:1px solid rgba(255,255,255,.04);gap:8px;white-space:nowrap;overflow:hidden}
+.T-sb-sit-down{font-family:'Press Start 2P';font-size:10px;color:#30c0e0;letter-spacing:.5px;flex-shrink:0}
+.T-sb-sit-div{width:1px;height:14px;background:rgba(255,255,255,.12);flex-shrink:0}
+.T-sb-sit-ball{font-family:'Press Start 2P';font-size:10px;color:#e8e6ff;opacity:.7;letter-spacing:.5px;flex-shrink:1;overflow:hidden;text-overflow:ellipsis}
+.T-sb-sit-torch{font-family:'Press Start 2P';font-size:12px;color:#c8a030;letter-spacing:.5px;transition:transform .08s,text-shadow .08s;flex-shrink:0}
 
-/* field strip */
 /* field strip — Tecmo Bowl inspired */
-.T-strip{height:190px;flex-shrink:0;position:relative;background:#1a6a1a;overflow:hidden;border-bottom:1px solid #1a183a}
+.T-strip{height:200px;flex-shrink:0;position:relative;background:#1a6a1a;overflow:hidden;border-bottom:1px solid #1a183a}
 .T-field-turf{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.04) 50%,transparent 50%,transparent 100%);background-size:100% 12px}
 .T-yard{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.4)}
 .T-yard-5{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.15)}
@@ -66,7 +65,7 @@ const CSS = `
 .T-ez-l{left:0;border-right:3px solid rgba(255,255,255,.3)}
 .T-ez-r{right:0;border-left:3px solid rgba(255,255,255,.3)}
 .T-ez-text{font-family:'Press Start 2P';font-size:6px;color:rgba(255,255,255,.5);writing-mode:vertical-lr;transform:rotate(180deg);letter-spacing:2px}
-.T-midfield-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:56px;opacity:.35;z-index:1;filter:saturate(1.4)}
+.T-midfield-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:72px;opacity:.5;z-index:1;filter:saturate(1.5) drop-shadow(0 0 8px rgba(255,255,255,.15))}
 .T-hash{position:absolute;left:7%;right:7%;height:1px;background:rgba(255,255,255,.06)}
 /* placed cards on field — centered vertically */
 .T-placed{position:absolute;top:50%;transform:translateY(-50%);height:150px;z-index:8;border-radius:6px;overflow:hidden;background:var(--bg-surface);border:2px solid #00ff88;box-shadow:0 0 12px rgba(0,255,136,.2);display:flex;flex-direction:column}
@@ -125,8 +124,8 @@ const CSS = `
 .T-pbp{display:flex;flex-direction:column;gap:6px}
 .T-pbp-line{font-family:'Courier New',monospace;font-size:14px;color:#6a6690;line-height:1.4;letter-spacing:.3px}
 .T-pbp-live{color:#e8e6ff;text-shadow:0 0 6px rgba(232,230,255,.15)}
-.T-pbp-result{font-family:'Press Start 2P';font-size:14px;letter-spacing:.5px;line-height:1;margin-top:10px}
-.T-pbp-down{font-family:'Press Start 2P';font-size:12px;color:#30c0e0;margin-top:6px;letter-spacing:.5px;line-height:1}
+.T-pbp-result{font-family:'Press Start 2P';font-size:12px;letter-spacing:.5px;line-height:1;margin-top:10px;white-space:nowrap;overflow:hidden}
+.T-pbp-down{font-family:'Press Start 2P';font-size:10px;color:#30c0e0;margin-top:6px;letter-spacing:.5px;line-height:1;white-space:nowrap;overflow:hidden}
 .T-pbp-idle{font-family:'Courier New',monospace;font-size:11px;color:#333;letter-spacing:.5px}
 /* torch points fly animation */
 .T-torch-fly{position:fixed;z-index:9999;font-family:'Press Start 2P';font-size:12px;color:#c8a030;pointer-events:none;text-shadow:0 0 8px rgba(200,160,48,.5)}
