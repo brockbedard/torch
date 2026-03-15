@@ -148,15 +148,15 @@ const CSS = `
 .T-impact{position:absolute;top:50%;left:50%;width:40px;height:40px;border-radius:50%;z-index:99;pointer-events:none;transform:translate(-50%,-50%);animation:T-impact .4s ease-out forwards}
 @keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
 /* card matchup display on field — helmet crash animation */
-.T-clash{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:space-between;pointer-events:none;overflow:hidden;padding:8px}
-.T-clash-side{display:flex;flex-direction:column;gap:4px;width:38%}
+.T-clash{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:space-between;pointer-events:none;overflow:hidden;padding:8px 6px}
+.T-clash-side{display:flex;flex-direction:column;gap:4px;width:40%}
 @keyframes T-crash-left{0%{transform:translateX(-120%)}60%{transform:translateX(8%)}80%{transform:translateX(-3%)}100%{transform:translateX(0)}}
 @keyframes T-crash-right{0%{transform:translateX(120%)}60%{transform:translateX(-8%)}80%{transform:translateX(3%)}100%{transform:translateX(0)}}
 .T-clash-left{animation:T-crash-left .5s cubic-bezier(.2,.8,.3,1) forwards}
 .T-clash-right{animation:T-crash-right .5s cubic-bezier(.2,.8,.3,1) forwards}
 .T-clash-card{background:var(--bg-surface);border-radius:6px;border:2px solid;overflow:hidden}
-/* VS — absolutely centered on the field, independent of card positions */
-.T-clash-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10}
+/* VS — positioned by JS at the midfield logo coordinates */
+.T-clash-center{position:absolute;z-index:10}
 .T-clash-vs{font-family:'Press Start 2P';font-size:14px;color:#fff;background:rgba(200,160,48,.95);padding:8px 14px;border-radius:8px;box-shadow:0 0 24px rgba(200,160,48,.7),0 0 50px rgba(200,160,48,.3);letter-spacing:3px;line-height:1}
 @keyframes T-crash-spark{0%{opacity:1;transform:scale(0)}50%{opacity:1}100%{opacity:0;transform:scale(2)}}
 .T-clash-spark{width:30px;height:30px;border-radius:50%;background:radial-gradient(#fff,#c8a030,transparent);animation:T-crash-spark .4s ease-out .45s forwards;opacity:0}
@@ -560,19 +560,21 @@ export function buildGameplay() {
       clashCard(res.offPlay.name, res.offPlay.playType || res.offPlay.cardType, offColor) +
       clashCard(res.featuredOff.name, res.featuredOff.pos + ' \u00b7 OVR ' + res.featuredOff.ovr, offColor);
 
-    // Center: VS + spark (or torch overlay)
-    var center = document.createElement('div');
-    center.className = 'T-clash-center';
+    // VS — placed directly on the strip at the midfield position (not inside clash flex)
+    var vsEl = document.createElement('div');
+    vsEl.className = 'T-clash-center';
+    vsEl.style.cssText = 'top:50%;left:50%;transform:translate(-50%,-50%)';
     if (torchCard) {
-      center.innerHTML =
+      vsEl.innerHTML =
         '<div class="T-clash-spark"></div>' +
-        "<div style=\"background:#1a1030;border:2px solid #c8a030;border-radius:4px;padding:4px 8px;box-shadow:0 0 16px rgba(200,160,48,.4);z-index:3\">" +
+        "<div style=\"background:#1a1030;border:2px solid #c8a030;border-radius:4px;padding:6px 10px;box-shadow:0 0 16px rgba(200,160,48,.4)\">" +
           "<div style=\"font-family:'Press Start 2P';font-size:5px;color:#c8a030;text-align:center\">" + torchCard.tier + "</div>" +
           "<div style=\"font-family:'Bebas Neue';font-size:13px;color:#c8a030;line-height:1;text-align:center\">" + torchCard.name + "</div>" +
         "</div>";
     } else {
-      center.innerHTML = '<div class="T-clash-spark"></div><div class="T-clash-vs">VS</div>';
+      vsEl.innerHTML = '<div class="T-clash-spark"></div><div class="T-clash-vs">VS</div>';
     }
+    strip.appendChild(vsEl); // on the strip, not inside the clash container
 
     // Right: defense (play + player) — crash in from right
     var right = document.createElement('div');
@@ -581,7 +583,7 @@ export function buildGameplay() {
       clashCard(res.defPlay.name, res.defPlay.cardType || 'DEF', defColor) +
       clashCard(res.featuredDef.name, res.featuredDef.pos + ' \u00b7 OVR ' + res.featuredDef.ovr, defColor);
 
-    clash.append(left, center, right);
+    clash.append(left, right);
     strip.appendChild(clash);
   }
 
@@ -1114,6 +1116,8 @@ export function buildGameplay() {
             narr.innerHTML = '<div class="T-pbp-idle">...<span class="T-pbp-cursor"></span></div>';
             var clashEl = strip.querySelector('.T-clash');
             if (clashEl) clashEl.remove();
+            var vsEl2 = strip.querySelector('.T-clash-center');
+            if (vsEl2) vsEl2.remove();
             onDone();
           };
           pbp.appendChild(nextBtn);
