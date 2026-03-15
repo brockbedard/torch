@@ -359,16 +359,16 @@ export function buildCardDraft() {
   hdr.appendChild(backBtn);
   el.appendChild(hdr);
 
-  // Content — fills remaining space, no scroll
+  // Content — matches player draft layout exactly
   var content = document.createElement('div');
-  content.style.cssText = 'flex:1;display:flex;flex-direction:column;padding:8px 12px;overflow:hidden;';
+  content.style.cssText = 'flex:1;display:flex;flex-direction:column;padding:10px 14px;overflow:hidden;';
 
-  // Title row with auto-pick inline
+  // Title row with auto-pick inline (same as draft.js)
   var titleRow = document.createElement('div');
-  titleRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-shrink:0;margin-bottom:4px;';
+  titleRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-shrink:0;margin-bottom:6px;';
   var title = document.createElement('div');
   title.className = 'chrome-header';
-  title.style.cssText = 'font-size:20px;margin-bottom:0;';
+  title.style.cssText = 'font-size:22px;margin-bottom:0;';
   title.textContent = isOff ? 'PICK OFFENSE PLAYS' : 'PICK DEFENSE PLAYS';
   var autoBtn = document.createElement('button');
   autoBtn.style.cssText = "font-family:'Press Start 2P';font-size:6px;color:var(--cyan);background:none;border:1px solid var(--cyan);padding:5px 8px;cursor:pointer;border-radius:12px;opacity:.7;";
@@ -387,44 +387,23 @@ export function buildCardDraft() {
   titleRow.append(title, autoBtn);
   content.appendChild(titleRow);
 
-  // Counter: dots + text
-  var counterRow = document.createElement('div');
-  counterRow.style.cssText = "font-family:'Press Start 2P';font-size:8px;letter-spacing:1px;margin-bottom:4px;display:flex;align-items:center;gap:6px;flex-shrink:0;";
-  var dots = [];
-  for (var d = 0; d < 4; d++) {
-    var dot = document.createElement('div');
-    dot.style.cssText = 'width:7px;height:7px;border-radius:50%;background:#333;border:1px solid #555;transition:all 0.2s;flex-shrink:0;';
-    dots.push(dot);
-    counterRow.appendChild(dot);
-  }
-  var counterText = document.createElement('div');
-  counterText.style.cssText = 'color:var(--a-gold);margin-left:2px;white-space:nowrap;';
-  counterRow.appendChild(counterText);
-  content.appendChild(counterRow);
-
   var selected = {};
 
-  // Card grid — fills remaining space
+  // Section label (matches draft.js style)
+  var sectionLabel = document.createElement('div');
+  sectionLabel.style.cssText = "font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:4px;";
+  sectionLabel.textContent = 'PLAYS \u2014 PICK 4';
+  content.appendChild(sectionLabel);
+
+  // Card grid — 2x5, fills remaining space (same flex pattern as draft.js skill grid)
   var cardGrid = document.createElement('div');
-  cardGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr 1fr 1fr;gap:6px;flex:1;min-height:0;';
+  cardGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr 1fr 1fr;gap:8px;flex:1;min-height:0;';
 
   function refreshCards() {
     cardGrid.innerHTML = '';
     var count = Object.keys(selected).length;
-
-    // Update counter
-    counterText.textContent = count + ' OF 4 SELECTED';
-    for (var i = 0; i < 4; i++) {
-      if (i < count) {
-        dots[i].style.background = '#00ff88';
-        dots[i].style.borderColor = '#00ff88';
-        dots[i].style.boxShadow = '0 0 6px rgba(0,255,136,0.5)';
-      } else {
-        dots[i].style.background = '#333';
-        dots[i].style.borderColor = '#555';
-        dots[i].style.boxShadow = 'none';
-      }
-    }
+    // Update section label with count
+    sectionLabel.textContent = 'PLAYS \u2014 ' + count + ' OF 4 SELECTED';
 
     pool.forEach(function(card, idx) {
       var key = card.id + '_' + idx;
@@ -435,18 +414,15 @@ export function buildCardDraft() {
 
       playCard.onclick = function() {
         if (selected[key]) {
-          SND.click();
+          SND.select();
           delete selected[key];
           refreshCards();
           refreshGoBtn();
         } else if (Object.keys(selected).length < 4) {
-          SND.click();
+          SND.select();
           selected[key] = card;
           refreshCards();
           refreshGoBtn();
-        } else {
-          counterText.style.animation = 'counterFlash 0.4s ease-out';
-          setTimeout(function() { counterText.style.animation = ''; }, 400);
         }
       };
 
@@ -462,12 +438,12 @@ export function buildCardDraft() {
     var ready = Object.keys(selected).length === 4;
     goBtn.className = 'btn-blitz';
     goBtn.style.cssText =
-      'width:100%;font-size:14px;margin-top:6px;flex-shrink:0;' +
+      'width:100%;font-size:14px;margin-top:4px;flex-shrink:0;' +
       (ready
-        ? 'background:#ffcc00;border-color:#ffcc00;color:#000;box-shadow:6px 6px 0 #997a00, 0 0 30px rgba(255,204,0,0.4);animation:lockGlow 2s ease-in-out infinite;'
+        ? 'background:#ffcc00;border-color:#ffcc00;color:#000;box-shadow:6px 6px 0 #997a00, 0 0 30px rgba(255,204,0,0.4);'
         : 'opacity:0.35;');
     goBtn.disabled = !ready;
-    goBtn.textContent = ready ? 'LOCK IN PLAYS \u2192' : 'PICK 4 PLAYS';
+    goBtn.textContent = ready ? 'LOCK IN PLAYS \u2192' : 'CHOOSE YOUR PLAYS';
     goBtn.onclick = ready ? function() {
       SND.click();
       var hand = Object.keys(selected).map(function(k) { return selected[k]; });
