@@ -99,10 +99,11 @@ const CSS = `
 /* instruction */
 .T-inst{text-align:center;padding:6px 0 2px;font-family:'Press Start 2P';font-size:7px;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
 
-/* card tray — cards at 150px, matching field outlines */
-.T-tray{display:flex;gap:6px;padding:6px 8px;flex-shrink:0}
-.T-card{flex:1;height:150px;border-radius:6px;background:var(--bg-surface);overflow:hidden;display:flex;flex-direction:column;transition:all .12s;touch-action:none;position:relative;cursor:grab}
+/* card tray — matches pregame draft card style */
+.T-tray{display:flex;gap:8px;padding:6px 8px;flex-shrink:0}
+.T-card{flex:1;height:150px;border-radius:6px;background:var(--bg-surface);overflow:hidden;display:flex;flex-direction:column;transition:all .15s ease;touch-action:none;position:relative;cursor:grab;opacity:.8;border:2px solid #1a183a}
 .T-card:active{cursor:grabbing}
+.T-card-sel{opacity:1;border-color:#00ff88;box-shadow:0 0 18px rgba(0,255,136,.35),inset 0 0 12px rgba(0,255,136,.08)}
 .T-card-gone{opacity:.3;pointer-events:none}
 .T-card-hurt{opacity:.2;pointer-events:none}
 /* drag ghost */
@@ -147,14 +148,14 @@ const CSS = `
 .T-impact{position:absolute;top:50%;left:50%;width:40px;height:40px;border-radius:50%;z-index:99;pointer-events:none;transform:translate(-50%,-50%);animation:T-impact .4s ease-out forwards}
 @keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
 /* card matchup display on field — helmet crash animation */
-.T-clash{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;gap:0;pointer-events:none;overflow:hidden;padding:6px}
-.T-clash-side{display:flex;flex-direction:column;gap:3px;align-items:center;justify-content:center;width:38%}
+.T-clash{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;gap:0;pointer-events:none;overflow:hidden;padding:4px}
+.T-clash-side{display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;width:40%}
 @keyframes T-crash-left{0%{transform:translateX(-120%)}60%{transform:translateX(8%)}80%{transform:translateX(-3%)}100%{transform:translateX(0)}}
 @keyframes T-crash-right{0%{transform:translateX(120%)}60%{transform:translateX(-8%)}80%{transform:translateX(3%)}100%{transform:translateX(0)}}
 .T-clash-left{animation:T-crash-left .5s cubic-bezier(.2,.8,.3,1) forwards}
 .T-clash-right{animation:T-crash-right .5s cubic-bezier(.2,.8,.3,1) forwards}
-.T-clash-card{width:100%;background:var(--bg-surface);border-radius:4px;border:2px solid;overflow:hidden;display:flex;flex-direction:column}
-.T-clash-center{display:flex;flex-direction:column;align-items:center;justify-content:center;width:24%;z-index:2}
+.T-clash-card{width:100%;background:var(--bg-surface);border-radius:4px;border:2px solid;overflow:hidden;display:flex;flex-direction:column;max-height:48%}
+.T-clash-center{display:flex;flex-direction:column;align-items:center;justify-content:center;width:20%;z-index:2}
 .T-clash-vs{font-family:'Bebas Neue';font-size:22px;color:#c8a030;font-style:italic}
 @keyframes T-crash-spark{0%{opacity:1;transform:scale(0)}50%{opacity:1}100%{opacity:0;transform:scale(2)}}
 .T-clash-spark{width:30px;height:30px;border-radius:50%;background:radial-gradient(#fff,#c8a030,transparent);animation:T-crash-spark .4s ease-out .45s forwards;opacity:0}
@@ -537,18 +538,14 @@ export function buildGameplay() {
       torchCard = TORCH_CARDS.find(function(c) { return c.id === tcId; });
     }
 
-    // Left: offense cards (play + player) — crash in from left
+    var isOff = res._preSnap ? res._preSnap.possession === hAbbr : true;
+
+    // Left: offense full cards (play + player) — crash in from left
     var left = document.createElement('div');
     left.className = 'T-clash-side T-clash-left';
     left.innerHTML =
-      '<div class="T-clash-card" style="border-color:' + offColor + '">' +
-        "<div style=\"padding:4px 5px 2px;font-family:'Bebas Neue';font-size:11px;color:#fff;line-height:1\">" + res.offPlay.name + "</div>" +
-        "<div style=\"padding:0 5px 3px;font-family:'Courier New';font-size:6px;color:" + offColor + "\">" + (res.offPlay.playType||res.offPlay.cardType) + "</div>" +
-      '</div>' +
-      '<div class="T-clash-card" style="border-color:' + offColor + '66">' +
-        "<div style=\"padding:4px 5px 1px;font-family:'Bebas Neue';font-size:11px;color:" + offColor + ";line-height:1\">" + res.featuredOff.name + "</div>" +
-        "<div style=\"padding:0 5px 3px;font-family:'Courier New';font-size:6px;color:#8a86b0\">" + res.featuredOff.pos + ' OVR ' + res.featuredOff.ovr + "</div>" +
-      '</div>';
+      '<div class="T-clash-card" style="border-color:' + offColor + '">' + mkPlayCard(res.offPlay) + '</div>' +
+      '<div class="T-clash-card" style="border-color:' + offColor + '66">' + mkPlayerCard(res.featuredOff, hTeam, true) + '</div>';
 
     // Center: VS + spark (or torch overlay)
     var center = document.createElement('div');
@@ -556,26 +553,20 @@ export function buildGameplay() {
     if (torchCard) {
       center.innerHTML =
         '<div class="T-clash-spark"></div>' +
-        "<div style=\"background:#1a1030;border:2px solid #c8a030;border-radius:4px;padding:3px 6px;box-shadow:0 0 12px rgba(200,160,48,.4);z-index:3\">" +
+        "<div style=\"background:#1a1030;border:2px solid #c8a030;border-radius:4px;padding:4px 8px;box-shadow:0 0 16px rgba(200,160,48,.4);z-index:3\">" +
           "<div style=\"font-family:'Press Start 2P';font-size:5px;color:#c8a030;text-align:center\">" + torchCard.tier + "</div>" +
-          "<div style=\"font-family:'Bebas Neue';font-size:12px;color:#c8a030;line-height:1;text-align:center\">" + torchCard.name + "</div>" +
+          "<div style=\"font-family:'Bebas Neue';font-size:13px;color:#c8a030;line-height:1;text-align:center\">" + torchCard.name + "</div>" +
         "</div>";
     } else {
       center.innerHTML = '<div class="T-clash-spark"></div><div class="T-clash-vs">VS</div>';
     }
 
-    // Right: defense cards (play + player) — crash in from right
+    // Right: defense full cards (play + player) — crash in from right
     var right = document.createElement('div');
     right.className = 'T-clash-side T-clash-right';
     right.innerHTML =
-      '<div class="T-clash-card" style="border-color:' + defColor + '">' +
-        "<div style=\"padding:4px 5px 2px;font-family:'Bebas Neue';font-size:11px;color:#fff;line-height:1\">" + res.defPlay.name + "</div>" +
-        "<div style=\"padding:0 5px 3px;font-family:'Courier New';font-size:6px;color:" + defColor + "\">" + (res.defPlay.cardType||'DEF') + "</div>" +
-      '</div>' +
-      '<div class="T-clash-card" style="border-color:' + defColor + '66">' +
-        "<div style=\"padding:4px 5px 1px;font-family:'Bebas Neue';font-size:11px;color:" + defColor + ";line-height:1\">" + res.featuredDef.name + "</div>" +
-        "<div style=\"padding:0 5px 3px;font-family:'Courier New';font-size:6px;color:#8a86b0\">" + res.featuredDef.pos + ' OVR ' + res.featuredDef.ovr + "</div>" +
-      '</div>';
+      '<div class="T-clash-card" style="border-color:' + defColor + '">' + mkPlayCard(res.defPlay) + '</div>' +
+      '<div class="T-clash-card" style="border-color:' + defColor + '66">' + mkPlayerCard(res.featuredDef, oTeam, false) + '</div>';
 
     clash.append(left, center, right);
     strip.appendChild(clash);
@@ -1228,10 +1219,9 @@ export function buildGameplay() {
       plays.forEach(play => {
         const isSel = selPl === play;
         const c = document.createElement('div');
-        c.className = 'T-card' + (isSel ? ' T-card-gone' : '');
-        c.style.border = '2px solid ' + (isSel ? '#00ff8844' : '#1a183a');
+        c.className = 'T-card' + (isSel ? ' T-card-sel T-card-gone' : '');
         c.innerHTML = mkPlayCard(play);
-        c.onclick = () => { if (phase==='busy') return; SND.click(); selPl = play; phase = 'player'; drawField(); drawPanel(); };
+        c.onclick = () => { if (phase==='busy') return; SND.select(); selPl = play; phase = 'player'; drawField(); drawPanel(); };
         c.onmousedown = function(e) { startDrag('play', play, c, e); };
         c.ontouchstart = function(e) { startDrag('play', play, c, e); };
         tray.appendChild(c);
@@ -1239,13 +1229,11 @@ export function buildGameplay() {
     } else if (phase === 'player') {
       players.forEach(p => {
         const isSel = selP === p;
-        const tc = tierColor(p.ovr);
         const c = document.createElement('div');
-        c.className = 'T-card' + (isSel ? ' T-card-gone' : '') + (p.injured ? ' T-card-hurt' : '');
-        c.style.border = '2px solid ' + (isSel ? '#00ff8844' : tc + '44');
+        c.className = 'T-card' + (isSel ? ' T-card-sel T-card-gone' : '') + (p.injured ? ' T-card-hurt' : '');
         c.innerHTML = mkPlayerCard(p, hTeam, isOff);
         c.onclick = () => {
-          if (p.injured || phase==='busy') return; SND.click(); selP = p;
+          if (p.injured || phase==='busy') return; SND.select(); selP = p;
           phase = gs.humanTorchCards.length > 0 ? 'torch' : 'ready';
           drawField(); drawPanel();
         };
