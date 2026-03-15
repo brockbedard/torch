@@ -55,9 +55,9 @@ const CSS = `
 /* field strip — Tecmo Bowl inspired */
 .T-strip{height:190px;flex-shrink:0;position:relative;background:#1a6a1a;overflow:hidden;border-bottom:1px solid #1a183a}
 .T-field-turf{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.04) 50%,transparent 50%,transparent 100%);background-size:100% 12px}
-.T-yard{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.2)}
-.T-yard-5{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.08)}
-.T-yard-num{position:absolute;font-family:'Press Start 2P';font-size:9px;color:rgba(255,255,255,.25);transform:translateX(-50%);letter-spacing:1px}
+.T-yard{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.4)}
+.T-yard-5{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.15)}
+.T-yard-num{position:absolute;font-family:'Press Start 2P';font-size:10px;color:rgba(255,255,255,.45);transform:translateX(-50%);letter-spacing:1px;font-weight:bold}
 .T-yard-num-top{top:4px}
 .T-yard-num-bot{bottom:4px}
 .T-los{position:absolute;top:0;bottom:0;width:3px;z-index:5;transition:left .4s ease-out}
@@ -66,7 +66,7 @@ const CSS = `
 .T-ez-l{left:0;border-right:3px solid rgba(255,255,255,.3)}
 .T-ez-r{right:0;border-left:3px solid rgba(255,255,255,.3)}
 .T-ez-text{font-family:'Press Start 2P';font-size:6px;color:rgba(255,255,255,.5);writing-mode:vertical-lr;transform:rotate(180deg);letter-spacing:2px}
-.T-midfield-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:48px;opacity:.2;z-index:1;filter:saturate(1.3)}
+.T-midfield-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:56px;opacity:.35;z-index:1;filter:saturate(1.4)}
 .T-hash{position:absolute;left:7%;right:7%;height:1px;background:rgba(255,255,255,.06)}
 /* placed cards on field — centered vertically */
 .T-placed{position:absolute;top:50%;transform:translateY(-50%);height:150px;z-index:8;border-radius:6px;overflow:hidden;background:var(--bg-surface);border:2px solid #00ff88;box-shadow:0 0 12px rgba(0,255,136,.2);display:flex;flex-direction:column}
@@ -148,18 +148,15 @@ const CSS = `
 .T-impact{position:absolute;top:50%;left:50%;width:40px;height:40px;border-radius:50%;z-index:99;pointer-events:none;transform:translate(-50%,-50%);animation:T-impact .4s ease-out forwards}
 @keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
 /* card matchup display on field — helmet crash animation */
-.T-clash{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:space-between;pointer-events:none;overflow:hidden;padding:8px 6px}
-.T-clash-side{display:flex;flex-direction:column;gap:4px;width:40%}
-@keyframes T-crash-left{0%{transform:translateX(-120%)}60%{transform:translateX(8%)}80%{transform:translateX(-3%)}100%{transform:translateX(0)}}
-@keyframes T-crash-right{0%{transform:translateX(120%)}60%{transform:translateX(-8%)}80%{transform:translateX(3%)}100%{transform:translateX(0)}}
-.T-clash-left{animation:T-crash-left .5s cubic-bezier(.2,.8,.3,1) forwards}
-.T-clash-right{animation:T-crash-right .5s cubic-bezier(.2,.8,.3,1) forwards}
+/* clash: simple 3-column layout — left cards | VS | right cards */
+.T-clash{position:absolute;inset:0;z-index:9;display:flex;align-items:center;pointer-events:none;padding:8px}
+.T-clash-side{flex:1;display:flex;flex-direction:column;gap:4px}
 .T-clash-card{background:var(--bg-surface);border-radius:6px;border:2px solid;overflow:hidden}
-/* VS — positioned by JS at the midfield logo coordinates */
-.T-clash-center{position:absolute;z-index:10}
-.T-clash-vs{font-family:'Press Start 2P';font-size:14px;color:#fff;background:rgba(200,160,48,.95);padding:8px 14px;border-radius:8px;box-shadow:0 0 24px rgba(200,160,48,.7),0 0 50px rgba(200,160,48,.3);letter-spacing:3px;line-height:1}
-@keyframes T-crash-spark{0%{opacity:1;transform:scale(0)}50%{opacity:1}100%{opacity:0;transform:scale(2)}}
-.T-clash-spark{width:30px;height:30px;border-radius:50%;background:radial-gradient(#fff,#c8a030,transparent);animation:T-crash-spark .4s ease-out .45s forwards;opacity:0}
+.T-clash-center{display:flex;align-items:center;justify-content:center;padding:0 6px}
+.T-clash-vs{font-family:'Press Start 2P';font-size:14px;color:#fff;background:rgba(200,160,48,.95);padding:8px 12px;border-radius:8px;box-shadow:0 0 24px rgba(200,160,48,.7),0 0 50px rgba(200,160,48,.3);letter-spacing:3px;line-height:1}
+/* torch points big popup */
+@keyframes T-torch-pop{0%{opacity:1;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-50%) scale(0.8) translateY(-30px)}}
+.T-torch-big{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);z-index:9999;font-family:'Press Start 2P';font-size:28px;pointer-events:none;animation:T-torch-pop 1.5s ease-out forwards;text-shadow:0 0 20px currentColor}
 
 /* overlays */
 .T-ov{position:absolute;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;pointer-events:none}
@@ -553,37 +550,34 @@ export function buildGameplay() {
         "</div></div>";
     }
 
-    // Left: offense (play + player) — crash in from left
+    // Left: offense cards
     var left = document.createElement('div');
-    left.className = 'T-clash-side T-clash-left';
+    left.className = 'T-clash-side';
     left.innerHTML =
       clashCard(res.offPlay.name, res.offPlay.playType || res.offPlay.cardType, offColor) +
       clashCard(res.featuredOff.name, res.featuredOff.pos + ' \u00b7 OVR ' + res.featuredOff.ovr, offColor);
 
-    // VS — placed directly on the strip at the midfield position (not inside clash flex)
-    var vsEl = document.createElement('div');
-    vsEl.className = 'T-clash-center';
-    vsEl.style.cssText = 'top:50%;left:50%;transform:translate(-50%,-50%)';
+    // Center: VS (flex child between left and right — guaranteed centered)
+    var center = document.createElement('div');
+    center.className = 'T-clash-center';
     if (torchCard) {
-      vsEl.innerHTML =
-        '<div class="T-clash-spark"></div>' +
-        "<div style=\"background:#1a1030;border:2px solid #c8a030;border-radius:4px;padding:6px 10px;box-shadow:0 0 16px rgba(200,160,48,.4)\">" +
+      center.innerHTML =
+        "<div style=\"background:#1a1030;border:2px solid #c8a030;border-radius:6px;padding:6px 10px;box-shadow:0 0 16px rgba(200,160,48,.4)\">" +
           "<div style=\"font-family:'Press Start 2P';font-size:5px;color:#c8a030;text-align:center\">" + torchCard.tier + "</div>" +
           "<div style=\"font-family:'Bebas Neue';font-size:13px;color:#c8a030;line-height:1;text-align:center\">" + torchCard.name + "</div>" +
         "</div>";
     } else {
-      vsEl.innerHTML = '<div class="T-clash-spark"></div><div class="T-clash-vs">VS</div>';
+      center.innerHTML = '<div class="T-clash-vs">VS</div>';
     }
-    strip.appendChild(vsEl); // on the strip, not inside the clash container
 
-    // Right: defense (play + player) — crash in from right
+    // Right: defense cards
     var right = document.createElement('div');
-    right.className = 'T-clash-side T-clash-right';
+    right.className = 'T-clash-side';
     right.innerHTML =
       clashCard(res.defPlay.name, res.defPlay.cardType || 'DEF', defColor) +
       clashCard(res.featuredDef.name, res.featuredDef.pos + ' \u00b7 OVR ' + res.featuredDef.ovr, defColor);
 
-    clash.append(left, right);
+    clash.append(left, center, right);
     strip.appendChild(clash);
   }
 
@@ -1054,8 +1048,16 @@ export function buildGameplay() {
           }
           rl.innerHTML = parts;
           pbp.appendChild(rl);
-          // Animate torch points flying to scoreboard (positive adds, negative drains)
+          // Big torch popup + fly to scoreboard
           if (torchEarned !== 0) {
+            // Big overlay popup
+            var bigPop = document.createElement('div');
+            bigPop.className = 'T-torch-big';
+            bigPop.style.color = torchEarned > 0 ? '#c8a030' : '#e03050';
+            bigPop.textContent = '\uD83D\uDD25 ' + (torchEarned > 0 ? '+' : '') + torchEarned;
+            document.body.appendChild(bigPop);
+            setTimeout(function() { bigPop.remove(); }, 1500);
+            // Fly to scoreboard
             setTimeout(function() { animateTorchFly(rl.querySelector('.T-torch-src'), torchEarned); }, 400);
           }
           // TORCH points explanation (user's team only)
@@ -1116,8 +1118,6 @@ export function buildGameplay() {
             narr.innerHTML = '<div class="T-pbp-idle">...<span class="T-pbp-cursor"></span></div>';
             var clashEl = strip.querySelector('.T-clash');
             if (clashEl) clashEl.remove();
-            var vsEl2 = strip.querySelector('.T-clash-center');
-            if (vsEl2) vsEl2.remove();
             onDone();
           };
           pbp.appendChild(nextBtn);

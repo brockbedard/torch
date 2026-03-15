@@ -2,7 +2,7 @@ import { SND } from '../../engine/sound.js';
 import { render, setGs, getOffCards, getDefCards, VERSION, VERSION_NAME } from '../../state.js';
 
 var DEV_LOG = [
-  "v0.17.5 — VS absolutely centered on field, proportional scoreboard (symmetric grid), clash card sizing fixed, conversions play out fully.",
+  "v0.17.6 — Removed clash animation, VS centered as flex child, big torch popup, brighter field (yard lines/numbers/logo), proportional scoreboard.",
   "v0.17.0 — Complete Gameplay Rebuild: Tecmo-style field with home endzones, drag-and-drop card selection (play\u2192player\u2192torch\u2192SNAP), broadcast play-by-play commentary with variable pacing, celebrations (TD rain, turnover crack, sack impact), TORCH points fly animation, 4-card clash display, conversion card selection, offense/defense energy shift, 2-minute drill transformation, btn-blitz consistency throughout.",
   "v0.16.0 — Team Selection Overhaul: Full-width team cards with SVG helmets (CT angular cactus, IR bulky trident), coach portraits (Vance/Burris), stadium cutouts (The Furnace/The Forge), star ratings, mottos, signature plays. Removed coach specialty, difficulty descriptions. Clean difficulty row.",
   "v0.14.1 — 8-Bug Fix: Conversion UI after TDs (XP/2pt/3pt), defense hand rendering, endGame data pipeline, snap log team tracking, auto-draft key fix, audible import fix, version sync, Torch Cards count correction.",
