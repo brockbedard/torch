@@ -77,8 +77,9 @@ const CSS = `
 .T-drop-active{animation:T-drop-pulse 1.5s ease-in-out infinite}
 .T-drop-active .T-drop-lbl{color:#c8a030}
 
-/* cards section */
+/* cards section — hidden during play-by-play */
 .T-panel{display:flex;flex-direction:column;overflow:hidden;transition:background .5s;flex-shrink:0}
+.T-panel-hidden{display:none}
 .T-panel-off{background:linear-gradient(180deg,#120e00 0%,#06050f 50%)}
 .T-panel-def{background:linear-gradient(180deg,#00080e 0%,#06050f 50%)}
 
@@ -425,7 +426,7 @@ export function buildGameplay() {
 
   // ── PLAY-BY-PLAY BOOTH (bottom third) ──
   const narr = document.createElement('div'); narr.className = 'T-narr';
-  narr.innerHTML = '<div class="T-pbp-idle">> SYSTEM READY<span class="T-pbp-cursor" style="display:inline-block;width:6px;height:10px;background:#333;margin-left:3px;animation:T-blink .6s step-end infinite"></span></div>';
+  narr.innerHTML = '<div class="T-pbp-idle">...<span class="T-pbp-cursor"></span></div>';
   el.appendChild(narr);
 
   function setNarr(a, b) {
@@ -442,86 +443,96 @@ export function buildGameplay() {
     const isPass = op.completionRate !== null;
     const s = gs.getSummary();
 
+    // 5 commentary lines
     const lines = [];
     if (isPass) {
-      lines.push(off.name + ' takes the snap, drops back...');
-      lines.push('He surveys the field. ' + def.name + ' reading the play.');
+      lines.push(off.name + ' takes the snap, drops back');
+      lines.push('Surveys the field. ' + def.name + ' reading the play');
       if (r.isSack) {
-        lines.push('The pocket collapses!');
-        lines.push(def.name + ' gets there!');
-        lines.push('SACK! ' + off.name + ' brought down.');
+        lines.push('The pocket collapses');
+        lines.push(def.name + ' gets there');
+        lines.push('SACK! ' + off.name + ' brought down');
       } else if (r.isIncomplete) {
-        lines.push(off.name + ' sees an opening...');
-        lines.push('Throws!');
-        lines.push('Ball falls incomplete.');
+        lines.push(off.name + ' sees an opening');
+        lines.push('Throws');
+        lines.push('Ball falls incomplete');
       } else if (r.isInterception) {
-        lines.push(off.name + ' loads up...');
-        lines.push('Fires!');
-        lines.push(def.name + ' jumps the route! INTERCEPTED!');
+        lines.push(off.name + ' loads up');
+        lines.push('Fires');
+        lines.push(def.name + ' jumps the route! INTERCEPTED');
       } else {
-        lines.push(off.name + ' sets his feet...');
-        lines.push('Throws to the ' + (op.playType==='DEEP'?'deep side':'flat') + '!');
-        lines.push(r.isTouchdown ? 'CAUGHT IN THE END ZONE!' : 'Caught! ' + r.yards + ' yards.');
+        lines.push(off.name + ' sets his feet');
+        lines.push('Throws to the ' + (op.playType==='DEEP'?'deep side':'flat'));
+        lines.push(r.isTouchdown ? 'CAUGHT IN THE END ZONE' : 'Caught! ' + r.yards + ' yards');
       }
     } else {
-      lines.push(off.name + ' takes the handoff...');
-      lines.push('Hits the ' + (op.playType==='OPTION'?'read point':'hole') + '.');
+      lines.push(off.name + ' takes the handoff');
+      lines.push('Hits the ' + (op.playType==='OPTION'?'read point':'hole'));
       if (r.yards <= 0 && !r.isTouchdown) {
-        lines.push(def.name + ' meets him there!');
-        lines.push('Nowhere to go.');
-        lines.push('Stuffed at the line.');
+        lines.push(def.name + ' meets him there');
+        lines.push('Nowhere to go');
+        lines.push('Stuffed at the line');
       } else if (r.isFumbleLost) {
-        lines.push(off.name + ' fights for yards...');
-        lines.push('Ball is loose!');
-        lines.push('Defense recovers!');
+        lines.push(off.name + ' fights for yards');
+        lines.push('Ball is loose');
+        lines.push('Defense recovers');
       } else {
-        lines.push(off.name + ' breaks through!');
-        lines.push(r.yards >= 10 ? 'Room to run!' : 'Pushing forward...');
-        lines.push(r.isTouchdown ? 'HE\'S IN! TOUCHDOWN!' : r.yards + ' yards. Ball at the ' + s.ballPosition + '.');
+        lines.push(off.name + ' breaks through');
+        lines.push(r.yards >= 10 ? 'Room to run' : 'Pushing forward');
+        lines.push(r.isTouchdown ? 'HE\'S IN! TOUCHDOWN' : r.yards + ' yards');
       }
     }
 
+    // Result line with ball position + TORCH points
     const resColor = r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
-    const resText = r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE LOST' : r.isIncomplete?'INCOMPLETE' : (r.yards>=0?'+':'')+r.yards+' YARDS';
+    const yardLabel = r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE LOST' : r.isIncomplete?'INCOMPLETE' : (r.yards>=0?'+':'')+r.yards+' YDS';
+    const torchEarned = Math.floor(r.offComboPts || 0);
+    const ballPos = s.ballPosition;
+    const possTeam = s.possession === 'CT' ? getTeam('canyon_tech') : getTeam('iron_ridge');
 
     narr.innerHTML = '';
     const pbp = document.createElement('div'); pbp.className = 'T-pbp';
     narr.appendChild(pbp);
     let idx = 0;
-
-    // Thinking cursor element
     const cursor = document.createElement('span'); cursor.className = 'T-pbp-cursor';
 
     function showNext() {
       if (idx < lines.length) {
-        // Remove cursor from previous line
         if (cursor.parentNode) cursor.remove();
-        // Dim previous lines
         pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { el.classList.remove('T-pbp-live'); });
-        // Add "thinking" cursor first
+        // Show "..." thinking line with cursor
         const thinkLine = document.createElement('div');
         thinkLine.className = 'T-pbp-line T-pbp-live';
+        thinkLine.textContent = '...';
         thinkLine.appendChild(cursor);
         pbp.appendChild(thinkLine);
         narr.scrollTop = narr.scrollHeight;
-        // After "thinking" pause, reveal the actual text
-        var delay = 400 + Math.floor(Math.random() * 400); // 400-800ms thinking
+        // Thinking pause — variable, feels like watching a play develop
+        var delay = 500 + Math.floor(Math.random() * 600);
         setTimeout(function() {
-          thinkLine.textContent = '> ' + lines[idx];
+          thinkLine.textContent = lines[idx];
           narr.scrollTop = narr.scrollHeight;
           idx++;
-          setTimeout(showNext, 300);
+          setTimeout(showNext, 200);
         }, delay);
       } else {
         if (cursor.parentNode) cursor.remove();
         pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { el.classList.remove('T-pbp-live'); });
+        // Result line: yards + ball position + torch
         const rl = document.createElement('div');
         rl.className = 'T-pbp-result';
         rl.style.color = resColor;
-        rl.textContent = resText;
+        let resHTML = yardLabel;
+        if (!r.isTouchdown && !r.isInterception && !r.isFumbleLost) {
+          resHTML += " <span style=\"color:#554f80;font-size:9px\">BALL ON " + ballPos + "</span>";
+        }
+        if (torchEarned > 0) {
+          resHTML += " <span style=\"color:#c8a030;font-size:9px\">\uD83D\uDD25+" + torchEarned + "</span>";
+        }
+        rl.innerHTML = resHTML;
         pbp.appendChild(rl);
         narr.scrollTop = narr.scrollHeight;
-        setTimeout(onDone, 1200);
+        setTimeout(onDone, 1400);
       }
     }
     showNext();
@@ -594,6 +605,8 @@ export function buildGameplay() {
     const sides = gs.getCurrentSides();
     const players = isOff ? sides.offPlayers.slice(0,4) : sides.defPlayers.slice(0,4);
     const plays = isOff ? sides.offHand : sides.defHand;
+    // Hide panel during play-by-play so commentary sits directly under field
+    if (phase === 'busy') { panel.className = 'T-panel T-panel-hidden'; return; }
     panel.className = 'T-panel ' + (isOff ? 'T-panel-off' : 'T-panel-def');
 
     // 2min check
