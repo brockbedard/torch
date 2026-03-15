@@ -333,8 +333,8 @@ export function buildGameplay() {
   const gs = GS.engine;
 
   // ui state
-  let selP = null, selPl = null;
-  let phase = 'play'; // play | player | ready | busy
+  let selP = null, selPl = null, selTorch = null;
+  let phase = 'play'; // play | player | torch | ready | busy
   let driveSnaps = [];
   let prev2min = gs.twoMinActive;
 
@@ -451,7 +451,15 @@ export function buildGameplay() {
     } else {
       h += '<div class="T-drop T-drop-player' + (phase==='player'?' T-drop-active':'') + '" data-drop="player"><span class="T-drop-lbl">PLAYER</span></div>';
     }
-    h += '<div class="T-drop T-drop-torch" data-drop="torch"><span class="T-drop-lbl">TORCH</span></div>';
+    if (selTorch) {
+      var tc = TORCH_CARDS.find(function(c) { return c.id === selTorch; });
+      var tName = tc ? tc.name : selTorch;
+      h += '<div class="T-placed T-placed-torch" style="border-color:#c8a030;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px">' +
+        "<div style=\"font-family:'Bebas Neue';font-size:13px;color:#c8a030;text-align:center\">" + tName + "</div>" +
+        "<div style=\"font-family:'Courier New';font-size:6px;color:#8a86b0;text-align:center\">TORCH</div></div>";
+    } else {
+      h += '<div class="T-drop T-drop-torch' + (phase==='torch'?' T-drop-active':'') + '" data-drop="torch"><span class="T-drop-lbl">TORCH</span></div>';
+    }
 
     strip.innerHTML = h;
   }
@@ -847,7 +855,12 @@ export function buildGameplay() {
       if (hit && dz.dataset.drop === dragItem.type) {
         SND.click();
         if (dragItem.type === 'play') { selPl = dragItem.data; phase = 'player'; }
-        else if (dragItem.type === 'player') { selP = dragItem.data; phase = 'ready'; }
+        else if (dragItem.type === 'player') { selP = dragItem.data; phase = gs.humanTorchCards.length > 0 ? 'torch' : 'ready'; }
+        else if (dragItem.type === 'torch') {
+          selTorch = dragItem.data.id;
+          gs.humanTorchCards.splice(dragItem.data._idx, 1);
+          phase = 'ready';
+        }
         drawField();
         drawPanel();
       }
@@ -879,6 +892,7 @@ export function buildGameplay() {
     inst.style.color = isOff ? '#c8a030' : '#30c0e0';
     if (phase === 'play') inst.textContent = isOff ? 'Drag a play onto the field' : 'Drag a scheme onto the field';
     else if (phase === 'player') inst.textContent = 'Drag a player onto the field';
+    else if (phase === 'torch') inst.textContent = 'Play a Torch card or skip';
     else if (phase === 'ready') inst.textContent = '';
     panel.appendChild(inst);
 
@@ -905,11 +919,49 @@ export function buildGameplay() {
         c.className = 'T-card' + (isSel ? ' T-card-gone' : '') + (p.injured ? ' T-card-hurt' : '');
         c.style.border = '2px solid ' + (isSel ? '#00ff8844' : tc + '44');
         c.innerHTML = mkPlayerCard(p, hTeam, isOff);
-        c.onclick = () => { if (p.injured || phase==='busy') return; SND.click(); selP = p; phase = 'ready'; drawField(); drawPanel(); };
+        c.onclick = () => {
+          if (p.injured || phase==='busy') return; SND.click(); selP = p;
+          phase = gs.humanTorchCards.length > 0 ? 'torch' : 'ready';
+          drawField(); drawPanel();
+        };
         c.onmousedown = function(e) { if (!p.injured) startDrag('player', p, c, e); };
         c.ontouchstart = function(e) { if (!p.injured) startDrag('player', p, c, e); };
         tray.appendChild(c);
       });
+    } else if (phase === 'torch') {
+      // Show torch cards from inventory
+      gs.humanTorchCards.forEach(function(cardId, i) {
+        var tc = TORCH_CARDS.find(function(c) { return c.id === cardId; });
+        if (!tc) return;
+        var tierCol = tc.tier === 'GOLD' ? '#c8a030' : tc.tier === 'SILVER' ? '#aaa' : '#CD7F32';
+        var c = document.createElement('div');
+        c.className = 'T-card';
+        c.style.border = '2px solid ' + tierCol + '44';
+        c.innerHTML =
+          "<div style=\"padding:8px 8px 4px\">" +
+            "<div style=\"font-family:'Courier New';font-size:7px;font-weight:bold;color:" + tierCol + ";letter-spacing:1px\">" + tc.tier + "</div>" +
+            "<div style=\"font-family:'Bebas Neue';font-size:16px;color:#fff;line-height:1;margin-top:2px\">" + tc.name + "</div>" +
+          "</div>" +
+          "<div style=\"flex:1;padding:4px 8px;font-family:'Courier New';font-size:9px;color:#8a86b0;line-height:1.3\">" + tc.effect + "</div>";
+        c.onclick = function() {
+          SND.click();
+          selTorch = cardId;
+          // Remove from inventory (single use)
+          gs.humanTorchCards.splice(i, 1);
+          phase = 'ready';
+          drawField(); drawPanel();
+        };
+        c.onmousedown = function(e) { startDrag('torch', { id: cardId, name: tc.name, _idx: i }, c, e); };
+        c.ontouchstart = function(e) { startDrag('torch', { id: cardId, name: tc.name, _idx: i }, c, e); };
+        tray.appendChild(c);
+      });
+      // Skip button
+      var skipBtn = document.createElement('div');
+      skipBtn.className = 'T-card';
+      skipBtn.style.cssText = 'border:2px dashed #554f8044;display:flex;align-items:center;justify-content:center;cursor:pointer;';
+      skipBtn.innerHTML = "<div style=\"font-family:'Press Start 2P';font-size:7px;color:#554f80;text-align:center\">SKIP<br>TORCH</div>";
+      skipBtn.onclick = function() { SND.click(); phase = 'ready'; drawField(); drawPanel(); };
+      tray.appendChild(skipBtn);
     }
     panel.appendChild(tray);
 
@@ -946,9 +998,11 @@ export function buildGameplay() {
     phase = 'busy';
     const isOff = gs.possession === hAbbr;
     const prevPoss = gs.possession;
-    const res = isOff ? gs.executeSnap(selPl, selP, null, null) : gs.executeSnap(null, null, selPl, selP);
+    const offCard = isOff ? selTorch : null;
+    const defCard = isOff ? null : selTorch;
+    const res = isOff ? gs.executeSnap(selPl, selP, null, null, offCard, defCard) : gs.executeSnap(null, null, selPl, selP, offCard, defCard);
     driveSnaps.push(res);
-    selP = null; selPl = null;
+    selP = null; selPl = null; selTorch = null;
 
     // Update field/scorebug immediately, then play-by-play in bottom third
     drawBug(); drawField(); drawPanel();
@@ -962,7 +1016,7 @@ export function buildGameplay() {
 
   function nextSnap() {
     phase = 'play';
-    selP = null; selPl = null;
+    selP = null; selPl = null; selTorch = null;
     drawBug(); drawField(); drawPanel();
     // Human always picks cards — on offense they pick offPlay+player,
     // on defense they pick defPlay+player. doSnap() passes them in the right slots.
