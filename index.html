@@ -20,5 +20,14 @@
   <div id="root"></div>
   <!-- Modularized JS Entry Point -->
   <script type="module" src="/src/main.js"></script>
+  <script>
+    // Request fullscreen on first user interaction
+    document.addEventListener('click', function goFS() {
+      var el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen().catch(function(){});
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      document.removeEventListener('click', goFS);
+    }, { once: true });
+  </script>
 </body>
 </html>
