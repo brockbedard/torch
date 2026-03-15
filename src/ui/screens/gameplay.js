@@ -580,14 +580,15 @@ export function buildGameplay() {
     // Create flying element
     var fly = document.createElement('div');
     fly.className = 'T-torch-fly';
-    fly.textContent = '\uD83D\uDD25 +' + pts;
+    var isNeg = pts < 0;
+    var absPts = Math.abs(pts);
+    fly.textContent = '\uD83D\uDD25 ' + (isNeg ? '' : '+') + pts;
     fly.style.left = srcRect.left + 'px';
     fly.style.top = srcRect.top + 'px';
+    if (isNeg) fly.style.color = '#e03050';
     document.body.appendChild(fly);
 
     // Animate to target position
-    var dx = tgtRect.left - srcRect.left;
-    var dy = tgtRect.top - srcRect.top;
     fly.style.transition = 'all 0.6s cubic-bezier(0.2, 0.8, 0.3, 1)';
     requestAnimationFrame(function() {
       fly.style.left = tgtRect.left + 'px';
@@ -596,17 +597,17 @@ export function buildGameplay() {
       fly.style.transform = 'scale(0.7)';
     });
 
-    // After fly arrives, roll up the number in the scoreboard
+    // After fly arrives, roll the number up or down
     setTimeout(function() {
       fly.remove();
-      // Roll up the torch total — count from old to new
-      var oldTotal = parseInt(torchTarget.textContent.replace(/[^\d]/g, '')) || 0;
+      var oldTotal = parseInt(torchTarget.textContent.replace(/[^\-\d]/g, '')) || 0;
       var newTotal = oldTotal + pts;
       var current = oldTotal;
-      var step = Math.max(1, Math.ceil(pts / 15));
+      var step = Math.max(1, Math.ceil(absPts / 15)) * (isNeg ? -1 : 1);
       var rollInterval = setInterval(function() {
         current += step;
-        if (current >= newTotal) {
+        var done = isNeg ? (current <= newTotal) : (current >= newTotal);
+        if (done) {
           current = newTotal;
           clearInterval(rollInterval);
           SND.chime();
@@ -614,11 +615,14 @@ export function buildGameplay() {
           SND.points();
         }
         torchTarget.innerHTML = '\uD83D\uDD25 ' + current;
+        var pulseColor = isNeg ? '#e03050' : '#c8a030';
         torchTarget.style.transform = 'scale(1.15)';
-        torchTarget.style.textShadow = '0 0 8px #c8a030';
+        torchTarget.style.textShadow = '0 0 8px ' + pulseColor;
+        torchTarget.style.color = pulseColor;
         setTimeout(function() {
           torchTarget.style.transform = 'scale(1)';
           torchTarget.style.textShadow = '';
+          torchTarget.style.color = '#c8a030';
         }, 80);
       }, 60);
     }, 650);
@@ -1005,9 +1009,8 @@ export function buildGameplay() {
           }
           rl.innerHTML = parts;
           pbp.appendChild(rl);
-          // Animate torch points flying to scoreboard
-          // Only fly positive torch points to the scoreboard
-          if (torchEarned > 0) {
+          // Animate torch points flying to scoreboard (positive adds, negative drains)
+          if (torchEarned !== 0) {
             setTimeout(function() { animateTorchFly(rl.querySelector('.T-torch-src'), torchEarned); }, 400);
           }
           // TORCH points explanation (user's team only)
