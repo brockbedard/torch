@@ -4,8 +4,8 @@ import { IR_DEF_PLAYS } from './data/irDefensePlays.js';
 import { CT_OFF_PLAYS } from './data/ctOffensePlays.js';
 import { CT_DEF_PLAYS } from './data/ctDefensePlays.js';
 
-export var VERSION = '0.17.3';
-export var VERSION_NAME = 'Sound + Commentary + Polish';
+export var VERSION = '0.17.4';
+export var VERSION_NAME = 'VS + Clash + Polish';
 
 export var GS = null;
 
