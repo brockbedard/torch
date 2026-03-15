@@ -395,40 +395,46 @@ export function buildCardDraft() {
   sectionLabel.textContent = 'PLAYS \u2014 PICK 4';
   content.appendChild(sectionLabel);
 
-  // Card grid — 2x5, fills remaining space (same flex pattern as draft.js skill grid)
+  // Card grid — 2x5, fills remaining space
   var cardGrid = document.createElement('div');
   cardGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr 1fr 1fr;gap:8px;flex:1;min-height:0;';
 
-  function refreshCards() {
-    cardGrid.innerHTML = '';
+  // Build cards ONCE, store references for style updates
+  var cardEls = [];
+  pool.forEach(function(card, idx) {
+    var key = card.id + '_' + idx;
+    var playCard = buildPlayCard(card, false, idx);
+    playCard._key = key;
+    playCard._card = card;
+    playCard.onclick = function() {
+      if (selected[key]) {
+        SND.select();
+        delete selected[key];
+      } else if (Object.keys(selected).length < 4) {
+        SND.select();
+        selected[key] = card;
+      }
+      updateCardStates();
+      refreshGoBtn();
+    };
+    cardEls.push(playCard);
+    cardGrid.appendChild(playCard);
+  });
+
+  function updateCardStates() {
     var count = Object.keys(selected).length;
-    // Update section label with count
     sectionLabel.textContent = 'PLAYS \u2014 ' + count + ' OF 4 SELECTED';
-
-    pool.forEach(function(card, idx) {
-      var key = card.id + '_' + idx;
-      var isSel = !!selected[key];
-      var playCard = buildPlayCard(card, isSel, idx);
-
-      if (!isSel && count >= 4) playCard.style.opacity = '0.3';
-
-      playCard.onclick = function() {
-        if (selected[key]) {
-          SND.select();
-          delete selected[key];
-          refreshCards();
-          refreshGoBtn();
-        } else if (Object.keys(selected).length < 4) {
-          SND.select();
-          selected[key] = card;
-          refreshCards();
-          refreshGoBtn();
-        }
-      };
-
-      cardGrid.appendChild(playCard);
+    cardEls.forEach(function(el) {
+      var isSel = !!selected[el._key];
+      var maxed = count >= 4;
+      el.style.borderColor = isSel ? '#00ff88' : '#00ff8833';
+      el.style.opacity = isSel ? '1' : (maxed ? '0.3' : '0.55');
+      el.style.boxShadow = isSel ? '0 0 18px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08)' : 'none';
+      el.style.transform = isSel ? 'translateY(-4px)' : 'translateY(0)';
     });
   }
+
+  function refreshCards() { updateCardStates(); }
 
   content.appendChild(cardGrid);
 
