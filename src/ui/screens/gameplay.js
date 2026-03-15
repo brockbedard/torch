@@ -147,8 +147,8 @@ const CSS = `
 .T-impact{position:absolute;top:50%;left:50%;width:40px;height:40px;border-radius:50%;z-index:99;pointer-events:none;transform:translate(-50%,-50%);animation:T-impact .4s ease-out forwards}
 @keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
 /* card matchup display on field — helmet crash animation */
-.T-clash{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;gap:0;pointer-events:none;overflow:hidden}
-.T-clash-side{display:flex;flex-direction:column;gap:2px;align-items:center;width:38%}
+.T-clash{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;gap:0;pointer-events:none;overflow:hidden;padding:6px}
+.T-clash-side{display:flex;flex-direction:column;gap:3px;align-items:center;justify-content:center;width:38%}
 @keyframes T-crash-left{0%{transform:translateX(-120%)}60%{transform:translateX(8%)}80%{transform:translateX(-3%)}100%{transform:translateX(0)}}
 @keyframes T-crash-right{0%{transform:translateX(120%)}60%{transform:translateX(-8%)}80%{transform:translateX(3%)}100%{transform:translateX(0)}}
 .T-clash-left{animation:T-crash-left .5s cubic-bezier(.2,.8,.3,1) forwards}
