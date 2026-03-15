@@ -671,6 +671,22 @@ export function buildGameplay() {
     });
 
     function buildTemplateLines() {
+    const s = gs.getSummary();
+    const possTeamName = s.possession === 'CT' ? 'Canyon Tech' : 'Iron Ridge';
+    const defTeamName = s.possession === 'CT' ? 'Iron Ridge' : 'Canyon Tech';
+    // Context-aware closing line
+    function contextLine() {
+      if (r.isTouchdown) {
+        var newScore = s.possession === 'CT' ? (s.ctScore) + ' to ' + s.irScore : s.ctScore + ' to ' + (s.irScore);
+        return possTeamName + ' scores! It\'s ' + newScore;
+      }
+      if (s.down >= 3 && r.yards >= s.distance) return 'That\'s a first down! ' + possTeamName + ' keeps the chains moving';
+      if (s.down >= 3 && r.yards < s.distance && !r.isTouchdown) return 'They\'ll face fourth down now — big decision coming up';
+      if (s.playsUsed >= 18) return 'Late in the half — every snap counts from here';
+      if (s.yardsToEndzone <= 10) return 'Inside the ten — can they punch it in?';
+      if (Math.abs(s.ctScore - s.irScore) <= 3) return 'A one-possession game — the tension is building';
+      return '';
+    }
     const lines = [];
     if (isPass) {
       // Line 1: play call + key personnel (always mention featured off)
@@ -698,10 +714,13 @@ export function buildGameplay() {
       } else if (r.isTouchdown) {
         lines.push(qb.name + ' sees ' + receiver.name + ' breaking free...');
         lines.push('He lets it fly!');
-        lines.push(receiver.name + ' CATCHES IT!');
-        lines.push('TOUCHDOWN! TOUCHDOWN! ' + receiver.name + ' IN THE END ZONE!');
+        if (s.yardsToEndzone > 20) {
+          lines.push(receiver.name + ' at the thirty, the twenty, the TEN...');
+        }
+        lines.push(receiver.name + ' CATCHES IT! TOUCHDOWN!');
         lines.push(tackler.name + ' was a step too late — that throw was PERFECT');
-        lines.push('What a moment! ' + qb.name + ' to ' + receiver.name + ' — you can\'t draw it up any better');
+        lines.push(qb.name + ' to ' + receiver.name + ' — you cannot draw it up any better than that');
+        lines.push(possTeamName + ' finds the end zone!');
       } else if (r.yards >= 15) {
         lines.push(qb.name + ' steps up in the pocket, launches it deep!');
         lines.push(receiver.name + ' goes up and GETS IT!');
@@ -742,12 +761,16 @@ export function buildGameplay() {
         lines.push(def.name + ' comes up with it! FUMBLE RECOVERY!');
         lines.push('A devastating turnover — ' + ballCarrier.name + ' just couldn\'t hold on');
       } else if (r.isTouchdown) {
-        lines.push(ballCarrier.name + ' hits the hole...');
-        lines.push('He breaks a tackle at the five!');
-        lines.push('He\'s into the end zone!');
-        lines.push('TOUCHDOWN! ' + ballCarrier.name + ' WALKS IN!');
-        lines.push(tackler.name + ' couldn\'t get there — the blocking was just too good');
-        lines.push('The ' + op.name + ' was the perfect call against that ' + dp.name + ' defense');
+        lines.push(ballCarrier.name + ' hits the hole and breaks through!');
+        if (s.yardsToEndzone > 10) {
+          lines.push('He\'s got daylight! To the twenty, the ten...');
+          lines.push('NOBODY\'S GOING TO CATCH HIM!');
+        } else {
+          lines.push('Breaks a tackle at the five!');
+        }
+        lines.push('TOUCHDOWN! ' + ballCarrier.name + '!');
+        lines.push(tackler.name + ' couldn\'t get an angle — the ' + op.name + ' was the perfect call');
+        lines.push(possTeamName + ' scores! What a drive!');
       } else if (r.yards >= 15) {
         lines.push(ballCarrier.name + ' bounces it outside — daylight!');
         lines.push('He\'s got room to run! Into the second level!');
@@ -767,6 +790,8 @@ export function buildGameplay() {
       }
     }
 
+    var ctx = contextLine();
+    if (ctx) lines.push(ctx);
     return lines;
     } // end buildTemplateLines
 
@@ -792,12 +817,18 @@ export function buildGameplay() {
           thinkLine.appendChild(cursor);
           pbp.appendChild(thinkLine);
           narr.scrollTop = narr.scrollHeight;
-          var delay = 800 + Math.floor(Math.random() * 800);
+          // Vary timing: setup lines slow, action fast, climax dramatic pause
+          var pct = idx / lines.length; // 0 = first line, 1 = last
+          var delay;
+          if (pct < 0.3) delay = 900 + Math.floor(Math.random() * 600); // setup: measured
+          else if (pct < 0.7) delay = 400 + Math.floor(Math.random() * 400); // action: fast
+          else delay = 1000 + Math.floor(Math.random() * 800); // climax/analysis: dramatic
           setTimeout(function() {
             thinkLine.textContent = lines[idx];
             narr.scrollTop = narr.scrollHeight;
             idx++;
-            setTimeout(showNext, 300);
+            var gap = pct < 0.7 ? 200 : 400; // faster between action lines
+            setTimeout(showNext, gap);
           }, delay);
         } else {
           if (cursor.parentNode) cursor.remove();
