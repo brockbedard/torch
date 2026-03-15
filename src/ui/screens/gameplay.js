@@ -52,19 +52,20 @@ const CSS = `
 .T-sb-sit-torch{font-family:'Press Start 2P';font-size:9px;color:#c8a030;letter-spacing:.5px}
 
 /* field strip */
-/* field strip */
-.T-strip{height:166px;flex-shrink:0;position:relative;background:#0a3a0a;overflow:hidden;border-bottom:1px solid #1a183a}
-.T-field-turf{position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.02) 0px,rgba(255,255,255,.02) 1px,transparent 1px,transparent 10%),repeating-linear-gradient(0deg,rgba(0,0,0,.06) 0%,rgba(0,0,0,.06) 50%,transparent 50%,transparent 100%);background-size:100% 100%,100% 20%}
-.T-yard{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.08)}
-.T-yard-num{position:absolute;top:3px;font-family:'Courier New';font-size:7px;color:rgba(255,255,255,.15);transform:translateX(-50%);font-weight:bold}
-.T-los{position:absolute;top:0;bottom:0;width:2px;z-index:5;transition:left .4s ease-out}
-.T-ltg{position:absolute;top:0;bottom:0;width:1px;opacity:.5;z-index:4;transition:left .4s ease-out;border-left:2px dashed}
-.T-ez{position:absolute;top:0;bottom:0;width:6%;display:flex;align-items:center;justify-content:center}
-.T-ez-l{left:0;background:linear-gradient(90deg,rgba(255,60,60,.15),transparent);border-right:2px solid rgba(255,255,255,.1)}
-.T-ez-r{right:0;background:linear-gradient(270deg,rgba(60,100,255,.15),transparent);border-left:2px solid rgba(255,255,255,.1)}
-.T-ez-logo{font-size:20px;opacity:.4;filter:saturate(.7)}
-.T-midfield-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28px;opacity:.12;z-index:1}
-.T-hash{position:absolute;left:6%;right:6%;height:1px;background:rgba(255,255,255,.04)}
+/* field strip — Tecmo Bowl inspired */
+.T-strip{height:166px;flex-shrink:0;position:relative;background:#1a6a1a;overflow:hidden;border-bottom:1px solid #1a183a}
+.T-field-turf{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.04) 50%,transparent 50%,transparent 100%);background-size:100% 12px}
+.T-yard{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.2)}
+.T-yard-5{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.08)}
+.T-yard-num{position:absolute;top:4px;font-family:'Press Start 2P';font-size:9px;color:rgba(255,255,255,.25);transform:translateX(-50%);letter-spacing:1px}
+.T-los{position:absolute;top:0;bottom:0;width:3px;z-index:5;transition:left .4s ease-out}
+.T-ltg{position:absolute;top:0;bottom:0;width:2px;opacity:.6;z-index:4;transition:left .4s ease-out;border-left:2px dashed}
+.T-ez{position:absolute;top:0;bottom:0;width:7%;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.T-ez-l{left:0;border-right:3px solid rgba(255,255,255,.3)}
+.T-ez-r{right:0;border-left:3px solid rgba(255,255,255,.3)}
+.T-ez-text{font-family:'Press Start 2P';font-size:6px;color:rgba(255,255,255,.5);writing-mode:vertical-lr;transform:rotate(180deg);letter-spacing:2px}
+.T-midfield-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:36px;opacity:.15;z-index:1}
+.T-hash{position:absolute;left:7%;right:7%;height:1px;background:rgba(255,255,255,.06)}
 /* placed cards on field — 150px to match tray cards exactly */
 .T-placed{position:absolute;bottom:8px;height:150px;z-index:8;border-radius:6px;overflow:hidden;background:var(--bg-surface);border:2px solid #00ff88;box-shadow:0 0 12px rgba(0,255,136,.2);display:flex;flex-direction:column}
 .T-placed-play{left:3%;width:30%}
@@ -119,7 +120,7 @@ const CSS = `
 .T-pbp-line{font-family:'Courier New',monospace;font-size:13px;color:#554f80;line-height:1.4;letter-spacing:.3px}
 .T-pbp-live{color:#30c0e0}
 .T-pbp-result{font-family:'Press Start 2P';font-size:14px;letter-spacing:.5px;line-height:1;margin-top:10px}
-.T-pbp-down{font-family:'Courier New';font-size:11px;color:#554f80;margin-top:6px;letter-spacing:.5px}
+.T-pbp-down{font-family:'Press Start 2P';font-size:12px;color:#30c0e0;margin-top:6px;letter-spacing:.5px;line-height:1}
 .T-pbp-idle{font-family:'Courier New',monospace;font-size:11px;color:#333;letter-spacing:.5px}
 .T-next{margin-top:10px;padding:10px;font-family:'Bebas Neue';font-size:20px;letter-spacing:3px;color:#06050f;border:none;border-radius:6px;cursor:pointer;background:linear-gradient(180deg,#30c0e0,#2090a0);box-shadow:0 3px 12px rgba(48,192,224,.2);width:100%;text-align:center}
 .T-next:active{transform:scale(.97)}
@@ -407,23 +408,29 @@ export function buildGameplay() {
     const isOff = gs.possession === hAbbr;
     const ct = getTeam('canyon_tech'), ir = getTeam('iron_ridge');
     const homeTeam = getTeam(GS.team);
-    const lp = 6 + s.ballPosition * .88;
+    const lp = 7 + s.ballPosition * .86;
     const td = s.possession==='CT' ? s.ballPosition+s.distance : s.ballPosition-s.distance;
-    const tp = 6 + Math.max(0,Math.min(100,td)) * .88;
+    const tp = 7 + Math.max(0,Math.min(100,td)) * .86;
     const pc = s.possession==='CT' ? ct.accent : ir.accent;
-    // Turf texture
+    // Turf texture (horizontal stripes like Tecmo)
     let h = '<div class="T-field-turf"></div>';
-    // Endzones with team logos
-    h += '<div class="T-ez T-ez-l"><span class="T-ez-logo">' + ir.icon + '</span></div>';
-    h += '<div class="T-ez T-ez-r"><span class="T-ez-logo">' + ct.icon + '</span></div>';
-    // Midfield logo (home team)
+    // Colored endzones with mascot text
+    var irEzColor = ir.color || '#CC1A1A';
+    var ctEzColor = ct.color || '#FF5E1A';
+    h += '<div class="T-ez T-ez-l" style="background:' + irEzColor + '"><span class="T-ez-text">TRIDENTS</span></div>';
+    h += '<div class="T-ez T-ez-r" style="background:' + ctEzColor + '"><span class="T-ez-text">CACTI</span></div>';
+    // Midfield logo (home team, large and faded)
     h += '<div class="T-midfield-logo">' + homeTeam.icon + '</div>';
-    // Yard lines with numbers
+    // Yard lines every 10, minor lines every 5, numbers on 10s
     var yardNums = {10:'10',20:'20',30:'30',40:'40',50:'50',60:'40',70:'30',80:'20',90:'10'};
-    for (let i=10;i<=90;i+=10) {
-      var xp = 6+i*.88;
-      h += '<div class="T-yard" style="left:'+xp+'%"></div>';
-      h += '<div class="T-yard-num" style="left:'+xp+'%">'+(yardNums[i]||'')+'</div>';
+    for (let i=5;i<=95;i+=5) {
+      var xp = 7+i*.86;
+      if (i%10===0) {
+        h += '<div class="T-yard" style="left:'+xp+'%"></div>';
+        h += '<div class="T-yard-num" style="left:'+xp+'%">'+(yardNums[i]||'')+'</div>';
+      } else {
+        h += '<div class="T-yard-5" style="left:'+xp+'%"></div>';
+      }
     }
     // Hash marks
     h += '<div class="T-hash" style="top:30%"></div><div class="T-hash" style="top:70%"></div>';
