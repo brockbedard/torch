@@ -100,19 +100,16 @@ const CSS = `
 /* drag ghost */
 .T-drag-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.85;transform:scale(1.05);filter:drop-shadow(0 4px 12px rgba(0,0,0,.6))}
 
-/* snap bar */
-.T-snap{padding:4px 6px;flex-shrink:0;display:flex;gap:4px;align-items:stretch}
-.T-go{flex:1;padding:10px;font-family:'Bebas Neue';font-size:24px;letter-spacing:5px;color:#06050f;border:none;border-radius:8px;cursor:pointer;background:linear-gradient(180deg,#f0c020,#c8a010);box-shadow:0 4px 20px rgba(200,160,16,.25);transition:all .2s}
-.T-go:active{transform:scale(.97);box-shadow:none}
-.T-go:disabled{opacity:.2;cursor:not-allowed;box-shadow:none;animation:none}
-@keyframes T-pulse{0%,100%{box-shadow:0 4px 20px rgba(200,160,16,.25)}50%{box-shadow:0 4px 30px rgba(200,160,16,.5)}}
-.T-go:not(:disabled){animation:T-pulse 1.8s ease-in-out infinite}
+/* snap bar — uses btn-blitz style */
+.T-snap{padding:4px 6px;flex-shrink:0;display:flex;gap:4px;align-items:stretch;flex-direction:column}
+@keyframes T-pulse{0%,100%{box-shadow:6px 6px 0 #997a00, 10px 10px 0 #000, 0 0 20px rgba(255,204,0,.3)}50%{box-shadow:6px 6px 0 #997a00, 10px 10px 0 #000, 0 0 40px rgba(255,204,0,.6)}}
 
 /* 2min buttons */
 .T-2btns{display:flex;gap:5px}
-.T-2btn{flex:1;padding:8px;font-family:'Press Start 2P';font-size:6px;border-radius:6px;cursor:pointer;text-align:center;background:none;letter-spacing:.5px}
-.T-spike{color:#30c0e0;border:1.5px solid #30c0e0}
-.T-kneel{color:#554f80;border:1.5px solid #554f80}
+.T-2btn{flex:1;padding:10px;font-family:'Press Start 2P';font-size:7px;cursor:pointer;text-align:center;background:none;letter-spacing:.5px;text-transform:uppercase;border:4px solid}
+.T-2btn:active{transform:translate(3px,3px)}
+.T-spike{color:#30c0e0;border-color:#30c0e0;box-shadow:4px 4px 0 #1a6070,6px 6px 0 #000}
+.T-kneel{color:#554f80;border-color:#554f80;box-shadow:4px 4px 0 #2a2840,6px 6px 0 #000}
 
 /* play-by-play terminal */
 .T-narr{flex:1;min-height:0;background:#080812;border-top:1px solid #1a183a;overflow-y:auto;padding:10px 14px}
@@ -122,8 +119,6 @@ const CSS = `
 .T-pbp-result{font-family:'Press Start 2P';font-size:14px;letter-spacing:.5px;line-height:1;margin-top:10px}
 .T-pbp-down{font-family:'Press Start 2P';font-size:12px;color:#30c0e0;margin-top:6px;letter-spacing:.5px;line-height:1}
 .T-pbp-idle{font-family:'Courier New',monospace;font-size:11px;color:#333;letter-spacing:.5px}
-.T-next{margin-top:10px;padding:10px;font-family:'Bebas Neue';font-size:20px;letter-spacing:3px;color:#06050f;border:none;border-radius:6px;cursor:pointer;background:linear-gradient(180deg,#30c0e0,#2090a0);box-shadow:0 3px 12px rgba(48,192,224,.2);width:100%;text-align:center}
-.T-next:active{transform:scale(.97)}
 .T-pbp-cursor{display:inline-block;width:6px;height:12px;background:#30c0e0;margin-left:2px;animation:T-blink .6s step-end infinite}
 @keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
 /* card matchup display on field during play */
@@ -497,9 +492,58 @@ export function buildGameplay() {
     strip.appendChild(clash);
   }
 
+  /** Call AI for rich commentary, fall back to templates */
+  async function fetchAICommentary(res) {
+    const r = res.result;
+    const s = gs.getSummary();
+    const sides = gs.getCurrentSides();
+    const oStarters = sides.offPlayers.slice(0,4).map(function(p){return p.name+' '+p.pos+' '+p.ovr;}).join(', ');
+    const dStarters = sides.defPlayers.slice(0,4).map(function(p){return p.name+' '+p.pos+' '+p.ovr;}).join(', ');
+    const possTeam = s.possession === 'CT' ? 'Canyon Tech' : 'Iron Ridge';
+    const defTeamName = s.possession === 'CT' ? 'Iron Ridge' : 'Canyon Tech';
+
+    const prompt = 'You are a dramatic college football radio play-by-play announcer. Generate EXACTLY 5 short sentences (one per line) describing this play as it unfolds. Build tension. Reference the actual players by last name. The featured offensive player and featured defensive player should be mentioned but don\'t have to take every action. The QB throws/hands off, skill players catch/run, defenders tackle.\n\n' +
+      'GAME SITUATION:\n' +
+      'Score: CT ' + s.ctScore + ' - IR ' + s.irScore + '\n' +
+      s.down + (s.down===1?'st':s.down===2?'nd':s.down===3?'rd':'th') + ' & ' + s.distance + ', ball on ' + ballSideLabel() + '\n' +
+      'Half ' + s.half + ', Snap ' + s.playsUsed + '/20\n' +
+      possTeam + ' on offense vs ' + defTeamName + ' defense\n\n' +
+      'OFFENSE: ' + oStarters + '\n' +
+      'DEFENSE: ' + dStarters + '\n' +
+      'Featured OFF: ' + res.featuredOff.name + ' (' + res.featuredOff.pos + ')\n' +
+      'Featured DEF: ' + res.featuredDef.name + ' (' + res.featuredDef.pos + ')\n' +
+      'Play called: ' + res.offPlay.name + ' (' + (res.offPlay.playType||'') + ')\n' +
+      'Defense called: ' + res.defPlay.name + '\n\n' +
+      'RESULT: ' + r.description + '\n' +
+      'Yards: ' + r.yards + '\n' +
+      (r.isTouchdown?'TOUCHDOWN\n':'') + (r.isSack?'SACK\n':'') + (r.isInterception?'INTERCEPTION\n':'') + (r.isFumbleLost?'FUMBLE LOST\n':'') + (r.isIncomplete?'INCOMPLETE PASS\n':'') +
+      '\nWrite 5 lines only. One sentence each. Build from snap to result. Last line is the outcome. Use CAPS for big moments.';
+
+    try {
+      const resp = await fetch('/api/commentary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 200,
+          system: 'College football radio play-by-play. Dramatic, punchy, one sentence per line. 5 lines exactly. Reference players by last name.',
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      const text = data.content && data.content[0] && data.content[0].text;
+      if (!text) return null;
+      const lines = text.split('\n').filter(function(l) { return l.trim().length > 0; }).slice(0, 5);
+      return lines.length >= 3 ? lines : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   function runPlayByPlay(res, onDone) {
     const r = res.result;
-    const off = res.featuredOff; // featured skill player (WR, RB, TE, etc.)
+    const off = res.featuredOff;
     const def = res.featuredDef;
     const op = res.offPlay;
     const dp = res.defPlay;
@@ -524,6 +568,16 @@ export function buildGameplay() {
 
     showClashOnField(res);
 
+    // Try AI commentary first, build templates as fallback
+    fetchAICommentary(res).then(function(aiLines) {
+      if (aiLines) {
+        renderPBPLines(aiLines, res, onDone);
+      } else {
+        renderPBPLines(buildTemplateLines(), res, onDone);
+      }
+    });
+
+    function buildTemplateLines() {
     const lines = [];
     if (isPass) {
       // Line 1: play call + key personnel (always mention featured off)
@@ -594,76 +648,80 @@ export function buildGameplay() {
       }
     }
 
-    // Result: yards + ball position + torch — all same size on one line
-    const resColor = r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
-    const yardLabel = r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE LOST' : r.isIncomplete?'INCOMPLETE' : (r.yards>=0?'+':'')+r.yards+' YDS';
-    const torchEarned = Math.floor((r.offComboPts || 0) + (r.defComboPts || 0));
+    return lines;
+    } // end buildTemplateLines
 
-    narr.innerHTML = '';
-    const pbp = document.createElement('div'); pbp.className = 'T-pbp';
-    narr.appendChild(pbp);
-    let idx = 0;
-    const cursor = document.createElement('span'); cursor.className = 'T-pbp-cursor';
+    function renderPBPLines(lines, res, onDone) {
+      const r = res.result;
+      const resColor = r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
+      const yardLabel = r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE LOST' : r.isIncomplete?'INCOMPLETE' : (r.yards>=0?'+':'')+r.yards+' YDS';
+      const torchEarned = Math.floor((r.offComboPts || 0) + (r.defComboPts || 0));
 
-    function showNext() {
-      if (idx < lines.length) {
-        if (cursor.parentNode) cursor.remove();
-        pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { el.classList.remove('T-pbp-live'); });
-        // Dramatic pause — just blinking cursor
-        const thinkLine = document.createElement('div');
-        thinkLine.className = 'T-pbp-line T-pbp-live';
-        thinkLine.textContent = '';
-        thinkLine.appendChild(cursor);
-        pbp.appendChild(thinkLine);
-        narr.scrollTop = narr.scrollHeight;
-        // Long dramatic pause
-        var delay = 800 + Math.floor(Math.random() * 800);
-        setTimeout(function() {
-          thinkLine.textContent = lines[idx];
+      narr.innerHTML = '';
+      const pbp = document.createElement('div'); pbp.className = 'T-pbp';
+      narr.appendChild(pbp);
+      let idx = 0;
+      const cursor = document.createElement('span'); cursor.className = 'T-pbp-cursor';
+
+      function showNext() {
+        if (idx < lines.length) {
+          if (cursor.parentNode) cursor.remove();
+          pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { el.classList.remove('T-pbp-live'); });
+          const thinkLine = document.createElement('div');
+          thinkLine.className = 'T-pbp-line T-pbp-live';
+          thinkLine.textContent = '';
+          thinkLine.appendChild(cursor);
+          pbp.appendChild(thinkLine);
           narr.scrollTop = narr.scrollHeight;
-          idx++;
-          setTimeout(showNext, 300);
-        }, delay);
-      } else {
-        if (cursor.parentNode) cursor.remove();
-        pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { el.classList.remove('T-pbp-live'); });
-        // Result: yards + torch on one line
-        const rl = document.createElement('div');
-        rl.className = 'T-pbp-result';
-        let parts = '<span style="color:' + resColor + '">' + yardLabel + '</span>';
-        if (torchEarned > 0) {
-          parts += '<span style="color:#c8a030;margin-left:10px">\uD83D\uDD25 +' + torchEarned + '</span>';
-        }
-        rl.innerHTML = parts;
-        pbp.appendChild(rl);
-        // Down & distance + ball position on next line
-        const s2 = gs.getSummary();
-        const dn2 = ['','1ST','2ND','3RD','4TH'][s2.down]||'';
-        const dd = document.createElement('div');
-        dd.className = 'T-pbp-down';
-        if (r.isTouchdown) {
-          dd.textContent = 'TOUCHDOWN \u2014 CONVERSION ATTEMPT';
-        } else if (r.isInterception || r.isFumbleLost) {
-          dd.textContent = 'TURNOVER \u2014 BALL ON ' + ballSideLabel();
+          var delay = 800 + Math.floor(Math.random() * 800);
+          setTimeout(function() {
+            thinkLine.textContent = lines[idx];
+            narr.scrollTop = narr.scrollHeight;
+            idx++;
+            setTimeout(showNext, 300);
+          }, delay);
         } else {
-          dd.textContent = dn2 + ' & ' + s2.distance + ' \u2014 BALL ON ' + ballSideLabel();
+          if (cursor.parentNode) cursor.remove();
+          pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { el.classList.remove('T-pbp-live'); });
+          // Result: yards + torch
+          const rl = document.createElement('div');
+          rl.className = 'T-pbp-result';
+          let parts = '<span style="color:' + resColor + '">' + yardLabel + '</span>';
+          if (torchEarned > 0) {
+            parts += '<span style="color:#c8a030;margin-left:10px">\uD83D\uDD25 +' + torchEarned + '</span>';
+          }
+          rl.innerHTML = parts;
+          pbp.appendChild(rl);
+          // Down & distance
+          const s2 = gs.getSummary();
+          const dn2 = ['','1ST','2ND','3RD','4TH'][s2.down]||'';
+          const dd = document.createElement('div');
+          dd.className = 'T-pbp-down';
+          if (r.isTouchdown) {
+            dd.textContent = 'TOUCHDOWN \u2014 CONVERSION ATTEMPT';
+          } else if (r.isInterception || r.isFumbleLost) {
+            dd.textContent = 'TURNOVER \u2014 BALL ON ' + ballSideLabel();
+          } else {
+            dd.textContent = dn2 + ' & ' + s2.distance + ' \u2014 BALL ON ' + ballSideLabel();
+          }
+          pbp.appendChild(dd);
+          // NEXT PLAY button (btn-blitz style)
+          var nextBtn = document.createElement('button');
+          nextBtn.className = 'btn-blitz';
+          nextBtn.style.cssText = 'background:var(--cyan);border-color:var(--cyan);color:#000;font-size:14px;margin-top:10px;box-shadow:6px 6px 0 #006a77, 10px 10px 0 #000;';
+          nextBtn.textContent = 'NEXT PLAY \u2192';
+          nextBtn.onclick = function() {
+            SND.click();
+            var clashEl = strip.querySelector('.T-clash');
+            if (clashEl) clashEl.remove();
+            onDone();
+          };
+          pbp.appendChild(nextBtn);
+          narr.scrollTop = narr.scrollHeight;
         }
-        pbp.appendChild(dd);
-        // "NEXT PLAY" button — user reviews result before continuing
-        var nextBtn = document.createElement('button');
-        nextBtn.className = 'T-next';
-        nextBtn.textContent = 'NEXT PLAY \u2192';
-        nextBtn.onclick = function() {
-          SND.click();
-          var clashEl = strip.querySelector('.T-clash');
-          if (clashEl) clashEl.remove();
-          onDone();
-        };
-        pbp.appendChild(nextBtn);
-        narr.scrollTop = narr.scrollHeight;
       }
+      showNext();
     }
-    showNext();
   }
 
   // ── DRAG HANDLING ──
@@ -797,7 +855,10 @@ export function buildGameplay() {
         sz.appendChild(btns);
       }
 
-      const go = document.createElement('button'); go.className = 'T-go'; go.textContent = 'SNAP';
+      const go = document.createElement('button');
+      go.className = 'btn-blitz';
+      go.style.cssText = 'background:var(--a-gold);border-color:var(--a-gold);color:#000;font-size:16px;animation:T-pulse 1.8s ease-in-out infinite;';
+      go.textContent = 'SNAP';
       go.onclick = () => doSnap();
       sz.appendChild(go);
       panel.appendChild(sz);
