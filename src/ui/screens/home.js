@@ -2,7 +2,8 @@ import { SND } from '../../engine/sound.js';
 import { render, setGs, getOffCards, getDefCards, VERSION, VERSION_NAME } from '../../state.js';
 
 var DEV_LOG = [
-  "v0.17.6 — Removed clash animation, VS centered as flex child, big torch popup, brighter field (yard lines/numbers/logo), proportional scoreboard.",
+  "v0.18.0 \u2014 Gameday Build: CM3-style paced commentary, 5-tier celebration system, overhauled pre-game UI with kinetic progress stepper, vertically scrolling 'Your Squad'/'Your Plays' trophy rooms, and purple-themed gameplay drop zones.",
+  "v0.17.6 \u2014 Removed clash animation, VS centered as flex child, big torch popup, brighter field, proportional scoreboard.",
   "v0.17.0 — Complete Gameplay Rebuild: Tecmo-style field with home endzones, drag-and-drop card selection (play\u2192player\u2192torch\u2192SNAP), broadcast play-by-play commentary with variable pacing, celebrations (TD rain, turnover crack, sack impact), TORCH points fly animation, 4-card clash display, conversion card selection, offense/defense energy shift, 2-minute drill transformation, btn-blitz consistency throughout.",
   "v0.16.0 — Team Selection Overhaul: Full-width team cards with SVG helmets (CT angular cactus, IR bulky trident), coach portraits (Vance/Burris), stadium cutouts (The Furnace/The Forge), star ratings, mottos, signature plays. Removed coach specialty, difficulty descriptions. Clean difficulty row.",
   "v0.14.1 — 8-Bug Fix: Conversion UI after TDs (XP/2pt/3pt), defense hand rendering, endGame data pipeline, snap log team tracking, auto-draft key fix, audible import fix, version sync, Torch Cards count correction.",
@@ -107,7 +108,7 @@ export function buildHome(){
   if(isDev){
     var quickBtn=document.createElement('button');
     quickBtn.style.cssText=
-      'position:fixed;bottom:12px;right:12px;z-index:9999;'+
+      'position:absolute;bottom:12px;right:12px;z-index:9999;'+
       'background:rgba(0,0,0,0.85);border:1px solid var(--cyan);border-radius:20px;'+
       'padding:5px 10px;cursor:pointer;'+
       'font-family:"Courier New",monospace;font-size:9px;color:var(--cyan);'+
@@ -135,15 +136,7 @@ export function buildHome(){
         };
       });
     };
-    document.body.appendChild(quickBtn);
-    // Clean up when home screen is removed from DOM
-    var observer = new MutationObserver(function() {
-      if (!document.body.contains(el)) {
-        quickBtn.remove();
-        observer.disconnect();
-      }
-    });
-    observer.observe(document.getElementById('root'), { childList: true });
+    el.appendChild(quickBtn);
   }
 
   var buildLabel=document.createElement('div');

@@ -64,7 +64,9 @@ const CSS = `
 .T-ez{position:absolute;top:0;bottom:0;width:7%;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .T-ez-l{left:0;border-right:3px solid rgba(255,255,255,.3)}
 .T-ez-r{right:0;border-left:3px solid rgba(255,255,255,.3)}
-.T-ez-text{font-family:'Press Start 2P';font-size:6px;color:rgba(255,255,255,.5);writing-mode:vertical-lr;transform:rotate(180deg);letter-spacing:2px}
+.T-ez-text{font-family:'Press Start 2P';font-size:14px;color:rgba(255,255,255,0.6);writing-mode:vertical-lr;letter-spacing:4px}
+.T-ez-l .T-ez-text{transform:rotate(180deg)}
+.T-ez-r .T-ez-text{transform:rotate(0deg)}
 .T-midfield-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:72px;opacity:.5;z-index:1;filter:saturate(1.5) drop-shadow(0 0 8px rgba(255,255,255,.15))}
 .T-hash{position:absolute;left:7%;right:7%;height:1px;background:rgba(255,255,255,.06)}
 /* placed cards on field — centered vertically */
@@ -73,15 +75,15 @@ const CSS = `
 .T-placed-player{left:35%;width:30%}
 .T-placed-torch{right:3%;width:28%}
 /* empty drop outlines — centered vertically */
-.T-drop{position:absolute;top:50%;transform:translateY(-50%);height:150px;border:2px dashed #554f8044;border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:7;transition:all .2s}
+.T-drop{position:absolute;top:50%;transform:translateY(-50%);height:150px;border:2px dashed rgba(255,255,255,0.2);border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:7;transition:all .3s ease;opacity:0.8;background:rgba(0,0,0,0.2)}
 .T-drop-play{left:3%;width:30%}
 .T-drop-player{left:35%;width:30%}
 .T-drop-torch{right:3%;width:28%}
-.T-drop-lbl{font-family:'Press Start 2P';font-size:6px;color:#554f8055;letter-spacing:.5px}
-.T-drop-hover{border-color:#c8a030;background:rgba(200,160,48,.06)}
-@keyframes T-drop-pulse{0%,100%{border-color:#c8a03066;box-shadow:none}50%{border-color:#c8a030;box-shadow:inset 0 0 12px rgba(200,160,48,.08),0 0 8px rgba(200,160,48,.15)}}
-.T-drop-active{animation:T-drop-pulse 1.5s ease-in-out infinite}
-.T-drop-active .T-drop-lbl{color:#c8a030}
+.T-drop-lbl{font-family:'Press Start 2P';font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-align:center;line-height:1.4}
+.T-drop-hover{border-color:#bb00ff;background:rgba(187,0,255,.15);transform:translateY(-50%) scale(1.02)}
+@keyframes T-drop-pulse{0%,100%{border-color:rgba(187,0,255,0.4);box-shadow:0 0 10px rgba(187,0,255,0.1)}50%{border-color:#bb00ff;box-shadow:inset 0 0 15px rgba(187,0,255,.2),0 0 15px rgba(187,0,255,.4);background:rgba(187,0,255,0.05)}}
+.T-drop-active{animation:T-drop-pulse 1.5s ease-in-out infinite;border-style:solid;opacity:1;z-index:10}
+.T-drop-active .T-drop-lbl{color:#bb00ff;font-size:11px;text-shadow:0 0 8px rgba(187,0,255,0.5)}
 
 /* cards section — hidden during play-by-play */
 .T-panel{display:flex;flex-direction:column;overflow:hidden;transition:background .6s,border-color .6s;flex-shrink:0;border-top:2px solid transparent}
@@ -478,16 +480,20 @@ export function buildGameplay() {
 
     // Drop zones — empty outlines for unfilled, actual card for filled
     // Drop zones — active one pulses to guide the player
+    const playLbl = phase === 'play' ? 'DRAG<br><br>PLAY<br><br>HERE' : 'PLAY';
     if (selPl) {
       h += `<div class="T-placed T-placed-play">${mkPlayCard(selPl)}</div>`;
     } else {
-      h += '<div class="T-drop T-drop-play' + (phase==='play'?' T-drop-active':'') + '" data-drop="play"><span class="T-drop-lbl">PLAY</span></div>';
+      h += '<div class="T-drop T-drop-play' + (phase==='play'?' T-drop-active':'') + '" data-drop="play"><span class="T-drop-lbl">' + playLbl + '</span></div>';
     }
+
+    const playerLbl = phase === 'player' ? 'DRAG<br><br>PLAYER<br><br>HERE' : 'PLAYER';
     if (selP) {
       h += `<div class="T-placed T-placed-player">${mkPlayerCard(selP, hTeam, isOff)}</div>`;
     } else {
-      h += '<div class="T-drop T-drop-player' + (phase==='player'?' T-drop-active':'') + '" data-drop="player"><span class="T-drop-lbl">PLAYER</span></div>';
+      h += '<div class="T-drop T-drop-player' + (phase==='player'?' T-drop-active':'') + '" data-drop="player"><span class="T-drop-lbl">' + playerLbl + '</span></div>';
     }
+
     if (selTorch) {
       var tc = TORCH_CARDS.find(function(c) { return c.id === selTorch; });
       var tName = tc ? tc.name : selTorch;
@@ -495,7 +501,9 @@ export function buildGameplay() {
         "<div style=\"font-family:'Bebas Neue';font-size:13px;color:#c8a030;text-align:center\">" + tName + "</div>" +
         "<div style=\"font-family:'Courier New';font-size:6px;color:#8a86b0;text-align:center\">TORCH</div></div>";
     } else {
-      h += '<div class="T-drop T-drop-torch' + (phase==='torch'?' T-drop-active':'') + '" data-drop="torch"><span class="T-drop-lbl">TORCH</span></div>';
+      const hasTorchCards = gs.humanTorchCards && gs.humanTorchCards.length > 0;
+      const torchLbl = hasTorchCards ? (phase === 'torch' ? 'DRAG<br><br>TORCH<br><br>HERE' : 'TORCH') : 'NO<br><br>TORCH<br><br>CARD';
+      h += '<div class="T-drop T-drop-torch' + (phase==='torch'?' T-drop-active':'') + '" data-drop="torch"><span class="T-drop-lbl">' + torchLbl + '</span></div>';
     }
 
     strip.innerHTML = h;
@@ -642,19 +650,23 @@ export function buildGameplay() {
   }
 
   /** Screen shake */
-  function shakeScreen() {
+  function shakeScreen(frames = 4) {
     el.classList.add('T-shaking');
-    setTimeout(function() { el.classList.remove('T-shaking'); }, 500);
+    el.style.animationDuration = (frames * 0.1) + 's';
+    setTimeout(function() { el.classList.remove('T-shaking'); }, frames * 100);
   }
 
   /** Color flash overlay on the field */
-  function flashField(color) {
+  function flashField(color, duration = 600) {
     var flash = document.createElement('div');
     flash.className = 'T-flash';
     flash.style.background = color;
-    flash.style.animation = (color.indexOf('green') >= 0 || color.indexOf('3df') >= 0) ? 'T-flash-green .6s ease-out forwards' : 'T-flash-red .6s ease-out forwards';
+    flash.style.animation = 'T-flash-red ' + (duration/1000) + 's ease-out forwards';
+    if (color.indexOf('green') >= 0 || color.indexOf('3df') >= 0 || color.indexOf('cyan') >= 0 || color.indexOf('c0e0') >= 0) {
+      flash.style.animation = 'T-flash-green ' + (duration/1000) + 's ease-out forwards';
+    }
     strip.appendChild(flash);
-    setTimeout(function() { flash.remove(); }, 600);
+    setTimeout(function() { flash.remove(); }, duration);
   }
 
   /** Impact burst on the field */
@@ -668,23 +680,23 @@ export function buildGameplay() {
   }
 
   /** Footballs raining from top of screen */
-  function rainFootballs() {
-    for (var i = 0; i < 12; i++) {
+  function rainFootballs(amount = 12) {
+    for (var i = 0; i < amount; i++) {
       var fb = document.createElement('div');
       fb.className = 'T-rain';
       fb.textContent = '\uD83C\uDFC8';
       fb.style.left = (5 + Math.random() * 90) + '%';
       fb.style.top = '-20px';
-      fb.style.animationDelay = (Math.random() * 1.2) + 's';
+      fb.style.animationDelay = (Math.random() * 1.5) + 's';
       fb.style.animationDuration = (1.5 + Math.random() * 1) + 's';
-      fb.style.fontSize = (12 + Math.floor(Math.random() * 10)) + 'px';
+      fb.style.fontSize = (12 + Math.floor(Math.random() * 14)) + 'px';
       el.appendChild(fb);
-      (function(f) { setTimeout(function() { f.remove(); }, 3000); })(fb);
+      (function(f) { setTimeout(function() { f.remove(); }, 3500); })(fb);
     }
   }
 
-  /** Big text slam on field (INTERCEPTED, FUMBLE, etc.) */
-  function slamText(text, color) {
+  /** Big text slam on field */
+  function slamText(text, color, duration = 1200) {
     var crack = document.createElement('div');
     crack.className = 'T-crack';
     crack.innerHTML = '<div class="T-crack-text" style="color:' + color + '">' + text + '</div>';
@@ -693,33 +705,69 @@ export function buildGameplay() {
       crack.style.transition = 'opacity .4s';
       crack.style.opacity = '0';
       setTimeout(function() { crack.remove(); }, 400);
-    }, 1200);
+    }, duration);
   }
 
-  /** Touchdown celebration — green flash + footballs + shake + slam + sound */
-  function celebrateTD() {
-    SND.td();
-    shakeScreen();
-    flashField('rgba(61,245,138,.5)');
-    rainFootballs();
-    setTimeout(function() { slamText('TOUCHDOWN', '#3df58a'); }, 200);
-  }
+  /** 5-Tier Celebration System */
+  function triggerCelebration(tier, r, isDef) {
+    if (tier === 1) return;
+    
+    if (tier === 2) {
+      SND.hit();
+      flashField(isDef ? 'rgba(48,192,224,0.4)' : 'rgba(61,245,138,0.4)', 400);
+      return;
+    }
 
-  /** Turnover celebration — red flash + shake + slam + sound */
-  function celebrateTurnover(text) {
-    SND.turnover();
-    shakeScreen();
-    flashField('rgba(224,48,80,.5)');
-    impactBurst('rgba(224,48,80,.6)');
-    setTimeout(function() { slamText(text, '#e03050'); }, 150);
-  }
+    if (tier === 3) {
+      SND.bigPlay();
+      shakeScreen(4);
+      flashField(isDef ? 'rgba(224,48,80,0.3)' : 'rgba(200,160,48,0.3)', 600);
+      impactBurst(isDef ? 'rgba(224,48,80,0.4)' : 'rgba(200,160,48,0.4)');
+      return;
+    }
 
-  /** Sack celebration — shake + impact + slam + sound */
-  function celebrateSack() {
-    SND.sack();
-    shakeScreen();
-    impactBurst('rgba(255,255,255,.4)');
-    setTimeout(function() { slamText('SACK', '#e03050'); }, 100);
+    if (tier >= 4) {
+      var tDuration = tier === 5 ? 4500 : 3000;
+      
+      if (tier === 5) {
+        var bgFade = document.createElement('div');
+        bgFade.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:90;transition:opacity 0.5s;pointer-events:none;';
+        el.appendChild(bgFade);
+        setTimeout(function() { bgFade.style.opacity = '0'; setTimeout(function() { bgFade.remove(); }, 500); }, tDuration - 1000);
+      }
+
+      if (r.isTouchdown) {
+        SND.td();
+        shakeScreen(6);
+        var tColor = isDef ? '#e03050' : '#3df58a';
+        flashField(tColor + '88', 800);
+        setTimeout(function() { flashField(tColor + '88', 800); }, 400);
+        rainFootballs(tier === 5 ? 24 : 16);
+        slamText('TOUCHDOWN', tColor, tDuration - 400);
+      } else if (r.isInterception) {
+        SND.turnover();
+        shakeScreen(6);
+        flashField('rgba(224,48,80,0.6)', 800);
+        impactBurst('rgba(224,48,80,0.8)');
+        slamText('INTERCEPTED', '#e03050', tDuration - 400);
+      } else if (r.isFumbleLost) {
+        SND.turnover();
+        shakeScreen(5);
+        flashField('rgba(224,96,32,0.6)', 800);
+        slamText('FUMBLE', '#e06020', tDuration - 400);
+      } else if (r.isSack) {
+        SND.sack();
+        shakeScreen(8);
+        flashField('rgba(224,48,80,0.5)', 600);
+        impactBurst('rgba(255,255,255,0.6)');
+        slamText('SACKED', '#e03050', tDuration - 400);
+      } else { 
+        SND.turnover();
+        shakeScreen(6);
+        flashField('rgba(48,192,224,0.6)', 800);
+        slamText('DENIED', '#30c0e0', tDuration - 400);
+      }
+    }
   }
 
   /** AI commentary — 4s timeout, returns lines array or null */
@@ -966,6 +1014,18 @@ export function buildGameplay() {
 
     function renderPBPLines(lines, res, onDone) {
       const r = res.result;
+      const pre = res._preSnap || gs.getSummary();
+      const s2 = gs.getSummary();
+      const isUserDef = (pre.possession !== hAbbr);
+      const isGoAhead = (s2.ctScore > s2.irScore && pre.ctScore <= pre.irScore) || (s2.irScore > s2.ctScore && pre.irScore <= pre.ctScore);
+      const isClutch = pre.twoMinActive || isGoAhead || (s2.ctScore === s2.irScore);
+
+      let tier = 1;
+      if ((r.isTouchdown || r.isInterception || r.isFumbleLost) && isClutch) tier = 5;
+      else if (r.isTouchdown || r.isInterception || r.isFumbleLost || (s2.down === 4 && r.yards < s2.distance) || (r.isSack && s2.down >= 3)) tier = 4;
+      else if (r.yards >= 13 || (r.isSack && r.yards <= -5)) tier = 3;
+      else if (res.gotFirstDown || (r.yards >= 7 && r.yards <= 12)) tier = 2;
+
       const resColor = r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
       const yardLabel = r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE LOST' : r.isIncomplete?'INCOMPLETE' : (r.yards>=0?'+':'')+r.yards+' YDS';
       // TORCH points for the USER's team only
@@ -1007,35 +1067,43 @@ export function buildGameplay() {
       function showNext() {
         if (idx < lines.length) {
           if (cursor.parentNode) cursor.remove();
-          pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { el.classList.remove('T-pbp-live'); });
+          pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { 
+            el.classList.remove('T-pbp-live');
+            el.style.opacity = '0.4';
+          });
           const thinkLine = document.createElement('div');
           thinkLine.className = 'T-pbp-line T-pbp-live';
-          thinkLine.textContent = '';
+          thinkLine.textContent = lines[idx];
+          thinkLine.style.opacity = '1';
+          thinkLine.style.color = '#e8e6ff';
+          
+          if (idx >= 2 && idx < lines.length - 1) {
+            if (r.isSack || r.isInterception || r.isFumbleLost) thinkLine.style.color = '#F03030';
+            else if (r.yards >= 8 || r.isTouchdown) thinkLine.style.color = '#F5B800';
+          }
+          if (idx === lines.length - 1 && lines.length > 3) {
+            if (r.isTouchdown || r.isInterception || r.isFumbleLost) thinkLine.style.color = r.isTouchdown ? '#00E5C0' : '#F03030';
+          }
+          
           thinkLine.appendChild(cursor);
           pbp.appendChild(thinkLine);
           narr.scrollTop = narr.scrollHeight;
-          // Vary timing: setup lines slow, action fast, climax dramatic pause
-          var pct = idx / lines.length; // 0 = first line, 1 = last
-          var delay;
-          if (pct < 0.3) delay = 900 + Math.floor(Math.random() * 600); // setup: measured
-          else if (pct < 0.7) delay = 400 + Math.floor(Math.random() * 400); // action: fast
-          else delay = 1000 + Math.floor(Math.random() * 800); // climax/analysis: dramatic
-          setTimeout(function() {
-            thinkLine.textContent = lines[idx];
-            narr.scrollTop = narr.scrollHeight;
-            idx++;
-            var gap = pct < 0.7 ? 200 : 400; // faster between action lines
-            setTimeout(showNext, gap);
-          }, delay);
+          
+          var delay = 700;
+          if (idx === lines.length - 1) delay = 2500;
+          else if (idx >= 2 && idx < lines.length - 2) delay = 1100;
+          else if (idx === lines.length - 2) delay = 1800;
+
+          idx++;
+          setTimeout(showNext, delay);
         } else {
           if (cursor.parentNode) cursor.remove();
-          pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { el.classList.remove('T-pbp-live'); });
-          // Fire celebrations at the climax
-          if (r.isTouchdown) celebrateTD();
-          else if (r.isInterception) celebrateTurnover('INTERCEPTED');
-          else if (r.isFumbleLost) celebrateTurnover('FUMBLE');
-          else if (r.isSack) celebrateSack();
-          else if (r.yards >= 15) { SND.bigPlay(); shakeScreen(); flashField('rgba(61,245,138,.3)'); }
+          pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { 
+            el.classList.remove('T-pbp-live');
+            el.style.opacity = '0.4';
+          });
+          
+          triggerCelebration(tier, r, isUserDef);
           // Result: yards + torch (torch flies to scoreboard)
           const rl = document.createElement('div');
           rl.className = 'T-pbp-result';

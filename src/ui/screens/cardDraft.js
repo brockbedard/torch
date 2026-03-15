@@ -225,57 +225,72 @@ function buildPlayCard(card, isSel, staggerIdx) {
   return cel;
 }
 
-/* Play review screen — all 10 play cards fly in, fills screen */
+/* Play review screen — vertically scrolling "YOUR PLAYS" style */
 function showPlayReview(team, offHand, defHand, onContinue) {
   var root = document.getElementById('root');
   var ov = document.createElement('div');
   ov.style.cssText =
     'position:absolute;inset:0;z-index:100;background:var(--bg);' +
-    'display:flex;flex-direction:column;padding:12px 14px;overflow:hidden;';
+    'display:flex;flex-direction:column;padding:0;overflow:hidden;';
 
   var sty = document.createElement('style');
-  sty.textContent = '@keyframes playFlyIn{from{opacity:0;transform:translateY(30px) scale(.85)}to{opacity:1;transform:none}}';
+  sty.textContent = '@keyframes playFlyIn{from{opacity:0;transform:translateY(40px) scale(.8)}to{opacity:1;transform:none}}';
   ov.appendChild(sty);
 
-  // Header
+  // Stepper at top
+  ov.appendChild(buildDraftProgress(3));
+
+  // Header (Fixed)
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'flex-shrink:0;text-align:center;margin-bottom:8px;';
-  hdr.innerHTML =
-    "<div style=\"font-family:'Bebas Neue';font-size:30px;color:var(--a-gold);letter-spacing:3px\">YOUR PLAYBOOK</div>" +
-    "<div style=\"font-family:'Courier New';font-size:8px;color:var(--muted)\">" + team.name + " \u2014 8 PLAYS</div>";
+  hdr.style.cssText = 'flex-shrink:0;text-align:center;padding:12px 14px 8px;background:rgba(0,0,0,0.5);border-bottom:2px solid var(--a-gold);';
+  var playsHdr = document.createElement('div');
+  playsHdr.className = 'chrome-header';
+  playsHdr.style.cssText = 'font-size:28px;margin-bottom:0;';
+  playsHdr.textContent = 'YOUR PLAYS';
+  hdr.appendChild(playsHdr);
   ov.appendChild(hdr);
 
-  function miniCard(play, idx) {
-    var cat = catLabel(play);
-    var catColor = CAT_COLORS[cat] || '#aaa';
-    return '<div style="background:var(--bg-surface);border:2px solid #00ff8844;border-radius:6px;padding:10px 12px;' +
-      'display:flex;align-items:center;justify-content:space-between;flex:1;min-height:0;' +
-      'animation:playFlyIn 0.35s ease-out ' + (idx * 0.05) + 's both">' +
-      "<span style=\"font-family:'Bebas Neue';font-size:18px;color:#fff;letter-spacing:1px\">" + play.name + "</span>" +
-      "<span style=\"font-family:'Courier New';font-size:7px;font-weight:bold;color:" + catColor + ";border:1px solid " + catColor + "44;padding:2px 6px;border-radius:8px;letter-spacing:.5px\">" + cat + "</span>" +
-    '</div>';
+  // Scrollable container
+  var scroll = document.createElement('div');
+  scroll.style.cssText = 'flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:12px;';
+
+  function buildSection(label, plays, offset) {
+    var lbl = document.createElement('div');
+    lbl.style.cssText = "font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;margin:8px 0 4px;";
+    lbl.textContent = label;
+    scroll.appendChild(lbl);
+
+    var grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;';
+    plays.forEach(function(p, i) {
+      var card = buildPlayCard(p, true, i + offset);
+      card.style.animation = 'playFlyIn 0.4s ease-out ' + ((i + offset) * 0.08) + 's both';
+      card.style.cursor = 'default';
+      grid.appendChild(card);
+    });
+    scroll.appendChild(grid);
   }
 
-  // Offense label + grid
-  ov.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Press Start 2P';font-size:7px;color:#00ff88;letter-spacing:1px;margin-bottom:4px;flex-shrink:0\">OFFENSE</div>");
-  var offGrid = document.createElement('div');
-  offGrid.style.cssText = 'display:flex;flex-direction:column;gap:4px;flex:1;min-height:0;margin-bottom:6px;';
-  offHand.forEach(function(p, i) { offGrid.insertAdjacentHTML('beforeend', miniCard(p, i)); });
-  ov.appendChild(offGrid);
+  buildSection('OFFENSE', offHand, 0);
+  buildSection('DEFENSE', defHand, 4);
+  
+  // Bottom padding for scroll
+  var pad = document.createElement('div');
+  pad.style.height = '20px';
+  scroll.appendChild(pad);
+  
+  ov.appendChild(scroll);
 
-  // Defense label + grid
-  ov.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Press Start 2P';font-size:7px;color:#00ff88;letter-spacing:1px;margin-bottom:4px;flex-shrink:0\">DEFENSE</div>");
-  var defGrid = document.createElement('div');
-  defGrid.style.cssText = 'display:flex;flex-direction:column;gap:4px;flex:1;min-height:0;margin-bottom:8px;';
-  defHand.forEach(function(p, i) { defGrid.insertAdjacentHTML('beforeend', miniCard(p, i + 5)); });
-  ov.appendChild(defGrid);
-
+  // Continue Button (Fixed at bottom)
+  var btnBox = document.createElement('div');
+  btnBox.style.cssText = 'padding:12px 14px;background:rgba(0,0,0,0.8);border-top:1px solid #333;';
   var btn = document.createElement('button');
   btn.className = 'btn-blitz';
-  btn.style.cssText = 'background:var(--a-gold);border-color:var(--a-gold);color:#000;font-size:14px;flex-shrink:0;';
+  btn.style.cssText = 'background:var(--a-gold);border-color:var(--f-purple);color:#000;box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;font-size:16px;width:100%;';
   btn.textContent = 'CONTINUE \u2192';
   btn.onclick = function() { SND.snap(); ov.remove(); onContinue(); };
-  ov.appendChild(btn);
+  btnBox.appendChild(btn);
+  ov.appendChild(btnBox);
 
   root.appendChild(ov);
 }
@@ -317,20 +332,20 @@ export function buildCardDraft() {
     'font-style:italic;transform:skewX(-10deg);';
   var brandName = document.createElement('span');
   brandName.style.cssText =
-    'font-family:"Bebas Neue",sans-serif;font-size:24px;color:' + team.accent + ';' +
+    'font-family:"Bebas Neue",sans-serif;font-size:32px;color:' + team.accent + ';' +
     'letter-spacing:2px;text-shadow:2px 2px 0 #000, 0 0 10px ' + team.accent + ';';
-  brandName.textContent = team.icon + ' ' + team.name;
+  brandName.textContent = 'TORCH';
   var brandScheme = document.createElement('span');
   brandScheme.style.cssText =
-    'font-family:"Bebas Neue",sans-serif;font-size:16px;color:var(--muted);' +
+    'font-family:"Bebas Neue",sans-serif;font-size:22px;color:var(--white);' +
     'letter-spacing:1px;margin-left:6px;';
-  brandScheme.textContent = '\u00b7 ' + schemeName;
+  brandScheme.textContent = '- PLAY NOW';
   teamBrand.append(brandName, brandScheme);
   hdr.appendChild(teamBrand);
 
   var backBtn = document.createElement('button');
   backBtn.style.cssText =
-    'font-family:\'Press Start 2P\',monospace;font-size:8px;padding:10px 16px;' +
+    'font-family:\'Press Start 2P\',monospace;font-size:10px;padding:10px 16px;' +
     'cursor:pointer;background:#000;color:var(--white);border:2px solid #333;';
   backBtn.textContent = '\u2190 BACK';
   backBtn.onclick = function() {
@@ -358,16 +373,18 @@ export function buildCardDraft() {
   var content = document.createElement('div');
   content.style.cssText = 'flex:1;display:flex;flex-direction:column;padding:10px 14px;overflow:hidden;';
 
+  var selected = {};
+
   // Title row with auto-pick inline (same as draft.js)
   var titleRow = document.createElement('div');
   titleRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-shrink:0;margin-bottom:6px;';
   var title = document.createElement('div');
   title.className = 'chrome-header';
   title.style.cssText = 'font-size:22px;margin-bottom:0;';
-  title.textContent = isOff ? 'PICK OFFENSE PLAYS' : 'PICK DEFENSE PLAYS';
+  title.textContent = isOff ? 'PICK OFFENSIVE PLAYS' : 'PICK DEFENSIVE PLAYS';
   var autoBtn = document.createElement('button');
   autoBtn.style.cssText = "font-family:'Press Start 2P';font-size:6px;color:var(--cyan);background:none;border:1px solid var(--cyan);padding:5px 8px;cursor:pointer;border-radius:12px;opacity:.7;";
-  autoBtn.textContent = '\u26A1 AUTO';
+  autoBtn.textContent = '\u26A1 AUTO-SELECT';
   autoBtn.onclick = function() {
     SND.click();
     selected = {};
@@ -378,17 +395,22 @@ export function buildCardDraft() {
     });
     refreshCards();
     refreshGoBtn();
+    refreshDots();
   };
   titleRow.append(title, autoBtn);
   content.appendChild(titleRow);
 
-  var selected = {};
-
-  // Section label (matches draft.js style)
-  var sectionLabel = document.createElement('div');
-  sectionLabel.style.cssText = "font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:4px;";
-  sectionLabel.textContent = 'PLAYS \u2014 PICK 4';
-  content.appendChild(sectionLabel);
+  // Dots system
+  var dotRow = document.createElement('div');
+  dotRow.style.cssText = "display:flex;align-items:center;font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:8px;";
+  function refreshDots() {
+    var count = Object.keys(selected).length;
+    var dots = '';
+    for (var i=0; i<4; i++) dots += (i < count ? '●' : '○');
+    dotRow.innerHTML = 'PICK 4 PLAYS <span style="font-size:18px;margin-left:8px;letter-spacing:4px;line-height:0;display:inline-flex;align-items:center;height:10px;vertical-align:middle;transform:translateY(-4px)">' + dots + '</span>';
+  }
+  refreshDots();
+  content.appendChild(dotRow);
 
   // Card grid — 2x5, fills remaining space
   var cardGrid = document.createElement('div');
@@ -397,7 +419,6 @@ export function buildCardDraft() {
   function refreshCards() {
     cardGrid.innerHTML = '';
     var count = Object.keys(selected).length;
-    sectionLabel.textContent = 'PLAYS \u2014 ' + count + ' OF 4 SELECTED';
 
     pool.forEach(function(card, idx) {
       var key = card.id + '_' + idx;
@@ -416,6 +437,7 @@ export function buildCardDraft() {
         }
         refreshCards();
         refreshGoBtn();
+        refreshDots();
       };
 
       cardGrid.appendChild(playCard);
@@ -432,8 +454,8 @@ export function buildCardDraft() {
     goBtn.style.cssText =
       'width:100%;font-size:14px;margin-top:4px;flex-shrink:0;' +
       (ready
-        ? 'background:#ffcc00;border-color:#ffcc00;color:#000;box-shadow:6px 6px 0 #997a00, 0 0 30px rgba(255,204,0,0.4);'
-        : 'opacity:0.35;');
+        ? 'background:var(--a-gold);border-color:var(--f-purple);color:#000;box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;'
+        : 'background:#555;border-color:var(--f-purple);color:var(--f-purple);box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;opacity:0.8;');
     goBtn.disabled = !ready;
     goBtn.textContent = ready ? 'LOCK IN PLAYS \u2192' : 'CHOOSE YOUR PLAYS';
     goBtn.onclick = ready ? function() {

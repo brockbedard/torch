@@ -2,6 +2,33 @@
 
 ---
 
+## v0.18.0 "Gameday Build" — March 15, 2026
+
+**Production URL:** https://torch-two.vercel.app
+
+### What's New
+- **CM3-Inspired Play-by-Play Pacing** — Lines appear one at a time with variable timing (Setup: 0.7s, Action: 1.1s, Climax: 2.5s). Current line highlighted, previous lines dimmed to 0.4 opacity.
+- **5-Tier Celebration System** — Scaling effects from Routine (Tier 1) to Clutch Game-Winner (Tier 5). Includes screen shake, impact bursts, full-screen takeovers, slow-mo fade, and massive football rain.
+- **Kinetic Progress Stepper** — Overhauled 1-2-3-4 stepper with breathing pulse animations on active steps, glowing checkmarks for completion, and moving "flow" animations on connector lines.
+- **Trophy Room Reviews** — Redesigned "YOUR SQUAD" and "YOUR PLAYS" screens using full-sized cards in a vertically scrolling grid.
+- **Enhanced Selection Tracking** — Green dot progress system (●/○) for Roster and Play selection, perfectly aligned with text labels.
+
+### What Changed
+- **Unified Drafting UI** — Updated all draft headers to larger 32px "TORCH - PLAY NOW" branding.
+- **Improved Navigation** — Upscaled back arrows (10px) across all screens for better mobile accessibility.
+- **Purple Gameplay Highlights** — Card drop highlights and pulses shifted to Purple (#bb00ff) for maximum field contrast.
+- **Endzone Refinement** — Upscaled endzone text (14px) and fixed orientation so both sides read logically.
+- **Terminology Updates** — "AUTO" renamed to "AUTO-SELECT," "OFFENSE" to "OFFENSIVE PLAYS," and "PLAYERS" to "ROSTER."
+- **Difficulty Reversion** — Reverted difficulty buttons to stoplight color theme (Green/Yellow/Red) while maintaining unified button physics.
+
+### Bug Fixes
+- Fixed SSL "bad record mac" network errors by forcing System CA.
+- Resolved blank screen error during transition from player draft to play draft.
+- Fixed vertical alignment of progress dots.
+- Removed redundant pre-draft tutorial modals.
+
+---
+
 ## v0.17.6 "Torch Popup + Field Polish" — March 15, 2026
 
 **Production URL:** https://torch-two.vercel.app

@@ -4,8 +4,8 @@ import { IR_DEF_PLAYS } from './data/irDefensePlays.js';
 import { CT_OFF_PLAYS } from './data/ctOffensePlays.js';
 import { CT_DEF_PLAYS } from './data/ctDefensePlays.js';
 
-export var VERSION = '0.17.6';
-export var VERSION_NAME = 'Torch Popup + Field Polish';
+export var VERSION = '0.18.0';
+export var VERSION_NAME = 'Gameday Build';
 
 export var GS = null;
 

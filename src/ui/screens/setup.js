@@ -98,8 +98,7 @@ function starStr(n) { var s=''; for(var i=0;i<5;i++) s += i<n?'\u2605':'\u2606';
    ═══════════════════════════════════════════ */
 export function buildSetup() {
   var selTeam = GS.team;
-  if (!GS.difficulty) GS.difficulty = 'MEDIUM';
-  var selDiff = GS.difficulty;
+  var selDiff = GS.difficulty || null;
 
   var el = document.createElement('div');
   el.className = 'sup';
@@ -119,20 +118,20 @@ export function buildSetup() {
     'display:flex;align-items:baseline;gap:0;font-style:italic;transform:skewX(-10deg);';
   var hdrName = document.createElement('span');
   hdrName.style.cssText =
-    "font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--a-gold);" +
+    "font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--a-gold);" +
     "letter-spacing:2px;text-shadow:2px 2px 0 #000, 0 0 10px var(--a-gold);";
   hdrName.textContent = 'TORCH';
   var hdrSub = document.createElement('span');
   hdrSub.style.cssText =
-    "font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--muted);" +
+    "font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);" +
     "letter-spacing:1px;margin-left:6px;";
-  hdrSub.textContent = '\u00b7 TEAM SELECT';
+  hdrSub.textContent = '\u00b7 PLAY NOW';
   hdrTitle.append(hdrName, hdrSub);
   hdr.appendChild(hdrTitle);
 
   var backBtn = document.createElement('button');
   backBtn.style.cssText =
-    "font-family:'Press Start 2P',monospace;font-size:8px;padding:10px 16px;" +
+    "font-family:'Press Start 2P',monospace;font-size:10px;padding:10px 16px;" +
     "cursor:pointer;background:#000;color:var(--white);border:2px solid #333;";
   backBtn.textContent = '\u2190 BACK';
   backBtn.onclick = function() { SND.click(); setGs(null); };
@@ -144,37 +143,44 @@ export function buildSetup() {
   content.style.cssText =
     'flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px;';
 
-  // Section header
-  var teamTitle = document.createElement('div');
-  teamTitle.className = 'chrome-header';
-  teamTitle.style.cssText = 'font-size:22px;margin-bottom:4px;';
-  teamTitle.textContent = 'SELECT YOUR TEAM';
-  content.appendChild(teamTitle);
+  // Difficulty Row
+  var diffLabel = document.createElement('div');
+  diffLabel.className = 'chrome-header';
+  diffLabel.style.cssText = 'font-size:22px;margin-bottom:4px;';
+  diffLabel.textContent = 'CHOOSE YOUR DIFFICULTY';
+  content.appendChild(diffLabel);
 
-  // Difficulty row (compact)
   var diffRow = document.createElement('div');
-  diffRow.style.cssText = 'display:flex;gap:8px;margin-bottom:6px;';
-  var diffs = [
-    { id:'EASY', color:'var(--l-green)', glow:'rgba(0,255,68,0.4)' },
-    { id:'MEDIUM', color:'var(--a-gold)', glow:'rgba(255,204,0,0.4)' },
-    { id:'HARD', color:'var(--p-red)', glow:'rgba(255,0,64,0.4)' },
-  ];
+  diffRow.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;flex-shrink:0;';
   function refreshDiffs() {
     diffRow.innerHTML = '';
+    var diffs = [
+      { id: 'EASY', color: '#00ff88', glow: 'rgba(0,255,136,0.4)' },
+      { id: 'MEDIUM', color: '#ffcc00', glow: 'rgba(255,204,0,0.4)' },
+      { id: 'HARD', color: '#ff0040', glow: 'rgba(255,0,64,0.4)' }
+    ];
     diffs.forEach(function(d) {
       var isSel = selDiff === d.id;
       var opt = document.createElement('button');
       opt.className = 'btn-blitz';
       opt.style.cssText = 'flex:1;font-size:10px;text-align:center;padding:10px 2px;' +
         (isSel
-          ? 'background:'+d.color+';color:#000;border-color:'+d.color+';box-shadow:0 0 15px '+d.glow+';'
-          : 'background:transparent;border-color:'+d.color+';color:'+d.color+';opacity:0.5;');
+          ? 'background:'+d.color+';color:#000;border-color:var(--f-purple);box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;'
+          : 'background:#555;border-color:var(--f-purple);color:var(--f-purple);box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;opacity:0.8;');
       opt.textContent = d.id;
       opt.onclick = function() { SND.select(); selDiff=d.id; GS.difficulty=d.id; refreshDiffs(); refreshGo(); };
       diffRow.appendChild(opt);
     });
   }
+  refreshDiffs();
   content.appendChild(diffRow);
+
+  // Section header
+  var teamTitle = document.createElement('div');
+  teamTitle.className = 'chrome-header';
+  teamTitle.style.cssText = 'font-size:22px;margin-bottom:4px;';
+  teamTitle.textContent = 'SELECT YOUR TEAM';
+  content.appendChild(teamTitle);
 
   // Team cards (stacked, each fills ~half remaining space)
   var teamGrid = document.createElement('div');
@@ -272,8 +278,8 @@ export function buildSetup() {
     goBtn.className = 'btn-blitz';
     goBtn.disabled = !ready;
     goBtn.style.cssText = 'margin-top:6px;' + (ready
-      ? 'background:var(--a-gold);border-color:var(--a-gold);color:#000;box-shadow:0 0 30px rgba(255,204,0,0.6);font-size:16px;'
-      : 'opacity:0.3;');
+      ? 'background:var(--a-gold);border-color:var(--f-purple);color:#000;box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;font-size:16px;'
+      : 'background:#555;border-color:var(--f-purple);color:var(--f-purple);box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;font-size:16px;opacity:0.8;');
     goBtn.textContent = ready ? 'START DRAFT \u2192' : 'SELECT A TEAM';
     goBtn.onclick = ready ? function() {
       SND.snap();

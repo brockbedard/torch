@@ -88,7 +88,7 @@ function showDraftModal(isDef, onDismiss) {
 
   var btn = document.createElement('button');
   btn.className = 'btn-blitz';
-  btn.style.cssText = 'background:var(--a-gold);border-color:var(--a-gold);color:#000;font-size:12px;';
+  btn.style.cssText = 'background:var(--a-gold);border-color:var(--f-purple);color:#000;box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;font-size:12px;';
   btn.textContent = 'GOT IT';
   btn.onclick = function() { SND.click(); ov.remove(); if (onDismiss) onDismiss(); };
   box.appendChild(btn);
@@ -97,56 +97,73 @@ function showDraftModal(isDef, onDismiss) {
   root.appendChild(ov);
 }
 
-/* Roster review screen — all 8 cards fly in, fills screen */
+/* Roster review screen — all 8 cards fly in, vertically scrolling trophy room style */
 function showRosterReview(team, offRoster, defRoster, onContinue) {
   var root = document.getElementById('root');
   var ov = document.createElement('div');
   ov.style.cssText =
     'position:absolute;inset:0;z-index:100;background:var(--bg);' +
-    'display:flex;flex-direction:column;padding:12px 14px;overflow:hidden;';
+    'display:flex;flex-direction:column;padding:0;overflow:hidden;';
 
   var sty = document.createElement('style');
   sty.textContent = '@keyframes draftFlyIn{from{opacity:0;transform:translateY(40px) scale(.8)}to{opacity:1;transform:none}}';
   ov.appendChild(sty);
 
-  // Header
+  // Stepper at top
+  ov.appendChild(buildDraftProgress(2));
+
+  // Header (Fixed)
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'flex-shrink:0;text-align:center;margin-bottom:8px;';
-  hdr.innerHTML =
-    "<div style=\"font-family:'Bebas Neue';font-size:30px;color:var(--a-gold);letter-spacing:3px\">YOUR ROSTER</div>" +
-    "<div style=\"font-family:'Courier New';font-size:8px;color:var(--muted)\">" + team.name + " \u2014 8 PLAYERS</div>";
+  hdr.style.cssText = 'flex-shrink:0;text-align:center;padding:12px 14px 8px;background:rgba(0,0,0,0.5);border-bottom:2px solid var(--a-gold);';
+  var squadHdr = document.createElement('div');
+  squadHdr.className = 'chrome-header';
+  squadHdr.style.cssText = 'font-size:28px;margin-bottom:0;';
+  squadHdr.textContent = 'YOUR SQUAD';
+  hdr.appendChild(squadHdr);
   ov.appendChild(hdr);
 
-  // Offense label + grid
-  ov.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Press Start 2P';font-size:7px;color:#00ff88;letter-spacing:1px;margin-bottom:4px;flex-shrink:0\">OFFENSE</div>");
-  var offGrid = document.createElement('div');
-  offGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;flex:1;min-height:0;margin-bottom:6px;';
-  offRoster.forEach(function(p, i) {
-    var card = buildPlayerCard(p, team, 'offense', true, true);
-    card.style.animation = 'draftFlyIn 0.4s ease-out ' + (i * 0.08) + 's both';
-    card.style.cursor = 'default';
-    offGrid.appendChild(card);
-  });
-  ov.appendChild(offGrid);
+  // Scrollable container
+  var scroll = document.createElement('div');
+  scroll.style.cssText = 'flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:12px;';
 
-  // Defense label + grid
-  ov.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Press Start 2P';font-size:7px;color:#00ff88;letter-spacing:1px;margin-bottom:4px;flex-shrink:0\">DEFENSE</div>");
-  var defGrid = document.createElement('div');
-  defGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;flex:1;min-height:0;margin-bottom:8px;';
-  defRoster.forEach(function(p, i) {
-    var card = buildPlayerCard(p, team, 'defense', true, true);
-    card.style.animation = 'draftFlyIn 0.4s ease-out ' + ((i + 4) * 0.08) + 's both';
-    card.style.cursor = 'default';
-    defGrid.appendChild(card);
-  });
-  ov.appendChild(defGrid);
+  function buildSection(label, players, side, offset) {
+    var lbl = document.createElement('div');
+    lbl.style.cssText = "font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;margin:8px 0 4px;";
+    lbl.textContent = label;
+    scroll.appendChild(lbl);
 
+    var grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;';
+    players.forEach(function(p, i) {
+      var card = buildPlayerCard(p, team, side, true, false);
+      card.style.height = '160px'; // Slightly smaller to fit mobile without too much scroll
+      card.style.animation = 'draftFlyIn 0.4s ease-out ' + ((i + offset) * 0.08) + 's both';
+      card.style.cursor = 'default';
+      grid.appendChild(card);
+    });
+    scroll.appendChild(grid);
+  }
+
+  buildSection('OFFENSE', offRoster, 'offense', 0);
+  buildSection('DEFENSE', defRoster, 'defense', 4);
+  
+  // Bottom padding for scroll
+  var pad = document.createElement('div');
+  pad.style.height = '20px';
+  scroll.appendChild(pad);
+  
+  ov.appendChild(scroll);
+
+  // Continue Button (Fixed at bottom)
+  var btnBox = document.createElement('div');
+  btnBox.style.cssText = 'padding:12px 14px;background:rgba(0,0,0,0.8);border-top:1px solid #333;';
   var btn = document.createElement('button');
   btn.className = 'btn-blitz';
-  btn.style.cssText = 'background:var(--a-gold);border-color:var(--a-gold);color:#000;font-size:14px;flex-shrink:0;';
+  btn.style.cssText = 'background:var(--a-gold);border-color:var(--f-purple);color:#000;box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;font-size:16px;width:100%;';
   btn.textContent = 'CONTINUE \u2192';
   btn.onclick = function() { SND.snap(); ov.remove(); onContinue(); };
-  ov.appendChild(btn);
+  btnBox.appendChild(btn);
+  ov.appendChild(btnBox);
 
   root.appendChild(ov);
 }
@@ -174,15 +191,15 @@ export function buildDraft() {
     'background:rgba(0,0,0,0.5);padding:8px 14px;display:flex;justify-content:space-between;' +
     'align-items:center;flex-shrink:0;border-bottom:3px solid ' + team.accent + ';';
   var schemeName = isDef ? team.defStyle : team.style;
-  var teamBrand = document.createElement('div');
-  teamBrand.style.cssText = 'display:flex;align-items:baseline;font-style:italic;transform:skewX(-10deg);';
-  teamBrand.innerHTML =
-    "<span style=\"font-family:'Bebas Neue';font-size:24px;color:" + team.accent + ";letter-spacing:2px;text-shadow:2px 2px 0 #000, 0 0 10px " + team.accent + "\">" + team.name + "</span>" +
-    "<span style=\"font-family:'Bebas Neue';font-size:16px;color:var(--muted);letter-spacing:1px;margin-left:6px\">\u00b7 " + schemeName + "</span>";
-  hdr.appendChild(teamBrand);
+  var hdrTitle = document.createElement('div');
+  hdrTitle.style.cssText = 'display:flex;align-items:baseline;font-style:italic;transform:skewX(-10deg);';
+  hdrTitle.innerHTML =
+    "<span style=\"font-family:'Bebas Neue';font-size:32px;color:" + team.accent + ";letter-spacing:2px;text-shadow:2px 2px 0 #000, 0 0 10px " + team.accent + "\">TORCH</span>" +
+    "<span style=\"font-family:'Bebas Neue';font-size:22px;color:var(--white);letter-spacing:1px;margin-left:6px\">\u00b7 PLAY NOW</span>";
+  hdr.appendChild(hdrTitle);
 
   var backBtn = document.createElement('button');
-  backBtn.style.cssText = "font-family:'Press Start 2P';font-size:8px;padding:10px 16px;cursor:pointer;background:#000;color:var(--white);border:2px solid #333;";
+  backBtn.style.cssText = "font-family:'Press Start 2P';font-size:10px;padding:10px 16px;cursor:pointer;background:#000;color:var(--white);border:2px solid #333;";
   backBtn.textContent = '\u2190 BACK';
   backBtn.onclick = function() {
     SND.click();
@@ -210,7 +227,7 @@ export function buildDraft() {
   title.textContent = isDef ? 'PICK DEFENSE' : 'PICK OFFENSE';
   var autoBtn = document.createElement('button');
   autoBtn.style.cssText = "font-family:'Press Start 2P';font-size:6px;color:var(--cyan);background:none;border:1px solid var(--cyan);padding:5px 8px;cursor:pointer;border-radius:12px;opacity:.7;";
-  autoBtn.textContent = '\u26A1 AUTO';
+  autoBtn.textContent = '\u26A1 AUTO-SELECT';
   titleRow.append(title, autoBtn);
   content.appendChild(titleRow);
 
@@ -220,8 +237,12 @@ export function buildDraft() {
 
   // Primary label
   var primaryLabel = document.createElement('div');
-  primaryLabel.style.cssText = "font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:4px;";
-  primaryLabel.textContent = (isDef ? 'LINEBACKERS' : 'QUARTERBACK') + ' \u2014 PICK 1';
+  primaryLabel.style.cssText = "display:flex;align-items:center;font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:4px;";
+  function refreshPrimaryLabel() {
+    var dot = selPrimary ? '●' : '○';
+    primaryLabel.innerHTML = (isDef ? 'LINEBACKER' : 'QUARTERBACK') + ' \u2014 PICK 1 <span style="font-size:18px;margin-left:8px;line-height:0;display:inline-flex;align-items:center;height:10px;vertical-align:middle;transform:translateY(-4px)">' + dot + '</span>';
+  }
+  refreshPrimaryLabel();
   content.appendChild(primaryLabel);
 
   // Primary grid — takes ~30% of remaining space
@@ -231,8 +252,14 @@ export function buildDraft() {
 
   // Skill label
   var skillLabel = document.createElement('div');
-  skillLabel.style.cssText = "font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:4px;";
-  skillLabel.textContent = (isDef ? 'DEFENSIVE BACKS' : 'SKILL PLAYERS') + ' \u2014 PICK 3';
+  skillLabel.style.cssText = "display:flex;align-items:center;font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:4px;";
+  function refreshSkillLabel() {
+    var count = Object.keys(selSkill).length;
+    var dots = '';
+    for (var i=0; i<3; i++) dots += (i < count ? '●' : '○');
+    skillLabel.innerHTML = (isDef ? 'DEFENSIVE BACKS' : 'SKILL PLAYERS') + ' \u2014 PICK 3 <span style="font-size:18px;margin-left:8px;letter-spacing:4px;line-height:0;display:inline-flex;align-items:center;height:10px;vertical-align:middle;transform:translateY(-4px)">' + dots + '</span>';
+  }
+  refreshSkillLabel();
   content.appendChild(skillLabel);
 
   // Skill grid — takes ~60% of remaining space, rows stretch to fill
@@ -249,7 +276,7 @@ export function buildDraft() {
       card.onclick = function() {
         SND.select();
         selPrimary = (selPrimary === pl.id) ? null : pl.id;
-        refreshPrimary(); refreshSkills(); refreshGoBtn();
+        refreshPrimary(); refreshSkills(); refreshGoBtn(); refreshPrimaryLabel();
       };
       primaryGrid.appendChild(card);
     });
@@ -266,7 +293,7 @@ export function buildDraft() {
         SND.select();
         if (selSkill[pl.id]) { delete selSkill[pl.id]; }
         else if (Object.keys(selSkill).length < 3) { selSkill[pl.id] = true; }
-        refreshSkills(); refreshGoBtn();
+        refreshSkills(); refreshGoBtn(); refreshSkillLabel();
       };
       skillGrid.appendChild(card);
     });
@@ -278,7 +305,7 @@ export function buildDraft() {
     var topSkills = skillPlayers.slice().sort(function(a,b) { return b.ovr - a.ovr; }).slice(0, 3);
     selSkill = {};
     topSkills.forEach(function(s) { selSkill[s.id] = true; });
-    refreshPrimary(); refreshSkills(); refreshGoBtn();
+    refreshPrimary(); refreshSkills(); refreshGoBtn(); refreshPrimaryLabel(); refreshSkillLabel();
   };
 
   // Go button — directly below cards
@@ -290,8 +317,8 @@ export function buildDraft() {
     goBtn.disabled = !ready;
     goBtn.style.cssText += 'width:100%;font-size:14px;' +
       (ready
-        ? 'background:#ffcc00;border-color:#ffcc00;color:#000;box-shadow:6px 6px 0 #997a00, 0 0 30px rgba(255,204,0,0.4);'
-        : 'opacity:0.35;');
+        ? 'background:var(--a-gold);border-color:var(--f-purple);color:#000;box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;'
+        : 'background:#555;border-color:var(--f-purple);color:var(--f-purple);box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;opacity:0.8;');
 
     if (!ready) {
       goBtn.textContent = 'CHOOSE YOUR PLAYERS';
@@ -334,19 +361,9 @@ export function buildDraft() {
   content.appendChild(goBtn);
   el.appendChild(content);
 
-  // Init
   refreshPrimary();
   refreshSkills();
   refreshGoBtn();
-
-  // Show modal on first load
-  if (!GS._draftModalShown || (isDef && !GS._defDraftModalShown)) {
-    setTimeout(function() {
-      showDraftModal(isDef);
-    }, 300);
-    if (isDef) GS._defDraftModalShown = true;
-    else GS._draftModalShown = true;
-  }
 
   return el;
 }
