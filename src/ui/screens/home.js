@@ -94,78 +94,92 @@ export function buildHome(){
   // Cards go ABOVE the title — they are the hero element
 
   // === CARD FAN — playing card style with football art ===
+  // === CARD FAN — premium cards with staggered dealing ===
   var cardFan=document.createElement('div');
-  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:360px;height:200px;margin-top:0;margin-bottom:24px;z-index:2;opacity:0;animation:homeRevealScale 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;overflow:visible;';
-  // Card data: accent color, bg tint, label, pip color, card type, art SVG
+  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:360px;height:200px;margin-top:0;margin-bottom:24px;z-index:2;overflow:visible;animation:fanFloat 5s ease-in-out 1.5s infinite;';
+  // Unified glow filter for all icons (stdDeviation:6)
+  var iconFilter='<filter id="iGl"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  // Card data
   var fanData=[
-    {accent:'#F5B800',bg:'#0a1a08',label:'OFFENSE',pip:'#00E5C0',
-     art:'<svg viewBox="0 0 448 512" width="48" height="55" style="margin-top:4px;">'
-       +'<defs><linearGradient id="boltGrad" x1="100" y1="500" x2="350" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F5B800"/><stop offset="100%" stop-color="#FFFACD"/></linearGradient>'
-       +'<filter id="boltGlow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
-       +'<path fill="url(#boltGrad)" filter="url(#boltGlow)" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/>'
+    {accent:'#F5B800',bg:'#0a1a08',label:'OFFENSE',pip:'#00E5C0',borderAngle:'45deg',
+     art:'<svg viewBox="0 0 448 512" width="48" height="52">'
+       +'<defs><linearGradient id="boltGrad" x1="100" y1="500" x2="350" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F5B800"/><stop offset="100%" stop-color="#FFFACD"/></linearGradient>'+iconFilter+'</defs>'
+       +'<path fill="url(#boltGrad)" filter="url(#iGl)" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/>'
        +'</svg>',
-     cornerPip:'<svg viewBox="0 0 448 512" width="5" height="6"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#FFD700"/></svg>'},
-    {accent:'#FF5E1A',bg:'#1a0800',label:'TORCH',pip:'#FF5E1A',
-     art:'<svg viewBox="-8 -10 60 72" fill="none" width="56" height="68" style="margin-top:-4px;">'
+     cornerPip:'<svg viewBox="0 0 448 512" width="6" height="7"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#FFD700"/></svg>'},
+    {accent:'#FF5E1A',bg:'#1a0800',label:'TORCH',pip:'#FF5E1A',borderAngle:'180deg',
+     art:'<svg viewBox="-8 -10 60 72" fill="none" width="48" height="52">'
        +'<defs><linearGradient id="noGrad" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="100%" stop-color="#FFD700"/></linearGradient>'
-       +'<linearGradient id="noInner" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA00"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient>'
-       +'<filter id="fGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
-       +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#noGrad)" filter="url(#fGlow)" style="animation:flameSway 2.5s ease-in-out infinite;transform-origin:50% 100%;"/>'
-       +'<path d="M22 12C22 12 13 24 12 32C11 40 15 46 19 49C19 49 16 41 19 32C20 28 21 25 22 20C23 25 24 28 25 32C28 41 25 49 25 49C29 46 33 40 32 32C31 24 22 12 22 12Z" fill="url(#noInner)" opacity="0.6" style="animation:flameInnerSway 1.8s ease-in-out infinite;transform-origin:50% 100%;"/>'
+       +'<linearGradient id="noInner" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA00"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient>'+iconFilter+'</defs>'
+       +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#noGrad)" filter="url(#iGl)"/>'
+       +'<path d="M22 12C22 12 13 24 12 32C11 40 15 46 19 49C19 49 16 41 19 32C20 28 21 25 22 20C23 25 24 28 25 32C28 41 25 49 25 49C29 46 33 40 32 32C31 24 22 12 22 12Z" fill="url(#noInner)" opacity="0.6"/>'
        +'<ellipse cx="22" cy="52" rx="9" ry="3" fill="#FF5E1A" opacity="0.25"/>'
        +'</svg>',
-     cornerPip:'<svg viewBox="0 0 5 6" width="5" height="6"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF5E1A"/></svg>'},
-    {accent:'#00E5C0',bg:'#041518',label:'DEFENSE',pip:'#00E5C0',
-     art:'<svg viewBox="0 0 512 512" width="46" height="46" style="margin-top:6px;">'
-       +'<defs><linearGradient id="shieldGrad" x1="256" y1="512" x2="256" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#008B74"/><stop offset="100%" stop-color="#80FFF0"/></linearGradient>'
-       +'<filter id="shieldGlow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
-       +'<path fill="url(#shieldGrad)" filter="url(#shieldGlow)" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8s0 0 0 0z"/>'
+     cornerPip:'<svg viewBox="0 0 5 6" width="6" height="7"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF5E1A"/></svg>'},
+    {accent:'#00E5C0',bg:'#041518',label:'DEFENSE',pip:'#00E5C0',borderAngle:'90deg',
+     art:'<svg viewBox="0 0 512 512" width="48" height="52">'
+       +'<defs><linearGradient id="shieldGrad" x1="256" y1="512" x2="256" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#008B74"/><stop offset="100%" stop-color="#80FFF0"/></linearGradient>'+iconFilter+'</defs>'
+       +'<path fill="url(#shieldGrad)" filter="url(#iGl)" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8s0 0 0 0z"/>'
        +'</svg>',
-     cornerPip:'<svg viewBox="0 0 512 512" width="5" height="6"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z" fill="#00FFDD"/></svg>'},
+     cornerPip:'<svg viewBox="0 0 512 512" width="6" height="7"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z" fill="#00FFDD"/></svg>'},
   ];
   var fanAngles=[-18,0,18];
   var fanX=[-72,0,72];
   var fanY=[12,0,12];
   var fanZ=[1,3,1];
   var fanScale=[1,1.2,1];
+  var dealDelay=[0,0.12,0.24]; // staggered entrance
   for(var c=0;c<3;c++){
     var d=fanData[c];
-    var isCenter=c===1;
+    var isTorch=d.label==='TORCH';
+    var borderW=isTorch?4:3;
     var card=document.createElement('div');
-    card.style.cssText='position:absolute;width:100px;height:140px;border-radius:7px;'
-      +'background:linear-gradient(170deg,'+d.bg+' 0%,#09081A 100%);'
+    card.style.cssText='position:absolute;width:100px;height:140px;border-radius:8px;'
+      // Vignette: radial gradient darkening at edges
+      +'background:radial-gradient(ellipse at 50% 40%,'+d.bg+' 0%,#06050f 100%);'
       +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
       +'transform:rotate('+fanAngles[c]+'deg) translateX('+fanX[c]+'px) translateY('+fanY[c]+'px) scale('+fanScale[c]+');'
       +'z-index:'+fanZ[c]+';'
-      +'box-shadow:0 4px 16px rgba(0,0,0,0.5)'+(isCenter?',0 0 12px rgba(245,184,0,0.15)':'')+';'
-      +'overflow:hidden;position:absolute;';
-    // Gradient border wrapper
+      // Dual shadow: contact + elevation + accent glow for TORCH
+      +'box-shadow:0 2px 4px rgba(0,0,0,0.4),0 8px 20px rgba(0,0,0,0.25)'+(isTorch?',0 0 16px rgba(255,94,26,0.2)':'')+';'
+      // Inset shadow for bevel/depth
+      +'overflow:hidden;position:absolute;'
+      // Staggered deal entrance
+      +'opacity:0;animation:cardDealIn 0.4s cubic-bezier(0.22,1.3,0.36,1) '+dealDelay[c]+'s both;';
+    // Inset bevel overlay (makes card feel 3D)
+    var bevel=document.createElement('div');
+    bevel.style.cssText='position:absolute;inset:0;border-radius:8px;box-shadow:inset 1px 1px 3px rgba(255,255,255,0.06),inset -1px -1px 3px rgba(0,0,0,0.3);pointer-events:none;z-index:7;';
+    card.appendChild(bevel);
+    // Gradient border — direction varies per card type
     var borderWrap=document.createElement('div');
-    borderWrap.style.cssText='position:absolute;inset:-2px;border-radius:9px;background:linear-gradient(135deg,'+d.accent+',#F5B800,'+d.accent+');z-index:-1;';
+    borderWrap.style.cssText='position:absolute;inset:-'+borderW+'px;border-radius:'+(8+borderW)+'px;background:linear-gradient('+d.borderAngle+','+d.accent+',#F5B800,'+d.accent+');z-index:-1;';
     card.appendChild(borderWrap);
-    // Card margin (2px inset light border — "bleed margin")
+    // Inner margin line — quieter (20% opacity)
     var margin=document.createElement('div');
-    margin.style.cssText='position:absolute;inset:4px;border-radius:5px;border:1px solid '+d.accent+'66;pointer-events:none;z-index:4;';
+    margin.style.cssText='position:absolute;inset:5px;border-radius:5px;border:1.5px solid '+d.accent+'33;pointer-events:none;z-index:4;';
     card.appendChild(margin);
     // Corner pip — top left
     var pipTL=document.createElement('div');
-    pipTL.style.cssText='position:absolute;top:7px;left:7px;z-index:5;';
+    pipTL.style.cssText='position:absolute;top:8px;left:8px;z-index:5;';
     pipTL.innerHTML=d.cornerPip;
     card.appendChild(pipTL);
     // Corner pip — bottom right (rotated 180)
     var pipBR=document.createElement('div');
-    pipBR.style.cssText='position:absolute;bottom:24px;right:7px;z-index:5;transform:rotate(180deg);';
+    pipBR.style.cssText='position:absolute;bottom:24px;right:8px;z-index:5;transform:rotate(180deg);';
     pipBR.innerHTML=d.cornerPip;
     card.appendChild(pipBR);
-    // Center art area
+    // Decorative divider between art and nameplate
+    var divider=document.createElement('div');
+    divider.style.cssText='position:absolute;bottom:'+(isTorch?'22':'20')+'px;left:15%;right:15%;height:1px;background:'+d.accent+'22;z-index:5;';
+    card.appendChild(divider);
+    // Center art area — normalized to 48x52 bounding box
     var artArea=document.createElement('div');
-    artArea.style.cssText='margin-top:2px;z-index:3;';
+    artArea.style.cssText='display:flex;align-items:center;justify-content:center;width:48px;height:52px;z-index:3;';
     artArea.innerHTML=d.art;
     card.appendChild(artArea);
     // Bottom nameplate
     var nameplate=document.createElement('div');
-    var isTorch=d.label==='TORCH';
-    nameplate.style.cssText='position:absolute;bottom:0;left:0;right:0;height:'+(isTorch?'20':'18')+'px;background:'+d.accent+(isTorch?'ee':'dd')+';display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 5px 5px;';
+    nameplate.style.cssText='position:absolute;bottom:0;left:0;right:0;height:'+(isTorch?'20':'18')+'px;background:'+d.accent+(isTorch?'ee':'dd')+';display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 6px 6px;';
     var npText=document.createElement('div');
     if(isTorch){
       npText.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:16px;color:#09081A;letter-spacing:3px;transform:skewX(-8deg);";
@@ -175,9 +189,9 @@ export function buildHome(){
     npText.textContent=d.label;
     nameplate.appendChild(npText);
     card.appendChild(nameplate);
-    // Shimmer sweep
+    // Shimmer sweep — slowed to 6s
     var shimmer=document.createElement('div');
-    shimmer.style.cssText='position:absolute;inset:0;border-radius:7px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);animation:cardShimmer 4s '+(c*0.5)+'s ease-in-out infinite;pointer-events:none;z-index:6;';
+    shimmer.style.cssText='position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);animation:cardShimmer 6s '+(c*0.8)+'s ease-in-out infinite;pointer-events:none;z-index:8;';
     card.appendChild(shimmer);
     cardFan.appendChild(card);
   }
