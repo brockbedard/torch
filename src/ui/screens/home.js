@@ -126,9 +126,9 @@ export function buildHome(){
        +'</svg>',
      cornerPip:'<svg viewBox="0 0 512 512" width="5" height="6"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z" fill="#00FFDD"/></svg>'},
   ];
-  var fanAngles=[-18,0,18];
-  var fanX=[-70,0,70];
-  var fanY=[12,0,12];
+  var fanAngles=[-20,0,20];
+  var fanX=[-80,0,80];
+  var fanY=[14,0,14];
   var fanZ=[1,3,1];
   var fanScale=[1,1.14,1];
   for(var c=0;c<3;c++){
@@ -186,19 +186,16 @@ export function buildHome(){
   }
   el.append(cardFan);
 
-  // === TITLE: T(football)RCH FOOTBALL ===
+  // === TITLE: T(football)RCH — option C, shifted left ===
+  var faPaths='<path fill="url(#oG)" d="M247.5 25.4c-13.5 3.3-26.4 7.2-38.6 11.7C142.9 61.6 96.7 103.6 66 153.6C47.8 183.4 35.1 215.9 26.9 249L264.5 486.6c13.5-3.3 26.4-7.2 38.6-11.7c66-24.5 112.2-66.5 142.9-116.5c18.3-29.8 30.9-62.3 39.1-95.3L247.5 25.4zM495.2 205.3c6.1-56.8 1.4-112.2-7.7-156.4c-2.7-12.9-13-22.9-26.1-25.1c-58.2-9.7-109.9-12-155.6-7.9L495.2 205.3zM206.1 496L16.8 306.7c-6.1 56.8-1.4 112.2 7.7 156.4c2.7 12.9 13 22.9 26.1 25.1c58.2 9.7 109.9 12 155.6 7.9z"/>'
+    +'<path fill="#FFFBE6" d="M260.7 164.7c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6z"/>';
+  var oD='<defs><linearGradient id="oG" x1="100" y1="100" x2="420" y2="420" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#D4893B"/><stop offset="45%" stop-color="#B5652B"/><stop offset="100%" stop-color="#8B4A1F"/></linearGradient></defs>';
+  var footballO='<svg viewBox="80 -40 350 590" width="36" fill="none" preserveAspectRatio="xMidYMid meet"'
+    +' style="display:inline-block;height:0.72em;vertical-align:top;margin:0 1px 0 -1px;'
+    +'filter:drop-shadow(0 0 5px rgba(255,140,0,0.5)) drop-shadow(0 0 10px rgba(255,94,26,0.25));">'
+    +oD+'<g transform="translate(256,256) rotate(-45) translate(-256,-256)">'+faPaths+'</g></svg>';
   var title=document.createElement('h1');
   title.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:96px;line-height:0.85;color:#FFD54F;text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 30px rgba(255,204,0,0.4);transform:skewX(-8deg);margin-bottom:0;text-align:center;letter-spacing:8px;z-index:2;animation:homeRevealUp 0.5s ease-out 0.4s both,titleShimmer 4s ease-in-out 2s infinite;position:relative;";
-  // Football-O: FA football rotated to vertical, aligned to cap height
-  // The FA football path is drawn diagonally (~45deg). Rotating the inner <g> by -45deg
-  // makes it vertical while keeping the SVG bounding box stable for alignment.
-  var footballO='<svg viewBox="0 0 100 100" width="56" height="56" fill="none" style="display:inline-block;vertical-align:top;margin:0 -4px;position:relative;top:8px;filter:drop-shadow(0 0 6px rgba(255,140,0,0.5)) drop-shadow(0 0 12px rgba(255,94,26,0.3));">'
-    +'<defs><linearGradient id="oGrad" x1="15" y1="15" x2="85" y2="85" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#D4893B"/><stop offset="45%" stop-color="#B5652B"/><stop offset="100%" stop-color="#8B4A1F"/></linearGradient>'
-    +'<filter id="oGlow"><feGaussianBlur stdDeviation="1.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
-    +'<g transform="translate(50,50) rotate(-45) translate(-50,-50) scale(0.195) translate(0,0)">'
-    +'<path fill="url(#oGrad)" d="M247.5 25.4c-13.5 3.3-26.4 7.2-38.6 11.7C142.9 61.6 96.7 103.6 66 153.6C47.8 183.4 35.1 215.9 26.9 249L264.5 486.6c13.5-3.3 26.4-7.2 38.6-11.7c66-24.5 112.2-66.5 142.9-116.5c18.3-29.8 30.9-62.3 39.1-95.3L247.5 25.4zM495.2 205.3c6.1-56.8 1.4-112.2-7.7-156.4c-2.7-12.9-13-22.9-26.1-25.1c-58.2-9.7-109.9-12-155.6-7.9L495.2 205.3zM206.1 496L16.8 306.7c-6.1 56.8-1.4 112.2 7.7 156.4c2.7 12.9 13 22.9 26.1 25.1c58.2 9.7 109.9 12 155.6 7.9z"/>'
-    +'<path fill="#FFFBE6" filter="url(#oGlow)" d="M260.7 164.7c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6z"/>'
-    +'</g></svg>';
   title.innerHTML='T'+footballO+'RCH<span style="display:block;color:white;font-family:\'Barlow Condensed\',sans-serif;font-weight:600;font-size:40px;letter-spacing:10px;text-shadow:2px 2px 0 rgba(0,0,0,0.8);margin-top:4px;transform:skewX(0deg);">FOOTBALL</span>';
   el.append(title);
 
