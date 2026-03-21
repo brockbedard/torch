@@ -30,7 +30,7 @@ function buildHomeCard(type, w, h) {
         +'<path fill="url(#bG_o'+w+')" stroke="#7ACC00" stroke-width="8" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/></svg>',
       pip:'<svg viewBox="0 0 448 512" width="6" height="7"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="rgba(255,255,255,0.5)"/></svg>'},
     torch: {accent:'#FF4511',bg:'#CC3A10',bgEdge:'#6A1A08',label:'TORCH',spotColor:'rgba(255,255,255,0.1)',
-      art:'<svg viewBox="-8 -10 60 72" fill="none" width="52" height="56">'
+      art:'<svg viewBox="0 -2 44 56" fill="none" width="52" height="56" style="overflow:visible;">'
         +'<defs><linearGradient id="nG_t'+w+'" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF6A30"/><stop offset="100%" stop-color="#FFD060"/></linearGradient>'
         +'<linearGradient id="nI_t'+w+'" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA44"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient></defs>'
         +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#nG_t'+w+')" stroke="#FF4511" stroke-width="1.5"/>'
@@ -57,7 +57,7 @@ function buildHomeCard(type, w, h) {
     +'background:radial-gradient(ellipse at 50% 40%,'+d.bg+' 0%,'+d.bgEdge+' 100%);'
     +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
     +'box-shadow:0 2px 4px rgba(0,0,0,0.4),'+(isTorch?'0 16px 40px rgba(0,0,0,0.4)':'0 8px 20px rgba(0,0,0,0.25)')+';'
-    +'overflow:hidden;';
+    +'overflow:hidden;position:relative;';
 
   // TORCH: breathing glow
   if(isTorch){
@@ -91,6 +91,9 @@ function buildHomeCard(type, w, h) {
   pBR.innerHTML = d.pip;
   card.appendChild(pBR);
 
+  // Nameplate height (must be declared before art centering uses it)
+  var npH = isTorch ? 20 : 18;
+
   // Spotlight — centered in art area (above nameplate)
   var artCenterY = (h - npH) / 2;
   var spot = document.createElement('div');
@@ -114,7 +117,6 @@ function buildHomeCard(type, w, h) {
   card.appendChild(artWrap);
 
   // Nameplate
-  var npH = isTorch ? 20 : 18;
   var np = document.createElement('div');
   np.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:'+npH+'px;background:'+d.accent+(isTorch?'ee':'dd')+';display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 6px 6px;';
   var npT = document.createElement('div');
