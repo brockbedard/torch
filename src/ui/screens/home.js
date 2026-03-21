@@ -97,29 +97,30 @@ export function buildHome(){
   // === CARD FAN — premium cards with staggered dealing ===
   var cardFan=document.createElement('div');
   cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:360px;height:200px;margin-top:0;margin-bottom:24px;z-index:2;overflow:visible;animation:fanFloat 5s ease-in-out 1.5s infinite;';
-  // Unified glow filter for all icons (stdDeviation:6)
-  var iconFilter='<filter id="iGl"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
-  // Card data
+  // Card data — no blur filter, crisp icons with stroke + spotlight backing
   var fanData=[
     {accent:'#FFB800',bg:'#0a1a08',label:'OFFENSE',pip:'#00E5C0',borderAngle:'45deg',
+     spotColor:'rgba(255,184,0,0.25)',
      art:'<svg viewBox="0 0 448 512" width="48" height="52">'
-       +'<defs><linearGradient id="boltGrad" x1="100" y1="500" x2="350" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFB800"/><stop offset="100%" stop-color="#FFFACD"/></linearGradient>'+iconFilter+'</defs>'
-       +'<path fill="url(#boltGrad)" filter="url(#iGl)" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/>'
+       +'<defs><linearGradient id="boltGrad" x1="100" y1="450" x2="350" y2="50" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFD060"/><stop offset="100%" stop-color="#FFFACD"/></linearGradient></defs>'
+       +'<path fill="url(#boltGrad)" stroke="#FFB800" stroke-width="8" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/>'
        +'</svg>',
      cornerPip:'<svg viewBox="0 0 448 512" width="6" height="7"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#FFB800"/></svg>'},
     {accent:'#FF4511',bg:'#1a0800',label:'TORCH',pip:'#FF4511',borderAngle:'180deg',
+     spotColor:'rgba(255,69,17,0.25)',
      art:'<svg viewBox="-8 -10 60 72" fill="none" width="48" height="52">'
-       +'<defs><linearGradient id="noGrad" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#FFB800"/></linearGradient>'
-       +'<linearGradient id="noInner" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FF8C00"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient>'+iconFilter+'</defs>'
-       +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#noGrad)" filter="url(#iGl)"/>'
-       +'<path d="M22 12C22 12 13 24 12 32C11 40 15 46 19 49C19 49 16 41 19 32C20 28 21 25 22 20C23 25 24 28 25 32C28 41 25 49 25 49C29 46 33 40 32 32C31 24 22 12 22 12Z" fill="url(#noInner)" opacity="0.6"/>'
-       +'<ellipse cx="22" cy="52" rx="9" ry="3" fill="#FF4511" opacity="0.25"/>'
+       +'<defs><linearGradient id="noGrad" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF6A30"/><stop offset="100%" stop-color="#FFD060"/></linearGradient>'
+       +'<linearGradient id="noInner" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA44"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient></defs>'
+       +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#noGrad)" stroke="#FF4511" stroke-width="0.8"/>'
+       +'<path d="M22 12C22 12 13 24 12 32C11 40 15 46 19 49C19 49 16 41 19 32C20 28 21 25 22 20C23 25 24 28 25 32C28 41 25 49 25 49C29 46 33 40 32 32C31 24 22 12 22 12Z" fill="url(#noInner)" opacity="0.7"/>'
+       +'<ellipse cx="22" cy="52" rx="9" ry="3" fill="#FF4511" opacity="0.2"/>'
        +'</svg>',
      cornerPip:'<svg viewBox="0 0 5 6" width="6" height="7"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF4511"/></svg>'},
     {accent:'#00E5C0',bg:'#041518',label:'DEFENSE',pip:'#00E5C0',borderAngle:'90deg',
+     spotColor:'rgba(0,229,192,0.2)',
      art:'<svg viewBox="0 0 512 512" width="48" height="52">'
-       +'<defs><linearGradient id="shieldGrad" x1="256" y1="512" x2="256" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#008B74"/><stop offset="100%" stop-color="#80FFF0"/></linearGradient>'+iconFilter+'</defs>'
-       +'<path fill="url(#shieldGrad)" filter="url(#iGl)" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8s0 0 0 0z"/>'
+       +'<defs><linearGradient id="shieldGrad" x1="256" y1="512" x2="256" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#00C8A8"/><stop offset="100%" stop-color="#A0FFF0"/></linearGradient></defs>'
+       +'<path fill="url(#shieldGrad)" stroke="#00E5C0" stroke-width="8" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8s0 0 0 0z"/>'
        +'</svg>',
      cornerPip:'<svg viewBox="0 0 512 512" width="6" height="7"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z" fill="#00FFDD"/></svg>'},
   ];
@@ -172,7 +173,11 @@ export function buildHome(){
     var divider=document.createElement('div');
     divider.style.cssText='position:absolute;bottom:'+(isTorch?'22':'20')+'px;left:15%;right:15%;height:1px;background:'+d.accent+'22;z-index:5;';
     card.appendChild(divider);
-    // Center art area — normalized to 48x52 bounding box
+    // Spotlight backing behind icon — radial gradient halo
+    var spotlight=document.createElement('div');
+    spotlight.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:68px;height:68px;border-radius:50%;background:radial-gradient(circle,'+d.spotColor+' 0%,transparent 70%);z-index:2;pointer-events:none;';
+    card.appendChild(spotlight);
+    // Center art area — normalized to 48x52 bounding box, crisp (no blur)
     var artArea=document.createElement('div');
     artArea.style.cssText='display:flex;align-items:center;justify-content:center;width:48px;height:52px;z-index:3;';
     artArea.innerHTML=d.art;
