@@ -99,24 +99,24 @@ export function buildHome(){
   cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:360px;height:200px;margin-top:0;margin-bottom:24px;z-index:2;overflow:visible;animation:fanFloat 5s ease-in-out 1.5s infinite;';
   // Card data — no blur filter, crisp icons with stroke + spotlight backing
   var fanData=[
-    {accent:'#FFB800',bg:'#0a1a08',label:'OFFENSE',pip:'#00E5C0',borderAngle:'45deg',
-     spotColor:'rgba(255,184,0,0.25)',
+    {accent:'#7ACC00',bg:'#0A1A06',label:'OFFENSE',pip:'#7ACC00',borderAngle:'135deg',
+     spotColor:'rgba(122,204,0,0.25)',
      art:'<svg viewBox="0 0 448 512" width="48" height="52">'
-       +'<defs><linearGradient id="boltGrad" x1="100" y1="450" x2="350" y2="50" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFD060"/><stop offset="100%" stop-color="#FFFACD"/></linearGradient></defs>'
-       +'<path fill="url(#boltGrad)" stroke="#FFB800" stroke-width="8" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/>'
+       +'<defs><linearGradient id="boltGrad" x1="100" y1="450" x2="350" y2="50" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#90E040"/><stop offset="100%" stop-color="#D4FF80"/></linearGradient></defs>'
+       +'<path fill="url(#boltGrad)" stroke="#7ACC00" stroke-width="8" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/>'
        +'</svg>',
-     cornerPip:'<svg viewBox="0 0 448 512" width="6" height="7"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#FFB800"/></svg>'},
-    {accent:'#FF4511',bg:'#1a0800',label:'TORCH',pip:'#FF4511',borderAngle:'180deg',
+     cornerPip:'<svg viewBox="0 0 448 512" width="6" height="7"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#7ACC00"/></svg>'},
+    {accent:'#FF4511',bg:'#1a0800',label:'TORCH',pip:'#FF4511',borderAngle:'135deg',
      spotColor:'rgba(255,69,17,0.25)',
      art:'<svg viewBox="-8 -10 60 72" fill="none" width="48" height="52">'
        +'<defs><linearGradient id="noGrad" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF6A30"/><stop offset="100%" stop-color="#FFD060"/></linearGradient>'
        +'<linearGradient id="noInner" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA44"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient></defs>'
-       +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#noGrad)" stroke="#FF4511" stroke-width="0.8"/>'
+       +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#noGrad)" stroke="#FF4511" stroke-width="1.5"/>'
        +'<path d="M22 12C22 12 13 24 12 32C11 40 15 46 19 49C19 49 16 41 19 32C20 28 21 25 22 20C23 25 24 28 25 32C28 41 25 49 25 49C29 46 33 40 32 32C31 24 22 12 22 12Z" fill="url(#noInner)" opacity="0.7"/>'
        +'<ellipse cx="22" cy="52" rx="9" ry="3" fill="#FF4511" opacity="0.2"/>'
        +'</svg>',
      cornerPip:'<svg viewBox="0 0 5 6" width="6" height="7"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF4511"/></svg>'},
-    {accent:'#4DA6FF',bg:'#0A1420',label:'DEFENSE',pip:'#4DA6FF',borderAngle:'90deg',
+    {accent:'#4DA6FF',bg:'#0A1420',label:'DEFENSE',pip:'#4DA6FF',borderAngle:'135deg',
      spotColor:'rgba(77,166,255,0.2)',
      art:'<svg viewBox="0 0 512 512" width="48" height="52">'
        +'<defs><linearGradient id="shieldGrad" x1="256" y1="512" x2="256" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3080D0"/><stop offset="100%" stop-color="#A0D4FF"/></linearGradient></defs>'
@@ -153,7 +153,7 @@ export function buildHome(){
     card.appendChild(bevel);
     // Gradient border — direction varies per card type
     var borderWrap=document.createElement('div');
-    borderWrap.style.cssText='position:absolute;inset:-'+borderW+'px;border-radius:'+(8+borderW)+'px;background:linear-gradient('+d.borderAngle+','+d.accent+',#FFB800,'+d.accent+');z-index:-1;';
+    borderWrap.style.cssText='position:absolute;inset:-'+borderW+'px;border-radius:'+(8+borderW)+'px;background:linear-gradient('+d.borderAngle+','+d.accent+',rgba(255,255,255,0.4),'+d.accent+');z-index:-1;';
     card.appendChild(borderWrap);
     // Inner margin line — quieter (20% opacity)
     var margin=document.createElement('div');
