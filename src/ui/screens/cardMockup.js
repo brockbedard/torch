@@ -187,11 +187,14 @@ export function buildCardMockup() {
   // CARD BACKS (= home page cards)
   // ============================================================
   el.appendChild(sec('CARD BACKS — Same as Home Page'));
-  var backRow = row();
-  backRow.appendChild(wrap(buildHomeCard('offense',100,140), 'OFFENSE BACK'));
-  backRow.appendChild(wrap(buildHomeCard('torch',100,140), 'TORCH BACK'));
-  backRow.appendChild(wrap(buildHomeCard('defense',100,140), 'DEFENSE BACK'));
-  el.appendChild(backRow);
+  var backWrap = document.createElement('div');
+  backWrap.style.cssText = 'background:radial-gradient(circle at 50% 50%,#1A1208 0%,#0A0804 70%);border-radius:12px;padding:30px 20px;display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:center;position:relative;overflow:visible;';
+  // Warm light pool behind cards (like home page)
+  backWrap.innerHTML = '<div style="position:absolute;top:30%;left:50%;transform:translateX(-50%);width:300px;height:200px;background:radial-gradient(circle,rgba(255,120,20,0.08) 0%,transparent 70%);pointer-events:none;"></div>';
+  backWrap.appendChild(wrap(buildHomeCard('offense',100,140), 'OFFENSE BACK'));
+  backWrap.appendChild(wrap(buildHomeCard('torch',100,140), 'TORCH BACK'));
+  backWrap.appendChild(wrap(buildHomeCard('defense',100,140), 'DEFENSE BACK'));
+  el.appendChild(backWrap);
 
   // ============================================================
   // PLAYER CARDS — Madden Style (chosen)
@@ -290,67 +293,15 @@ export function buildCardMockup() {
     return card;
   }
 
-  function buildPlayV2(p, w, h) {
-    // V2: Category stripe top, diagram center, name+desc bottom panel
-    var svgTag = p.svg.replace('fill="none">', 'width="'+(w*0.7)+'" height="'+(h*0.4)+'" fill="none">');
-    var card = document.createElement('div');
-    card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:2px solid '+p.catColor+'44;background:#0E0A06;overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.5);display:flex;flex-direction:column;';
-    card.innerHTML = '<div style="height:3px;background:'+p.catColor+';"></div>'
-      +'<div style="flex:1;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 50%,'+p.bg+',#0E0A06);">'+svgTag+'</div>'
-      +'<div style="padding:'+(w>90?'5px 7px 6px':'3px 5px 4px')+';border-top:1px solid #1E1610;">'
-      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?13:10)+'px;color:#fff;letter-spacing:1px;line-height:1;">'+p.name+'</div>'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">'
-      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(w>90?7:6)+'px;color:'+p.catColor+';">'+p.cat+'</div>'
-      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(w>90?7:6)+'px;color:'+riskC[p.risk]+';">'+riskI[p.risk]+'</div></div>'
-      +(w>90?'<div style="font-family:\'Rajdhani\';font-size:8px;color:#555;margin-top:2px;line-height:1.2;">'+p.desc+'</div>':'')
-      +'</div>';
-    return card;
-  }
+  // Play cards — Option A chosen
+  el.appendChild(sec('PLAY CARDS — Selection Size (100x150)'));
+  var pSelRow = row();
+  plays.forEach(function(p) { pSelRow.appendChild(wrap(buildPlayV1(p,100,150), p.name)); });
+  el.appendChild(pSelRow);
 
-  function buildPlayV3(p, w, h) {
-    // V3: Full card diagram bg, floating name + risk badge overlay
-    var svgTag = p.svg.replace('fill="none">', 'width="'+(w*0.8)+'" height="'+(h*0.55)+'" fill="none">');
-    var card = document.createElement('div');
-    card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:2px solid '+p.catColor+'44;background:radial-gradient(ellipse at 50% 45%,'+p.bg+',#0E0A06);overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.5);position:relative;display:flex;align-items:center;justify-content:center;';
-    // Category stripe top
-    card.innerHTML = '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:'+p.catColor+';z-index:2;"></div>'
-      // Risk badge top-right
-      +'<div style="position:absolute;top:6px;right:5px;font-family:\'Rajdhani\';font-weight:700;font-size:7px;color:'+riskC[p.risk]+';background:rgba(0,0,0,0.5);padding:1px 4px;border-radius:3px;z-index:2;">'+riskI[p.risk]+'</div>'
-      // Category badge top-left
-      +'<div style="position:absolute;top:6px;left:5px;font-family:\'Rajdhani\';font-weight:700;font-size:7px;color:'+p.catColor+';background:rgba(0,0,0,0.5);padding:1px 4px;border-radius:3px;z-index:2;">'+p.cat+'</div>'
-      // Centered diagram
-      +svgTag
-      // Bottom gradient + name
-      +'<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.85));padding:'+(w>90?'20px 7px 6px':'14px 5px 4px')+';z-index:2;">'
-      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?14:11)+'px;color:#fff;letter-spacing:1px;line-height:1;">'+p.name+'</div>'
-      +(w>90?'<div style="font-family:\'Rajdhani\';font-size:8px;color:#888;margin-top:2px;line-height:1.2;">'+p.desc+'</div>':'')
-      +'</div>';
-    return card;
-  }
-
-  // Show all 3 versions at selection size
-  el.appendChild(sec('PLAY CARDS — Option A: Name Top Bar'));
-  var pARow = row();
-  plays.forEach(function(p) { pARow.appendChild(wrap(buildPlayV1(p,100,150), p.name)); });
-  el.appendChild(pARow);
-
-  el.appendChild(sec('PLAY CARDS — Option B: Stripe + Bottom Panel'));
-  var pBRow = row();
-  plays.forEach(function(p) { pBRow.appendChild(wrap(buildPlayV2(p,100,150), p.name)); });
-  el.appendChild(pBRow);
-
-  el.appendChild(sec('PLAY CARDS — Option C: Full Diagram + Overlay'));
-  var pCRow = row();
-  plays.forEach(function(p) { pCRow.appendChild(wrap(buildPlayV3(p,100,150), p.name)); });
-  el.appendChild(pCRow);
-
-  // Show chosen version at gameplay size (all 3 for comparison)
-  el.appendChild(sec('PLAY CARDS — Gameplay Size (80x110) — All 3'));
+  el.appendChild(sec('PLAY CARDS — Gameplay Size (80x110)'));
   var pGameRow = row();
-  pGameRow.appendChild(wrap(buildPlayV1(plays[0],80,110), 'A: '+plays[0].name));
-  pGameRow.appendChild(wrap(buildPlayV2(plays[1],80,110), 'B: '+plays[1].name));
-  pGameRow.appendChild(wrap(buildPlayV3(plays[2],80,110), 'C: '+plays[2].name));
-  pGameRow.appendChild(wrap(buildPlayV3(plays[3],80,110), 'C: '+plays[3].name));
+  plays.forEach(function(p) { pGameRow.appendChild(wrap(buildPlayV1(p,80,110), p.name)); });
   el.appendChild(pGameRow);
 
   // ============================================================
