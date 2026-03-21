@@ -88,7 +88,7 @@ function showDraftModal(isDef, onDismiss) {
 
   var btn = document.createElement('button');
   btn.className = 'btn-blitz';
-  btn.style.cssText = 'background:var(--a-gold);border-color:var(--f-purple);color:#000;box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;font-size:12px;';
+  btn.style.cssText = 'background:var(--a-gold);border-color:var(--torch);color:#000;box-shadow:6px 6px 0 var(--torch), 10px 10px 0 #000;font-size:12px;';
   btn.textContent = 'GOT IT';
   btn.onclick = function() { SND.click(); ov.remove(); if (onDismiss) onDismiss(); };
   box.appendChild(btn);
@@ -159,7 +159,7 @@ function showRosterReview(team, offRoster, defRoster, onContinue) {
   btnBox.style.cssText = 'padding:12px 14px;background:rgba(0,0,0,0.8);border-top:1px solid #333;';
   var btn = document.createElement('button');
   btn.className = 'btn-blitz';
-  btn.style.cssText = 'background:var(--a-gold);border-color:var(--f-purple);color:#000;box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;font-size:16px;width:100%;';
+  btn.style.cssText = 'background:var(--a-gold);border-color:var(--torch);color:#000;box-shadow:6px 6px 0 var(--torch), 10px 10px 0 #000;font-size:16px;width:100%;';
   btn.textContent = 'CONTINUE \u2192';
   btn.onclick = function() { SND.snap(); ov.remove(); onContinue(); };
   btnBox.appendChild(btn);
@@ -326,8 +326,8 @@ export function buildDraft() {
     goBtn.disabled = !ready;
     goBtn.style.cssText += 'width:100%;font-size:14px;' +
       (ready
-        ? 'background:var(--a-gold);border-color:var(--f-purple);color:#000;box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;'
-        : 'background:#555;border-color:var(--f-purple);color:var(--f-purple);box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;opacity:0.8;');
+        ? 'background:var(--a-gold);border-color:var(--torch);color:#000;box-shadow:6px 6px 0 var(--torch), 10px 10px 0 #000;'
+        : 'background:#555;border-color:var(--torch);color:var(--torch);box-shadow:6px 6px 0 var(--torch), 10px 10px 0 #000;opacity:0.8;');
 
     if (!ready) {
       goBtn.textContent = 'CHOOSE YOUR PLAYERS';

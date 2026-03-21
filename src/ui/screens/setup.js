@@ -60,7 +60,7 @@ export function buildSetup() {
   var hdr = document.createElement('div');
   hdr.style.cssText =
     'background:rgba(0,0,0,0.5);padding:10px 14px;display:flex;justify-content:space-between;' +
-    'align-items:center;flex-shrink:0;border-bottom:2px solid var(--f-purple);';
+    'align-items:center;flex-shrink:0;border-bottom:2px solid var(--torch);';
 
   var hdrTitle = document.createElement('div');
   hdrTitle.style.cssText =
@@ -135,11 +135,11 @@ export function buildSetup() {
       var opt = document.createElement('button');
       opt.className = 'btn-blitz';
       opt.style.cssText = 'flex:1;font-size:10px;text-align:center;padding:10px 0;' +
-        'color:#fff;text-shadow:1px 1px 0 #000;border-color:var(--f-purple);' +
+        'color:#fff;text-shadow:1px 1px 0 #000;border-color:var(--torch);' +
         'background:' + d.color + ';' +
         (isSel 
-          ? 'box-shadow:4px 4px 0 var(--f-purple), 6px 6px 0 #000;transform:scale(1.02);z-index:5;outline:2px solid #fff;' 
-          : 'box-shadow:3px 3px 0 var(--f-purple), 4px 4px 0 #000;opacity:0.6;');
+          ? 'box-shadow:4px 4px 0 var(--torch), 6px 6px 0 #000;transform:scale(1.02);z-index:5;outline:2px solid #fff;' 
+          : 'box-shadow:3px 3px 0 var(--torch), 4px 4px 0 #000;opacity:0.6;');
       opt.textContent = d.id;
       opt.onclick = function() { SND.select(); selDiff=d.id; GS.difficulty=d.id; refreshDiffs(); refreshGo(); };
       diffRow.appendChild(opt);
@@ -276,8 +276,8 @@ export function buildSetup() {
     goBtn.className = 'btn-blitz';
     goBtn.disabled = !ready;
     goBtn.style.cssText = 'margin-top:12px;' + (ready
-      ? 'background:var(--a-gold);border-color:var(--f-purple);color:#000;box-shadow:4px 4px 0 var(--f-purple), 6px 6px 0 #000;font-size:14px;padding:12px;'
-      : 'background:#555;border-color:var(--f-purple);color:var(--f-purple);box-shadow:4px 4px 0 var(--f-purple), 6px 6px 0 #000;font-size:14px;padding:12px;opacity:0.8;');
+      ? 'background:var(--a-gold);border-color:var(--torch);color:#000;box-shadow:4px 4px 0 var(--torch), 6px 6px 0 #000;font-size:14px;padding:12px;'
+      : 'background:#555;border-color:var(--torch);color:var(--torch);box-shadow:4px 4px 0 var(--torch), 6px 6px 0 #000;font-size:14px;padding:12px;opacity:0.8;');
     goBtn.textContent = ready ? 'START DRAFT \u2192' : 'SELECT A TEAM';
     goBtn.onclick = ready ? function() {
       SND.snap();

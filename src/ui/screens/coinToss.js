@@ -36,7 +36,7 @@ export function buildCoinToss() {
   var hdr = document.createElement('div');
   hdr.style.cssText =
     'background:rgba(0,0,0,0.5);padding:10px 14px;display:flex;justify-content:center;' +
-    'align-items:center;flex-shrink:0;border-bottom:2px solid var(--f-purple);';
+    'align-items:center;flex-shrink:0;border-bottom:2px solid var(--torch);';
   var hdrTitle = document.createElement('div');
   hdrTitle.style.cssText =
     "font-family:'Teko',sans-serif;font-weight:700;font-size:28px;color:var(--a-gold);" +
@@ -155,8 +155,8 @@ export function buildCoinToss() {
       var receiveBtn = document.createElement('button');
       receiveBtn.className = 'btn-blitz';
       receiveBtn.style.cssText =
-        'width:100%;font-size:12px;background:var(--a-gold);border-color:var(--f-purple);' +
-        'color:#000;box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;animation:pulseGold 2s infinite;';
+        'width:100%;font-size:12px;background:var(--a-gold);border-color:var(--torch);' +
+        'color:#000;box-shadow:6px 6px 0 var(--torch), 10px 10px 0 #000;animation:pulseGold 2s infinite;';
       receiveBtn.textContent = 'RECEIVE AT THE 50';
       receiveBtn.onclick = function() {
         SND.snap();
@@ -187,7 +187,7 @@ export function buildCoinToss() {
       continueBtn.className = 'btn-blitz';
       continueBtn.style.cssText =
         'width:100%;font-size:14px;margin-top:8px;background:var(--a-gold);' +
-        'border-color:var(--f-purple);color:#000;box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;animation:pulseGold 2s infinite;opacity:0;transition:opacity 0.5s;';
+        'border-color:var(--torch);color:#000;box-shadow:6px 6px 0 var(--torch), 10px 10px 0 #000;animation:pulseGold 2s infinite;opacity:0;transition:opacity 0.5s;';
       continueBtn.textContent = 'PLAY BALL';
       continueBtn.onclick = function() {
         SND.snap();

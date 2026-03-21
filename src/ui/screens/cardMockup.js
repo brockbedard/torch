@@ -12,7 +12,7 @@ function injectStyles() {
   s.id = 'mockup-styles';
   s.textContent = `
     @keyframes flipSnap { 0%{transform:rotateY(0)} 50%{transform:rotateY(90deg)} 51%{transform:rotateY(90deg)} 100%{transform:rotateY(180deg)} }
-    @keyframes dealSlide { 0%{opacity:0;transform:translateX(-120px) rotate(-30deg) scale(0.5)} 70%{opacity:1;transform:translateX(5px) rotate(2deg) scale(1.02)} 100%{transform:translateX(0) rotate(0deg) scale(1)} }
+    @keyframes dealSlide { 0%{opacity:0;transform:translateX(-120px) rotate(-18deg) scale(0.5)} 70%{opacity:1;transform:translateX(5px) rotate(1deg) scale(1.02)} 100%{transform:translateX(0) rotate(0deg) scale(1)} }
     @keyframes dealMulti { 0%{opacity:0;transform:translateY(-60px) scale(0.6)} 50%{opacity:1;transform:translateY(4px) scale(1.02)} 100%{opacity:1;transform:translateY(0) scale(1)} }
   `;
   document.head.appendChild(s);
@@ -28,19 +28,19 @@ function buildHomeCard(type, w, h) {
       art:'<svg viewBox="0 0 448 512" width="48" height="52">'
         +'<defs><linearGradient id="bG_o'+w+'" x1="100" y1="450" x2="350" y2="50"><stop offset="0%" stop-color="#90E040"/><stop offset="100%" stop-color="#D4FF80"/></linearGradient></defs>'
         +'<path fill="url(#bG_o'+w+')" stroke="#7ACC00" stroke-width="8" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/></svg>',
-      pip:'<svg viewBox="0 0 448 512" width="10" height="11"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#FFB800" opacity="0.6"/></svg>'},
+      pip:'<svg viewBox="0 0 448 512" width="12" height="14"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#FFB800" opacity="0.8"/></svg>'},
     torch: {accent:'#FF4511',bg:'#CC3A10',bgEdge:'#6A1A08',label:'TORCH',spotColor:'rgba(255,69,17,0.25)',
       art:'<svg viewBox="0 -2 44 56" fill="none" width="48" height="52" style="overflow:visible;">'
         +'<defs><linearGradient id="nG_t'+w+'" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF6A30"/><stop offset="100%" stop-color="#FFD060"/></linearGradient>'
         +'<linearGradient id="nI_t'+w+'" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA44"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient></defs>'
         +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#nG_t'+w+')" stroke="#FF4511" stroke-width="1.5"/>'
         +'<path d="M22 12C22 12 13 24 12 32C11 40 15 46 19 49C19 49 16 41 19 32C20 28 21 25 22 20C23 25 24 28 25 32C28 41 25 49 25 49C29 46 33 40 32 32C31 24 22 12 22 12Z" fill="url(#nI_t'+w+')" opacity="0.7"/></svg>',
-      pip:'<svg viewBox="0 0 5 6" width="10" height="11"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FFB800" opacity="0.6"/></svg>'},
+      pip:'<svg viewBox="0 0 5 6" width="12" height="14"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FFB800" opacity="0.8"/></svg>'},
     defense: {accent:'#4DA6FF',bg:'#3A7ACC',bgEdge:'#1A3A66',label:'DEFENSE',spotColor:'rgba(77,166,255,0.2)',
       art:'<svg viewBox="0 0 512 512" width="48" height="52">'
         +'<defs><linearGradient id="sG_d'+w+'" x1="256" y1="512" x2="256" y2="0"><stop offset="0%" stop-color="#3080D0"/><stop offset="100%" stop-color="#A0D4FF"/></linearGradient></defs>'
         +'<path fill="url(#sG_d'+w+')" stroke="#4DA6FF" stroke-width="8" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8z"/></svg>',
-      pip:'<svg viewBox="0 0 512 512" width="10" height="11"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z" fill="#FFB800" opacity="0.6"/></svg>'},
+      pip:'<svg viewBox="0 0 512 512" width="12" height="14"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z" fill="#FFB800" opacity="0.8"/></svg>'},
   };
   var d = configs[type];
   var isTorch = type === 'torch';
@@ -66,6 +66,10 @@ function buildHomeCard(type, w, h) {
     card.appendChild(glow);
   }
 
+  // Subtle diagonal texture
+  var texture = document.createElement('div');
+  texture.style.cssText = 'position:absolute;inset:0;border-radius:8px;opacity:0.04;pointer-events:none;z-index:1;background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.5) 3px,rgba(255,255,255,0.5) 4px);';
+  card.appendChild(texture);
   // Bevel
   var bevel = document.createElement('div');
   bevel.style.cssText = 'position:absolute;inset:0;border-radius:8px;box-shadow:inset 1px 1px 3px rgba(255,255,255,0.06),inset -1px -1px 3px rgba(0,0,0,0.3);pointer-events:none;z-index:7;';
@@ -235,17 +239,20 @@ export function buildCardMockup() {
   ];
   var tierC = { bronze:'#A0522D', silver:'#B0C4D4', gold:'#FFB800' };
 
-  var posNames = {QB:'QUARTERBACK',WR:'WIDE RECEIVER',RB:'RUNNING BACK',FB:'FULLBACK',TE:'TIGHT END',SLOT:'SLOT RECEIVER',
-    CB:'CORNERBACK',S:'SAFETY',LB:'LINEBACKER',DL:'DEFENSIVE LINE',DE:'DEFENSIVE END'};
+  // Abbreviated positions — universally understood by football fans
+  var posNames = {QB:'QB',WR:'WR',RB:'RB',FB:'FB',TE:'TE',SLOT:'SLOT',
+    CB:'CB',S:'S',LB:'LB',DL:'DL',DE:'DE'};
   function buildMaddenPlayer(p, w, h) {
     var tc = tierC[p.tier] || '#B0C4D4';
     var card = document.createElement('div');
     card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;border:2px solid '+tc+'44;background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);position:relative;box-shadow:0 4px 16px rgba(0,0,0,0.5);display:flex;flex-direction:column;';
     var fullPos = posNames[p.pos] || p.pos;
+    // Tier header bar behind OVR
+    var hdrBar = '<div style="position:absolute;top:0;left:0;right:0;height:'+(w>90?'46':'34')+'px;background:'+tc+'18;border-bottom:1px solid '+tc+'33;border-radius:6px 6px 0 0;z-index:1;"></div>';
     // OVR centered top
-    var topArea = '<div style="text-align:center;padding:'+(w>90?'6':'4')+'px 0 0;position:relative;z-index:2;">'
+    var topArea = hdrBar+'<div style="text-align:center;padding:'+(w>90?'6':'4')+'px 0 0;position:relative;z-index:2;">'
       +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?36:24)+'px;color:'+tc+';line-height:0.85;text-shadow:0 0 10px '+tc+'44;">'+p.ovr+'</div>'
-      +'<div style="font-family:\'Rajdhani\';font-weight:600;font-size:'+(w>90?7:6)+'px;color:#fff;letter-spacing:1px;margin-top:-1px;opacity:0.7;">'+fullPos+'</div></div>';
+      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(w>90?10:8)+'px;color:#fff;letter-spacing:2px;margin-top:-1px;opacity:0.7;">'+fullPos+'</div></div>';
     // Jersey number (left-aligned below OVR/position block)
     var numArea = '<div style="position:absolute;top:'+(w>90?'48':'34')+'px;left:'+(w>90?'8':'5')+'px;font-family:\'Teko\';font-weight:700;font-size:'+(w>90?14:11)+'px;color:#fff;opacity:0.7;line-height:1;z-index:2;">#'+(p.num||'')+'</div>';
     // Art placeholder
@@ -253,8 +260,12 @@ export function buildCardMockup() {
     // Bottom gradient
     var botGrad = '<div style="position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(transparent,#0A0804);z-index:1;"></div>';
     // Name bar
-    var nameBar = '<div style="position:absolute;bottom:0;left:0;right:0;z-index:2;background:'+p.teamColor+'22;padding:'+(w>90?'5px 6px':'3px 4px')+';border-top:1px solid '+p.teamColor+'44;border-bottom:2px solid '+p.teamColor+';">'
+    var nameBar = '<div style="position:absolute;bottom:0;left:0;right:0;z-index:2;background:'+p.teamColor+'22;padding:'+(w>90?'5px 6px':'3px 4px')+';border-top:1px solid '+p.teamColor+'44;border-bottom:'+(w>90?2:1)+'px solid '+p.teamColor+';">'
       +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?12:9)+'px;color:#fff;letter-spacing:1px;text-align:center;line-height:1.1;">'+(w>90?p.name:p.name.split(' ').pop())+'</div></div>';
+    // Move jersey number to name bar at gameplay size
+    if(w<=90){
+      numArea = '<div style="position:absolute;bottom:'+(w>90?'8':'4')+'px;left:'+(w>90?'8':'5')+'px;font-family:\'Teko\';font-weight:700;font-size:9px;color:#fff;opacity:0.5;line-height:1;z-index:3;">#'+(p.num||'')+'</div>';
+    }
     card.innerHTML = topArea + numArea + artArea + botGrad + nameBar;
     return card;
   }
@@ -278,18 +289,18 @@ export function buildCardMockup() {
   // ============================================================
   var routeSvg = '<svg viewBox="0 0 50 40" fill="none">'
     +'<circle cx="25" cy="35" r="3" fill="#FFB800" opacity="0.8"/>'
-    +'<circle cx="12" cy="32" r="2" fill="#FFB800" opacity="0.6"/>'
-    +'<circle cx="38" cy="32" r="2" fill="#FFB800" opacity="0.6"/>'
+    +'<circle cx="12" cy="32" r="2" fill="#FFB800" opacity="0.8"/>'
+    +'<circle cx="38" cy="32" r="2" fill="#FFB800" opacity="0.8"/>'
     +'<path d="M12 32L8 18" stroke="#FFB800" stroke-width="1.2" opacity="0.7"/>'
     +'<path d="M38 32L42 15" stroke="#FFB800" stroke-width="1.2" opacity="0.7"/>'
-    +'<polygon points="8,17 9.5,19 6.5,19" fill="#FFB800" opacity="0.6"/>'
-    +'<polygon points="42,14 43.5,16 40.5,16" fill="#FFB800" opacity="0.6"/></svg>';
+    +'<polygon points="8,17 9.5,19 6.5,19" fill="#FFB800" opacity="0.8"/>'
+    +'<polygon points="42,14 43.5,16 40.5,16" fill="#FFB800" opacity="0.8"/></svg>';
   var defSvg = '<svg viewBox="0 0 50 40" fill="none">'
     +'<circle cx="15" cy="10" r="2" fill="#4DA6FF" opacity="0.7"/>'
     +'<circle cx="35" cy="10" r="2" fill="#4DA6FF" opacity="0.7"/>'
     +'<circle cx="25" cy="15" r="2" fill="#4DA6FF" opacity="0.7"/>'
     +'<path d="M8 8Q25 28 42 8" stroke="#4DA6FF" stroke-width="1" stroke-dasharray="2 1.5" fill="none" opacity="0.5"/>'
-    +'<circle cx="25" cy="34" r="2.5" fill="#4DA6FF" opacity="0.6"/></svg>';
+    +'<circle cx="25" cy="34" r="2.5" fill="#4DA6FF" opacity="0.8"/></svg>';
   var riskI = { high:'\u26A1 HIGH', med:'\u25C6 MED', low:'\u25CF LOW' };
   var riskC = { high:'#ff0040', med:'#ff8800', low:'#00ff44' };
 
@@ -306,8 +317,9 @@ export function buildCardMockup() {
     var svgTag = p.svg.replace('fill="none">', 'width="'+(w*0.75)+'" height="'+(h*0.45)+'" fill="none">');
     var card = document.createElement('div');
     card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:2px solid '+p.catColor+'44;background:radial-gradient(ellipse at 50% 50%,'+p.bg+',#0E0A06);overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.5);display:flex;flex-direction:column;';
-    // Name bar top
-    card.innerHTML = '<div style="background:'+p.catColor+'22;padding:4px 6px;border-bottom:1px solid '+p.catColor+'33;">'
+    // Category stripe + Name bar top
+    card.innerHTML = '<div style="height:3px;background:'+p.catColor+';border-radius:5px 5px 0 0;"></div>'
+      +'<div style="background:'+p.catColor+'22;padding:4px 6px;border-bottom:1px solid '+p.catColor+'33;">'
       +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?14:11)+'px;color:#fff;letter-spacing:1px;line-height:1;">'+p.name+'</div></div>'
       // Diagram fills center
       +'<div style="flex:1;display:flex;align-items:center;justify-content:center;">'+svgTag+'</div>'
@@ -364,7 +376,7 @@ export function buildCardMockup() {
   var flipCard = document.createElement('div');
   flipCard.style.cssText = 'width:90px;height:126px;perspective:900px;cursor:pointer;';
   var flipInner = document.createElement('div');
-  flipInner.style.cssText = 'width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.5s ease-in-out;';
+  flipInner.style.cssText = 'width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.5s ease-out;';
   var flipFront = buildMaddenPlayer({name:'COLT AVERY',pos:'QB',ovr:78,num:7,tier:'silver',teamColor:'#FF4511'},90,126);
   flipFront.style.cssText += ';position:absolute;inset:0;backface-visibility:hidden;';
   var flipBack = buildHomeCard('offense',90,126);
