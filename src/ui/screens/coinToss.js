@@ -90,7 +90,7 @@ export function buildCoinToss() {
       // Human chooses: pick a Torch Card OR receive at 50
       var choiceLabel = document.createElement('div');
       choiceLabel.style.cssText =
-        "font-family:'Press Start 2P',monospace;font-size:9px;color:var(--muted);" +
+        "font-family:'Rajdhani',monospace;font-size:9px;color:var(--muted);" +
         "letter-spacing:1px;margin-bottom:4px;";
       choiceLabel.textContent = 'CHOOSE YOUR REWARD';
       choicePhase.appendChild(choiceLabel);
@@ -147,7 +147,7 @@ export function buildCoinToss() {
       // OR divider
       var orDiv = document.createElement('div');
       orDiv.style.cssText =
-        "font-family:'Press Start 2P',monospace;font-size:8px;color:var(--muted);letter-spacing:2px;";
+        "font-family:'Rajdhani',monospace;font-size:8px;color:var(--muted);letter-spacing:2px;";
       orDiv.textContent = '- OR -';
       choicePhase.appendChild(orDiv);
 

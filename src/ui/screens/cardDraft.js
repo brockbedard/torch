@@ -212,7 +212,7 @@ function buildPlayCard(card, isSel, staggerIdx) {
 
   // Matchup Intel Badge
   var intel = document.createElement('div');
-  intel.style.cssText = 'position:absolute;top:40px;right:8px;font-family:"Press Start 2P";font-size:5px;background:rgba(0,234,255,0.15);color:var(--cyan);padding:3px 5px;border-radius:4px;border:1px solid rgba(0,234,255,0.3);z-index:5;';
+  intel.style.cssText = 'position:absolute;top:40px;right:8px;font-family:"Rajdhani";font-size:5px;background:rgba(0,234,255,0.15);color:var(--cyan);padding:3px 5px;border-radius:4px;border:1px solid rgba(0,234,255,0.3);z-index:5;';
   var beats = {
     'mesh': 'BEATS MAN', 'slant': 'BEATS BLITZ', 'four_verts': 'BEATS COV 2', 
     'triple_option': 'BEATS EDGE', 'ir_robber': 'STOPS SLANT', 'ct_corner_blitz': 'STOPS DEEP'
@@ -256,7 +256,7 @@ function showPlayReview(team, offHand, defHand, onContinue) {
 
   function buildSection(label, plays, offset) {
     var lbl = document.createElement('div');
-    lbl.style.cssText = "font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;margin:8px 0 4px;";
+    lbl.style.cssText = "font-family:'Rajdhani';font-size:8px;color:#00ff88;letter-spacing:1px;margin:8px 0 4px;";
     lbl.textContent = label;
     scroll.appendChild(lbl);
 
@@ -344,7 +344,7 @@ export function buildCardDraft() {
 
   var backBtn = document.createElement('button');
   backBtn.style.cssText =
-    'font-family:\'Press Start 2P\',monospace;font-size:10px;padding:10px 16px;' +
+    'font-family:\'Rajdhani\',sans-serif;font-weight:700;font-size:14px;padding:10px 16px;letter-spacing:1px;' +
     'cursor:pointer;background:#000;color:var(--white);border:2px solid #333;';
   backBtn.textContent = '\u2190 BACK';
   backBtn.onclick = function() {
@@ -382,7 +382,7 @@ export function buildCardDraft() {
   title.style.cssText = 'font-size:22px;margin-bottom:0;';
   title.textContent = isOff ? 'PICK OFFENSIVE PLAYS' : 'PICK DEFENSIVE PLAYS';
   var autoBtn = document.createElement('button');
-  autoBtn.style.cssText = "font-family:'Press Start 2P';font-size:6px;color:var(--cyan);background:none;border:1px solid var(--cyan);padding:5px 8px;cursor:pointer;border-radius:12px;opacity:.7;";
+  autoBtn.style.cssText = "font-family:'Rajdhani';font-size:6px;color:var(--cyan);background:none;border:1px solid var(--cyan);padding:5px 8px;cursor:pointer;border-radius:12px;opacity:.7;";
   autoBtn.textContent = '\u26A1 AUTO-SELECT';
   autoBtn.onclick = function() {
     SND.click();
@@ -401,7 +401,7 @@ export function buildCardDraft() {
 
   // Dots system
   var dotRow = document.createElement('div');
-  dotRow.style.cssText = "display:flex;align-items:center;font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:8px;";
+  dotRow.style.cssText = "display:flex;align-items:center;font-family:'Rajdhani';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:8px;";
   function refreshDots() {
     var count = Object.keys(selected).length;
     var dots = '';

@@ -37,26 +37,26 @@ const CSS = `
 .T-sb-pos-arrow{position:absolute;top:50%;transform:translateY(-50%);font-size:12px;color:#c8a030;line-height:1}
 .T-sb-pos-arrow-l{left:-14px}
 .T-sb-pos-arrow-r{right:-14px}
-.T-sb-pts{font-family:'Press Start 2P';font-size:28px;color:#e8e6ff;line-height:1}
+.T-sb-pts{font-family:'Rajdhani';font-size:28px;color:#e8e6ff;line-height:1}
 .T-sb-pts-glow{text-shadow:0 0 14px rgba(255,204,0,.5)}
 .T-sb-center{text-align:center;padding:0 8px;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);min-width:80px}
 .T-sb-half{font-family:'Bebas Neue';font-size:17px;color:#c8a030;letter-spacing:2px;line-height:1;white-space:nowrap}
-.T-sb-snap{font-family:'Press Start 2P';font-size:12px;color:#e8e6ff;margin-top:3px;line-height:1;text-shadow:0 0 4px rgba(255,255,255,.2)}
-.T-sb-countdown{font-family:'Press Start 2P';font-size:9px;color:#554f80;margin-top:5px;line-height:1}
+.T-sb-snap{font-family:'Rajdhani';font-size:12px;color:#e8e6ff;margin-top:3px;line-height:1;text-shadow:0 0 4px rgba(255,255,255,.2)}
+.T-sb-countdown{font-family:'Rajdhani';font-size:9px;color:#554f80;margin-top:5px;line-height:1}
 .T-sb-countdown-live{font-size:14px;color:#e03050;text-shadow:0 0 10px rgba(224,48,80,.5)}
 /* situation bar — always one line, never wraps */
 .T-sb-sit{display:flex;align-items:center;justify-content:center;padding:6px 8px;background:rgba(0,0,0,.4);border-top:1px solid rgba(255,255,255,.04);gap:8px;white-space:nowrap;overflow:hidden}
-.T-sb-sit-down{font-family:'Press Start 2P';font-size:10px;color:#30c0e0;letter-spacing:.5px;flex-shrink:0}
+.T-sb-sit-down{font-family:'Rajdhani';font-size:10px;color:#30c0e0;letter-spacing:.5px;flex-shrink:0}
 .T-sb-sit-div{width:1px;height:14px;background:rgba(255,255,255,.12);flex-shrink:0}
-.T-sb-sit-ball{font-family:'Press Start 2P';font-size:10px;color:#e8e6ff;opacity:.7;letter-spacing:.5px;flex-shrink:1;overflow:hidden;text-overflow:ellipsis}
-.T-sb-sit-torch{font-family:'Press Start 2P';font-size:12px;color:#c8a030;letter-spacing:.5px;transition:transform .08s,text-shadow .08s;flex-shrink:0}
+.T-sb-sit-ball{font-family:'Rajdhani';font-size:10px;color:#e8e6ff;opacity:.7;letter-spacing:.5px;flex-shrink:1;overflow:hidden;text-overflow:ellipsis}
+.T-sb-sit-torch{font-family:'Rajdhani';font-size:12px;color:#c8a030;letter-spacing:.5px;transition:transform .08s,text-shadow .08s;flex-shrink:0}
 
 /* field strip — Tecmo Bowl inspired */
 .T-strip{height:200px;flex-shrink:0;position:relative;background:#1a6a1a;overflow:hidden;border-bottom:1px solid #1a183a}
 .T-field-turf{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.04) 50%,transparent 50%,transparent 100%);background-size:100% 12px}
 .T-yard{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.4)}
 .T-yard-5{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.15)}
-.T-yard-num{position:absolute;font-family:'Press Start 2P';font-size:10px;color:rgba(255,255,255,.45);transform:translateX(-50%);letter-spacing:1px;font-weight:bold}
+.T-yard-num{position:absolute;font-family:'Rajdhani';font-size:10px;color:rgba(255,255,255,.45);transform:translateX(-50%);letter-spacing:1px;font-weight:bold}
 .T-yard-num-top{top:4px}
 .T-yard-num-bot{bottom:4px}
 .T-los{position:absolute;top:0;bottom:0;width:3px;z-index:5;transition:left .4s ease-out}
@@ -64,7 +64,7 @@ const CSS = `
 .T-ez{position:absolute;top:0;bottom:0;width:7%;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .T-ez-l{left:0;border-right:3px solid rgba(255,255,255,.3)}
 .T-ez-r{right:0;border-left:3px solid rgba(255,255,255,.3)}
-.T-ez-text{font-family:'Press Start 2P';font-size:14px;color:rgba(255,255,255,0.6);writing-mode:vertical-lr;letter-spacing:4px}
+.T-ez-text{font-family:'Rajdhani';font-size:14px;color:rgba(255,255,255,0.6);writing-mode:vertical-lr;letter-spacing:4px}
 .T-ez-l .T-ez-text{transform:rotate(180deg)}
 .T-ez-r .T-ez-text{transform:rotate(0deg)}
 .T-midfield-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:72px;opacity:.5;z-index:1;filter:saturate(1.5) drop-shadow(0 0 8px rgba(255,255,255,.15))}
@@ -79,7 +79,7 @@ const CSS = `
 .T-drop-play{left:3%;width:30%}
 .T-drop-player{left:35%;width:30%}
 .T-drop-torch{right:3%;width:28%}
-.T-drop-lbl{font-family:'Press Start 2P';font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-align:center;line-height:1.4}
+.T-drop-lbl{font-family:'Rajdhani';font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-align:center;line-height:1.4}
 .T-drop-hover{border-color:#bb00ff;background:rgba(187,0,255,.15);transform:translateY(-50%) scale(1.02)}
 @keyframes T-drop-pulse{0%,100%{border-color:rgba(187,0,255,0.4);box-shadow:0 0 10px rgba(187,0,255,0.1)}50%{border-color:#bb00ff;box-shadow:inset 0 0 15px rgba(187,0,255,.2),0 0 15px rgba(187,0,255,.4);background:rgba(187,0,255,0.05)}}
 .T-drop-active{animation:T-drop-pulse 1.5s ease-in-out infinite;border-style:solid;opacity:1;z-index:10}
@@ -98,7 +98,7 @@ const CSS = `
 .T-panel-def .T-card{border-color:#30c0e022}
 
 /* instruction */
-.T-inst{text-align:center;padding:6px 0 2px;font-family:'Press Start 2P';font-size:7px;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
+.T-inst{text-align:center;padding:6px 0 2px;font-family:'Rajdhani';font-size:7px;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
 
 /* card tray — matches pregame draft card style */
 .T-tray{display:flex;gap:8px;padding:6px 8px;flex-shrink:0}
@@ -116,7 +116,7 @@ const CSS = `
 
 /* 2min buttons */
 .T-2btns{display:flex;gap:5px}
-.T-2btn{flex:1;padding:10px;font-family:'Press Start 2P';font-size:7px;cursor:pointer;text-align:center;background:none;letter-spacing:.5px;text-transform:uppercase;border:4px solid}
+.T-2btn{flex:1;padding:10px;font-family:'Rajdhani';font-size:7px;cursor:pointer;text-align:center;background:none;letter-spacing:.5px;text-transform:uppercase;border:4px solid}
 .T-2btn:active{transform:translate(3px,3px)}
 .T-spike{color:#30c0e0;border-color:#30c0e0;box-shadow:4px 4px 0 #1a6070,6px 6px 0 #000}
 .T-kneel{color:#554f80;border-color:#554f80;box-shadow:4px 4px 0 #2a2840,6px 6px 0 #000}
@@ -126,11 +126,11 @@ const CSS = `
 .T-pbp{display:flex;flex-direction:column;gap:6px}
 .T-pbp-line{font-family:'Courier New',monospace;font-size:14px;color:#6a6690;line-height:1.4;letter-spacing:.3px}
 .T-pbp-live{color:#e8e6ff;text-shadow:0 0 6px rgba(232,230,255,.15)}
-.T-pbp-result{font-family:'Press Start 2P';font-size:12px;letter-spacing:.5px;line-height:1;margin-top:10px;white-space:nowrap;overflow:hidden}
-.T-pbp-down{font-family:'Press Start 2P';font-size:10px;color:#30c0e0;margin-top:6px;letter-spacing:.5px;line-height:1;white-space:nowrap;overflow:hidden}
+.T-pbp-result{font-family:'Rajdhani';font-size:12px;letter-spacing:.5px;line-height:1;margin-top:10px;white-space:nowrap;overflow:hidden}
+.T-pbp-down{font-family:'Rajdhani';font-size:10px;color:#30c0e0;margin-top:6px;letter-spacing:.5px;line-height:1;white-space:nowrap;overflow:hidden}
 .T-pbp-idle{font-family:'Courier New',monospace;font-size:11px;color:#333;letter-spacing:.5px}
 /* torch points fly animation */
-.T-torch-fly{position:fixed;z-index:9999;font-family:'Press Start 2P';font-size:12px;color:#c8a030;pointer-events:none;text-shadow:0 0 8px rgba(200,160,48,.5)}
+.T-torch-fly{position:fixed;z-index:9999;font-family:'Rajdhani';font-size:12px;color:#c8a030;pointer-events:none;text-shadow:0 0 8px rgba(200,160,48,.5)}
 @keyframes T-flyup{0%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(.6)}}
 .T-pbp-cursor{display:inline-block;width:6px;height:12px;background:#30c0e0;margin-left:2px;animation:T-blink .6s step-end infinite}
 
@@ -144,7 +144,7 @@ const CSS = `
 .T-rain{position:absolute;font-size:16px;z-index:99;pointer-events:none;animation:T-rain-fall 2s ease-in forwards}
 @keyframes T-crack-in{0%{opacity:0;transform:scale(2)}100%{opacity:1;transform:scale(1)}}
 .T-crack{position:absolute;inset:0;z-index:100;pointer-events:none;display:flex;align-items:center;justify-content:center}
-.T-crack-text{font-family:'Press Start 2P';font-size:18px;letter-spacing:2px;animation:T-crack-in .3s ease-out;text-shadow:0 0 20px currentColor}
+.T-crack-text{font-family:'Rajdhani';font-size:18px;letter-spacing:2px;animation:T-crack-in .3s ease-out;text-shadow:0 0 20px currentColor}
 @keyframes T-impact{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(3)}}
 .T-impact{position:absolute;top:50%;left:50%;width:40px;height:40px;border-radius:50%;z-index:99;pointer-events:none;transform:translate(-50%,-50%);animation:T-impact .4s ease-out forwards}
 @keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
@@ -154,10 +154,10 @@ const CSS = `
 .T-clash-side{flex:1;display:flex;flex-direction:column;gap:4px}
 .T-clash-card{background:var(--bg-surface);border-radius:6px;border:2px solid;overflow:hidden}
 .T-clash-center{display:flex;align-items:center;justify-content:center;padding:0 6px}
-.T-clash-vs{font-family:'Press Start 2P';font-size:14px;color:#fff;background:rgba(200,160,48,.95);padding:8px 12px;border-radius:8px;box-shadow:0 0 24px rgba(200,160,48,.7),0 0 50px rgba(200,160,48,.3);letter-spacing:3px;line-height:1}
+.T-clash-vs{font-family:'Rajdhani';font-size:14px;color:#fff;background:rgba(200,160,48,.95);padding:8px 12px;border-radius:8px;box-shadow:0 0 24px rgba(200,160,48,.7),0 0 50px rgba(200,160,48,.3);letter-spacing:3px;line-height:1}
 /* torch points big popup */
 @keyframes T-torch-pop{0%{opacity:1;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-50%) scale(0.8) translateY(-30px)}}
-.T-torch-big{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);z-index:9999;font-family:'Press Start 2P';font-size:28px;pointer-events:none;animation:T-torch-pop 1.5s ease-out forwards;text-shadow:0 0 20px currentColor}
+.T-torch-big{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);z-index:9999;font-family:'Rajdhani';font-size:28px;pointer-events:none;animation:T-torch-pop 1.5s ease-out forwards;text-shadow:0 0 20px currentColor}
 
 /* overlays */
 .T-ov{position:absolute;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;pointer-events:none}
@@ -170,18 +170,18 @@ const CSS = `
 .T-ov-result .T-r-sub{font-family:'Courier New';font-size:9px;color:#8a86b0;margin-top:10px;max-width:300px;line-height:1.5}
 
 /* possession cut */
-.T-ov-poss .T-poss-score{font-family:'Press Start 2P';font-size:22px;color:#e8e6ff}
+.T-ov-poss .T-poss-score{font-family:'Rajdhani';font-size:22px;color:#e8e6ff}
 .T-ov-poss .T-poss-who{font-family:'Bebas Neue';font-size:22px;letter-spacing:3px;margin:10px 0}
 .T-ov-poss .T-poss-tag{font-family:'Courier New';font-size:9px;color:#554f80;font-style:italic}
 
 /* conversion */
 .T-conv{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px}
 .T-conv-hdr{font-family:'Bebas Neue';font-size:36px;color:#3df58a;letter-spacing:3px}
-.T-conv-btn{width:100%;max-width:260px;padding:14px;font-family:'Press Start 2P';font-size:7px;border-radius:8px;cursor:pointer;text-align:center;background:none;letter-spacing:.5px;line-height:1.6}
+.T-conv-btn{width:100%;max-width:260px;padding:14px;font-family:'Rajdhani';font-size:7px;border-radius:8px;cursor:pointer;text-align:center;background:none;letter-spacing:.5px;line-height:1.6}
 
 /* drive summary */
 .T-drv{padding:10px 14px;text-align:center}
-.T-drv-hdr{font-family:'Press Start 2P';font-size:7px;letter-spacing:1px;margin-bottom:4px}
+.T-drv-hdr{font-family:'Rajdhani';font-size:7px;letter-spacing:1px;margin-bottom:4px}
 .T-drv-stat{font-family:'Courier New';font-size:9px;color:#554f80}
 
 /* 2-min transformation */
@@ -570,7 +570,7 @@ export function buildGameplay() {
     if (torchCard) {
       center.innerHTML =
         "<div style=\"background:#1a1030;border:2px solid #c8a030;border-radius:6px;padding:6px 10px;box-shadow:0 0 16px rgba(200,160,48,.4)\">" +
-          "<div style=\"font-family:'Press Start 2P';font-size:5px;color:#c8a030;text-align:center\">" + torchCard.tier + "</div>" +
+          "<div style=\"font-family:'Rajdhani';font-size:5px;color:#c8a030;text-align:center\">" + torchCard.tier + "</div>" +
           "<div style=\"font-family:'Bebas Neue';font-size:13px;color:#c8a030;line-height:1;text-align:center\">" + torchCard.name + "</div>" +
         "</div>";
     } else {
@@ -1356,7 +1356,7 @@ export function buildGameplay() {
       var skipBtn = document.createElement('div');
       skipBtn.className = 'T-card';
       skipBtn.style.cssText = 'border:2px dashed #554f8044;display:flex;align-items:center;justify-content:center;cursor:pointer;';
-      skipBtn.innerHTML = "<div style=\"font-family:'Press Start 2P';font-size:7px;color:#554f80;text-align:center\">SKIP<br>TORCH</div>";
+      skipBtn.innerHTML = "<div style=\"font-family:'Rajdhani';font-size:7px;color:#554f80;text-align:center\">SKIP<br>TORCH</div>";
       skipBtn.onclick = function() { SND.click(); phase = 'ready'; drawField(); drawPanel(); };
       tray.appendChild(skipBtn);
     }
@@ -1646,7 +1646,7 @@ export function buildGameplay() {
         "<div style=\"font-family:'Bebas Neue';font-size:26px;color:var(--a-gold);letter-spacing:2px\">" + winner + " WINS THE TOSS</div>";
 
       if (humanWins) {
-        resultDiv.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Press Start 2P';font-size:7px;color:var(--muted);letter-spacing:1px\">CHOOSE YOUR REWARD</div>");
+        resultDiv.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Rajdhani';font-size:7px;color:var(--muted);letter-spacing:1px\">CHOOSE YOUR REWARD</div>");
 
         var cardRow = document.createElement('div');
         cardRow.style.cssText = 'display:flex;gap:6px;width:100%;';
@@ -1668,7 +1668,7 @@ export function buildGameplay() {
         });
         resultDiv.appendChild(cardRow);
 
-        resultDiv.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Press Start 2P';font-size:7px;color:var(--muted);letter-spacing:2px\">\u2014 OR \u2014</div>");
+        resultDiv.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Rajdhani';font-size:7px;color:var(--muted);letter-spacing:2px\">\u2014 OR \u2014</div>");
 
         var recBtn = document.createElement('button');
         recBtn.className = 'btn-blitz';
@@ -1707,7 +1707,7 @@ export function buildGameplay() {
         "Real countdown clock<br>" +
         "Both teams go for it on 4th down<br>" +
       "</div>" +
-      "<div style=\"font-family:'Press Start 2P';font-size:7px;color:var(--muted);letter-spacing:1px;margin-top:8px\">TAP TO START</div>";
+      "<div style=\"font-family:'Rajdhani';font-size:7px;color:var(--muted);letter-spacing:1px;margin-top:8px\">TAP TO START</div>";
     el.appendChild(ov);
     requestAnimationFrame(function() { ov.style.opacity = '1'; });
     ov.onclick = function() { SND.click(); ov.style.opacity = '0'; setTimeout(function() { ov.remove(); onDone(); }, 250); };

@@ -40,7 +40,7 @@ export function buildHalftime() {
     var b = document.createElement('div'); b.style.textAlign = 'center';
     var n = document.createElement('div'); n.style.cssText = `font-family:'Bebas Neue';font-size:24px;color:${color};letter-spacing:2px;`;
     n.textContent = name;
-    var s = document.createElement('div'); s.style.cssText = "font-family:'Press Start 2P';font-size:32px;color:#fff;text-shadow:0 0 15px rgba(255,255,255,0.3);";
+    var s = document.createElement('div'); s.style.cssText = "font-family:'Rajdhani';font-size:32px;color:#fff;text-shadow:0 0 15px rgba(255,255,255,0.3);";
     s.textContent = score;
     b.append(n, s); return b;
   };
@@ -54,8 +54,8 @@ export function buildHalftime() {
   var shopHdr = document.createElement('div');
   shopHdr.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid #222;padding-bottom:8px;";
   shopHdr.innerHTML = `
-    <div style="font-family:'Press Start 2P';font-size:10px;color:var(--a-gold);">LOCKER ROOM SHOP</div>
-    <div style="font-family:'Press Start 2P';font-size:9px;color:var(--l-green);">${humanPts} PTS</div>
+    <div style="font-family:'Rajdhani';font-size:10px;color:var(--a-gold);">LOCKER ROOM SHOP</div>
+    <div style="font-family:'Rajdhani';font-size:9px;color:var(--l-green);">${humanPts} PTS</div>
   `;
   shopBox.appendChild(shopHdr);
 
@@ -84,7 +84,7 @@ export function buildHalftime() {
     cardEl.innerHTML = `
       <div style="font-size:6px;color:var(--muted);">${card.tier}</div>
       <div style="font-family:'Bebas Neue';font-size:13px;color:#fff;margin:2px 0;">${card.name}</div>
-      <div style="font-family:'Press Start 2P';font-size:8px;color:var(--l-green);">${card.cost}P</div>
+      <div style="font-family:'Rajdhani';font-size:8px;color:var(--l-green);">${card.cost}P</div>
     `;
 
     if (canAfford && !alreadyHas3) {

@@ -80,7 +80,7 @@ export function buildSetup() {
 
   var backBtn = document.createElement('button');
   backBtn.style.cssText =
-    "font-family:'Press Start 2P',monospace;font-size:10px;padding:10px 16px;" +
+    "font-family:'Rajdhani',monospace;font-size:10px;padding:10px 16px;" +
     "cursor:pointer;background:#000;color:var(--white);border:2px solid #333;";
   backBtn.textContent = '\u2190 BACK';
   backBtn.onclick = function() { SND.click(); setGs(null); };
@@ -167,7 +167,7 @@ export function buildSetup() {
       stars += '<span style="color:' + starCol + '">' + char + '</span>';
     }
     return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0px">' +
-      "<span style=\"font-family:'Press Start 2P';font-size:9px;color:#fff;letter-spacing:0.5px;text-shadow:1px 1px 2px #000\">" + label + "</span>" +
+      "<span style=\"font-family:'Rajdhani';font-size:9px;color:#fff;letter-spacing:0.5px;text-shadow:1px 1px 2px #000\">" + label + "</span>" +
       "<span style=\"font-family:'Courier New';font-size:14px;font-weight:bold;letter-spacing:-1px\">" + stars + "</span>" +
     '</div>';
   }
@@ -230,7 +230,7 @@ export function buildSetup() {
         '<div style="font-size:36px;filter:drop-shadow(0 0 15px ' + tColor + ')">' + team.icon + '</div>' +
         '<div style="display:flex;flex-direction:column;gap:2px;">' +
           "<div style=\"font-family:'Bebas Neue';font-size:26px;color:#fff;line-height:1;letter-spacing:2px;text-shadow:2px 2px 4px #000\">" + teamFullName + "</div>" +
-          "<div style=\"font-family:'Press Start 2P';font-size:8px;color:" + tColor + ";letter-spacing:1px;text-shadow:0 0 10px #000\">" + x.motto + "</div>" +
+          "<div style=\"font-family:'Rajdhani';font-size:8px;color:" + tColor + ";letter-spacing:1px;text-shadow:0 0 10px #000\">" + x.motto + "</div>" +
         '</div>';
       contentWrap.appendChild(topRow);
 
@@ -255,7 +255,7 @@ export function buildSetup() {
         ratingRow('OVERALL', x.ratings.OVR, tColor) +
         '<div style="border-top:1px solid rgba(255,255,255,0.1);margin-top:2px;padding-top:2px;display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;">' +
           '<span style="font-size:10px;color:var(--a-gold);line-height:1;">\u2605</span>' +
-          '<span style="font-family:\'Press Start 2P\';font-size:9px;color:var(--a-gold);text-transform:uppercase;letter-spacing:-0.8px;">STAR: ' + x.starPlayers + '</span>' +
+          '<span style="font-family:\'Rajdhani\';font-size:9px;color:var(--a-gold);text-transform:uppercase;letter-spacing:-0.8px;">STAR: ' + x.starPlayers + '</span>' +
         '</div>';
       
       botRow.append(coachCircle, statsBox);

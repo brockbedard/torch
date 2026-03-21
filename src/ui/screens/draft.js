@@ -128,7 +128,7 @@ function showRosterReview(team, offRoster, defRoster, onContinue) {
 
   function buildSection(label, players, side, offset) {
     var lbl = document.createElement('div');
-    lbl.style.cssText = "font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;margin:8px 0 4px;";
+    lbl.style.cssText = "font-family:'Rajdhani';font-size:8px;color:#00ff88;letter-spacing:1px;margin:8px 0 4px;";
     lbl.textContent = label;
     scroll.appendChild(lbl);
 
@@ -208,7 +208,7 @@ export function buildDraft() {
   hdr.appendChild(hdrTitle);
 
   var backBtn = document.createElement('button');
-  backBtn.style.cssText = "font-family:'Press Start 2P';font-size:10px;padding:10px 16px;cursor:pointer;background:#000;color:var(--white);border:2px solid #333;";
+  backBtn.style.cssText = "font-family:'Rajdhani';font-size:10px;padding:10px 16px;cursor:pointer;background:#000;color:var(--white);border:2px solid #333;";
   backBtn.textContent = '\u2190 BACK';
   backBtn.onclick = function() {
     SND.click();
@@ -235,7 +235,7 @@ export function buildDraft() {
   title.style.cssText = 'font-size:22px;margin-bottom:0;';
   title.textContent = isDef ? 'PICK DEFENSE ROSTER' : 'PICK OFFENSE ROSTER';
   var autoBtn = document.createElement('button');
-  autoBtn.style.cssText = "font-family:'Press Start 2P';font-size:6px;color:var(--cyan);background:none;border:1px solid var(--cyan);padding:5px 8px;cursor:pointer;border-radius:12px;opacity:.7;";
+  autoBtn.style.cssText = "font-family:'Rajdhani';font-size:6px;color:var(--cyan);background:none;border:1px solid var(--cyan);padding:5px 8px;cursor:pointer;border-radius:12px;opacity:.7;";
   autoBtn.textContent = '\u26A1 AUTO-SELECT';
   titleRow.append(title, autoBtn);
   content.appendChild(titleRow);
@@ -246,7 +246,7 @@ export function buildDraft() {
 
   // Primary label
   var primaryLabel = document.createElement('div');
-  primaryLabel.style.cssText = "display:flex;align-items:center;font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:4px;";
+  primaryLabel.style.cssText = "display:flex;align-items:center;font-family:'Rajdhani';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:4px;";
   function refreshPrimaryLabel() {
     var dot = selPrimary ? '●' : '○';
     primaryLabel.innerHTML = (isDef ? 'LINEBACKER' : 'QUARTERBACK') + ' \u2014 PICK 1 <span style="font-size:18px;margin-left:8px;line-height:0;display:inline-flex;align-items:center;height:10px;vertical-align:middle;transform:translateY(-4px)">' + dot + '</span>';
@@ -261,7 +261,7 @@ export function buildDraft() {
 
   // Skill label
   var skillLabel = document.createElement('div');
-  skillLabel.style.cssText = "display:flex;align-items:center;font-family:'Press Start 2P';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:4px;";
+  skillLabel.style.cssText = "display:flex;align-items:center;font-family:'Rajdhani';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:4px;";
   function refreshSkillLabel() {
     var count = Object.keys(selSkill).length;
     var dots = '';

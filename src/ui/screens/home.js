@@ -103,32 +103,40 @@ export function buildHome(){
     +'<defs>'
     +'<linearGradient id="flameOuter" x1="60" y1="180" x2="60" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="50%" stop-color="#FF8C00"/><stop offset="100%" stop-color="#FFD700"/></linearGradient>'
     +'<linearGradient id="flameInner" x1="60" y1="150" x2="60" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="40%" stop-color="#FFAA00"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient>'
-    +'<linearGradient id="ballGrad" x1="40" y1="130" x2="80" y2="160" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8B4513"/><stop offset="40%" stop-color="#5C2D0E"/><stop offset="100%" stop-color="#3A1A00"/></linearGradient>'
-    +'<linearGradient id="laceGlow" x1="55" y1="140" x2="65" y2="155" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFFBE6"/><stop offset="100%" stop-color="#FF8C00"/></linearGradient>'
+    +'<linearGradient id="ballGrad" x1="36" y1="140" x2="84" y2="165" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#D4893B"/><stop offset="50%" stop-color="#B5652B"/><stop offset="100%" stop-color="#8B4A1F"/></linearGradient>'
+    +'<linearGradient id="laceGlow" x1="55" y1="140" x2="65" y2="155" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFFBE6"/><stop offset="100%" stop-color="#FFD080"/></linearGradient>'
     +'<filter id="flameGlow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
-    +'<filter id="hotGlow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
+    +'<filter id="hotGlow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
     +'</defs>'
     // Flame erupts from the football
     +'<path d="M60 2C60 2 28 40 22 75C16 110 32 138 42 148C42 148 36 122 45 100C50 88 56 78 60 65C64 78 70 88 75 100C84 122 78 148 78 148C88 138 104 110 98 75C92 40 60 2 60 2Z" fill="url(#flameOuter)" filter="url(#flameGlow)"/>'
     +'<path d="M60 28C60 28 42 58 38 82C34 106 44 128 52 136C52 136 46 115 52 98C56 88 58 80 60 70C62 80 64 88 68 98C74 115 68 136 68 136C76 128 86 106 82 82C78 58 60 28 60 28Z" fill="url(#flameInner)" opacity="0.9" style="animation:flameInnerSway 1.8s ease-in-out infinite;transform-origin:50% 100%;"/>'
-    // Football at the base — tilted 30deg, flame erupts from laces end
-    +'<g transform="translate(60,152) rotate(-30)">'
-    +'<ellipse cx="0" cy="0" rx="24" ry="13" fill="url(#ballGrad)" stroke="#2A1000" stroke-width="1"/>'
-    // Leather texture lines
-    +'<path d="M-18 -2C-10 -8 10 -8 18 -2" stroke="#4A2800" stroke-width="0.6" fill="none" opacity="0.4"/>'
-    +'<path d="M-18 2C-10 8 10 8 18 2" stroke="#4A2800" stroke-width="0.6" fill="none" opacity="0.4"/>'
-    // Laces — glowing white-hot
-    +'<line x1="-6" y1="-1" x2="6" y2="-1" stroke="url(#laceGlow)" stroke-width="1.5" stroke-linecap="round" filter="url(#hotGlow)"/>'
-    +'<line x1="-4" y1="-4" x2="-4" y2="2" stroke="url(#laceGlow)" stroke-width="1" stroke-linecap="round" filter="url(#hotGlow)"/>'
-    +'<line x1="0" y1="-4.5" x2="0" y2="2.5" stroke="url(#laceGlow)" stroke-width="1" stroke-linecap="round" filter="url(#hotGlow)"/>'
-    +'<line x1="4" y1="-4" x2="4" y2="2" stroke="url(#laceGlow)" stroke-width="1" stroke-linecap="round" filter="url(#hotGlow)"/>'
+    // Football at the base — pointed oval (not ellipse), tilted 30deg
+    +'<g transform="translate(60,153) rotate(-30)">'
+    // Pointed football body shape
+    +'<path d="M-26 0C-26 -5 -20 -13 -10 -14C-3 -14.5 3 -14.5 10 -14C20 -13 26 -5 26 0C26 5 20 13 10 14C3 14.5 -3 14.5 -10 14C-20 13 -26 5 -26 0Z" fill="url(#ballGrad)" stroke="#6B3410" stroke-width="0.8"/>'
+    // Specular highlight — upper left
+    +'<ellipse cx="-6" cy="-5" rx="10" ry="4" fill="white" opacity="0.1" transform="rotate(-15)"/>'
+    // White tip stripes (college football)
+    +'<path d="M-23 -3C-22 -7 -20 -10 -17 -11.5" stroke="#F5F0E0" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.85"/>'
+    +'<path d="M-23 3C-22 7 -20 10 -17 11.5" stroke="#F5F0E0" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.85"/>'
+    +'<path d="M23 -3C22 -7 20 -10 17 -11.5" stroke="#F5F0E0" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.85"/>'
+    +'<path d="M23 3C22 7 20 10 17 11.5" stroke="#F5F0E0" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.85"/>'
+    // Center seam (curved along top contour)
+    +'<path d="M-14 -2.5C-7 -6.5 7 -6.5 14 -2.5" stroke="#FFFBE6" stroke-width="1.3" stroke-linecap="round" fill="none" filter="url(#hotGlow)"/>'
+    // 5 cross-stitches
+    +'<line x1="-9" y1="-6.5" x2="-9" y2="-0.5" stroke="#FFFBE6" stroke-width="0.9" stroke-linecap="round" filter="url(#hotGlow)"/>'
+    +'<line x1="-4.5" y1="-7.5" x2="-4.5" y2="-1.5" stroke="#FFFBE6" stroke-width="0.9" stroke-linecap="round" filter="url(#hotGlow)"/>'
+    +'<line x1="0" y1="-7.8" x2="0" y2="-1.8" stroke="#FFFBE6" stroke-width="0.9" stroke-linecap="round" filter="url(#hotGlow)"/>'
+    +'<line x1="4.5" y1="-7.5" x2="4.5" y2="-1.5" stroke="#FFFBE6" stroke-width="0.9" stroke-linecap="round" filter="url(#hotGlow)"/>'
+    +'<line x1="9" y1="-6.5" x2="9" y2="-0.5" stroke="#FFFBE6" stroke-width="0.9" stroke-linecap="round" filter="url(#hotGlow)"/>'
     +'</g>'
     // Speed lines trailing behind the nose
-    +'<path d="M38 160Q32 164 26 162" stroke="#FF8C00" stroke-width="1" fill="none" opacity="0.4"/>'
-    +'<path d="M36 164Q28 168 22 166" stroke="#FF5E1A" stroke-width="0.8" fill="none" opacity="0.3"/>'
-    +'<path d="M40 156Q34 158 30 156" stroke="#FFD700" stroke-width="0.6" fill="none" opacity="0.25"/>'
+    +'<path d="M38 161Q30 166 24 163" stroke="#FF8C00" stroke-width="1.2" fill="none" opacity="0.35"/>'
+    +'<path d="M36 165Q26 170 20 167" stroke="#FF5E1A" stroke-width="0.9" fill="none" opacity="0.25"/>'
+    +'<path d="M40 157Q34 160 28 158" stroke="#FFD700" stroke-width="0.7" fill="none" opacity="0.2"/>'
     // Base glow
-    +'<ellipse cx="60" cy="165" rx="20" ry="6" fill="#FF5E1A" opacity="0.2"/>'
+    +'<ellipse cx="60" cy="167" rx="22" ry="7" fill="#FF5E1A" opacity="0.15"/>'
     +'</svg>';
 
   logoWrap.append(fireEl);
@@ -142,18 +150,55 @@ export function buildHome(){
 
   // === TAGLINE ===
   var tagline=document.createElement('div');
-  tagline.style.cssText="font-family:'Press Start 2P',monospace;font-size:7px;color:var(--cyan);letter-spacing:3px;text-align:center;margin-top:10px;margin-bottom:8px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.7s both;text-shadow:0 0 12px rgba(0,234,255,0.3);";
-  tagline.textContent='DRAFT. SNAP. SCORE.';
+  tagline.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:600;font-size:11px;color:var(--cyan);letter-spacing:4px;text-align:center;margin-top:10px;margin-bottom:8px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.7s both;text-shadow:0 0 12px rgba(0,234,255,0.3);text-transform:uppercase;";
+  tagline.textContent='DEAL THE PLAY.';
   el.append(tagline);
 
-  // === CARD FAN PREVIEW — premium style ===
+  // === CARD FAN — playing card style with football art ===
   var cardFan=document.createElement('div');
-  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:200px;height:90px;margin-top:12px;margin-bottom:20px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.9s both;overflow:visible;';
-  // Card data: glyph, tint, pip color (cyan=offense, purple=defense)
+  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:200px;height:100px;margin-top:12px;margin-bottom:20px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.9s both;overflow:visible;';
+  // Card data: accent color, bg tint, label, pip color, card type, art SVG
   var fanData=[
-    {glyph:'\u2316',tint:'#0D0820',pip:'#8B5CF6'},  // crosshair — defense
-    {glyph:'\u26A1',tint:'#1A0E05',pip:'#00E5C0'},   // lightning — offense (center hero)
-    {glyph:'\u2694',tint:'#051A18',pip:'#00E5C0'},    // swords — offense
+    {accent:'#F5B800',bg:'#0a2010',label:'OFFENSE',pip:'#00E5C0',
+     art:'<svg viewBox="0 0 36 38" fill="none" width="36" height="38">'
+       +'<line x1="4" y1="34" x2="32" y2="34" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>'
+       +'<line x1="4" y1="22" x2="32" y2="22" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>'
+       +'<circle cx="18" cy="30" r="2" fill="#F5B800" opacity="0.9"/>'
+       +'<circle cx="10" cy="30" r="1.5" fill="#F5B800" opacity="0.7"/>'
+       +'<circle cx="26" cy="30" r="1.5" fill="#F5B800" opacity="0.7"/>'
+       +'<circle cx="6" cy="28" r="1.5" fill="#F5B800" opacity="0.7"/>'
+       +'<circle cx="30" cy="28" r="1.5" fill="#F5B800" opacity="0.7"/>'
+       +'<path d="M10 30L10 20L4 12" stroke="#F5B800" stroke-width="0.8" fill="none" opacity="0.6"/>'
+       +'<path d="M26 30L26 20L32 12" stroke="#F5B800" stroke-width="0.8" fill="none" opacity="0.6"/>'
+       +'<path d="M18 30L18 14" stroke="#F5B800" stroke-width="0.8" stroke-dasharray="2 1.5" fill="none" opacity="0.5"/>'
+       +'<polygon points="4,11 5.5,13 2.5,13" fill="#F5B800" opacity="0.6"/>'
+       +'<polygon points="32,11 33.5,13 30.5,13" fill="#F5B800" opacity="0.6"/>'
+       +'<polygon points="18,13 19.5,15 16.5,15" fill="#F5B800" opacity="0.5"/>'
+       +'</svg>',
+     cornerPip:'<svg viewBox="0 0 5 3" width="5" height="3"><ellipse cx="2.5" cy="1.5" rx="2.5" ry="1.5" fill="#F5B800"/></svg>'},
+    {accent:'#FF5E1A',bg:'#1a0800',label:'TORCH',pip:'#FF5E1A',
+     art:'<svg viewBox="0 0 36 38" fill="none" width="36" height="38">'
+       +'<path d="M18 4C18 4 10 14 9 20C8 26 12 31 15 33C15 33 13 27 15 22C16 19 17 17 18 14C19 17 20 19 21 22C23 27 21 33 21 33C24 31 28 26 27 20C26 14 18 4 18 4Z" fill="url(#noGrad)" stroke="#FF5E1A" stroke-width="0.5" opacity="0.9"/>'
+       +'<path d="M18 12C18 12 14 18 13 22C12 26 14 30 16 32C16 32 15 28 16 24C17 21 18 19 18 16C18 19 19 21 20 24C21 28 20 32 20 32C22 30 24 26 23 22C22 18 18 12 18 12Z" fill="#FFD700" opacity="0.5"/>'
+       +'<line x1="14" y1="36" x2="22" y2="36" stroke="rgba(255,255,255,0.15)" stroke-width="0.5"/>'
+       +'<path d="M16 2L18 0L20 2" stroke="rgba(255,255,255,0.2)" stroke-width="0.5" fill="none"/>'
+       +'<defs><linearGradient id="noGrad" x1="18" y1="33" x2="18" y2="4"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="100%" stop-color="#FFD700"/></linearGradient></defs>'
+       +'</svg>',
+     cornerPip:'<svg viewBox="0 0 5 6" width="4" height="5"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF5E1A"/></svg>'},
+    {accent:'#00E5C0',bg:'#051a18',label:'DEFENSE',pip:'#8B5CF6',
+     art:'<svg viewBox="0 0 36 38" fill="none" width="36" height="38">'
+       +'<line x1="4" y1="34" x2="32" y2="34" stroke="rgba(0,229,192,0.06)" stroke-width="0.5"/>'
+       +'<line x1="4" y1="22" x2="32" y2="22" stroke="rgba(0,229,192,0.06)" stroke-width="0.5"/>'
+       +'<circle cx="12" cy="10" r="1.5" fill="#00E5C0" opacity="0.7"/>'
+       +'<circle cx="24" cy="10" r="1.5" fill="#00E5C0" opacity="0.7"/>'
+       +'<circle cx="18" cy="14" r="1.5" fill="#00E5C0" opacity="0.7"/>'
+       +'<path d="M6 8Q18 24 30 8" stroke="#00E5C0" stroke-width="0.8" stroke-dasharray="2 1.5" fill="none" opacity="0.5"/>'
+       +'<path d="M2 14Q18 32 34 14" stroke="#00E5C0" stroke-width="0.8" stroke-dasharray="2 1.5" fill="none" opacity="0.35"/>'
+       +'<circle cx="18" cy="30" r="2" fill="#00E5C0" opacity="0.5"/>'
+       +'<path d="M18 30L14 34" stroke="#00E5C0" stroke-width="0.6" fill="none" opacity="0.4"/>'
+       +'<path d="M18 30L22 34" stroke="#00E5C0" stroke-width="0.6" fill="none" opacity="0.4"/>'
+       +'</svg>',
+     cornerPip:'<svg viewBox="0 0 6 6" width="5" height="5"><path d="M3 0L5.5 2L5 5L3 6L1 5L0.5 2Z" fill="#00E5C0"/></svg>'},
   ];
   var fanAngles=[-15,0,15];
   var fanX=[-30,0,30];
@@ -161,37 +206,50 @@ export function buildHome(){
   var fanZ=[1,3,1];
   var fanScale=[1,1.06,1];
   for(var c=0;c<3;c++){
-    var card=document.createElement('div');
+    var d=fanData[c];
     var isCenter=c===1;
+    var card=document.createElement('div');
     card.style.cssText='position:absolute;width:56px;height:78px;border-radius:5px;'
-      +'background:radial-gradient(ellipse at 50% 30%,'+fanData[c].tint+' 0%,#09081A 100%);'
-      +'display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;'
+      +'background:linear-gradient(170deg,'+d.bg+' 0%,#09081A 100%);'
+      +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
       +'transform:rotate('+fanAngles[c]+'deg) translateX('+fanX[c]+'px) translateY('+fanY[c]+'px) scale('+fanScale[c]+');'
       +'z-index:'+fanZ[c]+';'
       +'box-shadow:0 4px 16px rgba(0,0,0,0.5)'+(isCenter?',0 0 12px rgba(245,184,0,0.15)':'')+';'
-      +'border:2px solid transparent;'
-      +'background-clip:padding-box;'
-      +'overflow:hidden;';
-    // Gradient border via pseudo-technique (outer wrapper)
+      +'overflow:hidden;position:absolute;';
+    // Gradient border wrapper
     var borderWrap=document.createElement('div');
-    borderWrap.style.cssText='position:absolute;inset:-2px;border-radius:7px;background:linear-gradient(135deg,#FF5E1A,#F5B800,#FF5E1A);z-index:-1;';
+    borderWrap.style.cssText='position:absolute;inset:-2px;border-radius:7px;background:linear-gradient(135deg,'+d.accent+',#F5B800,'+d.accent+');z-index:-1;';
     card.appendChild(borderWrap);
-    // Inner edge catch
-    var innerEdge=document.createElement('div');
-    innerEdge.style.cssText='position:absolute;inset:0;border-radius:5px;border:1px solid rgba(255,255,255,0.08);pointer-events:none;z-index:2;';
-    card.appendChild(innerEdge);
-    // Center glyph
-    var glyph=document.createElement('div');
-    glyph.style.cssText='font-size:22px;color:#F5B800;text-shadow:0 0 8px rgba(245,184,0,0.4);line-height:1;margin-top:2px;';
-    glyph.textContent=fanData[c].glyph;
-    card.appendChild(glyph);
-    // Bottom pip (rarity gem)
-    var pip=document.createElement('div');
-    pip.style.cssText='position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:'+fanData[c].pip+';box-shadow:0 0 4px '+fanData[c].pip+';';
-    card.appendChild(pip);
+    // Card margin (2px inset light border — "bleed margin")
+    var margin=document.createElement('div');
+    margin.style.cssText='position:absolute;inset:2px;border-radius:3px;border:1px solid '+d.accent+'66;pointer-events:none;z-index:4;';
+    card.appendChild(margin);
+    // Corner pip — top left
+    var pipTL=document.createElement('div');
+    pipTL.style.cssText='position:absolute;top:4px;left:4px;z-index:5;';
+    pipTL.innerHTML=d.cornerPip;
+    card.appendChild(pipTL);
+    // Corner pip — bottom right (rotated 180)
+    var pipBR=document.createElement('div');
+    pipBR.style.cssText='position:absolute;bottom:14px;right:4px;z-index:5;transform:rotate(180deg);';
+    pipBR.innerHTML=d.cornerPip;
+    card.appendChild(pipBR);
+    // Center art area
+    var artArea=document.createElement('div');
+    artArea.style.cssText='margin-top:2px;z-index:3;';
+    artArea.innerHTML=d.art;
+    card.appendChild(artArea);
+    // Bottom nameplate
+    var nameplate=document.createElement('div');
+    nameplate.style.cssText='position:absolute;bottom:0;left:0;right:0;height:12px;background:'+d.accent+'dd;display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 3px 3px;';
+    var npText=document.createElement('div');
+    npText.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:6px;color:#09081A;letter-spacing:1.5px;";
+    npText.textContent=d.label;
+    nameplate.appendChild(npText);
+    card.appendChild(nameplate);
     // Shimmer sweep
     var shimmer=document.createElement('div');
-    shimmer.style.cssText='position:absolute;inset:0;border-radius:5px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);animation:cardShimmer 4s '+(c*0.5)+'s ease-in-out infinite;pointer-events:none;z-index:3;';
+    shimmer.style.cssText='position:absolute;inset:0;border-radius:5px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);animation:cardShimmer 4s '+(c*0.5)+'s ease-in-out infinite;pointer-events:none;z-index:6;';
     card.appendChild(shimmer);
     cardFan.appendChild(card);
   }
@@ -202,8 +260,8 @@ export function buildHome(){
   playWrap.style.cssText='width:100%;z-index:2;position:relative;display:flex;flex-direction:column;gap:20px;opacity:0;animation:homeRevealBtn 0.4s ease-out 1.0s both;';
   var playBtn=document.createElement('button');
   playBtn.className='btn-blitz';
-  playBtn.style.cssText='border-color:var(--cyan);color:#000;background:linear-gradient(180deg,#00ffcc 0%,#00c8aa 100%);font-size:20px;padding:24px 20px;animation:ctaGlow 3s ease-in-out 2s infinite;';
-  playBtn.textContent='PICK YOUR TEAM';
+  playBtn.style.cssText='border-color:var(--cyan);color:#000;background:linear-gradient(180deg,#00ffcc 0%,#00c8aa 100%);font-size:24px;padding:22px 20px;animation:ctaGlow 3s ease-in-out 2s infinite;letter-spacing:4px;';
+  playBtn.textContent='PLAY';
   playBtn.onclick=function(){
     SND.click();
     setGs(function(s){ return Object.assign({}, s, {screen:'setup', team:null, side:null}); });

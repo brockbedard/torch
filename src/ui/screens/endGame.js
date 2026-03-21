@@ -66,7 +66,7 @@ export function buildEndGame() {
     n.textContent = name;
     var s = document.createElement('div');
     s.style.cssText =
-      "font-family:'Press Start 2P',monospace;font-size:36px;color:#fff;" +
+      "font-family:'Rajdhani',monospace;font-size:36px;color:#fff;" +
       "text-shadow:0 0 15px rgba(255,255,255,0.3);";
     s.textContent = score;
     b.append(n, s);
@@ -92,12 +92,12 @@ export function buildEndGame() {
 
   var torchLabel = document.createElement('div');
   torchLabel.style.cssText =
-    "font-family:'Press Start 2P',monospace;font-size:8px;color:var(--a-gold);letter-spacing:2px;margin-bottom:8px;";
+    "font-family:'Rajdhani',monospace;font-size:8px;color:var(--a-gold);letter-spacing:2px;margin-bottom:8px;";
   torchLabel.textContent = 'TORCH POINTS EARNED';
 
   var torchScore = document.createElement('div');
   torchScore.style.cssText =
-    "font-family:'Press Start 2P',monospace;font-size:24px;color:var(--a-gold);" +
+    "font-family:'Rajdhani',monospace;font-size:24px;color:var(--a-gold);" +
     "text-shadow:0 0 15px rgba(255,204,0,0.4);";
   torchScore.textContent = humanTorch;
 
@@ -111,7 +111,7 @@ export function buildEndGame() {
 
   var statLabel = document.createElement('div');
   statLabel.style.cssText =
-    "font-family:'Press Start 2P',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:4px;";
+    "font-family:'Rajdhani',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:4px;";
   statLabel.textContent = 'GAME STATS';
   statsBlock.appendChild(statLabel);
 
@@ -149,7 +149,7 @@ export function buildEndGame() {
 
   // Game Recap Log
   var logLabel = document.createElement('div');
-  logLabel.style.cssText = "font-family:'Press Start 2P',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:10px;align-self:flex-start;width:100%;max-width:300px;";
+  logLabel.style.cssText = "font-family:'Rajdhani',monospace;font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:10px;align-self:flex-start;width:100%;max-width:300px;";
   logLabel.textContent = 'GAME RECAP';
   content.appendChild(logLabel);
 

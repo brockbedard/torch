@@ -6,14 +6,22 @@
  */
 
 export function buildDraftProgress(currentStep) {
-  // Inject animation if not already present
-  if (!document.getElementById('draft-progress-anim')) {
+  // Inject animations if not already present
+  if (!document.getElementById('draft-progress-style')) {
     const style = document.createElement('style');
-    style.id = 'draft-progress-anim';
+    style.id = 'draft-progress-style';
     style.textContent = `
-      @keyframes stepPulse {
-        0%, 100% { transform: scale(1); box-shadow: 0 0 8px rgba(255,204,0,0.4); }
-        50% { transform: scale(1.15); box-shadow: 0 0 15px rgba(255,204,0,0.8); }
+      @keyframes step-pulse {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 8px rgba(187,0,255,0.4); }
+        50% { transform: scale(1.2); box-shadow: 0 0 15px rgba(187,0,255,0.8); }
+      }
+      @keyframes check-glow {
+        0%, 100% { filter: brightness(1); transform: scale(1); }
+        50% { filter: brightness(1.5); transform: scale(1.2); }
+      }
+      @keyframes line-flow {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(200%); }
       }
     `;
     document.head.appendChild(style);
@@ -23,7 +31,7 @@ export function buildDraftProgress(currentStep) {
   container.style.cssText =
     'display:flex;align-items:center;padding:8px 14px;background:rgba(0,0,0,0.3);flex-shrink:0;';
 
-  const steps = ['TEAM', 'ROSTER', 'PLAYS', 'START'];
+  const steps = ['TEAM', 'ROSTER', 'PLAYS', 'PLAY'];
 
   steps.forEach((label, i) => {
     const stepIdx = i + 1;
@@ -34,8 +42,8 @@ export function buildDraftProgress(currentStep) {
     const pill = document.createElement('div');
     pill.style.cssText =
       'display:flex;align-items:center;gap:4px;' +
-      'font-family:"Press Start 2P",monospace;font-size:8px;letter-spacing:.5px;' +
-      'color:' + (isCurrent ? 'var(--a-gold,#ffcc00)' : isPast ? '#aaa' : '#444') + ';' +
+      'font-family:"Rajdhani",monospace;font-size:8px;letter-spacing:.5px;' +
+      'color:' + (isCurrent ? '#bb00ff' : isPast ? '#aaa' : '#444') + ';' +
       'transition:color 0.3s;';
 
     // Checkmark for completed, number for current/future
@@ -49,7 +57,7 @@ export function buildDraftProgress(currentStep) {
       indicator.textContent = stepIdx;
       indicator.style.fontSize = '7px';
       indicator.style.cssText += (isCurrent
-          ? 'background:var(--a-gold,#ffcc00);color:#000;box-shadow:0 0 12px rgba(255,204,0,0.6);animation:step-pulse 1.5s infinite ease-in-out;'
+          ? 'background:#bb00ff;color:#fff;box-shadow:0 0 12px rgba(187,0,255,0.6);animation:step-pulse 1.5s infinite ease-in-out;'
           : 'background:#222;color:#555;');
     }
     pill.appendChild(indicator);
@@ -79,26 +87,5 @@ export function buildDraftProgress(currentStep) {
     }
   });
 
-  // Inject animation
-  if (!document.getElementById('draft-progress-style')) {
-    const style = document.createElement('style');
-    style.id = 'draft-progress-style';
-    style.textContent = `
-      @keyframes step-pulse {
-        0%, 100% { transform: scale(1); box-shadow: 0 0 8px rgba(255,204,0,0.4); }
-        50% { transform: scale(1.2); box-shadow: 0 0 15px rgba(255,204,0,0.8); }
-      }
-      @keyframes check-glow {
-        0%, 100% { filter: brightness(1); transform: scale(1); }
-        50% { filter: brightness(1.5); transform: scale(1.2); }
-      }
-      @keyframes line-flow {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(200%); }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-    return container;
-    }
+  return container;
+}
