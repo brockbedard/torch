@@ -24,23 +24,23 @@ function injectStyles() {
 // when the parent provides the stacking context.
 function buildHomeCard(type, w, h) {
   var configs = {
-    offense: {accent:'#7ACC00',bg:'#5A9E00',bgEdge:'#2A4A00',label:'OFFENSE',spotColor:'rgba(255,255,255,0.1)',
-      art:'<svg viewBox="0 0 448 512" width="52" height="56">'
+    offense: {accent:'#7ACC00',bg:'#5A9E00',bgEdge:'#2A4A00',label:'OFFENSE',spotColor:'rgba(122,204,0,0.25)',
+      art:'<svg viewBox="0 0 448 512" width="48" height="52">'
         +'<defs><linearGradient id="bG_o'+w+'" x1="100" y1="450" x2="350" y2="50"><stop offset="0%" stop-color="#90E040"/><stop offset="100%" stop-color="#D4FF80"/></linearGradient></defs>'
         +'<path fill="url(#bG_o'+w+')" stroke="#7ACC00" stroke-width="8" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/></svg>',
-      pip:'<svg viewBox="0 0 448 512" width="6" height="7"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="rgba(255,255,255,0.5)"/></svg>'},
-    torch: {accent:'#FF4511',bg:'#CC3A10',bgEdge:'#6A1A08',label:'TORCH',spotColor:'rgba(255,255,255,0.1)',
-      art:'<svg viewBox="0 -2 44 56" fill="none" width="52" height="56" style="overflow:visible;">'
+      pip:'<svg viewBox="0 0 448 512" width="10" height="11"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#FFB800" opacity="0.6"/></svg>'},
+    torch: {accent:'#FF4511',bg:'#CC3A10',bgEdge:'#6A1A08',label:'TORCH',spotColor:'rgba(255,69,17,0.25)',
+      art:'<svg viewBox="0 -2 44 56" fill="none" width="48" height="52" style="overflow:visible;">'
         +'<defs><linearGradient id="nG_t'+w+'" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF6A30"/><stop offset="100%" stop-color="#FFD060"/></linearGradient>'
         +'<linearGradient id="nI_t'+w+'" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA44"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient></defs>'
         +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#nG_t'+w+')" stroke="#FF4511" stroke-width="1.5"/>'
         +'<path d="M22 12C22 12 13 24 12 32C11 40 15 46 19 49C19 49 16 41 19 32C20 28 21 25 22 20C23 25 24 28 25 32C28 41 25 49 25 49C29 46 33 40 32 32C31 24 22 12 22 12Z" fill="url(#nI_t'+w+')" opacity="0.7"/></svg>',
-      pip:'<svg viewBox="0 0 5 6" width="6" height="7"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="rgba(255,255,255,0.5)"/></svg>'},
-    defense: {accent:'#4DA6FF',bg:'#3A7ACC',bgEdge:'#1A3A66',label:'DEFENSE',spotColor:'rgba(255,255,255,0.1)',
-      art:'<svg viewBox="0 0 512 512" width="52" height="56">'
+      pip:'<svg viewBox="0 0 5 6" width="10" height="11"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FFB800" opacity="0.6"/></svg>'},
+    defense: {accent:'#4DA6FF',bg:'#3A7ACC',bgEdge:'#1A3A66',label:'DEFENSE',spotColor:'rgba(77,166,255,0.2)',
+      art:'<svg viewBox="0 0 512 512" width="48" height="52">'
         +'<defs><linearGradient id="sG_d'+w+'" x1="256" y1="512" x2="256" y2="0"><stop offset="0%" stop-color="#3080D0"/><stop offset="100%" stop-color="#A0D4FF"/></linearGradient></defs>'
         +'<path fill="url(#sG_d'+w+')" stroke="#4DA6FF" stroke-width="8" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8z"/></svg>',
-      pip:'<svg viewBox="0 0 512 512" width="6" height="7"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z" fill="rgba(255,255,255,0.5)"/></svg>'},
+      pip:'<svg viewBox="0 0 512 512" width="10" height="11"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z" fill="#FFB800" opacity="0.6"/></svg>'},
   };
   var d = configs[type];
   var isTorch = type === 'torch';
@@ -125,7 +125,25 @@ function buildHomeCard(type, w, h) {
   } else {
     npT.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:"+(w>=100?'11':'9')+"px;color:#000;letter-spacing:2px;";
   }
-  npT.textContent = d.label;
+  if(isTorch){
+    // Football-O scaled for nameplate
+    var fs = w>=100 ? 16 : 12;
+    var oSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    oSvg.setAttribute('viewBox','0 0 100 100');
+    oSvg.setAttribute('fill','none');
+    oSvg.setAttribute('preserveAspectRatio','xMidYMid meet');
+    oSvg.style.cssText = 'display:inline-block;height:0.72em;width:0.52em;vertical-align:middle;margin:0 1px 2px;overflow:visible;';
+    oSvg.innerHTML = '<defs><linearGradient id="npOG" x1="15" y1="15" x2="85" y2="85"><stop offset="0%" stop-color="#D4893B"/><stop offset="45%" stop-color="#B5652B"/><stop offset="100%" stop-color="#8B4A1F"/></linearGradient></defs>'
+      +'<g transform="translate(50,50) rotate(-45) scale(0.22) translate(-256,-256)">'
+      +'<path fill="url(#npOG)" d="M247.5 25.4c-13.5 3.3-26.4 7.2-38.6 11.7C142.9 61.6 96.7 103.6 66 153.6C47.8 183.4 35.1 215.9 26.9 249L264.5 486.6c13.5-3.3 26.4-7.2 38.6-11.7c66-24.5 112.2-66.5 142.9-116.5c18.3-29.8 30.9-62.3 39.1-95.3L247.5 25.4zM495.2 205.3c6.1-56.8 1.4-112.2-7.7-156.4c-2.7-12.9-13-22.9-26.1-25.1c-58.2-9.7-109.9-12-155.6-7.9L495.2 205.3zM206.1 496L16.8 306.7c-6.1 56.8-1.4 112.2 7.7 156.4c2.7 12.9 13 22.9 26.1 25.1c58.2 9.7 109.9 12 155.6 7.9z"/>'
+      +'<path fill="#FFFBE6" d="M260.7 164.7c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6z"/>'
+      +'</g>';
+    npT.textContent = 'T';
+    npT.appendChild(oSvg);
+    npT.appendChild(document.createTextNode('RCH'));
+  } else {
+    npT.textContent = d.label;
+  }
   np.appendChild(npT);
   card.appendChild(np);
 
