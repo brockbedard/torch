@@ -2,6 +2,7 @@ import { SND } from '../../engine/sound.js';
 import { render, setGs, getOffCards, getDefCards, VERSION, VERSION_NAME } from '../../state.js';
 
 var DEV_LOG = [
+  "v0.19.0 \u2014 Premium UI: Layered atmosphere home screen, torch-pass football SVG, playing-card fan with football art, entrance choreography, Teko+Rajdhani font system, ember particles, title shimmer, CTA glow breathe.",
   "v0.18.0 \u2014 Gameday Build: CM3-style paced commentary, 5-tier celebration system, overhauled pre-game UI with kinetic progress stepper, vertically scrolling 'Your Squad'/'Your Plays' trophy rooms, and purple-themed gameplay drop zones.",
   "v0.17.6 \u2014 Removed clash animation, VS centered as flex child, big torch popup, brighter field, proportional scoreboard.",
   "v0.17.0 — Complete Gameplay Rebuild: Tecmo-style field with home endzones, drag-and-drop card selection (play\u2192player\u2192torch\u2192SNAP), broadcast play-by-play commentary with variable pacing, celebrations (TD rain, turnover crack, sack impact), TORCH points fly animation, 4-card clash display, conversion card selection, offense/defense energy shift, 2-minute drill transformation, btn-blitz consistency throughout.",
@@ -161,21 +162,11 @@ export function buildHome(){
   var fanData=[
     {accent:'#F5B800',bg:'#0a2010',label:'OFFENSE',pip:'#00E5C0',
      art:'<svg viewBox="0 0 36 38" fill="none" width="36" height="38">'
-       +'<line x1="4" y1="34" x2="32" y2="34" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>'
-       +'<line x1="4" y1="22" x2="32" y2="22" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>'
-       +'<circle cx="18" cy="30" r="2" fill="#F5B800" opacity="0.9"/>'
-       +'<circle cx="10" cy="30" r="1.5" fill="#F5B800" opacity="0.7"/>'
-       +'<circle cx="26" cy="30" r="1.5" fill="#F5B800" opacity="0.7"/>'
-       +'<circle cx="6" cy="28" r="1.5" fill="#F5B800" opacity="0.7"/>'
-       +'<circle cx="30" cy="28" r="1.5" fill="#F5B800" opacity="0.7"/>'
-       +'<path d="M10 30L10 20L4 12" stroke="#F5B800" stroke-width="0.8" fill="none" opacity="0.6"/>'
-       +'<path d="M26 30L26 20L32 12" stroke="#F5B800" stroke-width="0.8" fill="none" opacity="0.6"/>'
-       +'<path d="M18 30L18 14" stroke="#F5B800" stroke-width="0.8" stroke-dasharray="2 1.5" fill="none" opacity="0.5"/>'
-       +'<polygon points="4,11 5.5,13 2.5,13" fill="#F5B800" opacity="0.6"/>'
-       +'<polygon points="32,11 33.5,13 30.5,13" fill="#F5B800" opacity="0.6"/>'
-       +'<polygon points="18,13 19.5,15 16.5,15" fill="#F5B800" opacity="0.5"/>'
+       +'<defs><linearGradient id="boltGrad" x1="18" y1="36" x2="18" y2="2"><stop offset="0%" stop-color="#F5B800"/><stop offset="100%" stop-color="#FFE066"/></linearGradient></defs>'
+       +'<path d="M20 2L10 18L16 18L12 36L26 16L19 16L24 2Z" fill="url(#boltGrad)" stroke="#F5B800" stroke-width="0.5" opacity="0.9"/>'
+       +'<path d="M19 8L14 20L17.5 20L15 32L23 18L19.5 18L22 8Z" fill="#FFE066" opacity="0.4"/>'
        +'</svg>',
-     cornerPip:'<svg viewBox="0 0 5 3" width="5" height="3"><ellipse cx="2.5" cy="1.5" rx="2.5" ry="1.5" fill="#F5B800"/></svg>'},
+     cornerPip:'<svg viewBox="0 0 6 8" width="4" height="5"><path d="M3.5 0L1 4L2.5 4L1.5 8L5 3L3.2 3L4.5 0Z" fill="#F5B800"/></svg>'},
     {accent:'#FF5E1A',bg:'#1a0800',label:'TORCH',pip:'#FF5E1A',
      art:'<svg viewBox="0 0 36 38" fill="none" width="36" height="38">'
        +'<path d="M18 4C18 4 10 14 9 20C8 26 12 31 15 33C15 33 13 27 15 22C16 19 17 17 18 14C19 17 20 19 21 22C23 27 21 33 21 33C24 31 28 26 27 20C26 14 18 4 18 4Z" fill="url(#noGrad)" stroke="#FF5E1A" stroke-width="0.5" opacity="0.9"/>'
@@ -187,18 +178,12 @@ export function buildHome(){
      cornerPip:'<svg viewBox="0 0 5 6" width="4" height="5"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF5E1A"/></svg>'},
     {accent:'#00E5C0',bg:'#051a18',label:'DEFENSE',pip:'#8B5CF6',
      art:'<svg viewBox="0 0 36 38" fill="none" width="36" height="38">'
-       +'<line x1="4" y1="34" x2="32" y2="34" stroke="rgba(0,229,192,0.06)" stroke-width="0.5"/>'
-       +'<line x1="4" y1="22" x2="32" y2="22" stroke="rgba(0,229,192,0.06)" stroke-width="0.5"/>'
-       +'<circle cx="12" cy="10" r="1.5" fill="#00E5C0" opacity="0.7"/>'
-       +'<circle cx="24" cy="10" r="1.5" fill="#00E5C0" opacity="0.7"/>'
-       +'<circle cx="18" cy="14" r="1.5" fill="#00E5C0" opacity="0.7"/>'
-       +'<path d="M6 8Q18 24 30 8" stroke="#00E5C0" stroke-width="0.8" stroke-dasharray="2 1.5" fill="none" opacity="0.5"/>'
-       +'<path d="M2 14Q18 32 34 14" stroke="#00E5C0" stroke-width="0.8" stroke-dasharray="2 1.5" fill="none" opacity="0.35"/>'
-       +'<circle cx="18" cy="30" r="2" fill="#00E5C0" opacity="0.5"/>'
-       +'<path d="M18 30L14 34" stroke="#00E5C0" stroke-width="0.6" fill="none" opacity="0.4"/>'
-       +'<path d="M18 30L22 34" stroke="#00E5C0" stroke-width="0.6" fill="none" opacity="0.4"/>'
+       +'<defs><linearGradient id="shieldGrad" x1="18" y1="36" x2="18" y2="2"><stop offset="0%" stop-color="#008B74"/><stop offset="100%" stop-color="#00E5C0"/></linearGradient></defs>'
+       +'<path d="M18 2C18 2 6 4 6 10C6 18 8 26 18 36C28 26 30 18 30 10C30 4 18 2 18 2Z" fill="url(#shieldGrad)" stroke="#00E5C0" stroke-width="0.5" opacity="0.9"/>'
+       +'<path d="M18 8C18 8 11 9.5 11 13C11 18 12.5 24 18 31C23.5 24 25 18 25 13C25 9.5 18 8 18 8Z" fill="#00E5C0" opacity="0.3"/>'
+       +'<line x1="18" y1="10" x2="18" y2="28" stroke="#00E5C0" stroke-width="0.5" opacity="0.2"/>'
        +'</svg>',
-     cornerPip:'<svg viewBox="0 0 6 6" width="5" height="5"><path d="M3 0L5.5 2L5 5L3 6L1 5L0.5 2Z" fill="#00E5C0"/></svg>'},
+     cornerPip:'<svg viewBox="0 0 6 7" width="4" height="5"><path d="M3 0C3 0 0.5 0.5 0.5 2C0.5 3.5 1.5 5 3 7C4.5 5 5.5 3.5 5.5 2C5.5 0.5 3 0 3 0Z" fill="#00E5C0"/></svg>'},
   ];
   var fanAngles=[-15,0,15];
   var fanX=[-30,0,30];
