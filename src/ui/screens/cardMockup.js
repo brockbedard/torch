@@ -21,19 +21,19 @@ function injectStyles() {
 // ====== HOME PAGE CARD BUILDERS (exact match to home.js) ======
 function buildHomeCard(type, w, h) {
   var configs = {
-    offense: {accent:'#7ACC00',bg:'#0A1A06',label:'OFFENSE',spotColor:'rgba(122,204,0,0.25)',
+    offense: {accent:'#7ACC00',bg:'#122E0C',label:'OFFENSE',spotColor:'rgba(122,204,0,0.25)',
       art:'<svg viewBox="0 0 448 512" width="48" height="52">'
         +'<defs><linearGradient id="bG_o'+w+'" x1="100" y1="450" x2="350" y2="50"><stop offset="0%" stop-color="#90E040"/><stop offset="100%" stop-color="#D4FF80"/></linearGradient></defs>'
         +'<path fill="url(#bG_o'+w+')" stroke="#7ACC00" stroke-width="8" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/></svg>',
       pip:'<svg viewBox="0 0 448 512" width="6" height="7"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#7ACC00"/></svg>'},
-    torch: {accent:'#FF4511',bg:'#1a0800',label:'TORCH',spotColor:'rgba(255,69,17,0.25)',
+    torch: {accent:'#FF4511',bg:'#2A1000',label:'TORCH',spotColor:'rgba(255,69,17,0.25)',
       art:'<svg viewBox="-8 -10 60 72" fill="none" width="48" height="52">'
         +'<defs><linearGradient id="nG_t'+w+'" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF6A30"/><stop offset="100%" stop-color="#FFD060"/></linearGradient>'
         +'<linearGradient id="nI_t'+w+'" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA44"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient></defs>'
         +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#nG_t'+w+')" stroke="#FF4511" stroke-width="1.5"/>'
         +'<path d="M22 12C22 12 13 24 12 32C11 40 15 46 19 49C19 49 16 41 19 32C20 28 21 25 22 20C23 25 24 28 25 32C28 41 25 49 25 49C29 46 33 40 32 32C31 24 22 12 22 12Z" fill="url(#nI_t'+w+')" opacity="0.7"/></svg>',
       pip:'<svg viewBox="0 0 5 6" width="6" height="7"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF4511"/></svg>'},
-    defense: {accent:'#4DA6FF',bg:'#0A1420',label:'DEFENSE',spotColor:'rgba(77,166,255,0.2)',
+    defense: {accent:'#4DA6FF',bg:'#0C1E30',label:'DEFENSE',spotColor:'rgba(77,166,255,0.2)',
       art:'<svg viewBox="0 0 512 512" width="48" height="52">'
         +'<defs><linearGradient id="sG_d'+w+'" x1="256" y1="512" x2="256" y2="0"><stop offset="0%" stop-color="#3080D0"/><stop offset="100%" stop-color="#A0D4FF"/></linearGradient></defs>'
         +'<path fill="url(#sG_d'+w+')" stroke="#4DA6FF" stroke-width="8" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8z"/></svg>',
@@ -54,7 +54,7 @@ function buildHomeCard(type, w, h) {
 
   var card = document.createElement('div');
   card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;'
-    +'background:radial-gradient(ellipse at 50% 40%,'+d.bg+',#0A0804);'
+    +'background:radial-gradient(ellipse at 50% 40%,'+d.bg+' 0%,#0E0A06 100%);'
     +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
     +'overflow:hidden;position:relative;';
   var layers = '';
@@ -232,38 +232,86 @@ export function buildCardMockup() {
     { name:'COVER 3 SKY', cat:'ZONE', catColor:'#4DA6FF', risk:'low', desc:'Deep thirds coverage', svg:defSvg, bg:'#0A1420' },
   ];
 
-  function buildPlayCard(p, w, h) {
-    var diagH = Math.round(h * 0.5);
-    var svgW = Math.round(w * 0.7);
-    var svgH = Math.round(diagH * 0.8);
-    var svgTag = p.svg.replace('fill="none">', 'width="'+svgW+'" height="'+svgH+'" fill="none">');
+  // 3 play card layout options
+  function buildPlayV1(p, w, h) {
+    // V1: Nameplate top, diagram fills center, category+risk bottom bar
+    var svgTag = p.svg.replace('fill="none">', 'width="'+(w*0.75)+'" height="'+(h*0.45)+'" fill="none">');
     var card = document.createElement('div');
-    card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:6px;border:2px solid '+p.catColor+'33;background:#0A0804;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,0.5);';
+    card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:2px solid '+p.catColor+'44;background:radial-gradient(ellipse at 50% 50%,'+p.bg+',#0E0A06);overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.5);display:flex;flex-direction:column;';
+    // Name bar top
+    card.innerHTML = '<div style="background:'+p.catColor+'22;padding:4px 6px;border-bottom:1px solid '+p.catColor+'33;">'
+      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?14:11)+'px;color:#fff;letter-spacing:1px;line-height:1;">'+p.name+'</div></div>'
+      // Diagram fills center
+      +'<div style="flex:1;display:flex;align-items:center;justify-content:center;">'+svgTag+'</div>'
+      // Bottom bar: category + risk
+      +'<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px;background:rgba(0,0,0,0.3);border-top:1px solid #1E1610;">'
+      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(w>90?8:6)+'px;color:'+p.catColor+';letter-spacing:0.5px;">'+p.cat+'</div>'
+      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(w>90?8:6)+'px;color:'+riskC[p.risk]+';">'+riskI[p.risk]+'</div></div>';
+    return card;
+  }
+
+  function buildPlayV2(p, w, h) {
+    // V2: Category stripe top, diagram center, name+desc bottom panel
+    var svgTag = p.svg.replace('fill="none">', 'width="'+(w*0.7)+'" height="'+(h*0.4)+'" fill="none">');
+    var card = document.createElement('div');
+    card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:2px solid '+p.catColor+'44;background:#0E0A06;overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.5);display:flex;flex-direction:column;';
     card.innerHTML = '<div style="height:3px;background:'+p.catColor+';"></div>'
-      +'<div style="height:'+diagH+'px;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 50%,'+p.bg+',#0A0804);border-bottom:1px solid #1E1610;">'+svgTag+'</div>'
-      +'<div style="padding:'+(w>90?'5px 8px':'3px 5px')+';display:flex;flex-direction:column;justify-content:center;flex:1;">'
-      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?13:10)+'px;color:#fff;letter-spacing:1px;line-height:1.1;">'+p.name+'</div>'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:'+(w>90?'3':'2')+'px;">'
-      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(w>90?7:6)+'px;color:'+p.catColor+';letter-spacing:0.5px;">'+p.cat+'</div>'
+      +'<div style="flex:1;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 50%,'+p.bg+',#0E0A06);">'+svgTag+'</div>'
+      +'<div style="padding:'+(w>90?'5px 7px 6px':'3px 5px 4px')+';border-top:1px solid #1E1610;">'
+      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?13:10)+'px;color:#fff;letter-spacing:1px;line-height:1;">'+p.name+'</div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">'
+      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(w>90?7:6)+'px;color:'+p.catColor+';">'+p.cat+'</div>'
       +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(w>90?7:6)+'px;color:'+riskC[p.risk]+';">'+riskI[p.risk]+'</div></div>'
-      +(w>90?'<div style="font-family:\'Rajdhani\';font-size:8px;color:#666;margin-top:2px;line-height:1.2;">'+p.desc+'</div>':'')
+      +(w>90?'<div style="font-family:\'Rajdhani\';font-size:8px;color:#555;margin-top:2px;line-height:1.2;">'+p.desc+'</div>':'')
       +'</div>';
     return card;
   }
 
-  el.appendChild(sec('PLAY CARDS — Selection Size (100x150)'));
-  var playSelRow = row();
-  plays.forEach(function(p) {
-    playSelRow.appendChild(wrap(buildPlayCard(p,100,150), p.name+' (selection)'));
-  });
-  el.appendChild(playSelRow);
+  function buildPlayV3(p, w, h) {
+    // V3: Full card diagram bg, floating name + risk badge overlay
+    var svgTag = p.svg.replace('fill="none">', 'width="'+(w*0.8)+'" height="'+(h*0.55)+'" fill="none">');
+    var card = document.createElement('div');
+    card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:2px solid '+p.catColor+'44;background:radial-gradient(ellipse at 50% 45%,'+p.bg+',#0E0A06);overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.5);position:relative;display:flex;align-items:center;justify-content:center;';
+    // Category stripe top
+    card.innerHTML = '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:'+p.catColor+';z-index:2;"></div>'
+      // Risk badge top-right
+      +'<div style="position:absolute;top:6px;right:5px;font-family:\'Rajdhani\';font-weight:700;font-size:7px;color:'+riskC[p.risk]+';background:rgba(0,0,0,0.5);padding:1px 4px;border-radius:3px;z-index:2;">'+riskI[p.risk]+'</div>'
+      // Category badge top-left
+      +'<div style="position:absolute;top:6px;left:5px;font-family:\'Rajdhani\';font-weight:700;font-size:7px;color:'+p.catColor+';background:rgba(0,0,0,0.5);padding:1px 4px;border-radius:3px;z-index:2;">'+p.cat+'</div>'
+      // Centered diagram
+      +svgTag
+      // Bottom gradient + name
+      +'<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.85));padding:'+(w>90?'20px 7px 6px':'14px 5px 4px')+';z-index:2;">'
+      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?14:11)+'px;color:#fff;letter-spacing:1px;line-height:1;">'+p.name+'</div>'
+      +(w>90?'<div style="font-family:\'Rajdhani\';font-size:8px;color:#888;margin-top:2px;line-height:1.2;">'+p.desc+'</div>':'')
+      +'</div>';
+    return card;
+  }
 
-  el.appendChild(sec('PLAY CARDS — Gameplay Size (80x110)'));
-  var playGameRow = row();
-  plays.forEach(function(p) {
-    playGameRow.appendChild(wrap(buildPlayCard(p,80,110), p.name+' (gameplay)'));
-  });
-  el.appendChild(playGameRow);
+  // Show all 3 versions at selection size
+  el.appendChild(sec('PLAY CARDS — Option A: Name Top Bar'));
+  var pARow = row();
+  plays.forEach(function(p) { pARow.appendChild(wrap(buildPlayV1(p,100,150), p.name)); });
+  el.appendChild(pARow);
+
+  el.appendChild(sec('PLAY CARDS — Option B: Stripe + Bottom Panel'));
+  var pBRow = row();
+  plays.forEach(function(p) { pBRow.appendChild(wrap(buildPlayV2(p,100,150), p.name)); });
+  el.appendChild(pBRow);
+
+  el.appendChild(sec('PLAY CARDS — Option C: Full Diagram + Overlay'));
+  var pCRow = row();
+  plays.forEach(function(p) { pCRow.appendChild(wrap(buildPlayV3(p,100,150), p.name)); });
+  el.appendChild(pCRow);
+
+  // Show chosen version at gameplay size (all 3 for comparison)
+  el.appendChild(sec('PLAY CARDS — Gameplay Size (80x110) — All 3'));
+  var pGameRow = row();
+  pGameRow.appendChild(wrap(buildPlayV1(plays[0],80,110), 'A: '+plays[0].name));
+  pGameRow.appendChild(wrap(buildPlayV2(plays[1],80,110), 'B: '+plays[1].name));
+  pGameRow.appendChild(wrap(buildPlayV3(plays[2],80,110), 'C: '+plays[2].name));
+  pGameRow.appendChild(wrap(buildPlayV3(plays[3],80,110), 'C: '+plays[3].name));
+  el.appendChild(pGameRow);
 
   // ============================================================
   // TORCH CARDS — Centered Flame V1 (chosen)
