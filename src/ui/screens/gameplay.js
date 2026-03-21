@@ -23,16 +23,16 @@ import { TORCH_CARDS } from '../../data/torchCards.js';
    ═══════════════════════════════════════════ */
 const CSS = `
 /* root */
-.T{height:100vh;display:flex;flex-direction:column;background:#06050f;overflow:hidden;position:relative;font-family:'Barlow Condensed',sans-serif}
+.T{height:100vh;display:flex;flex-direction:column;background:#0A0804;overflow:hidden;position:relative;font-family:'Barlow Condensed',sans-serif}
 
 /* scoreboard */
-.T-sb{background:#0a0916;border-bottom:1px solid #1a183a;flex-shrink:0;z-index:60;overflow:hidden}
+.T-sb{background:#0E0A04;border-bottom:1px solid #1E1610;flex-shrink:0;z-index:60;overflow:hidden}
 /* score row: 5 columns — icon | team+score | center | team+score | icon */
 .T-sb-row{display:grid;grid-template-columns:36px 1fr minmax(70px,auto) 1fr 36px;align-items:center;justify-items:center;padding:10px 10px;gap:6px}
 .T-sb-icon{font-size:32px;line-height:1;text-align:center;filter:drop-shadow(0 0 8px rgba(255,255,255,.2)) saturate(1.3)}
 .T-sb-side{display:flex;flex-direction:column;align-items:center;padding:6px 6px;border-radius:6px;position:relative}
 .T-sb-side-glow{background:radial-gradient(ellipse,rgba(255,204,0,.2) 0%,rgba(255,204,0,.06) 50%,transparent 75%);box-shadow:0 0 20px rgba(255,204,0,.18)}
-.T-sb-name{font-family:'Bebas Neue';font-size:18px;font-style:italic;line-height:1;letter-spacing:1px;white-space:nowrap}
+.T-sb-name{font-family:'Teko';font-size:18px;font-style:italic;line-height:1;letter-spacing:1px;white-space:nowrap}
 .T-sb-score-row{position:relative;margin-top:2px;display:flex;justify-content:center}
 .T-sb-pos-arrow{position:absolute;top:50%;transform:translateY(-50%);font-size:12px;color:#c8a030;line-height:1}
 .T-sb-pos-arrow-l{left:-14px}
@@ -40,7 +40,7 @@ const CSS = `
 .T-sb-pts{font-family:'Rajdhani';font-size:28px;color:#e8e6ff;line-height:1}
 .T-sb-pts-glow{text-shadow:0 0 14px rgba(255,204,0,.5)}
 .T-sb-center{text-align:center;padding:0 8px;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);min-width:80px}
-.T-sb-half{font-family:'Bebas Neue';font-size:17px;color:#c8a030;letter-spacing:2px;line-height:1;white-space:nowrap}
+.T-sb-half{font-family:'Teko';font-size:17px;color:#c8a030;letter-spacing:2px;line-height:1;white-space:nowrap}
 .T-sb-snap{font-family:'Rajdhani';font-size:12px;color:#e8e6ff;margin-top:3px;line-height:1;text-shadow:0 0 4px rgba(255,255,255,.2)}
 .T-sb-countdown{font-family:'Rajdhani';font-size:9px;color:#554f80;margin-top:5px;line-height:1}
 .T-sb-countdown-live{font-size:14px;color:#e03050;text-shadow:0 0 10px rgba(224,48,80,.5)}
@@ -52,7 +52,7 @@ const CSS = `
 .T-sb-sit-torch{font-family:'Rajdhani';font-size:12px;color:#c8a030;letter-spacing:.5px;transition:transform .08s,text-shadow .08s;flex-shrink:0}
 
 /* field strip — Tecmo Bowl inspired */
-.T-strip{height:200px;flex-shrink:0;position:relative;background:#1a6a1a;overflow:hidden;border-bottom:1px solid #1a183a}
+.T-strip{height:200px;flex-shrink:0;position:relative;background:#1a6a1a;overflow:hidden;border-bottom:1px solid #1E1610}
 .T-field-turf{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.04) 50%,transparent 50%,transparent 100%);background-size:100% 12px}
 .T-yard{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.4)}
 .T-yard-5{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.15)}
@@ -70,7 +70,7 @@ const CSS = `
 .T-midfield-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:72px;opacity:.5;z-index:1;filter:saturate(1.5) drop-shadow(0 0 8px rgba(255,255,255,.15))}
 .T-hash{position:absolute;left:7%;right:7%;height:1px;background:rgba(255,255,255,.06)}
 /* placed cards on field — centered vertically */
-.T-placed{position:absolute;top:50%;transform:translateY(-50%);height:150px;z-index:8;border-radius:6px;overflow:hidden;background:var(--bg-surface);border:2px solid #00ff88;box-shadow:0 0 12px rgba(0,255,136,.2);display:flex;flex-direction:column}
+.T-placed{position:absolute;top:50%;transform:translateY(-50%);height:150px;z-index:8;border-radius:6px;overflow:hidden;background:var(--bg-surface);border:2px solid #00ff44;box-shadow:0 0 12px rgba(0,255,68,.2);display:flex;flex-direction:column}
 .T-placed-play{left:3%;width:30%}
 .T-placed-player{left:35%;width:30%}
 .T-placed-torch{right:3%;width:28%}
@@ -89,11 +89,11 @@ const CSS = `
 .T-panel{display:flex;flex-direction:column;overflow:hidden;transition:background .6s,border-color .6s;flex-shrink:0;border-top:2px solid transparent}
 .T-panel-hidden{display:none}
 /* offense: warm amber energy */
-.T-panel-off{background:linear-gradient(180deg,#1a1000 0%,#06050f 60%);border-top-color:#c8a03044}
+.T-panel-off{background:linear-gradient(180deg,#1a1000 0%,#0A0804 60%);border-top-color:#c8a03044}
 .T-panel-off .T-inst{color:#c8a030}
 .T-panel-off .T-card{border-color:#c8a03022}
 /* defense: cold blue/red danger */
-.T-panel-def{background:linear-gradient(180deg,#00101a 0%,#06050f 60%);border-top-color:#30c0e044}
+.T-panel-def{background:linear-gradient(180deg,#00101a 0%,#0A0804 60%);border-top-color:#30c0e044}
 .T-panel-def .T-inst{color:#30c0e0}
 .T-panel-def .T-card{border-color:#30c0e022}
 
@@ -102,9 +102,9 @@ const CSS = `
 
 /* card tray — matches pregame draft card style */
 .T-tray{display:flex;gap:8px;padding:6px 8px;flex-shrink:0}
-.T-card{flex:1;height:150px;border-radius:6px;background:var(--bg-surface);overflow:hidden;display:flex;flex-direction:column;transition:all .15s ease;touch-action:none;position:relative;cursor:grab;opacity:.8;border:2px solid #1a183a}
+.T-card{flex:1;height:150px;border-radius:6px;background:var(--bg-surface);overflow:hidden;display:flex;flex-direction:column;transition:all .15s ease;touch-action:none;position:relative;cursor:grab;opacity:.8;border:2px solid #1E1610}
 .T-card:active{cursor:grabbing}
-.T-card-sel{opacity:1;border-color:#00ff88;box-shadow:0 0 18px rgba(0,255,136,.35),inset 0 0 12px rgba(0,255,136,.08)}
+.T-card-sel{opacity:1;border-color:#00ff44;box-shadow:0 0 18px rgba(0,255,68,.35),inset 0 0 12px rgba(0,255,68,.08)}
 .T-card-gone{opacity:.3;pointer-events:none}
 .T-card-hurt{opacity:.2;pointer-events:none}
 /* drag ghost */
@@ -122,13 +122,13 @@ const CSS = `
 .T-kneel{color:#554f80;border-color:#554f80;box-shadow:4px 4px 0 #2a2840,6px 6px 0 #000}
 
 /* play-by-play terminal */
-.T-narr{flex:1;min-height:0;background:#080812;border-top:1px solid #1a183a;overflow-y:auto;padding:10px 14px}
+.T-narr{flex:1;min-height:0;background:#0C0804;border-top:1px solid #1E1610;overflow-y:auto;padding:10px 14px}
 .T-pbp{display:flex;flex-direction:column;gap:6px}
-.T-pbp-line{font-family:'Courier New',monospace;font-size:14px;color:#6a6690;line-height:1.4;letter-spacing:.3px}
+.T-pbp-line{font-family:'Rajdhani',monospace;font-size:14px;color:#6a6690;line-height:1.4;letter-spacing:.3px}
 .T-pbp-live{color:#e8e6ff;text-shadow:0 0 6px rgba(232,230,255,.15)}
 .T-pbp-result{font-family:'Rajdhani';font-size:12px;letter-spacing:.5px;line-height:1;margin-top:10px;white-space:nowrap;overflow:hidden}
 .T-pbp-down{font-family:'Rajdhani';font-size:10px;color:#30c0e0;margin-top:6px;letter-spacing:.5px;line-height:1;white-space:nowrap;overflow:hidden}
-.T-pbp-idle{font-family:'Courier New',monospace;font-size:11px;color:#333;letter-spacing:.5px}
+.T-pbp-idle{font-family:'Rajdhani',monospace;font-size:11px;color:#333;letter-spacing:.5px}
 /* torch points fly animation */
 .T-torch-fly{position:fixed;z-index:9999;font-family:'Rajdhani';font-size:12px;color:#c8a030;pointer-events:none;text-shadow:0 0 8px rgba(200,160,48,.5)}
 @keyframes T-flyup{0%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(.6)}}
@@ -162,34 +162,34 @@ const CSS = `
 /* overlays */
 .T-ov{position:absolute;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;pointer-events:none}
 .T-ov-dark{background:rgba(6,5,15,.92)}
-.T-ov-black{background:#06050f;pointer-events:auto}
+.T-ov-black{background:#0A0804;pointer-events:auto}
 @keyframes T-fade{from{opacity:0}to{opacity:1}}
 @keyframes T-pop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
-.T-ov-result .T-r-play{font-family:'Courier New';font-size:9px;color:#554f80;letter-spacing:1px;margin-bottom:6px}
-.T-ov-result .T-r-big{font-family:'Bebas Neue';font-size:44px;letter-spacing:3px;line-height:1;animation:T-pop .3s ease-out}
-.T-ov-result .T-r-sub{font-family:'Courier New';font-size:9px;color:#8a86b0;margin-top:10px;max-width:300px;line-height:1.5}
+.T-ov-result .T-r-play{font-family:'Rajdhani';font-size:9px;color:#554f80;letter-spacing:1px;margin-bottom:6px}
+.T-ov-result .T-r-big{font-family:'Teko';font-size:44px;letter-spacing:3px;line-height:1;animation:T-pop .3s ease-out}
+.T-ov-result .T-r-sub{font-family:'Rajdhani';font-size:9px;color:#8a86b0;margin-top:10px;max-width:300px;line-height:1.5}
 
 /* possession cut */
 .T-ov-poss .T-poss-score{font-family:'Rajdhani';font-size:22px;color:#e8e6ff}
-.T-ov-poss .T-poss-who{font-family:'Bebas Neue';font-size:22px;letter-spacing:3px;margin:10px 0}
-.T-ov-poss .T-poss-tag{font-family:'Courier New';font-size:9px;color:#554f80;font-style:italic}
+.T-ov-poss .T-poss-who{font-family:'Teko';font-size:22px;letter-spacing:3px;margin:10px 0}
+.T-ov-poss .T-poss-tag{font-family:'Rajdhani';font-size:9px;color:#554f80;font-style:italic}
 
 /* conversion */
 .T-conv{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px}
-.T-conv-hdr{font-family:'Bebas Neue';font-size:36px;color:#3df58a;letter-spacing:3px}
+.T-conv-hdr{font-family:'Teko';font-size:36px;color:#3df58a;letter-spacing:3px}
 .T-conv-btn{width:100%;max-width:260px;padding:14px;font-family:'Rajdhani';font-size:7px;border-radius:8px;cursor:pointer;text-align:center;background:none;letter-spacing:.5px;line-height:1.6}
 
 /* drive summary */
 .T-drv{padding:10px 14px;text-align:center}
 .T-drv-hdr{font-family:'Rajdhani';font-size:7px;letter-spacing:1px;margin-bottom:4px}
-.T-drv-stat{font-family:'Courier New';font-size:9px;color:#554f80}
+.T-drv-stat{font-family:'Rajdhani';font-size:9px;color:#554f80}
 
 /* 2-min transformation */
 /* 2-minute drill — full urgency transformation */
 .T-urgent .T-strip{border-bottom-color:#e03050;box-shadow:inset 0 0 30px rgba(224,48,80,.1)}
 .T-urgent .T-sb{border-bottom-color:#e03050}
 .T-urgent .T-sb-sit{background:rgba(224,48,80,.08)}
-@keyframes T-breathe{0%,100%{background-color:#06050f}50%{background-color:#140008}}
+@keyframes T-breathe{0%,100%{background-color:#0A0804}50%{background-color:#140008}}
 .T-urgent .T-panel{animation:T-breathe 2s ease-in-out infinite;border-top-color:#e0305066}
 .T-urgent .T-narr{border-top-color:#e0305044;background:#0a0008}
 @keyframes T-urgent-border{0%,100%{border-color:#e0305044}50%{border-color:#e03050}}
@@ -279,12 +279,12 @@ function mkPlayerCard(p, team, isOff) {
   // Matches draft.js buildPlayerCard with small=true sizes
   return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:5px 6px 0">' +
     '<div>' +
-      "<div style=\"font-family:'Courier New';font-size:10px;font-weight:bold;color:#ff0040;letter-spacing:1px;line-height:1\">" + p.pos + '</div>' +
-      "<div style=\"font-family:'Bebas Neue';font-size:15px;color:#fff;line-height:1;margin-top:1px\">" + p.name + '</div>' +
+      "<div style=\"font-family:'Rajdhani';font-size:10px;font-weight:bold;color:#ff0040;letter-spacing:1px;line-height:1\">" + p.pos + '</div>' +
+      "<div style=\"font-family:'Teko';font-size:15px;color:#fff;line-height:1;margin-top:1px\">" + p.name + '</div>' +
     '</div>' +
     '<div style="text-align:right">' +
-      "<div style=\"font-family:'Courier New';font-size:20px;font-weight:bold;color:" + tc + ";line-height:1;text-shadow:0 0 8px " + tc + "66\">" + p.ovr + '</div>' +
-      "<div style=\"font-family:'Courier New';font-size:6px;font-weight:bold;color:" + tc + ";opacity:.7;letter-spacing:1px\">OVR</div>" +
+      "<div style=\"font-family:'Rajdhani';font-size:20px;font-weight:bold;color:" + tc + ";line-height:1;text-shadow:0 0 8px " + tc + "66\">" + p.ovr + '</div>' +
+      "<div style=\"font-family:'Rajdhani';font-size:6px;font-weight:bold;color:" + tc + ";opacity:.7;letter-spacing:1px\">OVR</div>" +
     '</div></div>' +
     '<div style="flex:1;min-height:0;position:relative;overflow:hidden">' +
       '<img src="' + imgSrc + '" alt="' + p.name + '" draggable="false" style="height:100%;width:100%;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7))">' +
@@ -307,16 +307,16 @@ function mkPlayCard(play) {
   var riskLabel = risk==='high'?'HIGH VOLTAGE':risk==='med'?'CALCULATED':'STEADY HAND';
   var riskWidth = risk==='high'?'90%':risk==='med'?'60%':'35%';
   // SVG with zoomed viewBox, thicker strokes, bigger dots — matches cardDraft exactly
-  var svg = playSvg(play.id, '#00ff88');
+  var svg = playSvg(play.id, '#00ff44');
   svg = svg.replace('viewBox="0 0 60 50"','viewBox="4 4 52 44"')
     .replace('width="60" height="50"','width="100%" height="100%" preserveAspectRatio="xMidYMid meet"')
     .replace(/stroke-width="1.5"/g,'stroke-width="2.5"').replace(/stroke-width="1"/g,'stroke-width="2"')
     .replace(/r="3.5"/g,'r="5"').replace(/r="2.5"/g,'r="4"')
-    .replace(/stroke="#00ff88"/g,'stroke="#ffcc00"');
+    .replace(/stroke="#00ff44"/g,'stroke="#FFB800"');
   // Header
   return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 8px 4px">' +
-      "<div style=\"font-family:'Bebas Neue';font-size:14px;color:#fff;line-height:1.1;flex:1;margin-right:4px\">" + play.name + '</div>' +
-      "<div style=\"font-family:'Courier New';font-size:6px;font-weight:bold;color:" + cc + ";border:1px solid " + cc + "44;padding:2px 4px;border-radius:8px;letter-spacing:.5px\">" + cat + '</div>' +
+      "<div style=\"font-family:'Teko';font-size:14px;color:#fff;line-height:1.1;flex:1;margin-right:4px\">" + play.name + '</div>' +
+      "<div style=\"font-family:'Rajdhani';font-size:6px;font-weight:bold;color:" + cc + ";border:1px solid " + cc + "44;padding:2px 4px;border-radius:8px;letter-spacing:.5px\">" + cat + '</div>' +
     '</div>' +
     // Diagram
     '<div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse,#1E1610,#0A0804);margin:0 6px;border-radius:4px;overflow:hidden">' + svg + '</div>' +
@@ -325,10 +325,10 @@ function mkPlayCard(play) {
       '<div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden">' +
         '<div style="width:' + riskWidth + ';height:100%;border-radius:3px;background:' + riskColor + '"></div>' +
       '</div>' +
-      "<div style=\"font-family:'Courier New';font-size:7px;font-weight:bold;color:" + riskColor + ";letter-spacing:.5px;margin-top:2px\">" + riskLabel + '</div>' +
+      "<div style=\"font-family:'Rajdhani';font-size:7px;font-weight:bold;color:" + riskColor + ";letter-spacing:.5px;margin-top:2px\">" + riskLabel + '</div>' +
     '</div>' +
     // Description
-    "<div style=\"padding:2px 8px 6px;font-family:'Courier New';font-size:7px;color:var(--muted);opacity:.7\">" + (PLAY_DESC[play.id]||'') + '</div>';
+    "<div style=\"padding:2px 8px 6px;font-family:'Rajdhani';font-size:7px;color:var(--muted);opacity:.7\">" + (PLAY_DESC[play.id]||'') + '</div>';
 }
 
 function resolveRoster(ids, pool) {
@@ -454,7 +454,7 @@ export function buildGameplay() {
     // Turf texture
     let h = '<div class="T-field-turf"></div>';
     // Both endzones customized for home team
-    var homeColor = homeTeam.color || '#FF5E1A';
+    var homeColor = homeTeam.color || '#FF4511';
     var homeMascot = GS.team === 'canyon_tech' ? 'CACTI' : 'TRIDENTS';
     h += '<div class="T-ez T-ez-l" style="background:' + homeColor + '"><span class="T-ez-text">' + homeMascot + '</span></div>';
     h += '<div class="T-ez T-ez-r" style="background:' + homeColor + '"><span class="T-ez-text">' + homeMascot + '</span></div>';
@@ -498,8 +498,8 @@ export function buildGameplay() {
       var tc = TORCH_CARDS.find(function(c) { return c.id === selTorch; });
       var tName = tc ? tc.name : selTorch;
       h += '<div class="T-placed T-placed-torch" style="border-color:#c8a030;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px">' +
-        "<div style=\"font-family:'Bebas Neue';font-size:13px;color:#c8a030;text-align:center\">" + tName + "</div>" +
-        "<div style=\"font-family:'Courier New';font-size:6px;color:#8a86b0;text-align:center\">TORCH</div></div>";
+        "<div style=\"font-family:'Teko';font-size:13px;color:#c8a030;text-align:center\">" + tName + "</div>" +
+        "<div style=\"font-family:'Rajdhani';font-size:6px;color:#8a86b0;text-align:center\">TORCH</div></div>";
     } else {
       const hasTorchCards = gs.humanTorchCards && gs.humanTorchCards.length > 0;
       const torchLbl = hasTorchCards ? (phase === 'torch' ? 'DRAG<br><br>TORCH<br><br>HERE' : 'TORCH') : 'NO<br><br>TORCH<br><br>CARD';
@@ -552,8 +552,8 @@ export function buildGameplay() {
     function clashCard(name, sub, color) {
       return '<div class="T-clash-card" style="border-color:' + color + '">' +
         "<div style=\"padding:8px 10px 6px\">" +
-          "<div style=\"font-family:'Bebas Neue';font-size:18px;color:#fff;line-height:1\">" + name + "</div>" +
-          "<div style=\"font-family:'Courier New';font-size:11px;font-weight:bold;color:" + color + ";margin-top:3px;letter-spacing:.5px\">" + sub + "</div>" +
+          "<div style=\"font-family:'Teko';font-size:18px;color:#fff;line-height:1\">" + name + "</div>" +
+          "<div style=\"font-family:'Rajdhani';font-size:11px;font-weight:bold;color:" + color + ";margin-top:3px;letter-spacing:.5px\">" + sub + "</div>" +
         "</div></div>";
     }
 
@@ -571,7 +571,7 @@ export function buildGameplay() {
       center.innerHTML =
         "<div style=\"background:#1E1610;border:2px solid #c8a030;border-radius:6px;padding:6px 10px;box-shadow:0 0 16px rgba(200,160,48,.4)\">" +
           "<div style=\"font-family:'Rajdhani';font-size:5px;color:#c8a030;text-align:center\">" + torchCard.tier + "</div>" +
-          "<div style=\"font-family:'Bebas Neue';font-size:13px;color:#c8a030;line-height:1;text-align:center\">" + torchCard.name + "</div>" +
+          "<div style=\"font-family:'Teko';font-size:13px;color:#c8a030;line-height:1;text-align:center\">" + torchCard.name + "</div>" +
         "</div>";
     } else {
       center.innerHTML = '<div class="T-clash-vs">VS</div>';
@@ -1079,10 +1079,10 @@ export function buildGameplay() {
           
           if (idx >= 2 && idx < lines.length - 1) {
             if (r.isSack || r.isInterception || r.isFumbleLost) thinkLine.style.color = '#F03030';
-            else if (r.yards >= 8 || r.isTouchdown) thinkLine.style.color = '#F5B800';
+            else if (r.yards >= 8 || r.isTouchdown) thinkLine.style.color = '#FFB800';
           }
           if (idx === lines.length - 1 && lines.length > 3) {
-            if (r.isTouchdown || r.isInterception || r.isFumbleLost) thinkLine.style.color = r.isTouchdown ? '#00E5C0' : '#F03030';
+            if (r.isTouchdown || r.isInterception || r.isFumbleLost) thinkLine.style.color = r.isTouchdown ? '#4DA6FF' : '#F03030';
           }
           
           thinkLine.appendChild(cursor);
@@ -1157,7 +1157,7 @@ export function buildGameplay() {
             if (r.historyBonus > 0) reasons.push('Play mix bonus');
             if (r.historyBonus < -2) reasons.push('Predictable calls');
             var torchExpl = document.createElement('div');
-            torchExpl.style.cssText = "font-family:'Courier New';font-size:9px;color:#8a86b0;margin-top:4px;line-height:1.4";
+            torchExpl.style.cssText = "font-family:'Rajdhani';font-size:9px;color:#8a86b0;margin-top:4px;line-height:1.4";
             torchExpl.textContent = reasons.join(' \u00b7 ');
             pbp.appendChild(torchExpl);
           }
@@ -1284,7 +1284,7 @@ export function buildGameplay() {
     // Side indicator + instruction
     if (phase === 'play' || phase === 'player' || phase === 'torch') {
       var sideBar = document.createElement('div');
-      sideBar.style.cssText = "text-align:center;padding:3px 0;font-family:'Bebas Neue';font-size:16px;letter-spacing:3px;flex-shrink:0;" +
+      sideBar.style.cssText = "text-align:center;padding:3px 0;font-family:'Teko';font-size:16px;letter-spacing:3px;flex-shrink:0;" +
         (isOff ? 'color:#c8a030;background:linear-gradient(90deg,transparent,rgba(200,160,48,.08),transparent)' : 'color:#30c0e0;background:linear-gradient(90deg,transparent,rgba(48,192,224,.08),transparent)');
       sideBar.textContent = isOff ? 'YOUR OFFENSE' : 'YOUR DEFENSE';
       panel.appendChild(sideBar);
@@ -1336,10 +1336,10 @@ export function buildGameplay() {
         c.style.border = '2px solid ' + tierCol + '44';
         c.innerHTML =
           "<div style=\"padding:8px 8px 4px\">" +
-            "<div style=\"font-family:'Courier New';font-size:7px;font-weight:bold;color:" + tierCol + ";letter-spacing:1px\">" + tc.tier + "</div>" +
-            "<div style=\"font-family:'Bebas Neue';font-size:16px;color:#fff;line-height:1;margin-top:2px\">" + tc.name + "</div>" +
+            "<div style=\"font-family:'Rajdhani';font-size:7px;font-weight:bold;color:" + tierCol + ";letter-spacing:1px\">" + tc.tier + "</div>" +
+            "<div style=\"font-family:'Teko';font-size:16px;color:#fff;line-height:1;margin-top:2px\">" + tc.name + "</div>" +
           "</div>" +
-          "<div style=\"flex:1;padding:4px 8px;font-family:'Courier New';font-size:9px;color:#8a86b0;line-height:1.3\">" + tc.effect + "</div>";
+          "<div style=\"flex:1;padding:4px 8px;font-family:'Rajdhani';font-size:9px;color:#8a86b0;line-height:1.3\">" + tc.effect + "</div>";
         c.onclick = function() {
           SND.click();
           selTorch = cardId;
@@ -1610,7 +1610,7 @@ export function buildGameplay() {
       '<div class="T-poss-score" style="color:#e03050;font-size:28px">2:00</div>'+
       '<div class="T-poss-who" style="color:#e03050;font-size:24px;letter-spacing:4px">2-MINUTE WARNING</div>'+
       "<div class=\"T-poss-tag\" style=\"color:#e03050;opacity:.7\">The clock is live. SPIKE and KNEEL available.</div>"+
-      "<div style=\"font-family:'Courier New';font-size:9px;color:#554f80;margin-top:8px\">Every second counts from here.</div>";
+      "<div style=\"font-family:'Rajdhani';font-size:9px;color:#554f80;margin-top:8px\">Every second counts from here.</div>";
     el.appendChild(ov);
     requestAnimationFrame(() => ov.style.opacity='1');
     setTimeout(() => { ov.style.opacity='0'; setTimeout(() => ov.remove(), 250); }, 2500);
@@ -1629,8 +1629,8 @@ export function buildGameplay() {
 
     // Coin animation
     ov.innerHTML =
-      "<div style='width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#FFD700,#B8860B);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 0 25px rgba(255,204,0,.4);animation:T-coin 1.5s ease-out forwards'>\uD83C\uDFC8</div>" +
-      "<div style=\"font-family:'Bebas Neue';font-size:24px;color:#fff;letter-spacing:2px\">COIN TOSS...</div>";
+      "<div style='width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#FFB800,#B8860B);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 0 25px rgba(255,204,0,.4);animation:T-coin 1.5s ease-out forwards'>\uD83C\uDFC8</div>" +
+      "<div style=\"font-family:'Teko';font-size:24px;color:#fff;letter-spacing:2px\">COIN TOSS...</div>";
 
     el.appendChild(ov);
     requestAnimationFrame(function() { ov.style.opacity = '1'; });
@@ -1643,7 +1643,7 @@ export function buildGameplay() {
       var resultDiv = document.createElement('div');
       resultDiv.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:340px;';
       resultDiv.innerHTML =
-        "<div style=\"font-family:'Bebas Neue';font-size:26px;color:var(--a-gold);letter-spacing:2px\">" + winner + " WINS THE TOSS</div>";
+        "<div style=\"font-family:'Teko';font-size:26px;color:var(--a-gold);letter-spacing:2px\">" + winner + " WINS THE TOSS</div>";
 
       if (humanWins) {
         resultDiv.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Rajdhani';font-size:7px;color:var(--muted);letter-spacing:1px\">CHOOSE YOUR REWARD</div>");
@@ -1655,9 +1655,9 @@ export function buildGameplay() {
           var tierCol = card.tier === 'SILVER' ? '#aaa' : '#CD7F32';
           ce.style.cssText = 'flex:1;background:var(--bg-surface);border:2px solid ' + tierCol + ';border-radius:6px;padding:10px 6px;cursor:pointer;text-align:center;transition:all .15s;';
           ce.innerHTML =
-            "<div style=\"font-family:'Courier New';font-size:7px;font-weight:bold;color:" + tierCol + ";letter-spacing:1px;margin-bottom:3px\">" + card.tier + "</div>" +
-            "<div style=\"font-family:'Bebas Neue';font-size:14px;color:#fff;line-height:1.1;margin-bottom:3px\">" + card.name + "</div>" +
-            "<div style=\"font-family:'Courier New';font-size:7px;color:var(--muted);line-height:1.3\">" + card.effect + "</div>";
+            "<div style=\"font-family:'Rajdhani';font-size:7px;font-weight:bold;color:" + tierCol + ";letter-spacing:1px;margin-bottom:3px\">" + card.tier + "</div>" +
+            "<div style=\"font-family:'Teko';font-size:14px;color:#fff;line-height:1.1;margin-bottom:3px\">" + card.name + "</div>" +
+            "<div style=\"font-family:'Rajdhani';font-size:7px;color:var(--muted);line-height:1.3\">" + card.effect + "</div>";
           ce.onclick = function() {
             SND.snap();
             ce.style.transform = 'scale(1.1)';
@@ -1700,7 +1700,7 @@ export function buildGameplay() {
     ov.className = 'T-ov T-ov-dark';
     ov.style.cssText += 'pointer-events:auto;flex-direction:column;gap:12px;padding:24px;opacity:0;transition:opacity .3s;cursor:pointer;';
     ov.innerHTML =
-      "<div style=\"font-family:'Bebas Neue';font-size:30px;color:var(--a-gold);letter-spacing:3px\">HOW TO PLAY</div>" +
+      "<div style=\"font-family:'Teko';font-size:30px;color:var(--a-gold);letter-spacing:3px\">HOW TO PLAY</div>" +
       "<div style=\"font-family:'Barlow Condensed';font-size:16px;color:#ccc;line-height:1.6;text-align:center;max-width:300px\">" +
         "20 snaps per half<br>" +
         "2-minute warning after snap 20<br>" +

@@ -28,7 +28,7 @@ export function buildCoinToss() {
   styleEl.textContent =
     '@keyframes coinSpin { 0% { transform:rotateY(0deg); } 100% { transform:rotateY(1080deg); } }' +
     '@keyframes fadeSlideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }' +
-    '@keyframes pulseGold { 0%,100% { box-shadow:0 0 20px rgba(255,204,0,0.3); } 50% { box-shadow:0 0 40px rgba(255,204,0,0.6); } }' +
+    '@keyframes pulseGold { 0%,100% { box-shadow:0 0 20px rgba(255,184,0,0.3); } 50% { box-shadow:0 0 40px rgba(255,184,0,0.6); } }' +
     '@keyframes cardStolen { 0% { transform:scale(1); opacity:1; } 100% { transform:translateY(-100px) scale(0.5); opacity:0; } }';
   el.appendChild(styleEl);
 
@@ -41,7 +41,7 @@ export function buildCoinToss() {
   hdrTitle.style.cssText =
     "font-family:'Teko',sans-serif;font-weight:700;font-size:28px;color:var(--a-gold);" +
     "letter-spacing:3px;font-style:italic;transform:skewX(-8deg);" +
-    "text-shadow:2px 2px 0 rgba(0,0,0,0.9),0 0 12px rgba(255,204,0,0.3);";
+    "text-shadow:2px 2px 0 rgba(0,0,0,0.9),0 0 12px rgba(255,184,0,0.3);";
   hdrTitle.textContent = '6. COIN TOSS';
   hdr.appendChild(hdrTitle);
   el.appendChild(hdr);
@@ -58,14 +58,14 @@ export function buildCoinToss() {
 
   var coin = document.createElement('div');
   coin.style.cssText =
-    'width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg, #FFD700, #B8860B);' +
+    'width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg, #FFB800, #8B6A00);' +
     'display:flex;align-items:center;justify-content:center;font-size:36px;' +
-    'box-shadow:0 0 30px rgba(255,204,0,0.4);animation:coinSpin 1.5s ease-out forwards;';
+    'box-shadow:0 0 30px rgba(255,184,0,0.4);animation:coinSpin 1.5s ease-out forwards;';
   coin.textContent = '\uD83C\uDFC8';
 
   var flipText = document.createElement('div');
   flipText.style.cssText =
-    "font-family:'Bebas Neue',sans-serif;font-size:24px;color:#fff;letter-spacing:2px;";
+    "font-family:'Teko',sans-serif;font-size:24px;color:#fff;letter-spacing:2px;";
   flipText.textContent = 'FLIPPING...';
 
   coinPhase.append(coin, flipText);
@@ -110,24 +110,24 @@ export function buildCoinToss() {
 
         var tierEl = document.createElement('div');
         tierEl.style.cssText =
-          "font-family:'Courier New',monospace;font-size:7px;font-weight:bold;" +
+          "font-family:'Rajdhani',monospace;font-size:7px;font-weight:bold;" +
           "color:" + (card.tier === 'SILVER' ? '#aaa' : '#CD7F32') + ";" +
           "letter-spacing:1px;margin-bottom:4px;";
         tierEl.textContent = card.tier;
 
         var nameEl = document.createElement('div');
         nameEl.style.cssText =
-          "font-family:'Bebas Neue',sans-serif;font-size:14px;color:#fff;line-height:1.1;margin-bottom:4px;";
+          "font-family:'Teko',sans-serif;font-size:14px;color:#fff;line-height:1.1;margin-bottom:4px;";
         nameEl.textContent = card.name;
 
         var descEl = document.createElement('div');
         descEl.style.cssText =
-          "font-family:'Courier New',monospace;font-size:7px;color:var(--muted);line-height:1.3;";
+          "font-family:'Rajdhani',monospace;font-size:7px;color:var(--muted);line-height:1.3;";
         descEl.textContent = card.effect;
 
         cardEl.append(tierEl, nameEl, descEl);
 
-        cardEl.onmouseenter = function() { cardEl.style.borderColor = '#00ff88'; cardEl.style.boxShadow = '0 0 15px rgba(0,255,136,0.3)'; };
+        cardEl.onmouseenter = function() { cardEl.style.borderColor = '#00ff44'; cardEl.style.boxShadow = '0 0 15px rgba(0,255,68,0.3)'; };
         cardEl.onmouseleave = function() { cardEl.style.borderColor = card.tier === 'SILVER' ? '#aaa' : '#CD7F32'; cardEl.style.boxShadow = 'none'; };
 
         cardEl.onclick = function() {
@@ -172,7 +172,7 @@ export function buildCoinToss() {
       
       var cardPreview = document.createElement('div');
       cardPreview.style.cssText = 'width:120px;background:var(--bg-surface);border:2px solid var(--p-red);border-radius:6px;padding:12px;text-align:center;position:relative;animation:cardStolen 1.5s ease-in-out forwards;';
-      cardPreview.innerHTML = `<div style="font-size:8px;color:var(--p-red);margin-bottom:4px;">${cpuCard.tier}</div><div style="font-size:14px;font-family:'Bebas Neue';color:#fff;">${cpuCard.name}</div>`;
+      cardPreview.innerHTML = `<div style="font-size:8px;color:var(--p-red);margin-bottom:4px;">${cpuCard.tier}</div><div style="font-size:14px;font-family:'Teko';color:#fff;">${cpuCard.name}</div>`;
       cpuChoiceWrap.appendChild(cardPreview);
 
       var cpuMsg = document.createElement('div');

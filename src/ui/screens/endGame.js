@@ -41,7 +41,7 @@ export function buildEndGame() {
     "font-family:'Teko',sans-serif;font-weight:700;font-size:32px;letter-spacing:3px;" +
     "font-style:italic;transform:skewX(-8deg);" +
     (humanWon ? 'color:#00ff44;animation:victoryPulse 2s infinite;' :
-     tied ? 'color:var(--a-gold);' : 'color:#ff4444;');
+     tied ? 'color:var(--a-gold);' : 'color:#ff0040;');
   hdrTitle.textContent = humanWon ? 'VICTORY' : tied ? 'TIE GAME' : 'DEFEAT';
   hdr.appendChild(hdrTitle);
   el.appendChild(hdr);
@@ -62,7 +62,7 @@ export function buildEndGame() {
     b.style.cssText = 'text-align:center;';
     var n = document.createElement('div');
     n.style.cssText =
-      "font-family:'Bebas Neue',sans-serif;font-size:24px;color:" + color + ";letter-spacing:2px;";
+      "font-family:'Teko',sans-serif;font-size:24px;color:" + color + ";letter-spacing:2px;";
     n.textContent = name;
     var s = document.createElement('div');
     s.style.cssText =
@@ -74,7 +74,7 @@ export function buildEndGame() {
   };
 
   var dash = document.createElement('div');
-  dash.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--muted);";
+  dash.style.cssText = "font-family:'Teko',sans-serif;font-size:28px;color:var(--muted);";
   dash.textContent = '\u2014';
 
   scoreBlock.append(
@@ -98,7 +98,7 @@ export function buildEndGame() {
   var torchScore = document.createElement('div');
   torchScore.style.cssText =
     "font-family:'Rajdhani',monospace;font-size:24px;color:var(--a-gold);" +
-    "text-shadow:0 0 15px rgba(255,204,0,0.4);";
+    "text-shadow:0 0 15px rgba(255,184,0,0.4);";
   torchScore.textContent = humanTorch;
 
   torchBlock.append(torchLabel, torchScore);
@@ -139,7 +139,7 @@ export function buildEndGame() {
     label.style.cssText = "font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--muted);";
     label.textContent = s[0];
     var val = document.createElement('div');
-    val.style.cssText = "font-family:'Courier New',monospace;font-size:12px;color:#fff;font-weight:bold;";
+    val.style.cssText = "font-family:'Rajdhani',monospace;font-size:12px;color:#fff;font-weight:bold;";
     val.textContent = s[1];
     row.append(label, val);
     statsBlock.appendChild(row);
@@ -159,7 +159,7 @@ export function buildEndGame() {
   if (gs.snapLog && gs.snapLog.length > 0) {
     gs.snapLog.forEach((log, i) => {
       var item = document.createElement('div');
-      item.style.cssText = "font-family:'Courier New',monospace;font-size:9px;color:#fff;line-height:1.2;border-bottom:1px solid #ffffff08;padding-bottom:4px;";
+      item.style.cssText = "font-family:'Rajdhani',monospace;font-size:9px;color:#fff;line-height:1.2;border-bottom:1px solid #ffffff08;padding-bottom:4px;";
       var teamColor = getTeam(log.team === 'CT' ? 'canyon_tech' : 'iron_ridge').accent;
       item.innerHTML = `<span style="color:${teamColor};font-weight:bold;">${log.team}:</span> ${log.result}`;
       logBox.appendChild(item);
@@ -173,7 +173,7 @@ export function buildEndGame() {
   returnBtn.style.cssText =
     'width:100%;max-width:300px;font-size:14px;margin-top:12px;' +
     'background:var(--a-gold);border-color:var(--a-gold);color:#000;' +
-    'box-shadow:0 0 20px rgba(255,204,0,0.3);';
+    'box-shadow:0 0 20px rgba(255,184,0,0.3);';
   returnBtn.textContent = 'RETURN TO HUB';
   returnBtn.onclick = function() {
     SND.click();

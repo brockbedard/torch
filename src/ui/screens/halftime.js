@@ -25,7 +25,7 @@ export function buildHalftime() {
   var hdr = document.createElement('div');
   hdr.style.cssText = 'background:rgba(0,0,0,0.7);padding:12px 14px;text-align:center;flex-shrink:0;border-bottom:2px solid var(--a-gold);';
   var hdrTitle = document.createElement('div');
-  hdrTitle.style.cssText = "font-family:'Teko',sans-serif;font-weight:700;font-size:32px;color:var(--a-gold);letter-spacing:3px;font-style:italic;transform:skewX(-8deg);text-shadow:2px 2px 0 rgba(0,0,0,0.9),0 0 12px rgba(255,204,0,0.3);";
+  hdrTitle.style.cssText = "font-family:'Teko',sans-serif;font-weight:700;font-size:32px;color:var(--a-gold);letter-spacing:3px;font-style:italic;transform:skewX(-8deg);text-shadow:2px 2px 0 rgba(0,0,0,0.9),0 0 12px rgba(255,184,0,0.3);";
   hdrTitle.textContent = 'HALFTIME REPORT';
   hdr.appendChild(hdrTitle);
   el.appendChild(hdr);
@@ -38,7 +38,7 @@ export function buildHalftime() {
   scoreBlock.style.cssText = 'display:flex;align-items:center;gap:20px;';
   var teamBlock = (name, score, color) => {
     var b = document.createElement('div'); b.style.textAlign = 'center';
-    var n = document.createElement('div'); n.style.cssText = `font-family:'Bebas Neue';font-size:24px;color:${color};letter-spacing:2px;`;
+    var n = document.createElement('div'); n.style.cssText = `font-family:'Teko';font-size:24px;color:${color};letter-spacing:2px;`;
     n.textContent = name;
     var s = document.createElement('div'); s.style.cssText = "font-family:'Rajdhani';font-size:32px;color:#fff;text-shadow:0 0 15px rgba(255,255,255,0.3);";
     s.textContent = score;
@@ -80,10 +80,10 @@ export function buildHalftime() {
     var canAfford = humanPts >= card.cost;
     var alreadyHas3 = gs.humanTorchCards.length >= 3;
 
-    cardEl.style.cssText = `flex:1;background:#000;border:1px solid ${card.tier==='GOLD'?'var(--a-gold)':card.tier==='SILVER'?'#aaa':'#CD7F32'};border-radius:6px;padding:8px;text-align:center;cursor:${canAfford&&!alreadyHas3?'pointer':'not-allowed'};opacity:${canAfford&&!alreadyHas3?'1':'0.5'};transition:transform 0.1s;`;
+    cardEl.style.cssText = `flex:1;background:var(--bg-surface);border:1px solid ${card.tier==='GOLD'?'var(--a-gold)':card.tier==='SILVER'?'#aaa':'#CD7F32'};border-radius:6px;padding:8px;text-align:center;cursor:${canAfford&&!alreadyHas3?'pointer':'not-allowed'};opacity:${canAfford&&!alreadyHas3?'1':'0.5'};transition:transform 0.1s;`;
     cardEl.innerHTML = `
       <div style="font-size:6px;color:var(--muted);">${card.tier}</div>
-      <div style="font-family:'Bebas Neue';font-size:13px;color:#fff;margin:2px 0;">${card.name}</div>
+      <div style="font-family:'Teko';font-size:13px;color:#fff;margin:2px 0;">${card.name}</div>
       <div style="font-family:'Rajdhani';font-size:8px;color:var(--l-green);">${card.cost}P</div>
     `;
 

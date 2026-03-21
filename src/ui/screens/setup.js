@@ -68,7 +68,7 @@ export function buildSetup() {
   var hdrName = document.createElement('span');
   hdrName.style.cssText =
     "font-family:'Teko',sans-serif;font-weight:700;font-size:32px;color:var(--a-gold);" +
-    "letter-spacing:3px;text-shadow:2px 2px 0 rgba(0,0,0,0.9),0 0 12px rgba(255,204,0,0.3);";
+    "letter-spacing:3px;text-shadow:2px 2px 0 rgba(0,0,0,0.9),0 0 12px rgba(255,184,0,0.3);";
   hdrName.textContent = 'TORCH';
   var hdrSub = document.createElement('span');
   hdrSub.style.cssText =
@@ -109,7 +109,7 @@ export function buildSetup() {
         100% { transform: translate(30px, -60px) scale(0); opacity: 0; }
       }
       .theme-haze { position:absolute; inset:0; background:linear-gradient(0deg, rgba(255,100,0,0.3), transparent); pointer-events:none; animation: heat-haze 2s ease-in-out infinite; mix-blend-mode: color-dodge; z-index:2; }
-      .theme-spark { position:absolute; width:6px; height:6px; background:#fff; border-radius:50%; pointer-events:none; box-shadow:0 0 10px #ffcc00, 0 0 20px #ff6600; }
+      .theme-spark { position:absolute; width:6px; height:6px; background:#fff; border-radius:50%; pointer-events:none; box-shadow:0 0 10px #FFB800, 0 0 20px #ff6600; }
     `;
     document.head.appendChild(style);
   }
@@ -126,8 +126,8 @@ export function buildSetup() {
   function refreshDiffs() {
     diffRow.innerHTML = '';
     var diffs = [
-      { id: 'EASY', color: '#00ff88' },
-      { id: 'MEDIUM', color: '#ffcc00' },
+      { id: 'EASY', color: '#00ff44' },
+      { id: 'MEDIUM', color: '#FFB800' },
       { id: 'HARD', color: '#ff0040' }
     ];
     diffs.forEach(function(d) {
@@ -168,7 +168,7 @@ export function buildSetup() {
     }
     return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0px">' +
       "<span style=\"font-family:'Rajdhani';font-size:9px;color:#fff;letter-spacing:0.5px;text-shadow:1px 1px 2px #000\">" + label + "</span>" +
-      "<span style=\"font-family:'Courier New';font-size:14px;font-weight:bold;letter-spacing:-1px\">" + stars + "</span>" +
+      "<span style=\"font-family:'Rajdhani';font-size:14px;font-weight:bold;letter-spacing:-1px\">" + stars + "</span>" +
     '</div>';
   }
 
@@ -183,14 +183,14 @@ export function buildSetup() {
       card.style.cssText =
         'background:var(--bg-surface);position:relative;border-radius:6px;cursor:pointer;overflow:hidden;' +
         'transition:all 0.15s ease;display:flex;flex-direction:column;' +
-        'border:2px solid ' + (isSel ? '#00ff88' : '#00ff8833') + ';' +
+        'border:2px solid ' + (isSel ? '#00ff44' : '#00ff4433') + ';' +
         'opacity:' + (isSel ? '1' : '0.8') + ';' +
-        (isSel ? 'box-shadow:0 0 18px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08);' : '');
+        (isSel ? 'box-shadow:0 0 18px rgba(0,255,68,0.35), inset 0 0 12px rgba(0,255,68,0.08);' : '');
 
       // Selected bar (Matches play/roster cards)
       if (isSel) {
         var bar = document.createElement('div');
-        bar.style.cssText = 'position:absolute;top:0;left:50%;transform:translateX(-50%);width:36px;height:3px;background:#00ff88;border-radius:0 0 3px 3px;z-index:10;';
+        bar.style.cssText = 'position:absolute;top:0;left:50%;transform:translateX(-50%);width:36px;height:3px;background:#00ff44;border-radius:0 0 3px 3px;z-index:10;';
         card.appendChild(bar);
       }
 
@@ -229,7 +229,7 @@ export function buildSetup() {
       topRow.innerHTML = 
         '<div style="font-size:36px;filter:drop-shadow(0 0 15px ' + tColor + ')">' + team.icon + '</div>' +
         '<div style="display:flex;flex-direction:column;gap:2px;">' +
-          "<div style=\"font-family:'Bebas Neue';font-size:26px;color:#fff;line-height:1;letter-spacing:2px;text-shadow:2px 2px 4px #000\">" + teamFullName + "</div>" +
+          "<div style=\"font-family:'Teko';font-size:26px;color:#fff;line-height:1;letter-spacing:2px;text-shadow:2px 2px 4px #000\">" + teamFullName + "</div>" +
           "<div style=\"font-family:'Rajdhani';font-size:8px;color:" + tColor + ";letter-spacing:1px;text-shadow:0 0 10px #000\">" + x.motto + "</div>" +
         '</div>';
       contentWrap.appendChild(topRow);

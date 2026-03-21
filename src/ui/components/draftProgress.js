@@ -52,7 +52,7 @@ export function buildDraftProgress(currentStep) {
     
     if (isPast) {
       indicator.textContent = '\u2713';
-      indicator.style.cssText += 'color:#00ff88;font-weight:bold;text-shadow:0 0 8px rgba(0,255,136,0.8);animation:check-glow 2s infinite;background:rgba(0,255,136,0.1);border:1px solid #00ff88;';
+      indicator.style.cssText += 'color:#00ff44;font-weight:bold;text-shadow:0 0 8px rgba(0,255,68,0.8);animation:check-glow 2s infinite;background:rgba(0,255,68,0.1);border:1px solid #00ff44;';
     } else {
       indicator.textContent = stepIdx;
       indicator.style.fontSize = '7px';
@@ -76,11 +76,11 @@ export function buildDraftProgress(currentStep) {
 
       line.style.cssText =
         'flex:1;height:2px;margin:0 6px;position:relative;overflow:hidden;' +
-        'background:' + (isLinePast ? (isLineActive ? 'rgba(0,255,136,0.2)' : '#00ff88') : '#222') + ';';
+        'background:' + (isLinePast ? (isLineActive ? 'rgba(0,255,68,0.2)' : '#00ff44') : '#222') + ';';
       
       if (isLineActive) {
         const flow = document.createElement('div');
-        flow.style.cssText = 'position:absolute;inset:0;background:linear-gradient(90deg,transparent,#00ff88,transparent);width:50%;animation:line-flow 1.5s infinite linear;';
+        flow.style.cssText = 'position:absolute;inset:0;background:linear-gradient(90deg,transparent,#00ff44,transparent);width:50%;animation:line-flow 1.5s infinite linear;';
         line.appendChild(flow);
       }
       container.appendChild(line);

@@ -34,9 +34,9 @@ function catLabel(card) {
 }
 
 var CAT_COLORS = {
-  SHORT: '#00ff44', QUICK: '#00eaff', DEEP: '#ff0040', RUN: '#ff4d00',
+  SHORT: '#00ff44', QUICK: '#4DA6FF', DEEP: '#ff0040', RUN: '#ff4d00',
   SCREEN: '#ff66aa', OPTION: '#ff4d00', POWER: '#ff4d00',
-  BLITZ: '#ff0040', ZONE: '#00ccaa', PRESSURE: '#ffcc00', HYBRID: '#FF4511',
+  BLITZ: '#ff0040', ZONE: '#4DA6FF', PRESSURE: '#FFB800', HYBRID: '#FF4511',
 };
 
 var SHORT_DESC = {
@@ -89,19 +89,19 @@ function buildPlayCard(card, isSel, staggerIdx) {
   var cel = document.createElement('div');
   cel.style.cssText =
     'background:var(--bg-surface);' +
-    'border:2px solid ' + (isSel ? '#00ff88' : '#00ff8833') + ';' +
+    'border:2px solid ' + (isSel ? '#00ff44' : '#00ff4433') + ';' +
     'border-radius:6px;padding:0;position:relative;overflow:hidden;' +
     'cursor:pointer;display:flex;flex-direction:column;' +
     'transition:all 0.15s ease;' +
     'opacity:' + (isSel ? '1' : '0.8') + ';' +
-    (isSel ? 'box-shadow:0 0 18px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08);' : '');
+    (isSel ? 'box-shadow:0 0 18px rgba(0,255,68,0.35), inset 0 0 12px rgba(0,255,68,0.08);' : '');
 
   // Selected bar
   if (isSel) {
     var bar = document.createElement('div');
     bar.style.cssText =
       'position:absolute;top:0;left:50%;transform:translateX(-50%);' +
-      'width:36px;height:3px;background:#00ff88;border-radius:0 0 3px 3px;z-index:3;';
+      'width:36px;height:3px;background:#00ff44;border-radius:0 0 3px 3px;z-index:3;';
     cel.appendChild(bar);
   }
 
@@ -110,16 +110,16 @@ function buildPlayCard(card, isSel, staggerIdx) {
   header.style.cssText =
     'display:flex;justify-content:space-between;align-items:center;' +
     'padding:10px 10px 6px 10px;position:relative;z-index:2;' +
-    (isSel ? 'background:linear-gradient(180deg, rgba(0,255,136,0.1) 0%, transparent 100%);' : '');
+    (isSel ? 'background:linear-gradient(180deg, rgba(0,255,68,0.1) 0%, transparent 100%);' : '');
 
   var nameEl = document.createElement('div');
   nameEl.style.cssText =
-    'font-family:"Bebas Neue",sans-serif;font-size:16px;color:#fff;line-height:1.1;flex:1;margin-right:6px;';
+    'font-family:"Teko",sans-serif;font-size:16px;color:#fff;line-height:1.1;flex:1;margin-right:6px;';
   nameEl.textContent = card.name;
 
   var badge = document.createElement('div');
   badge.style.cssText =
-    'font-family:"Courier New",monospace;font-size:7px;font-weight:bold;' +
+    'font-family:"Rajdhani",monospace;font-size:7px;font-weight:bold;' +
     'color:' + catColor + ';border:1px solid ' + catColor + '44;' +
     'padding:2px 5px;border-radius:8px;letter-spacing:0.5px;white-space:nowrap;flex-shrink:0;';
   badge.textContent = cat;
@@ -134,7 +134,7 @@ function buildPlayCard(card, isSel, staggerIdx) {
     'background:radial-gradient(ellipse at center, #1E1610 0%, #0A0804 100%);' +
     'margin:0 8px;border-radius:4px;overflow:hidden;position:relative;';
 
-  var svgHTML = playSvg(card.id, '#00ff88');
+  var svgHTML = playSvg(card.id, '#00ff44');
   var animId = 'anim_' + card.id + '_' + staggerIdx;
   // Tighter viewBox to zoom in, thicker strokes, bigger dots
   var animSvg = svgHTML
@@ -146,8 +146,8 @@ function buildPlayCard(card, isSel, staggerIdx) {
     .replace(/stroke-width="1"/g, 'stroke-width="2"')
     .replace(/r="3.5"/g, 'r="5"')
     .replace(/r="2.5"/g, 'r="4"')
-    .replace(/stroke="#00ff88"/g, 'stroke="#ffcc00"')
-    .replace(/fill="#00ff88"/g, 'fill="#00ff88"');
+    .replace(/stroke="#00ff44"/g, 'stroke="#FFB800"')
+    .replace(/fill="#00ff44"/g, 'fill="#00ff44"');
 
   diagWrap.innerHTML = animSvg;
 
@@ -173,7 +173,7 @@ function buildPlayCard(card, isSel, staggerIdx) {
 
   var meterFill = document.createElement('div');
   var riskLabel = document.createElement('div');
-  riskLabel.style.cssText = 'font-family:"Courier New",monospace;font-size:9px;font-weight:bold;letter-spacing:0.5px;margin-top:3px;';
+  riskLabel.style.cssText = 'font-family:"Rajdhani",monospace;font-size:9px;font-weight:bold;letter-spacing:0.5px;margin-top:3px;';
 
   if (risk === 'high') {
     meterFill.style.cssText =
@@ -205,7 +205,7 @@ function buildPlayCard(card, isSel, staggerIdx) {
   // Footer — short punchy description
   var footer = document.createElement('div');
   footer.style.cssText =
-    'padding:4px 10px 10px;font-family:"Courier New",monospace;font-size:9px;' +
+    'padding:4px 10px 10px;font-family:"Rajdhani",monospace;font-size:9px;' +
     'color:var(--muted);line-height:1.3;opacity:0.7;';
   footer.textContent = SHORT_DESC[card.id] || card.desc;
   cel.appendChild(footer);
@@ -256,7 +256,7 @@ function showPlayReview(team, offHand, defHand, onContinue) {
 
   function buildSection(label, plays, offset) {
     var lbl = document.createElement('div');
-    lbl.style.cssText = "font-family:'Rajdhani';font-size:8px;color:#00ff88;letter-spacing:1px;margin:8px 0 4px;";
+    lbl.style.cssText = "font-family:'Rajdhani';font-size:8px;color:#00ff44;letter-spacing:1px;margin:8px 0 4px;";
     lbl.textContent = label;
     scroll.appendChild(lbl);
 
@@ -317,7 +317,7 @@ export function buildCardDraft() {
     '@keyframes meterFill60 { to { width: 60%; } }' +
     '@keyframes meterFill35 { to { width: 35%; } }' +
     '@keyframes counterFlash { 0% { color: #ff0040; } 100% { color: var(--a-gold); } }' +
-    '@keyframes lockGlow { 0%,100% { box-shadow:6px 6px 0 #997a00, 0 0 30px rgba(255,204,0,0.4); } 50% { box-shadow:6px 6px 0 #997a00, 0 0 50px rgba(255,204,0,0.7); } }';
+    '@keyframes lockGlow { 0%,100% { box-shadow:6px 6px 0 #997a00, 0 0 30px rgba(255,184,0,0.4); } 50% { box-shadow:6px 6px 0 #997a00, 0 0 50px rgba(255,184,0,0.7); } }';
   el.appendChild(styleEl);
 
   // Header bar — team name + scheme
@@ -332,7 +332,7 @@ export function buildCardDraft() {
   var brandName = document.createElement('span');
   brandName.style.cssText =
     "font-family:'Teko',sans-serif;font-weight:700;font-size:32px;color:var(--a-gold);" +
-    "letter-spacing:3px;text-shadow:2px 2px 0 rgba(0,0,0,0.9),0 0 12px rgba(255,204,0,0.3);";
+    "letter-spacing:3px;text-shadow:2px 2px 0 rgba(0,0,0,0.9),0 0 12px rgba(255,184,0,0.3);";
   brandName.textContent = 'TORCH';
   var brandScheme = document.createElement('span');
   brandScheme.style.cssText =
@@ -401,7 +401,7 @@ export function buildCardDraft() {
 
   // Dots system
   var dotRow = document.createElement('div');
-  dotRow.style.cssText = "display:flex;align-items:center;font-family:'Rajdhani';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:8px;";
+  dotRow.style.cssText = "display:flex;align-items:center;font-family:'Rajdhani';font-size:8px;color:#00ff44;letter-spacing:1px;flex-shrink:0;margin-bottom:8px;";
   function refreshDots() {
     var count = Object.keys(selected).length;
     var dots = '';

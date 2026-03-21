@@ -25,14 +25,14 @@ function buildPlayerCard(player, team, side, isSel, small) {
   var card = document.createElement('div');
   card.style.cssText =
     'background:var(--bg-surface);display:flex;flex-direction:column;' +
-    'border:2px solid ' + (isSel ? '#00ff88' : tierColor + '44') + ';' +
+    'border:2px solid ' + (isSel ? '#00ff44' : tierColor + '44') + ';' +
     'border-radius:6px;padding:0;cursor:pointer;position:relative;overflow:hidden;' +
     'opacity:' + (isSel ? '1' : '0.8') + ';transition:all 0.15s ease;' +
-    (isSel ? 'box-shadow:0 0 18px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08);' : '');
+    (isSel ? 'box-shadow:0 0 18px rgba(0,255,68,0.35), inset 0 0 12px rgba(0,255,68,0.08);' : '');
 
   if (isSel) {
     var bar = document.createElement('div');
-    bar.style.cssText = 'position:absolute;top:0;left:50%;transform:translateX(-50%);width:' + (small?'20':'30') + 'px;height:3px;background:#00ff88;border-radius:0 0 3px 3px;z-index:3;';
+    bar.style.cssText = 'position:absolute;top:0;left:50%;transform:translateX(-50%);width:' + (small?'20':'30') + 'px;height:3px;background:#00ff44;border-radius:0 0 3px 3px;z-index:3;';
     card.appendChild(bar);
   }
 
@@ -40,15 +40,15 @@ function buildPlayerCard(player, team, side, isSel, small) {
   var header = document.createElement('div');
   header.style.cssText =
     'display:flex;justify-content:space-between;align-items:flex-start;padding:' + pad + ';' +
-    (isSel ? 'background:linear-gradient(180deg, rgba(0,255,136,0.1) 0%, transparent 100%);' : '');
+    (isSel ? 'background:linear-gradient(180deg, rgba(0,255,68,0.1) 0%, transparent 100%);' : '');
   header.innerHTML =
     '<div>' +
-      "<div style=\"font-family:'Courier New';font-size:" + posSize + ";font-weight:bold;color:#ff0040;letter-spacing:" + (small?'1':'2') + "px;line-height:1\">" + player.pos + "</div>" +
-      "<div style=\"font-family:'Bebas Neue';font-size:" + nameSize + ";color:#fff;line-height:1;margin-top:" + (small?'1':'2') + "px\">" + player.name + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-size:" + posSize + ";font-weight:bold;color:#ff0040;letter-spacing:" + (small?'1':'2') + "px;line-height:1\">" + player.pos + "</div>" +
+      "<div style=\"font-family:'Teko';font-size:" + nameSize + ";color:#fff;line-height:1;margin-top:" + (small?'1':'2') + "px\">" + player.name + "</div>" +
     '</div>' +
     '<div style="text-align:right">' +
-      "<div style=\"font-family:'Courier New';font-size:" + ovrSize + ";font-weight:bold;color:" + tierColor + ";line-height:1;text-shadow:0 0 8px " + tierColor + "66\">" + player.ovr + "</div>" +
-      "<div style=\"font-family:'Courier New';font-size:" + ovrLbl + ";font-weight:bold;color:" + tierColor + ";opacity:.7;letter-spacing:1px\">OVR</div>" +
+      "<div style=\"font-family:'Rajdhani';font-size:" + ovrSize + ";font-weight:bold;color:" + tierColor + ";line-height:1;text-shadow:0 0 8px " + tierColor + "66\">" + player.ovr + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-size:" + ovrLbl + ";font-weight:bold;color:" + tierColor + ";opacity:.7;letter-spacing:1px\">OVR</div>" +
     '</div>';
   card.appendChild(header);
 
@@ -83,7 +83,7 @@ function showDraftModal(isDef, onDismiss) {
     : 'Pick 1 quarterback and 3 skill players.\nThese 4 players will be your offensive weapons.';
 
   box.innerHTML =
-    "<div style=\"font-family:'Bebas Neue';font-size:28px;color:var(--a-gold);letter-spacing:2px;margin-bottom:10px\">" + title + "</div>" +
+    "<div style=\"font-family:'Teko';font-size:28px;color:var(--a-gold);letter-spacing:2px;margin-bottom:10px\">" + title + "</div>" +
     "<div style=\"font-family:'Barlow Condensed';font-size:15px;color:#ccc;line-height:1.4;white-space:pre-line;margin-bottom:16px\">" + body + "</div>";
 
   var btn = document.createElement('button');
@@ -128,7 +128,7 @@ function showRosterReview(team, offRoster, defRoster, onContinue) {
 
   function buildSection(label, players, side, offset) {
     var lbl = document.createElement('div');
-    lbl.style.cssText = "font-family:'Rajdhani';font-size:8px;color:#00ff88;letter-spacing:1px;margin:8px 0 4px;";
+    lbl.style.cssText = "font-family:'Rajdhani';font-size:8px;color:#00ff44;letter-spacing:1px;margin:8px 0 4px;";
     lbl.textContent = label;
     scroll.appendChild(lbl);
 
@@ -197,7 +197,7 @@ export function buildDraft() {
   var hdrName = document.createElement('span');
   hdrName.style.cssText =
     "font-family:'Teko',sans-serif;font-weight:700;font-size:32px;color:var(--a-gold);" +
-    "letter-spacing:3px;text-shadow:2px 2px 0 rgba(0,0,0,0.9),0 0 12px rgba(255,204,0,0.3);";
+    "letter-spacing:3px;text-shadow:2px 2px 0 rgba(0,0,0,0.9),0 0 12px rgba(255,184,0,0.3);";
   hdrName.textContent = 'TORCH';
   var hdrSub = document.createElement('span');
   hdrSub.style.cssText =
@@ -246,7 +246,7 @@ export function buildDraft() {
 
   // Primary label
   var primaryLabel = document.createElement('div');
-  primaryLabel.style.cssText = "display:flex;align-items:center;font-family:'Rajdhani';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:4px;";
+  primaryLabel.style.cssText = "display:flex;align-items:center;font-family:'Rajdhani';font-size:8px;color:#00ff44;letter-spacing:1px;flex-shrink:0;margin-bottom:4px;";
   function refreshPrimaryLabel() {
     var dot = selPrimary ? '●' : '○';
     primaryLabel.innerHTML = (isDef ? 'LINEBACKER' : 'QUARTERBACK') + ' \u2014 PICK 1 <span style="font-size:18px;margin-left:8px;line-height:0;display:inline-flex;align-items:center;height:10px;vertical-align:middle;transform:translateY(-4px)">' + dot + '</span>';
@@ -261,7 +261,7 @@ export function buildDraft() {
 
   // Skill label
   var skillLabel = document.createElement('div');
-  skillLabel.style.cssText = "display:flex;align-items:center;font-family:'Rajdhani';font-size:8px;color:#00ff88;letter-spacing:1px;flex-shrink:0;margin-bottom:4px;";
+  skillLabel.style.cssText = "display:flex;align-items:center;font-family:'Rajdhani';font-size:8px;color:#00ff44;letter-spacing:1px;flex-shrink:0;margin-bottom:4px;";
   function refreshSkillLabel() {
     var count = Object.keys(selSkill).length;
     var dots = '';
