@@ -1,6 +1,7 @@
 import { GS, setRender } from './state.js';
 import { SND } from './engine/sound.js';
 import { buildHome } from './ui/screens/home.js';
+import { buildCardMockup } from './ui/screens/cardMockup.js';
 import { buildSetup } from './ui/screens/setup.js';
 import { buildDraft } from './ui/screens/draft.js';
 import { buildCardDraft } from './ui/screens/cardDraft.js';
@@ -18,7 +19,10 @@ function render() {
   try { screen.orientation.unlock(); } catch (e) {}
   let content;
 
-  if (!GS) {
+  // ?mockup param shows card design mockup page
+  if (window.location.search.includes('mockup')) {
+    content = buildCardMockup();
+  } else if (!GS) {
     content = buildHome();
   } else {
     switch (GS.screen) {
