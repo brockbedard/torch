@@ -1,9 +1,9 @@
 :root {
-  --bg: #050015; --bg-surface: #0f0d1a; --bg-raised: #1a1030;
-  --f-purple: #bb00ff; --l-green: #00ff44; --a-gold: #FFB800;
+  --bg: #0A0804; --bg-surface: #141008; --bg-raised: #1E1610;
+  --f-purple: #FF4511; --torch: #FF4511; --l-green: #00ff44; --a-gold: #FFB800;
   --white: #ffffff; --glass: rgba(255, 255, 255, 0.1);
   --chrome: linear-gradient(to bottom, #fff 0%, #888 50%, #fff 100%);
-  --p-red: #ff0040; --text: #fff; --muted: #aaa; --cyan: #00eaff; --orange: #FF4511; --danger: #ff0040;
+  --p-red: #ff0040; --text: #fff; --muted: #aaa; --cyan: #4DA6FF; --orange: #FF4511; --danger: #ff0040;
   --safe-top: env(safe-area-inset-top);
   --safe-bottom: env(safe-area-inset-bottom);
 }
@@ -15,7 +15,7 @@ html,body {
 body { color: white; font-family: 'Barlow Condensed', sans-serif; display: flex; justify-content: center; font-size: 18px; }
 #root { 
   width: 100%; max-width: 430px; height: 100vh; background: var(--bg); position: relative; 
-  overflow-y: auto; overflow-x: hidden; box-shadow: 0 0 100px rgba(187, 0, 255, 0.2);
+  overflow-y: auto; overflow-x: hidden; box-shadow: 0 0 100px rgba(255, 69, 17, 0.15);
   padding-top: var(--safe-top); padding-bottom: var(--safe-bottom);
   user-select: none; -webkit-user-select: none;
   -webkit-overflow-scrolling: touch;

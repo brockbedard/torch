@@ -30,10 +30,10 @@ export function buildHome(){
   // === LAYERED BACKGROUND ===
   // Base: deep purple radial
   var bgBase=document.createElement('div');
-  bgBase.style.cssText='position:absolute;inset:0;background:radial-gradient(circle at 50% 30%,#2A0055 0%,#06001A 70%);z-index:0;';
+  bgBase.style.cssText='position:absolute;inset:0;background:radial-gradient(circle at 50% 30%,#1A1208 0%,#0A0804 70%);z-index:0;';
   // Drifting layer for subtle movement
   var bgDrift=document.createElement('div');
-  bgDrift.style.cssText='position:absolute;inset:-25%;width:150%;height:150%;background:radial-gradient(circle at 50% 40%,#2A0055 0%,transparent 60%);z-index:0;animation:bgDrift 15s ease-in-out infinite;opacity:0.6;';
+  bgDrift.style.cssText='position:absolute;inset:-25%;width:150%;height:150%;background:radial-gradient(circle at 50% 40%,#1A1208 0%,transparent 60%);z-index:0;animation:bgDrift 15s ease-in-out infinite;opacity:0.6;';
   // Warm light pool behind flame area
   var bgWarm=document.createElement('div');
   bgWarm.style.cssText='position:absolute;top:15%;left:50%;transform:translateX(-50%);width:85%;max-width:400px;height:350px;background:radial-gradient(circle,rgba(255,120,20,0.1) 0%,rgba(255,80,0,0.04) 40%,transparent 70%);z-index:0;pointer-events:none;';
@@ -116,13 +116,13 @@ export function buildHome(){
        +'<ellipse cx="22" cy="52" rx="9" ry="3" fill="#FF4511" opacity="0.2"/>'
        +'</svg>',
      cornerPip:'<svg viewBox="0 0 5 6" width="6" height="7"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF4511"/></svg>'},
-    {accent:'#00E5C0',bg:'#041518',label:'DEFENSE',pip:'#00E5C0',borderAngle:'90deg',
-     spotColor:'rgba(0,229,192,0.2)',
+    {accent:'#4DA6FF',bg:'#0A1420',label:'DEFENSE',pip:'#4DA6FF',borderAngle:'90deg',
+     spotColor:'rgba(77,166,255,0.2)',
      art:'<svg viewBox="0 0 512 512" width="48" height="52">'
-       +'<defs><linearGradient id="shieldGrad" x1="256" y1="512" x2="256" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#00C8A8"/><stop offset="100%" stop-color="#A0FFF0"/></linearGradient></defs>'
-       +'<path fill="url(#shieldGrad)" stroke="#00E5C0" stroke-width="8" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8s0 0 0 0z"/>'
+       +'<defs><linearGradient id="shieldGrad" x1="256" y1="512" x2="256" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3080D0"/><stop offset="100%" stop-color="#A0D4FF"/></linearGradient></defs>'
+       +'<path fill="url(#shieldGrad)" stroke="#4DA6FF" stroke-width="8" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8s0 0 0 0z"/>'
        +'</svg>',
-     cornerPip:'<svg viewBox="0 0 512 512" width="6" height="7"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z" fill="#00FFDD"/></svg>'},
+     cornerPip:'<svg viewBox="0 0 512 512" width="6" height="7"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z" fill="#4DA6FF"/></svg>'},
   ];
   var fanAngles=[-18,0,18];
   var fanX=[-72,0,72];
@@ -137,7 +137,7 @@ export function buildHome(){
     var card=document.createElement('div');
     card.style.cssText='position:absolute;width:100px;height:140px;border-radius:8px;'
       // Vignette: radial gradient darkening at edges
-      +'background:radial-gradient(ellipse at 50% 40%,'+d.bg+' 0%,#06050f 100%);'
+      +'background:radial-gradient(ellipse at 50% 40%,'+d.bg+' 0%,#0A0804 100%);'
       +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
       +'transform:rotate('+fanAngles[c]+'deg) translateX('+fanX[c]+'px) translateY('+fanY[c]+'px) scale('+fanScale[c]+');'
       +'z-index:'+fanZ[c]+';'

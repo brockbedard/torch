@@ -80,10 +80,10 @@ const CSS = `
 .T-drop-player{left:35%;width:30%}
 .T-drop-torch{right:3%;width:28%}
 .T-drop-lbl{font-family:'Rajdhani';font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-align:center;line-height:1.4}
-.T-drop-hover{border-color:#bb00ff;background:rgba(187,0,255,.15);transform:translateY(-50%) scale(1.02)}
-@keyframes T-drop-pulse{0%,100%{border-color:rgba(187,0,255,0.4);box-shadow:0 0 10px rgba(187,0,255,0.1)}50%{border-color:#bb00ff;box-shadow:inset 0 0 15px rgba(187,0,255,.2),0 0 15px rgba(187,0,255,.4);background:rgba(187,0,255,0.05)}}
+.T-drop-hover{border-color:#FF4511;background:rgba(255,69,17,.15);transform:translateY(-50%) scale(1.02)}
+@keyframes T-drop-pulse{0%,100%{border-color:rgba(255,69,17,0.4);box-shadow:0 0 10px rgba(255,69,17,0.1)}50%{border-color:#FF4511;box-shadow:inset 0 0 15px rgba(255,69,17,.2),0 0 15px rgba(255,69,17,.4);background:rgba(255,69,17,0.05)}}
 .T-drop-active{animation:T-drop-pulse 1.5s ease-in-out infinite;border-style:solid;opacity:1;z-index:10}
-.T-drop-active .T-drop-lbl{color:#bb00ff;font-size:11px;text-shadow:0 0 8px rgba(187,0,255,0.5)}
+.T-drop-active .T-drop-lbl{color:#FF4511;font-size:11px;text-shadow:0 0 8px rgba(255,69,17,0.5)}
 
 /* cards section — hidden during play-by-play */
 .T-panel{display:flex;flex-direction:column;overflow:hidden;transition:background .6s,border-color .6s;flex-shrink:0;border-top:2px solid transparent}

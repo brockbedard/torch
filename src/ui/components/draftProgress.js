@@ -12,8 +12,8 @@ export function buildDraftProgress(currentStep) {
     style.id = 'draft-progress-style';
     style.textContent = `
       @keyframes step-pulse {
-        0%, 100% { transform: scale(1); box-shadow: 0 0 8px rgba(187,0,255,0.4); }
-        50% { transform: scale(1.2); box-shadow: 0 0 15px rgba(187,0,255,0.8); }
+        0%, 100% { transform: scale(1); box-shadow: 0 0 8px rgba(255,69,17,0.4); }
+        50% { transform: scale(1.2); box-shadow: 0 0 15px rgba(255,69,17,0.8); }
       }
       @keyframes check-glow {
         0%, 100% { filter: brightness(1); transform: scale(1); }
@@ -43,7 +43,7 @@ export function buildDraftProgress(currentStep) {
     pill.style.cssText =
       'display:flex;align-items:center;gap:4px;' +
       'font-family:"Rajdhani",monospace;font-size:8px;letter-spacing:.5px;' +
-      'color:' + (isCurrent ? '#bb00ff' : isPast ? '#aaa' : '#444') + ';' +
+      'color:' + (isCurrent ? '#FF4511' : isPast ? '#aaa' : '#444') + ';' +
       'transition:color 0.3s;';
 
     // Checkmark for completed, number for current/future
@@ -57,7 +57,7 @@ export function buildDraftProgress(currentStep) {
       indicator.textContent = stepIdx;
       indicator.style.fontSize = '7px';
       indicator.style.cssText += (isCurrent
-          ? 'background:#bb00ff;color:#fff;box-shadow:0 0 12px rgba(187,0,255,0.6);animation:step-pulse 1.5s infinite ease-in-out;'
+          ? 'background:#FF4511;color:#fff;box-shadow:0 0 12px rgba(255,69,17,0.6);animation:step-pulse 1.5s infinite ease-in-out;'
           : 'background:#222;color:#555;');
     }
     pill.appendChild(indicator);

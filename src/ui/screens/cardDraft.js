@@ -36,7 +36,7 @@ function catLabel(card) {
 var CAT_COLORS = {
   SHORT: '#00ff44', QUICK: '#00eaff', DEEP: '#ff0040', RUN: '#ff4d00',
   SCREEN: '#ff66aa', OPTION: '#ff4d00', POWER: '#ff4d00',
-  BLITZ: '#ff0040', ZONE: '#00ccaa', PRESSURE: '#ffcc00', HYBRID: '#bb00ff',
+  BLITZ: '#ff0040', ZONE: '#00ccaa', PRESSURE: '#ffcc00', HYBRID: '#FF4511',
 };
 
 var SHORT_DESC = {
