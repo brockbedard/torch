@@ -60,8 +60,8 @@ function buildHomeCard(type, w, h) {
   var layers = '';
   // Bevel
   layers += '<div style="position:absolute;inset:0;border-radius:8px;box-shadow:inset 1px 1px 3px rgba(255,255,255,0.06),inset -1px -1px 3px rgba(0,0,0,0.3);pointer-events:none;z-index:7;"></div>';
-  // Inner margin
-  layers += '<div style="position:absolute;inset:5px;border-radius:5px;border:1.5px solid '+d.accent+'33;pointer-events:none;z-index:4;"></div>';
+  // Inner margin — stops above nameplate
+  layers += '<div style="position:absolute;top:5px;left:5px;right:5px;bottom:'+(isTorch?'22':'20')+'px;border-radius:5px 5px 0 0;border:1.5px solid '+d.accent+'33;border-bottom:none;pointer-events:none;z-index:4;"></div>';
   // Corner pips
   layers += '<div style="position:absolute;top:8px;left:8px;z-index:5;">'+d.pip+'</div>';
   layers += '<div style="position:absolute;bottom:'+(isTorch?'24':'22')+'px;right:8px;z-index:5;transform:rotate(180deg);">'+d.pip+'</div>';
@@ -206,12 +206,9 @@ export function buildCardMockup() {
   el.appendChild(compRow);
 
   // ============================================================
-  // PLAY CARDS — Split V3 (chosen)
+  // PLAY CARDS — Split V3
   // ============================================================
-  el.appendChild(sec('PLAY CARDS — Split Layout (chosen)'));
-  var playRow = row();
-
-  var routeSvg = '<svg viewBox="0 0 50 40" width="56" height="40" fill="none">'
+  var routeSvg = '<svg viewBox="0 0 50 40" fill="none">'
     +'<circle cx="25" cy="35" r="3" fill="#FFB800" opacity="0.8"/>'
     +'<circle cx="12" cy="32" r="2" fill="#FFB800" opacity="0.6"/>'
     +'<circle cx="38" cy="32" r="2" fill="#FFB800" opacity="0.6"/>'
@@ -219,7 +216,7 @@ export function buildCardMockup() {
     +'<path d="M38 32L42 15" stroke="#FFB800" stroke-width="1.2" opacity="0.7"/>'
     +'<polygon points="8,17 9.5,19 6.5,19" fill="#FFB800" opacity="0.6"/>'
     +'<polygon points="42,14 43.5,16 40.5,16" fill="#FFB800" opacity="0.6"/></svg>';
-  var defSvg = '<svg viewBox="0 0 50 40" width="56" height="40" fill="none">'
+  var defSvg = '<svg viewBox="0 0 50 40" fill="none">'
     +'<circle cx="15" cy="10" r="2" fill="#4DA6FF" opacity="0.7"/>'
     +'<circle cx="35" cy="10" r="2" fill="#4DA6FF" opacity="0.7"/>'
     +'<circle cx="25" cy="15" r="2" fill="#4DA6FF" opacity="0.7"/>'
@@ -235,20 +232,38 @@ export function buildCardMockup() {
     { name:'COVER 3 SKY', cat:'ZONE', catColor:'#4DA6FF', risk:'low', desc:'Deep thirds coverage', svg:defSvg, bg:'#0A1420' },
   ];
 
-  plays.forEach(function(p) {
+  function buildPlayCard(p, w, h) {
+    var diagH = Math.round(h * 0.5);
+    var svgW = Math.round(w * 0.7);
+    var svgH = Math.round(diagH * 0.8);
+    var svgTag = p.svg.replace('fill="none">', 'width="'+svgW+'" height="'+svgH+'" fill="none">');
     var card = document.createElement('div');
-    card.style.cssText = 'width:80px;height:120px;border-radius:6px;border:2px solid '+p.catColor+'33;background:#0A0804;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,0.5);';
+    card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:6px;border:2px solid '+p.catColor+'33;background:#0A0804;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,0.5);';
     card.innerHTML = '<div style="height:3px;background:'+p.catColor+';"></div>'
-      +'<div style="height:60px;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 50%,'+p.bg+',#0A0804);border-bottom:1px solid #1E1610;">'+p.svg+'</div>'
-      +'<div style="padding:4px 6px;">'
-      +'<div style="font-family:\'Teko\';font-weight:700;font-size:11px;color:#fff;letter-spacing:1px;line-height:1;line-height:1.1;">'+p.name+'</div>'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">'
-      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:6px;color:'+p.catColor+';letter-spacing:0.5px;">'+p.cat+'</div>'
-      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:6px;color:'+riskC[p.risk]+';">'+riskI[p.risk]+'</div></div>'
-      +'<div style="font-family:\'Rajdhani\';font-size:7px;color:#666;margin-top:1px;line-height:1.1;">'+p.desc+'</div></div>';
-    playRow.appendChild(wrap(card, p.name));
+      +'<div style="height:'+diagH+'px;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 50%,'+p.bg+',#0A0804);border-bottom:1px solid #1E1610;">'+svgTag+'</div>'
+      +'<div style="padding:'+(w>90?'5px 8px':'3px 5px')+';display:flex;flex-direction:column;justify-content:center;flex:1;">'
+      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?13:10)+'px;color:#fff;letter-spacing:1px;line-height:1.1;">'+p.name+'</div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:'+(w>90?'3':'2')+'px;">'
+      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(w>90?7:6)+'px;color:'+p.catColor+';letter-spacing:0.5px;">'+p.cat+'</div>'
+      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(w>90?7:6)+'px;color:'+riskC[p.risk]+';">'+riskI[p.risk]+'</div></div>'
+      +(w>90?'<div style="font-family:\'Rajdhani\';font-size:8px;color:#666;margin-top:2px;line-height:1.2;">'+p.desc+'</div>':'')
+      +'</div>';
+    return card;
+  }
+
+  el.appendChild(sec('PLAY CARDS — Selection Size (100x150)'));
+  var playSelRow = row();
+  plays.forEach(function(p) {
+    playSelRow.appendChild(wrap(buildPlayCard(p,100,150), p.name+' (selection)'));
   });
-  el.appendChild(playRow);
+  el.appendChild(playSelRow);
+
+  el.appendChild(sec('PLAY CARDS — Gameplay Size (80x110)'));
+  var playGameRow = row();
+  plays.forEach(function(p) {
+    playGameRow.appendChild(wrap(buildPlayCard(p,80,110), p.name+' (gameplay)'));
+  });
+  el.appendChild(playGameRow);
 
   // ============================================================
   // TORCH CARDS — Centered Flame V1 (chosen)
