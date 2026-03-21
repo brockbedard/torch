@@ -25,7 +25,7 @@ var DEV_LOG = [
 
 export function buildHome(){
   var el=document.createElement('div');
-  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 30px;position:relative;overflow:hidden;';
+  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 30px;position:relative;overflow:hidden;gap:6px;';
 
   // === LAYERED BACKGROUND ===
   // Base: deep purple radial
@@ -98,7 +98,7 @@ export function buildHome(){
 
   // === CARD FAN — playing card style with football art ===
   var cardFan=document.createElement('div');
-  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:310px;height:130px;margin-top:16px;margin-bottom:24px;z-index:2;opacity:0;animation:homeRevealScale 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;overflow:visible;';
+  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:320px;height:160px;margin-top:10px;margin-bottom:16px;z-index:2;opacity:0;animation:homeRevealScale 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;overflow:visible;';
   // Card data: accent color, bg tint, label, pip color, card type, art SVG
   var fanData=[
     {accent:'#F5B800',bg:'#0a1a08',label:'OFFENSE',pip:'#00E5C0',
@@ -109,7 +109,7 @@ export function buildHome(){
        +'</svg>',
      cornerPip:'<svg viewBox="0 0 448 512" width="5" height="6"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#FFD700"/></svg>'},
     {accent:'#FF5E1A',bg:'#1a0800',label:'TORCH',pip:'#FF5E1A',
-     art:'<svg viewBox="-4 -2 52 58" fill="none" width="44" height="52" style="margin-top:0;">'
+     art:'<svg viewBox="-6 -6 56 64" fill="none" width="48" height="56" style="margin-top:-2px;">'
        +'<defs><linearGradient id="noGrad" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="100%" stop-color="#FFD700"/></linearGradient>'
        +'<linearGradient id="noInner" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA00"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient>'
        +'<filter id="fGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
@@ -126,16 +126,16 @@ export function buildHome(){
        +'</svg>',
      cornerPip:'<svg viewBox="0 0 512 512" width="5" height="6"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z" fill="#00FFDD"/></svg>'},
   ];
-  var fanAngles=[-18,0,18];
-  var fanX=[-55,0,55];
-  var fanY=[8,0,8];
+  var fanAngles=[-16,0,16];
+  var fanX=[-62,0,62];
+  var fanY=[10,0,10];
   var fanZ=[1,3,1];
   var fanScale=[1,1.06,1];
   for(var c=0;c<3;c++){
     var d=fanData[c];
     var isCenter=c===1;
     var card=document.createElement('div');
-    card.style.cssText='position:absolute;width:72px;height:100px;border-radius:6px;'
+    card.style.cssText='position:absolute;width:82px;height:114px;border-radius:6px;'
       +'background:linear-gradient(170deg,'+d.bg+' 0%,#09081A 100%);'
       +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
       +'transform:rotate('+fanAngles[c]+'deg) translateX('+fanX[c]+'px) translateY('+fanY[c]+'px) scale('+fanScale[c]+');'
@@ -152,12 +152,12 @@ export function buildHome(){
     card.appendChild(margin);
     // Corner pip — top left
     var pipTL=document.createElement('div');
-    pipTL.style.cssText='position:absolute;top:5px;left:5px;z-index:5;';
+    pipTL.style.cssText='position:absolute;top:6px;left:6px;z-index:5;';
     pipTL.innerHTML=d.cornerPip;
     card.appendChild(pipTL);
     // Corner pip — bottom right (rotated 180)
     var pipBR=document.createElement('div');
-    pipBR.style.cssText='position:absolute;bottom:18px;right:5px;z-index:5;transform:rotate(180deg);';
+    pipBR.style.cssText='position:absolute;bottom:20px;right:6px;z-index:5;transform:rotate(180deg);';
     pipBR.innerHTML=d.cornerPip;
     card.appendChild(pipBR);
     // Center art area
@@ -167,9 +167,9 @@ export function buildHome(){
     card.appendChild(artArea);
     // Bottom nameplate
     var nameplate=document.createElement('div');
-    nameplate.style.cssText='position:absolute;bottom:0;left:0;right:0;height:14px;background:'+d.accent+'dd;display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 4px 4px;';
+    nameplate.style.cssText='position:absolute;bottom:0;left:0;right:0;height:16px;background:'+d.accent+'dd;display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 4px 4px;';
     var npText=document.createElement('div');
-    npText.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:8px;color:#09081A;letter-spacing:2px;";
+    npText.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:9px;color:#09081A;letter-spacing:2px;";
     npText.textContent=d.label;
     nameplate.appendChild(npText);
     card.appendChild(nameplate);
@@ -183,22 +183,22 @@ export function buildHome(){
 
   // === TITLE: T(football)RCH FOOTBALL ===
   var title=document.createElement('h1');
-  title.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:88px;line-height:0.85;color:#FFD54F;text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 30px rgba(255,204,0,0.4);transform:skewX(-8deg);margin-bottom:0;text-align:center;letter-spacing:6px;z-index:2;animation:homeRevealUp 0.5s ease-out 0.4s both,titleShimmer 4s ease-in-out 2s infinite;position:relative;";
+  title.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:96px;line-height:0.85;color:#FFD54F;text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 30px rgba(255,204,0,0.4);transform:skewX(-8deg);margin-bottom:0;text-align:center;letter-spacing:8px;z-index:2;animation:homeRevealUp 0.5s ease-out 0.4s both,titleShimmer 4s ease-in-out 2s infinite;position:relative;";
   // Football-O: Font Awesome football (CC BY 4.0) rotated to vertical
-  var footballO='<span style="position:relative;display:inline-block;width:48px;height:68px;vertical-align:baseline;margin:0 -4px;">'
-    +'<svg viewBox="0 0 512 512" width="48" height="48" fill="none" style="position:absolute;top:10px;left:0;transform:rotate(-45deg);filter:drop-shadow(0 0 6px rgba(255,140,0,0.5)) drop-shadow(0 0 12px rgba(255,94,26,0.3));">'
+  var footballO='<span style="position:relative;display:inline-block;width:54px;height:74px;vertical-align:baseline;margin:0 -4px;">'
+    +'<svg viewBox="0 0 512 512" width="54" height="54" fill="none" style="position:absolute;top:10px;left:0;transform:rotate(-45deg);filter:drop-shadow(0 0 6px rgba(255,140,0,0.5)) drop-shadow(0 0 12px rgba(255,94,26,0.3));">'
     +'<defs><linearGradient id="oGrad" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#D4893B"/><stop offset="45%" stop-color="#B5652B"/><stop offset="100%" stop-color="#8B4A1F"/></linearGradient>'
     +'<filter id="oGlow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
     +'<path fill="url(#oGrad)" d="M247.5 25.4c-13.5 3.3-26.4 7.2-38.6 11.7C142.9 61.6 96.7 103.6 66 153.6C47.8 183.4 35.1 215.9 26.9 249L264.5 486.6c13.5-3.3 26.4-7.2 38.6-11.7c66-24.5 112.2-66.5 142.9-116.5c18.3-29.8 30.9-62.3 39.1-95.3L247.5 25.4zM495.2 205.3c6.1-56.8 1.4-112.2-7.7-156.4c-2.7-12.9-13-22.9-26.1-25.1c-58.2-9.7-109.9-12-155.6-7.9L495.2 205.3zM206.1 496L16.8 306.7c-6.1 56.8-1.4 112.2 7.7 156.4c2.7 12.9 13 22.9 26.1 25.1c58.2 9.7 109.9 12 155.6 7.9z"/>'
     +'<path fill="#FFFBE6" filter="url(#oGlow)" d="M260.7 164.7c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6z"/>'
     +'</svg></span>';
-  title.innerHTML='T'+footballO+'RCH<span style="display:block;color:white;font-family:\'Barlow Condensed\',sans-serif;font-weight:600;font-size:36px;letter-spacing:8px;text-shadow:2px 2px 0 rgba(0,0,0,0.8);margin-top:4px;transform:skewX(0deg);">FOOTBALL</span>';
+  title.innerHTML='T'+footballO+'RCH<span style="display:block;color:white;font-family:\'Barlow Condensed\',sans-serif;font-weight:600;font-size:40px;letter-spacing:10px;text-shadow:2px 2px 0 rgba(0,0,0,0.8);margin-top:4px;transform:skewX(0deg);">FOOTBALL</span>';
   el.append(title);
 
   // === TAGLINE ===
   var tagline=document.createElement('div');
-  tagline.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:600;font-size:11px;color:var(--cyan);letter-spacing:4px;text-align:center;margin-top:10px;margin-bottom:8px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.6s both;text-shadow:0 0 12px rgba(0,234,255,0.3);text-transform:uppercase;";
-  tagline.textContent='DEAL THE PLAY.';
+  tagline.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:600;font-size:13px;color:var(--cyan);letter-spacing:5px;text-align:center;margin-top:8px;margin-bottom:12px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.6s both;text-shadow:0 0 12px rgba(0,234,255,0.3);text-transform:uppercase;";
+  tagline.textContent='DEAL THE PLAY';
   el.append(tagline);
 
   // === CTA BUTTON ===
