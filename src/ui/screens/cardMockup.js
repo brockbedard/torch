@@ -18,10 +18,13 @@ function injectStyles() {
   document.head.appendChild(s);
 }
 
-// ====== HOME PAGE CARD BUILDERS (exact match to home.js) ======
+// ====== HOME PAGE CARD — uses EXACT same DOM structure as home.js ======
+// The key: card is position:absolute inside a position:relative wrapper.
+// The gradient border uses inset:-Npx + z-index:-1, which only works
+// when the parent provides the stacking context.
 function buildHomeCard(type, w, h) {
   var configs = {
-    offense: {accent:'#7ACC00',bg:'#122E0C',label:'OFFENSE',spotColor:'rgba(122,204,0,0.25)',
+    offense: {accent:'#7ACC00',bg:'#0A1A06',label:'OFFENSE',spotColor:'rgba(122,204,0,0.25)',
       art:'<svg viewBox="0 0 448 512" width="48" height="52">'
         +'<defs><linearGradient id="bG_o'+w+'" x1="100" y1="450" x2="350" y2="50"><stop offset="0%" stop-color="#90E040"/><stop offset="100%" stop-color="#D4FF80"/></linearGradient></defs>'
         +'<path fill="url(#bG_o'+w+')" stroke="#7ACC00" stroke-width="8" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/></svg>',
@@ -42,65 +45,102 @@ function buildHomeCard(type, w, h) {
   var d = configs[type];
   var isTorch = type === 'torch';
   var bw = isTorch ? 4 : 3;
-  // Wrapper for gradient border
+
+  // Wrapper provides the stacking context (position:relative)
+  // so the card's z-index:-1 border shows correctly
   var outer = document.createElement('div');
-  outer.style.cssText = 'position:relative;width:'+(w+bw*2)+'px;height:'+(h+bw*2)+'px;border-radius:'+(8+bw)+'px;background:linear-gradient(135deg,'+d.accent+',rgba(255,255,255,0.4),'+d.accent+');padding:'+bw+'px;'
-    +'box-shadow:0 2px 4px rgba(0,0,0,0.4),'+(isTorch?'0 16px 40px rgba(0,0,0,0.4)':'0 8px 20px rgba(0,0,0,0.25)')+';';
+  outer.style.cssText = 'position:relative;width:'+w+'px;height:'+h+'px;';
 
-  // TORCH-ONLY: Breathing glow aura behind the card
-  if(isTorch){
-    outer.innerHTML += '<div style="position:absolute;inset:-8px;border-radius:20px;background:#FF4511;filter:blur(12px);opacity:0.15;z-index:-1;pointer-events:none;animation:torchGlow 3s ease-in-out infinite;"></div>';
-  }
-
+  // Card — position:absolute inside the wrapper, exactly like home.js
   var card = document.createElement('div');
-  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;'
-    +'background:radial-gradient(ellipse at 50% 40%,'+d.bg+' 0%,#0E0A06 100%);'
+  card.style.cssText = 'position:absolute;width:'+w+'px;height:'+h+'px;border-radius:8px;'
+    +'background:radial-gradient(ellipse at 50% 40%,'+d.bg+' 0%,#0A0804 100%);'
     +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
-    +'overflow:hidden;position:relative;';
-  var layers = '';
-  // Bevel
-  layers += '<div style="position:absolute;inset:0;border-radius:8px;box-shadow:inset 1px 1px 3px rgba(255,255,255,0.06),inset -1px -1px 3px rgba(0,0,0,0.3);pointer-events:none;z-index:7;"></div>';
-  // Inner margin — stops above nameplate
-  layers += '<div style="position:absolute;top:5px;left:5px;right:5px;bottom:'+(isTorch?'22':'20')+'px;border-radius:5px 5px 0 0;border:1.5px solid '+d.accent+'33;border-bottom:none;pointer-events:none;z-index:4;"></div>';
-  // Corner pips
-  layers += '<div style="position:absolute;top:8px;left:8px;z-index:5;">'+d.pip+'</div>';
-  layers += '<div style="position:absolute;bottom:'+(isTorch?'24':'22')+'px;right:8px;z-index:5;transform:rotate(180deg);">'+d.pip+'</div>';
-  // Spotlight
-  layers += '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:68px;height:68px;border-radius:50%;background:radial-gradient(circle,'+d.spotColor+',transparent 70%);z-index:2;pointer-events:none;"></div>';
-  // Art icon — TORCH gets animated flame
+    +'box-shadow:0 2px 4px rgba(0,0,0,0.4),'+(isTorch?'0 16px 40px rgba(0,0,0,0.4)':'0 8px 20px rgba(0,0,0,0.25)')+';'
+    +'overflow:hidden;';
+
+  // TORCH: breathing glow
   if(isTorch){
-    layers += '<div style="display:flex;align-items:center;justify-content:center;width:48px;height:52px;z-index:3;">'
-      +d.art.replace('stroke="#FF4511" stroke-width="1.5"','stroke="#FF4511" stroke-width="1.5" style="animation:flameSway 2.5s ease-in-out infinite;transform-origin:50% 100%;"')
-      +'</div>';
-  } else {
-    layers += '<div style="display:flex;align-items:center;justify-content:center;width:48px;height:52px;z-index:3;">'+d.art+'</div>';
+    var glow = document.createElement('div');
+    glow.style.cssText = 'position:absolute;inset:-8px;border-radius:16px;background:#FF4511;filter:blur(12px);opacity:0.15;z-index:-2;pointer-events:none;animation:torchGlow 3s ease-in-out infinite;';
+    card.appendChild(glow);
   }
+
+  // Bevel
+  var bevel = document.createElement('div');
+  bevel.style.cssText = 'position:absolute;inset:0;border-radius:8px;box-shadow:inset 1px 1px 3px rgba(255,255,255,0.06),inset -1px -1px 3px rgba(0,0,0,0.3);pointer-events:none;z-index:7;';
+  card.appendChild(bevel);
+
+  // Gradient border — z-index:-1 works because card is position:absolute in positioned parent
+  var border = document.createElement('div');
+  border.style.cssText = 'position:absolute;inset:-'+bw+'px;border-radius:'+(8+bw)+'px;background:linear-gradient(135deg,'+d.accent+',rgba(255,255,255,0.4),'+d.accent+');z-index:-1;';
+  card.appendChild(border);
+
+  // Inner margin — stops above nameplate
+  var margin = document.createElement('div');
+  margin.style.cssText = 'position:absolute;top:5px;left:5px;right:5px;bottom:'+(isTorch?'22':'20')+'px;border-radius:5px 5px 0 0;border:1.5px solid '+d.accent+'33;border-bottom:none;pointer-events:none;z-index:4;';
+  card.appendChild(margin);
+
+  // Corner pips
+  var pTL = document.createElement('div');
+  pTL.style.cssText = 'position:absolute;top:8px;left:8px;z-index:5;';
+  pTL.innerHTML = d.pip;
+  card.appendChild(pTL);
+  var pBR = document.createElement('div');
+  pBR.style.cssText = 'position:absolute;bottom:'+(isTorch?'24':'22')+'px;right:8px;z-index:5;transform:rotate(180deg);';
+  pBR.innerHTML = d.pip;
+  card.appendChild(pBR);
+
+  // Spotlight
+  var spot = document.createElement('div');
+  spot.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:68px;height:68px;border-radius:50%;background:radial-gradient(circle,'+d.spotColor+',transparent 70%);z-index:2;pointer-events:none;';
+  card.appendChild(spot);
+
   // Divider
-  layers += '<div style="position:absolute;bottom:'+(isTorch?'22':'20')+'px;left:15%;right:15%;height:1px;background:'+d.accent+'22;z-index:5;"></div>';
+  var div = document.createElement('div');
+  div.style.cssText = 'position:absolute;bottom:'+(isTorch?'22':'20')+'px;left:15%;right:15%;height:1px;background:'+d.accent+'22;z-index:5;';
+  card.appendChild(div);
+
+  // Art icon
+  var artWrap = document.createElement('div');
+  artWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;width:48px;height:52px;z-index:3;';
+  if(isTorch){
+    artWrap.innerHTML = d.art.replace('stroke="#FF4511" stroke-width="1.5"','stroke="#FF4511" stroke-width="1.5" style="animation:flameSway 2.5s ease-in-out infinite;transform-origin:50% 100%;"');
+  } else {
+    artWrap.innerHTML = d.art;
+  }
+  card.appendChild(artWrap);
+
   // Nameplate
   var npH = isTorch ? 20 : 18;
-  var npFont = isTorch ? "font-family:'Teko';font-weight:700;font-size:"+(w>=100?'16':'12')+"px;color:#09081A;letter-spacing:3px;transform:skewX(-8deg);" : "font-family:'Rajdhani';font-weight:700;font-size:"+(w>=100?'11':'9')+"px;color:#000;letter-spacing:2px;";
-  layers += '<div style="position:absolute;bottom:0;left:0;right:0;height:'+npH+'px;background:'+d.accent+(isTorch?'ee':'dd')+';display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 6px 6px;"><div style="'+npFont+'">'+d.label+'</div></div>';
-  // Shimmer — TORCH gets warm golden sweep, others get white
+  var np = document.createElement('div');
+  np.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:'+npH+'px;background:'+d.accent+(isTorch?'ee':'dd')+';display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 6px 6px;';
+  var npT = document.createElement('div');
   if(isTorch){
-    layers += '<div style="position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 35%,rgba(255,180,80,0.12) 48%,rgba(255,255,255,0.08) 52%,transparent 65%);animation:torchShimmer 4.5s ease-in-out infinite;pointer-events:none;z-index:8;"></div>';
+    npT.style.cssText = "font-family:'Teko';font-weight:700;font-size:"+(w>=100?'16':'12')+"px;color:#09081A;letter-spacing:3px;transform:skewX(-8deg);";
   } else {
-    layers += '<div style="position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);animation:cardShimmer 6s ease-in-out infinite;pointer-events:none;z-index:8;"></div>';
+    npT.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:"+(w>=100?'11':'9')+"px;color:#000;letter-spacing:2px;";
   }
-  card.innerHTML = layers;
+  npT.textContent = d.label;
+  np.appendChild(npT);
+  card.appendChild(np);
 
-  // TORCH-ONLY: Ember sparks from card top
+  // Shimmer
+  var shim = document.createElement('div');
   if(isTorch){
-    var sparkDrifts=[-12,8,-6,14,-10];
-    for(var sp=0;sp<5;sp++){
-      var spark=document.createElement('div');
-      var ssz=1.5+Math.random()*1.5;
-      var sdur=1.2+Math.random()*1.5;
-      var sdelay=Math.random()*3;
-      var sleft=25+Math.random()*50;
-      spark.style.cssText='position:absolute;top:10px;left:'+sleft+'%;width:'+ssz+'px;height:'+ssz+'px;border-radius:50%;background:#FF8C00;z-index:9;pointer-events:none;opacity:0;animation:torchSpark '+sdur+'s '+sdelay+'s ease-out infinite;--sx:'+sparkDrifts[sp]+'px;';
+    shim.style.cssText = 'position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 35%,rgba(255,180,80,0.12) 48%,rgba(255,255,255,0.08) 52%,transparent 65%);animation:torchShimmer 4.5s ease-in-out infinite;pointer-events:none;z-index:8;';
+  } else {
+    shim.style.cssText = 'position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);animation:cardShimmer 6s ease-in-out infinite;pointer-events:none;z-index:8;';
+  }
+  card.appendChild(shim);
+
+  // TORCH: ember sparks
+  if(isTorch){
+    [-12,8,-6,14,-10].forEach(function(drift){
+      var spark = document.createElement('div');
+      spark.style.cssText = 'position:absolute;top:10px;left:'+(25+Math.random()*50)+'%;width:'+(1.5+Math.random()*1.5)+'px;height:'+(1.5+Math.random()*1.5)+'px;border-radius:50%;background:#FF8C00;z-index:9;pointer-events:none;opacity:0;animation:torchSpark '+(1.2+Math.random()*1.5)+'s '+(Math.random()*3)+'s ease-out infinite;--sx:'+drift+'px;';
       card.appendChild(spark);
-    }
+    });
   }
 
   outer.appendChild(card);
