@@ -104,24 +104,13 @@ export function buildCardMockup() {
   el.appendChild(hdr);
 
   // ============================================================
-  // HOME PAGE CARDS (reference)
+  // CARD BACKS (= home page cards)
   // ============================================================
-  el.appendChild(sec('HOME PAGE CARDS (reference)'));
-  var homeRow = row();
-  homeRow.appendChild(wrap(buildHomeCard('offense',100,140), 'OFFENSE (home)'));
-  homeRow.appendChild(wrap(buildHomeCard('torch',100,140), 'TORCH (home)'));
-  homeRow.appendChild(wrap(buildHomeCard('defense',100,140), 'DEFENSE (home)'));
-  el.appendChild(homeRow);
-
-  // ============================================================
-  // CARD BACKS — matching home page style
-  // ============================================================
-  el.appendChild(sec('CARD BACKS — Home Page Style'));
+  el.appendChild(sec('CARD BACKS — Same as Home Page'));
   var backRow = row();
-  // Player back = Offense style used as card back
-  backRow.appendChild(wrap(buildHomeCard('offense',90,126), 'PLAYER BACK (offense style)'));
-  backRow.appendChild(wrap(buildHomeCard('torch',90,126), 'TORCH CARD BACK'));
-  backRow.appendChild(wrap(buildHomeCard('defense',90,126), 'DEFENSE BACK'));
+  backRow.appendChild(wrap(buildHomeCard('offense',100,140), 'OFFENSE BACK'));
+  backRow.appendChild(wrap(buildHomeCard('torch',100,140), 'TORCH BACK'));
+  backRow.appendChild(wrap(buildHomeCard('defense',100,140), 'DEFENSE BACK'));
   el.appendChild(backRow);
 
   // ============================================================
@@ -138,16 +127,19 @@ export function buildCardMockup() {
   ];
   var tierC = { bronze:'#A0522D', silver:'#B0C4D4', gold:'#FFB800' };
 
+  var posNames = {QB:'QUARTERBACK',WR:'WIDE RECEIVER',RB:'RUNNING BACK',FB:'FULLBACK',TE:'TIGHT END',SLOT:'SLOT RECEIVER',
+    CB:'CORNERBACK',S:'SAFETY',LB:'LINEBACKER',DL:'DEFENSIVE LINE',DE:'DEFENSIVE END'};
   function buildMaddenPlayer(p, w, h) {
     var tc = tierC[p.tier] || '#B0C4D4';
     var card = document.createElement('div');
     card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;border:2px solid '+tc+'44;background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);position:relative;box-shadow:0 4px 16px rgba(0,0,0,0.5);display:flex;flex-direction:column;';
+    var fullPos = posNames[p.pos] || p.pos;
     // OVR centered top
     var topArea = '<div style="text-align:center;padding:'+(w>90?'6':'4')+'px 0 0;position:relative;z-index:2;">'
       +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?36:24)+'px;color:'+tc+';line-height:0.85;text-shadow:0 0 10px '+tc+'44;">'+p.ovr+'</div>'
-      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(w>90?8:7)+'px;color:#ff0040;letter-spacing:2px;margin-top:-2px;">'+p.pos+'</div></div>';
-    // Jersey number (top-right corner)
-    var numArea = '<div style="position:absolute;top:'+(w>90?'6':'4')+'px;right:'+(w>90?'8':'5')+'px;font-family:\'Teko\';font-weight:700;font-size:'+(w>90?18:14)+'px;color:'+tc+';opacity:0.35;line-height:1;z-index:2;">#'+(p.num||'')+'</div>';
+      +'<div style="font-family:\'Rajdhani\';font-weight:600;font-size:'+(w>90?7:6)+'px;color:#aaa;letter-spacing:1px;margin-top:-1px;">'+fullPos+'</div></div>';
+    // Jersey number (top-left corner, away from OVR)
+    var numArea = '<div style="position:absolute;top:'+(w>90?'8':'5')+'px;left:'+(w>90?'8':'5')+'px;font-family:\'Teko\';font-weight:700;font-size:'+(w>90?16:12)+'px;color:#fff;opacity:0.3;line-height:1;z-index:2;">#'+(p.num||'')+'</div>';
     // Art placeholder
     var artArea = '<div style="flex:1;display:flex;align-items:center;justify-content:center;"><div style="width:'+(w*0.55)+'px;height:'+(h*0.4)+'px;border-radius:50% 50% 0 0;background:linear-gradient(180deg,'+p.teamColor+'33,transparent);opacity:0.4;"></div></div>';
     // Bottom gradient
