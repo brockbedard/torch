@@ -102,14 +102,14 @@ export function buildHome(){
   // Card data: accent color, bg tint, label, pip color, card type, art SVG
   var fanData=[
     {accent:'#F5B800',bg:'#0a1a08',label:'OFFENSE',pip:'#00E5C0',
-     art:'<svg viewBox="0 0 448 512" width="36" height="42" style="margin-top:4px;">'
+     art:'<svg viewBox="0 0 448 512" width="40" height="46" style="margin-top:2px;">'
        +'<defs><linearGradient id="boltGrad" x1="100" y1="500" x2="350" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F5B800"/><stop offset="100%" stop-color="#FFFACD"/></linearGradient>'
        +'<filter id="boltGlow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
        +'<path fill="url(#boltGrad)" filter="url(#boltGlow)" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/>'
        +'</svg>',
      cornerPip:'<svg viewBox="0 0 448 512" width="5" height="6"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#FFD700"/></svg>'},
     {accent:'#FF5E1A',bg:'#1a0800',label:'TORCH',pip:'#FF5E1A',
-     art:'<svg viewBox="-6 -6 56 64" fill="none" width="48" height="56" style="margin-top:-2px;">'
+     art:'<svg viewBox="-8 -10 60 72" fill="none" width="48" height="58" style="margin-top:-4px;">'
        +'<defs><linearGradient id="noGrad" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="100%" stop-color="#FFD700"/></linearGradient>'
        +'<linearGradient id="noInner" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA00"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient>'
        +'<filter id="fGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
@@ -119,7 +119,7 @@ export function buildHome(){
        +'</svg>',
      cornerPip:'<svg viewBox="0 0 5 6" width="5" height="6"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF5E1A"/></svg>'},
     {accent:'#00E5C0',bg:'#041518',label:'DEFENSE',pip:'#8B5CF6',
-     art:'<svg viewBox="0 0 512 512" width="34" height="34" style="margin-top:6px;">'
+     art:'<svg viewBox="0 0 512 512" width="38" height="38" style="margin-top:4px;">'
        +'<defs><linearGradient id="shieldGrad" x1="256" y1="512" x2="256" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#008B74"/><stop offset="100%" stop-color="#80FFF0"/></linearGradient>'
        +'<filter id="shieldGlow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
        +'<path fill="url(#shieldGrad)" filter="url(#shieldGlow)" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8s0 0 0 0z"/>'
@@ -167,9 +167,14 @@ export function buildHome(){
     card.appendChild(artArea);
     // Bottom nameplate
     var nameplate=document.createElement('div');
-    nameplate.style.cssText='position:absolute;bottom:0;left:0;right:0;height:16px;background:'+d.accent+'dd;display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 4px 4px;';
+    var isTorch=d.label==='TORCH';
+    nameplate.style.cssText='position:absolute;bottom:0;left:0;right:0;height:'+(isTorch?'18':'16')+'px;background:'+d.accent+(isTorch?'ee':'dd')+';display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 4px 4px;';
     var npText=document.createElement('div');
-    npText.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:9px;color:#09081A;letter-spacing:2px;";
+    if(isTorch){
+      npText.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:14px;color:#09081A;letter-spacing:3px;transform:skewX(-8deg);";
+    } else {
+      npText.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:9px;color:#000;letter-spacing:2px;text-shadow:0 0 4px rgba(255,255,255,0.3);";
+    }
     npText.textContent=d.label;
     nameplate.appendChild(npText);
     card.appendChild(nameplate);
@@ -185,8 +190,8 @@ export function buildHome(){
   var title=document.createElement('h1');
   title.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:96px;line-height:0.85;color:#FFD54F;text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 30px rgba(255,204,0,0.4);transform:skewX(-8deg);margin-bottom:0;text-align:center;letter-spacing:8px;z-index:2;animation:homeRevealUp 0.5s ease-out 0.4s both,titleShimmer 4s ease-in-out 2s infinite;position:relative;";
   // Football-O: Font Awesome football (CC BY 4.0) rotated to vertical
-  var footballO='<span style="position:relative;display:inline-block;width:54px;height:74px;vertical-align:baseline;margin:0 -4px;">'
-    +'<svg viewBox="0 0 512 512" width="54" height="54" fill="none" style="position:absolute;top:10px;left:0;transform:rotate(-45deg);filter:drop-shadow(0 0 6px rgba(255,140,0,0.5)) drop-shadow(0 0 12px rgba(255,94,26,0.3));">'
+  var footballO='<span style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:54px;height:72px;vertical-align:middle;margin:0 -2px 6px;">'
+    +'<svg viewBox="0 0 512 512" width="52" height="52" fill="none" style="transform:rotate(-45deg);filter:drop-shadow(0 0 6px rgba(255,140,0,0.5)) drop-shadow(0 0 12px rgba(255,94,26,0.3));">'
     +'<defs><linearGradient id="oGrad" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#D4893B"/><stop offset="45%" stop-color="#B5652B"/><stop offset="100%" stop-color="#8B4A1F"/></linearGradient>'
     +'<filter id="oGlow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
     +'<path fill="url(#oGrad)" d="M247.5 25.4c-13.5 3.3-26.4 7.2-38.6 11.7C142.9 61.6 96.7 103.6 66 153.6C47.8 183.4 35.1 215.9 26.9 249L264.5 486.6c13.5-3.3 26.4-7.2 38.6-11.7c66-24.5 112.2-66.5 142.9-116.5c18.3-29.8 30.9-62.3 39.1-95.3L247.5 25.4zM495.2 205.3c6.1-56.8 1.4-112.2-7.7-156.4c-2.7-12.9-13-22.9-26.1-25.1c-58.2-9.7-109.9-12-155.6-7.9L495.2 205.3zM206.1 496L16.8 306.7c-6.1 56.8-1.4 112.2 7.7 156.4c2.7 12.9 13 22.9 26.1 25.1c58.2 9.7 109.9 12 155.6 7.9z"/>'
