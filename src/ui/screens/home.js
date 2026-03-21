@@ -25,7 +25,7 @@ var DEV_LOG = [
 
 export function buildHome(){
   var el=document.createElement('div');
-  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 30px;position:relative;overflow:hidden;gap:6px;';
+  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 30px;position:relative;overflow:hidden;gap:0;';
 
   // === LAYERED BACKGROUND ===
   // Base: deep purple radial
@@ -36,18 +36,15 @@ export function buildHome(){
   bgDrift.style.cssText='position:absolute;inset:-25%;width:150%;height:150%;background:radial-gradient(circle at 50% 40%,#2A0055 0%,transparent 60%);z-index:0;animation:bgDrift 15s ease-in-out infinite;opacity:0.6;';
   // Warm light pool behind flame area
   var bgWarm=document.createElement('div');
-  bgWarm.style.cssText='position:absolute;top:15%;left:50%;transform:translateX(-50%);width:350px;height:350px;background:radial-gradient(circle,rgba(255,120,20,0.1) 0%,rgba(255,80,0,0.04) 40%,transparent 70%);z-index:0;pointer-events:none;';
-  // Subtle magenta accent in corners
-  var bgMagenta=document.createElement('div');
-  bgMagenta.style.cssText='position:absolute;bottom:0;left:0;right:0;height:50%;background:radial-gradient(ellipse at 20% 100%,rgba(255,0,110,0.04) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(255,0,110,0.03) 0%,transparent 50%);z-index:0;pointer-events:none;';
+  bgWarm.style.cssText='position:absolute;top:15%;left:50%;transform:translateX(-50%);width:85%;max-width:400px;height:350px;background:radial-gradient(circle,rgba(255,120,20,0.1) 0%,rgba(255,80,0,0.04) 40%,transparent 70%);z-index:0;pointer-events:none;';
   // Noise texture overlay
   var bgNoise=document.createElement('div');
   bgNoise.style.cssText='position:absolute;inset:0;z-index:0;opacity:0.03;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E");background-size:128px 128px;';
-  el.append(bgBase,bgDrift,bgWarm,bgMagenta,bgNoise);
+  el.append(bgBase,bgDrift,bgWarm,bgNoise);
 
   // === EMBER PARTICLES — prominent, emanating from logo area ===
   var emberWrap=document.createElement('div');
-  emberWrap.style.cssText='position:absolute;top:30%;left:50%;transform:translateX(-50%);width:300px;height:160px;z-index:1;pointer-events:none;';
+  emberWrap.style.cssText='position:absolute;top:25%;left:50%;transform:translateX(-50%);width:300px;height:200px;z-index:1;pointer-events:none;';
   var drifts=[-30,-18,12,25,-10,18,-24,8,15,-22,10,-15,22,-8,28,-28,14,-20];
   for(var e=0;e<22;e++){
     var ember=document.createElement('div');
@@ -98,18 +95,18 @@ export function buildHome(){
 
   // === CARD FAN — playing card style with football art ===
   var cardFan=document.createElement('div');
-  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:320px;height:160px;margin-top:10px;margin-bottom:30px;z-index:2;opacity:0;animation:homeRevealScale 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;overflow:visible;';
+  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:360px;height:200px;margin-top:0;margin-bottom:24px;z-index:2;opacity:0;animation:homeRevealScale 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;overflow:visible;';
   // Card data: accent color, bg tint, label, pip color, card type, art SVG
   var fanData=[
     {accent:'#F5B800',bg:'#0a1a08',label:'OFFENSE',pip:'#00E5C0',
-     art:'<svg viewBox="0 0 448 512" width="40" height="46" style="margin-top:2px;">'
+     art:'<svg viewBox="0 0 448 512" width="48" height="55" style="margin-top:4px;">'
        +'<defs><linearGradient id="boltGrad" x1="100" y1="500" x2="350" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F5B800"/><stop offset="100%" stop-color="#FFFACD"/></linearGradient>'
        +'<filter id="boltGlow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
        +'<path fill="url(#boltGrad)" filter="url(#boltGlow)" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/>'
        +'</svg>',
      cornerPip:'<svg viewBox="0 0 448 512" width="5" height="6"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#FFD700"/></svg>'},
     {accent:'#FF5E1A',bg:'#1a0800',label:'TORCH',pip:'#FF5E1A',
-     art:'<svg viewBox="-8 -10 60 72" fill="none" width="48" height="58" style="margin-top:-4px;">'
+     art:'<svg viewBox="-8 -10 60 72" fill="none" width="56" height="68" style="margin-top:-4px;">'
        +'<defs><linearGradient id="noGrad" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="100%" stop-color="#FFD700"/></linearGradient>'
        +'<linearGradient id="noInner" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA00"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient>'
        +'<filter id="fGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
@@ -118,24 +115,24 @@ export function buildHome(){
        +'<ellipse cx="22" cy="52" rx="9" ry="3" fill="#FF5E1A" opacity="0.25"/>'
        +'</svg>',
      cornerPip:'<svg viewBox="0 0 5 6" width="5" height="6"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF5E1A"/></svg>'},
-    {accent:'#00E5C0',bg:'#041518',label:'DEFENSE',pip:'#8B5CF6',
-     art:'<svg viewBox="0 0 512 512" width="38" height="38" style="margin-top:4px;">'
+    {accent:'#00E5C0',bg:'#041518',label:'DEFENSE',pip:'#00E5C0',
+     art:'<svg viewBox="0 0 512 512" width="46" height="46" style="margin-top:6px;">'
        +'<defs><linearGradient id="shieldGrad" x1="256" y1="512" x2="256" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#008B74"/><stop offset="100%" stop-color="#80FFF0"/></linearGradient>'
        +'<filter id="shieldGlow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
        +'<path fill="url(#shieldGrad)" filter="url(#shieldGlow)" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8s0 0 0 0z"/>'
        +'</svg>',
      cornerPip:'<svg viewBox="0 0 512 512" width="5" height="6"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z" fill="#00FFDD"/></svg>'},
   ];
-  var fanAngles=[-20,0,20];
-  var fanX=[-80,0,80];
-  var fanY=[14,0,14];
+  var fanAngles=[-18,0,18];
+  var fanX=[-72,0,72];
+  var fanY=[12,0,12];
   var fanZ=[1,3,1];
-  var fanScale=[1,1.14,1];
+  var fanScale=[1,1.2,1];
   for(var c=0;c<3;c++){
     var d=fanData[c];
     var isCenter=c===1;
     var card=document.createElement('div');
-    card.style.cssText='position:absolute;width:82px;height:114px;border-radius:6px;'
+    card.style.cssText='position:absolute;width:100px;height:140px;border-radius:7px;'
       +'background:linear-gradient(170deg,'+d.bg+' 0%,#09081A 100%);'
       +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
       +'transform:rotate('+fanAngles[c]+'deg) translateX('+fanX[c]+'px) translateY('+fanY[c]+'px) scale('+fanScale[c]+');'
@@ -144,20 +141,20 @@ export function buildHome(){
       +'overflow:hidden;position:absolute;';
     // Gradient border wrapper
     var borderWrap=document.createElement('div');
-    borderWrap.style.cssText='position:absolute;inset:-2px;border-radius:8px;background:linear-gradient(135deg,'+d.accent+',#F5B800,'+d.accent+');z-index:-1;';
+    borderWrap.style.cssText='position:absolute;inset:-2px;border-radius:9px;background:linear-gradient(135deg,'+d.accent+',#F5B800,'+d.accent+');z-index:-1;';
     card.appendChild(borderWrap);
     // Card margin (2px inset light border — "bleed margin")
     var margin=document.createElement('div');
-    margin.style.cssText='position:absolute;inset:3px;border-radius:4px;border:1px solid '+d.accent+'66;pointer-events:none;z-index:4;';
+    margin.style.cssText='position:absolute;inset:4px;border-radius:5px;border:1px solid '+d.accent+'66;pointer-events:none;z-index:4;';
     card.appendChild(margin);
     // Corner pip — top left
     var pipTL=document.createElement('div');
-    pipTL.style.cssText='position:absolute;top:6px;left:6px;z-index:5;';
+    pipTL.style.cssText='position:absolute;top:7px;left:7px;z-index:5;';
     pipTL.innerHTML=d.cornerPip;
     card.appendChild(pipTL);
     // Corner pip — bottom right (rotated 180)
     var pipBR=document.createElement('div');
-    pipBR.style.cssText='position:absolute;bottom:20px;right:6px;z-index:5;transform:rotate(180deg);';
+    pipBR.style.cssText='position:absolute;bottom:24px;right:7px;z-index:5;transform:rotate(180deg);';
     pipBR.innerHTML=d.cornerPip;
     card.appendChild(pipBR);
     // Center art area
@@ -168,19 +165,19 @@ export function buildHome(){
     // Bottom nameplate
     var nameplate=document.createElement('div');
     var isTorch=d.label==='TORCH';
-    nameplate.style.cssText='position:absolute;bottom:0;left:0;right:0;height:'+(isTorch?'18':'16')+'px;background:'+d.accent+(isTorch?'ee':'dd')+';display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 4px 4px;';
+    nameplate.style.cssText='position:absolute;bottom:0;left:0;right:0;height:'+(isTorch?'20':'18')+'px;background:'+d.accent+(isTorch?'ee':'dd')+';display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 5px 5px;';
     var npText=document.createElement('div');
     if(isTorch){
-      npText.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:14px;color:#09081A;letter-spacing:3px;transform:skewX(-8deg);";
+      npText.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:16px;color:#09081A;letter-spacing:3px;transform:skewX(-8deg);";
     } else {
-      npText.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:9px;color:#000;letter-spacing:2px;text-shadow:0 0 4px rgba(255,255,255,0.3);";
+      npText.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;color:#000;letter-spacing:2px;";
     }
     npText.textContent=d.label;
     nameplate.appendChild(npText);
     card.appendChild(nameplate);
     // Shimmer sweep
     var shimmer=document.createElement('div');
-    shimmer.style.cssText='position:absolute;inset:0;border-radius:6px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);animation:cardShimmer 4s '+(c*0.5)+'s ease-in-out infinite;pointer-events:none;z-index:6;';
+    shimmer.style.cssText='position:absolute;inset:0;border-radius:7px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);animation:cardShimmer 4s '+(c*0.5)+'s ease-in-out infinite;pointer-events:none;z-index:6;';
     card.appendChild(shimmer);
     cardFan.appendChild(card);
   }
@@ -190,7 +187,7 @@ export function buildHome(){
   // Create the football SVG element programmatically (avoids data URI encoding issues).
   // The span is sized to match a Teko O. The SVG inside uses overflow:visible + contain.
   var title=document.createElement('h1');
-  title.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:96px;line-height:0.85;color:#FFD54F;text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 30px rgba(255,204,0,0.4);transform:skewX(-8deg);margin-bottom:0;text-align:center;letter-spacing:8px;z-index:2;animation:homeRevealUp 0.5s ease-out 0.4s both,titleShimmer 4s ease-in-out 2s infinite;position:relative;";
+  title.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:76px;line-height:0.85;color:#FFD54F;text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,204,0,0.35);transform:skewX(-8deg);margin-bottom:0;text-align:center;letter-spacing:6px;z-index:2;animation:homeRevealUp 0.5s ease-out 0.4s both,titleShimmer 4s ease-in-out 2s infinite;position:relative;";
   title.textContent='T';
   // Football O span
   var oSpan=document.createElement('span');
@@ -212,14 +209,14 @@ export function buildHome(){
   rch.textContent='RCH';
   title.appendChild(rch);
   var sub=document.createElement('span');
-  sub.style.cssText="display:block;color:white;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:40px;letter-spacing:10px;text-shadow:2px 2px 0 rgba(0,0,0,0.8);margin-top:4px;";
+  sub.style.cssText="display:block;color:#FFF5E6;font-family:'Teko',sans-serif;font-weight:700;font-size:32px;letter-spacing:5px;text-shadow:2px 2px 0 rgba(0,0,0,0.8);margin-top:2px;";
   sub.textContent='FOOTBALL';
   title.appendChild(sub);
   el.append(title);
 
   // === TAGLINE ===
   var tagline=document.createElement('div');
-  tagline.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:600;font-size:13px;color:var(--cyan);letter-spacing:5px;text-align:center;margin-top:8px;margin-bottom:12px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.6s both;text-shadow:0 0 12px rgba(0,234,255,0.3);text-transform:uppercase;";
+  tagline.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:600;font-size:14px;color:rgba(255,224,160,0.7);letter-spacing:3px;text-align:center;margin-top:8px;margin-bottom:16px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.6s both;text-shadow:0 0 8px rgba(255,180,0,0.15);text-transform:uppercase;";
   tagline.textContent='DEAL THE PLAY';
   el.append(tagline);
 
@@ -228,8 +225,8 @@ export function buildHome(){
   playWrap.style.cssText='width:100%;z-index:2;position:relative;display:flex;flex-direction:column;gap:20px;opacity:0;animation:homeRevealBtn 0.4s ease-out 1.0s both;';
   var playBtn=document.createElement('button');
   playBtn.className='btn-blitz';
-  playBtn.style.cssText='border-color:var(--cyan);color:#000;background:linear-gradient(180deg,#00ffcc 0%,#00c8aa 100%);font-size:20px;padding:18px 20px;animation:ctaGlow 3s ease-in-out 2s infinite;letter-spacing:4px;';
-  playBtn.textContent='PLAY';
+  playBtn.style.cssText='border-color:#FF8C00;color:#000;background:linear-gradient(180deg,#FFB800 0%,#FF5E1A 100%);font-size:24px;padding:20px 24px;animation:ctaGlow 3s ease-in-out 0.3s infinite;letter-spacing:5px;';
+  playBtn.textContent='KICK OFF';
   playBtn.onclick=function(){
     SND.click();
     setGs(function(s){ return Object.assign({}, s, {screen:'setup', team:null, side:null}); });

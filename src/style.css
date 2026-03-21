@@ -59,10 +59,10 @@ body { color: white; font-family: 'Barlow Condensed', sans-serif; display: flex;
 @keyframes homeRevealUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
 @keyframes homeRevealScale{from{opacity:0;transform:scale(0.3);}to{opacity:1;transform:scale(1);}}
 @keyframes homeRevealBtn{from{opacity:0;transform:scale(0.92);}to{opacity:1;transform:scale(1);}}
-/* Home screen — CTA glow breathe */
+/* Home screen — CTA glow breathe (orange/torch branded) */
 @keyframes ctaGlow{
-  0%,100%{box-shadow:6px 6px 0 #006a77,10px 10px 0 #000,0 0 15px rgba(0,234,255,0.3);}
-  50%{box-shadow:6px 6px 0 #006a77,10px 10px 0 #000,0 0 35px rgba(0,234,255,0.6),0 0 60px rgba(0,234,255,0.2);}
+  0%,100%{box-shadow:6px 6px 0 #8B4A00,10px 10px 0 #000,0 0 15px rgba(255,140,0,0.3);}
+  50%{box-shadow:6px 6px 0 #8B4A00,10px 10px 0 #000,0 0 30px rgba(255,140,0,0.5),0 0 50px rgba(255,94,26,0.15);}
 }
 /* Home screen — ember particles */
 @keyframes emberRise{
@@ -77,11 +77,11 @@ body { color: white; font-family: 'Barlow Condensed', sans-serif; display: flex;
   75%{transform:translate(-15px,8px);}
   100%{transform:translate(0,0);}
 }
-/* Home screen — title shimmer */
+/* Home screen — title shimmer (tamed — 30-40px range, no 80px spread) */
 @keyframes titleShimmer{
-  0%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 30px rgba(255,204,0,0.4);}
-  50%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 45px rgba(255,204,0,0.6),0 0 80px rgba(255,140,0,0.2);}
-  100%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 30px rgba(255,204,0,0.4);}
+  0%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,204,0,0.35);}
+  50%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 40px rgba(255,204,0,0.5);}
+  100%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,204,0,0.35);}
 }
 /* Home screen — card shimmer sweep */
 @keyframes cardShimmer{
