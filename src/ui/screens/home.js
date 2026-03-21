@@ -187,7 +187,7 @@ export function buildHome(){
   // Create the football SVG element programmatically (avoids data URI encoding issues).
   // The span is sized to match a Teko O. The SVG inside uses overflow:visible + contain.
   var title=document.createElement('h1');
-  title.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:76px;line-height:0.85;color:#FFD54F;text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,204,0,0.35);transform:skewX(-8deg);margin-bottom:0;text-align:center;letter-spacing:6px;z-index:2;animation:homeRevealUp 0.5s ease-out 0.4s both,titleShimmer 4s ease-in-out 2s infinite;position:relative;";
+  title.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:88px;line-height:0.85;color:#FFD54F;text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,204,0,0.35);transform:skewX(-8deg);margin-bottom:0;text-align:center;letter-spacing:7px;z-index:2;animation:homeRevealUp 0.5s ease-out 0.4s both,titleShimmer 4s ease-in-out 2s infinite;position:relative;";
   title.textContent='T';
   // Football O span
   var oSpan=document.createElement('span');
@@ -209,14 +209,14 @@ export function buildHome(){
   rch.textContent='RCH';
   title.appendChild(rch);
   var sub=document.createElement('span');
-  sub.style.cssText="display:block;color:#FFF5E6;font-family:'Teko',sans-serif;font-weight:700;font-size:32px;letter-spacing:5px;text-shadow:2px 2px 0 rgba(0,0,0,0.8);margin-top:2px;";
+  sub.style.cssText="display:block;color:#FFF5E6;font-family:'Teko',sans-serif;font-weight:700;font-size:38px;letter-spacing:6px;text-shadow:2px 2px 0 rgba(0,0,0,0.8);margin-top:2px;";
   sub.textContent='FOOTBALL';
   title.appendChild(sub);
   el.append(title);
 
   // === TAGLINE ===
   var tagline=document.createElement('div');
-  tagline.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:600;font-size:14px;color:rgba(255,224,160,0.7);letter-spacing:3px;text-align:center;margin-top:8px;margin-bottom:16px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.6s both;text-shadow:0 0 8px rgba(255,180,0,0.15);text-transform:uppercase;";
+  tagline.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:16px;color:rgba(255,224,160,0.85);letter-spacing:4px;text-align:center;margin-top:10px;margin-bottom:16px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.6s both;text-shadow:0 0 10px rgba(255,180,0,0.2);text-transform:uppercase;";
   tagline.textContent='DEAL THE PLAY';
   el.append(tagline);
 
