@@ -17,57 +17,52 @@ function injectStyles() {
   document.head.appendChild(s);
 }
 
-// ====== HOME PAGE CARD BUILDERS (reused from home.js patterns) ======
+// ====== HOME PAGE CARD BUILDERS (exact match to home.js) ======
 function buildHomeCard(type, w, h) {
   var configs = {
-    offense: {accent:'#7ACC00',bg:'#0A1A06',label:'OFFENSE',borderAngle:'135deg',spotColor:'rgba(122,204,0,0.25)',
-      art:'<svg viewBox="0 0 448 512" width="'+(w*0.48)+'" height="'+(h*0.37)+'">'
-        +'<defs><linearGradient id="bG_o" x1="100" y1="450" x2="350" y2="50"><stop offset="0%" stop-color="#90E040"/><stop offset="100%" stop-color="#D4FF80"/></linearGradient></defs>'
-        +'<path fill="url(#bG_o)" stroke="#7ACC00" stroke-width="8" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/></svg>',
+    offense: {accent:'#7ACC00',bg:'#0A1A06',label:'OFFENSE',spotColor:'rgba(122,204,0,0.25)',
+      art:'<svg viewBox="0 0 448 512" width="48" height="52">'
+        +'<defs><linearGradient id="bG_o'+w+'" x1="100" y1="450" x2="350" y2="50"><stop offset="0%" stop-color="#90E040"/><stop offset="100%" stop-color="#D4FF80"/></linearGradient></defs>'
+        +'<path fill="url(#bG_o'+w+')" stroke="#7ACC00" stroke-width="8" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/></svg>',
       pip:'<svg viewBox="0 0 448 512" width="6" height="7"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#7ACC00"/></svg>'},
-    torch: {accent:'#FF4511',bg:'#1a0800',label:'TORCH',borderAngle:'135deg',spotColor:'rgba(255,69,17,0.25)',
-      art:'<svg viewBox="-8 -10 60 72" fill="none" width="'+(w*0.48)+'" height="'+(h*0.37)+'">'
-        +'<defs><linearGradient id="nG_t" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF6A30"/><stop offset="100%" stop-color="#FFD060"/></linearGradient>'
-        +'<linearGradient id="nI_t" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA44"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient></defs>'
-        +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#nG_t)" stroke="#FF4511" stroke-width="1.5"/>'
-        +'<path d="M22 12C22 12 13 24 12 32C11 40 15 46 19 49C19 49 16 41 19 32C20 28 21 25 22 20C23 25 24 28 25 32C28 41 25 49 25 49C29 46 33 40 32 32C31 24 22 12 22 12Z" fill="url(#nI_t)" opacity="0.7"/></svg>',
+    torch: {accent:'#FF4511',bg:'#1a0800',label:'TORCH',spotColor:'rgba(255,69,17,0.25)',
+      art:'<svg viewBox="-8 -10 60 72" fill="none" width="48" height="52">'
+        +'<defs><linearGradient id="nG_t'+w+'" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF6A30"/><stop offset="100%" stop-color="#FFD060"/></linearGradient>'
+        +'<linearGradient id="nI_t'+w+'" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA44"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient></defs>'
+        +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#nG_t'+w+')" stroke="#FF4511" stroke-width="1.5"/>'
+        +'<path d="M22 12C22 12 13 24 12 32C11 40 15 46 19 49C19 49 16 41 19 32C20 28 21 25 22 20C23 25 24 28 25 32C28 41 25 49 25 49C29 46 33 40 32 32C31 24 22 12 22 12Z" fill="url(#nI_t'+w+')" opacity="0.7"/></svg>',
       pip:'<svg viewBox="0 0 5 6" width="6" height="7"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF4511"/></svg>'},
-    defense: {accent:'#4DA6FF',bg:'#0A1420',label:'DEFENSE',borderAngle:'135deg',spotColor:'rgba(77,166,255,0.2)',
-      art:'<svg viewBox="0 0 512 512" width="'+(w*0.48)+'" height="'+(h*0.37)+'">'
-        +'<defs><linearGradient id="sG_d" x1="256" y1="512" x2="256" y2="0"><stop offset="0%" stop-color="#3080D0"/><stop offset="100%" stop-color="#A0D4FF"/></linearGradient></defs>'
-        +'<path fill="url(#sG_d)" stroke="#4DA6FF" stroke-width="8" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8z"/></svg>',
+    defense: {accent:'#4DA6FF',bg:'#0A1420',label:'DEFENSE',spotColor:'rgba(77,166,255,0.2)',
+      art:'<svg viewBox="0 0 512 512" width="48" height="52">'
+        +'<defs><linearGradient id="sG_d'+w+'" x1="256" y1="512" x2="256" y2="0"><stop offset="0%" stop-color="#3080D0"/><stop offset="100%" stop-color="#A0D4FF"/></linearGradient></defs>'
+        +'<path fill="url(#sG_d'+w+')" stroke="#4DA6FF" stroke-width="8" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8z"/></svg>',
       pip:'<svg viewBox="0 0 512 512" width="6" height="7"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z" fill="#4DA6FF"/></svg>'},
   };
   var d = configs[type];
   var isTorch = type === 'torch';
   var bw = isTorch ? 4 : 3;
+  // Build with DOM elements instead of innerHTML +=
   var card = document.createElement('div');
   card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;'
     +'background:radial-gradient(ellipse at 50% 40%,'+d.bg+',#0A0804);'
     +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
     +'box-shadow:0 2px 4px rgba(0,0,0,0.4),0 8px 20px rgba(0,0,0,0.25)'+(isTorch?',0 0 16px rgba(255,69,17,0.2)':'')+';'
     +'overflow:hidden;position:relative;';
-  // Bevel
-  card.innerHTML += '<div style="position:absolute;inset:0;border-radius:8px;box-shadow:inset 1px 1px 3px rgba(255,255,255,0.06),inset -1px -1px 3px rgba(0,0,0,0.3);pointer-events:none;z-index:7;"></div>';
-  // Border
-  card.innerHTML += '<div style="position:absolute;inset:-'+bw+'px;border-radius:'+(8+bw)+'px;background:linear-gradient('+d.borderAngle+','+d.accent+',rgba(255,255,255,0.4),'+d.accent+');z-index:-1;"></div>';
-  // Inner margin
-  card.innerHTML += '<div style="position:absolute;inset:5px;border-radius:5px;border:1.5px solid '+d.accent+'33;pointer-events:none;z-index:4;"></div>';
-  // Corner pips
-  card.innerHTML += '<div style="position:absolute;top:8px;left:8px;z-index:5;">'+d.pip+'</div>';
-  card.innerHTML += '<div style="position:absolute;bottom:24px;right:8px;z-index:5;transform:rotate(180deg);">'+d.pip+'</div>';
-  // Spotlight
-  card.innerHTML += '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:68px;height:68px;border-radius:50%;background:radial-gradient(circle,'+d.spotColor+',transparent 70%);z-index:2;pointer-events:none;"></div>';
-  // Art
-  card.innerHTML += '<div style="display:flex;align-items:center;justify-content:center;z-index:3;">'+d.art+'</div>';
-  // Divider
-  card.innerHTML += '<div style="position:absolute;bottom:'+(isTorch?'22':'20')+'px;left:15%;right:15%;height:1px;background:'+d.accent+'22;z-index:5;"></div>';
-  // Nameplate
+  // Build all layers
+  var layers = '';
+  layers += '<div style="position:absolute;inset:0;border-radius:8px;box-shadow:inset 1px 1px 3px rgba(255,255,255,0.06),inset -1px -1px 3px rgba(0,0,0,0.3);pointer-events:none;z-index:7;"></div>';
+  layers += '<div style="position:absolute;inset:-'+bw+'px;border-radius:'+(8+bw)+'px;background:linear-gradient(135deg,'+d.accent+',rgba(255,255,255,0.4),'+d.accent+');z-index:-1;"></div>';
+  layers += '<div style="position:absolute;inset:5px;border-radius:5px;border:1.5px solid '+d.accent+'33;pointer-events:none;z-index:4;"></div>';
+  layers += '<div style="position:absolute;top:8px;left:8px;z-index:5;">'+d.pip+'</div>';
+  layers += '<div style="position:absolute;bottom:'+(isTorch?'24':'22')+'px;right:8px;z-index:5;transform:rotate(180deg);">'+d.pip+'</div>';
+  layers += '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:68px;height:68px;border-radius:50%;background:radial-gradient(circle,'+d.spotColor+',transparent 70%);z-index:2;pointer-events:none;"></div>';
+  layers += '<div style="display:flex;align-items:center;justify-content:center;width:48px;height:52px;z-index:3;">'+d.art+'</div>';
+  layers += '<div style="position:absolute;bottom:'+(isTorch?'22':'20')+'px;left:15%;right:15%;height:1px;background:'+d.accent+'22;z-index:5;"></div>';
   var npH = isTorch ? 20 : 18;
-  var npFont = isTorch ? "font-family:'Teko';font-weight:700;font-size:14px;color:#09081A;letter-spacing:3px;transform:skewX(-8deg);" : "font-family:'Rajdhani';font-weight:700;font-size:10px;color:#000;letter-spacing:2px;";
-  card.innerHTML += '<div style="position:absolute;bottom:0;left:0;right:0;height:'+npH+'px;background:'+d.accent+(isTorch?'ee':'dd')+';display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 6px 6px;"><div style="'+npFont+'">'+d.label+'</div></div>';
-  // Shimmer
-  card.innerHTML += '<div style="position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);pointer-events:none;z-index:8;"></div>';
+  var npFont = isTorch ? "font-family:'Teko';font-weight:700;font-size:"+(w>=100?'16':'12')+"px;color:#09081A;letter-spacing:3px;transform:skewX(-8deg);" : "font-family:'Rajdhani';font-weight:700;font-size:"+(w>=100?'11':'9')+"px;color:#000;letter-spacing:2px;";
+  layers += '<div style="position:absolute;bottom:0;left:0;right:0;height:'+npH+'px;background:'+d.accent+(isTorch?'ee':'dd')+';display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 6px 6px;"><div style="'+npFont+'">'+d.label+'</div></div>';
+  layers += '<div style="position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);pointer-events:none;z-index:8;"></div>';
+  card.innerHTML = layers;
   return card;
 }
 
@@ -236,11 +231,11 @@ export function buildCardMockup() {
   torchCards.forEach(function(tc) {
     var bc = tTiers[tc.tier];
     var card = document.createElement('div');
-    card.style.cssText = 'width:90px;height:126px;border-radius:7px;border:2px solid '+bc+';background:radial-gradient(ellipse at 50% 35%,#1a0800,#0A0804);overflow:hidden;position:relative;box-shadow:0 4px 16px rgba(0,0,0,0.5),0 0 12px rgba(255,69,17,0.15);';
+    card.style.cssText = 'width:96px;height:134px;border-radius:7px;border:2px solid '+bc+';background:radial-gradient(ellipse at 50% 35%,#1a0800,#0A0804);overflow:hidden;position:relative;box-shadow:0 4px 16px rgba(0,0,0,0.5),0 0 12px rgba(255,69,17,0.15);';
     card.innerHTML = '<div style="font-family:\'Rajdhani\';font-weight:700;font-size:7px;color:'+bc+';letter-spacing:1.5px;text-align:center;padding:5px 0 0;opacity:0.7;">'+tc.tier+'</div>'
-      +'<div style="display:flex;align-items:center;justify-content:center;height:50px;"><svg viewBox="0 0 44 44" width="36" height="36" fill="none"><defs><linearGradient id="tg_'+tc.tier+'" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#FFB800"/></linearGradient></defs>'+flamePath+' fill="url(#tg_'+tc.tier+')" stroke="#FF4511" stroke-width="0.8"/></svg></div>'
-      +'<div style="font-family:\'Teko\';font-weight:700;font-size:12px;color:#fff;text-align:center;letter-spacing:1px;line-height:1;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+tc.name+'</div>'
-      +'<div style="font-family:\'Rajdhani\';font-size:8px;color:#aaa;text-align:center;padding:2px 6px;line-height:1.2;">'+tc.effect+'</div>'
+      +'<div style="display:flex;align-items:center;justify-content:center;height:52px;"><svg viewBox="0 0 44 44" width="38" height="38" fill="none"><defs><linearGradient id="tg_'+tc.tier+'" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#FFB800"/></linearGradient></defs>'+flamePath+' fill="url(#tg_'+tc.tier+')" stroke="#FF4511" stroke-width="0.8"/></svg></div>'
+      +'<div style="font-family:\'Teko\';font-weight:700;font-size:13px;color:#fff;text-align:center;letter-spacing:1px;line-height:1;padding:0 6px;">'+tc.name+'</div>'
+      +'<div style="font-family:\'Rajdhani\';font-size:8px;color:#aaa;text-align:center;padding:3px 8px;line-height:1.3;">'+tc.effect+'</div>'
       +'<div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:'+bc+';opacity:0.6;"></div>';
     torchRow.appendChild(wrap(card, tc.tier + ' TIER'));
   });
