@@ -157,16 +157,16 @@ export function buildHome(){
 
   // === CARD FAN — playing card style with football art ===
   var cardFan=document.createElement('div');
-  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:200px;height:100px;margin-top:12px;margin-bottom:20px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.9s both;overflow:visible;';
+  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:240px;height:100px;margin-top:12px;margin-bottom:20px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.9s both;overflow:visible;';
   // Card data: accent color, bg tint, label, pip color, card type, art SVG
   var fanData=[
-    {accent:'#F5B800',bg:'#0a2010',label:'OFFENSE',pip:'#00E5C0',
+    {accent:'#F5B800',bg:'#0a1a08',label:'OFFENSE',pip:'#00E5C0',
      art:'<svg viewBox="0 0 36 38" fill="none" width="36" height="38">'
-       +'<defs><linearGradient id="boltGrad" x1="18" y1="36" x2="18" y2="2"><stop offset="0%" stop-color="#F5B800"/><stop offset="100%" stop-color="#FFE066"/></linearGradient></defs>'
-       +'<path d="M20 2L10 18L16 18L12 36L26 16L19 16L24 2Z" fill="url(#boltGrad)" stroke="#F5B800" stroke-width="0.5" opacity="0.9"/>'
-       +'<path d="M19 8L14 20L17.5 20L15 32L23 18L19.5 18L22 8Z" fill="#FFE066" opacity="0.4"/>'
+       +'<defs><linearGradient id="boltGrad" x1="18" y1="36" x2="18" y2="2"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#FFFACD"/></linearGradient></defs>'
+       +'<path d="M20 2L10 18L16 18L12 36L26 16L19 16L24 2Z" fill="url(#boltGrad)" stroke="#FFE066" stroke-width="0.5"/>'
+       +'<path d="M19 8L14 20L17.5 20L15 32L23 18L19.5 18L22 8Z" fill="#FFFACD" opacity="0.5"/>'
        +'</svg>',
-     cornerPip:'<svg viewBox="0 0 6 8" width="4" height="5"><path d="M3.5 0L1 4L2.5 4L1.5 8L5 3L3.2 3L4.5 0Z" fill="#F5B800"/></svg>'},
+     cornerPip:'<svg viewBox="0 0 6 8" width="4" height="5"><path d="M3.5 0L1 4L2.5 4L1.5 8L5 3L3.2 3L4.5 0Z" fill="#FFD700"/></svg>'},
     {accent:'#FF5E1A',bg:'#1a0800',label:'TORCH',pip:'#FF5E1A',
      art:'<svg viewBox="0 0 36 38" fill="none" width="36" height="38">'
        +'<path d="M18 4C18 4 10 14 9 20C8 26 12 31 15 33C15 33 13 27 15 22C16 19 17 17 18 14C19 17 20 19 21 22C23 27 21 33 21 33C24 31 28 26 27 20C26 14 18 4 18 4Z" fill="url(#noGrad)" stroke="#FF5E1A" stroke-width="0.5" opacity="0.9"/>'
@@ -176,18 +176,18 @@ export function buildHome(){
        +'<defs><linearGradient id="noGrad" x1="18" y1="33" x2="18" y2="4"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="100%" stop-color="#FFD700"/></linearGradient></defs>'
        +'</svg>',
      cornerPip:'<svg viewBox="0 0 5 6" width="4" height="5"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF5E1A"/></svg>'},
-    {accent:'#00E5C0',bg:'#051a18',label:'DEFENSE',pip:'#8B5CF6',
+    {accent:'#00E5C0',bg:'#041518',label:'DEFENSE',pip:'#8B5CF6',
      art:'<svg viewBox="0 0 36 38" fill="none" width="36" height="38">'
-       +'<defs><linearGradient id="shieldGrad" x1="18" y1="36" x2="18" y2="2"><stop offset="0%" stop-color="#008B74"/><stop offset="100%" stop-color="#00E5C0"/></linearGradient></defs>'
-       +'<path d="M18 2C18 2 6 4 6 10C6 18 8 26 18 36C28 26 30 18 30 10C30 4 18 2 18 2Z" fill="url(#shieldGrad)" stroke="#00E5C0" stroke-width="0.5" opacity="0.9"/>'
-       +'<path d="M18 8C18 8 11 9.5 11 13C11 18 12.5 24 18 31C23.5 24 25 18 25 13C25 9.5 18 8 18 8Z" fill="#00E5C0" opacity="0.3"/>'
-       +'<line x1="18" y1="10" x2="18" y2="28" stroke="#00E5C0" stroke-width="0.5" opacity="0.2"/>'
+       +'<defs><linearGradient id="shieldGrad" x1="18" y1="36" x2="18" y2="2"><stop offset="0%" stop-color="#00FFDD"/><stop offset="100%" stop-color="#80FFF0"/></linearGradient></defs>'
+       +'<path d="M18 2C18 2 6 4 6 10C6 18 8 26 18 36C28 26 30 18 30 10C30 4 18 2 18 2Z" fill="url(#shieldGrad)" stroke="#80FFF0" stroke-width="0.5"/>'
+       +'<path d="M18 8C18 8 11 9.5 11 13C11 18 12.5 24 18 31C23.5 24 25 18 25 13C25 9.5 18 8 18 8Z" fill="#80FFF0" opacity="0.35"/>'
+       +'<line x1="18" y1="10" x2="18" y2="28" stroke="#80FFF0" stroke-width="0.5" opacity="0.2"/>'
        +'</svg>',
-     cornerPip:'<svg viewBox="0 0 6 7" width="4" height="5"><path d="M3 0C3 0 0.5 0.5 0.5 2C0.5 3.5 1.5 5 3 7C4.5 5 5.5 3.5 5.5 2C5.5 0.5 3 0 3 0Z" fill="#00E5C0"/></svg>'},
+     cornerPip:'<svg viewBox="0 0 6 7" width="4" height="5"><path d="M3 0C3 0 0.5 0.5 0.5 2C0.5 3.5 1.5 5 3 7C4.5 5 5.5 3.5 5.5 2C5.5 0.5 3 0 3 0Z" fill="#00FFDD"/></svg>'},
   ];
-  var fanAngles=[-15,0,15];
-  var fanX=[-30,0,30];
-  var fanY=[3,0,3];
+  var fanAngles=[-18,0,18];
+  var fanX=[-42,0,42];
+  var fanY=[5,0,5];
   var fanZ=[1,3,1];
   var fanScale=[1,1.06,1];
   for(var c=0;c<3;c++){
