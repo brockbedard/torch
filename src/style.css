@@ -1,9 +1,9 @@
 :root {
   --bg: #050015; --bg-surface: #0f0d1a; --bg-raised: #1a1030;
-  --f-purple: #bb00ff; --l-green: #00ff44; --a-gold: #ffcc00;
+  --f-purple: #bb00ff; --l-green: #00ff44; --a-gold: #FFB800;
   --white: #ffffff; --glass: rgba(255, 255, 255, 0.1);
   --chrome: linear-gradient(to bottom, #fff 0%, #888 50%, #fff 100%);
-  --p-red: #ff0040; --text: #fff; --muted: #aaa; --cyan: #00eaff; --orange: #ff4d00; --danger: #ff0040;
+  --p-red: #ff0040; --text: #fff; --muted: #aaa; --cyan: #00eaff; --orange: #FF4511; --danger: #ff0040;
   --safe-top: env(safe-area-inset-top);
   --safe-bottom: env(safe-area-inset-bottom);
 }
@@ -79,9 +79,9 @@ body { color: white; font-family: 'Barlow Condensed', sans-serif; display: flex;
 }
 /* Home screen — title shimmer (tamed — 30-40px range, no 80px spread) */
 @keyframes titleShimmer{
-  0%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,204,0,0.35);}
-  50%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 40px rgba(255,204,0,0.5);}
-  100%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,204,0,0.35);}
+  0%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,184,0,0.35);}
+  50%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 40px rgba(255,184,0,0.5);}
+  100%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,184,0,0.35);}
 }
 /* Home screen — card shimmer sweep (slowed to 6s for premium feel) */
 @keyframes cardShimmer{

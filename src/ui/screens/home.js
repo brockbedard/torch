@@ -101,21 +101,21 @@ export function buildHome(){
   var iconFilter='<filter id="iGl"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
   // Card data
   var fanData=[
-    {accent:'#F5B800',bg:'#0a1a08',label:'OFFENSE',pip:'#00E5C0',borderAngle:'45deg',
+    {accent:'#FFB800',bg:'#0a1a08',label:'OFFENSE',pip:'#00E5C0',borderAngle:'45deg',
      art:'<svg viewBox="0 0 448 512" width="48" height="52">'
-       +'<defs><linearGradient id="boltGrad" x1="100" y1="500" x2="350" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#F5B800"/><stop offset="100%" stop-color="#FFFACD"/></linearGradient>'+iconFilter+'</defs>'
+       +'<defs><linearGradient id="boltGrad" x1="100" y1="500" x2="350" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFB800"/><stop offset="100%" stop-color="#FFFACD"/></linearGradient>'+iconFilter+'</defs>'
        +'<path fill="url(#boltGrad)" filter="url(#iGl)" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/>'
        +'</svg>',
-     cornerPip:'<svg viewBox="0 0 448 512" width="6" height="7"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#FFD700"/></svg>'},
-    {accent:'#FF5E1A',bg:'#1a0800',label:'TORCH',pip:'#FF5E1A',borderAngle:'180deg',
+     cornerPip:'<svg viewBox="0 0 448 512" width="6" height="7"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#FFB800"/></svg>'},
+    {accent:'#FF4511',bg:'#1a0800',label:'TORCH',pip:'#FF4511',borderAngle:'180deg',
      art:'<svg viewBox="-8 -10 60 72" fill="none" width="48" height="52">'
-       +'<defs><linearGradient id="noGrad" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="100%" stop-color="#FFD700"/></linearGradient>'
-       +'<linearGradient id="noInner" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA00"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient>'+iconFilter+'</defs>'
+       +'<defs><linearGradient id="noGrad" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#FFB800"/></linearGradient>'
+       +'<linearGradient id="noInner" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FF8C00"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient>'+iconFilter+'</defs>'
        +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#noGrad)" filter="url(#iGl)"/>'
        +'<path d="M22 12C22 12 13 24 12 32C11 40 15 46 19 49C19 49 16 41 19 32C20 28 21 25 22 20C23 25 24 28 25 32C28 41 25 49 25 49C29 46 33 40 32 32C31 24 22 12 22 12Z" fill="url(#noInner)" opacity="0.6"/>'
-       +'<ellipse cx="22" cy="52" rx="9" ry="3" fill="#FF5E1A" opacity="0.25"/>'
+       +'<ellipse cx="22" cy="52" rx="9" ry="3" fill="#FF4511" opacity="0.25"/>'
        +'</svg>',
-     cornerPip:'<svg viewBox="0 0 5 6" width="6" height="7"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF5E1A"/></svg>'},
+     cornerPip:'<svg viewBox="0 0 5 6" width="6" height="7"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF4511"/></svg>'},
     {accent:'#00E5C0',bg:'#041518',label:'DEFENSE',pip:'#00E5C0',borderAngle:'90deg',
      art:'<svg viewBox="0 0 512 512" width="48" height="52">'
        +'<defs><linearGradient id="shieldGrad" x1="256" y1="512" x2="256" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#008B74"/><stop offset="100%" stop-color="#80FFF0"/></linearGradient>'+iconFilter+'</defs>'
@@ -152,7 +152,7 @@ export function buildHome(){
     card.appendChild(bevel);
     // Gradient border — direction varies per card type
     var borderWrap=document.createElement('div');
-    borderWrap.style.cssText='position:absolute;inset:-'+borderW+'px;border-radius:'+(8+borderW)+'px;background:linear-gradient('+d.borderAngle+','+d.accent+',#F5B800,'+d.accent+');z-index:-1;';
+    borderWrap.style.cssText='position:absolute;inset:-'+borderW+'px;border-radius:'+(8+borderW)+'px;background:linear-gradient('+d.borderAngle+','+d.accent+',#FFB800,'+d.accent+');z-index:-1;';
     card.appendChild(borderWrap);
     // Inner margin line — quieter (20% opacity)
     var margin=document.createElement('div');
@@ -201,7 +201,7 @@ export function buildHome(){
   // Create the football SVG element programmatically (avoids data URI encoding issues).
   // The span is sized to match a Teko O. The SVG inside uses overflow:visible + contain.
   var title=document.createElement('h1');
-  title.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:88px;line-height:0.85;color:#FFD54F;text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,204,0,0.35);transform:skewX(-8deg);margin-bottom:0;text-align:center;letter-spacing:7px;z-index:2;animation:homeRevealUp 0.5s ease-out 0.4s both,titleShimmer 4s ease-in-out 2s infinite;position:relative;";
+  title.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:88px;line-height:0.85;color:#FFB800;text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,184,0,0.35);transform:skewX(-8deg);margin-bottom:0;text-align:center;letter-spacing:7px;z-index:2;animation:homeRevealUp 0.5s ease-out 0.4s both,titleShimmer 4s ease-in-out 2s infinite;position:relative;";
   title.textContent='T';
   // Football O span
   var oSpan=document.createElement('span');
@@ -239,7 +239,7 @@ export function buildHome(){
   playWrap.style.cssText='width:100%;z-index:2;position:relative;display:flex;flex-direction:column;gap:20px;opacity:0;animation:homeRevealBtn 0.4s ease-out 1.0s both;';
   var playBtn=document.createElement('button');
   playBtn.className='btn-blitz';
-  playBtn.style.cssText='border-color:#FF8C00;color:#000;background:linear-gradient(180deg,#FFB800 0%,#FF5E1A 100%);font-size:24px;padding:20px 24px;animation:ctaGlow 3s ease-in-out 0.3s infinite;letter-spacing:5px;';
+  playBtn.style.cssText='border-color:#FF4511;color:#000;background:linear-gradient(180deg,#FFB800 0%,#FF4511 100%);font-size:24px;padding:20px 24px;animation:ctaGlow 3s ease-in-out 0.3s infinite;letter-spacing:5px;';
   playBtn.textContent='KICK OFF';
   playBtn.onclick=function(){
     SND.click();
