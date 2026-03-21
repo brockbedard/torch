@@ -83,10 +83,25 @@ body { color: white; font-family: 'Barlow Condensed', sans-serif; display: flex;
   50%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 40px rgba(255,184,0,0.5);}
   100%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,184,0,0.35);}
 }
-/* Home screen — card shimmer sweep (slowed to 6s for premium feel) */
+/* Home screen — card shimmer sweep */
 @keyframes cardShimmer{
   0%,100%{background-position:-100px 0;}
   50%{background-position:100px 0;}
+}
+/* Home screen — TORCH card breathing glow */
+@keyframes torchGlow{
+  0%,100%{opacity:0.15;transform:scale(1);}
+  50%{opacity:0.4;transform:scale(1.05);}
+}
+/* Home screen — TORCH card warm shimmer */
+@keyframes torchShimmer{
+  0%,100%{background-position:-120px 0;}
+  50%{background-position:120px 0;}
+}
+/* Home screen — TORCH card ember sparks */
+@keyframes torchSpark{
+  0%{opacity:0.8;transform:translateY(0) translateX(0) scale(1);}
+  100%{opacity:0;transform:translateY(-50px) translateX(var(--sx)) scale(0.2);}
 }
 /* Home screen — gentle fan float */
 @keyframes fanFloat{

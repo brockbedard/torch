@@ -133,56 +133,81 @@ export function buildHome(){
   for(var c=0;c<3;c++){
     var d=fanData[c];
     var isTorch=d.label==='TORCH';
+    var isOff=d.label==='OFFENSE';
+    var isDef=d.label==='DEFENSE';
     var borderW=isTorch?4:3;
     var card=document.createElement('div');
     card.style.cssText='position:absolute;width:100px;height:140px;border-radius:8px;'
-      // Vignette: radial gradient darkening at edges
       +'background:radial-gradient(ellipse at 50% 40%,'+d.bg+' 0%,#0A0804 100%);'
       +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
       +'transform:rotate('+fanAngles[c]+'deg) translateX('+fanX[c]+'px) translateY('+fanY[c]+'px) scale('+fanScale[c]+');'
       +'z-index:'+fanZ[c]+';'
-      // Dual shadow: contact + elevation + accent glow for TORCH
-      +'box-shadow:0 2px 4px rgba(0,0,0,0.4),0 8px 20px rgba(0,0,0,0.25)'+(isTorch?',0 0 16px rgba(255,94,26,0.2)':'')+';'
-      // Inset shadow for bevel/depth
+      // TORCH gets deeper shadow for "floating higher" effect
+      +'box-shadow:0 2px 4px rgba(0,0,0,0.4),'+(isTorch?'0 16px 40px rgba(0,0,0,0.4)':'0 8px 20px rgba(0,0,0,0.25)')+';'
       +'overflow:hidden;position:absolute;'
-      // Staggered deal entrance
       +'opacity:0;animation:cardDealIn 0.4s cubic-bezier(0.22,1.3,0.36,1) '+dealDelay[c]+'s both;';
-    // Inset bevel overlay (makes card feel 3D)
+
+    // === TORCH-ONLY: Breathing glow aura behind card (#2) ===
+    if(isTorch){
+      var glowAura=document.createElement('div');
+      glowAura.style.cssText='position:absolute;inset:-8px;border-radius:16px;background:#FF4511;filter:blur(12px);opacity:0.15;z-index:-2;pointer-events:none;animation:torchGlow 3s ease-in-out infinite;';
+      card.appendChild(glowAura);
+    }
+
+    // === TORCH-ONLY + ADJACENT: Light cast from torch onto neighbors (#3) ===
+    if(isOff){
+      // Warm light on offense card's right edge (nearest torch)
+      var warmCast=document.createElement('div');
+      warmCast.style.cssText='position:absolute;top:0;right:0;width:40%;height:100%;background:linear-gradient(to left,rgba(255,120,40,0.06),transparent);border-radius:0 8px 8px 0;z-index:1;pointer-events:none;';
+      card.appendChild(warmCast);
+    }
+    if(isDef){
+      // Warm light on defense card's left edge (nearest torch)
+      var warmCast2=document.createElement('div');
+      warmCast2.style.cssText='position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(to right,rgba(255,120,40,0.06),transparent);border-radius:8px 0 0 8px;z-index:1;pointer-events:none;';
+      card.appendChild(warmCast2);
+    }
+
+    // Inset bevel
     var bevel=document.createElement('div');
     bevel.style.cssText='position:absolute;inset:0;border-radius:8px;box-shadow:inset 1px 1px 3px rgba(255,255,255,0.06),inset -1px -1px 3px rgba(0,0,0,0.3);pointer-events:none;z-index:7;';
     card.appendChild(bevel);
-    // Gradient border — direction varies per card type
+    // Gradient border
     var borderWrap=document.createElement('div');
     borderWrap.style.cssText='position:absolute;inset:-'+borderW+'px;border-radius:'+(8+borderW)+'px;background:linear-gradient('+d.borderAngle+','+d.accent+',rgba(255,255,255,0.4),'+d.accent+');z-index:-1;';
     card.appendChild(borderWrap);
-    // Inner margin line — quieter (20% opacity)
+    // Inner margin
     var margin=document.createElement('div');
     margin.style.cssText='position:absolute;inset:5px;border-radius:5px;border:1.5px solid '+d.accent+'33;pointer-events:none;z-index:4;';
     card.appendChild(margin);
-    // Corner pip — top left
+    // Corner pips
     var pipTL=document.createElement('div');
     pipTL.style.cssText='position:absolute;top:8px;left:8px;z-index:5;';
     pipTL.innerHTML=d.cornerPip;
     card.appendChild(pipTL);
-    // Corner pip — bottom right (rotated 180)
     var pipBR=document.createElement('div');
     pipBR.style.cssText='position:absolute;bottom:24px;right:8px;z-index:5;transform:rotate(180deg);';
     pipBR.innerHTML=d.cornerPip;
     card.appendChild(pipBR);
-    // Decorative divider between art and nameplate
+    // Divider
     var divider=document.createElement('div');
     divider.style.cssText='position:absolute;bottom:'+(isTorch?'22':'20')+'px;left:15%;right:15%;height:1px;background:'+d.accent+'22;z-index:5;';
     card.appendChild(divider);
-    // Spotlight backing behind icon — radial gradient halo
+    // Spotlight backing
     var spotlight=document.createElement('div');
     spotlight.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:68px;height:68px;border-radius:50%;background:radial-gradient(circle,'+d.spotColor+' 0%,transparent 70%);z-index:2;pointer-events:none;';
     card.appendChild(spotlight);
-    // Center art area — normalized to 48x52 bounding box, crisp (no blur)
+    // Center art — TORCH gets animated flame (#1), others stay static
     var artArea=document.createElement('div');
     artArea.style.cssText='display:flex;align-items:center;justify-content:center;width:48px;height:52px;z-index:3;';
-    artArea.innerHTML=d.art;
+    if(isTorch){
+      // Re-enable flame animation only on torch card
+      artArea.innerHTML=d.art.replace('fill="url(#noGrad)" stroke="#FF4511" stroke-width="1.5"','fill="url(#noGrad)" stroke="#FF4511" stroke-width="1.5" style="animation:flameSway 2.5s ease-in-out infinite;transform-origin:50% 100%;"');
+    } else {
+      artArea.innerHTML=d.art;
+    }
     card.appendChild(artArea);
-    // Bottom nameplate
+    // Nameplate
     var nameplate=document.createElement('div');
     nameplate.style.cssText='position:absolute;bottom:0;left:0;right:0;height:'+(isTorch?'20':'18')+'px;background:'+d.accent+(isTorch?'ee':'dd')+';display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 6px 6px;';
     var npText=document.createElement('div');
@@ -194,10 +219,29 @@ export function buildHome(){
     npText.textContent=d.label;
     nameplate.appendChild(npText);
     card.appendChild(nameplate);
-    // Shimmer sweep — slowed to 6s
+    // Shimmer — TORCH gets warm golden sweep (#4), others get white
     var shimmer=document.createElement('div');
-    shimmer.style.cssText='position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);animation:cardShimmer 6s '+(c*0.8)+'s ease-in-out infinite;pointer-events:none;z-index:8;';
+    if(isTorch){
+      shimmer.style.cssText='position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 35%,rgba(255,180,80,0.12) 48%,rgba(255,255,255,0.08) 52%,transparent 65%);animation:torchShimmer 4.5s ease-in-out infinite;pointer-events:none;z-index:8;';
+    } else {
+      shimmer.style.cssText='position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);animation:cardShimmer 6s '+(c*0.8)+'s ease-in-out infinite;pointer-events:none;z-index:8;';
+    }
     card.appendChild(shimmer);
+
+    // === TORCH-ONLY: Card-specific ember sparks (#6) ===
+    if(isTorch){
+      var sparkDrifts=[-12,8,-6,14,-10,6];
+      for(var s=0;s<5;s++){
+        var spark=document.createElement('div');
+        var ssz=1.5+Math.random()*1.5;
+        var sdur=1.2+Math.random()*1.5;
+        var sdelay=Math.random()*3;
+        var sleft=25+Math.random()*50;
+        spark.style.cssText='position:absolute;top:10px;left:'+sleft+'%;width:'+ssz+'px;height:'+ssz+'px;border-radius:50%;background:#FF8C00;z-index:9;pointer-events:none;opacity:0;animation:torchSpark '+sdur+'s '+sdelay+'s ease-out infinite;--sx:'+sparkDrifts[s%sparkDrifts.length]+'px;';
+        card.appendChild(spark);
+      }
+    }
+
     cardFan.appendChild(card);
   }
   el.append(cardFan);
