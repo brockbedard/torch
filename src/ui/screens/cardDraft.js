@@ -328,18 +328,17 @@ export function buildCardDraft() {
 
   var teamBrand = document.createElement('div');
   teamBrand.style.cssText =
-    'display:flex;align-items:baseline;gap:0;' +
-    'font-style:italic;transform:skewX(-10deg);';
+    'display:flex;align-items:baseline;gap:0;font-style:italic;transform:skewX(-10deg);';
   var brandName = document.createElement('span');
   brandName.style.cssText =
-    'font-family:"Bebas Neue",sans-serif;font-size:32px;color:' + team.accent + ';' +
-    'letter-spacing:2px;text-shadow:2px 2px 0 #000, 0 0 10px ' + team.accent + ';';
+    "font-family:'Teko',sans-serif;font-weight:700;font-size:32px;color:var(--a-gold);" +
+    "letter-spacing:3px;text-shadow:2px 2px 0 rgba(0,0,0,0.9),0 0 12px rgba(255,204,0,0.3);";
   brandName.textContent = 'TORCH';
   var brandScheme = document.createElement('span');
   brandScheme.style.cssText =
-    'font-family:"Bebas Neue",sans-serif;font-size:22px;color:var(--white);' +
-    'letter-spacing:1px;margin-left:6px;';
-  brandScheme.textContent = '- PLAY NOW';
+    "font-family:'Teko',sans-serif;font-weight:500;font-size:22px;color:var(--white);" +
+    "letter-spacing:1px;margin-left:6px;";
+  brandScheme.textContent = '\u00b7 PLAY NOW';
   teamBrand.append(brandName, brandScheme);
   hdr.appendChild(teamBrand);
 

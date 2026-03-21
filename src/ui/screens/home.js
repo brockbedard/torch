@@ -93,36 +93,45 @@ export function buildHome(){
     el.appendChild(banner);
   }
 
-  // === HERO: Single flame with football inside ===
+  // === HERO: "The Torch Pass" — football fused with flame ===
   var logoWrap=document.createElement('div');
-  logoWrap.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:160px;height:200px;margin-bottom:8px;z-index:2;animation:homeRevealScale 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;';
+  logoWrap.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:160px;height:220px;margin-bottom:4px;z-index:2;animation:homeRevealScale 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;';
 
-  // Main flame SVG — sole hero element
   var fireEl=document.createElement('div');
-  fireEl.style.cssText='width:160px;height:200px;animation:flameSway 2.5s ease-in-out infinite;z-index:1;';
-  fireEl.innerHTML='<svg viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">'
+  fireEl.style.cssText='width:160px;height:220px;animation:flameSway 2.5s ease-in-out infinite;z-index:1;';
+  fireEl.innerHTML='<svg viewBox="0 0 120 180" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">'
     +'<defs>'
-    +'<linearGradient id="flameOuter" x1="50" y1="140" x2="50" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="50%" stop-color="#FF8C00"/><stop offset="100%" stop-color="#FFD700"/></linearGradient>'
-    +'<linearGradient id="flameInner" x1="50" y1="120" x2="50" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="40%" stop-color="#FFAA00"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient>'
+    +'<linearGradient id="flameOuter" x1="60" y1="180" x2="60" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="50%" stop-color="#FF8C00"/><stop offset="100%" stop-color="#FFD700"/></linearGradient>'
+    +'<linearGradient id="flameInner" x1="60" y1="150" x2="60" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="40%" stop-color="#FFAA00"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient>'
+    +'<linearGradient id="ballGrad" x1="40" y1="130" x2="80" y2="160" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#8B4513"/><stop offset="40%" stop-color="#5C2D0E"/><stop offset="100%" stop-color="#3A1A00"/></linearGradient>'
+    +'<linearGradient id="laceGlow" x1="55" y1="140" x2="65" y2="155" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFFBE6"/><stop offset="100%" stop-color="#FF8C00"/></linearGradient>'
     +'<filter id="flameGlow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
+    +'<filter id="hotGlow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
     +'</defs>'
-    +'<path d="M50 2C50 2 20 35 15 65C10 95 25 120 35 128C35 128 30 105 38 85C42 75 48 68 50 55C52 68 58 75 62 85C70 105 65 128 65 128C75 120 90 95 85 65C80 35 50 2 50 2Z" fill="url(#flameOuter)" filter="url(#flameGlow)"/>'
-    +'<path d="M50 25C50 25 35 50 32 72C29 94 38 112 45 118C45 118 40 100 45 85C48 76 50 70 50 60C50 70 52 76 55 85C60 100 55 118 55 118C62 112 71 94 68 72C65 50 50 25 50 25Z" fill="url(#flameInner)" opacity="0.9" style="animation:flameInnerSway 1.8s ease-in-out infinite;transform-origin:50% 100%;"/>'
-    +'<ellipse cx="50" cy="125" rx="18" ry="8" fill="#FF5E1A" opacity="0.3"/>'
+    // Flame erupts from the football
+    +'<path d="M60 2C60 2 28 40 22 75C16 110 32 138 42 148C42 148 36 122 45 100C50 88 56 78 60 65C64 78 70 88 75 100C84 122 78 148 78 148C88 138 104 110 98 75C92 40 60 2 60 2Z" fill="url(#flameOuter)" filter="url(#flameGlow)"/>'
+    +'<path d="M60 28C60 28 42 58 38 82C34 106 44 128 52 136C52 136 46 115 52 98C56 88 58 80 60 70C62 80 64 88 68 98C74 115 68 136 68 136C76 128 86 106 82 82C78 58 60 28 60 28Z" fill="url(#flameInner)" opacity="0.9" style="animation:flameInnerSway 1.8s ease-in-out infinite;transform-origin:50% 100%;"/>'
+    // Football at the base — tilted 30deg, flame erupts from laces end
+    +'<g transform="translate(60,152) rotate(-30)">'
+    +'<ellipse cx="0" cy="0" rx="24" ry="13" fill="url(#ballGrad)" stroke="#2A1000" stroke-width="1"/>'
+    // Leather texture lines
+    +'<path d="M-18 -2C-10 -8 10 -8 18 -2" stroke="#4A2800" stroke-width="0.6" fill="none" opacity="0.4"/>'
+    +'<path d="M-18 2C-10 8 10 8 18 2" stroke="#4A2800" stroke-width="0.6" fill="none" opacity="0.4"/>'
+    // Laces — glowing white-hot
+    +'<line x1="-6" y1="-1" x2="6" y2="-1" stroke="url(#laceGlow)" stroke-width="1.5" stroke-linecap="round" filter="url(#hotGlow)"/>'
+    +'<line x1="-4" y1="-4" x2="-4" y2="2" stroke="url(#laceGlow)" stroke-width="1" stroke-linecap="round" filter="url(#hotGlow)"/>'
+    +'<line x1="0" y1="-4.5" x2="0" y2="2.5" stroke="url(#laceGlow)" stroke-width="1" stroke-linecap="round" filter="url(#hotGlow)"/>'
+    +'<line x1="4" y1="-4" x2="4" y2="2" stroke="url(#laceGlow)" stroke-width="1" stroke-linecap="round" filter="url(#hotGlow)"/>'
+    +'</g>'
+    // Speed lines trailing behind the nose
+    +'<path d="M38 160Q32 164 26 162" stroke="#FF8C00" stroke-width="1" fill="none" opacity="0.4"/>'
+    +'<path d="M36 164Q28 168 22 166" stroke="#FF5E1A" stroke-width="0.8" fill="none" opacity="0.3"/>'
+    +'<path d="M40 156Q34 158 30 156" stroke="#FFD700" stroke-width="0.6" fill="none" opacity="0.25"/>'
+    // Base glow
+    +'<ellipse cx="60" cy="165" rx="20" ry="6" fill="#FF5E1A" opacity="0.2"/>'
     +'</svg>';
 
-  // Football nestled inside the flame
-  var ballCont=document.createElement('div');
-  ballCont.style.cssText='position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);z-index:10;pointer-events:none;animation:ballHover 3s ease-in-out infinite;';
-  var ballIcon=document.createElement('div');
-  ballIcon.style.cssText='font-size:50px;filter:drop-shadow(0 0 12px rgba(0,0,0,0.8)) drop-shadow(0 0 20px rgba(255,140,0,0.4));';
-  ballIcon.textContent='\uD83C\uDFC8';
-  var ballFire=document.createElement('div');
-  ballFire.style.cssText='position:absolute;inset:-10px;width:80px;height:80px;animation:ballIgnite 2s ease-in-out infinite;pointer-events:none;mix-blend-mode:screen;';
-  ballFire.innerHTML='<svg viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><defs><linearGradient id="bfOuter" x1="50" y1="140" x2="50" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="50%" stop-color="#FF8C00"/><stop offset="100%" stop-color="#FFD700"/></linearGradient></defs><path d="M50 2C50 2 20 35 15 65C10 95 25 120 35 128C35 128 30 105 38 85C42 75 48 68 50 55C52 68 58 75 62 85C70 105 65 128 65 128C75 120 90 95 85 65C80 35 50 2 50 2Z" fill="url(#bfOuter)" opacity="0.6"/></svg>';
-  ballCont.append(ballIcon,ballFire);
-
-  logoWrap.append(fireEl,ballCont);
+  logoWrap.append(fireEl);
   el.appendChild(logoWrap);
 
   // === TITLE LOCKUP: TORCH + FOOTBALL as one composed unit ===
@@ -137,41 +146,60 @@ export function buildHome(){
   tagline.textContent='DRAFT. SNAP. SCORE.';
   el.append(tagline);
 
-  // === TEAM VS TEASER ===
-  var vsWrap=document.createElement('div');
-  vsWrap.style.cssText='display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px;margin-bottom:16px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.9s both;';
-  // CT icon
-  var ctIcon=document.createElement('div');
-  ctIcon.style.cssText='width:36px;height:36px;border-radius:50%;background:#1a0800;border:2px solid #FF5E1A;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 12px rgba(255,94,26,0.3);';
-  ctIcon.textContent='\uD83C\uDF35';
-  // VS
-  var vsLabel=document.createElement('div');
-  vsLabel.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:20px;color:var(--muted);letter-spacing:2px;";
-  vsLabel.textContent='VS';
-  // IR icon
-  var irIcon=document.createElement('div');
-  irIcon.style.cssText='width:36px;height:36px;border-radius:50%;background:#1a0000;border:2px solid #CC1A1A;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 12px rgba(204,26,26,0.3);';
-  irIcon.textContent='\uD83D\uDD31';
-  vsWrap.append(ctIcon,vsLabel,irIcon);
-  el.append(vsWrap);
-
-  // === CARD FAN PREVIEW ===
+  // === CARD FAN PREVIEW — premium style ===
   var cardFan=document.createElement('div');
-  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:200px;height:60px;margin-bottom:20px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 1.0s both;';
-  var fanCards=['HAIL MARY','COVER 0','BLITZ'];
-  var fanAngles=[-12,0,12];
-  var fanX=[-28,0,28];
+  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:200px;height:90px;margin-top:12px;margin-bottom:20px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.9s both;overflow:visible;';
+  // Card data: glyph, tint, pip color (cyan=offense, purple=defense)
+  var fanData=[
+    {glyph:'\u2316',tint:'#0D0820',pip:'#8B5CF6'},  // crosshair — defense
+    {glyph:'\u26A1',tint:'#1A0E05',pip:'#00E5C0'},   // lightning — offense (center hero)
+    {glyph:'\u2694',tint:'#051A18',pip:'#00E5C0'},    // swords — offense
+  ];
+  var fanAngles=[-15,0,15];
+  var fanX=[-30,0,30];
+  var fanY=[3,0,3];
+  var fanZ=[1,3,1];
+  var fanScale=[1,1.06,1];
   for(var c=0;c<3;c++){
     var card=document.createElement('div');
-    card.style.cssText='position:absolute;width:52px;height:72px;border-radius:6px;border:2px solid rgba(255,255,255,0.2);background:linear-gradient(145deg,#1a1030 0%,#0f0d1a 100%);display:flex;align-items:center;justify-content:center;text-align:center;transform:rotate('+fanAngles[c]+'deg) translateX('+fanX[c]+'px);box-shadow:0 4px 12px rgba(0,0,0,0.4);';
-    card.innerHTML='<span style="font-family:\'Press Start 2P\',monospace;font-size:5px;color:rgba(255,255,255,0.5);line-height:1.4;padding:4px;">'+fanCards[c]+'</span>';
+    var isCenter=c===1;
+    card.style.cssText='position:absolute;width:56px;height:78px;border-radius:5px;'
+      +'background:radial-gradient(ellipse at 50% 30%,'+fanData[c].tint+' 0%,#09081A 100%);'
+      +'display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;'
+      +'transform:rotate('+fanAngles[c]+'deg) translateX('+fanX[c]+'px) translateY('+fanY[c]+'px) scale('+fanScale[c]+');'
+      +'z-index:'+fanZ[c]+';'
+      +'box-shadow:0 4px 16px rgba(0,0,0,0.5)'+(isCenter?',0 0 12px rgba(245,184,0,0.15)':'')+';'
+      +'border:2px solid transparent;'
+      +'background-clip:padding-box;'
+      +'overflow:hidden;';
+    // Gradient border via pseudo-technique (outer wrapper)
+    var borderWrap=document.createElement('div');
+    borderWrap.style.cssText='position:absolute;inset:-2px;border-radius:7px;background:linear-gradient(135deg,#FF5E1A,#F5B800,#FF5E1A);z-index:-1;';
+    card.appendChild(borderWrap);
+    // Inner edge catch
+    var innerEdge=document.createElement('div');
+    innerEdge.style.cssText='position:absolute;inset:0;border-radius:5px;border:1px solid rgba(255,255,255,0.08);pointer-events:none;z-index:2;';
+    card.appendChild(innerEdge);
+    // Center glyph
+    var glyph=document.createElement('div');
+    glyph.style.cssText='font-size:22px;color:#F5B800;text-shadow:0 0 8px rgba(245,184,0,0.4);line-height:1;margin-top:2px;';
+    glyph.textContent=fanData[c].glyph;
+    card.appendChild(glyph);
+    // Bottom pip (rarity gem)
+    var pip=document.createElement('div');
+    pip.style.cssText='position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:'+fanData[c].pip+';box-shadow:0 0 4px '+fanData[c].pip+';';
+    card.appendChild(pip);
+    // Shimmer sweep
+    var shimmer=document.createElement('div');
+    shimmer.style.cssText='position:absolute;inset:0;border-radius:5px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);animation:cardShimmer 4s '+(c*0.5)+'s ease-in-out infinite;pointer-events:none;z-index:3;';
+    card.appendChild(shimmer);
     cardFan.appendChild(card);
   }
   el.append(cardFan);
 
   // === CTA BUTTON ===
   var playWrap=document.createElement('div');
-  playWrap.style.cssText='width:100%;z-index:2;position:relative;display:flex;flex-direction:column;gap:20px;opacity:0;animation:homeRevealBtn 0.4s ease-out 1.1s both;';
+  playWrap.style.cssText='width:100%;z-index:2;position:relative;display:flex;flex-direction:column;gap:20px;opacity:0;animation:homeRevealBtn 0.4s ease-out 1.0s both;';
   var playBtn=document.createElement('button');
   playBtn.className='btn-blitz';
   playBtn.style.cssText='border-color:var(--cyan);color:#000;background:linear-gradient(180deg,#00ffcc 0%,#00c8aa 100%);font-size:20px;padding:24px 20px;animation:ctaGlow 3s ease-in-out 2s infinite;';

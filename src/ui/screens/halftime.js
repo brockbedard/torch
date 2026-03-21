@@ -25,7 +25,7 @@ export function buildHalftime() {
   var hdr = document.createElement('div');
   hdr.style.cssText = 'background:rgba(0,0,0,0.7);padding:12px 14px;text-align:center;flex-shrink:0;border-bottom:2px solid var(--a-gold);';
   var hdrTitle = document.createElement('div');
-  hdrTitle.style.cssText = "font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--a-gold);letter-spacing:3px;font-style:italic;transform:skewX(-10deg);text-shadow:2px 2px 0 #000, 0 0 10px var(--a-gold);";
+  hdrTitle.style.cssText = "font-family:'Teko',sans-serif;font-weight:700;font-size:32px;color:var(--a-gold);letter-spacing:3px;font-style:italic;transform:skewX(-8deg);text-shadow:2px 2px 0 rgba(0,0,0,0.9),0 0 12px rgba(255,204,0,0.3);";
   hdrTitle.textContent = 'HALFTIME REPORT';
   hdr.appendChild(hdrTitle);
   el.appendChild(hdr);

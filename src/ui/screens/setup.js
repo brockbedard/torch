@@ -4,90 +4,26 @@ import { TEAMS } from '../../data/teams.js';
 import { buildDraftProgress } from '../components/draftProgress.js';
 
 /* ═══════════════════════════════════════════
-   SVG ASSETS (coaches + stadiums)
-   ═══════════════════════════════════════════ */
-
-const SVG_CT_COACH = `<svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-  <ellipse cx="50" cy="108" rx="35" ry="12" fill="#1a0800" opacity=".3"/>
-  <path d="M35,65 L30,110 L70,110 L65,65 Z" fill="#e05a10"/>
-  <path d="M42,65 L45,75 L55,75 L58,65" fill="#cc4a00"/>
-  <path d="M30,80 L15,95 L20,100 L35,88" fill="#e05a10"/>
-  <path d="M70,75 L90,65 L92,70 L73,82" fill="#e05a10"/>
-  <circle cx="50" cy="45" r="22" fill="#d4a574"/>
-  <ellipse cx="50" cy="40" rx="24" ry="10" fill="#3a2010"/>
-  <rect x="36" y="38" width="12" height="5" rx="2" fill="#111" opacity=".8"/>
-  <rect x="52" y="38" width="12" height="5" rx="2" fill="#111" opacity=".8"/>
-  <line x1="36" y1="40" x2="32" y2="38" stroke="#111" stroke-width="1.5"/>
-  <line x1="64" y1="40" x2="68" y2="38" stroke="#111" stroke-width="1.5"/>
-  <path d="M44,55 Q50,62 56,55" stroke="#8a4020" stroke-width="2" fill="#6a2010"/>
-  <path d="M47,73 L47,65 L53,65 L53,73" fill="#d4a574"/>
-</svg>`;
-
-const SVG_IR_COACH = `<svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-  <ellipse cx="50" cy="108" rx="38" ry="12" fill="#000a1a" opacity=".3"/>
-  <path d="M28,68 L22,112 L78,112 L72,68 Z" fill="#1a2a4a"/>
-  <path d="M40,68 L42,78 L58,78 L60,68" fill="#0a1a3a"/>
-  <path d="M30,78 Q38,95 45,88 L42,78 L30,78 Z" fill="#1a2a4a"/>
-  <path d="M70,78 Q62,95 55,88 L58,78 L70,78 Z" fill="#1a2a4a"/>
-  <line x1="35" y1="82" x2="65" y2="82" stroke="#0a1a3a" stroke-width="1"/>
-  <circle cx="50" cy="45" r="22" fill="#c49a70"/>
-  <rect x="34" y="26" width="32" height="10" rx="1" fill="#2a1a0a"/>
-  <rect x="36" y="24" width="28" height="4" fill="#2a1a0a"/>
-  <circle cx="42" cy="42" r="2.5" fill="#1a1a1a"/>
-  <circle cx="58" cy="42" r="2.5" fill="#1a1a1a"/>
-  <line x1="36" y1="39" x2="46" y2="40" stroke="#2a1a0a" stroke-width="2.5"/>
-  <line x1="54" y1="40" x2="64" y2="39" stroke="#2a1a0a" stroke-width="2.5"/>
-  <line x1="44" y1="55" x2="56" y2="55" stroke="#7a5a3a" stroke-width="2"/>
-  <path d="M47,70 L47,65 L53,65 L53,70" fill="#c49a70"/>
-</svg>`;
-
-const SVG_CT_STADIUM = `<svg viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/svg">
-  <rect width="200" height="90" fill="#1a0800"/>
-  <path d="M0,20 Q50,0 100,5 Q150,0 200,20 L200,50 L0,50 Z" fill="#cc4a00" opacity=".25"/>
-  <path d="M0,30 Q50,12 100,16 Q150,12 200,30 L200,50 L0,50 Z" fill="#e05a10" opacity=".2"/>
-  <rect x="10" y="50" width="180" height="35" rx="2" fill="#1a5a1a"/>
-  <line x1="50" y1="50" x2="50" y2="85" stroke="#2a7a2a" stroke-width=".5" opacity=".5"/>
-  <line x1="100" y1="50" x2="100" y2="85" stroke="#2a7a2a" stroke-width=".5" opacity=".5"/>
-  <line x1="150" y1="50" x2="150" y2="85" stroke="#2a7a2a" stroke-width=".5" opacity=".5"/>
-  <path d="M5,85 L5,78 L8,75 L5,78" stroke="#3a6a2a" stroke-width="1.5" fill="none"/>
-  <path d="M195,85 L195,78 L192,75 L195,78" stroke="#3a6a2a" stroke-width="1.5" fill="none"/>
-  <rect x="0" y="85" width="200" height="5" fill="#0a0400"/>
-</svg>`;
-
-const SVG_IR_STADIUM = `<svg viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/svg">
-  <rect width="200" height="90" fill="#060a14"/>
-  <path d="M0,18 Q50,2 100,6 Q150,2 200,18 L200,50 L0,50 Z" fill="#1a2a4a" opacity=".3"/>
-  <path d="M0,28 Q50,14 100,18 Q150,14 200,28 L200,50 L0,50 Z" fill="#0a1a3a" opacity=".25"/>
-  <rect x="10" y="50" width="180" height="35" rx="2" fill="#0a2a0a"/>
-  <line x1="50" y1="50" x2="50" y2="85" stroke="#1a3a1a" stroke-width=".5" opacity=".4"/>
-  <line x1="100" y1="50" x2="100" y2="85" stroke="#1a3a1a" stroke-width=".5" opacity=".4"/>
-  <line x1="150" y1="50" x2="150" y2="85" stroke="#1a3a1a" stroke-width=".5" opacity=".4"/>
-  <rect x="15" y="10" width="4" height="40" fill="#2a3a5a" opacity=".3"/>
-  <rect x="55" y="5" width="4" height="45" fill="#2a3a5a" opacity=".3"/>
-  <rect x="141" y="5" width="4" height="45" fill="#2a3a5a" opacity=".3"/>
-  <rect x="181" y="10" width="4" height="40" fill="#2a3a5a" opacity=".3"/>
-  <rect x="0" y="85" width="200" height="5" fill="#020610"/>
-</svg>`;
-
-/* ═══════════════════════════════════════════
    EXTENDED TEAM DATA
    ═══════════════════════════════════════════ */
 const XDATA = {
   canyon_tech: {
-    coach: 'COACH RICKY VANCE', quote: '"If we\'re not scoring, we\'re not trying."',
+    coach: 'COACH RICKY VANCE', quote: "If we're not scoring, we're not trying.",
     motto: 'BURN THE COVERAGE', est: 'Est. 1974 \u2014 3x Conf. Champs',
-    sigPlay: 'FOUR VERTS', starPlayers: 'Avery 78 QB \u00b7 Vasquez 82 SLOT',
+    sigPlay: 'FOUR VERTS', starPlayers: 'Rio Vasquez WIDE RECEIVER',
     stadium: 'THE FURNACE',
     ratings: { OFF:4, DEF:3, SPD:5, TGH:2, OVR:4 },
-    coachSvg: SVG_CT_COACH, stadiumSvg: SVG_CT_STADIUM,
+    coachImg: '/img/teams/coach-ir.jpg', stadiumImg: '/img/teams/stadium-ir.jpg',
+    playstyle: 'AIR RAID', playstyleIcon: '\u26A1',
   },
   iron_ridge: {
-    coach: 'COACH DALE BURRIS', quote: '"You don\'t need to throw. You need to want it more."',
+    coach: 'COACH DALE BURRIS', quote: "You don't need to throw. You need to want it more.",
     motto: 'CONTROL THE LINE', est: 'Est. 1961 \u2014 5x Conf. Champs',
-    sigPlay: 'TRIPLE OPTION', starPlayers: 'Kendrick 80 QB \u00b7 Torres 82 FB',
+    sigPlay: 'TRIPLE OPTION', starPlayers: 'Mack Torres FULLBACK',
     stadium: 'THE FORGE',
     ratings: { OFF:3, DEF:4, SPD:2, TGH:5, OVR:4 },
-    coachSvg: SVG_IR_COACH, stadiumSvg: SVG_IR_STADIUM,
+    coachImg: '/img/teams/coach-ct.jpg', stadiumImg: '/img/teams/stadium-ct.jpg',
+    playstyle: 'GROUND & POUND', playstyleIcon: '\u2692',
   },
 };
 
@@ -97,17 +33,30 @@ function starStr(n) { var s=''; for(var i=0;i<5;i++) s += i<n?'\u2605':'\u2606';
    BUILD
    ═══════════════════════════════════════════ */
 export function buildSetup() {
-  var selTeam = GS.team;
-  var selDiff = GS.difficulty || null;
+  var selTeam = GS ? GS.team : null;
+  var selDiff = GS ? GS.difficulty : null;
 
   var el = document.createElement('div');
   el.className = 'sup';
   el.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;background:var(--bg);';
 
+  // Inject animations
+  if (!document.getElementById('setup-hero-style')) {
+    var styleEl = document.createElement('style');
+    styleEl.id = 'setup-hero-style';
+    styleEl.textContent = `
+      @keyframes hero-glow {
+        0%, 100% { box-shadow: 0 0 20px var(--glow-color), inset 0 0 10px rgba(255,255,255,0.2); }
+        50% { box-shadow: 0 0 40px var(--glow-color), inset 0 0 20px rgba(255,255,255,0.4); }
+      }
+    `;
+    document.head.appendChild(styleEl);
+  }
+
   // ── Progress bar (step 1) ──
   el.appendChild(buildDraftProgress(1));
 
-  // ── Header bar (matches draft/cardDraft pattern) ──
+  // ── Header bar ──
   var hdr = document.createElement('div');
   hdr.style.cssText =
     'background:rgba(0,0,0,0.5);padding:10px 14px;display:flex;justify-content:space-between;' +
@@ -118,12 +67,12 @@ export function buildSetup() {
     'display:flex;align-items:baseline;gap:0;font-style:italic;transform:skewX(-10deg);';
   var hdrName = document.createElement('span');
   hdrName.style.cssText =
-    "font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--a-gold);" +
-    "letter-spacing:2px;text-shadow:2px 2px 0 #000, 0 0 10px var(--a-gold);";
+    "font-family:'Teko',sans-serif;font-weight:700;font-size:32px;color:var(--a-gold);" +
+    "letter-spacing:3px;text-shadow:2px 2px 0 rgba(0,0,0,0.9),0 0 12px rgba(255,204,0,0.3);";
   hdrName.textContent = 'TORCH';
   var hdrSub = document.createElement('span');
   hdrSub.style.cssText =
-    "font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);" +
+    "font-family:'Teko',sans-serif;font-weight:500;font-size:22px;color:var(--white);" +
     "letter-spacing:1px;margin-left:6px;";
   hdrSub.textContent = '\u00b7 PLAY NOW';
   hdrTitle.append(hdrName, hdrSub);
@@ -138,35 +87,59 @@ export function buildSetup() {
   hdr.appendChild(backBtn);
   el.appendChild(hdr);
 
-  // ── Content (fills remaining space) ──
+  // ── Content ──
   var content = document.createElement('div');
   content.style.cssText =
-    'flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px;';
+    'flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:20px;';
+
+  // Inject thematic animations
+  if (!document.getElementById('setup-theme-styles')) {
+    const style = document.createElement('style');
+    style.id = 'setup-theme-styles';
+    style.textContent = `
+      @keyframes heat-haze {
+        0% { transform: translateY(0) scaleX(1) skewX(0deg); opacity: 0.4; }
+        25% { transform: translateY(-4px) scaleX(1.05) skewX(2deg); opacity: 0.6; }
+        50% { transform: translateY(-8px) scaleX(1.1) skewX(-2deg); opacity: 0.8; }
+        75% { transform: translateY(-4px) scaleX(1.05) skewX(2deg); opacity: 0.6; }
+        100% { transform: translateY(0) scaleX(1) skewX(0deg); opacity: 0.4; }
+      }
+      @keyframes spark-float {
+        0% { transform: translate(0,0) scale(1); opacity: 1; }
+        100% { transform: translate(30px, -60px) scale(0); opacity: 0; }
+      }
+      .theme-haze { position:absolute; inset:0; background:linear-gradient(0deg, rgba(255,100,0,0.3), transparent); pointer-events:none; animation: heat-haze 2s ease-in-out infinite; mix-blend-mode: color-dodge; z-index:2; }
+      .theme-spark { position:absolute; width:6px; height:6px; background:#fff; border-radius:50%; pointer-events:none; box-shadow:0 0 10px #ffcc00, 0 0 20px #ff6600; }
+    `;
+    document.head.appendChild(style);
+  }
 
   // Difficulty Row
   var diffLabel = document.createElement('div');
   diffLabel.className = 'chrome-header';
-  diffLabel.style.cssText = 'font-size:22px;margin-bottom:4px;';
+  diffLabel.style.cssText = 'font-size:22px;margin-bottom:8px;';
   diffLabel.textContent = 'CHOOSE YOUR DIFFICULTY';
   content.appendChild(diffLabel);
 
   var diffRow = document.createElement('div');
-  diffRow.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;flex-shrink:0;';
+  diffRow.style.cssText = 'display:flex;gap:10px;margin-bottom:8px;flex-shrink:0;padding-right:6px;';
   function refreshDiffs() {
     diffRow.innerHTML = '';
     var diffs = [
-      { id: 'EASY', color: '#00ff88', glow: 'rgba(0,255,136,0.4)' },
-      { id: 'MEDIUM', color: '#ffcc00', glow: 'rgba(255,204,0,0.4)' },
-      { id: 'HARD', color: '#ff0040', glow: 'rgba(255,0,64,0.4)' }
+      { id: 'EASY', color: '#00ff88' },
+      { id: 'MEDIUM', color: '#ffcc00' },
+      { id: 'HARD', color: '#ff0040' }
     ];
     diffs.forEach(function(d) {
       var isSel = selDiff === d.id;
       var opt = document.createElement('button');
       opt.className = 'btn-blitz';
-      opt.style.cssText = 'flex:1;font-size:10px;text-align:center;padding:10px 2px;' +
-        (isSel
-          ? 'background:'+d.color+';color:#000;border-color:var(--f-purple);box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;'
-          : 'background:#555;border-color:var(--f-purple);color:var(--f-purple);box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;opacity:0.8;');
+      opt.style.cssText = 'flex:1;font-size:10px;text-align:center;padding:10px 0;' +
+        'color:#fff;text-shadow:1px 1px 0 #000;border-color:var(--f-purple);' +
+        'background:' + d.color + ';' +
+        (isSel 
+          ? 'box-shadow:4px 4px 0 var(--f-purple), 6px 6px 0 #000;transform:scale(1.02);z-index:5;outline:2px solid #fff;' 
+          : 'box-shadow:3px 3px 0 var(--f-purple), 4px 4px 0 #000;opacity:0.6;');
       opt.textContent = d.id;
       opt.onclick = function() { SND.select(); selDiff=d.id; GS.difficulty=d.id; refreshDiffs(); refreshGo(); };
       diffRow.appendChild(opt);
@@ -178,18 +151,24 @@ export function buildSetup() {
   // Section header
   var teamTitle = document.createElement('div');
   teamTitle.className = 'chrome-header';
-  teamTitle.style.cssText = 'font-size:22px;margin-bottom:4px;';
+  teamTitle.style.cssText = 'font-size:22px;margin-bottom:8px;';
   teamTitle.textContent = 'SELECT YOUR TEAM';
   content.appendChild(teamTitle);
 
-  // Team cards (stacked, each fills ~half remaining space)
+  // Team cards
   var teamGrid = document.createElement('div');
-  teamGrid.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:8px;';
+  teamGrid.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
 
   function ratingRow(label, val, color) {
-    return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">' +
-      "<span style=\"font-family:'Courier New';font-size:9px;font-weight:bold;color:#8a86b0\">" + label + "</span>" +
-      "<span style=\"font-family:'Courier New';font-size:11px;color:"+color+";letter-spacing:-1px\">" + starStr(val) + "</span>" +
+    var stars = '';
+    for(var i=0; i<5; i++) {
+      var char = (i < val ? '\u2605' : '\u2606');
+      var starCol = (i < val ? color : 'rgba(255,255,255,0.3)');
+      stars += '<span style="color:' + starCol + '">' + char + '</span>';
+    }
+    return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0px">' +
+      "<span style=\"font-family:'Press Start 2P';font-size:9px;color:#fff;letter-spacing:0.5px;text-shadow:1px 1px 2px #000\">" + label + "</span>" +
+      "<span style=\"font-family:'Courier New';font-size:14px;font-weight:bold;letter-spacing:-1px\">" + stars + "</span>" +
     '</div>';
   }
 
@@ -198,72 +177,91 @@ export function buildSetup() {
     TEAMS.forEach(function(team) {
       var isSel = selTeam === team.id;
       var x = XDATA[team.id];
+      var tColor = team.accent;
 
       var card = document.createElement('div');
       card.style.cssText =
-        'flex:1;background:var(--bg-surface);position:relative;' +
-        'border:2px solid ' + (isSel ? '#00ff88' : team.accent+'44') + ';' +
-        'border-radius:8px;cursor:pointer;overflow:hidden;' +
+        'background:var(--bg-surface);position:relative;border-radius:6px;cursor:pointer;overflow:hidden;' +
         'transition:all 0.15s ease;display:flex;flex-direction:column;' +
+        'border:2px solid ' + (isSel ? '#00ff88' : '#00ff8833') + ';' +
         'opacity:' + (isSel ? '1' : '0.8') + ';' +
-        (isSel
-          ? 'box-shadow:0 0 20px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08);'
-          : 'box-shadow:0 4px 20px rgba(0,0,0,0.5);');
+        (isSel ? 'box-shadow:0 0 18px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.08);' : '');
 
+      // Selected bar (Matches play/roster cards)
       if (isSel) {
         var bar = document.createElement('div');
-        bar.style.cssText = 'position:absolute;top:0;left:50%;transform:translateX(-50%);width:36px;height:3px;background:#00ff88;border-radius:0 0 3px 3px;z-index:3;';
+        bar.style.cssText = 'position:absolute;top:0;left:50%;transform:translateX(-50%);width:36px;height:3px;background:#00ff88;border-radius:0 0 3px 3px;z-index:10;';
         card.appendChild(bar);
       }
 
-      // ── TOP HALF: Team identity ──
-      var top = document.createElement('div');
-      top.style.cssText =
-        'display:flex;gap:10px;padding:10px 12px 8px;' +
-        (isSel ? 'background:linear-gradient(180deg, rgba(0,255,136,0.08) 0%, transparent 100%);' : '');
+      // ── STADIUM BACKGROUND ──
+      var stadiumBg = document.createElement('div');
+      stadiumBg.style.cssText = 'position:absolute;inset:0;z-index:1;' +
+        'background:linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 60%, var(--bg-surface) 100%), url(' + x.stadiumImg + ') center/cover no-repeat;';
+      card.appendChild(stadiumBg);
 
-      // Icon + coach
-      top.innerHTML =
-        '<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;width:60px;">' +
-          '<div style="font-size:44px;line-height:1;filter:drop-shadow(0 0 12px '+team.accent+')">' + team.icon + '</div>' +
-          '<div style="width:44px;height:52px">' + x.coachSvg + '</div>' +
-        '</div>' +
-        '<div style="flex:1;min-width:0">' +
-          // Big team name
-          "<div style=\"font-family:'Bebas Neue';font-size:26px;color:"+team.accent+";line-height:1;letter-spacing:2px;" +
-          (isSel ? "text-shadow:0 0 12px "+team.accent+";" : "") +
-          "\">" + team.name + " " + (team.id==='canyon_tech'?'CACTI':'TRIDENTS') + "</div>" +
-          // Coach + quote
-          "<div style=\"font-family:'Courier New';font-size:8px;font-weight:bold;color:"+team.accent+";margin-top:3px\">" + x.coach + "</div>" +
-          "<div style=\"font-family:'Barlow Condensed';font-size:12px;font-style:italic;color:"+team.accent+";opacity:.6;line-height:1.2\">" + x.quote + "</div>" +
-          // Scheme + details
-          "<div style=\"font-family:'Courier New';font-size:8px;color:"+team.accent+";opacity:.5;margin-top:4px;line-height:1.5\">" +
-            team.style + " OFFENSE \u00b7 " + team.defStyle + " DEFENSE<br>" +
-            "<span style='font-weight:bold;opacity:1'>" + x.motto + "</span> \u00b7 " + x.est + "<br>" +
-            "Sig: " + x.sigPlay + " \u00b7 " + x.starPlayers +
-          "</div>" +
+      // Thematic Overlays
+      if (team.id === 'canyon_tech') {
+        var haze = document.createElement('div'); haze.className = 'theme-haze';
+        card.appendChild(haze);
+      } else {
+        var sparkCont = document.createElement('div');
+        sparkCont.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:2;';
+        setInterval(() => {
+          if (!card.parentNode) return;
+          var s = document.createElement('div'); s.className = 'theme-spark';
+          s.style.left = Math.random() * 100 + '%'; s.style.top = (60 + Math.random() * 40) + '%';
+          s.style.animation = 'spark-float ' + (1 + Math.random()) + 's forwards';
+          sparkCont.appendChild(s);
+          setTimeout(() => s.remove(), 2000);
+        }, 300);
+        card.appendChild(sparkCont);
+      }
+
+      // ── CONTENT WRAPPER ──
+      var contentWrap = document.createElement('div');
+      contentWrap.style.cssText = 'display:flex;flex-direction:column;padding:6px;position:relative;z-index:3;';
+
+      // Top Row: Logo + Team Name
+      var topRow = document.createElement('div');
+      topRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:2px;';
+      var teamFullName = team.id === 'canyon_tech' ? 'CANYON TECH CACTI' : 'IRON RIDGE TRIDENTS';
+      topRow.innerHTML = 
+        '<div style="font-size:36px;filter:drop-shadow(0 0 15px ' + tColor + ')">' + team.icon + '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:2px;">' +
+          "<div style=\"font-family:'Bebas Neue';font-size:26px;color:#fff;line-height:1;letter-spacing:2px;text-shadow:2px 2px 4px #000\">" + teamFullName + "</div>" +
+          "<div style=\"font-family:'Press Start 2P';font-size:8px;color:" + tColor + ";letter-spacing:1px;text-shadow:0 0 10px #000\">" + x.motto + "</div>" +
         '</div>';
-      card.appendChild(top);
+      contentWrap.appendChild(topRow);
 
-      // ── BOTTOM HALF: Stadium + Ratings ──
-      var botWrap = document.createElement('div');
-      botWrap.style.cssText =
-        'flex:1;padding:6px 12px 8px;border-top:1px solid rgba(255,255,255,0.04);' +
-        'display:flex;flex-direction:column;justify-content:center;gap:4px;';
+      // Bottom Row: Coach & Stats (Side by Side)
+      var botRow = document.createElement('div');
+      botRow.style.cssText = 'display:flex;gap:10px;align-items:center;margin-top:2px;margin-bottom:4px;';
 
-      // Stadium
-      botWrap.innerHTML =
-        '<div style="width:100%;height:30px;border-radius:4px;overflow:hidden">' + x.stadiumSvg + '</div>' +
-        "<div style=\"font-family:'Press Start 2P';font-size:5px;color:"+team.accent+";opacity:.5;letter-spacing:.5px\">HOME: " + x.stadium + "</div>" +
-        // Ratings with full labels and stars
-        "<div style='margin-top:4px'>" +
-          ratingRow('OFFENSE', x.ratings.OFF, team.accent) +
-          ratingRow('DEFENSE', x.ratings.DEF, team.accent) +
-          ratingRow('SPEED', x.ratings.SPD, team.accent) +
-          ratingRow('TOUGHNESS', x.ratings.TGH, team.accent) +
-          ratingRow('OVERALL', x.ratings.OVR, team.accent) +
-        "</div>";
-      card.appendChild(botWrap);
+      // Coach
+      var coachCircle = document.createElement('div');
+      coachCircle.style.cssText = 'width:60px;height:60px;border-radius:50%;background:#000;border:2px solid ' + tColor + ';overflow:hidden;flex-shrink:0;box-shadow:0 0 10px rgba(0,0,0,0.5);';
+      var coachZoom = team.id === 'iron_ridge' ? 'transform:scale(1.55);transform-origin:center 25%;' : 'transform:scale(1.4);transform-origin:center 25%;';
+      coachCircle.innerHTML = '<img src="' + x.coachImg + '" style="width:100%;height:100%;object-fit:cover;' + coachZoom + '">';
+      
+      // Stats
+      var statsBox = document.createElement('div');
+      statsBox.style.cssText = 'flex:1;background:rgba(0,0,0,0.3);backdrop-filter:blur(4px);padding:4px 6px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);display:flex;flex-direction:column;gap:1px;';
+      statsBox.innerHTML = 
+        ratingRow('OFFENSE', x.ratings.OFF, tColor) +
+        ratingRow('DEFENSE', x.ratings.DEF, tColor) +
+        ratingRow('SPEED', x.ratings.SPD, tColor) +
+        ratingRow('TOUGHNESS', x.ratings.TGH, tColor) +
+        ratingRow('OVERALL', x.ratings.OVR, tColor) +
+        '<div style="border-top:1px solid rgba(255,255,255,0.1);margin-top:2px;padding-top:2px;display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;">' +
+          '<span style="font-size:10px;color:var(--a-gold);line-height:1;">\u2605</span>' +
+          '<span style="font-family:\'Press Start 2P\';font-size:9px;color:var(--a-gold);text-transform:uppercase;letter-spacing:-0.8px;">STAR: ' + x.starPlayers + '</span>' +
+        '</div>';
+      
+      botRow.append(coachCircle, statsBox);
+      contentWrap.appendChild(botRow);
+
+      card.appendChild(contentWrap);
 
       card.onclick = function() { SND.select(); selTeam=team.id; GS.team=team.id; refreshTeams(); refreshGo(); };
       teamGrid.appendChild(card);
@@ -271,15 +269,15 @@ export function buildSetup() {
   }
   content.appendChild(teamGrid);
 
-  // Go button (pinned at bottom)
+  // Go button
   var goBtn = document.createElement('button');
   function refreshGo() {
     var ready = selTeam && selDiff;
     goBtn.className = 'btn-blitz';
     goBtn.disabled = !ready;
-    goBtn.style.cssText = 'margin-top:6px;' + (ready
-      ? 'background:var(--a-gold);border-color:var(--f-purple);color:#000;box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;font-size:16px;'
-      : 'background:#555;border-color:var(--f-purple);color:var(--f-purple);box-shadow:6px 6px 0 var(--f-purple), 10px 10px 0 #000;font-size:16px;opacity:0.8;');
+    goBtn.style.cssText = 'margin-top:12px;' + (ready
+      ? 'background:var(--a-gold);border-color:var(--f-purple);color:#000;box-shadow:4px 4px 0 var(--f-purple), 6px 6px 0 #000;font-size:14px;padding:12px;'
+      : 'background:#555;border-color:var(--f-purple);color:var(--f-purple);box-shadow:4px 4px 0 var(--f-purple), 6px 6px 0 #000;font-size:14px;padding:12px;opacity:0.8;');
     goBtn.textContent = ready ? 'START DRAFT \u2192' : 'SELECT A TEAM';
     goBtn.onclick = ready ? function() {
       SND.snap();
@@ -295,7 +293,6 @@ export function buildSetup() {
   el.appendChild(content);
 
   refreshTeams();
-  refreshDiffs();
   refreshGo();
 
   return el;

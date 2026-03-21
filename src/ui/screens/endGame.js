@@ -38,8 +38,8 @@ export function buildEndGame() {
     'border-bottom:2px solid var(--a-gold);';
   var hdrTitle = document.createElement('div');
   hdrTitle.style.cssText =
-    "font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;" +
-    "font-style:italic;transform:skewX(-10deg);" +
+    "font-family:'Teko',sans-serif;font-weight:700;font-size:32px;letter-spacing:3px;" +
+    "font-style:italic;transform:skewX(-8deg);" +
     (humanWon ? 'color:#00ff44;animation:victoryPulse 2s infinite;' :
      tied ? 'color:var(--a-gold);' : 'color:#ff4444;');
   hdrTitle.textContent = humanWon ? 'VICTORY' : tied ? 'TIE GAME' : 'DEFEAT';

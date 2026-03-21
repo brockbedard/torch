@@ -192,10 +192,19 @@ export function buildDraft() {
     'align-items:center;flex-shrink:0;border-bottom:3px solid ' + team.accent + ';';
   var schemeName = isDef ? team.defStyle : team.style;
   var hdrTitle = document.createElement('div');
-  hdrTitle.style.cssText = 'display:flex;align-items:baseline;font-style:italic;transform:skewX(-10deg);';
-  hdrTitle.innerHTML =
-    "<span style=\"font-family:'Bebas Neue';font-size:32px;color:" + team.accent + ";letter-spacing:2px;text-shadow:2px 2px 0 #000, 0 0 10px " + team.accent + "\">TORCH</span>" +
-    "<span style=\"font-family:'Bebas Neue';font-size:22px;color:var(--white);letter-spacing:1px;margin-left:6px\">\u00b7 PLAY NOW</span>";
+  hdrTitle.style.cssText =
+    'display:flex;align-items:baseline;gap:0;font-style:italic;transform:skewX(-10deg);';
+  var hdrName = document.createElement('span');
+  hdrName.style.cssText =
+    "font-family:'Teko',sans-serif;font-weight:700;font-size:32px;color:var(--a-gold);" +
+    "letter-spacing:3px;text-shadow:2px 2px 0 rgba(0,0,0,0.9),0 0 12px rgba(255,204,0,0.3);";
+  hdrName.textContent = 'TORCH';
+  var hdrSub = document.createElement('span');
+  hdrSub.style.cssText =
+    "font-family:'Teko',sans-serif;font-weight:500;font-size:22px;color:var(--white);" +
+    "letter-spacing:1px;margin-left:6px;";
+  hdrSub.textContent = '\u00b7 PLAY NOW';
+  hdrTitle.append(hdrName, hdrSub);
   hdr.appendChild(hdrTitle);
 
   var backBtn = document.createElement('button');
@@ -224,7 +233,7 @@ export function buildDraft() {
   var title = document.createElement('div');
   title.className = 'chrome-header';
   title.style.cssText = 'font-size:22px;margin-bottom:0;';
-  title.textContent = isDef ? 'PICK DEFENSE' : 'PICK OFFENSE';
+  title.textContent = isDef ? 'PICK DEFENSE ROSTER' : 'PICK OFFENSE ROSTER';
   var autoBtn = document.createElement('button');
   autoBtn.style.cssText = "font-family:'Press Start 2P';font-size:6px;color:var(--cyan);background:none;border:1px solid var(--cyan);padding:5px 8px;cursor:pointer;border-radius:12px;opacity:.7;";
   autoBtn.textContent = '\u26A1 AUTO-SELECT';
