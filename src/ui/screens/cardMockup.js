@@ -13,7 +13,7 @@ function injectStyles() {
   s.textContent = `
     @keyframes flipSnap { 0%{transform:rotateY(0)} 50%{transform:rotateY(90deg)} 51%{transform:rotateY(90deg)} 100%{transform:rotateY(180deg)} }
     @keyframes dealSlide { 0%{opacity:0;transform:translateX(-120px) rotate(-30deg) scale(0.5)} 70%{opacity:1;transform:translateX(5px) rotate(2deg) scale(1.02)} 100%{transform:translateX(0) rotate(0deg) scale(1)} }
-    @keyframes dealMulti { 0%{opacity:0;transform:translateY(-60px) scale(0.6)} 50%{opacity:1;transform:translateY(4px) scale(1.02)} 100%{transform:translateY(0) scale(1)} }
+    @keyframes dealMulti { 0%{opacity:0;transform:translateY(-60px) scale(0.6)} 50%{opacity:1;transform:translateY(4px) scale(1.02)} 100%{opacity:1;transform:translateY(0) scale(1)} }
   `;
   document.head.appendChild(s);
 }
@@ -48,7 +48,7 @@ function buildHomeCard(type, w, h) {
     +'background:radial-gradient(ellipse at 50% 40%,'+d.bg+',#0A0804);'
     +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
     +'box-shadow:0 2px 4px rgba(0,0,0,0.4),0 8px 20px rgba(0,0,0,0.25)'+(isTorch?',0 0 16px rgba(255,69,17,0.2)':'')+';'
-    +'overflow:hidden;position:relative;';
+    +'position:relative;';
   // Build all layers
   var layers = '';
   layers += '<div style="position:absolute;inset:0;border-radius:8px;box-shadow:inset 1px 1px 3px rgba(255,255,255,0.06),inset -1px -1px 3px rgba(0,0,0,0.3);pointer-events:none;z-index:7;"></div>';
@@ -131,28 +131,31 @@ export function buildCardMockup() {
   var playerRow = row();
 
   var players = [
-    { name:'COLT AVERY', pos:'QB', ovr:78, tier:'silver', teamColor:'#FF4511', badge:'A' },
-    { name:'QUEZ SAMPSON', pos:'WR', ovr:80, tier:'gold', teamColor:'#FF4511', badge:'S' },
-    { name:'MACK TORRES', pos:'FB', ovr:82, tier:'gold', teamColor:'#CC1A1A', badge:'B' },
-    { name:'BO KENDRICK', pos:'QB', ovr:80, tier:'gold', teamColor:'#CC1A1A', badge:'I' },
+    { name:'COLT AVERY', pos:'QB', ovr:78, num:7, tier:'silver', teamColor:'#FF4511' },
+    { name:'QUEZ SAMPSON', pos:'WR', ovr:80, num:1, tier:'gold', teamColor:'#FF4511' },
+    { name:'MACK TORRES', pos:'FB', ovr:82, num:44, tier:'gold', teamColor:'#CC1A1A' },
+    { name:'BO KENDRICK', pos:'QB', ovr:80, num:12, tier:'gold', teamColor:'#CC1A1A' },
   ];
   var tierC = { bronze:'#A0522D', silver:'#B0C4D4', gold:'#FFB800' };
 
   function buildMaddenPlayer(p, w, h) {
-    var tc = tierC[p.tier];
+    var tc = tierC[p.tier] || '#B0C4D4';
     var card = document.createElement('div');
-    card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;border:2px solid '+tc+'44;background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);overflow:hidden;position:relative;box-shadow:0 4px 16px rgba(0,0,0,0.5);';
+    card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;border:2px solid '+tc+'44;background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);position:relative;box-shadow:0 4px 16px rgba(0,0,0,0.5);display:flex;flex-direction:column;';
     // OVR centered top
-    card.innerHTML = '<div style="text-align:center;padding:6px 0 0;position:relative;z-index:2;">'
+    var topArea = '<div style="text-align:center;padding:'+(w>90?'6':'4')+'px 0 0;position:relative;z-index:2;">'
       +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?36:24)+'px;color:'+tc+';line-height:0.85;text-shadow:0 0 10px '+tc+'44;">'+p.ovr+'</div>'
-      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(w>90?8:7)+'px;color:#ff0040;letter-spacing:2px;margin-top:-2px;">'+p.pos+'</div></div>'
-      // Art placeholder
-      +'<div style="flex:1;display:flex;align-items:center;justify-content:center;"><div style="width:'+(w*0.55)+'px;height:'+(h*0.45)+'px;border-radius:50% 50% 0 0;background:linear-gradient(180deg,'+p.teamColor+'33,transparent);opacity:0.4;"></div></div>'
-      // Bottom gradient
-      +'<div style="position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(transparent,#0A0804);z-index:1;"></div>'
-      // Name bar with team color
-      +'<div style="position:absolute;bottom:0;left:0;right:0;z-index:2;background:'+p.teamColor+'22;padding:'+(w>90?'5px 8px':'3px 5px')+';border-top:1px solid '+p.teamColor+'44;border-bottom:2px solid '+p.teamColor+';">'
-      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?13:10)+'px;color:#fff;letter-spacing:1px;text-align:center;line-height:1.1;">'+(w>90?p.name:p.name.split(' ').pop())+'</div></div>';
+      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(w>90?8:7)+'px;color:#ff0040;letter-spacing:2px;margin-top:-2px;">'+p.pos+'</div></div>';
+    // Jersey number (top-right corner)
+    var numArea = '<div style="position:absolute;top:'+(w>90?'6':'4')+'px;right:'+(w>90?'8':'5')+'px;font-family:\'Teko\';font-weight:700;font-size:'+(w>90?18:14)+'px;color:'+tc+';opacity:0.35;line-height:1;z-index:2;">#'+(p.num||'')+'</div>';
+    // Art placeholder
+    var artArea = '<div style="flex:1;display:flex;align-items:center;justify-content:center;"><div style="width:'+(w*0.55)+'px;height:'+(h*0.4)+'px;border-radius:50% 50% 0 0;background:linear-gradient(180deg,'+p.teamColor+'33,transparent);opacity:0.4;"></div></div>';
+    // Bottom gradient
+    var botGrad = '<div style="position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(transparent,#0A0804);z-index:1;"></div>';
+    // Name bar
+    var nameBar = '<div style="position:absolute;bottom:0;left:0;right:0;z-index:2;background:'+p.teamColor+'22;padding:'+(w>90?'5px 6px':'3px 4px')+';border-top:1px solid '+p.teamColor+'44;border-bottom:2px solid '+p.teamColor+';">'
+      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?12:9)+'px;color:#fff;letter-spacing:1px;text-align:center;line-height:1.1;">'+(w>90?p.name:p.name.split(' ').pop())+'</div></div>';
+    card.innerHTML = topArea + numArea + artArea + botGrad + nameBar;
     return card;
   }
 
@@ -206,19 +209,19 @@ export function buildCardMockup() {
     card.innerHTML = '<div style="height:3px;background:'+p.catColor+';"></div>'
       +'<div style="height:60px;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 50%,'+p.bg+',#0A0804);border-bottom:1px solid #1E1610;">'+p.svg+'</div>'
       +'<div style="padding:4px 6px;">'
-      +'<div style="font-family:\'Teko\';font-weight:700;font-size:11px;color:#fff;letter-spacing:1px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.name+'</div>'
+      +'<div style="font-family:\'Teko\';font-weight:700;font-size:11px;color:#fff;letter-spacing:1px;line-height:1;line-height:1.1;">'+p.name+'</div>'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">'
       +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:6px;color:'+p.catColor+';letter-spacing:0.5px;">'+p.cat+'</div>'
       +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:6px;color:'+riskC[p.risk]+';">'+riskI[p.risk]+'</div></div>'
-      +'<div style="font-family:\'Rajdhani\';font-size:7px;color:#666;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+p.desc+'</div></div>';
+      +'<div style="font-family:\'Rajdhani\';font-size:7px;color:#666;margin-top:1px;line-height:1.1;">'+p.desc+'</div></div>';
     playRow.appendChild(wrap(card, p.name));
   });
   el.appendChild(playRow);
 
   // ============================================================
-  // TORCH CARDS — Using home page torch card style with tier borders
+  // TORCH CARDS — Centered Flame V1 (chosen)
   // ============================================================
-  el.appendChild(sec('TORCH CARDS — Home Page Style + Tiers'));
+  el.appendChild(sec('TORCH CARDS — Centered Flame V1'));
   var torchRow = row();
   var tTiers = { GOLD:'#FFB800', SILVER:'#B0C4D4', BRONZE:'#A0522D' };
   var torchCards = [
@@ -226,24 +229,16 @@ export function buildCardMockup() {
     { name:'MOMENTUM SHIFT', tier:'SILVER', effect:'+3 yards next play' },
     { name:'AUDIBLE', tier:'BRONZE', effect:'Change your play at the line' },
   ];
+  var flamePath = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
   torchCards.forEach(function(tc) {
     var bc = tTiers[tc.tier];
-    // Use the home page torch card as the base
-    var card = buildHomeCard('torch', 100, 140);
-    // Override the border color with the tier color
-    var borderEl = card.querySelector('[style*="inset:-4px"]') || card.children[1];
-    if (borderEl) borderEl.style.background = 'linear-gradient(135deg,'+bc+',rgba(255,255,255,0.4),'+bc+')';
-    // Add tier label at the top
-    var tierLabel = document.createElement('div');
-    tierLabel.style.cssText = "position:absolute;top:4px;left:50%;transform:translateX(-50%);font-family:'Rajdhani';font-weight:700;font-size:7px;color:"+bc+";letter-spacing:1.5px;z-index:9;opacity:0.7;";
-    tierLabel.textContent = tc.tier;
-    card.appendChild(tierLabel);
-    // Add card name below the nameplate area
-    var nameOverlay = document.createElement('div');
-    nameOverlay.style.cssText = "position:absolute;bottom:22px;left:0;right:0;text-align:center;z-index:9;padding:0 6px;";
-    nameOverlay.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:11px;color:#fff;line-height:1;letter-spacing:1px;\">"+tc.name+"</div>"
-      +"<div style=\"font-family:'Rajdhani';font-size:7px;color:#aaa;line-height:1.2;margin-top:2px;\">"+tc.effect+"</div>";
-    card.appendChild(nameOverlay);
+    var card = document.createElement('div');
+    card.style.cssText = 'width:100px;height:140px;border-radius:7px;border:3px solid '+bc+';background:radial-gradient(ellipse at 50% 35%,#1a0800,#0A0804);position:relative;box-shadow:0 4px 16px rgba(0,0,0,0.5),0 0 12px rgba(255,69,17,0.15);display:flex;flex-direction:column;align-items:center;';
+    card.innerHTML = '<div style="font-family:\'Rajdhani\';font-weight:700;font-size:8px;color:'+bc+';letter-spacing:2px;text-align:center;padding:8px 0 0;opacity:0.7;">'+tc.tier+'</div>'
+      +'<div style="display:flex;align-items:center;justify-content:center;height:56px;margin-top:2px;"><svg viewBox="0 0 44 44" width="42" height="42" fill="none"><defs><linearGradient id="tg_'+tc.tier+'" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#FFB800"/></linearGradient></defs><path d="'+flamePath+'" fill="url(#tg_'+tc.tier+')" stroke="#FF4511" stroke-width="0.8"/></svg></div>'
+      +'<div style="font-family:\'Teko\';font-weight:700;font-size:14px;color:#fff;text-align:center;letter-spacing:1px;line-height:1.1;padding:0 8px;">'+tc.name+'</div>'
+      +'<div style="font-family:\'Rajdhani\';font-size:9px;color:#aaa;text-align:center;padding:4px 10px;line-height:1.3;">'+tc.effect+'</div>'
+      +'<div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:'+bc+';opacity:0.6;border-radius:0 0 5px 5px;"></div>';
     torchRow.appendChild(wrap(card, tc.tier + ' TIER'));
   });
   el.appendChild(torchRow);
@@ -258,8 +253,8 @@ export function buildCardMockup() {
   var flipCard = document.createElement('div');
   flipCard.style.cssText = 'width:90px;height:126px;perspective:900px;cursor:pointer;';
   var flipInner = document.createElement('div');
-  flipInner.style.cssText = 'width:100%;height:100%;position:relative;transform-style:preserve-3d;';
-  var flipFront = buildMaddenPlayer({name:'COLT AVERY',pos:'QB',ovr:78,tier:'silver',teamColor:'#FF4511',badge:'A'},90,126);
+  flipInner.style.cssText = 'width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.5s ease-in-out;';
+  var flipFront = buildMaddenPlayer({name:'COLT AVERY',pos:'QB',ovr:78,num:7,tier:'silver',teamColor:'#FF4511'},90,126);
   flipFront.style.cssText += ';position:absolute;inset:0;backface-visibility:hidden;';
   var flipBack = buildHomeCard('offense',90,126);
   flipBack.style.cssText += ';position:absolute;inset:0;backface-visibility:hidden;transform:rotateY(180deg);';
@@ -268,12 +263,7 @@ export function buildCardMockup() {
   var isFlipped = false;
   flipCard.onclick = function() {
     isFlipped = !isFlipped;
-    flipInner.style.animation = 'flipSnap 0.5s ease-in-out';
-    flipInner.addEventListener('animationend', function h() {
-      flipInner.removeEventListener('animationend', h);
-      flipInner.style.animation = '';
-      flipInner.style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0)';
-    });
+    flipInner.style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
   };
   flipCard.appendChild(flipInner);
   demoRow.appendChild(wrap(flipCard, 'TAP TO FLIP'));
@@ -338,10 +328,10 @@ export function buildCardMockup() {
 
   var multiDealt = false;
   var multiPlayers = [
-    { name:'COLT AVERY', pos:'QB', ovr:78, tier:'silver', teamColor:'#FF4511' },
-    { name:'QUEZ SAMPSON', pos:'WR', ovr:80, tier:'gold', teamColor:'#FF4511' },
-    { name:'RIO VASQUEZ', pos:'SLOT', ovr:82, tier:'gold', teamColor:'#FF4511' },
-    { name:'KIRBY WALSH', pos:'RB', ovr:72, tier:'bronze', teamColor:'#FF4511' },
+    { name:'COLT AVERY', pos:'QB', ovr:78, num:7, tier:'silver', teamColor:'#FF4511' },
+    { name:'QUEZ SAMPSON', pos:'WR', ovr:80, num:1, tier:'gold', teamColor:'#FF4511' },
+    { name:'RIO VASQUEZ', pos:'SLOT', ovr:82, num:3, tier:'gold', teamColor:'#FF4511' },
+    { name:'KIRBY WALSH', pos:'RB', ovr:72, num:22, tier:'bronze', teamColor:'#FF4511' },
   ];
 
   multiDeck.onclick = function() {
