@@ -13,6 +13,7 @@ function injectStyles() {
   s.textContent = `
     @keyframes flipSnap { 0%{transform:rotateY(0)} 50%{transform:rotateY(90deg)} 51%{transform:rotateY(90deg)} 100%{transform:rotateY(180deg)} }
     @keyframes dealSlide { 0%{opacity:0;transform:translateX(-120px) rotate(-30deg) scale(0.5)} 70%{opacity:1;transform:translateX(5px) rotate(2deg) scale(1.02)} 100%{transform:translateX(0) rotate(0deg) scale(1)} }
+    @keyframes dealMulti { 0%{opacity:0;transform:translateY(-60px) scale(0.6)} 50%{opacity:1;transform:translateY(4px) scale(1.02)} 100%{transform:translateY(0) scale(1)} }
   `;
   document.head.appendChild(s);
 }
@@ -151,9 +152,7 @@ export function buildCardMockup() {
       +'<div style="position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(transparent,#0A0804);z-index:1;"></div>'
       // Name bar with team color
       +'<div style="position:absolute;bottom:0;left:0;right:0;z-index:2;background:'+p.teamColor+'22;padding:'+(w>90?'5px 8px':'3px 5px')+';border-top:1px solid '+p.teamColor+'44;border-bottom:2px solid '+p.teamColor+';">'
-      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?14:10)+'px;color:#fff;letter-spacing:1px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(w>90?p.name:p.name.split(' ').pop())+'</div></div>'
-      // Badge circle
-      +'<div style="position:absolute;top:6px;right:6px;width:'+(w>90?16:12)+'px;height:'+(w>90?16:12)+'px;border-radius:50%;background:'+tc+'22;border:1px solid '+tc+'44;display:flex;align-items:center;justify-content:center;font-family:\'Rajdhani\';font-size:'+(w>90?8:6)+'px;color:'+tc+';z-index:3;">'+p.badge+'</div>';
+      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?13:10)+'px;color:#fff;letter-spacing:1px;text-align:center;line-height:1.1;">'+(w>90?p.name:p.name.split(' ').pop())+'</div></div>';
     return card;
   }
 
@@ -217,9 +216,9 @@ export function buildCardMockup() {
   el.appendChild(playRow);
 
   // ============================================================
-  // TORCH CARDS — Centered Flame V1 (chosen)
+  // TORCH CARDS — Using home page torch card style with tier borders
   // ============================================================
-  el.appendChild(sec('TORCH CARDS — Centered Flame (chosen)'));
+  el.appendChild(sec('TORCH CARDS — Home Page Style + Tiers'));
   var torchRow = row();
   var tTiers = { GOLD:'#FFB800', SILVER:'#B0C4D4', BRONZE:'#A0522D' };
   var torchCards = [
@@ -227,16 +226,24 @@ export function buildCardMockup() {
     { name:'MOMENTUM SHIFT', tier:'SILVER', effect:'+3 yards next play' },
     { name:'AUDIBLE', tier:'BRONZE', effect:'Change your play at the line' },
   ];
-  var flamePath = '<path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z"';
   torchCards.forEach(function(tc) {
     var bc = tTiers[tc.tier];
-    var card = document.createElement('div');
-    card.style.cssText = 'width:96px;height:134px;border-radius:7px;border:2px solid '+bc+';background:radial-gradient(ellipse at 50% 35%,#1a0800,#0A0804);overflow:hidden;position:relative;box-shadow:0 4px 16px rgba(0,0,0,0.5),0 0 12px rgba(255,69,17,0.15);';
-    card.innerHTML = '<div style="font-family:\'Rajdhani\';font-weight:700;font-size:7px;color:'+bc+';letter-spacing:1.5px;text-align:center;padding:5px 0 0;opacity:0.7;">'+tc.tier+'</div>'
-      +'<div style="display:flex;align-items:center;justify-content:center;height:52px;"><svg viewBox="0 0 44 44" width="38" height="38" fill="none"><defs><linearGradient id="tg_'+tc.tier+'" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#FFB800"/></linearGradient></defs>'+flamePath+' fill="url(#tg_'+tc.tier+')" stroke="#FF4511" stroke-width="0.8"/></svg></div>'
-      +'<div style="font-family:\'Teko\';font-weight:700;font-size:13px;color:#fff;text-align:center;letter-spacing:1px;line-height:1;padding:0 6px;">'+tc.name+'</div>'
-      +'<div style="font-family:\'Rajdhani\';font-size:8px;color:#aaa;text-align:center;padding:3px 8px;line-height:1.3;">'+tc.effect+'</div>'
-      +'<div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:'+bc+';opacity:0.6;"></div>';
+    // Use the home page torch card as the base
+    var card = buildHomeCard('torch', 100, 140);
+    // Override the border color with the tier color
+    var borderEl = card.querySelector('[style*="inset:-4px"]') || card.children[1];
+    if (borderEl) borderEl.style.background = 'linear-gradient(135deg,'+bc+',rgba(255,255,255,0.4),'+bc+')';
+    // Add tier label at the top
+    var tierLabel = document.createElement('div');
+    tierLabel.style.cssText = "position:absolute;top:4px;left:50%;transform:translateX(-50%);font-family:'Rajdhani';font-weight:700;font-size:7px;color:"+bc+";letter-spacing:1.5px;z-index:9;opacity:0.7;";
+    tierLabel.textContent = tc.tier;
+    card.appendChild(tierLabel);
+    // Add card name below the nameplate area
+    var nameOverlay = document.createElement('div');
+    nameOverlay.style.cssText = "position:absolute;bottom:22px;left:0;right:0;text-align:center;z-index:9;padding:0 6px;";
+    nameOverlay.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:11px;color:#fff;line-height:1;letter-spacing:1px;\">"+tc.name+"</div>"
+      +"<div style=\"font-family:'Rajdhani';font-size:7px;color:#aaa;line-height:1.2;margin-top:2px;\">"+tc.effect+"</div>";
+    card.appendChild(nameOverlay);
     torchRow.appendChild(wrap(card, tc.tier + ' TIER'));
   });
   el.appendChild(torchRow);
@@ -298,6 +305,67 @@ export function buildCardMockup() {
   dealWrap.appendChild(dealTarget);
   demoRow.appendChild(wrap(dealWrap, 'TAP DECK TO DEAL'));
   el.appendChild(demoRow);
+
+  // ============================================================
+  // MULTI-CARD DEAL
+  // ============================================================
+  el.appendChild(sec('MULTI-CARD DEAL — Tap deck to deal 4 cards'));
+  var multiRow = row();
+
+  var multiWrap = document.createElement('div');
+  multiWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:12px;';
+
+  // Deck
+  var multiDeck = document.createElement('div');
+  multiDeck.style.cssText = 'width:70px;height:98px;position:relative;cursor:pointer;';
+  for (var ms = 3; ms >= 0; ms--) {
+    var msc = buildHomeCard('torch', 62, 86);
+    msc.style.cssText += ';position:absolute;top:'+ms*2+'px;left:'+ms+'px;width:62px;height:86px;';
+    multiDeck.appendChild(msc);
+  }
+
+  // Target hand area
+  var multiHand = document.createElement('div');
+  multiHand.style.cssText = 'display:flex;gap:6px;min-height:110px;align-items:flex-end;';
+  var multiHandInner = document.createElement('div');
+  multiHandInner.style.cssText = 'display:flex;gap:6px;';
+  multiHand.appendChild(multiHandInner);
+
+  // Label
+  var multiLabel = document.createElement('div');
+  multiLabel.style.cssText = "font-family:'Rajdhani';font-size:9px;color:#666;text-align:center;";
+  multiLabel.textContent = 'Tap deck to deal hand';
+
+  var multiDealt = false;
+  var multiPlayers = [
+    { name:'COLT AVERY', pos:'QB', ovr:78, tier:'silver', teamColor:'#FF4511' },
+    { name:'QUEZ SAMPSON', pos:'WR', ovr:80, tier:'gold', teamColor:'#FF4511' },
+    { name:'RIO VASQUEZ', pos:'SLOT', ovr:82, tier:'gold', teamColor:'#FF4511' },
+    { name:'KIRBY WALSH', pos:'RB', ovr:72, tier:'bronze', teamColor:'#FF4511' },
+  ];
+
+  multiDeck.onclick = function() {
+    if (multiDealt) {
+      multiHandInner.innerHTML = '';
+      multiLabel.textContent = 'Tap deck to deal hand';
+      multiDealt = false;
+      return;
+    }
+    multiDealt = true;
+    multiLabel.textContent = 'Tap again to reset';
+    multiPlayers.forEach(function(mp, idx) {
+      var pc = buildMaddenPlayer(mp, 76, 106);
+      pc.style.opacity = '0';
+      pc.style.animation = 'dealMulti 0.4s cubic-bezier(0.22,1.3,0.36,1) ' + (idx * 0.12) + 's both';
+      multiHandInner.appendChild(pc);
+    });
+  };
+
+  multiWrap.appendChild(multiDeck);
+  multiWrap.appendChild(multiHand);
+  multiWrap.appendChild(multiLabel);
+  multiRow.appendChild(multiWrap);
+  el.appendChild(multiRow);
 
   // Footer
   var foot = document.createElement('div');
