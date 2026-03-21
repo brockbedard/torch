@@ -28,19 +28,19 @@ function buildHomeCard(type, w, h) {
       art:'<svg viewBox="0 0 448 512" width="52" height="56">'
         +'<defs><linearGradient id="bG_o'+w+'" x1="100" y1="450" x2="350" y2="50"><stop offset="0%" stop-color="#90E040"/><stop offset="100%" stop-color="#D4FF80"/></linearGradient></defs>'
         +'<path fill="url(#bG_o'+w+')" stroke="#7ACC00" stroke-width="8" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/></svg>',
-      pip:'<svg viewBox="0 0 448 512" width="8" height="9"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="rgba(255,255,255,0.5)"/></svg>'},
+      pip:'<svg viewBox="0 0 448 512" width="6" height="7"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="rgba(255,255,255,0.5)"/></svg>'},
     torch: {accent:'#FF4511',bg:'#CC3A10',bgEdge:'#6A1A08',label:'TORCH',spotColor:'rgba(255,255,255,0.1)',
-      art:'<svg viewBox="0 -2 44 56" fill="none" width="62" height="66" style="overflow:visible;">'
+      art:'<svg viewBox="-8 -10 60 72" fill="none" width="52" height="56">'
         +'<defs><linearGradient id="nG_t'+w+'" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF6A30"/><stop offset="100%" stop-color="#FFD060"/></linearGradient>'
         +'<linearGradient id="nI_t'+w+'" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA44"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient></defs>'
         +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#nG_t'+w+')" stroke="#FF4511" stroke-width="1.5"/>'
         +'<path d="M22 12C22 12 13 24 12 32C11 40 15 46 19 49C19 49 16 41 19 32C20 28 21 25 22 20C23 25 24 28 25 32C28 41 25 49 25 49C29 46 33 40 32 32C31 24 22 12 22 12Z" fill="url(#nI_t'+w+')" opacity="0.7"/></svg>',
-      pip:'<svg viewBox="0 0 5 6" width="8" height="9"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="rgba(255,255,255,0.5)"/></svg>'},
+      pip:'<svg viewBox="0 0 5 6" width="6" height="7"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="rgba(255,255,255,0.5)"/></svg>'},
     defense: {accent:'#4DA6FF',bg:'#3A7ACC',bgEdge:'#1A3A66',label:'DEFENSE',spotColor:'rgba(255,255,255,0.1)',
       art:'<svg viewBox="0 0 512 512" width="52" height="56">'
         +'<defs><linearGradient id="sG_d'+w+'" x1="256" y1="512" x2="256" y2="0"><stop offset="0%" stop-color="#3080D0"/><stop offset="100%" stop-color="#A0D4FF"/></linearGradient></defs>'
         +'<path fill="url(#sG_d'+w+')" stroke="#4DA6FF" stroke-width="8" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8z"/></svg>',
-      pip:'<svg viewBox="0 0 512 512" width="8" height="9"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z" fill="rgba(255,255,255,0.5)"/></svg>'},
+      pip:'<svg viewBox="0 0 512 512" width="6" height="7"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z" fill="rgba(255,255,255,0.5)"/></svg>'},
   };
   var d = configs[type];
   var isTorch = type === 'torch';
@@ -55,9 +55,9 @@ function buildHomeCard(type, w, h) {
   var card = document.createElement('div');
   card.style.cssText = 'position:absolute;width:'+w+'px;height:'+h+'px;border-radius:8px;'
     +'background:radial-gradient(ellipse at 50% 40%,'+d.bg+' 0%,'+d.bgEdge+' 100%);'
-    +''
+    +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
     +'box-shadow:0 2px 4px rgba(0,0,0,0.4),'+(isTorch?'0 16px 40px rgba(0,0,0,0.4)':'0 8px 20px rgba(0,0,0,0.25)')+';'
-    +'overflow:hidden;position:relative;';
+    +'overflow:hidden;';
 
   // TORCH: breathing glow
   if(isTorch){
@@ -81,23 +81,15 @@ function buildHomeCard(type, w, h) {
   margin.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:'+(isTorch?'20':'18')+'px;border-radius:8px 8px 0 0;box-shadow:inset 0 0 8px rgba(0,0,0,0.2);pointer-events:none;z-index:4;';
   card.appendChild(margin);
 
-  // Corner pips — scaled
-  var pipSize = Math.max(4, Math.round(8 * scale));
-  var scaledPip = d.pip.replace(/width="\d+"/, 'width="'+pipSize+'"').replace(/height="\d+"/, 'height="'+(pipSize+1)+'"');
-  var pipPad = Math.round(6 * scale);
+  // Corner pips
   var pTL = document.createElement('div');
-  pTL.style.cssText = 'position:absolute;top:'+pipPad+'px;left:'+pipPad+'px;z-index:5;';
-  pTL.innerHTML = scaledPip;
+  pTL.style.cssText = 'position:absolute;top:8px;left:8px;z-index:5;';
+  pTL.innerHTML = d.pip;
   card.appendChild(pTL);
   var pBR = document.createElement('div');
-  pBR.style.cssText = 'position:absolute;bottom:'+(npH+pipPad)+'px;right:'+pipPad+'px;z-index:5;transform:rotate(180deg);';
-  pBR.innerHTML = scaledPip;
+  pBR.style.cssText = 'position:absolute;bottom:'+(isTorch?'24':'22')+'px;right:8px;z-index:5;transform:rotate(180deg);';
+  pBR.innerHTML = d.pip;
   card.appendChild(pBR);
-
-  // Scale factor relative to 100px reference width
-  var scale = w / 100;
-  // Nameplate height (declared early so art centering can use it)
-  var npH = Math.round((isTorch ? 20 : 18) * scale);
 
   // Spotlight — centered in art area (above nameplate)
   var artCenterY = (h - npH) / 2;
@@ -112,19 +104,17 @@ function buildHomeCard(type, w, h) {
 
   // Art icon
   // Art centered in area above nameplate
-  var artW = Math.round((isTorch ? 62 : 52) * scale);
-  var artH = Math.round((isTorch ? 66 : 56) * scale);
   var artWrap = document.createElement('div');
-  artWrap.style.cssText = 'position:absolute;top:calc((100% - '+npH+'px - '+artH+'px) / 2);left:50%;transform:translateX(-50%);z-index:3;pointer-events:none;';
-  // Scale art SVG to card size
-  var scaledArt = d.art.replace(/width="\d+"/, 'width="'+artW+'"').replace(/height="\d+"/, 'height="'+artH+'"');
+  artWrap.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:'+npH+'px;display:flex;align-items:center;justify-content:center;z-index:3;';
   if(isTorch){
-    scaledArt = scaledArt.replace('stroke="#FF4511" stroke-width="1.5"','stroke="#FF4511" stroke-width="1.5" style="animation:flameSway 2.5s ease-in-out infinite;transform-origin:50% 100%;"');
+    artWrap.innerHTML = d.art.replace('stroke="#FF4511" stroke-width="1.5"','stroke="#FF4511" stroke-width="1.5" style="animation:flameSway 2.5s ease-in-out infinite;transform-origin:50% 100%;"');
+  } else {
+    artWrap.innerHTML = d.art;
   }
-  artWrap.innerHTML = scaledArt;
   card.appendChild(artWrap);
 
   // Nameplate
+  var npH = isTorch ? 20 : 18;
   var np = document.createElement('div');
   np.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:'+npH+'px;background:'+d.accent+(isTorch?'ee':'dd')+';display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 6px 6px;';
   var npT = document.createElement('div');
@@ -344,51 +334,45 @@ export function buildCardMockup() {
   // ============================================================
   // FLIP + DEAL DEMO
   // ============================================================
-  el.appendChild(sec('SNAP FLIP — All 3 types (tap each)'));
-  var flipRow = row();
+  el.appendChild(sec('SNAP FLIP + SLIDE DEAL (chosen animations)'));
+  var demoRow = row();
 
-  // Build a flip card for each type
-  var flipTypes = [
-    {type:'offense',front:{name:'COLT AVERY',pos:'QB',ovr:78,num:7,tier:'silver',teamColor:'#FF4511'},label:'OFFENSE'},
-    {type:'torch',front:{name:'RIO VASQUEZ',pos:'SLOT',ovr:82,num:3,tier:'gold',teamColor:'#FF4511'},label:'TORCH'},
-    {type:'defense',front:{name:'ZION CREWS',pos:'CB',ovr:82,num:24,tier:'gold',teamColor:'#FF4511'},label:'DEFENSE'},
-  ];
-  flipTypes.forEach(function(ft) {
-    var flipCard = document.createElement('div');
-    flipCard.style.cssText = 'width:90px;height:126px;perspective:900px;cursor:pointer;';
-    var flipInner = document.createElement('div');
-    flipInner.style.cssText = 'width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.5s ease-in-out;';
-    var flipFront = buildMaddenPlayer(ft.front,90,126);
-    flipFront.style.cssText += ';position:absolute;inset:0;backface-visibility:hidden;';
-    var flipBack = buildHomeCard(ft.type,90,126);
-    flipBack.style.cssText += ';position:absolute;inset:0;backface-visibility:hidden;transform:rotateY(180deg);';
-    flipInner.appendChild(flipFront);
-    flipInner.appendChild(flipBack);
-    var flipped = false;
-    flipCard.onclick = function() {
-      flipped = !flipped;
-      flipInner.style.transform = flipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
-    };
-    flipCard.appendChild(flipInner);
-    flipRow.appendChild(wrap(flipCard, ft.label+' — TAP'));
-  });
-  el.appendChild(flipRow);
+  // Flip demo
+  var flipCard = document.createElement('div');
+  flipCard.style.cssText = 'width:90px;height:126px;perspective:900px;cursor:pointer;';
+  var flipInner = document.createElement('div');
+  flipInner.style.cssText = 'width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.5s ease-in-out;';
+  var flipFront = buildMaddenPlayer({name:'COLT AVERY',pos:'QB',ovr:78,num:7,tier:'silver',teamColor:'#FF4511'},90,126);
+  flipFront.style.cssText += ';position:absolute;inset:0;backface-visibility:hidden;';
+  var flipBack = buildHomeCard('offense',90,126);
+  flipBack.style.cssText += ';position:absolute;inset:0;backface-visibility:hidden;transform:rotateY(180deg);';
+  flipInner.appendChild(flipFront);
+  flipInner.appendChild(flipBack);
+  var isFlipped = false;
+  flipCard.onclick = function() {
+    isFlipped = !isFlipped;
+    flipInner.style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+  };
+  flipCard.appendChild(flipInner);
+  demoRow.appendChild(wrap(flipCard, 'TAP TO FLIP'));
+
+  el.appendChild(demoRow);
 
   // Slide deal — all 3 types
-  el.appendChild(sec('SLIDE DEAL — All 3 types (tap each deck)'));
+  el.appendChild(sec('SLIDE DEAL — All 3 Types (tap each deck)'));
   var dealRow = row();
   var dealTypes = [
-    {type:'offense',player:{name:'QUEZ SAMPSON',pos:'WR',ovr:80,num:1,tier:'gold',teamColor:'#FF4511'},label:'OFFENSE DECK'},
-    {type:'torch',player:{name:'RIO VASQUEZ',pos:'SLOT',ovr:82,num:3,tier:'gold',teamColor:'#FF4511'},label:'TORCH DECK'},
-    {type:'defense',player:{name:'ANDRE KNOX',pos:'S',ovr:80,num:34,tier:'gold',teamColor:'#FF4511'},label:'DEFENSE DECK'},
+    {type:'offense',player:{name:'QUEZ SAMPSON',pos:'WR',ovr:80,num:1,tier:'gold',teamColor:'#FF4511'},label:'OFFENSE'},
+    {type:'torch',player:{name:'RIO VASQUEZ',pos:'SLOT',ovr:82,num:3,tier:'gold',teamColor:'#FF4511'},label:'TORCH'},
+    {type:'defense',player:{name:'ZION CREWS',pos:'CB',ovr:82,num:24,tier:'gold',teamColor:'#FF4511'},label:'DEFENSE'},
   ];
   dealTypes.forEach(function(dt) {
     var dw = document.createElement('div');
     dw.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;';
     var deck = document.createElement('div');
-    deck.style.cssText = 'width:66px;height:92px;position:relative;cursor:pointer;';
+    deck.style.cssText = 'width:70px;height:98px;position:relative;cursor:pointer;';
     for (var s = 2; s >= 0; s--) {
-      var sc = buildHomeCard(dt.type,58,82);
+      var sc = buildHomeCard(dt.type,62,86);
       sc.style.cssText += ';position:absolute;top:'+s*2+'px;left:'+s+'px;';
       deck.appendChild(sc);
     }
@@ -412,64 +396,77 @@ export function buildCardMockup() {
   el.appendChild(dealRow);
 
   // ============================================================
-  // MULTI-CARD DEAL
+  // MULTI-CARD DEAL — 3 deck types
   // ============================================================
-  el.appendChild(sec('MULTI-CARD DEAL — Tap deck to deal 4 cards'));
+  el.appendChild(sec('MULTI-CARD DEAL — All 3 Types (tap each deck)'));
   var multiRow = row();
 
-  var multiWrap = document.createElement('div');
-  multiWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:12px;';
-
-  // Deck
-  var multiDeck = document.createElement('div');
-  multiDeck.style.cssText = 'width:70px;height:98px;position:relative;cursor:pointer;';
-  for (var ms = 3; ms >= 0; ms--) {
-    var msc = buildHomeCard('torch', 62, 86);
-    msc.style.cssText += ';position:absolute;top:'+ms*2+'px;left:'+ms+'px;width:62px;height:86px;';
-    multiDeck.appendChild(msc);
-  }
-
-  // Target hand area
-  var multiHand = document.createElement('div');
-  multiHand.style.cssText = 'display:flex;gap:6px;min-height:110px;align-items:flex-end;';
-  var multiHandInner = document.createElement('div');
-  multiHandInner.style.cssText = 'display:flex;gap:6px;';
-  multiHand.appendChild(multiHandInner);
-
-  // Label
-  var multiLabel = document.createElement('div');
-  multiLabel.style.cssText = "font-family:'Rajdhani';font-size:9px;color:#666;text-align:center;";
-  multiLabel.textContent = 'Tap deck to deal hand';
-
-  var multiDealt = false;
-  var multiPlayers = [
-    { name:'COLT AVERY', pos:'QB', ovr:78, num:7, tier:'silver', teamColor:'#FF4511' },
-    { name:'QUEZ SAMPSON', pos:'WR', ovr:80, num:1, tier:'gold', teamColor:'#FF4511' },
-    { name:'RIO VASQUEZ', pos:'SLOT', ovr:82, num:3, tier:'gold', teamColor:'#FF4511' },
-    { name:'KIRBY WALSH', pos:'RB', ovr:72, num:22, tier:'bronze', teamColor:'#FF4511' },
+  var multiTypes = [
+    {type:'offense',label:'OFFENSE',players:[
+      {name:'COLT AVERY',pos:'QB',ovr:78,num:7,tier:'silver',teamColor:'#FF4511'},
+      {name:'QUEZ SAMPSON',pos:'WR',ovr:80,num:1,tier:'gold',teamColor:'#FF4511'},
+      {name:'RIO VASQUEZ',pos:'SLOT',ovr:82,num:3,tier:'gold',teamColor:'#FF4511'},
+      {name:'KIRBY WALSH',pos:'RB',ovr:72,num:22,tier:'bronze',teamColor:'#FF4511'},
+    ]},
+    {type:'torch',label:'TORCH',players:[
+      {name:'MACK TORRES',pos:'FB',ovr:82,num:44,tier:'gold',teamColor:'#CC1A1A'},
+      {name:'JAYLEN SIMS',pos:'RB',ovr:78,num:5,tier:'silver',teamColor:'#CC1A1A'},
+      {name:'BO KENDRICK',pos:'QB',ovr:80,num:12,tier:'gold',teamColor:'#CC1A1A'},
+      {name:'CADE BUCKLEY',pos:'TE',ovr:74,num:88,tier:'bronze',teamColor:'#CC1A1A'},
+    ]},
+    {type:'defense',label:'DEFENSE',players:[
+      {name:'ZION CREWS',pos:'CB',ovr:82,num:24,tier:'gold',teamColor:'#FF4511'},
+      {name:'ANDRE KNOX',pos:'S',ovr:80,num:34,tier:'gold',teamColor:'#FF4511'},
+      {name:'JACE WILDER',pos:'LB',ovr:78,num:55,tier:'silver',teamColor:'#FF4511'},
+      {name:'KAI OROZCO',pos:'S',ovr:72,num:8,tier:'bronze',teamColor:'#FF4511'},
+    ]},
   ];
 
-  multiDeck.onclick = function() {
-    if (multiDealt) {
-      multiHandInner.innerHTML = '';
-      multiLabel.textContent = 'Tap deck to deal hand';
-      multiDealt = false;
-      return;
-    }
-    multiDealt = true;
-    multiLabel.textContent = 'Tap again to reset';
-    multiPlayers.forEach(function(mp, idx) {
-      var pc = buildMaddenPlayer(mp, 76, 106);
-      pc.style.opacity = '0';
-      pc.style.animation = 'dealMulti 0.4s cubic-bezier(0.22,1.3,0.36,1) ' + (idx * 0.12) + 's both';
-      multiHandInner.appendChild(pc);
-    });
-  };
+  multiTypes.forEach(function(mt) {
+    var mWrap = document.createElement('div');
+    mWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:10px;';
 
-  multiWrap.appendChild(multiDeck);
-  multiWrap.appendChild(multiHand);
-  multiWrap.appendChild(multiLabel);
-  multiRow.appendChild(multiWrap);
+    var mDeck = document.createElement('div');
+    mDeck.style.cssText = 'width:70px;height:98px;position:relative;cursor:pointer;';
+    for (var ms = 3; ms >= 0; ms--) {
+      var msc = buildHomeCard(mt.type, 62, 86);
+      msc.style.cssText += ';position:absolute;top:'+ms*2+'px;left:'+ms+'px;';
+      mDeck.appendChild(msc);
+    }
+
+    var mHand = document.createElement('div');
+    mHand.style.cssText = 'display:flex;gap:4px;min-height:110px;align-items:flex-end;';
+    var mHandInner = document.createElement('div');
+    mHandInner.style.cssText = 'display:flex;gap:4px;';
+    mHand.appendChild(mHandInner);
+
+    var mLabel = document.createElement('div');
+    mLabel.style.cssText = "font-family:'Rajdhani';font-size:9px;color:#666;text-align:center;";
+    mLabel.textContent = 'Tap to deal';
+
+    var mDealt = false;
+    mDeck.onclick = function() {
+      if (mDealt) {
+        mHandInner.innerHTML = '';
+        mLabel.textContent = 'Tap to deal';
+        mDealt = false;
+        return;
+      }
+      mDealt = true;
+      mLabel.textContent = 'Tap to reset';
+      mt.players.forEach(function(mp, idx) {
+        var pc = buildMaddenPlayer(mp, 68, 95);
+        pc.style.opacity = '0';
+        pc.style.animation = 'dealMulti 0.4s cubic-bezier(0.22,1.3,0.36,1) ' + (idx * 0.12) + 's both';
+        mHandInner.appendChild(pc);
+      });
+    };
+
+    mWrap.appendChild(mDeck);
+    mWrap.appendChild(mHand);
+    mWrap.appendChild(lbl(mt.label));
+    multiRow.appendChild(mWrap);
+  });
   el.appendChild(multiRow);
 
   // Footer
