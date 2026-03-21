@@ -42,29 +42,37 @@ function buildHomeCard(type, w, h) {
   var d = configs[type];
   var isTorch = type === 'torch';
   var bw = isTorch ? 4 : 3;
-  // Build with DOM elements instead of innerHTML +=
+  // Use a wrapper div for the border gradient (instead of z-index:-1 which gets clipped)
+  var outer = document.createElement('div');
+  outer.style.cssText = 'width:'+(w+bw*2)+'px;height:'+(h+bw*2)+'px;border-radius:'+(8+bw)+'px;background:linear-gradient(135deg,'+d.accent+',rgba(255,255,255,0.4),'+d.accent+');padding:'+bw+'px;box-shadow:0 2px 4px rgba(0,0,0,0.4),0 8px 20px rgba(0,0,0,0.25)'+(isTorch?',0 0 16px rgba(255,69,17,0.2)':'')+';';
   var card = document.createElement('div');
   card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;'
     +'background:radial-gradient(ellipse at 50% 40%,'+d.bg+',#0A0804);'
     +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
-    +'box-shadow:0 2px 4px rgba(0,0,0,0.4),0 8px 20px rgba(0,0,0,0.25)'+(isTorch?',0 0 16px rgba(255,69,17,0.2)':'')+';'
-    +'position:relative;';
-  // Build all layers
+    +'overflow:hidden;position:relative;';
   var layers = '';
+  // Bevel
   layers += '<div style="position:absolute;inset:0;border-radius:8px;box-shadow:inset 1px 1px 3px rgba(255,255,255,0.06),inset -1px -1px 3px rgba(0,0,0,0.3);pointer-events:none;z-index:7;"></div>';
-  layers += '<div style="position:absolute;inset:-'+bw+'px;border-radius:'+(8+bw)+'px;background:linear-gradient(135deg,'+d.accent+',rgba(255,255,255,0.4),'+d.accent+');z-index:-1;"></div>';
+  // Inner margin
   layers += '<div style="position:absolute;inset:5px;border-radius:5px;border:1.5px solid '+d.accent+'33;pointer-events:none;z-index:4;"></div>';
+  // Corner pips
   layers += '<div style="position:absolute;top:8px;left:8px;z-index:5;">'+d.pip+'</div>';
   layers += '<div style="position:absolute;bottom:'+(isTorch?'24':'22')+'px;right:8px;z-index:5;transform:rotate(180deg);">'+d.pip+'</div>';
+  // Spotlight
   layers += '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:68px;height:68px;border-radius:50%;background:radial-gradient(circle,'+d.spotColor+',transparent 70%);z-index:2;pointer-events:none;"></div>';
+  // Art icon
   layers += '<div style="display:flex;align-items:center;justify-content:center;width:48px;height:52px;z-index:3;">'+d.art+'</div>';
+  // Divider
   layers += '<div style="position:absolute;bottom:'+(isTorch?'22':'20')+'px;left:15%;right:15%;height:1px;background:'+d.accent+'22;z-index:5;"></div>';
+  // Nameplate
   var npH = isTorch ? 20 : 18;
   var npFont = isTorch ? "font-family:'Teko';font-weight:700;font-size:"+(w>=100?'16':'12')+"px;color:#09081A;letter-spacing:3px;transform:skewX(-8deg);" : "font-family:'Rajdhani';font-weight:700;font-size:"+(w>=100?'11':'9')+"px;color:#000;letter-spacing:2px;";
   layers += '<div style="position:absolute;bottom:0;left:0;right:0;height:'+npH+'px;background:'+d.accent+(isTorch?'ee':'dd')+';display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 6px 6px;"><div style="'+npFont+'">'+d.label+'</div></div>';
+  // Shimmer
   layers += '<div style="position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);pointer-events:none;z-index:8;"></div>';
   card.innerHTML = layers;
-  return card;
+  outer.appendChild(card);
+  return outer;
 }
 
 export function buildCardMockup() {
