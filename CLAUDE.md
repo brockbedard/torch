@@ -1,10 +1,10 @@
 # TORCH — CLAUDE.md
 
 ## What This Is
-TORCH is a football card game. Full game, starts 0-0, you play both sides of the ball. Two teams (Canyon Tech air raid, Iron Ridge ground-and-pound) battle through 2 halves with card-based play selection, badge combos, and TORCH point scoring.
+TORCH is a football card game. Full game, starts 0-0, you play both sides of the ball. Two teams (Canyon Tech Cacti air raid, Iron Ridge Tridents ground-and-pound) battle through 2 halves with card-based play selection, badge combos, and TORCH point scoring.
 
-## Current State (as of 2026-03-15)
-- **Version:** v0.17.3 "Sound + Commentary + Polish" — full gameplay rebuild
+## Current State (as of 2026-03-21)
+- **Version:** v0.20.0 "Fire & Steel" — premium home screen, card design system, warm dark bg, torch brand identity
 - **Branch:** `refactor-vite` — all work is here
 - **Stack:** Vite + vanilla JS + jsfxr (sounds), deployed on Vercel
 - **Local dev:** `npx vite --host` (port 5173) or `npx vercel dev` (AI commentary)
@@ -18,7 +18,7 @@ TORCH is a football card game. Full game, starts 0-0, you play both sides of the
 - Vite for bundling and dev server
 - All game state in memory (no backend for v1 — daily puzzle seed from date)
 - CSS custom properties for theming (see existing design system in index.html)
-- Fonts: Bebas Neue (headers), Press Start 2P (labels), Barlow Condensed (body)
+- Fonts: Teko (display/headers), Rajdhani (buttons/labels/UI), Barlow Condensed (body)
 
 ## Critical Rules
 1. **Git commit after every major change** with descriptive message
@@ -256,16 +256,28 @@ src/
 
 ## Design System Colors
 ```css
---gold: #F5B800;      /* Logo, wins, highlights */
---cyan: #00E5C0;      /* Stats, first downs, Lakeshore */
---red: #F03030;       /* Danger, turnovers, loss */
---orange: #FF5E1A;    /* Streak, fire, momentum */
---purple: #8B5CF6;    /* Daily badge, special */
---navy: #09081A;      /* Background */
---bg2: #0f0d24;       /* Card backgrounds */
---bdr: #1e1c3a;       /* Borders */
---muted: #3e3c60;     /* Secondary text */
---text: #e8e6ff;      /* Primary text */
+--a-gold: #FFB800;    /* Logo, title, offense accent, highlights */
+--orange: #FF4511;    /* TORCH brand, fire, CTA, momentum */
+--cyan: #4DA6FF;      /* Defense accent, steel blue */
+--p-red: #ff0040;     /* Danger, turnovers, loss */
+--l-green: #00ff44;   /* Success, first downs */
+--bg: #0A0804;        /* Background (warm scorched black) */
+--bg-surface: #141008;/* Card/panel backgrounds */
+--bg-raised: #1E1610; /* Elevated surfaces */
+--muted: #aaa;        /* Secondary text */
+--text: #fff;         /* Primary text */
+```
+
+### Card Type Colors
+```css
+/* Offense: chartreuse green */
+Accent: #7ACC00  |  Card bg: #0A1A06  |  Icon: FA bolt
+
+/* Torch (signature): red-orange */
+Accent: #FF4511  |  Card bg: #1a0800  |  Icon: flame SVG
+
+/* Defense: steel blue */
+Accent: #4DA6FF  |  Card bg: #0A1420  |  Icon: FA shield-halved
 ```
 
 ## Testing Checklist Before Deploy

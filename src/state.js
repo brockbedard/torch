@@ -4,8 +4,8 @@ import { IR_DEF_PLAYS } from './data/irDefensePlays.js';
 import { CT_OFF_PLAYS } from './data/ctOffensePlays.js';
 import { CT_DEF_PLAYS } from './data/ctDefensePlays.js';
 
-export var VERSION = '0.19.0';
-export var VERSION_NAME = 'Premium UI';
+export var VERSION = '0.20.0';
+export var VERSION_NAME = 'Fire & Steel';
 
 export var GS = null;
 

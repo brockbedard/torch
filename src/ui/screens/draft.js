@@ -58,7 +58,7 @@ function buildPlayerCard(player, team, side, isSel, small) {
   var imgSrc = getPlayerImage(player, team, side);
   artWrap.innerHTML =
     '<img src="' + imgSrc + '" alt="' + player.name + '" draggable="false" style="height:100%;width:100%;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7))">' +
-    '<div style="position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(transparent,#0f0d1a);pointer-events:none"></div>';
+    '<div style="position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(transparent,#141008);pointer-events:none"></div>';
   card.appendChild(artWrap);
 
   return card;

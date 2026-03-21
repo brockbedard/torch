@@ -319,7 +319,7 @@ function mkPlayCard(play) {
       "<div style=\"font-family:'Courier New';font-size:6px;font-weight:bold;color:" + cc + ";border:1px solid " + cc + "44;padding:2px 4px;border-radius:8px;letter-spacing:.5px\">" + cat + '</div>' +
     '</div>' +
     // Diagram
-    '<div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse,#1a1030,#0a0818);margin:0 6px;border-radius:4px;overflow:hidden">' + svg + '</div>' +
+    '<div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse,#1E1610,#0A0804);margin:0 6px;border-radius:4px;overflow:hidden">' + svg + '</div>' +
     // Risk meter
     '<div style="padding:4px 8px 2px">' +
       '<div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden">' +
@@ -569,7 +569,7 @@ export function buildGameplay() {
     center.className = 'T-clash-center';
     if (torchCard) {
       center.innerHTML =
-        "<div style=\"background:#1a1030;border:2px solid #c8a030;border-radius:6px;padding:6px 10px;box-shadow:0 0 16px rgba(200,160,48,.4)\">" +
+        "<div style=\"background:#1E1610;border:2px solid #c8a030;border-radius:6px;padding:6px 10px;box-shadow:0 0 16px rgba(200,160,48,.4)\">" +
           "<div style=\"font-family:'Rajdhani';font-size:5px;color:#c8a030;text-align:center\">" + torchCard.tier + "</div>" +
           "<div style=\"font-family:'Bebas Neue';font-size:13px;color:#c8a030;line-height:1;text-align:center\">" + torchCard.name + "</div>" +
         "</div>";

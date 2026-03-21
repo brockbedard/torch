@@ -131,7 +131,7 @@ function buildPlayCard(card, isSel, staggerIdx) {
   var diagWrap = document.createElement('div');
   diagWrap.style.cssText =
     'height:105px;display:flex;align-items:center;justify-content:center;' +
-    'background:radial-gradient(ellipse at center, #1a1030 0%, #0a0818 100%);' +
+    'background:radial-gradient(ellipse at center, #1E1610 0%, #0A0804 100%);' +
     'margin:0 8px;border-radius:4px;overflow:hidden;position:relative;';
 
   var svgHTML = playSvg(card.id, '#00ff88');
