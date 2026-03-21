@@ -94,70 +94,42 @@ export function buildHome(){
     el.appendChild(banner);
   }
 
-  // === HERO: "The Torch Pass" — football fused with flame ===
-  var logoWrap=document.createElement('div');
-  logoWrap.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:160px;height:220px;margin-bottom:4px;z-index:2;animation:homeRevealScale 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;';
-
-  var fireEl=document.createElement('div');
-  fireEl.style.cssText='width:160px;height:220px;animation:flameSway 2.5s ease-in-out infinite;z-index:1;';
-  fireEl.innerHTML='<svg viewBox="0 0 120 180" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">'
-    +'<defs>'
-    +'<linearGradient id="flameOuter" x1="60" y1="180" x2="60" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="50%" stop-color="#FF8C00"/><stop offset="100%" stop-color="#FFD700"/></linearGradient>'
-    +'<linearGradient id="flameInner" x1="60" y1="150" x2="60" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="40%" stop-color="#FFAA00"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient>'
-    +'<linearGradient id="ballGrad" x1="36" y1="140" x2="84" y2="165" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#D4893B"/><stop offset="50%" stop-color="#B5652B"/><stop offset="100%" stop-color="#8B4A1F"/></linearGradient>'
-    +'<linearGradient id="laceGlow" x1="55" y1="140" x2="65" y2="155" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFFBE6"/><stop offset="100%" stop-color="#FFD080"/></linearGradient>'
-    +'<filter id="flameGlow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
-    +'<filter id="hotGlow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
-    +'</defs>'
-    // Flame erupts from the football
-    +'<path d="M60 2C60 2 28 40 22 75C16 110 32 138 42 148C42 148 36 122 45 100C50 88 56 78 60 65C64 78 70 88 75 100C84 122 78 148 78 148C88 138 104 110 98 75C92 40 60 2 60 2Z" fill="url(#flameOuter)" filter="url(#flameGlow)"/>'
-    +'<path d="M60 28C60 28 42 58 38 82C34 106 44 128 52 136C52 136 46 115 52 98C56 88 58 80 60 70C62 80 64 88 68 98C74 115 68 136 68 136C76 128 86 106 82 82C78 58 60 28 60 28Z" fill="url(#flameInner)" opacity="0.9" style="animation:flameInnerSway 1.8s ease-in-out infinite;transform-origin:50% 100%;"/>'
-    // Football at the base — pointed oval (not ellipse), tilted 30deg
-    +'<g transform="translate(60,153) rotate(-30)">'
-    // Pointed football body shape
-    +'<path d="M-26 0C-26 -5 -20 -13 -10 -14C-3 -14.5 3 -14.5 10 -14C20 -13 26 -5 26 0C26 5 20 13 10 14C3 14.5 -3 14.5 -10 14C-20 13 -26 5 -26 0Z" fill="url(#ballGrad)" stroke="#6B3410" stroke-width="0.8"/>'
-    // Specular highlight — upper left
-    +'<ellipse cx="-6" cy="-5" rx="10" ry="4" fill="white" opacity="0.1" transform="rotate(-15)"/>'
-    // White tip stripes (college football)
-    +'<path d="M-23 -3C-22 -7 -20 -10 -17 -11.5" stroke="#F5F0E0" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.85"/>'
-    +'<path d="M-23 3C-22 7 -20 10 -17 11.5" stroke="#F5F0E0" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.85"/>'
-    +'<path d="M23 -3C22 -7 20 -10 17 -11.5" stroke="#F5F0E0" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.85"/>'
-    +'<path d="M23 3C22 7 20 10 17 11.5" stroke="#F5F0E0" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.85"/>'
-    // Center seam (curved along top contour)
-    +'<path d="M-14 -2.5C-7 -6.5 7 -6.5 14 -2.5" stroke="#FFFBE6" stroke-width="1.3" stroke-linecap="round" fill="none" filter="url(#hotGlow)"/>'
-    // 5 cross-stitches
-    +'<line x1="-9" y1="-6.5" x2="-9" y2="-0.5" stroke="#FFFBE6" stroke-width="0.9" stroke-linecap="round" filter="url(#hotGlow)"/>'
-    +'<line x1="-4.5" y1="-7.5" x2="-4.5" y2="-1.5" stroke="#FFFBE6" stroke-width="0.9" stroke-linecap="round" filter="url(#hotGlow)"/>'
-    +'<line x1="0" y1="-7.8" x2="0" y2="-1.8" stroke="#FFFBE6" stroke-width="0.9" stroke-linecap="round" filter="url(#hotGlow)"/>'
-    +'<line x1="4.5" y1="-7.5" x2="4.5" y2="-1.5" stroke="#FFFBE6" stroke-width="0.9" stroke-linecap="round" filter="url(#hotGlow)"/>'
-    +'<line x1="9" y1="-6.5" x2="9" y2="-0.5" stroke="#FFFBE6" stroke-width="0.9" stroke-linecap="round" filter="url(#hotGlow)"/>'
-    +'</g>'
-    // Speed lines trailing behind the nose
-    +'<path d="M38 161Q30 166 24 163" stroke="#FF8C00" stroke-width="1.2" fill="none" opacity="0.35"/>'
-    +'<path d="M36 165Q26 170 20 167" stroke="#FF5E1A" stroke-width="0.9" fill="none" opacity="0.25"/>'
-    +'<path d="M40 157Q34 160 28 158" stroke="#FFD700" stroke-width="0.7" fill="none" opacity="0.2"/>'
-    // Base glow
-    +'<ellipse cx="60" cy="167" rx="22" ry="7" fill="#FF5E1A" opacity="0.15"/>'
-    +'</svg>';
-
-  logoWrap.append(fireEl);
-  el.appendChild(logoWrap);
-
-  // === TITLE LOCKUP: TORCH + FOOTBALL as one composed unit ===
+  // === TITLE: T(football)RCH FOOTBALL ===
   var title=document.createElement('h1');
-  title.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:88px;line-height:0.85;color:#FFD54F;text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 30px rgba(255,204,0,0.4);transform:skewX(-8deg);margin-bottom:0;text-align:center;letter-spacing:6px;z-index:2;animation:homeRevealUp 0.5s ease-out 0.4s both,titleShimmer 4s ease-in-out 2s infinite;";
-  title.innerHTML='TORCH<span style="display:block;color:white;font-family:\'Barlow Condensed\',sans-serif;font-weight:600;font-size:36px;letter-spacing:8px;text-shadow:2px 2px 0 rgba(0,0,0,0.8);margin-top:4px;transform:skewX(0deg);">FOOTBALL</span>';
+  title.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:88px;line-height:0.85;color:#FFD54F;text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 30px rgba(255,204,0,0.4);transform:skewX(-8deg);margin-bottom:0;text-align:center;letter-spacing:6px;z-index:2;animation:homeRevealUp 0.5s ease-out 0.3s both,titleShimmer 4s ease-in-out 2s infinite;position:relative;";
+  // Football-O: symmetrical upright football using a clean custom SVG
+  var footballO='<span style="position:relative;display:inline-block;width:52px;height:68px;vertical-align:baseline;margin:0 -2px;">'
+    +'<svg viewBox="0 0 52 68" width="52" height="68" fill="none" style="position:absolute;top:6px;left:0;filter:drop-shadow(0 0 6px rgba(255,140,0,0.5)) drop-shadow(0 0 12px rgba(255,94,26,0.3));">'
+    +'<defs><linearGradient id="oGrad" x1="10" y1="10" x2="42" y2="58" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#D4893B"/><stop offset="45%" stop-color="#B5652B"/><stop offset="100%" stop-color="#8B4A1F"/></linearGradient>'
+    +'<filter id="oGlow"><feGaussianBlur stdDeviation="1" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
+    // Symmetrical pointed-oval football body (vertical orientation)
+    +'<path d="M26 2C26 2 46 12 46 34C46 56 26 66 26 66C26 66 6 56 6 34C6 12 26 2 26 2Z" fill="url(#oGrad)" stroke="#6B3410" stroke-width="0.8"/>'
+    // Specular highlight
+    +'<ellipse cx="20" cy="24" rx="8" ry="12" fill="white" opacity="0.08" transform="rotate(-10 20 24)"/>'
+    // White tip stripes (college)
+    +'<path d="M20 6C22 4 24 3 26 2.5C28 3 30 4 32 6" stroke="#F5F0E0" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.8"/>'
+    +'<path d="M20 62C22 64 24 65 26 65.5C28 65 30 64 32 62" stroke="#F5F0E0" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.8"/>'
+    // Center seam (horizontal, across the belly)
+    +'<path d="M10 34C16 28 36 28 42 34" stroke="#FFFBE6" stroke-width="1.5" stroke-linecap="round" fill="none" filter="url(#oGlow)"/>'
+    // 5 cross-stitches
+    +'<line x1="16" y1="28" x2="16" y2="34" stroke="#FFFBE6" stroke-width="1" stroke-linecap="round" filter="url(#oGlow)"/>'
+    +'<line x1="22" y1="27" x2="22" y2="33" stroke="#FFFBE6" stroke-width="1" stroke-linecap="round" filter="url(#oGlow)"/>'
+    +'<line x1="26" y1="26.5" x2="26" y2="32.5" stroke="#FFFBE6" stroke-width="1" stroke-linecap="round" filter="url(#oGlow)"/>'
+    +'<line x1="30" y1="27" x2="30" y2="33" stroke="#FFFBE6" stroke-width="1" stroke-linecap="round" filter="url(#oGlow)"/>'
+    +'<line x1="36" y1="28" x2="36" y2="34" stroke="#FFFBE6" stroke-width="1" stroke-linecap="round" filter="url(#oGlow)"/>'
+    +'</svg></span>';
+  title.innerHTML='T'+footballO+'RCH<span style="display:block;color:white;font-family:\'Barlow Condensed\',sans-serif;font-weight:600;font-size:36px;letter-spacing:8px;text-shadow:2px 2px 0 rgba(0,0,0,0.8);margin-top:4px;transform:skewX(0deg);">FOOTBALL</span>';
   el.append(title);
 
   // === TAGLINE ===
   var tagline=document.createElement('div');
-  tagline.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:600;font-size:11px;color:var(--cyan);letter-spacing:4px;text-align:center;margin-top:10px;margin-bottom:8px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.7s both;text-shadow:0 0 12px rgba(0,234,255,0.3);text-transform:uppercase;";
+  tagline.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:600;font-size:11px;color:var(--cyan);letter-spacing:4px;text-align:center;margin-top:10px;margin-bottom:8px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.5s both;text-shadow:0 0 12px rgba(0,234,255,0.3);text-transform:uppercase;";
   tagline.textContent='DEAL THE PLAY.';
   el.append(tagline);
 
   // === CARD FAN — playing card style with football art ===
   var cardFan=document.createElement('div');
-  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:240px;height:100px;margin-top:12px;margin-bottom:20px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.9s both;overflow:visible;';
+  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:310px;height:130px;margin-top:16px;margin-bottom:24px;z-index:2;opacity:0;animation:homeRevealScale 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;overflow:visible;';
   // Card data: accent color, bg tint, label, pip color, card type, art SVG
   var fanData=[
     {accent:'#F5B800',bg:'#0a1a08',label:'OFFENSE',pip:'#00E5C0',
@@ -168,14 +140,15 @@ export function buildHome(){
        +'</svg>',
      cornerPip:'<svg viewBox="0 0 6 8" width="4" height="5"><path d="M3.5 0L1 4L2.5 4L1.5 8L5 3L3.2 3L4.5 0Z" fill="#FFD700"/></svg>'},
     {accent:'#FF5E1A',bg:'#1a0800',label:'TORCH',pip:'#FF5E1A',
-     art:'<svg viewBox="0 0 36 38" fill="none" width="36" height="38">'
-       +'<path d="M18 4C18 4 10 14 9 20C8 26 12 31 15 33C15 33 13 27 15 22C16 19 17 17 18 14C19 17 20 19 21 22C23 27 21 33 21 33C24 31 28 26 27 20C26 14 18 4 18 4Z" fill="url(#noGrad)" stroke="#FF5E1A" stroke-width="0.5" opacity="0.9"/>'
-       +'<path d="M18 12C18 12 14 18 13 22C12 26 14 30 16 32C16 32 15 28 16 24C17 21 18 19 18 16C18 19 19 21 20 24C21 28 20 32 20 32C22 30 24 26 23 22C22 18 18 12 18 12Z" fill="#FFD700" opacity="0.5"/>'
-       +'<line x1="14" y1="36" x2="22" y2="36" stroke="rgba(255,255,255,0.15)" stroke-width="0.5"/>'
-       +'<path d="M16 2L18 0L20 2" stroke="rgba(255,255,255,0.2)" stroke-width="0.5" fill="none"/>'
-       +'<defs><linearGradient id="noGrad" x1="18" y1="33" x2="18" y2="4"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="100%" stop-color="#FFD700"/></linearGradient></defs>'
+     art:'<svg viewBox="0 0 44 50" fill="none" width="44" height="50">'
+       +'<defs><linearGradient id="noGrad" x1="22" y1="46" x2="22" y2="2"><stop offset="0%" stop-color="#FF5E1A"/><stop offset="100%" stop-color="#FFD700"/></linearGradient>'
+       +'<linearGradient id="noInner" x1="22" y1="40" x2="22" y2="10"><stop offset="0%" stop-color="#FFAA00"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient>'
+       +'<filter id="fGlow"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'
+       +'<path d="M22 2C22 2 8 16 6 26C4 36 12 44 18 47C18 47 14 38 18 28C20 23 21 19 22 14C23 19 24 23 26 28C30 38 26 47 26 47C32 44 40 36 38 26C36 16 22 2 22 2Z" fill="url(#noGrad)" filter="url(#fGlow)" style="animation:flameSway 2.5s ease-in-out infinite;transform-origin:50% 100%;"/>'
+       +'<path d="M22 14C22 14 14 24 13 30C12 36 16 42 20 44C20 44 17 37 20 30C21 27 22 24 22 20C22 24 23 27 24 30C27 37 24 44 24 44C28 42 32 36 31 30C30 24 22 14 22 14Z" fill="url(#noInner)" opacity="0.6" style="animation:flameInnerSway 1.8s ease-in-out infinite;transform-origin:50% 100%;"/>'
+       +'<ellipse cx="22" cy="47" rx="8" ry="2.5" fill="#FF5E1A" opacity="0.25"/>'
        +'</svg>',
-     cornerPip:'<svg viewBox="0 0 5 6" width="4" height="5"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF5E1A"/></svg>'},
+     cornerPip:'<svg viewBox="0 0 5 6" width="5" height="6"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF5E1A"/></svg>'},
     {accent:'#00E5C0',bg:'#041518',label:'DEFENSE',pip:'#8B5CF6',
      art:'<svg viewBox="0 0 36 38" fill="none" width="36" height="38">'
        +'<defs><linearGradient id="shieldGrad" x1="18" y1="36" x2="18" y2="2"><stop offset="0%" stop-color="#00FFDD"/><stop offset="100%" stop-color="#80FFF0"/></linearGradient></defs>'
@@ -186,15 +159,15 @@ export function buildHome(){
      cornerPip:'<svg viewBox="0 0 6 7" width="4" height="5"><path d="M3 0C3 0 0.5 0.5 0.5 2C0.5 3.5 1.5 5 3 7C4.5 5 5.5 3.5 5.5 2C5.5 0.5 3 0 3 0Z" fill="#00FFDD"/></svg>'},
   ];
   var fanAngles=[-18,0,18];
-  var fanX=[-42,0,42];
-  var fanY=[5,0,5];
+  var fanX=[-55,0,55];
+  var fanY=[8,0,8];
   var fanZ=[1,3,1];
   var fanScale=[1,1.06,1];
   for(var c=0;c<3;c++){
     var d=fanData[c];
     var isCenter=c===1;
     var card=document.createElement('div');
-    card.style.cssText='position:absolute;width:56px;height:78px;border-radius:5px;'
+    card.style.cssText='position:absolute;width:72px;height:100px;border-radius:6px;'
       +'background:linear-gradient(170deg,'+d.bg+' 0%,#09081A 100%);'
       +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
       +'transform:rotate('+fanAngles[c]+'deg) translateX('+fanX[c]+'px) translateY('+fanY[c]+'px) scale('+fanScale[c]+');'
@@ -203,20 +176,20 @@ export function buildHome(){
       +'overflow:hidden;position:absolute;';
     // Gradient border wrapper
     var borderWrap=document.createElement('div');
-    borderWrap.style.cssText='position:absolute;inset:-2px;border-radius:7px;background:linear-gradient(135deg,'+d.accent+',#F5B800,'+d.accent+');z-index:-1;';
+    borderWrap.style.cssText='position:absolute;inset:-2px;border-radius:8px;background:linear-gradient(135deg,'+d.accent+',#F5B800,'+d.accent+');z-index:-1;';
     card.appendChild(borderWrap);
     // Card margin (2px inset light border — "bleed margin")
     var margin=document.createElement('div');
-    margin.style.cssText='position:absolute;inset:2px;border-radius:3px;border:1px solid '+d.accent+'66;pointer-events:none;z-index:4;';
+    margin.style.cssText='position:absolute;inset:3px;border-radius:4px;border:1px solid '+d.accent+'66;pointer-events:none;z-index:4;';
     card.appendChild(margin);
     // Corner pip — top left
     var pipTL=document.createElement('div');
-    pipTL.style.cssText='position:absolute;top:4px;left:4px;z-index:5;';
+    pipTL.style.cssText='position:absolute;top:5px;left:5px;z-index:5;';
     pipTL.innerHTML=d.cornerPip;
     card.appendChild(pipTL);
     // Corner pip — bottom right (rotated 180)
     var pipBR=document.createElement('div');
-    pipBR.style.cssText='position:absolute;bottom:14px;right:4px;z-index:5;transform:rotate(180deg);';
+    pipBR.style.cssText='position:absolute;bottom:18px;right:5px;z-index:5;transform:rotate(180deg);';
     pipBR.innerHTML=d.cornerPip;
     card.appendChild(pipBR);
     // Center art area
@@ -226,15 +199,15 @@ export function buildHome(){
     card.appendChild(artArea);
     // Bottom nameplate
     var nameplate=document.createElement('div');
-    nameplate.style.cssText='position:absolute;bottom:0;left:0;right:0;height:12px;background:'+d.accent+'dd;display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 3px 3px;';
+    nameplate.style.cssText='position:absolute;bottom:0;left:0;right:0;height:14px;background:'+d.accent+'dd;display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 4px 4px;';
     var npText=document.createElement('div');
-    npText.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:6px;color:#09081A;letter-spacing:1.5px;";
+    npText.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:8px;color:#09081A;letter-spacing:2px;";
     npText.textContent=d.label;
     nameplate.appendChild(npText);
     card.appendChild(nameplate);
     // Shimmer sweep
     var shimmer=document.createElement('div');
-    shimmer.style.cssText='position:absolute;inset:0;border-radius:5px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);animation:cardShimmer 4s '+(c*0.5)+'s ease-in-out infinite;pointer-events:none;z-index:6;';
+    shimmer.style.cssText='position:absolute;inset:0;border-radius:6px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);animation:cardShimmer 4s '+(c*0.5)+'s ease-in-out infinite;pointer-events:none;z-index:6;';
     card.appendChild(shimmer);
     cardFan.appendChild(card);
   }
@@ -245,7 +218,7 @@ export function buildHome(){
   playWrap.style.cssText='width:100%;z-index:2;position:relative;display:flex;flex-direction:column;gap:20px;opacity:0;animation:homeRevealBtn 0.4s ease-out 1.0s both;';
   var playBtn=document.createElement('button');
   playBtn.className='btn-blitz';
-  playBtn.style.cssText='border-color:var(--cyan);color:#000;background:linear-gradient(180deg,#00ffcc 0%,#00c8aa 100%);font-size:24px;padding:22px 20px;animation:ctaGlow 3s ease-in-out 2s infinite;letter-spacing:4px;';
+  playBtn.style.cssText='border-color:var(--cyan);color:#000;background:linear-gradient(180deg,#00ffcc 0%,#00c8aa 100%);font-size:32px;padding:26px 24px;animation:ctaGlow 3s ease-in-out 2s infinite;letter-spacing:6px;';
   playBtn.textContent='PLAY';
   playBtn.onclick=function(){
     SND.click();
