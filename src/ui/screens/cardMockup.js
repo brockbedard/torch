@@ -42,9 +42,16 @@ function buildHomeCard(type, w, h) {
   var d = configs[type];
   var isTorch = type === 'torch';
   var bw = isTorch ? 4 : 3;
-  // Use a wrapper div for the border gradient (instead of z-index:-1 which gets clipped)
+  // Wrapper for gradient border
   var outer = document.createElement('div');
-  outer.style.cssText = 'width:'+(w+bw*2)+'px;height:'+(h+bw*2)+'px;border-radius:'+(8+bw)+'px;background:linear-gradient(135deg,'+d.accent+',rgba(255,255,255,0.4),'+d.accent+');padding:'+bw+'px;box-shadow:0 2px 4px rgba(0,0,0,0.4),0 8px 20px rgba(0,0,0,0.25)'+(isTorch?',0 0 16px rgba(255,69,17,0.2)':'')+';';
+  outer.style.cssText = 'position:relative;width:'+(w+bw*2)+'px;height:'+(h+bw*2)+'px;border-radius:'+(8+bw)+'px;background:linear-gradient(135deg,'+d.accent+',rgba(255,255,255,0.4),'+d.accent+');padding:'+bw+'px;'
+    +'box-shadow:0 2px 4px rgba(0,0,0,0.4),'+(isTorch?'0 16px 40px rgba(0,0,0,0.4)':'0 8px 20px rgba(0,0,0,0.25)')+';';
+
+  // TORCH-ONLY: Breathing glow aura behind the card
+  if(isTorch){
+    outer.innerHTML += '<div style="position:absolute;inset:-8px;border-radius:20px;background:#FF4511;filter:blur(12px);opacity:0.15;z-index:-1;pointer-events:none;animation:torchGlow 3s ease-in-out infinite;"></div>';
+  }
+
   var card = document.createElement('div');
   card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;'
     +'background:radial-gradient(ellipse at 50% 40%,'+d.bg+',#0A0804);'
@@ -60,17 +67,42 @@ function buildHomeCard(type, w, h) {
   layers += '<div style="position:absolute;bottom:'+(isTorch?'24':'22')+'px;right:8px;z-index:5;transform:rotate(180deg);">'+d.pip+'</div>';
   // Spotlight
   layers += '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:68px;height:68px;border-radius:50%;background:radial-gradient(circle,'+d.spotColor+',transparent 70%);z-index:2;pointer-events:none;"></div>';
-  // Art icon
-  layers += '<div style="display:flex;align-items:center;justify-content:center;width:48px;height:52px;z-index:3;">'+d.art+'</div>';
+  // Art icon — TORCH gets animated flame
+  if(isTorch){
+    layers += '<div style="display:flex;align-items:center;justify-content:center;width:48px;height:52px;z-index:3;">'
+      +d.art.replace('stroke="#FF4511" stroke-width="1.5"','stroke="#FF4511" stroke-width="1.5" style="animation:flameSway 2.5s ease-in-out infinite;transform-origin:50% 100%;"')
+      +'</div>';
+  } else {
+    layers += '<div style="display:flex;align-items:center;justify-content:center;width:48px;height:52px;z-index:3;">'+d.art+'</div>';
+  }
   // Divider
   layers += '<div style="position:absolute;bottom:'+(isTorch?'22':'20')+'px;left:15%;right:15%;height:1px;background:'+d.accent+'22;z-index:5;"></div>';
   // Nameplate
   var npH = isTorch ? 20 : 18;
   var npFont = isTorch ? "font-family:'Teko';font-weight:700;font-size:"+(w>=100?'16':'12')+"px;color:#09081A;letter-spacing:3px;transform:skewX(-8deg);" : "font-family:'Rajdhani';font-weight:700;font-size:"+(w>=100?'11':'9')+"px;color:#000;letter-spacing:2px;";
   layers += '<div style="position:absolute;bottom:0;left:0;right:0;height:'+npH+'px;background:'+d.accent+(isTorch?'ee':'dd')+';display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 6px 6px;"><div style="'+npFont+'">'+d.label+'</div></div>';
-  // Shimmer
-  layers += '<div style="position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);pointer-events:none;z-index:8;"></div>';
+  // Shimmer — TORCH gets warm golden sweep, others get white
+  if(isTorch){
+    layers += '<div style="position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 35%,rgba(255,180,80,0.12) 48%,rgba(255,255,255,0.08) 52%,transparent 65%);animation:torchShimmer 4.5s ease-in-out infinite;pointer-events:none;z-index:8;"></div>';
+  } else {
+    layers += '<div style="position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);animation:cardShimmer 6s ease-in-out infinite;pointer-events:none;z-index:8;"></div>';
+  }
   card.innerHTML = layers;
+
+  // TORCH-ONLY: Ember sparks from card top
+  if(isTorch){
+    var sparkDrifts=[-12,8,-6,14,-10];
+    for(var sp=0;sp<5;sp++){
+      var spark=document.createElement('div');
+      var ssz=1.5+Math.random()*1.5;
+      var sdur=1.2+Math.random()*1.5;
+      var sdelay=Math.random()*3;
+      var sleft=25+Math.random()*50;
+      spark.style.cssText='position:absolute;top:10px;left:'+sleft+'%;width:'+ssz+'px;height:'+ssz+'px;border-radius:50%;background:#FF8C00;z-index:9;pointer-events:none;opacity:0;animation:torchSpark '+sdur+'s '+sdelay+'s ease-out infinite;--sx:'+sparkDrifts[sp]+'px;';
+      card.appendChild(spark);
+    }
+  }
+
   outer.appendChild(card);
   return outer;
 }
@@ -145,9 +177,9 @@ export function buildCardMockup() {
     // OVR centered top
     var topArea = '<div style="text-align:center;padding:'+(w>90?'6':'4')+'px 0 0;position:relative;z-index:2;">'
       +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?36:24)+'px;color:'+tc+';line-height:0.85;text-shadow:0 0 10px '+tc+'44;">'+p.ovr+'</div>'
-      +'<div style="font-family:\'Rajdhani\';font-weight:600;font-size:'+(w>90?7:6)+'px;color:#aaa;letter-spacing:1px;margin-top:-1px;">'+fullPos+'</div></div>';
-    // Jersey number (top-left corner, away from OVR)
-    var numArea = '<div style="position:absolute;top:'+(w>90?'8':'5')+'px;left:'+(w>90?'8':'5')+'px;font-family:\'Teko\';font-weight:700;font-size:'+(w>90?16:12)+'px;color:#fff;opacity:0.3;line-height:1;z-index:2;">#'+(p.num||'')+'</div>';
+      +'<div style="font-family:\'Rajdhani\';font-weight:600;font-size:'+(w>90?7:6)+'px;color:#fff;letter-spacing:1px;margin-top:-1px;opacity:0.7;">'+fullPos+'</div></div>';
+    // Jersey number (left-aligned below OVR/position block)
+    var numArea = '<div style="position:absolute;top:'+(w>90?'48':'34')+'px;left:'+(w>90?'8':'5')+'px;font-family:\'Teko\';font-weight:700;font-size:'+(w>90?14:11)+'px;color:#fff;opacity:0.7;line-height:1;z-index:2;">#'+(p.num||'')+'</div>';
     // Art placeholder
     var artArea = '<div style="flex:1;display:flex;align-items:center;justify-content:center;"><div style="width:'+(w*0.55)+'px;height:'+(h*0.4)+'px;border-radius:50% 50% 0 0;background:linear-gradient(180deg,'+p.teamColor+'33,transparent);opacity:0.4;"></div></div>';
     // Bottom gradient
