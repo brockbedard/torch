@@ -5,7 +5,7 @@
  */
 
 import { VERSION } from '../../state.js';
-import { buildHomeCard, buildMaddenPlayer, buildPlayV1, buildTorchCard, injectCardStyles } from '../components/cards.js';
+import { buildHomeCard, buildMaddenPlayer, buildPlayV1, buildTorchCard, injectCardStyles, teamHelmetSvg, renderFlamePips } from '../components/cards.js';
 
 function injectStyles() {
   injectCardStyles();
@@ -78,29 +78,84 @@ export function buildCardMockup() {
   // ============================================================
   // PLAYER CARDS — Madden Style (chosen)
   // ============================================================
-  el.appendChild(sec('PLAYER CARDS — Madden Style (chosen)'));
+  el.appendChild(sec('PLAYER CARDS — v0.21 (Badge + Tier Borders)'));
   var playerRow = row();
 
+  // Sample players from each team showing all 3 tiers + star
   var players = [
-    { name:'COLT AVERY', pos:'QB', ovr:78, num:7, tier:'silver', teamColor:'#FF4511', img:'/img/players/ct-off-qb-avery.png' },
-    { name:'QUEZ SAMPSON', pos:'WR', ovr:80, num:1, tier:'gold', teamColor:'#FF4511', img:'/img/players/ct-off-wr-sampson.png' },
-    { name:'MACK TORRES', pos:'FB', ovr:82, num:44, tier:'gold', teamColor:'#CC1A1A', img:'/img/players/ir-off-fb-torres.png' },
-    { name:'BO KENDRICK', pos:'QB', ovr:80, num:12, tier:'gold', teamColor:'#CC1A1A', img:'/img/players/ir-off-qb-kendrick.png' },
+    { name:'MONROE', pos:'WR', ovr:84, num:1, badge:'SPEED_LINES', isStar:true, teamColor:'#8B0000' },
+    { name:'CALLOWAY', pos:'QB', ovr:80, num:7, badge:'CROSSHAIR', isStar:false, teamColor:'#8B0000' },
+    { name:'THORNE', pos:'FB', ovr:84, num:34, badge:'HELMET', isStar:true, teamColor:'#1B3A2D' },
+    { name:'BRIGGS', pos:'QB', ovr:78, num:12, badge:'CLIPBOARD', isStar:false, teamColor:'#1B3A2D' },
+    { name:'STRAND', pos:'QB', ovr:84, num:1, badge:'FLAME', isStar:true, teamColor:'#F28C28' },
+    { name:'HAYWARD', pos:'SLOT', ovr:84, num:3, badge:'GLOVE', isStar:true, teamColor:'#2E0854' },
+    { name:'TRAN', pos:'QB', ovr:74, num:14, badge:'BOLT', isStar:false, teamColor:'#8B0000' },
+    { name:'REYES', pos:'RB', ovr:72, num:28, badge:'CLEAT', isStar:false, teamColor:'#F28C28' },
   ];
 
   // Draft size
   players.forEach(function(p) {
-    playerRow.appendChild(wrap(buildMaddenPlayer(p,110,154), p.name+' (draft)'));
+    var label = p.name + (p.isStar ? ' STAR' : '') + ' (' + p.ovr + ')';
+    playerRow.appendChild(wrap(buildMaddenPlayer(p,110,154), label));
   });
   el.appendChild(playerRow);
 
   // Gameplay size
   el.appendChild(sec('PLAYER CARDS — Gameplay Size'));
   var compRow = row();
-  players.forEach(function(p) {
-    compRow.appendChild(wrap(buildMaddenPlayer(p,80,110), p.name.split(' ').pop()+' (gameplay)'));
+  players.slice(0,4).forEach(function(p) {
+    compRow.appendChild(wrap(buildMaddenPlayer(p,80,110), p.name));
   });
   el.appendChild(compRow);
+
+  // Flame pip ratings demo
+  el.appendChild(sec('FLAME PIP RATINGS'));
+  var pipRow = row();
+  var pipData = [
+    { label: 'Sentinels OFF 4/5', filled: 4, color: '#C4A265' },
+    { label: 'Wolves DEF 4/5', filled: 4, color: '#D4D4D4' },
+    { label: 'Stags OFF 5/5', filled: 5, color: '#F28C28' },
+    { label: 'Serpents DEF 4/5', filled: 4, color: '#39FF14' },
+    { label: 'Stags DEF 2/5', filled: 2, color: '#F28C28' },
+  ];
+  pipData.forEach(function(pd) {
+    var w2 = document.createElement('div');
+    w2.style.cssText = 'text-align:center;';
+    var pipWrap = document.createElement('div');
+    pipWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:2px;padding:8px;background:var(--bg-surface);border-radius:6px;';
+    pipWrap.innerHTML = renderFlamePips(pd.filled, 5, pd.color, 12);
+    w2.appendChild(pipWrap);
+    w2.appendChild(lbl(pd.label));
+    pipRow.appendChild(w2);
+  });
+  el.appendChild(pipRow);
+
+  // Team helmets demo
+  el.appendChild(sec('TEAM HELMETS'));
+  var helmRow = row();
+  var teamIds = ['sentinels', 'wolves', 'stags', 'serpents'];
+  teamIds.forEach(function(tid) {
+    var hw = document.createElement('div');
+    hw.style.cssText = 'text-align:center;';
+    var h48 = document.createElement('div');
+    h48.style.cssText = 'display:flex;align-items:center;justify-content:center;padding:8px;background:var(--bg-surface);border-radius:6px;';
+    h48.innerHTML = teamHelmetSvg(tid, 48);
+    hw.appendChild(h48);
+    hw.appendChild(lbl(tid.toUpperCase() + ' (48px)'));
+    helmRow.appendChild(hw);
+  });
+  // Small sizes
+  teamIds.forEach(function(tid) {
+    var hw = document.createElement('div');
+    hw.style.cssText = 'text-align:center;';
+    var h24 = document.createElement('div');
+    h24.style.cssText = 'display:flex;align-items:center;justify-content:center;padding:8px;background:var(--bg-surface);border-radius:6px;';
+    h24.innerHTML = teamHelmetSvg(tid, 24);
+    hw.appendChild(h24);
+    hw.appendChild(lbl(tid.toUpperCase() + ' (24px)'));
+    helmRow.appendChild(hw);
+  });
+  el.appendChild(helmRow);
 
   // ============================================================
   // PLAY CARDS — Split V3

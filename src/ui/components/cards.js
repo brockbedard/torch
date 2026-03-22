@@ -1,8 +1,12 @@
 /**
- * TORCH — Shared Card Components
- * Extracted from cardMockup.js for reuse across all game screens.
- * Card backs, Madden-style player cards, play cards, torch cards.
+ * TORCH v0.21 — Shared Card Components
+ * Single source of truth for all card visuals.
+ * Card backs, Madden-style player cards, play cards, torch cards,
+ * team helmets, flame pip ratings.
  */
+
+import { BADGE_ICON_PATHS } from '../../data/badgeIcons.js';
+import { TEAMS } from '../../data/teams.js';
 
 // ====== CARD ANIMATIONS (inject once) ======
 var _stylesInjected = false;
@@ -158,38 +162,126 @@ export function buildHomeCard(type, w, h) {
   return outer;
 }
 
-// ====== PLAYER CARD — Madden Style ======
-var TIER_COLORS = { bronze:'#A0522D', silver:'#B0C4D4', gold:'#FFB800' };
-var POS_NAMES = {QB:'QB',WR:'WR',RB:'RB',FB:'FB',TE:'TE',SLOT:'SLOT',
-  CB:'CB',S:'S',LB:'LB',DL:'DL',DE:'DE'};
+// ====== PLAYER CARD — Madden Style (v0.21: badge replaces OVR) ======
+var POS_NAMES = {QB:'QB',WR:'WR',RB:'RB',FB:'FB',TE:'TE',SLOT:'SLOT',SB:'SB',
+  CB:'CB',S:'S',LB:'LB',DL:'DL',DE:'DE',EDGE:'EDGE'};
+
+// Helmet SVG shell path (reused across all teams)
+var HELMET_PATH = 'M214.67 410.6c-14.73-1.18-28.57-6.54-42.64-11.99-25.84-10-52.68-20.39-81.81 4.8-5.1 4.41-12.82 3.85-17.24-1.25l-.81-1.04c-12.22-16.33-23.15-33.53-32.57-51.2-9.54-17.9-17.53-36.25-23.76-54.66-2.2-6.51-4.16-12.94-5.88-19.27C-5.5 218.91-3.09 163.75 18.1 117.61 39.44 71.12 79.58 34.13 139.37 13.89c5.45-1.85 11.01-3.55 16.65-5.08 52.22-14.14 109.49-11.57 157.51 9.95 43.22 19.37 78.9 53.94 96.85 105.29 2.02 5.82-.61 12.14-5.94 14.88-40.41 22.46-66.27 38.89-82.33 53.19l2.36 7.35v.05c6.51 20.34 13.65 42.65 22.23 63.66 16.25-6.42 32-13.62 47.07-21.33 18.65-9.55 36.55-20.02 53.33-30.86 5.1-3.27 11.89-1.79 15.16 3.31.39.6.72 1.24.97 1.88l47.89 111.61c2.04 4.79.41 10.22-3.63 13.16-14.42 11.8-29.24 20-44.13 24.67-15.62 4.89-31.33 5.92-46.8 3.12-19.86-3.58-36.19-14.08-49.89-28.82-20.42 6.63-40.86 11.65-59.62 14.43-4.39 10.72-11.18 20.58-19.66 28.96-13.84 13.67-32.34 23.48-52.39 26.55a88.224 88.224 0 0 1-20.33.74zm-5.19-119.43c15.25 0 27.6 12.36 27.6 27.6 0 15.25-12.35 27.6-27.6 27.6-15.24 0-27.6-12.35-27.6-27.6 0-15.24 12.36-27.6 27.6-27.6zM430 348.27l-13.38-27.88c-7.45 3.44-15.09 6.71-22.83 9.77l-4.08 1.59c9.07 7.9 19.23 13.36 30.71 15.43 3.17.57 6.37.94 9.58 1.09zm-22.89-47.69-15.86-33.03c-11.63 5.61-23.54 10.88-35.65 15.69 5.47 11.3 11.5 21.83 18.24 30.98 3.98-1.44 7.94-2.94 11.88-4.5a441.89 441.89 0 0 0 21.39-9.14zm3.69-42.91 15.95 33.21c13.14-6.98 25.12-14.42 35.2-22.05l-13.93-32.46a632.569 632.569 0 0 1-37.22 21.3zm25.46 53.03 16.82 35.04c1.25-.33 2.5-.69 3.75-1.08 10.26-3.21 20.57-8.55 30.79-16.02l-16.78-39.09c-10.24 7.35-21.96 14.47-34.58 21.15zm-130.93-99.16c-10.71 18.13-7.02 35.74-1.3 63.05l.62 2.94 2.22-.64a429.55 429.55 0 0 0 19.26-6.13c-7.98-19.65-14.68-40.11-20.8-59.22zm3.63 87.55c1.01 5.45 2 11.14 2.91 17.1.77 5.03.96 10.07.63 15.04 12.68-2.31 26.09-5.64 39.67-9.77-6.34-9.4-12.02-19.72-17.19-30.55-7.23 2.5-14.57 4.86-22.01 7.03l-4.01 1.15zm-30.49 56.97c-4.35.29-8.67.52-12.47.65-3.79.12-6.98-2.82-7.19-6.6-.92-16.66-2.73-33.15-4.47-49.06-3.86-35.28-7.44-67.91-.7-95.91 4.65-19.3 20.43-38.98 40.59-56.85 22.96-20.37 51.8-38.64 75.92-51.17-16.8-25.63-40.05-44.15-66.59-56.05-42.76-19.16-94.13-21.36-141.22-8.6-5.26 1.42-10.31 2.96-15.12 4.59C94.25 55 58.89 87.32 40.32 127.77c-18.74 40.8-20.7 90.24-6.7 141.9 1.61 5.95 3.42 11.87 5.4 17.74 5.86 17.31 13.3 34.44 22.13 51.02 7 13.13 14.89 25.98 23.58 38.38 35.7-24.37 66.43-12.48 96.12-.99 12.3 4.76 24.4 9.45 35.74 10.36 4.97.39 9.93.19 14.77-.55 14.85-2.28 28.58-9.58 38.88-19.75 3.08-3.04 5.85-6.34 8.23-9.82z';
+
+// Compute tier from OVR (spec: star 80-84, starter 76-78, reserve 72-74)
+function playerTier(ovr) {
+  if (ovr >= 80) return 'star';
+  if (ovr >= 76) return 'starter';
+  return 'reserve';
+}
+
+// Tier border colors
+function tierBorderStyle(tier, isStar, teamColor) {
+  if (isStar) return '2px solid #FFB800';
+  if (tier === 'star') return '2px solid #FFB800';
+  if (tier === 'starter') return '2px solid ' + (teamColor || '#aaa');
+  return '1px solid ' + (teamColor ? teamColor + '80' : '#aaa80');
+}
+
+// Tier glow color for helmet/badge
+function tierColor(tier, isStar) {
+  if (isStar || tier === 'star') return '#FFB800';
+  if (tier === 'starter') return '#B0C4D4';
+  return '#A0522D';
+}
+
+// Render team-colored helmet SVG
+export function teamHelmetSvg(teamId, size) {
+  size = size || 48;
+  var team = TEAMS[teamId];
+  var baseColor = team ? team.helmet.base : '#888';
+  var fmColor = team ? team.helmet.facemask : '#ccc';
+  // Helmet shell + facemask accent line
+  return '<svg viewBox="0 0 512 411" width="' + size + '" height="' + Math.round(size * 0.8) + '" fill="none">'
+    + '<path fill="' + baseColor + '" opacity="0.85" fill-rule="nonzero" d="' + HELMET_PATH + '"/>'
+    // Facemask bars (simplified — two horizontal lines across the face area)
+    + '<rect x="380" y="240" width="90" height="8" rx="4" fill="' + fmColor + '" opacity="0.7"/>'
+    + '<rect x="380" y="270" width="80" height="8" rx="4" fill="' + fmColor + '" opacity="0.7"/>'
+    // Stripe (center top)
+    + '<rect x="200" y="30" width="' + (team ? '16' : '0') + '" height="120" rx="4" fill="' + (team ? team.helmet.stripe : '#888') + '" opacity="0.5"/>'
+    + '</svg>';
+}
 
 export function buildMaddenPlayer(p, w, h) {
-  var tc = TIER_COLORS[p.tier] || '#B0C4D4';
+  var tier = p.tier || playerTier(p.ovr);
+  var isStar = p.isStar || false;
+  var tc = tierColor(tier, isStar);
+  var teamColor = p.teamColor || '#FF4511';
   var lg = w > 90;
   var card = document.createElement('div');
-  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:'+(lg?8:6)+'px;border:2px solid '+tc+'44;background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);position:relative;box-shadow:0 '+(lg?'4px 16px':'3px 10px')+' rgba(0,0,0,0.5);display:flex;flex-direction:column;';
+  var border = tierBorderStyle(tier, isStar, teamColor);
+  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:'+(lg?8:6)+'px;border:'+border+';background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);position:relative;box-shadow:0 '+(lg?'4px 16px':'3px 10px')+' rgba(0,0,0,0.5);display:flex;flex-direction:column;overflow:hidden;';
+
+  // Star glow for star players
+  if (isStar) {
+    card.style.boxShadow += ',0 0 ' + (lg ? '12' : '8') + 'px rgba(255,184,0,0.3)';
+  }
+
   var fullPos = POS_NAMES[p.pos] || p.pos;
-  // Top row: OVR centered, #number and position flanking
+
+  // Badge icon SVG for center (replaces OVR number)
+  var badgePath = BADGE_ICON_PATHS[p.badge] || '';
+  var badgeSize = lg ? 24 : 16;
+  var badgeSvg = badgePath
+    ? '<svg viewBox="0 0 512 512" width="'+badgeSize+'" height="'+badgeSize+'"><path d="'+badgePath+'" fill="'+tc+'"/></svg>'
+    : '';
+
+  // Top row: POS left, badge icon centered, #number right
   var topArea = '<div style="position:relative;padding:'+(lg?'6':'4')+'px 0 '+(lg?'2':'1')+'px;z-index:2;text-align:center;">'
-    +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(lg?32:20)+'px;color:'+tc+';line-height:1;text-shadow:0 0 '+(lg?'10':'6')+'px '+tc+'44;">'+p.ovr+'</div>'
-    +'<div style="position:absolute;left:'+(lg?'8':'5')+'px;top:50%;transform:translateY(-50%);font-family:\'Teko\';font-weight:700;font-size:'+(lg?11:8)+'px;color:#fff;opacity:0.7;line-height:1;">#'+(p.num||'')+'</div>'
-    +'<div style="position:absolute;right:'+(lg?'8':'5')+'px;top:50%;transform:translateY(-50%);font-family:\'Teko\';font-weight:700;font-size:'+(lg?11:8)+'px;color:#fff;opacity:0.7;line-height:1;">'+fullPos+'</div>'
+    + badgeSvg
+    +'<div style="position:absolute;left:'+(lg?'8':'5')+'px;top:50%;transform:translateY(-50%);font-family:\'Teko\';font-weight:700;font-size:'+(lg?11:8)+'px;color:#fff;opacity:0.7;line-height:1;">'+fullPos+'</div>'
+    +'<div style="position:absolute;right:'+(lg?'8':'5')+'px;top:50%;transform:translateY(-50%);font-family:\'Teko\';font-weight:700;font-size:'+(lg?11:8)+'px;color:#fff;opacity:0.7;line-height:1;">#'+(p.num||'')+'</div>'
     +'</div>';
-  // Football helmet art
+
+  // Star icon (pinned top-right for star players)
+  var starIcon = '';
+  if (isStar) {
+    starIcon = '<div style="position:absolute;top:'+(lg?'4':'3')+'px;right:'+(lg?'4':'3')+'px;z-index:5;width:'+(lg?'16':'12')+'px;height:'+(lg?'16':'12')+'px;">'
+      + '<svg viewBox="0 0 24 24" width="'+(lg?'16':'12')+'" height="'+(lg?'16':'12')+'"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z" fill="#FFB800"/></svg>'
+      + '</div>';
+  }
+
+  // Team-colored helmet art
   var helmW = lg ? 80 : 52;
   var helmH = lg ? 64 : 42;
+  var helmColor = teamColor;
   var artArea = '<div style="position:absolute;top:'+(lg?'30':'20')+'px;left:0;right:0;bottom:'+(lg?'26':'18')+'px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 '+(lg?'14':'10')+'px '+tc+'88);">'
     +'<svg viewBox="0 0 512 411" width="'+helmW+'" height="'+helmH+'" fill="none" style="position:absolute;">'
-    +'<path fill="'+tc+'" opacity="0.7" fill-rule="nonzero" d="M214.67 410.6c-14.73-1.18-28.57-6.54-42.64-11.99-25.84-10-52.68-20.39-81.81 4.8-5.1 4.41-12.82 3.85-17.24-1.25l-.81-1.04c-12.22-16.33-23.15-33.53-32.57-51.2-9.54-17.9-17.53-36.25-23.76-54.66-2.2-6.51-4.16-12.94-5.88-19.27C-5.5 218.91-3.09 163.75 18.1 117.61 39.44 71.12 79.58 34.13 139.37 13.89c5.45-1.85 11.01-3.55 16.65-5.08 52.22-14.14 109.49-11.57 157.51 9.95 43.22 19.37 78.9 53.94 96.85 105.29 2.02 5.82-.61 12.14-5.94 14.88-40.41 22.46-66.27 38.89-82.33 53.19l2.36 7.35v.05c6.51 20.34 13.65 42.65 22.23 63.66 16.25-6.42 32-13.62 47.07-21.33 18.65-9.55 36.55-20.02 53.33-30.86 5.1-3.27 11.89-1.79 15.16 3.31.39.6.72 1.24.97 1.88l47.89 111.61c2.04 4.79.41 10.22-3.63 13.16-14.42 11.8-29.24 20-44.13 24.67-15.62 4.89-31.33 5.92-46.8 3.12-19.86-3.58-36.19-14.08-49.89-28.82-20.42 6.63-40.86 11.65-59.62 14.43-4.39 10.72-11.18 20.58-19.66 28.96-13.84 13.67-32.34 23.48-52.39 26.55a88.224 88.224 0 0 1-20.33.74zm-5.19-119.43c15.25 0 27.6 12.36 27.6 27.6 0 15.25-12.35 27.6-27.6 27.6-15.24 0-27.6-12.35-27.6-27.6 0-15.24 12.36-27.6 27.6-27.6zM430 348.27l-13.38-27.88c-7.45 3.44-15.09 6.71-22.83 9.77l-4.08 1.59c9.07 7.9 19.23 13.36 30.71 15.43 3.17.57 6.37.94 9.58 1.09zm-22.89-47.69-15.86-33.03c-11.63 5.61-23.54 10.88-35.65 15.69 5.47 11.3 11.5 21.83 18.24 30.98 3.98-1.44 7.94-2.94 11.88-4.5a441.89 441.89 0 0 0 21.39-9.14zm3.69-42.91 15.95 33.21c13.14-6.98 25.12-14.42 35.2-22.05l-13.93-32.46a632.569 632.569 0 0 1-37.22 21.3zm25.46 53.03 16.82 35.04c1.25-.33 2.5-.69 3.75-1.08 10.26-3.21 20.57-8.55 30.79-16.02l-16.78-39.09c-10.24 7.35-21.96 14.47-34.58 21.15zm-130.93-99.16c-10.71 18.13-7.02 35.74-1.3 63.05l.62 2.94 2.22-.64a429.55 429.55 0 0 0 19.26-6.13c-7.98-19.65-14.68-40.11-20.8-59.22zm3.63 87.55c1.01 5.45 2 11.14 2.91 17.1.77 5.03.96 10.07.63 15.04 12.68-2.31 26.09-5.64 39.67-9.77-6.34-9.4-12.02-19.72-17.19-30.55-7.23 2.5-14.57 4.86-22.01 7.03l-4.01 1.15zm-30.49 56.97c-4.35.29-8.67.52-12.47.65-3.79.12-6.98-2.82-7.19-6.6-.92-16.66-2.73-33.15-4.47-49.06-3.86-35.28-7.44-67.91-.7-95.91 4.65-19.3 20.43-38.98 40.59-56.85 22.96-20.37 51.8-38.64 75.92-51.17-16.8-25.63-40.05-44.15-66.59-56.05-42.76-19.16-94.13-21.36-141.22-8.6-5.26 1.42-10.31 2.96-15.12 4.59C94.25 55 58.89 87.32 40.32 127.77c-18.74 40.8-20.7 90.24-6.7 141.9 1.61 5.95 3.42 11.87 5.4 17.74 5.86 17.31 13.3 34.44 22.13 51.02 7 13.13 14.89 25.98 23.58 38.38 35.7-24.37 66.43-12.48 96.12-.99 12.3 4.76 24.4 9.45 35.74 10.36 4.97.39 9.93.19 14.77-.55 14.85-2.28 28.58-9.58 38.88-19.75 3.08-3.04 5.85-6.34 8.23-9.82z"/>'
+    +'<path fill="'+helmColor+'" opacity="0.7" fill-rule="nonzero" d="'+HELMET_PATH+'"/>'
     +'</svg>'
     +'</div>';
+
   // Bottom gradient
   var botGrad = '<div style="position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(transparent,#0A0804);z-index:1;"></div>';
   // Name bar
-  var nameBar = '<div style="position:absolute;bottom:0;left:0;right:0;z-index:2;background:'+p.teamColor+'33;padding:'+(lg?'6px 8px':'4px 5px')+';border-top:1px solid '+p.teamColor+'44;border-bottom:2px solid '+p.teamColor+';border-radius:0 0 '+(lg?'6':'4')+'px '+(lg?'6':'4')+'px;">'
+  var nameBar = '<div style="position:absolute;bottom:0;left:0;right:0;z-index:2;background:'+teamColor+'33;padding:'+(lg?'6px 8px':'4px 5px')+';border-top:1px solid '+teamColor+'44;border-bottom:2px solid '+teamColor+';border-radius:0 0 '+(lg?'6':'4')+'px '+(lg?'6':'4')+'px;">'
     +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(lg?12:9)+'px;color:#fff;letter-spacing:'+(lg?'1':'0.5')+'px;text-align:center;line-height:1;white-space:nowrap;">'+(lg?p.name:p.name.split(' ').pop())+'</div></div>';
-  card.innerHTML = topArea + artArea + botGrad + nameBar;
+  card.innerHTML = starIcon + topArea + artArea + botGrad + nameBar;
   return card;
+}
+
+// ====== FLAME PIP RATING ======
+var FLAME_PIP_PATH = 'M6 0C6 0 2 5 1.5 8C1 11 3 13.5 5 14.5C5 14.5 3.5 11 5 8C5.5 6.5 6 5 6 3.5C6 5 6.5 6.5 7 8C8.5 11 7 14.5 7 14.5C9 13.5 11 11 10.5 8C10 5 6 0 6 0Z';
+
+// Renders a row of flame pips (e.g., 4 out of 5 filled)
+// Returns an HTML string
+export function renderFlamePips(filled, total, filledColor, size) {
+  total = total || 5;
+  filledColor = filledColor || '#FFB800';
+  size = size || 10;
+  var h = Math.round(size * 1.3);
+  var html = '';
+  for (var i = 0; i < total; i++) {
+    var color = i < filled ? filledColor : '#333';
+    html += '<svg viewBox="0 0 12 16" width="' + size + '" height="' + h + '" style="margin-right:1px;"><path d="' + FLAME_PIP_PATH + '" fill="' + color + '"/></svg>';
+  }
+  return html;
 }
 
 // ====== PLAY CARD — V1 (name bar top, icon center, category+risk bottom) ======
