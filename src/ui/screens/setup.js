@@ -1,6 +1,6 @@
 import { SND } from '../../engine/sound.js';
 import { GS, setGs } from '../../state.js';
-import { TEAMS } from '../../data/teams.js';
+import { TEAMS_LIST as TEAMS } from '../../data/teams.js';
 import { buildDraftProgress } from '../components/draftProgress.js';
 
 /* ═══════════════════════════════════════════

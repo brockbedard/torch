@@ -1,214 +1,105 @@
 /**
- * TORCH — Torch Cards Catalog
- * 25 cards: 7 Gold (40-50pts), 12 Silver (20-30pts), 6 Bronze (10-20pts).
- * Synchronized with docs/torch_sim.py.
- * Reactive cards: CHALLENGE FLAG, FLAG ON THE PLAY, ONSIDE KICK.
+ * TORCH v0.21 — TORCH Card Catalog
+ * 8 cards: 2 Gold (40-50pts), 4 Silver (20-30pts), 2 Bronze (10-20pts).
+ * Score = wallet. Buying cards spends your score.
+ * Cards persist across 3-game season. Single-use.
  */
 
 export const TORCH_CARDS = [
-  // === GOLD (7 cards, 40-50 cost) ===
+  // === GOLD (2 cards) ===
   {
-    id: 'SCOUT_TEAM',
+    id: 'scout_team',
     name: 'SCOUT TEAM',
     tier: 'GOLD',
     cost: 45,
-    isReactive: false,
-    effect: 'Defensive study increases stuff rate by 8% and reveals opponent play tendencies.'
+    type: 'pre-snap',
+    effect: 'See the opponent\'s play before you pick yours',
   },
   {
-    id: 'FILM_LEAK',
-    name: 'FILM LEAK',
-    tier: 'GOLD',
-    cost: 45,
-    isReactive: false,
-    effect: 'Opponent play is revealed pre-snap. Offense suffers a -3 mean yard penalty.'
-  },
-  {
-    id: 'SURE_HANDS',
+    id: 'sure_hands',
     name: 'SURE HANDS',
     tier: 'GOLD',
     cost: 50,
-    isReactive: false,
-    effect: 'Guarantees 100% completion rate and prevents all interceptions or fumbles this snap.'
-  },
-  {
-    id: 'MEDICAL_TENT',
-    name: 'MEDICAL TENT',
-    tier: 'GOLD',
-    cost: 40,
-    isReactive: false,
-    effect: 'Instantly heal any injured player, making them available for the next snap.'
-  },
-  {
-    id: 'TO_THE_HOUSE',
-    name: 'TO THE HOUSE',
-    tier: 'GOLD',
-    cost: 50,
-    isReactive: false,
-    effect: 'Defensive card: Any turnover forced this snap is automatically returned for a touchdown.'
-  },
-  {
-    id: 'DOUBLE_DOWN',
-    name: 'DOUBLE DOWN',
-    tier: 'GOLD',
-    cost: 45,
-    isReactive: false,
-    effect: 'Select two offensive plays and resolve both; the better result is kept.'
-  },
-  {
-    id: 'TRADE_DEADLINE',
-    name: 'TRADE DEADLINE',
-    tier: 'GOLD',
-    cost: 50,
-    isReactive: false,
-    effect: 'Permanently steal one random offensive play from the opponent\'s playbook.'
+    type: 'reactive',
+    effect: 'Cancel a turnover (INT or fumble) on this snap',
   },
 
-  // === SILVER (12 cards, 20-30 cost) ===
+  // === SILVER (4 cards) ===
   {
-    id: 'SIDELINE_PHONE',
-    name: 'SIDELINE PHONE',
-    tier: 'SILVER',
-    cost: 25,
-    isReactive: false,
-    effect: 'Reveal opponent\'s defensive coverage, allowing for an optimal play-call counter.'
-  },
-  {
-    id: 'PRIME_TIME',
-    name: 'PRIME TIME',
-    tier: 'SILVER',
-    cost: 25,
-    isReactive: false,
-    effect: 'Boost featured player OVR to 99 for this snap, maximizing performance.'
-  },
-  {
-    id: 'DOUBLE_MOVE',
-    name: 'DOUBLE MOVE',
-    tier: 'SILVER',
-    cost: 30,
-    isReactive: false,
-    effect: 'Creates a mismatch providing +2 mean yards and +10 TORCH points on a success.'
-  },
-  {
-    id: 'HARD_COUNT',
+    id: 'hard_count',
     name: 'HARD COUNT',
     tier: 'SILVER',
     cost: 25,
-    isReactive: false,
-    effect: 'Disrupts defensive timing. Forces a random defensive play or provides a yardage bonus.'
+    type: 'pre-snap',
+    effect: 'Force opponent to discard their play and pick a random replacement',
   },
   {
-    id: 'SHIFT',
-    name: 'SHIFT',
-    tier: 'SILVER',
-    cost: 20,
-    isReactive: false,
-    effect: 'Defensive adjustment that disrupts offensive alignment and execution.'
-  },
-  {
-    id: 'CHALLENGE_FLAG',
-    name: 'CHALLENGE FLAG',
-    tier: 'SILVER',
-    cost: 25,
-    isReactive: true,
-    effect: '75% chance to overturn a turnover or failed conversion on official review.'
-  },
-  {
-    id: 'FLAG_ON_THE_PLAY',
-    name: 'FLAG ON THE PLAY',
-    tier: 'SILVER',
-    cost: 25,
-    isReactive: true,
-    effect: 'Defensive penalty nullifies a big gain (10+ yards) by the offense.'
-  },
-  {
-    id: 'TIMEOUT',
-    name: 'TIMEOUT',
-    tier: 'SILVER',
-    cost: 20,
-    isReactive: false,
-    effect: 'Stops the clock in the 2-minute drill; 0 seconds elapse on this snap.'
-  },
-  {
-    id: 'HOT_ROUTE',
+    id: 'hot_route',
     name: 'HOT ROUTE',
     tier: 'SILVER',
     cost: 25,
-    isReactive: false,
-    effect: 'Quickly change a receiver\'s route, improving yardage potential at the line.'
+    type: 'pre-snap',
+    effect: 'Discard your full 5-card hand, draw 5 fresh',
   },
   {
-    id: 'FAKE_KNEEL',
-    name: 'FAKE KNEEL',
+    id: 'flag_on_the_play',
+    name: 'FLAG ON THE PLAY',
     tier: 'SILVER',
     cost: 25,
-    isReactive: false,
-    effect: 'Surprise 2-minute drill play that provides a +6 mean yard bonus.'
+    type: 'reactive',
+    effect: 'After opponent gains 10+ yards, 75% chance play is called back',
   },
   {
-    id: 'TRICK_PLAY',
-    name: 'TRICK PLAY',
-    tier: 'SILVER',
-    cost: 20,
-    isReactive: false,
-    effect: 'High-risk play that doubles TORCH points earned if it gains 10 or more yards.'
-  },
-  {
-    id: 'ONSIDE_KICK',
+    id: 'onside_kick',
     name: 'ONSIDE KICK',
     tier: 'SILVER',
     cost: 20,
-    isReactive: true,
-    effect: '35% chance to recover the ball at midfield after scoring a touchdown.'
+    type: 'post-td',
+    effect: 'After scoring a TD, 35% chance you recover at 50',
   },
 
-  // === BRONZE (6 cards, 10-20 cost) ===
+  // === BRONZE (2 cards) ===
   {
-    id: 'PERSONNEL_REPORT',
-    name: 'PERSONNEL REPORT',
-    tier: 'BRONZE',
-    cost: 15,
-    isReactive: false,
-    effect: 'Scout the opponent\'s roster to identify and exploit specific defensive weaknesses.'
-  },
-  {
-    id: '12TH_MAN',
+    id: 'twelfth_man',
     name: '12TH MAN',
     tier: 'BRONZE',
     cost: 15,
-    isReactive: false,
-    effect: 'Home field advantage: provides +4 mean yards and doubles TORCH points this snap.'
+    type: 'pre-snap',
+    effect: '+4 yards and double TORCH points this snap',
   },
   {
-    id: 'HURRY_UP',
-    name: 'HURRY UP',
-    tier: 'BRONZE',
-    cost: 15,
-    isReactive: false,
-    effect: '+2 mean yards when used during the 2-minute drill.'
-  },
-  {
-    id: 'ICE',
+    id: 'ice',
     name: 'ICE',
     tier: 'BRONZE',
     cost: 15,
-    isReactive: false,
-    effect: 'Negates the opponent\'s featured player OVR bonus and badge combos this snap.'
+    type: 'pre-snap',
+    effect: 'Freeze opponent\'s player — zero OVR bonus, no badge combo',
   },
-  {
-    id: 'NEXT_MAN_UP',
-    name: 'NEXT MAN UP',
-    tier: 'BRONZE',
-    cost: 10,
-    isReactive: false,
-    effect: 'Bench players step up with increased performance when starters are unavailable.'
-  },
-  {
-    id: 'RUN_IT_BACK',
-    name: 'RUN IT BACK',
-    tier: 'BRONZE',
-    cost: 15,
-    isReactive: false,
-    effect: 'Repeat the previous play with a small yardage bonus, catching the defense off guard.'
-  }
 ];
+
+// Get cards by tier
+export function getCardsByTier(tier) {
+  return TORCH_CARDS.filter(function(c) { return c.tier === tier; });
+}
+
+// Get a random card weighted by tier
+export function getRandomCard(weights) {
+  // weights: { BRONZE: 0.4, SILVER: 0.4, GOLD: 0.2 }
+  var r = Math.random();
+  var tier;
+  if (r < (weights.BRONZE || 0)) tier = 'BRONZE';
+  else if (r < (weights.BRONZE || 0) + (weights.SILVER || 0)) tier = 'SILVER';
+  else tier = 'GOLD';
+  var pool = getCardsByTier(tier);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// Shop trigger tier weights
+export var SHOP_WEIGHTS = {
+  touchdown:      { BRONZE: 0.40, SILVER: 0.40, GOLD: 0.20 },
+  turnover:       { BRONZE: 0.40, SILVER: 0.40, GOLD: 0.20 },
+  fourthDownStop: { BRONZE: 0.60, SILVER: 0.30, GOLD: 0.10 },
+  starActivation: { BRONZE: 0.50, SILVER: 0.35, GOLD: 0.15 },
+  halftime:       { BRONZE: 0.30, SILVER: 0.40, GOLD: 0.30 },
+  betweenGame:    { BRONZE: 0.20, SILVER: 0.40, GOLD: 0.40 },
+};
