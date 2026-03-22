@@ -1,5 +1,6 @@
 import { SND } from '../../engine/sound.js';
 import { render, setGs, getOffCards, getDefCards, VERSION, VERSION_NAME } from '../../state.js';
+import { buildHomeCard } from '../components/cards.js';
 
 var DEV_LOG = [
   "v0.20.0 \u2014 Fire & Steel: Cards-hero layout, football-O wordmark, green offense/orange torch/blue defense triad, TORCH card premium treatment (animated flame, breathing glow, light cast, warm shimmer, ember sparks), warm scorched-black bg, steel blue defense, torch orange replaces purple, Font Awesome icons, Teko+Rajdhani font system.",
@@ -94,160 +95,44 @@ export function buildHome(){
 
   // Cards go ABOVE the title — they are the hero element
 
-  // === CARD FAN — playing card style with football art ===
-  // === CARD FAN — premium cards with staggered dealing ===
+  // === CARD FAN — premium cards using shared buildHomeCard ===
   var cardFan=document.createElement('div');
   cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:360px;height:200px;margin-top:0;margin-bottom:24px;z-index:2;overflow:visible;animation:fanFloat 5s ease-in-out 1.5s infinite;';
-  // Card data — no blur filter, crisp icons with stroke + spotlight backing
-  var fanData=[
-    {accent:'#7ACC00',bg:'#5A9E00',label:'OFFENSE',pip:'#7ACC00',borderAngle:'135deg',
-     spotColor:'rgba(122,204,0,0.25)',
-     art:'<svg viewBox="0 0 448 512" width="48" height="52">'
-       +'<defs><linearGradient id="boltGrad" x1="100" y1="450" x2="350" y2="50" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#90E040"/><stop offset="100%" stop-color="#D4FF80"/></linearGradient></defs>'
-       +'<path fill="url(#boltGrad)" stroke="#7ACC00" stroke-width="8" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/>'
-       +'</svg>',
-     cornerPip:'<svg viewBox="0 0 448 512" width="6" height="7"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#7ACC00"/></svg>'},
-    {accent:'#FF4511',bg:'#CC3A10',label:'TORCH',pip:'#FF4511',borderAngle:'135deg',
-     spotColor:'rgba(255,69,17,0.25)',
-     art:'<svg viewBox="-8 -10 60 72" fill="none" width="48" height="52">'
-       +'<defs><linearGradient id="noGrad" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF6A30"/><stop offset="100%" stop-color="#FFD060"/></linearGradient>'
-       +'<linearGradient id="noInner" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA44"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient></defs>'
-       +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#noGrad)" stroke="#FF4511" stroke-width="1.5"/>'
-       +'<path d="M22 12C22 12 13 24 12 32C11 40 15 46 19 49C19 49 16 41 19 32C20 28 21 25 22 20C23 25 24 28 25 32C28 41 25 49 25 49C29 46 33 40 32 32C31 24 22 12 22 12Z" fill="url(#noInner)" opacity="0.7"/>'
-       +'<ellipse cx="22" cy="52" rx="9" ry="3" fill="#FF4511" opacity="0.2"/>'
-       +'</svg>',
-     cornerPip:'<svg viewBox="0 0 5 6" width="6" height="7"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FF4511"/></svg>'},
-    {accent:'#4DA6FF',bg:'#3A7ACC',label:'DEFENSE',pip:'#4DA6FF',borderAngle:'135deg',
-     spotColor:'rgba(77,166,255,0.2)',
-     art:'<svg viewBox="0 0 512 512" width="48" height="52">'
-       +'<defs><linearGradient id="shieldGrad" x1="256" y1="512" x2="256" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3080D0"/><stop offset="100%" stop-color="#A0D4FF"/></linearGradient></defs>'
-       +'<path fill="url(#shieldGrad)" stroke="#4DA6FF" stroke-width="8" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8s0 0 0 0z"/>'
-       +'</svg>',
-     cornerPip:'<svg viewBox="0 0 512 512" width="6" height="7"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z" fill="#4DA6FF"/></svg>'},
-  ];
+  var fanTypes=['offense','torch','defense'];
   var fanAngles=[-18,0,18];
   var fanX=[-72,0,72];
   var fanY=[12,0,12];
   var fanZ=[1,3,1];
   var fanScale=[1,1.2,1];
-  var dealDelay=[0,0.12,0.24]; // staggered entrance
+  var dealDelay=[0,0.12,0.24];
   for(var c=0;c<3;c++){
-    var d=fanData[c];
-    var isTorch=d.label==='TORCH';
-    var isOff=d.label==='OFFENSE';
-    var isDef=d.label==='DEFENSE';
-    var borderW=isTorch?4:3;
-    var card=document.createElement('div');
-    card.style.cssText='position:absolute;width:100px;height:140px;border-radius:8px;'
-      +'background:radial-gradient(ellipse at 50% 40%,'+d.bg+' 0%,#0A0804 100%);'
-      +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
+    var isTorch=fanTypes[c]==='torch';
+    var isOff=fanTypes[c]==='offense';
+    var isDef=fanTypes[c]==='defense';
+
+    // Build card back from shared component
+    var cardOuter=buildHomeCard(fanTypes[c],100,140);
+
+    // Apply fan positioning to the outer wrapper
+    cardOuter.style.cssText+='position:absolute;'
       +'transform:rotate('+fanAngles[c]+'deg) translateX('+fanX[c]+'px) translateY('+fanY[c]+'px) scale('+fanScale[c]+');'
       +'z-index:'+fanZ[c]+';'
-      // TORCH gets deeper shadow for "floating higher" effect
-      +'box-shadow:0 2px 4px rgba(0,0,0,0.4),'+(isTorch?'0 16px 40px rgba(0,0,0,0.4)':'0 8px 20px rgba(0,0,0,0.25)')+';'
-      +'overflow:hidden;position:absolute;'
       +'opacity:0;animation:cardDealIn 0.4s cubic-bezier(0.22,1.3,0.36,1) '+dealDelay[c]+'s both;';
 
-    // === TORCH-ONLY: Breathing glow aura behind card (#2) ===
-    if(isTorch){
-      var glowAura=document.createElement('div');
-      glowAura.style.cssText='position:absolute;inset:-8px;border-radius:16px;background:#FF4511;filter:blur(12px);opacity:0.15;z-index:-2;pointer-events:none;animation:torchGlow 3s ease-in-out infinite;';
-      card.appendChild(glowAura);
-    }
-
-    // === TORCH-ONLY + ADJACENT: Light cast from torch onto neighbors (#3) ===
-    if(isOff){
-      // Warm light on offense card's right edge (nearest torch)
+    // Add light cast from torch onto adjacent cards
+    var innerCard=cardOuter.querySelector('.torch-card-inner');
+    if(isOff && innerCard){
       var warmCast=document.createElement('div');
       warmCast.style.cssText='position:absolute;top:0;right:0;width:40%;height:100%;background:linear-gradient(to left,rgba(255,120,40,0.06),transparent);border-radius:0 8px 8px 0;z-index:1;pointer-events:none;';
-      card.appendChild(warmCast);
+      innerCard.appendChild(warmCast);
     }
-    if(isDef){
-      // Warm light on defense card's left edge (nearest torch)
+    if(isDef && innerCard){
       var warmCast2=document.createElement('div');
       warmCast2.style.cssText='position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(to right,rgba(255,120,40,0.06),transparent);border-radius:8px 0 0 8px;z-index:1;pointer-events:none;';
-      card.appendChild(warmCast2);
+      innerCard.appendChild(warmCast2);
     }
 
-    // Subtle diagonal texture pattern
-    var texture=document.createElement('div');
-    texture.style.cssText='position:absolute;inset:0;border-radius:8px;opacity:0.04;pointer-events:none;z-index:1;background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.5) 3px,rgba(255,255,255,0.5) 4px);';
-    card.appendChild(texture);
-    // Inset bevel
-    var bevel=document.createElement('div');
-    bevel.style.cssText='position:absolute;inset:0;border-radius:8px;box-shadow:inset 1px 1px 3px rgba(255,255,255,0.06),inset -1px -1px 3px rgba(0,0,0,0.3);pointer-events:none;z-index:7;';
-    card.appendChild(bevel);
-    // Gradient border
-    var borderWrap=document.createElement('div');
-    borderWrap.style.cssText='position:absolute;inset:-'+borderW+'px;border-radius:'+(8+borderW)+'px;background:linear-gradient('+d.borderAngle+','+d.accent+',rgba(255,255,255,0.4),'+d.accent+');z-index:-1;';
-    card.appendChild(borderWrap);
-    // Inner margin
-    var margin=document.createElement('div');
-    margin.style.cssText='position:absolute;inset:5px;border-radius:5px;border:1.5px solid '+d.accent+'33;pointer-events:none;z-index:4;';
-    card.appendChild(margin);
-    // Corner pips
-    var pipTL=document.createElement('div');
-    pipTL.style.cssText='position:absolute;top:8px;left:8px;z-index:5;';
-    pipTL.innerHTML=d.cornerPip;
-    card.appendChild(pipTL);
-    var pipBR=document.createElement('div');
-    pipBR.style.cssText='position:absolute;bottom:24px;right:8px;z-index:5;transform:rotate(180deg);';
-    pipBR.innerHTML=d.cornerPip;
-    card.appendChild(pipBR);
-    // Divider
-    var divider=document.createElement('div');
-    divider.style.cssText='position:absolute;bottom:'+(isTorch?'22':'20')+'px;left:15%;right:15%;height:1px;background:'+d.accent+'22;z-index:5;';
-    card.appendChild(divider);
-    // Spotlight backing
-    var spotlight=document.createElement('div');
-    spotlight.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:68px;height:68px;border-radius:50%;background:radial-gradient(circle,'+d.spotColor+' 0%,transparent 70%);z-index:2;pointer-events:none;';
-    card.appendChild(spotlight);
-    // Center art — TORCH gets animated flame (#1), others stay static
-    var artArea=document.createElement('div');
-    artArea.style.cssText='display:flex;align-items:center;justify-content:center;width:48px;height:52px;z-index:3;';
-    if(isTorch){
-      // Re-enable flame animation only on torch card
-      artArea.innerHTML=d.art.replace('fill="url(#noGrad)" stroke="#FF4511" stroke-width="1.5"','fill="url(#noGrad)" stroke="#FF4511" stroke-width="1.5" style="animation:flameSway 2.5s ease-in-out infinite;transform-origin:50% 100%;"');
-    } else {
-      artArea.innerHTML=d.art;
-    }
-    card.appendChild(artArea);
-    // Nameplate
-    var nameplate=document.createElement('div');
-    nameplate.style.cssText='position:absolute;bottom:0;left:0;right:0;height:'+(isTorch?'20':'18')+'px;background:'+d.accent+(isTorch?'ee':'dd')+';display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 6px 6px;';
-    var npText=document.createElement('div');
-    if(isTorch){
-      npText.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:16px;color:#09081A;letter-spacing:3px;transform:skewX(-8deg);";
-    } else {
-      npText.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;color:#000;letter-spacing:2px;";
-    }
-    npText.textContent=d.label;
-    nameplate.appendChild(npText);
-    card.appendChild(nameplate);
-    // Shimmer — TORCH gets warm golden sweep (#4), others get white
-    var shimmer=document.createElement('div');
-    if(isTorch){
-      shimmer.style.cssText='position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 35%,rgba(255,180,80,0.12) 48%,rgba(255,255,255,0.08) 52%,transparent 65%);animation:torchShimmer 4.5s ease-in-out infinite;pointer-events:none;z-index:8;';
-    } else {
-      shimmer.style.cssText='position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);animation:cardShimmer 6s '+(c*0.8)+'s ease-in-out infinite;pointer-events:none;z-index:8;';
-    }
-    card.appendChild(shimmer);
-
-    // === TORCH-ONLY: Card-specific ember sparks (#6) ===
-    if(isTorch){
-      var sparkDrifts=[-12,8,-6,14,-10,6];
-      for(var s=0;s<5;s++){
-        var spark=document.createElement('div');
-        var ssz=1.5+Math.random()*1.5;
-        var sdur=1.2+Math.random()*1.5;
-        var sdelay=Math.random()*3;
-        var sleft=25+Math.random()*50;
-        spark.style.cssText='position:absolute;top:10px;left:'+sleft+'%;width:'+ssz+'px;height:'+ssz+'px;border-radius:50%;background:#FF8C00;z-index:9;pointer-events:none;opacity:0;animation:torchSpark '+sdur+'s '+sdelay+'s ease-out infinite;--sx:'+sparkDrifts[s%sparkDrifts.length]+'px;';
-        card.appendChild(spark);
-      }
-    }
-
-    cardFan.appendChild(card);
+    cardFan.appendChild(cardOuter);
   }
   el.append(cardFan);
 

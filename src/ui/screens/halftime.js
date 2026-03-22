@@ -6,6 +6,7 @@
 import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam, getOtherTeam } from '../../state.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
+import { buildTorchCard } from '../components/cards.js';
 
 export function buildHalftime() {
   var el = document.createElement('div');
@@ -76,24 +77,30 @@ export function buildHalftime() {
   const offers = [getOffer(), getOffer(), getOffer()];
 
   offers.forEach(card => {
-    var cardEl = document.createElement('div');
     var canAfford = humanPts >= card.cost;
     var alreadyHas3 = gs.humanTorchCards.length >= 3;
+    var enabled = canAfford && !alreadyHas3;
 
-    cardEl.style.cssText = `flex:1;background:var(--bg-surface);border:1px solid ${card.tier==='GOLD'?'var(--a-gold)':card.tier==='SILVER'?'#aaa':'#CD7F32'};border-radius:6px;padding:8px;text-align:center;cursor:${canAfford&&!alreadyHas3?'pointer':'not-allowed'};opacity:${canAfford&&!alreadyHas3?'1':'0.5'};transition:transform 0.1s;`;
-    cardEl.innerHTML = `
-      <div style="font-size:6px;color:var(--muted);">${card.tier}</div>
-      <div style="font-family:'Teko';font-size:13px;color:#fff;margin:2px 0;">${card.name}</div>
-      <div style="font-family:'Rajdhani';font-size:8px;color:var(--l-green);">${card.cost}P</div>
-    `;
+    // Build torch card with Centered Flame V1 design
+    var cardEl = buildTorchCard(card, 90, 130);
+    cardEl.style.flex = '1';
+    cardEl.style.cursor = enabled ? 'pointer' : 'not-allowed';
+    cardEl.style.opacity = enabled ? '1' : '0.5';
+    cardEl.style.transition = 'transform 0.1s';
 
-    if (canAfford && !alreadyHas3) {
+    // Add cost overlay
+    var costEl = document.createElement('div');
+    costEl.style.cssText = "position:absolute;bottom:8px;left:0;right:0;text-align:center;font-family:'Rajdhani';font-weight:700;font-size:8px;color:var(--l-green);z-index:2;";
+    costEl.textContent = card.cost + 'P';
+    cardEl.appendChild(costEl);
+
+    if (enabled) {
       cardEl.onclick = () => {
         SND.snap();
         gs.humanTorchCards.push(card.id);
         if (isHumanCT) gs.ctTorchPts -= card.cost;
         else gs.irTorchPts -= card.cost;
-        render(); // Refresh halftime shop
+        render();
       };
       cardEl.onmouseenter = () => cardEl.style.transform = 'scale(1.05)';
       cardEl.onmouseleave = () => cardEl.style.transform = 'scale(1)';

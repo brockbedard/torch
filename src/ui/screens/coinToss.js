@@ -7,6 +7,7 @@
 import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam, getOtherTeam, fmtClock } from '../../state.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
+import { buildTorchCard } from '../components/cards.js';
 
 function getRandomCards(count) {
   // Weighted: Bronze/Silver only, no Gold
@@ -95,40 +96,19 @@ export function buildCoinToss() {
       choiceLabel.textContent = 'CHOOSE YOUR REWARD';
       choicePhase.appendChild(choiceLabel);
 
-      // Torch Card options
+      // Torch Card options — Centered Flame V1 style
       var cards = getRandomCards(3);
       var cardRow = document.createElement('div');
-      cardRow.style.cssText = 'display:flex;gap:8px;width:100%;';
+      cardRow.style.cssText = 'display:flex;gap:8px;width:100%;justify-content:center;';
 
       cards.forEach(function(card) {
-        var cardEl = document.createElement('div');
-        cardEl.style.cssText =
-          'flex:1;background:var(--bg-surface);border:2px solid ' +
-          (card.tier === 'SILVER' ? '#aaa' : '#CD7F32') +
-          ';border-radius:6px;padding:10px 8px;cursor:pointer;text-align:center;' +
-          'transition:all 0.15s ease;';
+        var cardEl = buildTorchCard(card, 90, 130);
+        cardEl.style.cursor = 'pointer';
+        cardEl.style.transition = 'all 0.15s ease';
 
-        var tierEl = document.createElement('div');
-        tierEl.style.cssText =
-          "font-family:'Rajdhani',monospace;font-size:7px;font-weight:bold;" +
-          "color:" + (card.tier === 'SILVER' ? '#aaa' : '#CD7F32') + ";" +
-          "letter-spacing:1px;margin-bottom:4px;";
-        tierEl.textContent = card.tier;
-
-        var nameEl = document.createElement('div');
-        nameEl.style.cssText =
-          "font-family:'Teko',sans-serif;font-size:14px;color:#fff;line-height:1.1;margin-bottom:4px;";
-        nameEl.textContent = card.name;
-
-        var descEl = document.createElement('div');
-        descEl.style.cssText =
-          "font-family:'Rajdhani',monospace;font-size:7px;color:var(--muted);line-height:1.3;";
-        descEl.textContent = card.effect;
-
-        cardEl.append(tierEl, nameEl, descEl);
-
+        var tierCol = card.tier === 'GOLD' ? '#FFB800' : card.tier === 'SILVER' ? '#B0C4D4' : '#A0522D';
         cardEl.onmouseenter = function() { cardEl.style.borderColor = '#00ff44'; cardEl.style.boxShadow = '0 0 15px rgba(0,255,68,0.3)'; };
-        cardEl.onmouseleave = function() { cardEl.style.borderColor = card.tier === 'SILVER' ? '#aaa' : '#CD7F32'; cardEl.style.boxShadow = 'none'; };
+        cardEl.onmouseleave = function() { cardEl.style.borderColor = tierCol; cardEl.style.boxShadow = '0 4px 16px rgba(0,0,0,0.5),0 0 12px rgba(255,69,17,0.15)'; };
 
         cardEl.onclick = function() {
           SND.snap();

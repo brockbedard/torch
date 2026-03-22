@@ -1,65 +1,32 @@
 import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam, shuffle } from '../../state.js';
 import { buildDraftProgress } from '../components/draftProgress.js';
+import { buildMaddenPlayer } from '../components/cards.js';
 
-function getPlayerImage(player, team, side) {
-  var prefix = team.abbr.toLowerCase();
-  var s = side === 'offense' ? 'off' : 'def';
-  var pos = player.pos.toLowerCase();
-  var lastName = player.name.split(' ').pop().toLowerCase();
-  return '/img/players/' + prefix + '-' + s + '-' + pos + '-' + lastName + '.png';
-}
-
-/* Compact player card — no badge icon, no nickname, fits on one screen */
+/* Player card — Madden style with selection state */
 function buildPlayerCard(player, team, side, isSel, small) {
-  var tierColor = '#CD7F32';
-  if (player.ovr >= 85) tierColor = 'var(--a-gold)';
-  else if (player.ovr >= 75) tierColor = '#aaa';
+  var tier = player.ovr >= 85 ? 'gold' : player.ovr >= 75 ? 'silver' : 'bronze';
+  var w = small ? 80 : 110;
+  var h = small ? 110 : 154;
+  var card = buildMaddenPlayer({
+    name: player.name, pos: player.pos, ovr: player.ovr,
+    num: player.num || '', tier: tier, teamColor: team.accent || '#FF4511'
+  }, w, h);
 
-  var posSize = small ? '10px' : '14px';
-  var nameSize = small ? '15px' : '22px';
-  var ovrSize = small ? '20px' : '30px';
-  var ovrLbl = small ? '6px' : '8px';
-  var pad = small ? '5px 6px 0' : '8px 10px 0';
-
-  var card = document.createElement('div');
-  card.style.cssText =
-    'background:var(--bg-surface);display:flex;flex-direction:column;' +
-    'border:2px solid ' + (isSel ? '#00ff44' : tierColor + '44') + ';' +
-    'border-radius:6px;padding:0;cursor:pointer;position:relative;overflow:hidden;' +
-    'opacity:' + (isSel ? '1' : '0.8') + ';transition:all 0.15s ease;' +
-    (isSel ? 'box-shadow:0 0 18px rgba(0,255,68,0.35), inset 0 0 12px rgba(0,255,68,0.08);' : '');
+  // Override sizing to fill container
+  card.style.width = '100%';
+  card.style.height = '100%';
+  card.style.cursor = 'pointer';
+  card.style.transition = 'all 0.15s ease';
+  card.style.opacity = isSel ? '1' : '0.8';
 
   if (isSel) {
+    card.style.border = '2px solid #00ff44';
+    card.style.boxShadow = '0 0 18px rgba(0,255,68,0.35), inset 0 0 12px rgba(0,255,68,0.08)';
     var bar = document.createElement('div');
     bar.style.cssText = 'position:absolute;top:0;left:50%;transform:translateX(-50%);width:' + (small?'20':'30') + 'px;height:3px;background:#00ff44;border-radius:0 0 3px 3px;z-index:3;';
     card.appendChild(bar);
   }
-
-  // Header: POS + NAME left, OVR right
-  var header = document.createElement('div');
-  header.style.cssText =
-    'display:flex;justify-content:space-between;align-items:flex-start;padding:' + pad + ';' +
-    (isSel ? 'background:linear-gradient(180deg, rgba(0,255,68,0.1) 0%, transparent 100%);' : '');
-  header.innerHTML =
-    '<div>' +
-      "<div style=\"font-family:'Rajdhani';font-size:" + posSize + ";font-weight:bold;color:#ff0040;letter-spacing:" + (small?'1':'2') + "px;line-height:1\">" + player.pos + "</div>" +
-      "<div style=\"font-family:'Teko';font-size:" + nameSize + ";color:#fff;line-height:1;margin-top:" + (small?'1':'2') + "px\">" + player.name + "</div>" +
-    '</div>' +
-    '<div style="text-align:right">' +
-      "<div style=\"font-family:'Rajdhani';font-size:" + ovrSize + ";font-weight:bold;color:" + tierColor + ";line-height:1;text-shadow:0 0 8px " + tierColor + "66\">" + player.ovr + "</div>" +
-      "<div style=\"font-family:'Rajdhani';font-size:" + ovrLbl + ";font-weight:bold;color:" + tierColor + ";opacity:.7;letter-spacing:1px\">OVR</div>" +
-    '</div>';
-  card.appendChild(header);
-
-  // Art (fills remaining card space)
-  var artWrap = document.createElement('div');
-  artWrap.style.cssText = 'position:relative;flex:1;min-height:0;overflow:hidden;';
-  var imgSrc = getPlayerImage(player, team, side);
-  artWrap.innerHTML =
-    '<img src="' + imgSrc + '" alt="' + player.name + '" draggable="false" style="height:100%;width:100%;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7))">' +
-    '<div style="position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(transparent,#141008);pointer-events:none"></div>';
-  card.appendChild(artWrap);
 
   return card;
 }
