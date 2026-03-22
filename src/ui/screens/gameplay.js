@@ -196,16 +196,16 @@ const CSS = `
 @keyframes T-coin{0%{transform:rotateY(0)}100%{transform:rotateY(1080deg)}}
 
 /* 3-Beat Snap Result */
-@keyframes T-beat-fly-off{0%{transform:translateY(60px) scale(0.8);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
-@keyframes T-beat-fly-def{0%{transform:translateY(-60px) scale(0.8);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
+@keyframes T-beat-fly-off{0%{transform:translateY(80px) scale(0.7);opacity:0}60%{opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
+@keyframes T-beat-fly-def{0%{transform:translateY(-80px) scale(0.7);opacity:0}60%{opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
 @keyframes T-beat-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
 @keyframes T-beat-flash{0%{opacity:0.5}100%{opacity:0}}
-@keyframes T-beat-yds{0%{transform:scale(0.5);opacity:0}50%{transform:scale(1.2);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes T-beat-yds{0%{transform:scale(0.4);opacity:0}40%{transform:scale(1.15);opacity:1}70%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
 .T-beat-dim{position:absolute;inset:0;background:rgba(0,0,0,0.4);z-index:50;pointer-events:none;transition:opacity 0.3s}
 .T-beat-cards{position:absolute;inset:0;z-index:55;display:flex;align-items:center;justify-content:center;gap:12px;pointer-events:none}
 .T-beat-card{padding:8px 12px;border-radius:8px;text-align:center;min-width:90px}
 .T-beat-result{position:absolute;inset:0;z-index:56;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;gap:4px}
-.T-beat-yds{font-family:'Teko';font-weight:700;font-size:42px;line-height:1;text-shadow:0 0 20px currentColor;animation:T-beat-yds 0.4s ease-out both}
+.T-beat-yds{font-family:'Teko';font-weight:700;font-size:42px;line-height:1;text-shadow:0 0 20px currentColor;animation:T-beat-yds 0.6s cubic-bezier(0.22,1.3,0.36,1) both}
 .T-beat-label{font-family:'Rajdhani';font-weight:700;font-size:14px;letter-spacing:1px;opacity:0.8}
 .T-beat-flash{position:absolute;inset:0;z-index:54;pointer-events:none;animation:T-beat-flash 0.3s ease-out forwards}
 `;
@@ -1380,7 +1380,7 @@ export function buildGameplay() {
     const inst = document.createElement('div'); inst.className = 'T-inst';
     if (phase === 'play') inst.textContent = isOff ? 'Drag a play onto the field' : 'Drag a scheme onto the field';
     else if (phase === 'player') inst.textContent = 'Drag a player onto the field';
-    else if (phase === 'torch') inst.textContent = 'Play a Torch card or skip';
+    else if (phase === 'torch') { inst.textContent = 'TORCH CARD \u2014 Play one or skip'; inst.style.color = '#FFB800'; }
     else inst.textContent = '';
     panel.appendChild(inst);
 
@@ -1549,106 +1549,145 @@ export function buildGameplay() {
     var r = res.result;
     var isGood = r.yards >= 4 || r.isTouchdown;
     var isBad = r.isSack || r.isInterception || r.isFumbleLost || r.isSafety;
-    var isExplosive = r.yards >= 15 || r.isTouchdown;
+    var isExplosive = r.yards >= 15;
     var isTD = r.isTouchdown;
 
-    // Determine juice level and timing
-    var totalDur = isTD ? 4000 : isExplosive ? 3500 : isBad ? 3500 : (r.yards >= 4 ? 3000 : 2000);
-    var shakeIntensity = isTD ? 4 : isExplosive ? 3 : isBad ? 3 : 0;
+    // Juice level
+    var shakeIntensity = isTD ? 5 : isExplosive ? 4 : isBad ? 4 : (isGood ? 2 : 0);
     var flashColor = isTD ? '#FFB800' : isGood ? '#3df58a' : isBad ? '#e03050' : 'transparent';
     var resultColor = isTD ? '#FFB800' : isGood ? '#3df58a' : isBad ? '#e03050' : '#c8a030';
     var resultText = isTD ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTED' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : r.isSafety ? 'SAFETY' : (r.yards >= 0 ? '+' : '') + r.yards + ' YDS';
 
-    // Force-hide panel during animation (prevents floating card bug)
+    // Force-hide panel during animation
     panel.style.display = 'none';
 
-    // ── BEAT 1: Anticipation (cards fly toward center) ──
+    // ════════════════════════════════════════════
+    // BEAT 1: ANTICIPATION (1200ms)
+    // Cards fly toward center SLOWLY. Dim over 400ms. Hold 500ms silence.
+    // ════════════════════════════════════════════
     var dim = document.createElement('div');
     dim.className = 'T-beat-dim';
     dim.style.opacity = '0';
+    dim.style.transition = 'opacity 0.4s';
     el.appendChild(dim);
     requestAnimationFrame(function() { dim.style.opacity = '1'; });
 
     var cards = document.createElement('div');
     cards.className = 'T-beat-cards';
+    // Slow fly-in: 700ms ease-out (was 400ms)
     cards.innerHTML =
-      '<div class="T-beat-card" style="background:rgba(200,160,48,0.15);border:2px solid #c8a03066;animation:T-beat-fly-off 0.4s ease-out both">' +
-        "<div style=\"font-family:'Teko';font-size:16px;color:#fff;line-height:1\">" + res.offPlay.name + '</div>' +
-        "<div style=\"font-family:'Rajdhani';font-size:9px;color:#c8a030;margin-top:2px\">" + res.featuredOff.name + '</div></div>' +
-      '<div class="T-beat-card" style="background:rgba(224,48,80,0.15);border:2px solid #e0305066;animation:T-beat-fly-def 0.4s ease-out both">' +
-        "<div style=\"font-family:'Teko';font-size:16px;color:#fff;line-height:1\">" + res.defPlay.name + '</div>' +
-        "<div style=\"font-family:'Rajdhani';font-size:9px;color:#e03050;margin-top:2px\">" + res.featuredDef.name + '</div></div>';
+      '<div class="T-beat-card" style="background:rgba(200,160,48,0.15);border:2px solid #c8a03088;animation:T-beat-fly-off 0.7s ease-out both;padding:12px 16px;">' +
+        "<div style=\"font-family:'Teko';font-size:20px;color:#fff;line-height:1;letter-spacing:1px\">" + res.offPlay.name + '</div>' +
+        "<div style=\"font-family:'Rajdhani';font-size:11px;color:#c8a030;margin-top:4px\">" + res.featuredOff.name + ' \u00b7 ' + res.featuredOff.pos + '</div></div>' +
+      '<div class="T-beat-card" style="background:rgba(224,48,80,0.15);border:2px solid #e0305088;animation:T-beat-fly-def 0.7s ease-out both;padding:12px 16px;">' +
+        "<div style=\"font-family:'Teko';font-size:20px;color:#fff;line-height:1;letter-spacing:1px\">" + res.defPlay.name + '</div>' +
+        "<div style=\"font-family:'Rajdhani';font-size:11px;color:#e03050;margin-top:4px\">" + res.featuredDef.name + ' \u00b7 ' + res.featuredDef.pos + '</div></div>';
     el.appendChild(cards);
 
-    // Sound build
-    SND.hit();
+    // Low tension sound at start
+    SND.cardSnap();
 
-    // ── BEAT 2: Impact / Hitstop (after 500ms) ──
+    // ════════════════════════════════════════════
+    // BEAT 2: IMPACT / HITSTOP (starts at 1200ms, lasts 1200ms)
+    // Cards freeze visible for 800ms. Player reads matchup.
+    // Then: shake + flash + 300ms silence + result sound.
+    // ════════════════════════════════════════════
     setTimeout(function() {
-      // Screen shake
-      if (shakeIntensity > 0) {
-        el.style.animation = 'T-beat-shake 0.15s ease-out';
-        setTimeout(function() { el.style.animation = ''; }, 200);
-      }
+      // Hitstop: cards are already visible and readable from beat 1.
+      // They stay put for 800ms. Nothing moves. Player reads the matchup.
 
-      // Color flash
-      if (flashColor !== 'transparent') {
-        var flash = document.createElement('div');
-        flash.className = 'T-beat-flash';
-        flash.style.background = flashColor;
-        el.appendChild(flash);
-        setTimeout(function() { flash.remove(); }, 300);
-      }
-
-      // Haptic
-      if (navigator.vibrate && shakeIntensity > 0) try { navigator.vibrate(shakeIntensity > 2 ? 80 : 30); } catch(e) {}
-
-      // 150ms silence, then result sound
+      // After 800ms of frozen display: impact effects
       setTimeout(function() {
-        if (isTD) SND.td();
-        else if (isBad) SND.turnover();
-        else if (isExplosive) SND.bigPlay();
-        else SND.snap();
-      }, 150);
-    }, 500);
+        // Screen shake
+        if (shakeIntensity > 0) {
+          el.style.animation = 'T-beat-shake 0.2s ease-out';
+          setTimeout(function() { el.style.animation = ''; }, 250);
+        }
 
-    // ── BEAT 3: Aftermath (after 800ms) — yardage counter + commentary ──
+        // Color flash (holds longer for TDs)
+        if (flashColor !== 'transparent') {
+          var flash = document.createElement('div');
+          flash.className = 'T-beat-flash';
+          flash.style.background = flashColor;
+          flash.style.animationDuration = isTD ? '0.5s' : '0.3s';
+          el.appendChild(flash);
+          setTimeout(function() { flash.remove(); }, isTD ? 500 : 300);
+        }
+
+        // Haptic
+        if (navigator.vibrate && shakeIntensity > 0) try { navigator.vibrate(shakeIntensity > 3 ? 100 : 40); } catch(e) {}
+
+        // 300ms silence, then result sound
+        setTimeout(function() {
+          if (isTD) SND.td();
+          else if (isBad) SND.turnover();
+          else if (isExplosive) SND.bigPlay();
+          else SND.snap();
+        }, 300);
+      }, 800); // 800ms hitstop freeze
+    }, 1200); // Beat 2 starts at 1200ms
+
+    // ════════════════════════════════════════════
+    // BEAT 3: AFTERMATH (starts at 2400ms)
+    // Result text scales in over 400ms, stays 2+ seconds.
+    // Commentary appears 800ms AFTER result text.
+    // TDs: 5000ms. Big plays: 3500ms. Routine: 2000ms.
+    // ════════════════════════════════════════════
+    var beat3Start = 2400;
+    var aftermathDur = isTD ? 5000 : (isExplosive || isBad) ? 3500 : 2000;
+
     setTimeout(function() {
-      // Remove anticipation elements
+      // Remove anticipation cards
       cards.remove();
-      dim.style.opacity = '0';
-      setTimeout(function() { dim.remove(); }, 300);
 
-      // Yardage result display
+      // Result text — scales in over 400ms
       var resultEl = document.createElement('div');
       resultEl.className = 'T-beat-result';
+      resultEl.style.opacity = '0';
       resultEl.innerHTML =
-        '<div class="T-beat-yds" style="color:' + resultColor + '">' + resultText + '</div>' +
-        '<div class="T-beat-label" style="color:' + resultColor + '">' + res.offPlay.name + ' vs ' + res.defPlay.name + '</div>';
+        '<div class="T-beat-yds" style="color:' + resultColor + ';font-size:' + (isTD ? '52px' : '42px') + '">' + resultText + '</div>' +
+        '<div class="T-beat-label" style="color:' + resultColor + ';opacity:0;transition:opacity 0.3s">' + res.offPlay.name + ' vs ' + res.defPlay.name + '</div>';
       el.appendChild(resultEl);
 
-      // Commentary
-      var bd = breakdown(res.offPlay, res.defPlay, r, res.featuredOff, res.featuredDef);
-      setNarr(r.description, bd);
+      // Scale in the result
+      requestAnimationFrame(function() {
+        resultEl.style.opacity = '1';
+        resultEl.style.transition = 'opacity 0.4s';
+      });
 
-      // Update board state while result shows
+      // Matchup label fades in 400ms after result
+      setTimeout(function() {
+        var label = resultEl.querySelector('.T-beat-label');
+        if (label) label.style.opacity = '1';
+      }, 400);
+
+      // Update board state
       drawBug();
       drawField();
 
-      // Clear result and proceed (non-blocking — player regains control)
+      // Commentary appears 800ms AFTER result text (not simultaneously)
+      setTimeout(function() {
+        var bd = breakdown(res.offPlay, res.defPlay, r, res.featuredOff, res.featuredDef);
+        setNarr(r.description, bd);
+      }, 800);
+
+      // Dim fades out slowly
+      dim.style.opacity = '0';
+      setTimeout(function() { dim.remove(); }, 500);
+
+      // Clear result and proceed after full aftermath duration
       setTimeout(function() {
         resultEl.style.opacity = '0';
-        resultEl.style.transition = 'opacity 0.3s';
-        setTimeout(function() { resultEl.remove(); }, 300);
+        resultEl.style.transition = 'opacity 0.4s';
+        setTimeout(function() { resultEl.remove(); }, 400);
 
-        // Determine if shop should trigger (skip if game is over — end-game shop handles it)
+        // Shop trigger check
         var shopTrigger = null;
         if (!gs.gameOver) {
           var isHumanPoss = prevPoss === hAbbr;
           if (res.gameEvent === 'touchdown' && isHumanPoss) shopTrigger = 'touchdown';
           else if ((r.isInterception || r.isFumbleLost) && !isHumanPoss) shopTrigger = 'turnover';
           else if (res.gameEvent === 'turnover_on_downs' && !isHumanPoss) shopTrigger = 'fourthDownStop';
-          // Star activation trigger
           else if ((!wasOffHot && offStarHot) || (!wasDefHot && defStarHot)) shopTrigger = 'starActivation';
         }
 
@@ -1664,8 +1703,8 @@ export function buildGameplay() {
         } else {
           afterShop();
         }
-      }, isTD ? 2500 : isExplosive ? 1500 : isBad ? 1200 : 800);
-    }, 800);
+      }, aftermathDur);
+    }, beat3Start);
   }
 
   /** Cycle a played card — return it to deck, draw a replacement */
