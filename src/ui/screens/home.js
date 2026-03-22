@@ -28,7 +28,7 @@ var DEV_LOG = [
 
 export function buildHome(){
   var el=document.createElement('div');
-  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 30px;position:relative;overflow:hidden;gap:0;';
+  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px 20px;position:relative;overflow:hidden;gap:0;';
 
   // === LAYERED BACKGROUND ===
   // Base: deep purple radial
@@ -98,7 +98,7 @@ export function buildHome(){
 
   // === CARD FAN — premium cards using shared buildHomeCard ===
   var cardFan=document.createElement('div');
-  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:360px;height:200px;margin-top:0;margin-bottom:24px;z-index:2;overflow:visible;animation:fanFloat 5s ease-in-out 1.5s infinite;';
+  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:340px;height:180px;margin-top:0;margin-bottom:16px;z-index:2;overflow:visible;animation:fanFloat 5s ease-in-out 1.5s infinite;';
   var fanTypes=['offense','torch','defense'];
   var fanAngles=[-18,0,18];
   var fanX=[-72,0,72];
@@ -170,13 +170,13 @@ export function buildHome(){
 
   // === TAGLINE ===
   var tagline=document.createElement('div');
-  tagline.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:16px;color:rgba(255,224,160,0.85);letter-spacing:4px;text-align:center;margin-top:10px;margin-bottom:16px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.6s both;text-shadow:0 0 10px rgba(255,180,0,0.2);text-transform:uppercase;";
+  tagline.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;color:rgba(255,224,160,0.7);letter-spacing:4px;text-align:center;margin-top:6px;margin-bottom:12px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.6s both;text-shadow:0 0 10px rgba(255,180,0,0.2);text-transform:uppercase;";
   tagline.textContent='DEAL THE PLAY';
   el.append(tagline);
 
   // === CTA BUTTON ===
   var playWrap=document.createElement('div');
-  playWrap.style.cssText='width:100%;z-index:2;position:relative;display:flex;flex-direction:column;gap:20px;opacity:0;animation:homeRevealBtn 0.4s ease-out 1.0s both;';
+  playWrap.style.cssText='width:100%;z-index:2;position:relative;display:flex;flex-direction:column;gap:10px;opacity:0;animation:homeRevealBtn 0.4s ease-out 1.0s both;';
   var playBtn=document.createElement('button');
   playBtn.className='btn-blitz';
   playBtn.style.cssText='border-color:#FF4511;color:#000;background:linear-gradient(180deg,#FFB800 0%,#FF4511 100%);font-size:24px;padding:20px 24px;animation:ctaGlow 3s ease-in-out 0.3s infinite;letter-spacing:5px;';
@@ -196,7 +196,7 @@ export function buildHome(){
   // Daily Drive button
   var dailyBtn=document.createElement('button');
   dailyBtn.className='btn-blitz';
-  dailyBtn.style.cssText='border-color:var(--a-gold);color:var(--a-gold);background:transparent;font-size:12px;padding:12px 20px;letter-spacing:3px;';
+  dailyBtn.style.cssText='border-color:#555;color:#aaa;background:transparent;font-size:10px;padding:8px 16px;letter-spacing:2px;box-shadow:none;';
   dailyBtn.textContent='DAILY DRIVE';
   dailyBtn.onclick=function(){
     SND.click();

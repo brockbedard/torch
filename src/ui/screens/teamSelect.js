@@ -52,7 +52,7 @@ export function buildTeamSelect() {
 
   // ── HEADER ──
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'background:rgba(0,0,0,0.5);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-bottom:2px solid var(--a-gold);z-index:10;';
+  hdr.style.cssText = 'background:rgba(0,0,0,0.5);padding:8px 12px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-bottom:2px solid var(--a-gold);z-index:10;';
   var hdrTitle = document.createElement('div');
   hdrTitle.style.cssText = "font-family:'Teko',sans-serif;font-weight:700;font-size:24px;color:var(--a-gold);letter-spacing:3px;font-style:italic;transform:skewX(-8deg);text-shadow:2px 2px 0 rgba(0,0,0,0.9);";
   hdrTitle.textContent = 'TORCH FOOTBALL';
@@ -66,7 +66,7 @@ export function buildTeamSelect() {
 
   // ── CONTENT ──
   var content = document.createElement('div');
-  content.style.cssText = 'flex:1;display:flex;flex-direction:column;padding:12px 12px 20px;gap:10px;justify-content:center;';
+  content.style.cssText = 'flex:1;display:flex;flex-direction:column;padding:8px 12px 12px;gap:8px;justify-content:flex-start;';
 
   // Title
   var title = document.createElement('div');
@@ -92,7 +92,7 @@ export function buildTeamSelect() {
 
   // ── 2x2 TEAM GRID ──
   var grid = document.createElement('div');
-  grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;';
+  grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;';
 
   var teamIds = Object.keys(TEAMS);
   teamIds.forEach(function(tid, idx) {

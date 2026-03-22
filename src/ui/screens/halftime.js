@@ -32,7 +32,7 @@ export function buildHalftime() {
   el.appendChild(hdr);
 
   var content = document.createElement('div');
-  content.style.cssText = 'flex:1;padding:20px 16px 40px;display:flex;flex-direction:column;align-items:center;gap:24px;';
+  content.style.cssText = 'flex:1;padding:12px 16px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;';
 
   // Score Summary
   var scoreBlock = document.createElement('div');

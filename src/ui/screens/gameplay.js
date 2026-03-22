@@ -29,7 +29,7 @@ const CSS = `
 /* scoreboard */
 .T-sb{background:#0E0A04;border-bottom:1px solid #1E1610;flex-shrink:0;z-index:60;overflow:hidden}
 /* score row: 5 columns — icon | team+score | center | team+score | icon */
-.T-sb-row{display:grid;grid-template-columns:36px 1fr minmax(70px,auto) 1fr 36px;align-items:center;justify-items:center;padding:10px 10px;gap:6px}
+.T-sb-row{display:grid;grid-template-columns:28px 1fr minmax(60px,auto) 1fr 28px;align-items:center;justify-items:center;padding:6px 8px;gap:4px}
 .T-sb-icon{font-size:32px;line-height:1;text-align:center;filter:drop-shadow(0 0 8px rgba(255,255,255,.2)) saturate(1.3)}
 .T-sb-side{display:flex;flex-direction:column;align-items:center;padding:6px 6px;border-radius:6px;position:relative}
 .T-sb-side-glow{background:radial-gradient(ellipse,rgba(255,204,0,.2) 0%,rgba(255,204,0,.06) 50%,transparent 75%);box-shadow:0 0 20px rgba(255,204,0,.18)}
@@ -46,14 +46,14 @@ const CSS = `
 .T-sb-countdown{font-family:'Rajdhani';font-size:9px;color:#554f80;margin-top:5px;line-height:1}
 .T-sb-countdown-live{font-size:14px;color:#e03050;text-shadow:0 0 10px rgba(224,48,80,.5)}
 /* situation bar — always one line, never wraps */
-.T-sb-sit{display:flex;align-items:center;justify-content:center;padding:6px 8px;background:rgba(0,0,0,.4);border-top:1px solid rgba(255,255,255,.04);gap:8px;white-space:nowrap;overflow:hidden}
+.T-sb-sit{display:flex;align-items:center;justify-content:center;padding:4px 8px;background:rgba(0,0,0,.4);border-top:1px solid rgba(255,255,255,.04);gap:6px;white-space:nowrap;overflow:hidden}
 .T-sb-sit-down{font-family:'Rajdhani';font-size:10px;color:#30c0e0;letter-spacing:.5px;flex-shrink:0}
 .T-sb-sit-div{width:1px;height:14px;background:rgba(255,255,255,.12);flex-shrink:0}
 .T-sb-sit-ball{font-family:'Rajdhani';font-size:10px;color:#e8e6ff;opacity:.7;letter-spacing:.5px;flex-shrink:1;overflow:hidden;text-overflow:ellipsis}
 .T-sb-sit-torch{font-family:'Rajdhani';font-size:12px;color:#c8a030;letter-spacing:.5px;transition:transform .08s,text-shadow .08s;flex-shrink:0}
 
 /* field strip — Tecmo Bowl inspired */
-.T-strip{height:200px;flex-shrink:0;position:relative;background:#1a6a1a;overflow:hidden;border-bottom:1px solid #1E1610}
+.T-strip{height:160px;flex-shrink:0;position:relative;background:#1a6a1a;overflow:hidden;border-bottom:1px solid #1E1610}
 .T-field-turf{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.04) 50%,transparent 50%,transparent 100%);background-size:100% 12px}
 .T-yard{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.4)}
 .T-yard-5{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.15)}
@@ -123,7 +123,7 @@ const CSS = `
 .T-kneel{color:#554f80;border-color:#554f80;box-shadow:4px 4px 0 #2a2840,6px 6px 0 #000}
 
 /* play-by-play terminal */
-.T-narr{flex:1;min-height:0;background:#0C0804;border-top:1px solid #1E1610;overflow-y:auto;padding:10px 14px}
+.T-narr{flex:0 0 auto;min-height:60px;max-height:100px;background:#0C0804;border-top:1px solid #1E1610;overflow-y:auto;padding:6px 10px}
 .T-pbp{display:flex;flex-direction:column;gap:6px}
 .T-pbp-line{font-family:'Rajdhani',monospace;font-size:14px;color:#6a6690;line-height:1.4;letter-spacing:.3px}
 .T-pbp-live{color:#e8e6ff;text-shadow:0 0 6px rgba(232,230,255,.15)}
