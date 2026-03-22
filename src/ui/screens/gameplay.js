@@ -8,11 +8,7 @@ import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam, getOtherTeam, fmtClock, getOffCards, getDefCards } from '../../state.js';
 import { badgeSvg, BADGE_LABELS } from '../../data/badges.js';
 import { GameState } from '../../engine/gameState.js';
-import { CT_OFFENSE, CT_DEFENSE, IR_OFFENSE, IR_DEFENSE } from '../../data/players.js';
-import { CT_OFF_PLAYS } from '../../data/ctOffensePlays.js';
-import { CT_DEF_PLAYS } from '../../data/ctDefensePlays.js';
-import { IR_OFF_PLAYS } from '../../data/irOffensePlays.js';
-import { IR_DEF_PLAYS } from '../../data/irDefensePlays.js';
+import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { checkOffensiveBadgeCombo, checkDefensiveBadgeCombo } from '../../engine/badgeCombos.js';
 import { getPlayHistoryBonus } from '../../engine/playHistory.js';
 import { playSvg } from '../../data/playDiagrams.js';
@@ -102,7 +98,7 @@ const CSS = `
 .T-inst{text-align:center;padding:6px 0 2px;font-family:'Rajdhani';font-size:7px;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
 
 /* card tray — matches pregame draft card style */
-.T-tray{display:flex;gap:8px;padding:6px 8px;flex-shrink:0}
+.T-tray{display:flex;gap:6px;padding:6px 6px;flex-shrink:0}
 .T-card{flex:1;height:150px;border-radius:6px;overflow:visible;display:flex;flex-direction:column;transition:all .15s ease;touch-action:none;position:relative;cursor:grab;opacity:.8}
 .T-card:active{cursor:grabbing}
 .T-card-sel{opacity:1;border-color:#00ff44 !important;box-shadow:0 0 18px rgba(0,255,68,.35),inset 0 0 12px rgba(0,255,68,.08) !important}
@@ -315,27 +311,35 @@ function resolveRoster(ids, pool) {
    BUILDER
    ═══════════════════════════════════════════ */
 export function buildGameplay() {
-  const hAbbr = GS.team === 'canyon_tech' ? 'CT' : 'IR';
+  // v0.21: Map new team IDs to engine CT/IR slots.
+  // Human always maps to CT slot, opponent to IR slot.
+  const hAbbr = 'CT';
   const hTeam = getTeam(GS.team);
-  const oTeam = getOtherTeam(GS.team);
-  const isCT = GS.team === 'canyon_tech';
+  const oppId = GS.opponent || getOtherTeam(GS.team).id;
+  const oTeam = getTeam(oppId);
 
   // engine
   if (!GS.engine) {
-    const hOH = GS.offHand || (isCT ? CT_OFF_PLAYS.slice(0,4) : IR_OFF_PLAYS.slice(0,4));
-    const hDH = GS.defHand || (isCT ? CT_DEF_PLAYS.slice(0,4) : IR_DEF_PLAYS.slice(0,4));
-    const hOR = resolveRoster(GS.offRoster, hTeam.players);
-    const hDR = resolveRoster(GS.defRoster, hTeam.defPlayers);
-    const cOH = isCT ? IR_OFF_PLAYS.slice(0,4) : CT_OFF_PLAYS.slice(0,4);
-    const cDH = isCT ? IR_DEF_PLAYS.slice(0,4) : CT_DEF_PLAYS.slice(0,4);
-    const cOR = isCT ? IR_OFFENSE : CT_OFFENSE;
-    const cDR = isCT ? IR_DEFENSE : CT_DEFENSE;
+    // Human plays + roster
+    var hOffPlays = getOffCards(GS.team);
+    var hDefPlays = getDefCards(GS.team);
+    var hOffRoster = getOffenseRoster(GS.team);
+    var hDefRoster = getDefenseRoster(GS.team);
+    // CPU plays + roster
+    var cOffPlays = getOffCards(oppId);
+    var cDefPlays = getDefCards(oppId);
+    var cOffRoster = getOffenseRoster(oppId);
+    var cDefRoster = getDefenseRoster(oppId);
+    // Resolve rosters from IDs if needed
+    var hOR = resolveRoster(GS.offRoster, hOffRoster);
+    var hDR = resolveRoster(GS.defRoster, hDefRoster);
     GS.engine = new GameState({
-      humanTeam: hAbbr, difficulty: GS.difficulty||'MEDIUM', coachBadge: GS.coachBadge||'SCHEMER',
-      ctOffHand: isCT?hOH:cOH, ctDefHand: isCT?hDH:cDH,
-      irOffHand: isCT?cOH:hOH, irDefHand: isCT?cDH:hDH,
-      ctOffRoster: isCT?hOR:cOR, ctDefRoster: isCT?hDR:cDR,
-      irOffRoster: isCT?cOR:hOR, irDefRoster: isCT?cDR:hDR,
+      humanTeam: hAbbr, difficulty: GS.difficulty||'EASY', coachBadge: GS.coachBadge||'SCHEMER',
+      // Human = CT slot, Opponent = IR slot
+      ctOffHand: hOffPlays.slice(0,5), ctDefHand: hDefPlays.slice(0,5),
+      irOffHand: cOffPlays.slice(0,5), irDefHand: cDefPlays.slice(0,5),
+      ctOffRoster: hOR, ctDefRoster: hDR,
+      irOffRoster: cOffRoster, irDefRoster: cDefRoster,
     });
   }
   const gs = GS.engine;
@@ -355,7 +359,7 @@ export function buildGameplay() {
   const bug = document.createElement('div'); bug.className = 'T-sb'; el.appendChild(bug);
   function drawBug() {
     const s = gs.getSummary();
-    const ct = getTeam('canyon_tech'), ir = getTeam('iron_ridge');
+    const ct = hTeam, ir = oTeam;
     var dn;
     if (conversionMode) {
       dn = conversionMode.choice === '2pt' ? '2PT CNV' : '3PT CNV';
@@ -419,7 +423,7 @@ export function buildGameplay() {
   function drawField() {
     const s = gs.getSummary();
     const isOff = gs.possession === hAbbr;
-    const ct = getTeam('canyon_tech'), ir = getTeam('iron_ridge');
+    const ct = hTeam, ir = oTeam;
     const homeTeam = getTeam(GS.team);
     const lp = 7 + s.ballPosition * .86;
     const td = s.possession==='CT' ? s.ballPosition+s.distance : s.ballPosition-s.distance;
@@ -429,7 +433,7 @@ export function buildGameplay() {
     let h = '<div class="T-field-turf"></div>';
     // Both endzones customized for home team
     var homeColor = homeTeam.color || '#FF4511';
-    var homeMascot = GS.team === 'canyon_tech' ? 'CACTI' : 'TRIDENTS';
+    var homeMascot = hTeam.mascot || hTeam.name;
     h += '<div class="T-ez T-ez-l" style="background:' + homeColor + '"><span class="T-ez-text">' + homeMascot + '</span></div>';
     h += '<div class="T-ez T-ez-r" style="background:' + homeColor + '"><span class="T-ez-text">' + homeMascot + '</span></div>';
     // Home team logo at midfield (large, featured)
@@ -531,8 +535,8 @@ export function buildGameplay() {
   function ballSideLabel() {
     const s = gs.getSummary();
     const yds = s.yardsToEndzone;
-    const possT = s.possession === 'CT' ? getTeam('canyon_tech') : getTeam('iron_ridge');
-    const defT = s.possession === 'CT' ? getTeam('iron_ridge') : getTeam('canyon_tech');
+    const possT = s.possession === 'CT' ? hTeam : oTeam;
+    const defT = s.possession === 'CT' ? oTeam : hTeam;
     if (yds <= 50) return defT.abbr + ' ' + yds;
     return possT.abbr + ' ' + (100 - yds);
   }
@@ -780,8 +784,8 @@ export function buildGameplay() {
     var sides = gs.getCurrentSides();
     var oNames = sides.offPlayers.slice(0,4).map(function(p){return p.name+' '+p.pos+' '+p.ovr;}).join(', ');
     var dNames = sides.defPlayers.slice(0,4).map(function(p){return p.name+' '+p.pos+' '+p.ovr;}).join(', ');
-    var possName = pre.possession === 'CT' ? 'Canyon Tech' : 'Iron Ridge';
-    var defName = pre.possession === 'CT' ? 'Iron Ridge' : 'Canyon Tech';
+    var possName = pre.possession === 'CT' ? hTeam.name : oTeam.name;
+    var defName = pre.possession === 'CT' ? oTeam.name : hTeam.name;
     var isBig = r.isTouchdown || r.isInterception || r.isFumbleLost || r.isSack || r.yards >= 15;
     var lineCount = isBig ? '7-9' : '5-6';
 
@@ -867,8 +871,8 @@ export function buildGameplay() {
     // Use pre-snap state for situation lines, post-snap for result/context
     const pre = res._preSnap || gs.getSummary();
     const s = gs.getSummary(); // post-snap for context lines
-    const possTeamName = pre.possession === 'CT' ? 'Canyon Tech' : 'Iron Ridge';
-    const defTeamName = pre.possession === 'CT' ? 'Iron Ridge' : 'Canyon Tech';
+    const possTeamName = pre.possession === 'CT' ? hTeam.name : oTeam.name;
+    const defTeamName = pre.possession === 'CT' ? oTeam.name : hTeam.name;
     // Context line — only on significant football moments, not every play
     function contextLine() {
       // Always on scores
@@ -1497,7 +1501,7 @@ export function buildGameplay() {
 
   function showPossCut(ev, done) {
     const s = gs.getSummary();
-    const nt = s.possession==='CT' ? getTeam('canyon_tech') : getTeam('iron_ridge');
+    const nt = s.possession==='CT' ? hTeam : oTeam;
     const ov = document.createElement('div'); ov.className = 'T-ov T-ov-black T-ov-poss';
     ov.style.cssText = 'opacity:0;transition:opacity .25s';
     ov.innerHTML =
@@ -1515,7 +1519,7 @@ export function buildGameplay() {
     const yds = log.reduce((s,r) => s + (r.result.yards||0), 0);
     const td = log.some(r => r.result.isTouchdown);
     const to = log.some(r => r.result.isInterception || r.result.isFumbleLost);
-    const dt = poss==='CT' ? getTeam('canyon_tech') : getTeam('iron_ridge');
+    const dt = poss==='CT' ? hTeam : oTeam;
 
     panel.innerHTML = '';
     const d = document.createElement('div'); d.className = 'T-drv';
