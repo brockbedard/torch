@@ -126,10 +126,10 @@ export function buildTeamSelect() {
     ratingsWrap.style.cssText = 'display:flex;flex-direction:column;gap:1px;width:100%;margin-top:2px;';
     var offRow = document.createElement('div');
     offRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;font-family:'Rajdhani';font-size:8px;color:#aaa;";
-    offRow.innerHTML = '<span>OFF</span><span>' + renderFlamePips(team.ratings.offense, 5, team.colors.secondary, 8) + '</span>';
+    offRow.innerHTML = '<span>OFF</span><span>' + renderFlamePips(team.ratings.offense, 5, team.colors.primary, 8) + '</span>';
     var defRow = document.createElement('div');
     defRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;font-family:'Rajdhani';font-size:8px;color:#aaa;";
-    defRow.innerHTML = '<span>DEF</span><span>' + renderFlamePips(team.ratings.defense, 5, team.colors.secondary, 8) + '</span>';
+    defRow.innerHTML = '<span>DEF</span><span>' + renderFlamePips(team.ratings.defense, 5, team.colors.primary, 8) + '</span>';
     ratingsWrap.appendChild(offRow);
     ratingsWrap.appendChild(defRow);
     card.appendChild(ratingsWrap);
