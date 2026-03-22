@@ -285,21 +285,64 @@ export function renderFlamePips(filled, total, filledColor, size) {
 }
 
 // ====== PLAY CARD — V1 (name bar top, icon center, category+risk bottom) ======
-var RISK_ICONS = { high:'\u26A1 HIGH', med:'\u25C6 MED', low:'\u25CF LOW' };
+
+// Play type watermark icons — simple SVG paths at viewBox="0 0 48 48"
+var PLAY_TYPE_ICONS = {
+  'RUN':           'M14 24h20M34 24l-6-5M34 24l-6 5',                     // Arrow right
+  'QB RUN':        'M14 24h20M34 24l-6-5M34 24l-6 5',                     // Arrow right
+  'DRAW':          'M14 24h20M34 24l-6-5M34 24l-6 5',                     // Arrow right
+  'SHORT PASS':    'M12 30Q24 18 36 26M36 26l-4-5M36 26l-5 2',            // Short arc
+  'QUICK PASS':    'M12 30Q24 18 36 26M36 26l-4-5M36 26l-5 2',            // Short arc
+  'DEEP PASS':     'M8 36Q24 6 40 20M40 20l-3-6M40 20l-6 1',             // Long arc
+  'PLAY-ACTION':   'M10 32L24 18M24 18L38 28M24 18l-4 6',                // Fake + throw
+  'SCREEN':        'M32 16Q12 20 14 32L28 36M14 32l4-4M14 32l5 1',       // Curved loop
+  'OPTION':        'M12 24h12M24 24l10-8M24 24l10 8',                    // Fork/split
+  'RPO':           'M12 24h12M24 24l10-8M24 24l10 8',                    // Fork/split
+  'BLITZ':         'M24 8L24 40M24 8l-6 8M24 8l6 8M16 20l8-4M32 20l-8-4', // Charging arrows
+  'ZONE COVERAGE': 'M10 14h28v20h-28z',                                   // Shield/box
+  'MAN COVERAGE':  'M24 10a6 6 0 1 1 0 12 6 6 0 1 1 0-12zM18 30h12v8h-12z', // Lock shape
+  'PRESS COVERAGE':'M24 10a6 6 0 1 1 0 12 6 6 0 1 1 0-12zM18 30h12v8h-12z',
+  'HYBRID':        'M24 4v40M4 24h40',                                    // Cross/split
+  'SPY':           'M24 14a10 10 0 1 0 0 20 10 10 0 1 0 0-20zM24 20a4 4 0 1 0 0 8 4 4 0 1 0 0-8z', // Eye
+};
+
+// Risk colors: green LOW, yellow MED, red HIGH
+var RISK_COLORS = { high:'#e03050', med:'#FFB800', low:'#3df58a' };
+var RISK_LABELS = { high:'HIGH', med:'MED', low:'LOW' };
 
 export function buildPlayV1(p, w, h) {
   var svgTag = p.svg.replace('CATFILL', p.catColor)
     .replace('SVGW', Math.round(w*0.75)).replace('SVGH', Math.round(h*0.45))
     .replace('fill="none">', 'width="'+Math.round(w*0.75)+'" height="'+Math.round(h*0.45)+'" fill="none">');
   var card = document.createElement('div');
-  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:2px solid '+p.catColor+'44;background:radial-gradient(ellipse at 50% 50%,'+p.bg+',#0E0A06);overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.5);display:flex;flex-direction:column;';
-  card.innerHTML = '<div style="height:3px;background:'+p.catColor+';border-radius:5px 5px 0 0;"></div>'
-    +'<div style="background:'+p.catColor+'22;padding:4px 6px;border-bottom:1px solid '+p.catColor+'33;">'
-    +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?14:11)+'px;color:#fff;letter-spacing:1px;line-height:1;white-space:nowrap;">'+p.name+'</div></div>'
-    +'<div style="flex:1;display:flex;align-items:center;justify-content:center;">'+svgTag+'</div>'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px;background:rgba(0,0,0,0.3);border-top:1px solid #1E1610;">'
-    +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(w>90?8:6)+'px;color:'+p.catColor+';letter-spacing:0.5px;">'+p.cat+'</div>'
-    +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(w>90?8:6)+'px;color:'+(p.riskColor||p.catColor)+';">'+RISK_ICONS[p.risk]+'</div></div>';
+  // Subtle color tint: offense cards get green tint, defense get blue tint
+  var isOffense = p.catColor === '#7ACC00';
+  var bgTint = isOffense ? '#0A1A06' : '#0A1420';
+  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:2px solid '+p.catColor+'44;background:linear-gradient(180deg,'+bgTint+' 0%,#0A0804 100%);overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.5);display:flex;flex-direction:column;position:relative;';
+
+  // Watermark icon in center (behind content)
+  var iconPath = PLAY_TYPE_ICONS[p.cat] || PLAY_TYPE_ICONS['RUN'];
+  var iconSize = Math.round(w * 0.6);
+  var watermark = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:0;opacity:0.08;">' +
+    '<svg viewBox="0 0 48 48" width="'+iconSize+'" height="'+iconSize+'" fill="none" stroke="'+p.catColor+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="'+iconPath+'"/></svg></div>';
+
+  // Risk indicator color
+  var riskColor = RISK_COLORS[p.risk] || '#aaa';
+  var riskLabel = RISK_LABELS[p.risk] || p.risk;
+  var riskFs = w > 90 ? 8 : 6;
+
+  card.innerHTML = watermark +
+    // Category stripe
+    '<div style="height:3px;background:'+p.catColor+';border-radius:5px 5px 0 0;position:relative;z-index:1;"></div>' +
+    // Name bar
+    '<div style="background:'+p.catColor+'22;padding:4px 6px;border-bottom:1px solid '+p.catColor+'33;position:relative;z-index:1;">' +
+    '<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?14:11)+'px;color:#fff;letter-spacing:1px;line-height:1;white-space:nowrap;">'+p.name+'</div></div>' +
+    // Diagram center
+    '<div style="flex:1;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;">'+svgTag+'</div>' +
+    // Bottom bar: category + risk (risk is color-coded)
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px;background:rgba(0,0,0,0.3);border-top:1px solid #1E1610;position:relative;z-index:1;">' +
+    '<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+riskFs+'px;color:'+p.catColor+';letter-spacing:0.5px;">'+p.cat+'</div>' +
+    '<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+riskFs+'px;color:'+riskColor+';">'+riskLabel+'</div></div>';
   return card;
 }
 
