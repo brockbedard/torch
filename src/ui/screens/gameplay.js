@@ -89,17 +89,16 @@ const CSS = `
 /* cards section — hidden during play-by-play */
 .T-panel{display:flex;flex-direction:column;overflow:hidden;transition:background .6s,border-color .6s;flex-shrink:0;border-top:2px solid transparent;position:relative;z-index:1}
 .T-panel-hidden{display:none}
-/* offense: warm amber energy */
-.T-panel-off{background:linear-gradient(180deg,#1a1000 0%,#0A0804 60%);border-top-color:#c8a03044}
-.T-panel-off .T-inst{color:#c8a030}
+/* offense + defense panels — unified warm dark */
+.T-panel-off{background:#0E0A04;border-top-color:#FF6B0033}
+.T-panel-off .T-inst{color:#888}
 .T-panel-off .T-card{}
-/* defense: cold blue/red danger */
-.T-panel-def{background:linear-gradient(180deg,#00101a 0%,#0A0804 60%);border-top-color:#30c0e044}
-.T-panel-def .T-inst{color:#30c0e0}
+.T-panel-def{background:#0E0A04;border-top-color:#FF6B0033}
+.T-panel-def .T-inst{color:#888}
 .T-panel-def .T-card{}
 
 /* instruction */
-.T-inst{text-align:center;padding:6px 0 2px;font-family:'Rajdhani';font-size:7px;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
+.T-inst{text-align:center;padding:4px 0 2px;font-family:'Rajdhani';font-size:8px;color:#666;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
 
 /* card tray — matches pregame draft card style */
 .T-tray{display:flex;gap:6px;padding:6px 6px;flex-shrink:0}
@@ -119,7 +118,7 @@ const CSS = `
 .T-2btns{display:flex;gap:5px}
 .T-2btn{flex:1;padding:10px;font-family:'Rajdhani';font-size:7px;cursor:pointer;text-align:center;background:none;letter-spacing:.5px;text-transform:uppercase;border:4px solid}
 .T-2btn:active{transform:translate(3px,3px)}
-.T-spike{color:#30c0e0;border-color:#30c0e0;box-shadow:4px 4px 0 #1a6070,6px 6px 0 #000}
+.T-spike{color:#FF6B00;border-color:#FF6B00;box-shadow:4px 4px 0 #803500,6px 6px 0 #000}
 .T-kneel{color:#554f80;border-color:#554f80;box-shadow:4px 4px 0 #2a2840,6px 6px 0 #000}
 
 /* play-by-play terminal */
@@ -136,7 +135,7 @@ const CSS = `
 /* torch points fly animation */
 .T-torch-fly{position:fixed;z-index:9999;font-family:'Rajdhani';font-size:12px;color:#c8a030;pointer-events:none;text-shadow:0 0 8px rgba(200,160,48,.5)}
 @keyframes T-flyup{0%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(.6)}}
-.T-pbp-cursor{display:inline-block;width:6px;height:12px;background:#30c0e0;margin-left:2px;animation:T-blink .6s step-end infinite}
+.T-pbp-cursor{display:inline-block;width:6px;height:12px;background:#FF6B00;margin-left:2px;animation:T-blink .6s step-end infinite}
 
 /* celebrations */
 @keyframes T-shake{0%,100%{transform:translateX(0)}10%{transform:translateX(-6px)}20%{transform:translateX(6px)}30%{transform:translateX(-4px)}40%{transform:translateX(4px)}50%{transform:translateX(-2px)}60%{transform:translateX(2px)}}
@@ -221,8 +220,8 @@ const CSS = `
    ═══════════════════════════════════════════ */
 function mqColor(q) { return q === 'green' ? '#3df58a' : q === 'red' ? '#e03050' : '#c8a030'; }
 function typeColor(t) {
-  return { SHORT:'#3df58a',QUICK:'#30c0e0',DEEP:'#e03050',RUN:'#e07020',SCREEN:'#e060a0',
-    OPTION:'#e07020',BLITZ:'#e03050',ZONE:'#30c0a0',PRESSURE:'#c8a030',HYBRID:'#9060e0' }[t] || '#8a86b0';
+  return { SHORT:'#3df58a',QUICK:'#FFB800',DEEP:'#e03050',RUN:'#e07020',SCREEN:'#e060a0',
+    OPTION:'#e07020',BLITZ:'#e03050',ZONE:'#3df58a',PRESSURE:'#FFB800',HYBRID:'#FF6B00' }[t] || '#aaa';
 }
 
 function matchupQ(player, play, history, isOff) {
@@ -864,7 +863,7 @@ export function buildGameplay() {
         SND.turnover();
         shakeScreen(6);
         flashField('rgba(48,192,224,0.6)', 800);
-        slamText('DENIED', '#30c0e0', tDuration - 400);
+        slamText('DENIED', '#FF6B00', tDuration - 400);
       }
     }
   }
@@ -1391,8 +1390,7 @@ export function buildGameplay() {
     // Side indicator + instruction
     if (phase === 'play' || phase === 'player' || phase === 'torch') {
       var sideBar = document.createElement('div');
-      sideBar.style.cssText = "text-align:center;padding:3px 0;font-family:'Teko';font-size:16px;letter-spacing:3px;flex-shrink:0;" +
-        (isOff ? 'color:#c8a030;background:linear-gradient(90deg,transparent,rgba(200,160,48,.08),transparent)' : 'color:#30c0e0;background:linear-gradient(90deg,transparent,rgba(48,192,224,.08),transparent)');
+      sideBar.style.cssText = "text-align:center;padding:2px 0;font-family:'Teko';font-size:13px;letter-spacing:3px;flex-shrink:0;color:#FF6B00;background:linear-gradient(90deg,transparent,rgba(255,107,0,.06),transparent);";
       sideBar.textContent = isOff ? 'YOUR OFFENSE' : 'YOUR DEFENSE';
       panel.appendChild(sideBar);
     }
@@ -1536,7 +1534,7 @@ export function buildGameplay() {
 
       const go = document.createElement('button');
       go.className = 'btn-blitz';
-      go.style.cssText = 'background:var(--a-gold);border-color:var(--a-gold);color:#000;font-size:16px;animation:T-pulse 1.8s ease-in-out infinite;';
+      go.style.cssText = 'background:linear-gradient(180deg,#FFB800,#FF4511);border-color:#FF4511;color:#000;font-size:16px;animation:T-pulse 1.8s ease-in-out infinite;';
       go.textContent = conversionMode ? 'ATTEMPT' : 'SNAP';
       go.onclick = conversionMode ? () => { SND.snap(); doConversionSnap(); } : () => { SND.snap(); doSnap(); };
       sz.appendChild(go);
