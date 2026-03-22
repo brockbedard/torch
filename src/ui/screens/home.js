@@ -182,7 +182,7 @@ export function buildHome(){
   playBtn.textContent='KICK OFF';
   playBtn.onclick=function(){
     SND.click();
-    setGs(function(s){ return Object.assign({}, s, {screen:'setup', team:null, side:null}); });
+    setGs(function(s){ return Object.assign({}, s, {screen:'teamSelect', team:null}); });
   };
 
   var devBtn=document.createElement('button');

@@ -2,9 +2,7 @@ import { GS, setRender } from './state.js';
 import { SND } from './engine/sound.js';
 import { buildHome } from './ui/screens/home.js';
 import { buildCardMockup } from './ui/screens/cardMockup.js';
-import { buildSetup } from './ui/screens/setup.js';
-import { buildDraft } from './ui/screens/draft.js';
-import { buildCardDraft } from './ui/screens/cardDraft.js';
+import { buildTeamSelect } from './ui/screens/teamSelect.js';
 import { buildGameplay } from './ui/screens/gameplay.js';
 import { buildHalftime } from './ui/screens/halftime.js';
 import { buildEndGame } from './ui/screens/endGame.js';
@@ -26,10 +24,8 @@ function render() {
     content = buildHome();
   } else {
     switch (GS.screen) {
-      case 'setup': content = buildSetup(); break;
-      case 'draft': content = buildDraft(); break;
-      case 'card_draft': content = buildCardDraft(); break;
-      case 'coin_toss': content = buildGameplay(); break; // coin toss is now an overlay inside gameplay
+      case 'teamSelect': content = buildTeamSelect(); break;
+      case 'setup': content = buildTeamSelect(); break; // Legacy redirect
       case 'gameplay': content = buildGameplay(); break;
       case 'halftime': content = buildHalftime(); break;
       case 'end_game': content = buildEndGame(); break;
