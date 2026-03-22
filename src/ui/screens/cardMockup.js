@@ -232,10 +232,10 @@ export function buildCardMockup() {
   var playerRow = row();
 
   var players = [
-    { name:'COLT AVERY', pos:'QB', ovr:78, num:7, tier:'silver', teamColor:'#FF4511' },
-    { name:'QUEZ SAMPSON', pos:'WR', ovr:80, num:1, tier:'gold', teamColor:'#FF4511' },
-    { name:'MACK TORRES', pos:'FB', ovr:82, num:44, tier:'gold', teamColor:'#CC1A1A' },
-    { name:'BO KENDRICK', pos:'QB', ovr:80, num:12, tier:'gold', teamColor:'#CC1A1A' },
+    { name:'COLT AVERY', pos:'QB', ovr:78, num:7, tier:'silver', teamColor:'#FF4511', img:'/img/players/ct-off-qb-avery.png' },
+    { name:'QUEZ SAMPSON', pos:'WR', ovr:80, num:1, tier:'gold', teamColor:'#FF4511', img:'/img/players/ct-off-wr-sampson.png' },
+    { name:'MACK TORRES', pos:'FB', ovr:82, num:44, tier:'gold', teamColor:'#CC1A1A', img:'/img/players/ir-off-fb-torres.png' },
+    { name:'BO KENDRICK', pos:'QB', ovr:80, num:12, tier:'gold', teamColor:'#CC1A1A', img:'/img/players/ir-off-qb-kendrick.png' },
   ];
   var tierC = { bronze:'#A0522D', silver:'#B0C4D4', gold:'#FFB800' };
 
@@ -244,28 +244,25 @@ export function buildCardMockup() {
     CB:'CB',S:'S',LB:'LB',DL:'DL',DE:'DE'};
   function buildMaddenPlayer(p, w, h) {
     var tc = tierC[p.tier] || '#B0C4D4';
+    var lg = w > 90;
     var card = document.createElement('div');
-    card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;border:2px solid '+tc+'44;background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);position:relative;box-shadow:0 4px 16px rgba(0,0,0,0.5);display:flex;flex-direction:column;';
+    card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:'+(lg?8:6)+'px;border:2px solid '+tc+'44;background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);position:relative;box-shadow:0 '+(lg?'4px 16px':'3px 10px')+' rgba(0,0,0,0.5);display:flex;flex-direction:column;';
     var fullPos = posNames[p.pos] || p.pos;
-    // Tier header bar behind OVR
-    var hdrBar = '<div style="position:absolute;top:0;left:0;right:0;height:'+(w>90?'46':'34')+'px;background:'+tc+'18;border-bottom:1px solid '+tc+'33;border-radius:6px 6px 0 0;z-index:1;"></div>';
     // OVR centered top
-    var topArea = hdrBar+'<div style="text-align:center;padding:'+(w>90?'6':'4')+'px 0 0;position:relative;z-index:2;">'
-      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?36:24)+'px;color:'+tc+';line-height:0.85;text-shadow:0 0 10px '+tc+'44;">'+p.ovr+'</div>'
-      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(w>90?10:8)+'px;color:#fff;letter-spacing:2px;margin-top:-1px;opacity:0.7;">'+fullPos+'</div></div>';
-    // Jersey number (left-aligned below OVR/position block)
-    var numArea = '<div style="position:absolute;top:'+(w>90?'48':'34')+'px;left:'+(w>90?'8':'5')+'px;font-family:\'Teko\';font-weight:700;font-size:'+(w>90?14:11)+'px;color:#fff;opacity:0.7;line-height:1;z-index:2;">#'+(p.num||'')+'</div>';
-    // Art placeholder
-    var artArea = '<div style="flex:1;display:flex;align-items:center;justify-content:center;"><div style="width:'+(w*0.55)+'px;height:'+(h*0.4)+'px;border-radius:50% 50% 0 0;background:linear-gradient(180deg,'+p.teamColor+'33,transparent);opacity:0.4;"></div></div>';
+    var topArea = '<div style="text-align:center;padding:'+(lg?'6':'4')+'px 0 0;position:relative;z-index:2;">'
+      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(lg?36:22)+'px;color:'+tc+';line-height:0.85;text-shadow:0 0 '+(lg?'10':'6')+'px '+tc+'44;">'+p.ovr+'</div>'
+      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(lg?10:7)+'px;color:#fff;letter-spacing:0.5px;margin-top:-1px;opacity:0.7;">'+fullPos+'</div></div>';
+    // Jersey number — always top-left
+    var numArea = '<div style="position:absolute;top:'+(lg?'48':'30')+'px;left:'+(lg?'8':'5')+'px;font-family:\'Teko\';font-weight:700;font-size:'+(lg?14:10)+'px;color:#fff;opacity:0.7;line-height:1;z-index:2;">#'+(p.num||'')+'</div>';
+    // Player art
+    var artArea = p.img
+      ? '<div style="flex:1;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;padding:0 4px;"><img src="'+p.img+'" alt="'+p.name+'" draggable="false" style="height:'+(lg?'90':'65')+'px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));"></div>'
+      : '<div style="flex:1;display:flex;align-items:center;justify-content:center;"><div style="width:'+(w*0.55)+'px;height:'+(h*0.4)+'px;border-radius:50% 50% 0 0;background:linear-gradient(180deg,'+p.teamColor+'33,transparent);opacity:0.4;"></div></div>';
     // Bottom gradient
     var botGrad = '<div style="position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(transparent,#0A0804);z-index:1;"></div>';
-    // Name bar
-    var nameBar = '<div style="position:absolute;bottom:0;left:0;right:0;z-index:2;background:'+p.teamColor+'22;padding:'+(w>90?'5px 6px':'3px 4px')+';border-top:1px solid '+p.teamColor+'44;border-bottom:'+(w>90?2:1)+'px solid '+p.teamColor+';">'
-      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?12:9)+'px;color:#fff;letter-spacing:1px;text-align:center;line-height:1.1;">'+(w>90?p.name:p.name.split(' ').pop())+'</div></div>';
-    // Move jersey number to name bar at gameplay size
-    if(w<=90){
-      numArea = '<div style="position:absolute;bottom:'+(w>90?'8':'4')+'px;left:'+(w>90?'8':'5')+'px;font-family:\'Teko\';font-weight:700;font-size:9px;color:#fff;opacity:0.5;line-height:1;z-index:3;">#'+(p.num||'')+'</div>';
-    }
+    // Name bar — same structure at both sizes
+    var nameBar = '<div style="position:absolute;bottom:0;left:0;right:0;z-index:2;background:'+p.teamColor+'22;padding:'+(lg?'5px 6px':'3px 4px')+';border-top:1px solid '+p.teamColor+'44;border-bottom:2px solid '+p.teamColor+';">'
+      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(lg?12:9)+'px;color:#fff;letter-spacing:'+(lg?'1':'0.5')+'px;text-align:center;line-height:1.1;">'+(lg?p.name:p.name.split(' ').pop())+'</div></div>';
     card.innerHTML = topArea + numArea + artArea + botGrad + nameBar;
     return card;
   }
@@ -377,7 +374,7 @@ export function buildCardMockup() {
   flipCard.style.cssText = 'width:90px;height:126px;perspective:900px;cursor:pointer;';
   var flipInner = document.createElement('div');
   flipInner.style.cssText = 'width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.5s ease-out;';
-  var flipFront = buildMaddenPlayer({name:'COLT AVERY',pos:'QB',ovr:78,num:7,tier:'silver',teamColor:'#FF4511'},90,126);
+  var flipFront = buildMaddenPlayer({name:'COLT AVERY',pos:'QB',ovr:78,num:7,tier:'silver',teamColor:'#FF4511',img:'/img/players/ct-off-qb-avery.png'},90,126);
   flipFront.style.cssText += ';position:absolute;inset:0;backface-visibility:hidden;';
   var flipBack = buildHomeCard('offense',90,126);
   flipBack.style.cssText += ';position:absolute;inset:0;backface-visibility:hidden;transform:rotateY(180deg);';
@@ -397,9 +394,9 @@ export function buildCardMockup() {
   el.appendChild(sec('SLIDE DEAL — All 3 Types (tap each deck)'));
   var dealRow = row();
   var dealTypes = [
-    {type:'offense',player:{name:'QUEZ SAMPSON',pos:'WR',ovr:80,num:1,tier:'gold',teamColor:'#FF4511'},label:'OFFENSE'},
-    {type:'torch',player:{name:'RIO VASQUEZ',pos:'SLOT',ovr:82,num:3,tier:'gold',teamColor:'#FF4511'},label:'TORCH'},
-    {type:'defense',player:{name:'ZION CREWS',pos:'CB',ovr:82,num:24,tier:'gold',teamColor:'#FF4511'},label:'DEFENSE'},
+    {type:'offense',player:{name:'QUEZ SAMPSON',pos:'WR',ovr:80,num:1,tier:'gold',teamColor:'#FF4511',img:'/img/players/ct-off-wr-sampson.png'},label:'OFFENSE'},
+    {type:'torch',player:{name:'RIO VASQUEZ',pos:'SLOT',ovr:82,num:3,tier:'gold',teamColor:'#FF4511',img:'/img/players/ct-off-slot-vasquez.png'},label:'TORCH'},
+    {type:'defense',player:{name:'ZION CREWS',pos:'CB',ovr:82,num:24,tier:'gold',teamColor:'#FF4511',img:'/img/players/ct-def-cb-crews.png'},label:'DEFENSE'},
   ];
   dealTypes.forEach(function(dt) {
     var dw = document.createElement('div');
@@ -438,22 +435,22 @@ export function buildCardMockup() {
 
   var multiTypes = [
     {type:'offense',label:'OFFENSE',players:[
-      {name:'COLT AVERY',pos:'QB',ovr:78,num:7,tier:'silver',teamColor:'#FF4511'},
-      {name:'QUEZ SAMPSON',pos:'WR',ovr:80,num:1,tier:'gold',teamColor:'#FF4511'},
-      {name:'RIO VASQUEZ',pos:'SLOT',ovr:82,num:3,tier:'gold',teamColor:'#FF4511'},
-      {name:'KIRBY WALSH',pos:'RB',ovr:72,num:22,tier:'bronze',teamColor:'#FF4511'},
+      {name:'COLT AVERY',pos:'QB',ovr:78,num:7,tier:'silver',teamColor:'#FF4511',img:'/img/players/ct-off-qb-avery.png'},
+      {name:'QUEZ SAMPSON',pos:'WR',ovr:80,num:1,tier:'gold',teamColor:'#FF4511',img:'/img/players/ct-off-wr-sampson.png'},
+      {name:'RIO VASQUEZ',pos:'SLOT',ovr:82,num:3,tier:'gold',teamColor:'#FF4511',img:'/img/players/ct-off-slot-vasquez.png'},
+      {name:'KIRBY WALSH',pos:'RB',ovr:72,num:22,tier:'bronze',teamColor:'#FF4511',img:'/img/players/ct-off-rb-walsh.png'},
     ]},
     {type:'torch',label:'TORCH',players:[
-      {name:'MACK TORRES',pos:'FB',ovr:82,num:44,tier:'gold',teamColor:'#CC1A1A'},
-      {name:'JAYLEN SIMS',pos:'RB',ovr:78,num:5,tier:'silver',teamColor:'#CC1A1A'},
-      {name:'BO KENDRICK',pos:'QB',ovr:80,num:12,tier:'gold',teamColor:'#CC1A1A'},
-      {name:'CADE BUCKLEY',pos:'TE',ovr:74,num:88,tier:'bronze',teamColor:'#CC1A1A'},
+      {name:'MACK TORRES',pos:'FB',ovr:82,num:44,tier:'gold',teamColor:'#CC1A1A',img:'/img/players/ir-off-fb-torres.png'},
+      {name:'JAYLEN SIMS',pos:'RB',ovr:78,num:5,tier:'silver',teamColor:'#CC1A1A',img:'/img/players/ir-off-rb-sims.png'},
+      {name:'BO KENDRICK',pos:'QB',ovr:80,num:12,tier:'gold',teamColor:'#CC1A1A',img:'/img/players/ir-off-qb-kendrick.png'},
+      {name:'CADE BUCKLEY',pos:'TE',ovr:74,num:88,tier:'bronze',teamColor:'#CC1A1A',img:'/img/players/ir-off-te-buckley.png'},
     ]},
     {type:'defense',label:'DEFENSE',players:[
-      {name:'ZION CREWS',pos:'CB',ovr:82,num:24,tier:'gold',teamColor:'#FF4511'},
-      {name:'ANDRE KNOX',pos:'S',ovr:80,num:34,tier:'gold',teamColor:'#FF4511'},
-      {name:'JACE WILDER',pos:'LB',ovr:78,num:55,tier:'silver',teamColor:'#FF4511'},
-      {name:'KAI OROZCO',pos:'S',ovr:72,num:8,tier:'bronze',teamColor:'#FF4511'},
+      {name:'ZION CREWS',pos:'CB',ovr:82,num:24,tier:'gold',teamColor:'#FF4511',img:'/img/players/ct-def-cb-crews.png'},
+      {name:'ANDRE KNOX',pos:'S',ovr:80,num:34,tier:'gold',teamColor:'#FF4511',img:'/img/players/ct-def-s-knox.png'},
+      {name:'JACE WILDER',pos:'LB',ovr:78,num:55,tier:'silver',teamColor:'#FF4511',img:'/img/players/ct-def-lb-wilder.png'},
+      {name:'KAI OROZCO',pos:'S',ovr:72,num:8,tier:'bronze',teamColor:'#FF4511',img:'/img/players/ct-def-s-orozco.png'},
     ]},
   ];
 
