@@ -24,19 +24,19 @@ function injectStyles() {
 // when the parent provides the stacking context.
 function buildHomeCard(type, w, h) {
   var configs = {
-    offense: {accent:'#7ACC00',bg:'#5A9E00',bgEdge:'#2A4A00',label:'OFFENSE',spotColor:'rgba(122,204,0,0.25)',
+    offense: {accent:'#7ACC00',bg:'#96CC50',bgEdge:'#4A6A20',label:'OFFENSE',spotColor:'rgba(122,204,0,0.25)',
       art:'<svg viewBox="0 0 448 512" width="48" height="52">'
         +'<defs><linearGradient id="bG_o'+w+'" x1="100" y1="450" x2="350" y2="50"><stop offset="0%" stop-color="#90E040"/><stop offset="100%" stop-color="#D4FF80"/></linearGradient></defs>'
         +'<path fill="url(#bG_o'+w+')" stroke="#7ACC00" stroke-width="8" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/></svg>',
       pip:'<svg viewBox="0 0 448 512" width="12" height="14"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z" fill="#FFB800" opacity="0.8"/></svg>'},
-    torch: {accent:'#FF4511',bg:'#CC3A10',bgEdge:'#6A1A08',label:'TORCH',spotColor:'rgba(255,69,17,0.25)',
+    torch: {accent:'#FF4511',bg:'#E88050',bgEdge:'#904028',label:'TORCH',spotColor:'rgba(255,69,17,0.25)',
       art:'<svg viewBox="0 -2 44 56" fill="none" width="48" height="52" style="overflow:visible;">'
         +'<defs><linearGradient id="nG_t'+w+'" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF6A30"/><stop offset="100%" stop-color="#FFD060"/></linearGradient>'
         +'<linearGradient id="nI_t'+w+'" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA44"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient></defs>'
         +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#nG_t'+w+')" stroke="#FF4511" stroke-width="1.5"/>'
         +'<path d="M22 12C22 12 13 24 12 32C11 40 15 46 19 49C19 49 16 41 19 32C20 28 21 25 22 20C23 25 24 28 25 32C28 41 25 49 25 49C29 46 33 40 32 32C31 24 22 12 22 12Z" fill="url(#nI_t'+w+')" opacity="0.7"/></svg>',
       pip:'<svg viewBox="0 0 5 6" width="12" height="14"><path d="M2.5 0C2.5 0 0.5 2 0.5 3.5C0.5 5 2 5.5 2.5 5.5C3 5.5 4.5 5 4.5 3.5C4.5 2 2.5 0 2.5 0Z" fill="#FFB800" opacity="0.8"/></svg>'},
-    defense: {accent:'#4DA6FF',bg:'#3A7ACC',bgEdge:'#1A3A66',label:'DEFENSE',spotColor:'rgba(77,166,255,0.2)',
+    defense: {accent:'#4DA6FF',bg:'#6AAAEE',bgEdge:'#385890',label:'DEFENSE',spotColor:'rgba(77,166,255,0.2)',
       art:'<svg viewBox="0 0 512 512" width="48" height="52">'
         +'<defs><linearGradient id="sG_d'+w+'" x1="256" y1="512" x2="256" y2="0"><stop offset="0%" stop-color="#3080D0"/><stop offset="100%" stop-color="#A0D4FF"/></linearGradient></defs>'
         +'<path fill="url(#sG_d'+w+')" stroke="#4DA6FF" stroke-width="8" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8z"/></svg>',
@@ -129,28 +129,7 @@ function buildHomeCard(type, w, h) {
   } else {
     npT.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:"+(w>=100?'11':'9')+"px;color:#000;letter-spacing:2px;";
   }
-  if(isTorch){
-    // Football-O scaled for nameplate
-    var fs = w>=100 ? 16 : 12;
-    var oSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-    oSvg.setAttribute('viewBox','0 0 100 100');
-    oSvg.setAttribute('fill','none');
-    oSvg.setAttribute('preserveAspectRatio','xMidYMid meet');
-    oSvg.style.cssText = 'display:inline-block;height:0.72em;width:0.52em;vertical-align:middle;margin:0 1px 2px -2px;overflow:visible;';
-    oSvg.innerHTML = '<defs><linearGradient id="npOG" x1="15" y1="15" x2="85" y2="85"><stop offset="0%" stop-color="#D4893B"/><stop offset="45%" stop-color="#B5652B"/><stop offset="100%" stop-color="#8B4A1F"/></linearGradient></defs>'
-      +'<g transform="translate(50,50) rotate(-45) scale(0.22) translate(-256,-256)">'
-      +'<path fill="url(#npOG)" d="M247.5 25.4c-13.5 3.3-26.4 7.2-38.6 11.7C142.9 61.6 96.7 103.6 66 153.6C47.8 183.4 35.1 215.9 26.9 249L264.5 486.6c13.5-3.3 26.4-7.2 38.6-11.7c66-24.5 112.2-66.5 142.9-116.5c18.3-29.8 30.9-62.3 39.1-95.3L247.5 25.4zM495.2 205.3c6.1-56.8 1.4-112.2-7.7-156.4c-2.7-12.9-13-22.9-26.1-25.1c-58.2-9.7-109.9-12-155.6-7.9L495.2 205.3zM206.1 496L16.8 306.7c-6.1 56.8-1.4 112.2 7.7 156.4c2.7 12.9 13 22.9 26.1 25.1c58.2 9.7 109.9 12 155.6 7.9z"/>'
-      +'<path fill="#FFFBE6" d="M260.7 164.7c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6z"/>'
-      +'</g>';
-    var tSpan = document.createElement('span');
-    tSpan.textContent = 'T';
-    tSpan.style.marginRight = '1px';
-    npT.appendChild(tSpan);
-    npT.appendChild(oSvg);
-    npT.appendChild(document.createTextNode('RCH'));
-  } else {
-    npT.textContent = d.label;
-  }
+  npT.textContent = d.label;
   np.appendChild(npT);
   card.appendChild(np);
 
@@ -226,6 +205,41 @@ export function buildCardMockup() {
   el.appendChild(backWrap);
 
   // ============================================================
+  // ICON ALTERNATIVES — Offense & Defense
+  // ============================================================
+  el.appendChild(sec('OFFENSE ICON OPTIONS'));
+  var offIconRow = row();
+  var offIcons = [
+    {name:'BOLT (current)',vb:'0 0 448 512',path:'M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z'},
+    {name:'CROSSHAIRS',vb:'0 0 512 512',path:'M256 0c17.7 0 32 14.3 32 32l0 10.4c93.7 13.9 167.7 88 181.6 181.6l10.4 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-10.4 0c-13.9 93.7-88 167.7-181.6 181.6l0 10.4c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-10.4C130.3 455.7 56.3 381.7 42.4 288L32 288c-17.7 0-32-14.3-32-32s14.3-32 32-32l10.4 0C56.3 130.3 130.3 56.3 224 42.4L224 32c0-17.7 14.3-32 32-32zM107.4 288c12.5 58.3 58.4 104.1 116.6 116.6l0-20.6c0-17.7 14.3-32 32-32s32 14.3 32 32l0 20.6c58.3-12.5 104.1-58.4 116.6-116.6L384 288c-17.7 0-32-14.3-32-32s14.3-32 32-32l20.6 0C392.1 165.7 346.3 119.9 288 107.4l0 20.6c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-20.6C165.7 119.9 119.9 165.7 107.4 224l20.6 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-20.6 0zM256 224a32 32 0 1 1 0 64 32 32 0 1 1 0-64z'},
+    {name:'RUNNER',vb:'0 0 448 512',path:'M320 48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM125.7 175.5c9.9-9.9 23.4-15.5 37.5-15.5c1.9 0 3.8 .1 5.6 .3L137.6 254c-9.3 28 1.7 58.8 26.8 74.5l86.2 53.9-25.4 88.8c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l28.7-100.4c5.9-20.6-2.6-42.6-20.7-53.9L238 299l30.9-82.4 5.1 12.3C289 264.7 323.9 288 362.7 288l21.3 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-21.3 0c-12.9 0-24.6-7.8-29.5-19.7l-6.3-15c-14.6-35.1-44.1-61.9-80.5-73.1l-48.7-15c-11.1-3.4-22.7-5.2-34.4-5.2c-31 0-60.8 12.3-82.7 34.3L57.4 153.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l23.1-23.1zM91.2 352L32 352c-17.7 0-32 14.3-32 32s14.3 32 32 32l69.6 0c19 0 36.2-11.2 43.9-28.5L157 361.6l-9.5-6c-17.5-10.9-30.5-26.8-37.9-44.9L91.2 352z'},
+    {name:'FORWARD',vb:'0 0 512 512',path:'M52.5 440.6c-9.5 7.9-22.8 9.7-34.1 4.4S0 428.4 0 416L0 96C0 83.6 7.2 72.3 18.4 67s24.5-3.6 34.1 4.4L224 214.3l0 41.7 0 41.7L52.5 440.6zM256 352l0-96 0-128 0-32c0-12.4 7.2-23.7 18.4-29s24.5-3.6 34.1 4.4l192 160c7.3 6.1 11.5 15.1 11.5 24.6s-4.2 18.5-11.5 24.6l-192 160c-9.5 7.9-22.8 9.7-34.1 4.4s-18.4-16.6-18.4-29l0-64z'},
+  ];
+  offIcons.forEach(function(ic) {
+    var card = document.createElement('div');
+    card.style.cssText = 'width:80px;height:112px;border-radius:7px;background:radial-gradient(ellipse at 50% 40%,#96CC50,#4A6A20);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,0.4);';
+    card.innerHTML = '<svg viewBox="'+ic.vb+'" width="40" height="44" fill="none"><path fill="rgba(255,255,255,0.9)" d="'+ic.path+'"/></svg>';
+    offIconRow.appendChild(wrap(card, ic.name));
+  });
+  el.appendChild(offIconRow);
+
+  el.appendChild(sec('DEFENSE ICON OPTIONS'));
+  var defIconRow = row();
+  var defIcons = [
+    {name:'SHIELD (current)',vb:'0 0 512 512',path:'M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8z'},
+    {name:'HAND FIST',vb:'0 0 448 512',path:'M192 0c17.7 0 32 14.3 32 32l0 112-64 0 0-112c0-17.7 14.3-32 32-32zM64 64c0-17.7 14.3-32 32-32s32 14.3 32 32l0 80-64 0 0-80zm192 0c0-17.7 14.3-32 32-32s32 14.3 32 32l0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-96zm96 64c0-17.7 14.3-32 32-32s32 14.3 32 32l0 64c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-64zm-96 88l0-.6c9.4 5.4 20.3 8.6 32 8.6c13.2 0 25.4-4 35.6-10.8c8.7 24.9 32.5 42.8 60.4 42.8c11.7 0 22.6-3.1 32-8.6l0 8.6c0 52.3-25.1 98.8-64 128l0 96c0 17.7-14.3 32-32 32l-160 0c-17.7 0-32-14.3-32-32l0-78.4c-17.3-7.9-33.2-18.8-46.9-32.5L69.5 357.5C45.5 333.5 32 300.9 32 267l0-27c0-35.3 28.7-64 64-64l88 0c22.1 0 40 17.9 40 40s-17.9 40-40 40l-56 0c-8.8 0-16 7.2-16 16s7.2 16 16 16l56 0c39.8 0 72-32.2 72-72z'},
+    {name:'LOCK',vb:'0 0 448 512',path:'M144 144l0 48 160 0 0-48c0-44.2-35.8-80-80-80s-80 35.8-80 80zM80 192l0-48C80 64.5 144.5 0 224 0s144 64.5 144 144l0 48 16 0c35.3 0 64 28.7 64 64l0 192c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 256c0-35.3 28.7-64 64-64l16 0z'},
+    {name:'BULLSEYE',vb:'0 0 512 512',path:'M448 256A192 192 0 1 0 64 256a192 192 0 1 0 384 0zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zm256 80a80 80 0 1 0 0-160 80 80 0 1 0 0 160zm0-224a144 144 0 1 1 0 288 144 144 0 1 1 0-288zM224 256a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z'},
+  ];
+  defIcons.forEach(function(ic) {
+    var card = document.createElement('div');
+    card.style.cssText = 'width:80px;height:112px;border-radius:7px;background:radial-gradient(ellipse at 50% 40%,#6AAAEE,#385890);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,0.4);';
+    card.innerHTML = '<svg viewBox="'+ic.vb+'" width="40" height="44" fill="none"><path fill="rgba(255,255,255,0.9)" d="'+ic.path+'"/></svg>';
+    defIconRow.appendChild(wrap(card, ic.name));
+  });
+  el.appendChild(defIconRow);
+
+  // ============================================================
   // PLAYER CARDS — Madden Style (chosen)
   // ============================================================
   el.appendChild(sec('PLAYER CARDS — Madden Style (chosen)'));
@@ -248,16 +262,20 @@ export function buildCardMockup() {
     var card = document.createElement('div');
     card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:'+(lg?8:6)+'px;border:2px solid '+tc+'44;background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);position:relative;box-shadow:0 '+(lg?'4px 16px':'3px 10px')+' rgba(0,0,0,0.5);display:flex;flex-direction:column;';
     var fullPos = posNames[p.pos] || p.pos;
-    // OVR centered top
-    var topArea = '<div style="text-align:center;padding:'+(lg?'6':'4')+'px 0 0;position:relative;z-index:2;">'
+    // Top row: #number | OVR | position — all on one line, centered
+    var topArea = '<div style="display:flex;align-items:center;justify-content:space-between;padding:'+(lg?'6':'4')+'px '+(lg?'10':'6')+'px '+(lg?'2':'1')+'px;position:relative;z-index:2;">'
+      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(lg?12:9)+'px;color:#fff;line-height:1;min-width:'+(lg?'20':'14')+'px;">#'+(p.num||'')+'</div>'
       +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(lg?36:22)+'px;color:'+tc+';line-height:0.85;text-shadow:0 0 '+(lg?'10':'6')+'px '+tc+'44;">'+p.ovr+'</div>'
-      +'<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+(lg?10:7)+'px;color:#fff;letter-spacing:0.5px;margin-top:-1px;opacity:0.7;">'+fullPos+'</div></div>';
-    // Jersey number — always top-left
-    var numArea = '<div style="position:absolute;top:'+(lg?'48':'30')+'px;left:'+(lg?'8':'5')+'px;font-family:\'Teko\';font-weight:700;font-size:'+(lg?14:10)+'px;color:#fff;opacity:0.7;line-height:1;z-index:2;">#'+(p.num||'')+'</div>';
+      +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(lg?12:9)+'px;color:#fff;line-height:1;min-width:'+(lg?'20':'14')+'px;text-align:right;">'+fullPos+'</div>'
+      +'</div>';
+    var numArea = '';
     // Player art
     var artArea = p.img
-      ? '<div style="flex:1;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;padding:0 4px;"><img src="'+p.img+'" alt="'+p.name+'" draggable="false" style="height:'+(lg?'90':'65')+'px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));"></div>'
-      : '<div style="flex:1;display:flex;align-items:center;justify-content:center;"><div style="width:'+(w*0.55)+'px;height:'+(h*0.4)+'px;border-radius:50% 50% 0 0;background:linear-gradient(180deg,'+p.teamColor+'33,transparent);opacity:0.4;"></div></div>';
+      ? '<div style="position:absolute;top:'+(lg?'32':'22')+'px;left:0;right:0;bottom:'+(lg?'32':'22')+'px;display:flex;align-items:center;justify-content:center;overflow:hidden;">'
+        +'<img src="'+p.img+'" alt="'+p.name+'" draggable="false" style="max-height:100%;max-width:100%;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.8));">'
+        +'<div style="position:absolute;inset:-4px;box-shadow:inset 0 0 '+(lg?'25':'18')+'px '+(lg?'18':'12')+'px #0A0804;pointer-events:none;"></div>'
+        +'</div>'
+      : '<div style="flex:1;"></div>';
     // Bottom gradient
     var botGrad = '<div style="position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(transparent,#0A0804);z-index:1;"></div>';
     // Name bar — same structure at both sizes
