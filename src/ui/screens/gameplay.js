@@ -47,7 +47,7 @@ const CSS = `
 .T-sb-countdown-live{font-size:14px;color:#e03050;text-shadow:0 0 10px rgba(224,48,80,.5)}
 /* situation bar — always one line, never wraps */
 .T-sb-sit{display:flex;align-items:center;justify-content:center;padding:4px 8px;background:rgba(0,0,0,.4);border-top:1px solid rgba(255,255,255,.04);gap:6px;white-space:nowrap;overflow:hidden}
-.T-sb-sit-down{font-family:'Rajdhani';font-size:10px;color:#30c0e0;letter-spacing:.5px;flex-shrink:0}
+.T-sb-sit-down{font-family:'Rajdhani';font-size:10px;color:#FF6B00;letter-spacing:.5px;flex-shrink:0}
 .T-sb-sit-div{width:1px;height:14px;background:rgba(255,255,255,.12);flex-shrink:0}
 .T-sb-sit-ball{font-family:'Rajdhani';font-size:10px;color:#e8e6ff;opacity:.7;letter-spacing:.5px;flex-shrink:1;overflow:hidden;text-overflow:ellipsis}
 .T-sb-sit-torch{font-family:'Rajdhani';font-size:12px;color:#c8a030;letter-spacing:.5px;transition:transform .08s,text-shadow .08s;flex-shrink:0}
@@ -123,13 +123,16 @@ const CSS = `
 .T-kneel{color:#554f80;border-color:#554f80;box-shadow:4px 4px 0 #2a2840,6px 6px 0 #000}
 
 /* play-by-play terminal */
-.T-narr{flex:0 0 auto;min-height:60px;max-height:100px;background:#0C0804;border-top:1px solid #1E1610;overflow-y:auto;padding:6px 10px}
-.T-pbp{display:flex;flex-direction:column;gap:6px}
-.T-pbp-line{font-family:'Rajdhani',monospace;font-size:14px;color:#6a6690;line-height:1.4;letter-spacing:.3px}
-.T-pbp-live{color:#e8e6ff;text-shadow:0 0 6px rgba(232,230,255,.15)}
-.T-pbp-result{font-family:'Rajdhani';font-size:12px;letter-spacing:.5px;line-height:1;margin-top:10px;white-space:nowrap;overflow:hidden}
-.T-pbp-down{font-family:'Rajdhani';font-size:10px;color:#30c0e0;margin-top:6px;letter-spacing:.5px;line-height:1;white-space:nowrap;overflow:hidden}
-.T-pbp-idle{font-family:'Rajdhani',monospace;font-size:11px;color:#333;letter-spacing:.5px}
+/* Commentary — broadcast booth ticker */
+.T-narr{flex:0 0 auto;height:110px;background:rgba(10,8,4,0.85);border-top:2px solid #FF6B00;overflow-y:auto;padding:8px 12px}
+.T-pbp{display:flex;flex-direction:column;gap:4px}
+.T-pbp-line{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:#fff;line-height:1.3;letter-spacing:.3px}
+.T-pbp-live{color:#fff}
+.T-pbp-sub{font-family:'Rajdhani';font-size:13px;color:#C4A265;line-height:1.2}
+.T-pbp-combo{font-family:'Rajdhani';font-size:12px;color:#FFB800;font-style:italic}
+.T-pbp-result{font-family:'Rajdhani';font-size:12px;letter-spacing:.5px;line-height:1;margin-top:6px;white-space:nowrap;overflow:hidden}
+.T-pbp-down{font-family:'Rajdhani';font-size:10px;color:#FF6B00;margin-top:4px;letter-spacing:.5px;line-height:1;white-space:nowrap;overflow:hidden}
+.T-pbp-idle{font-family:'Rajdhani',sans-serif;font-size:11px;color:#444;letter-spacing:.5px}
 /* torch points fly animation */
 .T-torch-fly{position:fixed;z-index:9999;font-family:'Rajdhani';font-size:12px;color:#c8a030;pointer-events:none;text-shadow:0 0 8px rgba(200,160,48,.5)}
 @keyframes T-flyup{0%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(.6)}}
@@ -613,8 +616,8 @@ export function buildGameplay() {
   el.appendChild(narr);
 
   function setNarr(a, b) {
-    narr.innerHTML = '<div class="T-pbp" style="padding:8px 14px"><div class="T-pbp-line T-pbp-live">' + a + '</div>' +
-      (b ? '<div class="T-pbp-line" style="color:#554f80;font-size:11px">' + b + '</div>' : '') + '</div>';
+    narr.innerHTML = '<div class="T-pbp"><div class="T-pbp-line T-pbp-live">' + a + '</div>' +
+      (b ? '<div class="T-pbp-sub">' + b + '</div>' : '') + '</div>';
     narr.scrollTop = narr.scrollHeight;
   }
 

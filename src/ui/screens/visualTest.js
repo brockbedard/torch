@@ -39,8 +39,16 @@ function resetGs() {
 export function buildVisualTest() {
   suppressRender();
 
+  // Let the body scroll natively — no nested scroll container
+  document.body.style.overflow = 'auto';
+  document.body.style.height = 'auto';
+  document.documentElement.style.overflow = 'auto';
+  document.documentElement.style.height = 'auto';
+  var root = document.getElementById('root');
+  if (root) { root.style.overflow = 'visible'; root.style.height = 'auto'; }
+
   var el = document.createElement('div');
-  el.style.cssText = 'min-height:100vh;background:#0A0804;padding:12px;overflow-y:auto;';
+  el.style.cssText = 'background:#0A0804;padding:12px;overflow:visible;';
 
   function section(title) {
     var s = document.createElement('div');
