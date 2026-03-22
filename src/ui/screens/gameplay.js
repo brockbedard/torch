@@ -16,6 +16,8 @@ import { TORCH_CARDS } from '../../data/torchCards.js';
 import { buildHomeCard, buildMaddenPlayer, buildPlayV1, buildTorchCard, injectCardStyles } from '../components/cards.js';
 import { showShop, renderInventory } from '../components/shop.js';
 import { showTooltip } from '../components/tooltip.js';
+import { getConditionEffects } from '../../data/gameConditions.js';
+import { checkPlayCombos } from '../../data/playSequenceCombos.js';
 
 /* ═══════════════════════════════════════════
    CSS
@@ -370,6 +372,12 @@ export function buildGameplay() {
   // Progressive disclosure
   var isFirstGame = GS.isFirstSeason && (!GS.season || GS.season.currentGame === 0);
   var isFirstSeason = GS.isFirstSeason;
+
+  // Game Day Conditions (v0.21)
+  var condEffects = getConditionEffects(GS.gameConditions || { weather: 'clear', field: 'turf', crowd: 'home' });
+
+  // Play Sequence Combos — track play history per drive
+  var drivePlayHistory = []; // {cat, playId} entries for current drive
 
   // TORCH card inventory (v0.21 — 3 slots, persisted in season)
   var torchInventory = (GS.season && GS.season.torchCards) ? GS.season.torchCards.slice() : [];
@@ -1543,6 +1551,46 @@ export function buildGameplay() {
     const defCard = isOff ? null : selTorch;
     var playedPlay = selPl;
     const res = isOff ? gs.executeSnap(selPl, selP, null, null, offCard, defCard) : gs.executeSnap(null, null, selPl, selP, offCard, defCard);
+
+    // Apply Game Day Condition modifiers to result
+    if (res && res.result) {
+      var r = res.result;
+      if (condEffects.completionMod && r.isIncomplete === false && !r.isSack) {
+        // Rain: increased chance of incompletion (already resolved, so we adjust yards down)
+      }
+      // Run mean modifier (snow, grass, mud)
+      var runMod = (condEffects.runMeanMod || 0) + (condEffects.allMeanMod || 0);
+      var passMod = condEffects.allMeanMod || 0;
+      if (r.yards !== undefined && !r.isTouchdown && !r.isSack && !r.isInterception) {
+        var isRun = playedPlay && (playedPlay.type === 'run' || playedPlay.completionRate === undefined || playedPlay.completionRate === 1);
+        r.yards += isRun ? runMod : passMod;
+        if (r.yards < 0 && !r.isSack) r.yards = 0;
+      }
+      // Wind: cap deep passes
+      if (condEffects.deepCapYards && r.yards > condEffects.deepCapYards) {
+        var isDeep = playedPlay && (playedPlay.playType === 'DEEP' || (playedPlay.cat && playedPlay.cat.indexOf('DEEP') >= 0));
+        if (isDeep) r.yards = condEffects.deepCapYards;
+      }
+    }
+
+    // Check play sequence combos
+    var playCat = playedPlay ? (playedPlay.cat || playedPlay.playType || 'RUN') : 'RUN';
+    var lastDefCat = res.defPlay ? (res.defPlay.cat || res.defPlay.cardType || '') : '';
+    var firedCombos = checkPlayCombos(drivePlayHistory, playCat, lastDefCat, playedPlay ? playedPlay.id : null);
+    drivePlayHistory.push({ cat: playCat, playId: playedPlay ? playedPlay.id : null });
+
+    // Apply combo yard bonuses
+    var comboBonus = 0;
+    var comboNames = [];
+    if (firedCombos.length > 0 && res && res.result) {
+      firedCombos.forEach(function(combo) {
+        comboBonus += combo.yardBonus;
+        comboNames.push(combo.name);
+      });
+      res.result.yards += comboBonus;
+      res._combos = comboNames;
+    }
+
     driveSnaps.push(res);
     var sides = gs.getCurrentSides();
     var teamId = GS.team;
@@ -1555,7 +1603,6 @@ export function buildGameplay() {
     drawField(); drawPanel();
     res._preSnap = preSnap;
 
-    // 3-Beat Snap Result
     // Check star activation
     var wasOffHot = offStarHot, wasDefHot = defStarHot;
     checkStarActivation(res);
@@ -1664,8 +1711,14 @@ export function buildGameplay() {
       var resultEl = document.createElement('div');
       resultEl.className = 'T-beat-result';
       resultEl.style.opacity = '0';
+      // Combo flash text (if any combos fired)
+      var comboHTML = '';
+      if (res._combos && res._combos.length > 0) {
+        comboHTML = '<div style="font-family:\'Teko\';font-weight:700;font-size:18px;color:#FFB800;letter-spacing:2px;margin-top:6px;text-shadow:0 0 12px rgba(255,184,0,0.5);animation:T-beat-yds 0.4s ease-out 0.3s both;opacity:0">' + res._combos.join(' + ') + '</div>';
+      }
       resultEl.innerHTML =
         '<div class="T-beat-yds" style="color:' + resultColor + ';font-size:' + (isTD ? '52px' : '42px') + '">' + resultText + '</div>' +
+        comboHTML +
         '<div class="T-beat-label" style="color:' + resultColor + ';opacity:0;transition:opacity 0.3s">' + res.offPlay.name + ' vs ' + res.defPlay.name + '</div>';
       el.appendChild(resultEl);
 
@@ -1724,7 +1777,7 @@ export function buildGameplay() {
         function afterShop() {
           if (res.gameEvent === 'touchdown') { showConv(res.scoringTeam); return; }
           if (posChanged(res.gameEvent, prevPoss)) {
-            showPossCut(res.gameEvent, function() { showDrive(driveSnaps, prevPoss, function() { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
+            showPossCut(res.gameEvent, function() { showDrive(driveSnaps, prevPoss, function() { driveSnaps=[]; drivePlayHistory=[]; if(!checkEnd()) nextSnap(); }); });
           } else { if(!checkEnd()) nextSnap(); }
         }
 
@@ -1832,7 +1885,7 @@ export function buildGameplay() {
     if (!isH) {
       gs.handleConversion('xp'); drawBug();
       setNarr('Extra point is good.', '+1 point');
-      showPossCut('score', () => { showDrive(driveSnaps, team, () => { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
+      showPossCut('score', () => { showDrive(driveSnaps, team, () => { driveSnaps=[]; drivePlayHistory=[]; if(!checkEnd()) nextSnap(); }); });
       return;
     }
     // Show conversion choice in the panel
@@ -1858,7 +1911,7 @@ export function buildGameplay() {
         if (c.id === 'xp') {
           gs.handleConversion('xp'); drawBug();
           setNarr('Extra point is GOOD!', '+1 point');
-          showPossCut('score', function() { showDrive(driveSnaps, team, function() { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
+          showPossCut('score', function() { showDrive(driveSnaps, team, function() { driveSnaps=[]; drivePlayHistory=[]; if(!checkEnd()) nextSnap(); }); });
         } else {
           // Enter card selection for 2pt/3pt conversion
           conversionMode = { choice: c.id, team: team };
@@ -1917,7 +1970,7 @@ export function buildGameplay() {
     showClashOnField(fakeRes);
     runPlayByPlay(fakeRes, function() {
       drawBug(); drawField();
-      showPossCut('score', function() { showDrive(driveSnaps, cm.team, function() { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
+      showPossCut('score', function() { showDrive(driveSnaps, cm.team, function() { driveSnaps=[]; drivePlayHistory=[]; if(!checkEnd()) nextSnap(); }); });
     });
   }
 

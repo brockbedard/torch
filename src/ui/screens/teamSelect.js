@@ -9,6 +9,7 @@ import { GS, setGs, getTeam, getOffCards, getDefCards, shuffle } from '../../sta
 import { TEAMS, getSeasonOpponents } from '../../data/teams.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { buildMaddenPlayer, teamHelmetSvg, renderFlamePips } from '../components/cards.js';
+import { generateConditions, WEATHER, FIELD, CROWD } from '../../data/gameConditions.js';
 
 // ============================================================
 // TEAM-SPECIFIC AUDIO STINGS (jsfxr presets)
@@ -210,6 +211,13 @@ function startSelectionAnimation(container, teamId, team, isFirst) {
   var offRoster = getOffenseRoster(teamId);
   var defRoster = getDefenseRoster(teamId);
 
+  // Generate Game Day Conditions
+  var gameNum = (GS.season && GS.season.currentGame) || 0;
+  var conditions = generateConditions(isFirst && gameNum === 0);
+  var weather = WEATHER[conditions.weather];
+  var field = FIELD[conditions.field];
+  var crowd = CROWD[conditions.crowd];
+
   // ── OVERLAY for animation ──
   var ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;z-index:1000;pointer-events:none;';
@@ -304,6 +312,17 @@ function startSelectionAnimation(container, teamId, team, isFirst) {
     vs.textContent = 'VS';
     ov.appendChild(vs);
 
+    // Game Day Conditions (below VS)
+    var condBar = document.createElement('div');
+    condBar.style.cssText = "position:absolute;top:65%;left:50%;transform:translateX(-50%);z-index:3;display:flex;gap:12px;font-family:'Rajdhani';font-weight:700;font-size:10px;color:#aaa;letter-spacing:0.5px;white-space:nowrap;";
+    condBar.innerHTML =
+      '<span style="color:#FFB800">' + weather.name.toUpperCase() + '</span>' +
+      '<span>\u00b7</span>' +
+      '<span>' + field.name.toUpperCase() + '</span>' +
+      '<span>\u00b7</span>' +
+      '<span style="color:' + (crowd.id === 'home' ? '#00ff44' : crowd.id === 'away' ? '#ff0040' : '#aaa') + '">' + crowd.name.toUpperCase() + '</span>';
+    ov.appendChild(condBar);
+
     SND.hit();
   }, 900);
 
@@ -327,6 +346,8 @@ function startSelectionAnimation(container, teamId, team, isFirst) {
         defRoster: defRoster.slice(0, 4).map(function(p) { return p.id; }),
         offHand: getOffCards(teamId).slice(0, 4),
         defHand: getDefCards(teamId).slice(0, 4),
+        // Game Day Conditions
+        gameConditions: conditions,
         // Season
         isFirstSeason: s ? s.isFirstSeason : true,
         season: s && s.season ? s.season : {
