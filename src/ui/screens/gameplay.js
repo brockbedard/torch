@@ -14,6 +14,7 @@ import { getPlayHistoryBonus } from '../../engine/playHistory.js';
 import { playSvg } from '../../data/playDiagrams.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
 import { buildHomeCard, buildMaddenPlayer, buildPlayV1, buildTorchCard, injectCardStyles } from '../components/cards.js';
+import { showShop, renderInventory } from '../components/shop.js';
 
 /* ═══════════════════════════════════════════
    CSS
@@ -364,6 +365,34 @@ export function buildGameplay() {
   let driveSnaps = [];
   let prev2min = gs.twoMinActive;
 
+  // TORCH card inventory (v0.21 — 3 slots, persisted in season)
+  var torchInventory = (GS.season && GS.season.torchCards) ? GS.season.torchCards.slice() : [];
+  var selectedPreSnap = null; // card object selected for current snap
+
+  function getTorchPoints() {
+    return hAbbr === 'CT' ? gs.ctTorchPts : gs.irTorchPts;
+  }
+
+  function spendTorchPoints(amount) {
+    if (hAbbr === 'CT') gs.ctTorchPts -= amount;
+    else gs.irTorchPts -= amount;
+  }
+
+  // Trigger shop after a big moment
+  function triggerShop(trigger, callback) {
+    var pts = getTorchPoints();
+    showShop(el, trigger, pts, torchInventory, function(card, newInv, spent) {
+      torchInventory = newInv;
+      spendTorchPoints(spent);
+      // Persist to season state
+      if (GS.season) GS.season.torchCards = torchInventory.slice();
+      drawBug();
+      if (callback) callback();
+    }, function() {
+      if (callback) callback();
+    });
+  }
+
   // dom
   const el = document.createElement('div');
   el.className = 'T';
@@ -488,7 +517,7 @@ export function buildGameplay() {
     if (selTorch) {
       h += '<div class="T-placed T-placed-torch" id="T-placed-torch-slot"></div>';
     } else {
-      const hasTorchCards = gs.humanTorchCards && gs.humanTorchCards.length > 0;
+      const hasTorchCards = torchInventory.length > 0;
       const torchLbl = hasTorchCards ? (phase === 'torch' ? 'DRAG<br><br>TORCH<br><br>HERE' : 'TORCH') : 'NO<br><br>TORCH<br><br>CARD';
       h += '<div class="T-drop T-drop-torch' + (phase==='torch'?' T-drop-active':'') + '" data-drop="torch"><span class="T-drop-lbl">' + torchLbl + '</span></div>';
     }
@@ -1269,10 +1298,12 @@ export function buildGameplay() {
       if (hit && dz.dataset.drop === dragItem.type) {
         SND.cardSnap();
         if (dragItem.type === 'play') { selPl = dragItem.data; phase = 'player'; }
-        else if (dragItem.type === 'player') { selP = dragItem.data; phase = gs.humanTorchCards.length > 0 ? 'torch' : 'ready'; }
+        else if (dragItem.type === 'player') { selP = dragItem.data; phase = torchInventory.filter(function(c){return c.type==='pre-snap';}).length > 0 ? 'torch' : 'ready'; }
         else if (dragItem.type === 'torch') {
-          selTorch = dragItem.data.id;
-          gs.humanTorchCards.splice(dragItem.data._idx, 1);
+          selectedPreSnap = dragItem.data;
+          var tidx = torchInventory.indexOf(dragItem.data);
+          if (tidx >= 0) torchInventory.splice(tidx, 1);
+          if (GS.season) GS.season.torchCards = torchInventory.slice();
           phase = 'ready';
         }
         drawField();
@@ -1367,7 +1398,7 @@ export function buildGameplay() {
         c.appendChild(playerCard);
         c.onclick = () => {
           if (p.injured || phase==='busy') return; SND.select(); selP = p;
-          phase = gs.humanTorchCards.length > 0 ? 'torch' : 'ready';
+          phase = torchInventory.filter(function(c){return c.type==='pre-snap';}).length > 0 ? 'torch' : 'ready';
           drawField(); drawPanel();
         };
         c.onmousedown = function(e) { if (!p.injured) startDrag('player', p, c, e); };
@@ -1375,11 +1406,15 @@ export function buildGameplay() {
         tray.appendChild(c);
       });
     } else if (phase === 'torch') {
-      // Show torch cards from inventory — Centered Flame V1 style
-      gs.humanTorchCards.forEach(function(cardId, i) {
-        var tc = TORCH_CARDS.find(function(c) { return c.id === cardId; });
-        if (!tc) return;
-        var tierCol = tc.tier === 'GOLD' ? '#FFB800' : tc.tier === 'SILVER' ? '#B0C4D4' : '#A0522D';
+      // Show TORCH cards from inventory (v0.21 — max 3 slots)
+      var preSnapCards = torchInventory.filter(function(c) { return c.type === 'pre-snap'; });
+      if (preSnapCards.length === 0) {
+        // No pre-snap cards — skip torch phase
+        phase = 'ready';
+        drawField(); drawPanel();
+        return;
+      }
+      preSnapCards.forEach(function(tc, i) {
         var c = buildTorchCard(tc);
         c.className += ' T-card';
         c.style.flex = '1';
@@ -1388,13 +1423,14 @@ export function buildGameplay() {
         c.style.touchAction = 'none';
         c.onclick = function() {
           SND.click();
-          selTorch = cardId;
-          gs.humanTorchCards.splice(i, 1);
+          selectedPreSnap = tc;
+          // Remove from inventory (single-use)
+          var idx = torchInventory.indexOf(tc);
+          if (idx >= 0) torchInventory.splice(idx, 1);
+          if (GS.season) GS.season.torchCards = torchInventory.slice();
           phase = 'ready';
           drawField(); drawPanel();
         };
-        c.onmousedown = function(e) { startDrag('torch', { id: cardId, name: tc.name, _idx: i }, c, e); };
-        c.ontouchstart = function(e) { startDrag('torch', { id: cardId, name: tc.name, _idx: i }, c, e); };
         tray.appendChild(c);
       });
       // Skip button
@@ -1402,7 +1438,7 @@ export function buildGameplay() {
       skipBtn.className = 'T-card';
       skipBtn.style.cssText = 'border:2px dashed #554f8044;display:flex;align-items:center;justify-content:center;cursor:pointer;';
       skipBtn.innerHTML = "<div style=\"font-family:'Rajdhani';font-size:7px;color:#554f80;text-align:center\">SKIP<br>TORCH</div>";
-      skipBtn.onclick = function() { SND.click(); phase = 'ready'; drawField(); drawPanel(); };
+      skipBtn.onclick = function() { SND.click(); selectedPreSnap = null; phase = 'ready'; drawField(); drawPanel(); };
       tray.appendChild(skipBtn);
     }
     panel.appendChild(tray);
@@ -1555,10 +1591,25 @@ export function buildGameplay() {
         resultEl.style.transition = 'opacity 0.3s';
         setTimeout(function() { resultEl.remove(); }, 300);
 
-        if (res.gameEvent === 'touchdown') { showConv(res.scoringTeam); return; }
-        if (posChanged(res.gameEvent, prevPoss)) {
-          showPossCut(res.gameEvent, function() { showDrive(driveSnaps, prevPoss, function() { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
-        } else { if(!checkEnd()) nextSnap(); }
+        // Determine if shop should trigger
+        var shopTrigger = null;
+        var isHumanPoss = prevPoss === hAbbr;
+        if (res.gameEvent === 'touchdown' && isHumanPoss) shopTrigger = 'touchdown';
+        else if ((r.isInterception || r.isFumbleLost) && !isHumanPoss) shopTrigger = 'turnover';
+        else if (res.gameEvent === 'turnover_on_downs' && !isHumanPoss) shopTrigger = 'fourthDownStop';
+
+        function afterShop() {
+          if (res.gameEvent === 'touchdown') { showConv(res.scoringTeam); return; }
+          if (posChanged(res.gameEvent, prevPoss)) {
+            showPossCut(res.gameEvent, function() { showDrive(driveSnaps, prevPoss, function() { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
+          } else { if(!checkEnd()) nextSnap(); }
+        }
+
+        if (shopTrigger) {
+          triggerShop(shopTrigger, afterShop);
+        } else {
+          afterShop();
+        }
       }, isTD ? 2500 : isExplosive ? 1500 : isBad ? 1200 : 800);
     }, 800);
   }
@@ -1872,10 +1923,8 @@ export function buildGameplay() {
     // Show empty panel behind overlay
     drawPanel();
     showCoinToss(function(torchCards, humanReceives) {
-      // Store torch cards from coin toss
-      if (torchCards && torchCards.length) {
-        torchCards.forEach(function(c) { gs.humanTorchCards.push(c.id); });
-      }
+      // v0.21: Coin toss cards no longer awarded (shop-based economy)
+      // Old: torchCards.forEach(c => gs.humanTorchCards.push(c.id));
       showRules(function() {
         phase = 'play';
         drawPanel();
