@@ -84,7 +84,7 @@ const CSS = `
 .T-drop-active .T-drop-lbl{color:#FF4511;font-size:11px;text-shadow:0 0 8px rgba(255,69,17,0.5)}
 
 /* cards section — hidden during play-by-play */
-.T-panel{display:flex;flex-direction:column;overflow:hidden;transition:background .6s,border-color .6s;flex-shrink:0;border-top:2px solid transparent}
+.T-panel{display:flex;flex-direction:column;overflow:hidden;transition:background .6s,border-color .6s;flex-shrink:0;border-top:2px solid transparent;position:relative;z-index:1}
 .T-panel-hidden{display:none}
 /* offense: warm amber energy */
 .T-panel-off{background:linear-gradient(180deg,#1a1000 0%,#0A0804 60%);border-top-color:#c8a03044}
@@ -1355,7 +1355,13 @@ export function buildGameplay() {
     const isOff = gs.possession === hAbbr;
     const sides = gs.getCurrentSides();
     const players = isOff ? sides.offPlayers.slice(0,4) : sides.defPlayers.slice(0,4);
-    const plays = isOff ? sides.offHand : sides.defHand;
+    var plays = isOff ? sides.offHand : sides.defHand;
+    // Safety: ensure hand has cards (refill from full pool if empty/short)
+    if (!plays || plays.length < 3) {
+      var fullPool = isOff ? getOffCards(GS.team) : getDefCards(GS.team);
+      plays = fullPool.slice(0, 5);
+      if (isOff) sides.offHand = plays; else sides.defHand = plays;
+    }
     // Hide panel during play-by-play so commentary sits directly under field
     if (phase === 'busy') { panel.className = 'T-panel T-panel-hidden'; return; }
     panel.className = 'T-panel ' + (isOff ? 'T-panel-off' : 'T-panel-def');
@@ -1553,6 +1559,9 @@ export function buildGameplay() {
     var resultColor = isTD ? '#FFB800' : isGood ? '#3df58a' : isBad ? '#e03050' : '#c8a030';
     var resultText = isTD ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTED' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : r.isSafety ? 'SAFETY' : (r.yards >= 0 ? '+' : '') + r.yards + ' YDS';
 
+    // Force-hide panel during animation (prevents floating card bug)
+    panel.style.display = 'none';
+
     // ── BEAT 1: Anticipation (cards fly toward center) ──
     var dim = document.createElement('div');
     dim.className = 'T-beat-dim';
@@ -1632,14 +1641,16 @@ export function buildGameplay() {
         resultEl.style.transition = 'opacity 0.3s';
         setTimeout(function() { resultEl.remove(); }, 300);
 
-        // Determine if shop should trigger
+        // Determine if shop should trigger (skip if game is over — end-game shop handles it)
         var shopTrigger = null;
-        var isHumanPoss = prevPoss === hAbbr;
-        if (res.gameEvent === 'touchdown' && isHumanPoss) shopTrigger = 'touchdown';
-        else if ((r.isInterception || r.isFumbleLost) && !isHumanPoss) shopTrigger = 'turnover';
-        else if (res.gameEvent === 'turnover_on_downs' && !isHumanPoss) shopTrigger = 'fourthDownStop';
-        // Star activation trigger
-        else if ((!wasOffHot && offStarHot) || (!wasDefHot && defStarHot)) shopTrigger = 'starActivation';
+        if (!gs.gameOver) {
+          var isHumanPoss = prevPoss === hAbbr;
+          if (res.gameEvent === 'touchdown' && isHumanPoss) shopTrigger = 'touchdown';
+          else if ((r.isInterception || r.isFumbleLost) && !isHumanPoss) shopTrigger = 'turnover';
+          else if (res.gameEvent === 'turnover_on_downs' && !isHumanPoss) shopTrigger = 'fourthDownStop';
+          // Star activation trigger
+          else if ((!wasOffHot && offStarHot) || (!wasDefHot && defStarHot)) shopTrigger = 'starActivation';
+        }
 
         function afterShop() {
           if (res.gameEvent === 'touchdown') { showConv(res.scoringTeam); return; }
@@ -1672,7 +1683,8 @@ export function buildGameplay() {
 
   function nextSnap() {
     phase = 'play';
-    selP = null; selPl = null; selTorch = null;
+    selP = null; selPl = null; selTorch = null; selectedPreSnap = null;
+    panel.style.display = ''; // Restore panel visibility
     drawBug(); drawField(); drawPanel();
     // Human always picks cards — on offense they pick offPlay+player,
     // on defense they pick defPlay+player. doSnap() passes them in the right slots.
@@ -1743,6 +1755,7 @@ export function buildGameplay() {
   var conversionMode = null; // null or {choice:'2pt'|'3pt', team:'CT'|'IR'}
 
   function showConv(team) {
+    panel.style.display = ''; // Restore panel for conversion UI
     const isH = team === hAbbr;
     if (!isH) {
       gs.handleConversion('xp'); drawBug();
