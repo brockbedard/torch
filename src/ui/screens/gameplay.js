@@ -193,6 +193,20 @@ const CSS = `
 .T-urgent .T-card{animation:T-urgent-border 1.5s ease-in-out infinite}
 .T-urgent .T-inst{color:#e03050 !important}
 @keyframes T-coin{0%{transform:rotateY(0)}100%{transform:rotateY(1080deg)}}
+
+/* 3-Beat Snap Result */
+@keyframes T-beat-fly-off{0%{transform:translateY(60px) scale(0.8);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
+@keyframes T-beat-fly-def{0%{transform:translateY(-60px) scale(0.8);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
+@keyframes T-beat-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
+@keyframes T-beat-flash{0%{opacity:0.5}100%{opacity:0}}
+@keyframes T-beat-yds{0%{transform:scale(0.5);opacity:0}50%{transform:scale(1.2);opacity:1}100%{transform:scale(1);opacity:1}}
+.T-beat-dim{position:absolute;inset:0;background:rgba(0,0,0,0.4);z-index:50;pointer-events:none;transition:opacity 0.3s}
+.T-beat-cards{position:absolute;inset:0;z-index:55;display:flex;align-items:center;justify-content:center;gap:12px;pointer-events:none}
+.T-beat-card{padding:8px 12px;border-radius:8px;text-align:center;min-width:90px}
+.T-beat-result{position:absolute;inset:0;z-index:56;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;gap:4px}
+.T-beat-yds{font-family:'Teko';font-weight:700;font-size:42px;line-height:1;text-shadow:0 0 20px currentColor;animation:T-beat-yds 0.4s ease-out both}
+.T-beat-label{font-family:'Rajdhani';font-weight:700;font-size:14px;letter-spacing:1px;opacity:0.8}
+.T-beat-flash{position:absolute;inset:0;z-index:54;pointer-events:none;animation:T-beat-flash 0.3s ease-out forwards}
 `;
 
 /* ═══════════════════════════════════════════
@@ -1443,13 +1457,110 @@ export function buildGameplay() {
     drawField(); drawPanel();
     res._preSnap = preSnap;
 
-    runPlayByPlay(res, function() {
-      drawBug(); drawField();
-      if (res.gameEvent === 'touchdown') { showConv(res.scoringTeam); return; }
-      if (posChanged(res.gameEvent, prevPoss)) {
-        showPossCut(res.gameEvent, function() { showDrive(driveSnaps, prevPoss, function() { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
-      } else { if(!checkEnd()) nextSnap(); }
-    });
+    // 3-Beat Snap Result
+    run3BeatSnap(res, prevPoss);
+  }
+
+  // ── 3-BEAT SNAP RESULT (Amendment 2 Section 7) ──
+  function run3BeatSnap(res, prevPoss) {
+    var r = res.result;
+    var isGood = r.yards >= 4 || r.isTouchdown;
+    var isBad = r.isSack || r.isInterception || r.isFumbleLost || r.isSafety;
+    var isExplosive = r.yards >= 15 || r.isTouchdown;
+    var isTD = r.isTouchdown;
+
+    // Determine juice level and timing
+    var totalDur = isTD ? 4000 : isExplosive ? 3500 : isBad ? 3500 : (r.yards >= 4 ? 3000 : 2000);
+    var shakeIntensity = isTD ? 4 : isExplosive ? 3 : isBad ? 3 : 0;
+    var flashColor = isTD ? '#FFB800' : isGood ? '#3df58a' : isBad ? '#e03050' : 'transparent';
+    var resultColor = isTD ? '#FFB800' : isGood ? '#3df58a' : isBad ? '#e03050' : '#c8a030';
+    var resultText = isTD ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTED' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : r.isSafety ? 'SAFETY' : (r.yards >= 0 ? '+' : '') + r.yards + ' YDS';
+
+    // ── BEAT 1: Anticipation (cards fly toward center) ──
+    var dim = document.createElement('div');
+    dim.className = 'T-beat-dim';
+    dim.style.opacity = '0';
+    el.appendChild(dim);
+    requestAnimationFrame(function() { dim.style.opacity = '1'; });
+
+    var cards = document.createElement('div');
+    cards.className = 'T-beat-cards';
+    cards.innerHTML =
+      '<div class="T-beat-card" style="background:rgba(200,160,48,0.15);border:2px solid #c8a03066;animation:T-beat-fly-off 0.4s ease-out both">' +
+        "<div style=\"font-family:'Teko';font-size:16px;color:#fff;line-height:1\">" + res.offPlay.name + '</div>' +
+        "<div style=\"font-family:'Rajdhani';font-size:9px;color:#c8a030;margin-top:2px\">" + res.featuredOff.name + '</div></div>' +
+      '<div class="T-beat-card" style="background:rgba(224,48,80,0.15);border:2px solid #e0305066;animation:T-beat-fly-def 0.4s ease-out both">' +
+        "<div style=\"font-family:'Teko';font-size:16px;color:#fff;line-height:1\">" + res.defPlay.name + '</div>' +
+        "<div style=\"font-family:'Rajdhani';font-size:9px;color:#e03050;margin-top:2px\">" + res.featuredDef.name + '</div></div>';
+    el.appendChild(cards);
+
+    // Sound build
+    SND.hit();
+
+    // ── BEAT 2: Impact / Hitstop (after 500ms) ──
+    setTimeout(function() {
+      // Screen shake
+      if (shakeIntensity > 0) {
+        el.style.animation = 'T-beat-shake 0.15s ease-out';
+        setTimeout(function() { el.style.animation = ''; }, 200);
+      }
+
+      // Color flash
+      if (flashColor !== 'transparent') {
+        var flash = document.createElement('div');
+        flash.className = 'T-beat-flash';
+        flash.style.background = flashColor;
+        el.appendChild(flash);
+        setTimeout(function() { flash.remove(); }, 300);
+      }
+
+      // Haptic
+      if (navigator.vibrate && shakeIntensity > 0) try { navigator.vibrate(shakeIntensity > 2 ? 80 : 30); } catch(e) {}
+
+      // 150ms silence, then result sound
+      setTimeout(function() {
+        if (isTD) SND.td();
+        else if (isBad) SND.turnover();
+        else if (isExplosive) SND.bigPlay();
+        else SND.snap();
+      }, 150);
+    }, 500);
+
+    // ── BEAT 3: Aftermath (after 800ms) — yardage counter + commentary ──
+    setTimeout(function() {
+      // Remove anticipation elements
+      cards.remove();
+      dim.style.opacity = '0';
+      setTimeout(function() { dim.remove(); }, 300);
+
+      // Yardage result display
+      var resultEl = document.createElement('div');
+      resultEl.className = 'T-beat-result';
+      resultEl.innerHTML =
+        '<div class="T-beat-yds" style="color:' + resultColor + '">' + resultText + '</div>' +
+        '<div class="T-beat-label" style="color:' + resultColor + '">' + res.offPlay.name + ' vs ' + res.defPlay.name + '</div>';
+      el.appendChild(resultEl);
+
+      // Commentary
+      var bd = breakdown(res.offPlay, res.defPlay, r, res.featuredOff, res.featuredDef);
+      setNarr(r.description, bd);
+
+      // Update board state while result shows
+      drawBug();
+      drawField();
+
+      // Clear result and proceed (non-blocking — player regains control)
+      setTimeout(function() {
+        resultEl.style.opacity = '0';
+        resultEl.style.transition = 'opacity 0.3s';
+        setTimeout(function() { resultEl.remove(); }, 300);
+
+        if (res.gameEvent === 'touchdown') { showConv(res.scoringTeam); return; }
+        if (posChanged(res.gameEvent, prevPoss)) {
+          showPossCut(res.gameEvent, function() { showDrive(driveSnaps, prevPoss, function() { driveSnaps=[]; if(!checkEnd()) nextSnap(); }); });
+        } else { if(!checkEnd()) nextSnap(); }
+      }, isTD ? 2500 : isExplosive ? 1500 : isBad ? 1200 : 800);
+    }, 800);
   }
 
   /** Cycle a played card — return it to deck, draw a replacement */
