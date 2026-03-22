@@ -243,7 +243,7 @@ export function buildSetup() {
       // Top Row: Logo + Team Name
       var topRow = document.createElement('div');
       topRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:2px;';
-      var teamFullName = team.id === 'canyon_tech' ? 'CANYON TECH CACTI' : 'IRON RIDGE TRIDENTS';
+      var teamFullName = team.name;
       topRow.innerHTML = 
         '<div style="font-size:36px;filter:drop-shadow(0 0 15px ' + tColor + ')">' + team.icon + '</div>' +
         '<div style="display:flex;flex-direction:column;gap:2px;">' +
