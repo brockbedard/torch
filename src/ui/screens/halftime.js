@@ -14,9 +14,9 @@ export function buildHalftime() {
   el.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;background:var(--bg);overflow-y:auto;';
 
   var gs = GS.engine;
-  var team = getTeam(gs.humanTeam);
-  var opp = getOtherTeam(gs.humanTeam);
-  var isHumanCT = gs.humanTeam === 'CT';
+  var team = getTeam(GS.team);
+  var opp = getTeam(GS.opponent || 'wolves');
+  var isHumanCT = true; // v0.21: human always maps to CT slot
 
   var humanScore = isHumanCT ? gs.ctScore : gs.irScore;
   var cpuScore = isHumanCT ? gs.irScore : gs.ctScore;
