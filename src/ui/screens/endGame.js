@@ -127,6 +127,56 @@ export function buildEndGame() {
 
   content.appendChild(seasonBlock);
 
+  // ── FILM ROOM (2-3 key coaching moments) ──
+  if (gs.snapLog && gs.snapLog.length > 2) {
+    var filmBlock = document.createElement('div');
+    filmBlock.style.cssText = 'background:var(--bg-surface);border:1px solid #333;border-radius:8px;padding:12px 16px;width:100%;max-width:300px;';
+
+    var filmTitle = document.createElement('div');
+    filmTitle.style.cssText = "font-family:'Teko';font-weight:700;font-size:16px;color:var(--a-gold);letter-spacing:2px;margin-bottom:8px;";
+    filmTitle.textContent = 'FILM ROOM';
+    filmBlock.appendChild(filmTitle);
+
+    var filmDesc = document.createElement('div');
+    filmDesc.style.cssText = "font-family:'Rajdhani';font-size:9px;color:#666;margin-bottom:8px;";
+    filmDesc.textContent = 'Key plays where a different call might have helped:';
+    filmBlock.appendChild(filmDesc);
+
+    // Find 2-3 snaps where the result was bad (turnovers, sacks, short gains on key downs)
+    var coachingMoments = [];
+    gs.snapLog.forEach(function(log, i) {
+      if (!log) return;
+      var isBadResult = log.result && (
+        log.result.indexOf('SACK') >= 0 ||
+        log.result.indexOf('INT') >= 0 ||
+        log.result.indexOf('FUMBLE') >= 0 ||
+        log.result.indexOf('-') >= 0
+      );
+      if (isBadResult && log.team === 'CT') { // Human is CT
+        coachingMoments.push({ snap: i + 1, text: log.result });
+      }
+    });
+
+    // Show top 2-3
+    var shown = coachingMoments.slice(0, 3);
+    if (shown.length === 0) {
+      // If no bad plays, show a positive message
+      var noFilm = document.createElement('div');
+      noFilm.style.cssText = "font-family:'Rajdhani';font-size:10px;color:#00ff44;text-align:center;padding:4px;";
+      noFilm.textContent = 'Clean game, Coach. Nothing to review.';
+      filmBlock.appendChild(noFilm);
+    } else {
+      shown.forEach(function(m) {
+        var moment = document.createElement('div');
+        moment.style.cssText = "font-family:'Rajdhani';font-size:9px;color:#ccc;padding:4px 0;border-bottom:1px solid #1E1610;line-height:1.3;";
+        moment.innerHTML = "<span style='color:var(--a-gold);'>Snap " + m.snap + ":</span> " + m.text +
+          "<br><span style='color:#666;font-size:8px;'>Watch for the coverage next time.</span>";
+        filmBlock.appendChild(moment);
+      });
+    }
+    content.appendChild(filmBlock);
+  }
+
   // ── BUTTONS ──
   if (isLastGame) {
     // Season complete — return to hub

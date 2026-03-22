@@ -4,8 +4,7 @@
 TORCH is a football card game (Balatro meets college football). 4 fictional college teams with distinct offensive/defensive schemes battle through 3-game seasons with card-based play selection, badge combos, star player Heat Check, and TORCH point scoring. Points are both your score and your wallet — spend them on TORCH cards for an edge.
 
 ## Current State (as of 2026-03-22)
-- **Version:** v0.20.0 "Fire & Steel" — shared card component system, card designs integrated across all screens
-- **Next:** v0.21 redesign spec complete at `docs/TORCH-V021-SPEC.md` — 4 new teams, 3-game seasons, simplified pre-game, progressive disclosure
+- **Version:** v0.21.0 "New Blood" — 4 new teams, 3-game seasons, fighting-game team select, 3-beat snap result, TORCH card shop, star Heat Check, play sequence combos, game day conditions, daily drive, progressive disclosure, film room
 - **Branch:** `refactor-vite` — all work is here
 - **Stack:** Vite + vanilla JS + jsfxr (sounds), deployed on Vercel
 - **Local dev:** `npx vite --host` (port 5173) or `npx vercel dev` (AI commentary)

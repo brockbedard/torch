@@ -6,6 +6,7 @@ import { buildTeamSelect } from './ui/screens/teamSelect.js';
 import { buildGameplay } from './ui/screens/gameplay.js';
 import { buildHalftime } from './ui/screens/halftime.js';
 import { buildEndGame } from './ui/screens/endGame.js';
+import { buildDailyDrive } from './ui/screens/dailyDrive.js';
 
 const root = document.getElementById('root');
 
@@ -26,6 +27,7 @@ function render() {
     switch (GS.screen) {
       case 'teamSelect': content = buildTeamSelect(); break;
       case 'setup': content = buildTeamSelect(); break; // Legacy redirect
+      case 'dailyDrive': content = buildDailyDrive(); break;
       case 'gameplay': content = buildGameplay(); break;
       case 'halftime': content = buildHalftime(); break;
       case 'end_game': content = buildEndGame(); break;

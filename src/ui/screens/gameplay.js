@@ -482,7 +482,7 @@ export function buildGameplay() {
     const irArrow = !ctHasBall ? '<span class="T-sb-pos-arrow T-sb-pos-arrow-r">\u25C0</span>' : '';
 
     // TORCH points — human team side
-    const hTorchHTML = `<span class="T-sb-sit-torch">\uD83D\uDD25 ${hTorch}</span>`;
+    const hTorchHTML = `<span class="T-sb-sit-torch">T ${hTorch}</span>`;
     const isHumanCT = hAbbr === 'CT';
 
     bug.innerHTML =
@@ -699,7 +699,7 @@ export function buildGameplay() {
     fly.className = 'T-torch-fly';
     var isNeg = pts < 0;
     var absPts = Math.abs(pts);
-    fly.textContent = '\uD83D\uDD25 ' + (isNeg ? '' : '+') + pts;
+    fly.textContent = 'T ' + (isNeg ? '' : '+') + pts;
     fly.style.left = srcRect.left + 'px';
     fly.style.top = srcRect.top + 'px';
     if (isNeg) fly.style.color = '#e03050';
@@ -731,7 +731,7 @@ export function buildGameplay() {
         } else {
           SND.points();
         }
-        torchTarget.innerHTML = '\uD83D\uDD25 ' + current;
+        torchTarget.innerHTML = 'T ' + current;
         var pulseColor = isNeg ? '#e03050' : '#c8a030';
         torchTarget.style.transform = 'scale(1.15)';
         torchTarget.style.textShadow = '0 0 8px ' + pulseColor;
@@ -780,7 +780,7 @@ export function buildGameplay() {
     for (var i = 0; i < amount; i++) {
       var fb = document.createElement('div');
       fb.className = 'T-rain';
-      fb.textContent = '\uD83C\uDFC8';
+      fb.textContent = 'T';
       fb.style.left = (5 + Math.random() * 90) + '%';
       fb.style.top = '-20px';
       fb.style.animationDelay = (Math.random() * 1.5) + 's';
@@ -1207,7 +1207,7 @@ export function buildGameplay() {
           if (torchEarned !== 0) {
             var tColor = torchEarned > 0 ? '#c8a030' : '#e03050';
             var tSign = torchEarned > 0 ? '+' : '';
-            parts += '<span class="T-torch-src" style="color:' + tColor + ';margin-left:10px">\uD83D\uDD25 ' + tSign + torchEarned + '</span>';
+            parts += '<span class="T-torch-src" style="color:' + tColor + ';margin-left:10px">T ' + tSign + torchEarned + '</span>';
           }
           rl.innerHTML = parts;
           pbp.appendChild(rl);
@@ -1217,7 +1217,7 @@ export function buildGameplay() {
             var bigPop = document.createElement('div');
             bigPop.className = 'T-torch-big';
             bigPop.style.color = torchEarned > 0 ? '#c8a030' : '#e03050';
-            bigPop.textContent = '\uD83D\uDD25 ' + (torchEarned > 0 ? '+' : '') + torchEarned;
+            bigPop.textContent = 'T ' + (torchEarned > 0 ? '+' : '') + torchEarned;
             document.body.appendChild(bigPop);
             setTimeout(function() { bigPop.remove(); }, 1500);
             // Fly to scoreboard
@@ -2003,7 +2003,7 @@ export function buildGameplay() {
 
     // Coin animation
     ov.innerHTML =
-      "<div style='width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#FFB800,#B8860B);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 0 25px rgba(255,204,0,.4);animation:T-coin 1.5s ease-out forwards'>\uD83C\uDFC8</div>" +
+      "<div style='width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#FFB800,#B8860B);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 0 25px rgba(255,204,0,.4);animation:T-coin 1.5s ease-out forwards'>T</div>" +
       "<div style=\"font-family:'Teko';font-size:24px;color:#fff;letter-spacing:2px\">COIN TOSS...</div>";
 
     el.appendChild(ov);

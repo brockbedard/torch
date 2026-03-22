@@ -1,5 +1,6 @@
 import { SND } from '../../engine/sound.js';
 import { render, setGs, getOffCards, getDefCards, VERSION, VERSION_NAME } from '../../state.js';
+import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { buildHomeCard } from '../components/cards.js';
 
 var DEV_LOG = [
@@ -192,7 +193,17 @@ export function buildHome(){
   devBtn.textContent='DEV: RESET DAILY LOCK';
   devBtn.onclick=function(){localStorage.clear(); render();};
 
-  playWrap.append(playBtn,devBtn);
+  // Daily Drive button
+  var dailyBtn=document.createElement('button');
+  dailyBtn.className='btn-blitz';
+  dailyBtn.style.cssText='border-color:var(--a-gold);color:var(--a-gold);background:transparent;font-size:12px;padding:12px 20px;letter-spacing:3px;';
+  dailyBtn.textContent='DAILY DRIVE';
+  dailyBtn.onclick=function(){
+    SND.click();
+    setGs(function(s){ return Object.assign({}, s || {}, {screen:'dailyDrive'}); });
+  };
+
+  playWrap.append(playBtn,dailyBtn,devBtn);
   el.appendChild(playWrap);
 
   // DEV-ONLY: Quick Play — skip all drafts, straight to gameplay
@@ -209,20 +220,22 @@ export function buildHome(){
     quickBtn.onmouseleave=function(){quickBtn.style.opacity='0.6';};
     quickBtn.onclick=function(){
       SND.click();
-      var offRoster=['ct_q1','ct_s1','ct_s3','ct_s4'];
-      var defRoster=['ct_db1','ct_db3','ct_dl1','ct_db4'];
-      var offHand=getOffCards('canyon_tech').slice(0,4);
-      var defHand=getDefCards('canyon_tech').slice(0,4);
+      var qpTeam = 'stags';
       setGs(function(){
         return {
           screen:'gameplay',
-          team:'canyon_tech',
-          offRoster:offRoster,
-          defRoster:defRoster,
-          offHand:offHand,
-          defHand:defHand,
+          team:qpTeam,
+          opponent:'wolves',
+          difficulty:'EASY',
+          offRoster:getOffenseRoster(qpTeam).slice(0,4).map(function(p){return p.id;}),
+          defRoster:getDefenseRoster(qpTeam).slice(0,4).map(function(p){return p.id;}),
+          offHand:getOffCards(qpTeam).slice(0,5),
+          defHand:getDefCards(qpTeam).slice(0,5),
           humanReceives:true,
           _coinTossDone:true,
+          isFirstSeason:false,
+          gameConditions:{weather:'clear',field:'turf',crowd:'home'},
+          season:{opponents:['wolves','sentinels','serpents'],currentGame:0,results:[],totalScore:0,torchCards:[],carryoverPoints:0},
         };
       });
     };
