@@ -1,10 +1,11 @@
 # TORCH — CLAUDE.md
 
 ## What This Is
-TORCH is a football card game. Full game, starts 0-0, you play both sides of the ball. Two teams (Canyon Tech Cacti air raid, Iron Ridge Tridents ground-and-pound) battle through 2 halves with card-based play selection, badge combos, and TORCH point scoring.
+TORCH is a football card game (Balatro meets college football). 4 fictional college teams with distinct offensive/defensive schemes battle through 3-game seasons with card-based play selection, badge combos, star player Heat Check, and TORCH point scoring. Points are both your score and your wallet — spend them on TORCH cards for an edge.
 
-## Current State (as of 2026-03-21)
-- **Version:** v0.20.0 "Fire & Steel" — premium home screen, card design system, warm dark bg, torch brand identity
+## Current State (as of 2026-03-22)
+- **Version:** v0.20.0 "Fire & Steel" — shared card component system, card designs integrated across all screens
+- **Next:** v0.21 redesign spec complete at `docs/TORCH-V021-SPEC.md` — 4 new teams, 3-game seasons, simplified pre-game, progressive disclosure
 - **Branch:** `refactor-vite` — all work is here
 - **Stack:** Vite + vanilla JS + jsfxr (sounds), deployed on Vercel
 - **Local dev:** `npx vite --host` (port 5173) or `npx vercel dev` (AI commentary)
@@ -32,20 +33,45 @@ TORCH is a football card game. Full game, starts 0-0, you play both sides of the
 ```
 ~/torch-football/
 ├── index.html          # Main app (being refactored into modules)
-├── src/                # Vite source modules (JS, CSS)
+├── src/
+│   ├── ui/
+│   │   ├── components/
+│   │   │   ├── cards.js         # ★ SHARED CARD BUILDERS (single source of truth)
+│   │   │   └── draftProgress.js # Draft stepper component
+│   │   └── screens/
+│   │       ├── home.js          # Home screen (card fan hero, wordmark)
+│   │       ├── setup.js         # Team selection
+│   │       ├── draft.js         # Player draft (uses buildMaddenPlayer)
+│   │       ├── cardDraft.js     # Play draft
+│   │       ├── coinToss.js      # Coin toss (uses buildTorchCard)
+│   │       ├── gameplay.js      # Main game (uses all shared builders)
+│   │       ├── halftime.js      # Halftime shop (uses buildTorchCard)
+│   │       ├── endGame.js       # End game stats
+│   │       └── cardMockup.js    # Design reference (?mockup URL param)
+│   ├── engine/                  # Game logic (snapResolver, gameState, etc.)
+│   ├── data/                    # Players, plays, torch cards, badges
+│   ├── state.js                 # Global state + version
+│   ├── main.js                  # App router
+│   └── style.css                # Design system CSS variables
 ├── public/             # Static assets (images, audio)
 ├── docs/               # Game design specs (see below)
-│   ├── TORCH-GAMEPLAY-SPEC-v0.13.md       # Master gameplay spec
-│   ├── TORCH-PLAY-DATA-TABLE-v0.11.md     # 20 offensive plays with distributions
-│   ├── TORCH-DEFENSIVE-CARDS-v0.11.md     # 20 defensive plays, 10 per team
-│   ├── TORCH-CARDS-CATALOG-v0.1.md        # 21 Torch Cards across 3 tiers
-│   ├── TORCH-GDD-v0.7.md                  # Original game design doc (outdated — use gameplay spec)
-│   └── torch_sim.py                       # Balance simulation engine (Python, reference only)
 ├── CLAUDE.md           # This file
 ├── DEV_LOG.md          # Changelog per local commit
 ├── package.json
 └── vercel.json
 ```
+
+## Shared Card Component System (src/ui/components/cards.js)
+This is the **single source of truth** for all card visuals. Every screen imports from here.
+
+| Builder | Returns | Used By |
+|---------|---------|---------|
+| `buildHomeCard(type, w, h)` | Card back (offense/torch/defense) with vivid bg, gradient border, shimmer, gold frame for torch | home.js, cardMockup.js |
+| `buildMaddenPlayer(p, w, h)` | Player card: centered OVR, flanking #/POS, helmet art, team-colored name bar | gameplay.js, draft.js, cardMockup.js |
+| `buildPlayV1(p, w, h)` | Play card: category stripe, name bar top, diagram center, cat+risk bottom | gameplay.js, cardMockup.js |
+| `buildTorchCard(tc, w, h)` | Torch card: centered flame, tier border, tier/name/effect | gameplay.js, coinToss.js, halftime.js, cardMockup.js |
+
+**Critical rule:** Never duplicate card HTML inline. Always call the shared builder. The mockup page (`?mockup`) is the visual reference — if a game screen card doesn't match the mockup, the game screen is wrong.
 
 ## Spec Documents (READ THESE BEFORE CODING)
 The gameplay engine must be built from these specs. They are the source of truth.
