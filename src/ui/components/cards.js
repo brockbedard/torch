@@ -191,20 +191,26 @@ function tierColor(tier, isStar) {
   return '#A0522D';
 }
 
-// Render team-colored helmet SVG
+// Render team-colored helmet SVG — confident illustration style
 export function teamHelmetSvg(teamId, size) {
   size = size || 48;
   var team = TEAMS[teamId];
   var baseColor = team ? team.helmet.base : '#888';
   var fmColor = team ? team.helmet.facemask : '#ccc';
-  // Helmet shell + facemask accent line
-  return '<svg viewBox="0 0 512 411" width="' + size + '" height="' + Math.round(size * 0.8) + '" fill="none">'
-    + '<path fill="' + baseColor + '" opacity="0.85" fill-rule="nonzero" d="' + HELMET_PATH + '"/>'
-    // Facemask bars (simplified — two horizontal lines across the face area)
-    + '<rect x="380" y="240" width="90" height="8" rx="4" fill="' + fmColor + '" opacity="0.7"/>'
-    + '<rect x="380" y="270" width="80" height="8" rx="4" fill="' + fmColor + '" opacity="0.7"/>'
-    // Stripe (center top)
-    + '<rect x="200" y="30" width="' + (team ? '16' : '0') + '" height="120" rx="4" fill="' + (team ? team.helmet.stripe : '#888') + '" opacity="0.5"/>'
+  var stripeColor = team ? team.helmet.stripe : '#888';
+  return '<svg viewBox="0 0 512 411" width="' + size + '" height="' + Math.round(size * 0.8) + '" fill="none" style="filter:drop-shadow(2px 3px 4px rgba(0,0,0,0.6));">'
+    // Semi-transparent filled background for visual weight
+    + '<path fill="' + baseColor + '" fill-rule="nonzero" d="' + HELMET_PATH + '"/>'
+    // Darker edge stroke for definition
+    + '<path fill="none" stroke="' + baseColor + '" stroke-width="6" stroke-opacity="0.4" fill-rule="nonzero" d="' + HELMET_PATH + '"/>'
+    // Highlight edge (top-left light catch)
+    + '<path fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="3" fill-rule="nonzero" d="' + HELMET_PATH + '" style="clip-path:inset(0 50% 50% 0);"/>'
+    // Facemask bars — thicker, team accent color
+    + '<rect x="375" y="232" width="95" height="12" rx="6" fill="' + fmColor + '" opacity="0.8"/>'
+    + '<rect x="375" y="260" width="85" height="12" rx="6" fill="' + fmColor + '" opacity="0.8"/>'
+    + '<rect x="380" y="288" width="70" height="10" rx="5" fill="' + fmColor + '" opacity="0.6"/>'
+    // Center stripe
+    + '<rect x="195" y="25" width="22" height="130" rx="6" fill="' + stripeColor + '" opacity="0.6"/>'
     + '</svg>';
 }
 
@@ -247,13 +253,29 @@ export function buildMaddenPlayer(p, w, h) {
       + '</div>';
   }
 
-  // Team-colored helmet art
+  // Team-colored helmet art — enhanced with fill, stroke, facemask, shadow
   var helmW = lg ? 80 : 52;
   var helmH = lg ? 64 : 42;
   var helmColor = teamColor;
-  var artArea = '<div style="position:absolute;top:'+(lg?'30':'20')+'px;left:0;right:0;bottom:'+(lg?'26':'18')+'px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 '+(lg?'14':'10')+'px '+tc+'88);">'
-    +'<svg viewBox="0 0 512 411" width="'+helmW+'" height="'+helmH+'" fill="none" style="position:absolute;">'
-    +'<path fill="'+helmColor+'" opacity="0.7" fill-rule="nonzero" d="'+HELMET_PATH+'"/>'
+  // Determine facemask color from team data if available
+  var helmTeamId = p.teamId || null;
+  var helmFm = '#ccc';
+  var helmStripe = helmColor;
+  if (helmTeamId && TEAMS[helmTeamId]) {
+    helmFm = TEAMS[helmTeamId].helmet.facemask;
+    helmStripe = TEAMS[helmTeamId].helmet.stripe;
+  }
+  var artArea = '<div style="position:absolute;top:'+(lg?'28':'18')+'px;left:0;right:0;bottom:'+(lg?'26':'18')+'px;display:flex;align-items:center;justify-content:center;">'
+    +'<svg viewBox="0 0 512 411" width="'+helmW+'" height="'+helmH+'" fill="none" style="position:absolute;filter:drop-shadow(2px 2px 4px rgba(0,0,0,0.5));">'
+    // Filled helmet shell
+    +'<path fill="'+helmColor+'" fill-rule="nonzero" d="'+HELMET_PATH+'"/>'
+    // Edge stroke for definition
+    +'<path fill="none" stroke="'+helmColor+'" stroke-width="4" stroke-opacity="0.3" fill-rule="nonzero" d="'+HELMET_PATH+'"/>'
+    // Facemask bars
+    +'<rect x="378" y="235" width="'+(lg?'90':'85')+'" height="'+(lg?'10':'8')+'" rx="'+(lg?'5':'4')+'" fill="'+helmFm+'" opacity="0.75"/>'
+    +'<rect x="378" y="260" width="'+(lg?'80':'75')+'" height="'+(lg?'10':'8')+'" rx="'+(lg?'5':'4')+'" fill="'+helmFm+'" opacity="0.75"/>'
+    // Stripe
+    +'<rect x="198" y="28" width="'+(lg?'18':'14')+'" height="'+(lg?'115':'100')+'" rx="'+(lg?'5':'4')+'" fill="'+helmStripe+'" opacity="0.5"/>'
     +'</svg>'
     +'</div>';
 

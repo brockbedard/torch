@@ -294,7 +294,9 @@ function mkPlayerCardEl(p, team) {
   var tier = p.ovr >= 85 ? 'gold' : p.ovr >= 75 ? 'silver' : 'bronze';
   return buildMaddenPlayer({
     name: p.name, pos: p.pos, ovr: p.ovr,
-    num: p.num || '', tier: tier, teamColor: team.accent || '#FF4511'
+    num: p.num || '', tier: tier, badge: p.badge, isStar: p.isStar,
+    teamColor: team.colors ? team.colors.primary : (team.accent || '#FF4511'),
+    teamId: GS.team
   }, 80, 150);
 }
 
@@ -1444,7 +1446,8 @@ export function buildGameplay() {
         var playerCard = buildMaddenPlayer({
           name: p.name, pos: p.pos, ovr: p.ovr,
           num: p.num || '', badge: p.badge, isStar: p.isStar,
-          teamColor: hTeam.colors ? hTeam.colors.primary : (hTeam.accent || '#FF4511')
+          teamColor: hTeam.colors ? hTeam.colors.primary : (hTeam.accent || '#FF4511'),
+          teamId: GS.team
         }, 80, 150);
         // Wrap in T-card for flex sizing and drag
         const c = document.createElement('div');
