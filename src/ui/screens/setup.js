@@ -7,23 +7,41 @@ import { buildDraftProgress } from '../components/draftProgress.js';
    EXTENDED TEAM DATA
    ═══════════════════════════════════════════ */
 const XDATA = {
-  canyon_tech: {
-    coach: 'COACH RICKY VANCE', quote: "If we're not scoring, we're not trying.",
-    motto: 'BURN THE COVERAGE', est: 'Est. 1974 \u2014 3x Conf. Champs',
-    sigPlay: 'FOUR VERTS', starPlayers: 'Rio Vasquez WIDE RECEIVER',
-    stadium: 'THE FURNACE',
-    ratings: { OFF:4, DEF:3, SPD:5, TGH:2, OVR:4 },
-    coachImg: '/img/teams/coach-ir.jpg', stadiumImg: '/img/teams/stadium-ir.jpg',
-    playstyle: 'AIR RAID', playstyleIcon: '\u26A1',
+  sentinels: {
+    coach: 'COACH TBD', quote: 'Eyes up, hands ready.',
+    motto: 'EYES UP, HANDS READY', est: 'Ridgemont University',
+    sigPlay: 'CHOICE ROUTE', starPlayers: 'Jaylen Monroe WR',
+    stadium: 'THE TOWER',
+    ratings: { OFF:4, DEF:3, SPD:4, TGH:3, OVR:4 },
+    coachImg: '', stadiumImg: '',
+    playstyle: 'RUN & SHOOT', playstyleIcon: '',
   },
-  iron_ridge: {
-    coach: 'COACH DALE BURRIS', quote: "You don't need to throw. You need to want it more.",
-    motto: 'CONTROL THE LINE', est: 'Est. 1961 \u2014 5x Conf. Champs',
-    sigPlay: 'TRIPLE OPTION', starPlayers: 'Mack Torres FULLBACK',
-    stadium: 'THE FORGE',
+  wolves: {
+    coach: 'COACH TBD', quote: 'Run through them.',
+    motto: 'RUN THROUGH THEM', est: 'Northern Pines A&M',
+    sigPlay: 'INSIDE VEER', starPlayers: 'Marcus Thorne FB',
+    stadium: 'THE DEN',
     ratings: { OFF:3, DEF:4, SPD:2, TGH:5, OVR:4 },
-    coachImg: '/img/teams/coach-ct.jpg', stadiumImg: '/img/teams/stadium-ct.jpg',
-    playstyle: 'GROUND & POUND', playstyleIcon: '\u2692',
+    coachImg: '', stadiumImg: '',
+    playstyle: 'TRIPLE OPTION', playstyleIcon: '',
+  },
+  stags: {
+    coach: 'COACH TBD', quote: 'Strike first, strike fast.',
+    motto: 'STRIKE FIRST, STRIKE FAST', est: 'Crestview College',
+    sigPlay: 'BUBBLE SCREEN RPO', starPlayers: 'Micah Strand QB',
+    stadium: 'THE RACK',
+    ratings: { OFF:5, DEF:2, SPD:5, TGH:2, OVR:4 },
+    coachImg: '', stadiumImg: '',
+    playstyle: 'SPREAD RPO', playstyleIcon: '',
+  },
+  serpents: {
+    coach: 'COACH TBD', quote: 'Death by a thousand cuts.',
+    motto: 'DEATH BY A THOUSAND CUTS', est: 'Blackwater State',
+    sigPlay: 'MESH CROSSFIRE', starPlayers: 'Zion Hayward SLOT',
+    stadium: 'THE PIT',
+    ratings: { OFF:3, DEF:4, SPD:3, TGH:3, OVR:4 },
+    coachImg: '', stadiumImg: '',
+    playstyle: 'AIR RAID', playstyleIcon: '',
   },
 };
 
