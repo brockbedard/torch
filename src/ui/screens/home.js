@@ -182,7 +182,8 @@ export function buildHome(){
   playBtn.textContent='KICK OFF';
   playBtn.onclick=function(){
     SND.click();
-    setGs(function(s){ return Object.assign({}, s, {screen:'teamSelect', team:null}); });
+    var firstDone = localStorage.getItem('torch_first_season_done');
+    setGs(function(s){ return Object.assign({}, s || {}, {screen:'teamSelect', team:null, isFirstSeason: !firstDone}); });
   };
 
   var devBtn=document.createElement('button');

@@ -15,6 +15,7 @@ import { playSvg } from '../../data/playDiagrams.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
 import { buildHomeCard, buildMaddenPlayer, buildPlayV1, buildTorchCard, injectCardStyles } from '../components/cards.js';
 import { showShop, renderInventory } from '../components/shop.js';
+import { showTooltip } from '../components/tooltip.js';
 
 /* ═══════════════════════════════════════════
    CSS
@@ -364,6 +365,11 @@ export function buildGameplay() {
   let phase = 'play'; // play | player | torch | ready | busy
   let driveSnaps = [];
   let prev2min = gs.twoMinActive;
+  var snapCount = 0; // Track snap number for teach tooltips
+
+  // Progressive disclosure
+  var isFirstGame = GS.isFirstSeason && (!GS.season || GS.season.currentGame === 0);
+  var isFirstSeason = GS.isFirstSeason;
 
   // TORCH card inventory (v0.21 — 3 slots, persisted in season)
   var torchInventory = (GS.season && GS.season.torchCards) ? GS.season.torchCards.slice() : [];
@@ -378,6 +384,8 @@ export function buildGameplay() {
   var defStarHot = false;
 
   function checkStarActivation(res) {
+    // Heat Check hidden on first game
+    if (isFirstGame) return;
     var r = res.result;
     var isOff = res._preSnap && res._preSnap.possession === hAbbr;
     if (isOff && offStar && res.featuredOff && res.featuredOff.id === offStar.id) {
@@ -1486,6 +1494,17 @@ export function buildGameplay() {
     }
     panel.appendChild(tray);
 
+    // ── TEACH TOOLTIPS (first game only) ──
+    if (isFirstGame && snapCount === 0) {
+      if (phase === 'play') {
+        showTooltip(el, 'first_play', 'Tap a play card to call it.', { delay: 600 });
+      } else if (phase === 'player') {
+        showTooltip(el, 'first_player', 'Now pick who runs it.', { delay: 400 });
+      } else if (phase === 'ready') {
+        showTooltip(el, 'first_snap', 'Hit SNAP!', { delay: 400 });
+      }
+    }
+
     // Snap bar — only appears when both cards placed
     if (phase === 'ready') {
       const sz = document.createElement('div'); sz.className = 'T-snap';
@@ -1635,6 +1654,7 @@ export function buildGameplay() {
     // ════════════════════════════════════════════
     var beat3Start = 2400;
     var aftermathDur = isTD ? 5000 : (isExplosive || isBad) ? 3500 : 2000;
+    snapCount++;
 
     setTimeout(function() {
       // Remove anticipation cards
@@ -1669,6 +1689,16 @@ export function buildGameplay() {
       setTimeout(function() {
         var bd = breakdown(res.offPlay, res.defPlay, r, res.featuredOff, res.featuredDef);
         setNarr(r.description, bd);
+
+        // Teach tooltips for first game
+        if (isFirstGame) {
+          if (r.comboFired && snapCount <= 4) {
+            showTooltip(el, 'first_combo', 'Match the right player with the right play for bonus yards!', { delay: 800 });
+          }
+          if (isTD) {
+            showTooltip(el, 'first_td', 'TORCH points are your score \u2014 and your wallet.', { delay: 1500 });
+          }
+        }
       }, 800);
 
       // Dim fades out slowly
@@ -1699,6 +1729,9 @@ export function buildGameplay() {
         }
 
         if (shopTrigger) {
+          if (isFirstGame) {
+            showTooltip(el, 'first_shop', 'Spend points on TORCH cards for an edge. Buy it or pass!', { delay: 200 });
+          }
           triggerShop(shopTrigger, afterShop);
         } else {
           afterShop();

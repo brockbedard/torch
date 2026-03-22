@@ -136,6 +136,8 @@ export function buildEndGame() {
     returnBtn.textContent = 'NEW SEASON';
     returnBtn.onclick = function() {
       SND.click();
+      // First season complete — flip progressive disclosure flag
+      localStorage.setItem('torch_first_season_done', '1');
       setGs(null); // Reset to home
     };
     content.appendChild(returnBtn);

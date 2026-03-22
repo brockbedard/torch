@@ -47,7 +47,7 @@ export function buildTeamSelect() {
   var el = document.createElement('div');
   el.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden;';
 
-  var isFirst = GS && GS.isFirstSeason;
+  var isFirst = !GS || GS.isFirstSeason !== false;
 
   // ── HEADER ──
   var hdr = document.createElement('div');
