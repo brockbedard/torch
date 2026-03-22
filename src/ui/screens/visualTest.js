@@ -49,9 +49,15 @@ export function buildVisualTest() {
     el.appendChild(s);
   }
 
-  function frame(child, height) {
+  // Inject override styles so child screens don't trap scrolling
+  var overrideStyle = document.createElement('style');
+  overrideStyle.textContent = '.vt-frame > * { height:auto !important; max-height:none !important; overflow:visible !important; position:relative !important; min-height:0 !important; }';
+  el.appendChild(overrideStyle);
+
+  function frame(child, minH) {
     var f = document.createElement('div');
-    f.style.cssText = 'width:375px;max-width:100%;border:1px solid #333;border-radius:8px;overflow:hidden;margin-bottom:16px;position:relative;background:#0A0804;' + (height ? 'height:' + height + 'px;overflow-y:auto;' : '');
+    f.className = 'vt-frame';
+    f.style.cssText = 'width:375px;max-width:100%;border:1px solid #333;border-radius:8px;overflow:visible;margin-bottom:16px;position:relative;background:#0A0804;min-height:' + (minH || 700) + 'px;';
     if (child) f.appendChild(child);
     el.appendChild(f);
     return f;
@@ -72,8 +78,7 @@ export function buildVisualTest() {
   resetGs();
   try {
     var homeEl = buildHome();
-    homeEl.style.minHeight = '600px';
-    frame(homeEl);
+    frame(homeEl, 650);
   } catch(e) { note('ERROR: ' + e.message); }
 
   // ============================================================
@@ -126,8 +131,7 @@ export function buildVisualTest() {
     });
     try {
       var gpDef = buildGameplay();
-      gpDef.style.height = '667px';
-      gpDef.style.overflow = 'hidden';
+      // vt-frame CSS handles overflow/height override
       frame(gpDef);
     } catch(e) { note('ERROR: ' + e.message); }
   })();
@@ -154,8 +158,7 @@ export function buildVisualTest() {
     });
     try {
       var gpOff = buildGameplay();
-      gpOff.style.height = '667px';
-      gpOff.style.overflow = 'hidden';
+      // vt-frame CSS handles overflow/height override
       frame(gpOff);
     } catch(e) { note('ERROR: ' + e.message); }
   })();
@@ -208,7 +211,7 @@ export function buildVisualTest() {
   note('Real showShop() rendered into a container');
   (function() {
     var shopContainer = document.createElement('div');
-    shopContainer.style.cssText = 'width:375px;height:400px;position:relative;background:#0A0804;overflow:hidden;';
+    shopContainer.style.cssText = 'width:375px;min-height:380px;position:relative;background:#0A0804;overflow:visible;';
     // showShop appends a fixed overlay — we'll capture it by making the container position:relative
     // and intercepting the fixed positioning
     frame(shopContainer);
