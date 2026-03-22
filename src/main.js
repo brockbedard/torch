@@ -2,6 +2,7 @@ import { GS, setRender } from './state.js';
 import { SND } from './engine/sound.js';
 import { buildHome } from './ui/screens/home.js';
 import { buildCardMockup } from './ui/screens/cardMockup.js';
+import { buildVisualTest } from './ui/screens/visualTest.js';
 import { buildTeamSelect } from './ui/screens/teamSelect.js';
 import { buildGameplay } from './ui/screens/gameplay.js';
 import { buildHalftime } from './ui/screens/halftime.js';
@@ -19,7 +20,9 @@ function render() {
   let content;
 
   // ?mockup param shows card design mockup page
-  if (window.location.search.includes('mockup')) {
+  if (window.location.search.includes('test')) {
+    content = buildVisualTest();
+  } else if (window.location.search.includes('mockup')) {
     content = buildCardMockup();
   } else if (!GS) {
     content = buildHome();
