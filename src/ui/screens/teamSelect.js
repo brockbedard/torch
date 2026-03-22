@@ -99,15 +99,25 @@ export function buildTeamSelect() {
     var team = TEAMS[tid];
     var card = document.createElement('div');
     card.style.cssText =
-      'background:radial-gradient(ellipse at 50% 30%,' + team.colors.primary + '15,#141008);' +
-      'border:2px solid ' + team.colors.primary + '44;border-radius:8px;padding:10px 8px;' +
-      'cursor:pointer;transition:all 0.15s ease;display:flex;flex-direction:column;align-items:center;gap:4px;' +
+      // Gradient: team primary at top (15% opacity) → black at bottom
+      'background:linear-gradient(180deg,' + team.colors.primary + '26 0%,#0A0804 100%);' +
+      'border:2px solid ' + team.colors.primary + '55;border-radius:8px;padding:12px 10px 8px;' +
+      'cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:3px;' +
       'opacity:0;animation:tsCardIn 0.35s ease-out ' + (idx * 0.1) + 's both;position:relative;overflow:hidden;';
 
-    // Helmet (48px)
+    // Hover/active states handled via tap handler below
+
+    // Helmet (48px) with glow halo
     var helmWrap = document.createElement('div');
-    helmWrap.style.cssText = 'filter:drop-shadow(0 0 12px ' + team.colors.primary + '60);';
-    helmWrap.innerHTML = teamHelmetSvg(tid, 48);
+    helmWrap.style.cssText = 'position:relative;margin-bottom:2px;';
+    // Glow halo behind helmet
+    var halo = document.createElement('div');
+    halo.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:radial-gradient(circle,' + team.colors.primary + '30,transparent 70%);pointer-events:none;';
+    helmWrap.appendChild(halo);
+    var helmInner = document.createElement('div');
+    helmInner.style.cssText = 'position:relative;filter:drop-shadow(0 2px 8px ' + team.colors.primary + '50);';
+    helmInner.innerHTML = teamHelmetSvg(tid, 48);
+    helmWrap.appendChild(helmInner);
     card.appendChild(helmWrap);
 
     // Team name
@@ -118,38 +128,50 @@ export function buildTeamSelect() {
 
     // Playstyle pill
     var pill = document.createElement('div');
-    pill.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:8px;color:" + team.colors.secondary + ";letter-spacing:1px;background:" + team.colors.primary + "33;padding:2px 8px;border-radius:10px;";
+    pill.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:7px;color:" + team.colors.primary + ";letter-spacing:1px;background:" + team.colors.primary + '22' + ";padding:2px 8px;border-radius:10px;border:1px solid " + team.colors.primary + '33;';
     pill.textContent = team.offScheme;
     card.appendChild(pill);
 
-    // Flame pip ratings
+    // Thin divider line in team color
+    var divider = document.createElement('div');
+    divider.style.cssText = 'width:80%;height:1px;background:' + team.colors.primary + '33;margin:3px 0 2px;';
+    card.appendChild(divider);
+
+    // Ratings (left) + Star callout (right) — side by side
+    var infoRow = document.createElement('div');
+    infoRow.style.cssText = 'display:flex;width:100%;gap:6px;align-items:flex-start;';
+
+    // Left: flame pip ratings
     var ratingsWrap = document.createElement('div');
-    ratingsWrap.style.cssText = 'display:flex;flex-direction:column;gap:1px;width:100%;margin-top:2px;';
+    ratingsWrap.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:1px;';
     var offRow = document.createElement('div');
-    offRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;font-family:'Rajdhani';font-size:8px;color:#aaa;";
-    offRow.innerHTML = '<span>OFF</span><span>' + renderFlamePips(team.ratings.offense, 5, team.colors.primary, 8) + '</span>';
+    offRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;font-family:'Rajdhani';font-size:7px;color:#888;";
+    offRow.innerHTML = '<span>OFF</span><span>' + renderFlamePips(team.ratings.offense, 5, team.colors.primary, 7) + '</span>';
     var defRow = document.createElement('div');
-    defRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;font-family:'Rajdhani';font-size:8px;color:#aaa;";
-    defRow.innerHTML = '<span>DEF</span><span>' + renderFlamePips(team.ratings.defense, 5, team.colors.primary, 8) + '</span>';
+    defRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;font-family:'Rajdhani';font-size:7px;color:#888;";
+    defRow.innerHTML = '<span>DEF</span><span>' + renderFlamePips(team.ratings.defense, 5, team.colors.primary, 7) + '</span>';
     ratingsWrap.appendChild(offRow);
     ratingsWrap.appendChild(defRow);
-    card.appendChild(ratingsWrap);
+    infoRow.appendChild(ratingsWrap);
 
-    // Star player callout
+    // Right: star player callout
     var offRoster = getOffenseRoster(tid);
     var star = offRoster.find(function(p) { return p.isStar; });
     if (star) {
       var starEl = document.createElement('div');
-      starEl.style.cssText = "display:flex;align-items:center;gap:4px;margin-top:2px;font-family:'Rajdhani';font-size:8px;color:#FFB800;";
-      starEl.innerHTML = '<svg viewBox="0 0 24 24" width="10" height="10"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z" fill="#FFB800"/></svg>' +
-        star.starTitle + ' / ' + star.pos;
-      card.appendChild(starEl);
+      starEl.style.cssText = "flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:1px;";
+      starEl.innerHTML =
+        '<div style="display:flex;align-items:center;gap:2px;"><svg viewBox="0 0 24 24" width="8" height="8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z" fill="#FFB800"/></svg>' +
+        "<span style=\"font-family:'Rajdhani';font-weight:700;font-size:7px;color:#FFB800;\">" + star.starTitle + "</span></div>" +
+        "<div style=\"font-family:'Rajdhani';font-size:6px;color:#888;text-align:right;\">" + star.pos + "</div>";
+      infoRow.appendChild(starEl);
     }
+    card.appendChild(infoRow);
 
     // Motto
     var motto = document.createElement('div');
-    motto.style.cssText = "font-family:'Rajdhani';font-size:7px;color:#666;font-style:italic;margin-top:1px;";
-    motto.textContent = team.motto;
+    motto.style.cssText = "font-family:'Rajdhani';font-size:6px;color:#555;font-style:italic;margin-top:2px;letter-spacing:0.5px;";
+    motto.textContent = '"' + team.motto + '"';
     card.appendChild(motto);
 
     // ── TAP HANDLER: starts the fighting-game animation ──
