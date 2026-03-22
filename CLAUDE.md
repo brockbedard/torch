@@ -4,7 +4,10 @@
 TORCH is a football card game (Balatro meets college football). 4 fictional college teams with distinct offensive/defensive schemes battle through 3-game seasons with card-based play selection, badge combos, star player Heat Check, and TORCH point scoring. Points are both your score and your wallet — spend them on TORCH cards for an edge.
 
 ## Current State (as of 2026-03-22)
-- **Version:** v0.21.0 "New Blood" — 4 new teams, 3-game seasons, fighting-game team select, 3-beat snap result, TORCH card shop, star Heat Check, play sequence combos, game day conditions, daily drive, progressive disclosure, film room
+- **Version:** v0.21.1 "New Blood — Polished" — feature-complete and visually polished
+- **What's in v0.21:** 4 teams (Sentinels/Wolves/Stags/Serpents), 3-game seasons, fighting-game team select with VS transition, 3-beat snap result (Balatro-inspired pacing), TORCH card shop (score=wallet, 8 cards, trigger moments), star Heat Check, play sequence combos (5 hidden patterns), game day conditions (weather/field/crowd), daily drive mode, progressive disclosure, film room coaching feedback
+- **Visual design pass (v0.21.1):** Spacing cleanup across all screens (no >40px dead space), team select cards with gradient backgrounds + glow halos + dividers + side-by-side layout, broadcast booth commentary (orange ticker bar, white/gold/team-color text hierarchy), unified warm palette (all blue UI elements → torch orange, only blue = defense card backs), play cards with type watermark icons + tinted backgrounds + colored risk labels, player card helmets with filled shells + facemask bars + stripes + drop shadows
+- **Test harness:** `?test` URL renders all 12 screen states using real build functions. `?mockup` shows card component reference.
 - **Branch:** `refactor-vite` — all work is here
 - **Stack:** Vite + vanilla JS + jsfxr (sounds), deployed on Vercel
 - **Local dev:** `npx vite --host` (port 5173) or `npx vercel dev` (AI commentary)
