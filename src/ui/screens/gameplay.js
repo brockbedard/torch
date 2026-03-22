@@ -369,6 +369,37 @@ export function buildGameplay() {
   var torchInventory = (GS.season && GS.season.torchCards) ? GS.season.torchCards.slice() : [];
   var selectedPreSnap = null; // card object selected for current snap
 
+  // Star Heat Check (v0.21)
+  var offRoster = getOffenseRoster(GS.team);
+  var defRoster = getDefenseRoster(GS.team);
+  var offStar = offRoster.find(function(p) { return p.isStar; });
+  var defStar = defRoster.find(function(p) { return p.isStar; });
+  var offStarHot = false;
+  var defStarHot = false;
+
+  function checkStarActivation(res) {
+    var r = res.result;
+    var isOff = res._preSnap && res._preSnap.possession === hAbbr;
+    if (isOff && offStar && res.featuredOff && res.featuredOff.id === offStar.id) {
+      if (!offStarHot && (r.yards >= 10 || (r.comboFired))) {
+        offStarHot = true;
+        // +4 OVR boost applied visually (engine OVR stays — we fake it via combo bonus)
+      }
+    }
+    if (!isOff && defStar && res.featuredDef && res.featuredDef.id === defStar.id) {
+      if (!defStarHot && (r.isSack || r.isInterception || r.isFumbleLost)) {
+        defStarHot = true;
+      }
+    }
+    // Deactivation
+    if (isOff && offStarHot && (r.isSack || r.isInterception || r.isFumbleLost)) {
+      offStarHot = false;
+    }
+    if (!isOff && defStarHot && r.isTouchdown) {
+      defStarHot = false;
+    }
+  }
+
   function getTorchPoints() {
     return hAbbr === 'CT' ? gs.ctTorchPts : gs.irTorchPts;
   }
@@ -1384,15 +1415,21 @@ export function buildGameplay() {
     } else if (phase === 'player') {
       players.forEach(p => {
         const isSel = selP === p;
-        var tier = p.ovr >= 85 ? 'gold' : p.ovr >= 75 ? 'silver' : 'bronze';
+        var isHot = (isOff && offStar && p.id === offStar.id && offStarHot) ||
+                    (!isOff && defStar && p.id === defStar.id && defStarHot);
         // Use the actual shared buildMaddenPlayer builder
         var playerCard = buildMaddenPlayer({
           name: p.name, pos: p.pos, ovr: p.ovr,
-          num: p.num || '', tier: tier, teamColor: hTeam.accent || '#FF4511'
+          num: p.num || '', badge: p.badge, isStar: p.isStar,
+          teamColor: hTeam.colors ? hTeam.colors.primary : (hTeam.accent || '#FF4511')
         }, 80, 150);
         // Wrap in T-card for flex sizing and drag
         const c = document.createElement('div');
         c.className = 'T-card' + (isSel ? ' T-card-sel T-card-gone' : '') + (p.injured ? ' T-card-hurt' : '');
+        // Star Heat Check: flame border when On Fire
+        if (isHot) {
+          c.style.cssText += 'border:2px solid #FF4511 !important;box-shadow:0 0 12px rgba(255,69,17,0.5),0 0 24px rgba(255,69,17,0.2) !important;animation:T-urgent-border 1s ease-in-out infinite !important;';
+        }
         playerCard.style.width = '100%';
         playerCard.style.height = '100%';
         c.appendChild(playerCard);
@@ -1494,11 +1531,15 @@ export function buildGameplay() {
     res._preSnap = preSnap;
 
     // 3-Beat Snap Result
-    run3BeatSnap(res, prevPoss);
+    // Check star activation
+    var wasOffHot = offStarHot, wasDefHot = defStarHot;
+    checkStarActivation(res);
+
+    run3BeatSnap(res, prevPoss, wasOffHot, wasDefHot);
   }
 
   // ── 3-BEAT SNAP RESULT (Amendment 2 Section 7) ──
-  function run3BeatSnap(res, prevPoss) {
+  function run3BeatSnap(res, prevPoss, wasOffHot, wasDefHot) {
     var r = res.result;
     var isGood = r.yards >= 4 || r.isTouchdown;
     var isBad = r.isSack || r.isInterception || r.isFumbleLost || r.isSafety;
@@ -1597,6 +1638,8 @@ export function buildGameplay() {
         if (res.gameEvent === 'touchdown' && isHumanPoss) shopTrigger = 'touchdown';
         else if ((r.isInterception || r.isFumbleLost) && !isHumanPoss) shopTrigger = 'turnover';
         else if (res.gameEvent === 'turnover_on_downs' && !isHumanPoss) shopTrigger = 'fourthDownStop';
+        // Star activation trigger
+        else if ((!wasOffHot && offStarHot) || (!wasDefHot && defStarHot)) shopTrigger = 'starActivation';
 
         function afterShop() {
           if (res.gameEvent === 'touchdown') { showConv(res.scoringTeam); return; }
