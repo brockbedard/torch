@@ -196,7 +196,9 @@ export function buildMaddenPlayer(p, w, h) {
 var RISK_ICONS = { high:'\u26A1 HIGH', med:'\u25C6 MED', low:'\u25CF LOW' };
 
 export function buildPlayV1(p, w, h) {
-  var svgTag = p.svg.replace('CATFILL', p.catColor).replace('fill="none">', 'width="'+(w*0.75)+'" height="'+(h*0.45)+'" fill="none">');
+  var svgTag = p.svg.replace('CATFILL', p.catColor)
+    .replace('SVGW', Math.round(w*0.75)).replace('SVGH', Math.round(h*0.45))
+    .replace('fill="none">', 'width="'+Math.round(w*0.75)+'" height="'+Math.round(h*0.45)+'" fill="none">');
   var card = document.createElement('div');
   card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:2px solid '+p.catColor+'44;background:radial-gradient(ellipse at 50% 50%,'+p.bg+',#0E0A06);overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.5);display:flex;flex-direction:column;';
   card.innerHTML = '<div style="height:3px;background:'+p.catColor+';border-radius:5px 5px 0 0;"></div>'

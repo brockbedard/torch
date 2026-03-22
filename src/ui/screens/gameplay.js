@@ -17,7 +17,7 @@ import { checkOffensiveBadgeCombo, checkDefensiveBadgeCombo } from '../../engine
 import { getPlayHistoryBonus } from '../../engine/playHistory.js';
 import { playSvg } from '../../data/playDiagrams.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
-import { buildHomeCard, buildMaddenPlayer, buildTorchCard, injectCardStyles } from '../components/cards.js';
+import { buildHomeCard, buildMaddenPlayer, buildPlayV1, buildTorchCard, injectCardStyles } from '../components/cards.js';
 
 /* ═══════════════════════════════════════════
    CSS
@@ -273,26 +273,13 @@ function playerImg(p, team, isOff) {
 
 function tierColor(ovr) { return ovr >= 85 ? '#c8a030' : ovr >= 75 ? '#aaa' : '#CD7F32'; }
 
-/* Build a Madden-style player card — centered OVR, flanking #/POS, helmet, name bar */
-function mkPlayerCard(p, team, isOff) {
-  var tc = p.ovr >= 85 ? '#FFB800' : p.ovr >= 75 ? '#B0C4D4' : '#A0522D';
-  var teamColor = team.accent || '#FF4511';
-  // Top row: OVR centered, # left, POS right
-  return '<div style="position:relative;padding:4px 0 1px;z-index:2;text-align:center;">' +
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:" + tc + ";line-height:1;text-shadow:0 0 6px " + tc + "44\">" + p.ovr + '</div>' +
-      "<div style=\"position:absolute;left:5px;top:50%;transform:translateY(-50%);font-family:'Teko';font-weight:700;font-size:8px;color:#fff;opacity:0.7;line-height:1\">#" + (p.num||'') + '</div>' +
-      "<div style=\"position:absolute;right:5px;top:50%;transform:translateY(-50%);font-family:'Teko';font-weight:700;font-size:8px;color:#fff;opacity:0.7;line-height:1\">" + p.pos + '</div>' +
-    '</div>' +
-    // Helmet art area
-    '<div style="position:absolute;top:20px;left:0;right:0;bottom:18px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 10px ' + tc + '88);">' +
-      '<svg viewBox="0 0 512 411" width="52" height="42" fill="none" style="position:absolute;">' +
-      '<path fill="' + tc + '" opacity="0.7" fill-rule="nonzero" d="M214.67 410.6c-14.73-1.18-28.57-6.54-42.64-11.99-25.84-10-52.68-20.39-81.81 4.8-5.1 4.41-12.82 3.85-17.24-1.25l-.81-1.04c-12.22-16.33-23.15-33.53-32.57-51.2-9.54-17.9-17.53-36.25-23.76-54.66-2.2-6.51-4.16-12.94-5.88-19.27C-5.5 218.91-3.09 163.75 18.1 117.61 39.44 71.12 79.58 34.13 139.37 13.89c5.45-1.85 11.01-3.55 16.65-5.08 52.22-14.14 109.49-11.57 157.51 9.95 43.22 19.37 78.9 53.94 96.85 105.29 2.02 5.82-.61 12.14-5.94 14.88-40.41 22.46-66.27 38.89-82.33 53.19l2.36 7.35v.05c6.51 20.34 13.65 42.65 22.23 63.66 16.25-6.42 32-13.62 47.07-21.33 18.65-9.55 36.55-20.02 53.33-30.86 5.1-3.27 11.89-1.79 15.16 3.31.39.6.72 1.24.97 1.88l47.89 111.61c2.04 4.79.41 10.22-3.63 13.16-14.42 11.8-29.24 20-44.13 24.67-15.62 4.89-31.33 5.92-46.8 3.12-19.86-3.58-36.19-14.08-49.89-28.82-20.42 6.63-40.86 11.65-59.62 14.43-4.39 10.72-11.18 20.58-19.66 28.96-13.84 13.67-32.34 23.48-52.39 26.55a88.224 88.224 0 0 1-20.33.74zm-5.19-119.43c15.25 0 27.6 12.36 27.6 27.6 0 15.25-12.35 27.6-27.6 27.6-15.24 0-27.6-12.35-27.6-27.6 0-15.24 12.36-27.6 27.6-27.6zM430 348.27l-13.38-27.88c-7.45 3.44-15.09 6.71-22.83 9.77l-4.08 1.59c9.07 7.9 19.23 13.36 30.71 15.43 3.17.57 6.37.94 9.58 1.09zm-22.89-47.69-15.86-33.03c-11.63 5.61-23.54 10.88-35.65 15.69 5.47 11.3 11.5 21.83 18.24 30.98 3.98-1.44 7.94-2.94 11.88-4.5a441.89 441.89 0 0 0 21.39-9.14zm3.69-42.91 15.95 33.21c13.14-6.98 25.12-14.42 35.2-22.05l-13.93-32.46a632.569 632.569 0 0 1-37.22 21.3zm25.46 53.03 16.82 35.04c1.25-.33 2.5-.69 3.75-1.08 10.26-3.21 20.57-8.55 30.79-16.02l-16.78-39.09c-10.24 7.35-21.96 14.47-34.58 21.15zm-130.93-99.16c-10.71 18.13-7.02 35.74-1.3 63.05l.62 2.94 2.22-.64a429.55 429.55 0 0 0 19.26-6.13c-7.98-19.65-14.68-40.11-20.8-59.22zm3.63 87.55c1.01 5.45 2 11.14 2.91 17.1.77 5.03.96 10.07.63 15.04 12.68-2.31 26.09-5.64 39.67-9.77-6.34-9.4-12.02-19.72-17.19-30.55-7.23 2.5-14.57 4.86-22.01 7.03l-4.01 1.15zm-30.49 56.97c-4.35.29-8.67.52-12.47.65-3.79.12-6.98-2.82-7.19-6.6-.92-16.66-2.73-33.15-4.47-49.06-3.86-35.28-7.44-67.91-.7-95.91 4.65-19.3 20.43-38.98 40.59-56.85 22.96-20.37 51.8-38.64 75.92-51.17-16.8-25.63-40.05-44.15-66.59-56.05-42.76-19.16-94.13-21.36-141.22-8.6-5.26 1.42-10.31 2.96-15.12 4.59C94.25 55 58.89 87.32 40.32 127.77c-18.74 40.8-20.7 90.24-6.7 141.9 1.61 5.95 3.42 11.87 5.4 17.74 5.86 17.31 13.3 34.44 22.13 51.02 7 13.13 14.89 25.98 23.58 38.38 35.7-24.37 66.43-12.48 96.12-.99 12.3 4.76 24.4 9.45 35.74 10.36 4.97.39 9.93.19 14.77-.55 14.85-2.28 28.58-9.58 38.88-19.75 3.08-3.04 5.85-6.34 8.23-9.82z"/>' +
-      '</svg></div>' +
-    // Bottom gradient
-    '<div style="position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(transparent,#0A0804);z-index:1;"></div>' +
-    // Name bar
-    '<div style="position:absolute;bottom:0;left:0;right:0;z-index:2;background:' + teamColor + '33;padding:4px 5px;border-top:1px solid ' + teamColor + '44;border-bottom:2px solid ' + teamColor + ';border-radius:0 0 4px 4px;">' +
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:9px;color:#fff;letter-spacing:0.5px;text-align:center;line-height:1;white-space:nowrap\">" + p.name.split(' ').pop() + '</div></div>';
+/* Build a placed player card for the field strip — uses shared buildMaddenPlayer */
+function mkPlayerCardEl(p, team) {
+  var tier = p.ovr >= 85 ? 'gold' : p.ovr >= 75 ? 'silver' : 'bronze';
+  return buildMaddenPlayer({
+    name: p.name, pos: p.pos, ovr: p.ovr,
+    num: p.num || '', tier: tier, teamColor: team.accent || '#FF4511'
+  }, 80, 150);
 }
 
 /* Risk classification matching cardDraft.js */
@@ -300,32 +287,22 @@ var HIGH_RISK_IDS = ['four_verts','go_route','y_corner','zero_cov','db_blitz'];
 var MED_RISK_IDS = ['mesh','slant','overload','fire_zone','a_gap_mug','edge_crash','pa_post','pa_flat','man_press','zone_drop','triple_option','zone_read'];
 function getRisk(id) { return HIGH_RISK_IDS.indexOf(id)>=0?'high':MED_RISK_IDS.indexOf(id)>=0?'med':'low'; }
 
-/* Build a play card — V1 style: category stripe, name top, diagram center, category+risk bottom */
-function mkPlayCard(play) {
+/* Build a placed play card for the field strip — uses shared buildPlayV1 */
+function mkPlayCardEl(play) {
   var cat = {SHORT:'SHORT',QUICK:'QUICK',DEEP:'DEEP',RUN:'RUN',SCREEN:'SCREEN',OPTION:'OPTION',
     BLITZ:'BLITZ',ZONE:'ZONE',PRESSURE:'PRESSURE',HYBRID:'HYBRID'}[play.playType||play.cardType] || 'RUN';
-  // Unified offense green / defense blue
   var isOffPlay = ['SHORT','QUICK','DEEP','RUN','SCREEN','OPTION'].indexOf(cat) >= 0;
   var catColor = isOffPlay ? '#7ACC00' : '#4DA6FF';
-  var risk = getRisk(play.id);
-  var riskIcon = risk==='high'?'\u26A1 HIGH':risk==='med'?'\u25C6 MED':'\u25CF LOW';
-  // SVG with zoomed viewBox, thicker strokes, bigger dots
-  var svg = playSvg(play.id, '#00ff44');
+  var svg = playSvg(play.id, catColor);
   svg = svg.replace('viewBox="0 0 60 50"','viewBox="4 4 52 44"')
-    .replace('width="60" height="50"','width="100%" height="100%" preserveAspectRatio="xMidYMid meet"')
+    .replace('width="60" height="50"','width="SVGW" height="SVGH" preserveAspectRatio="xMidYMid meet"')
     .replace(/stroke-width="1.5"/g,'stroke-width="2.5"').replace(/stroke-width="1"/g,'stroke-width="2"')
-    .replace(/r="3.5"/g,'r="5"').replace(/r="2.5"/g,'r="4"')
-    .replace(/stroke="#00ff44"/g,'stroke="#FFB800"');
-  // Category stripe + Name bar top
-  return '<div style="height:3px;background:' + catColor + ';border-radius:5px 5px 0 0;"></div>' +
-    '<div style="background:' + catColor + '22;padding:4px 6px;border-bottom:1px solid ' + catColor + '33;">' +
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:11px;color:#fff;letter-spacing:1px;line-height:1;white-space:nowrap\">" + play.name + '</div></div>' +
-    // Diagram fills center
-    '<div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">' + svg + '</div>' +
-    // Bottom bar: category + risk
-    '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px;background:rgba(0,0,0,0.3);border-top:1px solid #1E1610;">' +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:6px;color:" + catColor + ";letter-spacing:0.5px\">" + cat + '</div>' +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:6px;color:" + catColor + "\">" + riskIcon + '</div></div>';
+    .replace(/r="3.5"/g,'r="5"').replace(/r="2.5"/g,'r="4"');
+  return buildPlayV1({
+    name: play.name, cat: cat, catColor: catColor,
+    risk: getRisk(play.id), riskColor: catColor,
+    svg: svg, bg: isOffPlay ? '#0A1A06' : '#0A1420'
+  }, 80, 150);
 }
 
 function resolveRoster(ids, pool) {
@@ -476,29 +453,22 @@ export function buildGameplay() {
     h += `<div class="T-ltg" style="left:${tp}%;border-color:#c8a030"></div>`;
 
     // Drop zones — empty outlines for unfilled, actual card for filled
-    // Drop zones — active one pulses to guide the player
     const playLbl = phase === 'play' ? 'DRAG<br><br>PLAY<br><br>HERE' : 'PLAY';
     if (selPl) {
-      h += `<div class="T-placed T-placed-play">${mkPlayCard(selPl)}</div>`;
+      h += '<div class="T-placed T-placed-play" id="T-placed-play-slot"></div>';
     } else {
       h += '<div class="T-drop T-drop-play' + (phase==='play'?' T-drop-active':'') + '" data-drop="play"><span class="T-drop-lbl">' + playLbl + '</span></div>';
     }
 
     const playerLbl = phase === 'player' ? 'DRAG<br><br>PLAYER<br><br>HERE' : 'PLAYER';
     if (selP) {
-      h += `<div class="T-placed T-placed-player">${mkPlayerCard(selP, hTeam, isOff)}</div>`;
+      h += '<div class="T-placed T-placed-player" id="T-placed-player-slot"></div>';
     } else {
       h += '<div class="T-drop T-drop-player' + (phase==='player'?' T-drop-active':'') + '" data-drop="player"><span class="T-drop-lbl">' + playerLbl + '</span></div>';
     }
 
     if (selTorch) {
-      var tc = TORCH_CARDS.find(function(c) { return c.id === selTorch; });
-      var tName = tc ? tc.name : selTorch;
-      var tTierCol = tc && tc.tier === 'GOLD' ? '#FFB800' : tc && tc.tier === 'SILVER' ? '#B0C4D4' : '#A0522D';
-      h += '<div class="T-placed T-placed-torch" style="border:3px solid ' + tTierCol + ';background:radial-gradient(ellipse at 50% 35%,#1a0800,#0A0804);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;box-shadow:0 0 12px rgba(255,69,17,0.15)">' +
-        "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:6px;color:" + tTierCol + ";opacity:0.7;letter-spacing:1px\">" + (tc?tc.tier:'') + "</div>" +
-        "<div style=\"font-family:'Teko';font-weight:700;font-size:13px;color:#fff;text-align:center;line-height:1\">" + tName + "</div>" +
-        "<div style=\"font-family:'Rajdhani';font-size:6px;color:#aaa;text-align:center\">TORCH</div></div>";
+      h += '<div class="T-placed T-placed-torch" id="T-placed-torch-slot"></div>';
     } else {
       const hasTorchCards = gs.humanTorchCards && gs.humanTorchCards.length > 0;
       const torchLbl = hasTorchCards ? (phase === 'torch' ? 'DRAG<br><br>TORCH<br><br>HERE' : 'TORCH') : 'NO<br><br>TORCH<br><br>CARD';
@@ -506,6 +476,38 @@ export function buildGameplay() {
     }
 
     strip.innerHTML = h;
+
+    // Append actual shared-builder DOM cards into placed slots
+    if (selPl) {
+      var playSlot = strip.querySelector('#T-placed-play-slot');
+      if (playSlot) {
+        var playEl = mkPlayCardEl(selPl);
+        playEl.style.width = '100%';
+        playEl.style.height = '100%';
+        playSlot.appendChild(playEl);
+      }
+    }
+    if (selP) {
+      var playerSlot = strip.querySelector('#T-placed-player-slot');
+      if (playerSlot) {
+        var playerEl = mkPlayerCardEl(selP, hTeam);
+        playerEl.style.width = '100%';
+        playerEl.style.height = '100%';
+        playerSlot.appendChild(playerEl);
+      }
+    }
+    if (selTorch) {
+      var torchSlot = strip.querySelector('#T-placed-torch-slot');
+      if (torchSlot) {
+        var tc = TORCH_CARDS.find(function(c) { return c.id === selTorch; });
+        if (tc) {
+          var torchEl = buildTorchCard(tc, 80, 150);
+          torchEl.style.width = '100%';
+          torchEl.style.height = '100%';
+          torchSlot.appendChild(torchEl);
+        }
+      }
+    }
   }
 
   // ── PANEL ──
@@ -1302,31 +1304,29 @@ export function buildGameplay() {
     if (phase === 'play') {
       plays.forEach(play => {
         const isSel = selPl === play;
-        // Build play card using shared V1 builder
-        var isOffPlay = ['SHORT','QUICK','DEEP','RUN','SCREEN','OPTION'].indexOf(
-          {SHORT:'SHORT',QUICK:'QUICK',DEEP:'DEEP',RUN:'RUN',SCREEN:'SCREEN',OPTION:'OPTION',
-          BLITZ:'BLITZ',ZONE:'ZONE',PRESSURE:'PRESSURE',HYBRID:'HYBRID'}[play.playType||play.cardType] || 'RUN') >= 0;
-        var catColor = isOffPlay ? '#7ACC00' : '#4DA6FF';
+        // Adapt game data to shared buildPlayV1 format
         var cat = {SHORT:'SHORT',QUICK:'QUICK',DEEP:'DEEP',RUN:'RUN',SCREEN:'SCREEN',OPTION:'OPTION',
           BLITZ:'BLITZ',ZONE:'ZONE',PRESSURE:'PRESSURE',HYBRID:'HYBRID'}[play.playType||play.cardType] || 'RUN';
-        var risk = getRisk(play.id);
-        var riskIcon = risk==='high'?'\u26A1 HIGH':risk==='med'?'\u25C6 MED':'\u25CF LOW';
-        var svg = playSvg(play.id, '#00ff44');
+        var isOffPlay = ['SHORT','QUICK','DEEP','RUN','SCREEN','OPTION'].indexOf(cat) >= 0;
+        var catColor = isOffPlay ? '#7ACC00' : '#4DA6FF';
+        // Build SVG for play diagram
+        var svg = playSvg(play.id, catColor);
         svg = svg.replace('viewBox="0 0 60 50"','viewBox="4 4 52 44"')
-          .replace('width="60" height="50"','width="100%" height="100%" preserveAspectRatio="xMidYMid meet"')
+          .replace('width="60" height="50"','width="SVGW" height="SVGH" preserveAspectRatio="xMidYMid meet"')
           .replace(/stroke-width="1.5"/g,'stroke-width="2.5"').replace(/stroke-width="1"/g,'stroke-width="2"')
-          .replace(/r="3.5"/g,'r="5"').replace(/r="2.5"/g,'r="4"')
-          .replace(/stroke="#00ff44"/g,'stroke="#FFB800"');
+          .replace(/r="3.5"/g,'r="5"').replace(/r="2.5"/g,'r="4"');
+        // Use the actual shared buildPlayV1 builder
+        var playCard = buildPlayV1({
+          name: play.name, cat: cat, catColor: catColor,
+          risk: getRisk(play.id), riskColor: catColor,
+          svg: svg, bg: isOffPlay ? '#0A1A06' : '#0A1420'
+        }, 80, 150);
+        // Wrap in T-card for flex sizing and drag
         const c = document.createElement('div');
         c.className = 'T-card' + (isSel ? ' T-card-sel T-card-gone' : '');
-        c.style.cssText += 'border-radius:7px;border:2px solid ' + catColor + '44;background:radial-gradient(ellipse at 50% 50%,' + (isOffPlay?'#0A1A06':'#0A1420') + ',#0E0A06);overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.5);';
-        c.innerHTML = '<div style="height:3px;background:' + catColor + ';border-radius:5px 5px 0 0;"></div>' +
-          '<div style="background:' + catColor + '22;padding:4px 6px;border-bottom:1px solid ' + catColor + '33;">' +
-            "<div style=\"font-family:'Teko';font-weight:700;font-size:11px;color:#fff;letter-spacing:1px;line-height:1;white-space:nowrap\">" + play.name + '</div></div>' +
-          '<div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">' + svg + '</div>' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px;background:rgba(0,0,0,0.3);border-top:1px solid #1E1610;">' +
-            "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:6px;color:" + catColor + ";letter-spacing:0.5px\">" + cat + '</div>' +
-            "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:6px;color:" + catColor + "\">" + riskIcon + '</div></div>';
+        playCard.style.width = '100%';
+        playCard.style.height = '100%';
+        c.appendChild(playCard);
         c.onclick = () => { if (phase==='busy') return; SND.select(); selPl = play; phase = 'player'; drawField(); drawPanel(); };
         c.onmousedown = function(e) { startDrag('play', play, c, e); };
         c.ontouchstart = function(e) { startDrag('play', play, c, e); };
@@ -1336,25 +1336,17 @@ export function buildGameplay() {
       players.forEach(p => {
         const isSel = selP === p;
         var tier = p.ovr >= 85 ? 'gold' : p.ovr >= 75 ? 'silver' : 'bronze';
-        var tc = p.ovr >= 85 ? '#FFB800' : p.ovr >= 75 ? '#B0C4D4' : '#A0522D';
-        var teamColor = hTeam.accent || '#FF4511';
-        // Build Madden-style player card directly
+        // Use the actual shared buildMaddenPlayer builder
+        var playerCard = buildMaddenPlayer({
+          name: p.name, pos: p.pos, ovr: p.ovr,
+          num: p.num || '', tier: tier, teamColor: hTeam.accent || '#FF4511'
+        }, 80, 150);
+        // Wrap in T-card for flex sizing and drag
         const c = document.createElement('div');
         c.className = 'T-card' + (isSel ? ' T-card-sel T-card-gone' : '') + (p.injured ? ' T-card-hurt' : '');
-        c.style.cssText += 'border-radius:6px;border:2px solid ' + tc + '44;background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);box-shadow:0 3px 10px rgba(0,0,0,0.5);';
-        c.innerHTML =
-          '<div style="position:relative;padding:4px 0 1px;z-index:2;text-align:center;">' +
-            "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:" + tc + ";line-height:1;text-shadow:0 0 6px " + tc + "44\">" + p.ovr + '</div>' +
-            "<div style=\"position:absolute;left:5px;top:50%;transform:translateY(-50%);font-family:'Teko';font-weight:700;font-size:8px;color:#fff;opacity:0.7;line-height:1\">#" + (p.num||'') + '</div>' +
-            "<div style=\"position:absolute;right:5px;top:50%;transform:translateY(-50%);font-family:'Teko';font-weight:700;font-size:8px;color:#fff;opacity:0.7;line-height:1\">" + p.pos + '</div>' +
-          '</div>' +
-          '<div style="position:absolute;top:20px;left:0;right:0;bottom:18px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 10px ' + tc + '88);">' +
-            '<svg viewBox="0 0 512 411" width="52" height="42" fill="none" style="position:absolute;">' +
-            '<path fill="' + tc + '" opacity="0.7" fill-rule="nonzero" d="M214.67 410.6c-14.73-1.18-28.57-6.54-42.64-11.99-25.84-10-52.68-20.39-81.81 4.8-5.1 4.41-12.82 3.85-17.24-1.25l-.81-1.04c-12.22-16.33-23.15-33.53-32.57-51.2-9.54-17.9-17.53-36.25-23.76-54.66-2.2-6.51-4.16-12.94-5.88-19.27C-5.5 218.91-3.09 163.75 18.1 117.61 39.44 71.12 79.58 34.13 139.37 13.89c5.45-1.85 11.01-3.55 16.65-5.08 52.22-14.14 109.49-11.57 157.51 9.95 43.22 19.37 78.9 53.94 96.85 105.29 2.02 5.82-.61 12.14-5.94 14.88-40.41 22.46-66.27 38.89-82.33 53.19l2.36 7.35v.05c6.51 20.34 13.65 42.65 22.23 63.66 16.25-6.42 32-13.62 47.07-21.33 18.65-9.55 36.55-20.02 53.33-30.86 5.1-3.27 11.89-1.79 15.16 3.31.39.6.72 1.24.97 1.88l47.89 111.61c2.04 4.79.41 10.22-3.63 13.16-14.42 11.8-29.24 20-44.13 24.67-15.62 4.89-31.33 5.92-46.8 3.12-19.86-3.58-36.19-14.08-49.89-28.82-20.42 6.63-40.86 11.65-59.62 14.43-4.39 10.72-11.18 20.58-19.66 28.96-13.84 13.67-32.34 23.48-52.39 26.55a88.224 88.224 0 0 1-20.33.74zm-5.19-119.43c15.25 0 27.6 12.36 27.6 27.6 0 15.25-12.35 27.6-27.6 27.6-15.24 0-27.6-12.35-27.6-27.6 0-15.24 12.36-27.6 27.6-27.6zM430 348.27l-13.38-27.88c-7.45 3.44-15.09 6.71-22.83 9.77l-4.08 1.59c9.07 7.9 19.23 13.36 30.71 15.43 3.17.57 6.37.94 9.58 1.09zm-22.89-47.69-15.86-33.03c-11.63 5.61-23.54 10.88-35.65 15.69 5.47 11.3 11.5 21.83 18.24 30.98 3.98-1.44 7.94-2.94 11.88-4.5a441.89 441.89 0 0 0 21.39-9.14zm3.69-42.91 15.95 33.21c13.14-6.98 25.12-14.42 35.2-22.05l-13.93-32.46a632.569 632.569 0 0 1-37.22 21.3zm25.46 53.03 16.82 35.04c1.25-.33 2.5-.69 3.75-1.08 10.26-3.21 20.57-8.55 30.79-16.02l-16.78-39.09c-10.24 7.35-21.96 14.47-34.58 21.15zm-130.93-99.16c-10.71 18.13-7.02 35.74-1.3 63.05l.62 2.94 2.22-.64a429.55 429.55 0 0 0 19.26-6.13c-7.98-19.65-14.68-40.11-20.8-59.22zm3.63 87.55c1.01 5.45 2 11.14 2.91 17.1.77 5.03.96 10.07.63 15.04 12.68-2.31 26.09-5.64 39.67-9.77-6.34-9.4-12.02-19.72-17.19-30.55-7.23 2.5-14.57 4.86-22.01 7.03l-4.01 1.15zm-30.49 56.97c-4.35.29-8.67.52-12.47.65-3.79.12-6.98-2.82-7.19-6.6-.92-16.66-2.73-33.15-4.47-49.06-3.86-35.28-7.44-67.91-.7-95.91 4.65-19.3 20.43-38.98 40.59-56.85 22.96-20.37 51.8-38.64 75.92-51.17-16.8-25.63-40.05-44.15-66.59-56.05-42.76-19.16-94.13-21.36-141.22-8.6-5.26 1.42-10.31 2.96-15.12 4.59C94.25 55 58.89 87.32 40.32 127.77c-18.74 40.8-20.7 90.24-6.7 141.9 1.61 5.95 3.42 11.87 5.4 17.74 5.86 17.31 13.3 34.44 22.13 51.02 7 13.13 14.89 25.98 23.58 38.38 35.7-24.37 66.43-12.48 96.12-.99 12.3 4.76 24.4 9.45 35.74 10.36 4.97.39 9.93.19 14.77-.55 14.85-2.28 28.58-9.58 38.88-19.75 3.08-3.04 5.85-6.34 8.23-9.82z"/>' +
-            '</svg></div>' +
-          '<div style="position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(transparent,#0A0804);z-index:1;"></div>' +
-          '<div style="position:absolute;bottom:0;left:0;right:0;z-index:2;background:' + teamColor + '33;padding:4px 5px;border-top:1px solid ' + teamColor + '44;border-bottom:2px solid ' + teamColor + ';border-radius:0 0 4px 4px;">' +
-            "<div style=\"font-family:'Teko';font-weight:700;font-size:9px;color:#fff;letter-spacing:0.5px;text-align:center;line-height:1;white-space:nowrap\">" + p.name.split(' ').pop() + '</div></div>';
+        playerCard.style.width = '100%';
+        playerCard.style.height = '100%';
+        c.appendChild(playerCard);
         c.onclick = () => {
           if (p.injured || phase==='busy') return; SND.select(); selP = p;
           phase = gs.humanTorchCards.length > 0 ? 'torch' : 'ready';
