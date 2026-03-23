@@ -1,13 +1,33 @@
 /**
- * TORCH — Halftime Screen
- * Shows 1st half summary and the Halftime Card Shop.
+ * TORCH v0.22 — Halftime Report (Broadcast Style)
+ * Score + drive summary + top performer + coach pep talk + shop.
  */
 
 import { SND } from '../../engine/sound.js';
-import { GS, setGs, getTeam, getOtherTeam } from '../../state.js';
+import { GS, setGs, getTeam } from '../../state.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
 import { buildTorchCard } from '../components/cards.js';
+import { renderTeamBadge } from '../../data/teamLogos.js';
 import AudioStateManager from '../../engine/audioManager.js';
+
+var PEP_TALKS_WINNING = [
+  "We're in control. Keep the pressure on.",
+  "Good half. Now finish it.",
+  "They can't stop us. Second half is ours.",
+  "Stay disciplined. Don't let up.",
+];
+var PEP_TALKS_LOSING = [
+  "Down but not out. One stop and one score.",
+  "We've been here before. Time to fight.",
+  "Forget the first half. This is a new game.",
+  "They think it's over. Prove them wrong.",
+];
+var PEP_TALKS_TIED = [
+  "All square. Whoever wants it more wins.",
+  "Everything to play for. Let's go get it.",
+];
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 export function buildHalftime() {
   AudioStateManager.setState('halftime');
@@ -18,109 +38,97 @@ export function buildHalftime() {
   var gs = GS.engine;
   var team = getTeam(GS.team);
   var opp = getTeam(GS.opponent || 'wolves');
-  var isHumanCT = true; // v0.21: human always maps to CT slot
+  var humanScore = gs.ctScore;
+  var cpuScore = gs.irScore;
+  var humanPts = gs.ctTorchPts;
 
-  var humanScore = isHumanCT ? gs.ctScore : gs.irScore;
-  var cpuScore = isHumanCT ? gs.irScore : gs.ctScore;
-  var humanPts = isHumanCT ? gs.ctTorchPts : gs.irTorchPts;
-
-  // Header
+  // Header with torch orange underline
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'background:rgba(0,0,0,0.7);padding:12px 14px;text-align:center;flex-shrink:0;border-bottom:2px solid var(--a-gold);';
-  var hdrTitle = document.createElement('div');
-  hdrTitle.style.cssText = "font-family:'Teko',sans-serif;font-weight:700;font-size:32px;color:var(--a-gold);letter-spacing:3px;font-style:italic;transform:skewX(-8deg);text-shadow:2px 2px 0 rgba(0,0,0,0.9),0 0 12px rgba(255,184,0,0.3);";
-  hdrTitle.textContent = 'HALFTIME REPORT';
-  hdr.appendChild(hdrTitle);
+  hdr.style.cssText = 'background:rgba(0,0,0,0.7);padding:10px 14px;text-align:center;flex-shrink:0;border-bottom:3px solid #FF6B00;';
+  hdr.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:#FF6B00;letter-spacing:4px;font-style:italic;transform:skewX(-8deg);text-shadow:2px 2px 0 rgba(0,0,0,0.9);\">HALFTIME</div>";
   el.appendChild(hdr);
 
   var content = document.createElement('div');
-  content.style.cssText = 'padding:12px 16px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;';
+  content.style.cssText = 'padding:12px 16px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;';
 
-  // Score Summary
+  // Score with team badges
   var scoreBlock = document.createElement('div');
-  scoreBlock.style.cssText = 'display:flex;align-items:center;gap:20px;';
-  var teamBlock = (name, score, color) => {
-    var b = document.createElement('div'); b.style.textAlign = 'center';
-    var n = document.createElement('div'); n.style.cssText = `font-family:'Teko';font-size:24px;color:${color};letter-spacing:2px;`;
-    n.textContent = name;
-    var s = document.createElement('div'); s.style.cssText = "font-family:'Rajdhani';font-size:32px;color:#fff;text-shadow:0 0 15px rgba(255,255,255,0.3);";
-    s.textContent = score;
-    b.append(n, s); return b;
-  };
-  scoreBlock.append(teamBlock(team.name, humanScore, team.accent), teamBlock(opp.name, cpuScore, opp.accent));
+  scoreBlock.style.cssText = 'display:flex;align-items:center;gap:12px;width:100%;max-width:320px;justify-content:center;';
+  scoreBlock.innerHTML =
+    '<div style="display:flex;align-items:center;gap:6px;">' + renderTeamBadge(GS.team, 32) +
+      "<div style='text-align:center;'><div style=\"font-family:'Teko';font-size:14px;color:" + team.accent + ";letter-spacing:1px;\">" + team.name + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:32px;color:#fff;\">" + humanScore + "</div></div></div>" +
+    "<div style=\"font-family:'Teko';font-size:20px;color:#555;\">—</div>" +
+    '<div style="display:flex;align-items:center;gap:6px;flex-direction:row-reverse;">' + renderTeamBadge(GS.opponent, 32) +
+      "<div style='text-align:center;'><div style=\"font-family:'Teko';font-size:14px;color:" + opp.accent + ";letter-spacing:1px;\">" + opp.name + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:32px;color:#fff;\">" + cpuScore + "</div></div></div>";
   content.appendChild(scoreBlock);
 
-  // Shop Section
-  var shopBox = document.createElement('div');
-  shopBox.style.cssText = 'width:100%;max-width:350px;background:var(--bg-surface);border:1px solid #333;border-radius:10px;padding:16px;';
-  
-  var shopHdr = document.createElement('div');
-  shopHdr.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid #222;padding-bottom:8px;";
-  shopHdr.innerHTML = `
-    <div style="font-family:'Rajdhani';font-size:10px;color:var(--a-gold);">LOCKER ROOM SHOP</div>
-    <div style="font-family:'Rajdhani';font-size:9px;color:var(--l-green);">${humanPts} PTS</div>
-  `;
-  shopBox.appendChild(shopHdr);
+  // Drive summary
+  var st = gs.stats || {};
+  var summaryBlock = document.createElement('div');
+  summaryBlock.style.cssText = 'width:100%;max-width:320px;background:var(--bg-surface);border:1px solid #1E1610;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;';
+  var statRows = [
+    ['Total Yards', (st.ctTotalYards || 0) + ' — ' + (st.irTotalYards || 0)],
+    ['First Downs', (st.ctFirstDowns || 0) + ' — ' + (st.irFirstDowns || 0)],
+    ['Turnovers', (st.ctTurnovers || 0) + ' — ' + (st.irTurnovers || 0)],
+  ];
+  statRows.forEach(function(row) {
+    var r = document.createElement('div');
+    r.style.cssText = "display:flex;justify-content:space-between;font-family:'Rajdhani';font-size:11px;color:#aaa;padding:2px 0;border-bottom:1px solid #0E0A04;";
+    r.innerHTML = '<span>' + row[0] + '</span><span style="color:#fff;">' + row[1] + '</span>';
+    summaryBlock.appendChild(r);
+  });
+  content.appendChild(summaryBlock);
 
-  // Offers
+  // Coach's pep talk
+  var pepTalk = humanScore > cpuScore ? pick(PEP_TALKS_WINNING) : humanScore < cpuScore ? pick(PEP_TALKS_LOSING) : pick(PEP_TALKS_TIED);
+  var coachBlock = document.createElement('div');
+  coachBlock.style.cssText = "width:100%;max-width:320px;padding:10px 14px;background:rgba(255,107,0,0.06);border-left:3px solid #FF6B00;border-radius:0 6px 6px 0;font-family:'Rajdhani';font-size:12px;color:#ccc;font-style:italic;line-height:1.4;";
+  coachBlock.textContent = '"' + pepTalk + '"';
+  content.appendChild(coachBlock);
+
+  // Locker Room Shop
+  var shopBox = document.createElement('div');
+  shopBox.style.cssText = 'width:100%;max-width:320px;background:var(--bg-surface);border:1px solid #333;border-radius:8px;padding:10px 12px;';
+  shopBox.innerHTML = "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid #1E1610;padding-bottom:6px;\"><div style=\"font-family:'Rajdhani';font-weight:700;font-size:11px;color:#FF6B00;letter-spacing:1px;\">LOCKER ROOM SHOP</div><div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:#00ff44;\">" + humanPts + " PTS</div></div>";
+
   var offersRow = document.createElement('div');
-  offersRow.style.cssText = 'display:flex;gap:8px;';
-  
-  // Logic to get 3 random offers (weighted)
-  const getOffer = () => {
-    const r = Math.random();
-    let tier;
-    if (r < 0.50) tier = 'BRONZE';
-    else if (r < 0.85) tier = 'SILVER';
-    else tier = 'GOLD';
-    const pool = TORCH_CARDS.filter(c => c.tier === tier);
+  offersRow.style.cssText = 'display:flex;gap:6px;';
+  var getOffer = function() {
+    var r = Math.random();
+    var tier = r < 0.3 ? 'BRONZE' : r < 0.7 ? 'SILVER' : 'GOLD';
+    var pool = TORCH_CARDS.filter(function(c) { return c.tier === tier; });
     return pool[Math.floor(Math.random() * pool.length)];
   };
-  const offers = [getOffer(), getOffer(), getOffer()];
-
-  offers.forEach(card => {
+  [getOffer(), getOffer(), getOffer()].forEach(function(card) {
     var canAfford = humanPts >= card.cost;
-    var alreadyHas3 = gs.humanTorchCards.length >= 3;
-    var enabled = canAfford && !alreadyHas3;
-
-    // Build torch card with Centered Flame V1 design
-    var cardEl = buildTorchCard(card, 90, 130);
+    var cardEl = buildTorchCard(card, 80, 112);
     cardEl.style.flex = '1';
-    cardEl.style.cursor = enabled ? 'pointer' : 'not-allowed';
-    cardEl.style.opacity = enabled ? '1' : '0.5';
-    cardEl.style.transition = 'transform 0.1s';
-
-    // Add cost overlay
-    var costEl = document.createElement('div');
-    costEl.style.cssText = "position:absolute;bottom:8px;left:0;right:0;text-align:center;font-family:'Rajdhani';font-weight:700;font-size:8px;color:var(--l-green);z-index:2;";
-    costEl.textContent = card.cost + 'P';
-    cardEl.appendChild(costEl);
-
-    if (enabled) {
-      cardEl.onclick = () => {
+    cardEl.style.cursor = canAfford ? 'pointer' : 'not-allowed';
+    cardEl.style.opacity = canAfford ? '1' : '0.4';
+    if (canAfford) {
+      cardEl.onclick = function() {
         SND.snap();
         gs.humanTorchCards.push(card.id);
-        if (isHumanCT) gs.ctTorchPts -= card.cost;
-        else gs.irTorchPts -= card.cost;
-        render();
+        gs.ctTorchPts -= card.cost;
+        setGs(function(s) { return Object.assign({}, s, { screen: 'halftime' }); });
       };
-      cardEl.onmouseenter = () => cardEl.style.transform = 'scale(1.05)';
-      cardEl.onmouseleave = () => cardEl.style.transform = 'scale(1)';
     }
     offersRow.appendChild(cardEl);
   });
   shopBox.appendChild(offersRow);
   content.appendChild(shopBox);
 
-  // Resume Button
+  // Resume button
   var resumeBtn = document.createElement('button');
   resumeBtn.className = 'btn-blitz';
-  resumeBtn.style.cssText = 'width:100%;max-width:300px;background:var(--l-green);border-color:var(--l-green);color:#000;font-size:16px;box-shadow:6px 6px 0 #006622;';
+  resumeBtn.style.cssText = "width:100%;max-width:320px;font-size:14px;background:linear-gradient(180deg,#FFB800,#FF4511);border-color:#FF4511;color:#000;letter-spacing:2px;";
   resumeBtn.textContent = 'START SECOND HALF \u2192';
-  resumeBtn.onclick = () => {
+  resumeBtn.onclick = function() {
     SND.snap();
     gs.startSecondHalf();
-    setGs(s => ({ ...s, screen: 'gameplay' }));
+    setGs(function(s) { return Object.assign({}, s, { screen: 'gameplay' }); });
   };
   content.appendChild(resumeBtn);
 

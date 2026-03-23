@@ -2010,15 +2010,27 @@ export function buildGameplay() {
   function showPossCut(ev, done) {
     const s = gs.getSummary();
     const nt = s.possession==='CT' ? hTeam : oTeam;
+    const isYourBall = s.possession === hAbbr;
     const ov = document.createElement('div'); ov.className = 'T-ov T-ov-black T-ov-poss';
-    ov.style.cssText = 'opacity:0;transition:opacity .25s';
+    ov.style.cssText = 'opacity:0;transition:opacity .25s;pointer-events:auto;cursor:pointer;';
     ov.innerHTML =
-      `<div class="T-poss-score">${s.ctScore} \u2013 ${s.irScore}</div>`+
-      `<div class="T-poss-who" style="color:${nt.accent}">${nt.name} BALL</div>`+
-      `<div class="T-poss-tag">${tag(ev)}</div>`;
+      // Score with team badges
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
+        '<div style="text-align:center;">' + renderTeamBadge(GS.team, 28) +
+          "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:24px;color:#fff;\">" + s.ctScore + '</div></div>' +
+        "<div style=\"font-family:'Teko';font-size:18px;color:#555;\">\u2014</div>" +
+        '<div style="text-align:center;">' + renderTeamBadge(GS.opponent, 28) +
+          "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:24px;color:#fff;\">" + s.irScore + '</div></div>' +
+      '</div>' +
+      // Header
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:" + nt.accent + ";letter-spacing:3px;margin-bottom:4px;\">" + (isYourBall ? 'YOUR BALL' : 'CHANGE OF POSSESSION') + '</div>' +
+      `<div class="T-poss-tag" style="font-family:'Rajdhani';font-size:12px;color:#aaa;">${tag(ev)}</div>`;
+    // Tap to skip
+    ov.onclick = function() { ov.style.opacity='0'; setTimeout(function() { ov.remove(); done(); }, 250); };
     el.appendChild(ov);
     requestAnimationFrame(() => ov.style.opacity='1');
-    setTimeout(() => { ov.style.opacity='0'; setTimeout(() => { ov.remove(); done(); }, 250); }, 2000);
+    // Auto-advance after 2s
+    setTimeout(() => { if (ov.parentNode) { ov.style.opacity='0'; setTimeout(() => { ov.remove(); done(); }, 250); } }, 2000);
   }
 
   // ── DRIVE SUMMARY ──
