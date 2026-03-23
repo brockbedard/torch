@@ -399,7 +399,7 @@ export function buildVisualTest() {
     sb.style.cssText = 'width:375px;background:#0E0A04;border:1px solid #333;border-radius:8px;overflow:hidden;margin-bottom:12px;';
     sb.innerHTML =
       "<div style='display:flex;justify-content:space-between;align-items:center;padding:6px 8px;'>" +
-        "<div style='text-align:center;'><div style=\"font-family:'Teko';font-size:16px;color:#C4A265;\">SENTINELS</div><div style=\"font-family:'Rajdhani';font-size:24px;color:#fff;\">14</div></div>" +
+        "<div style='text-align:center;'><div style=\"font-family:'Teko';font-size:16px;color:#C4A265;\">BOARS</div><div style=\"font-family:'Rajdhani';font-size:24px;color:#fff;\">14</div></div>" +
         "<div style='text-align:center;'><div style=\"font-family:'Teko';font-size:14px;color:#FFB800;\">FIRST HALF</div><div style=\"font-family:'Rajdhani';font-size:10px;color:#aaa;\">8/20</div></div>" +
         "<div style='text-align:center;'><div style=\"font-family:'Teko';font-size:16px;color:#39FF14;\">SERPENTS</div><div style=\"font-family:'Rajdhani';font-size:24px;color:#fff;\">7</div></div>" +
       "</div>" +

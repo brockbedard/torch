@@ -84,12 +84,12 @@ Home → Daily Drive → Gameplay (1 half) → Result + Share
 
 | Team | Colors | Offense | Defense | OFF/DEF |
 |------|--------|---------|---------|---------|
-| **Sentinels** (Ridgemont) | Crimson #8B0000 / Gold #C4A265 | Run & Shoot | Press Man | 4/3 |
-| **Timber Wolves** (Northern Pines) | Green #1B3A2D / Silver #D4D4D4 | Triple Option | Cover 3 Zone | 3/4 |
+| **Boars** (Ridgemont) | Crimson #8B0000 / Gold #C4A265 | Run & Shoot | Press Man | 4/3 |
+| **Werewolves** (Northern Pines) | Midnight #1A1A2E / Silver #C0C0C0 | Triple Option | Cover 3 Zone | 3/4 |
 | **Stags** (Crestview) | Orange #F28C28 / Black #1C1C1C | Spread RPO | Swarm Blitz | 5/2 |
 | **Serpents** (Blackwater) | Purple #2E0854 / Green #39FF14 | Air Raid | Pattern Match | 3/4 |
 
-**Counter-play:** Sentinels > Serpents > Stags > Wolves > Sentinels
+**Counter-play:** Boars > Serpents > Stags > Werewolves > Boars
 
 ## Key Systems
 
