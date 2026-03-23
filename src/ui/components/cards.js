@@ -342,11 +342,11 @@ export function buildPlayV1(p, w, h) {
   var bgTint = isOffense ? '#0A1A06' : '#0A1420';
   card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:2px solid '+p.catColor+'44;background:linear-gradient(180deg,'+bgTint+' 0%,#0A0804 100%);overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.5);display:flex;flex-direction:column;position:relative;';
 
-  // Watermark icon in center (behind content)
+  // Watermark icon in center — big and bold, immediately recognizable
   var iconPath = PLAY_TYPE_ICONS[p.cat] || PLAY_TYPE_ICONS['RUN'];
-  var iconSize = Math.round(w * 0.6);
-  var watermark = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:0;opacity:0.08;">' +
-    '<svg viewBox="0 0 48 48" width="'+iconSize+'" height="'+iconSize+'" fill="none" stroke="'+p.catColor+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="'+iconPath+'"/></svg></div>';
+  var iconSize = Math.max(56, Math.round(w * 0.85));
+  var watermark = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:0;opacity:0.18;">' +
+    '<svg viewBox="0 0 48 48" width="'+iconSize+'" height="'+iconSize+'" fill="none" stroke="'+p.catColor+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="'+iconPath+'"/></svg></div>';
 
   // Risk indicator color
   var riskColor = RISK_COLORS[p.risk] || '#aaa';
