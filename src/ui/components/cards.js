@@ -335,7 +335,7 @@ export function buildPlayV1(p, w, h) {
   }
 
   // Name font size — auto-shrink for long names
-  var nameFs = p.name.length > 14 ? 11 : p.name.length > 10 ? 13 : 15;
+  var nameFs = p.name.length > 16 ? 10 : p.name.length > 12 ? 12 : 14;
 
   card.innerHTML =
     // 1. Color stripe
@@ -344,7 +344,7 @@ export function buildPlayV1(p, w, h) {
     '<div style="position:absolute;top:6px;right:6px;padding:1px 5px;border-radius:3px;background:'+tc.accent+'26;border:1px solid '+tc.accent+'66;z-index:2;">' +
       "<div style=\"font-family:'Teko';font-weight:700;font-size:9px;color:"+tc.accent+";letter-spacing:2px;line-height:1.2;\">"+typeKey+'</div></div>' +
     // 3. Play name
-    "<div style=\"padding:10px 8px 4px;padding-right:40px;font-family:'Teko';font-weight:700;font-size:"+nameFs+"px;color:#fff;letter-spacing:1px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;z-index:1;\">"+p.name+'</div>' +
+    "<div style=\"padding:10px 8px 4px;padding-right:40px;font-family:'Teko';font-weight:700;font-size:"+nameFs+"px;color:#fff;letter-spacing:"+(nameFs <= 10 ? '0' : '1')+"px;line-height:1;white-space:nowrap;position:relative;z-index:1;\">"+p.name+'</div>' +
     // 4. Description
     "<div style=\"padding:0 8px 8px;font-family:'Rajdhani';font-size:9px;color:rgba(255,255,255,0.5);line-height:1.3;min-height:24px;position:relative;z-index:1;\">"+(p.desc || '')+'</div>' +
     // Spacer
