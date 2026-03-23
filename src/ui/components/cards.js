@@ -337,10 +337,10 @@ export function buildPlayV1(p, w, h) {
     .replace('SVGW', Math.round(w*0.75)).replace('SVGH', Math.round(h*0.45))
     .replace('fill="none">', 'width="'+Math.round(w*0.75)+'" height="'+Math.round(h*0.45)+'" fill="none">');
   var card = document.createElement('div');
-  // Subtle color tint: offense cards get green tint, defense get blue tint
+  // Color tint: offense = green, defense = blue — visible at a glance
   var isOffense = p.catColor === '#7ACC00';
-  var bgTint = isOffense ? '#0A1A06' : '#0A1420';
-  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:2px solid '+p.catColor+'44;background:linear-gradient(180deg,'+bgTint+' 0%,#0A0804 100%);overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.5);display:flex;flex-direction:column;position:relative;';
+  var bgTint = isOffense ? '#122E0A' : '#0C1828';
+  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:2px solid '+p.catColor+'55;background:linear-gradient(180deg,'+bgTint+' 0%,#0A0804 80%);overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.5);display:flex;flex-direction:column;position:relative;';
 
   // Watermark icon in center — big and bold, immediately recognizable
   var iconPath = PLAY_TYPE_ICONS[p.cat] || PLAY_TYPE_ICONS['RUN'];
