@@ -1,198 +1,200 @@
 /**
- * TORCH v0.22 — Pregame Sequence
- * 5-second broadcast-style sequence between team select and gameplay.
- * Beat-by-beat: flame → split → badges slam → VS → names + conditions → field reveal
+ * TORCH v0.22.1 — Pregame Sequence ("Banded Clash")
+ * Full-screen symmetrical layout: TORCH header → Away band → VS → Home band → Weather card
+ * 4.5s display, tap-to-skip, progressive shortening after 5 games.
  */
 
 import { SND } from '../../engine/sound.js';
 import { GS, setGs } from '../../state.js';
 import { TEAMS } from '../../data/teams.js';
 import { renderTeamBadge } from '../../data/teamLogos.js';
+import { renderFlamePips } from '../components/cards.js';
 import AudioStateManager from '../../engine/audioManager.js';
+
+// Weather → temperature mapping
+var WEATHER_TEMP = { clear: '72°', rain: '58°', windy: '64°', snow: '28°' };
+var WEATHER_ICON = { clear: '☀️', rain: '🌧️', windy: '💨', snow: '❄️' };
+var FIELD_LABEL = { turf: 'TURF', grass: 'GRASS', mud: 'MUD', dome: 'DOME' };
 
 export function buildPregame() {
   AudioStateManager.setState('pre_game');
+
   var el = document.createElement('div');
-  el.style.cssText = 'position:fixed;inset:0;background:#0A0804;z-index:1000;display:flex;align-items:center;justify-content:center;overflow:hidden;';
+  el.style.cssText = 'position:fixed;inset:0;background:#0A0804;z-index:1000;display:flex;flex-direction:column;overflow:hidden;cursor:pointer;';
 
   var team = TEAMS[GS.team];
   var opp = TEAMS[GS.opponent];
   if (!team || !opp) { setGs(function(s) { return Object.assign({}, s, { screen: 'gameplay' }); }); return el; }
 
   var conditions = GS.gameConditions || { weather: 'clear', field: 'turf', crowd: 'home' };
-  var season = GS.season || {};
-  var gameNum = (season.currentGame || 0) + 1;
   var gamesPlayed = parseInt(localStorage.getItem('torch_games_played') || '0');
   var isFast = gamesPlayed >= 5;
-  var speed = isFast ? 0.5 : 1.0;
 
-  // Inject keyframe animations
+  // Determine home/away: crowd field tells us
+  var isHome = conditions.crowd === 'home';
+  var homeTeam = isHome ? team : opp;
+  var homeId = isHome ? GS.team : GS.opponent;
+  var awayTeam = isHome ? opp : team;
+  var awayId = isHome ? GS.opponent : GS.team;
+
+  // Flame SVG path
+  var FLAME = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
+
+  // ── STYLES ──
   var sty = document.createElement('style');
   sty.textContent =
-    '@keyframes pgFlameIn{0%{opacity:0;transform:scale(0.5)}50%{opacity:1;transform:scale(1.1)}100%{opacity:1;transform:scale(1)}}' +
-    '@keyframes pgSplit{0%{clip-path:inset(0 50% 0 50%)}100%{clip-path:inset(0 0 0 0)}}' +
-    '@keyframes pgSlamL{0%{transform:translateX(-200px) scale(0);opacity:0}70%{transform:translateX(10px) scale(1.3);opacity:1}100%{transform:translateX(0) scale(1);opacity:1}}' +
-    '@keyframes pgSlamR{0%{transform:translateX(200px) scale(0);opacity:0}70%{transform:translateX(-10px) scale(1.3);opacity:1}100%{transform:translateX(0) scale(1);opacity:1}}' +
-    '@keyframes pgVsSlam{0%{transform:translate(-50%,-50%) scale(3);opacity:0}60%{transform:translate(-50%,-50%) scale(0.9);opacity:1}100%{transform:translate(-50%,-50%) scale(1)}}' +
-    '@keyframes pgShake{0%,100%{transform:translateX(0)}15%{transform:translateX(-8px)}30%{transform:translateX(8px)}45%{transform:translateX(-5px)}60%{transform:translateX(5px)}75%{transform:translateX(-2px)}}' +
-    '@keyframes pgWipeUp{0%{clip-path:inset(100% 0 0 0)}100%{clip-path:inset(0 0 0 0)}}' +
-    '@keyframes pgFadeIn{0%{opacity:0}100%{opacity:1}}' +
-    '@keyframes pgBarFill{0%{width:0}100%{width:var(--fill)}}' +
-    '@keyframes pgFlash{0%{opacity:0.6}100%{opacity:0}}';
+    '@keyframes pgFlame{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}' +
+    '@keyframes pgSlideL{0%{transform:translateX(-100%);opacity:0}100%{transform:translateX(0);opacity:1}}' +
+    '@keyframes pgSlideR{0%{transform:translateX(100%);opacity:0}100%{transform:translateX(0);opacity:1}}' +
+    '@keyframes pgVsGlow{0%,100%{text-shadow:0 0 20px rgba(255,184,0,0.4),0 0 40px rgba(255,69,17,0.2)}50%{text-shadow:0 0 30px rgba(255,184,0,0.8),0 0 60px rgba(255,69,17,0.4)}}' +
+    '@keyframes pgFadeUp{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}' +
+    '@keyframes pgShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}' +
+    '@keyframes pgVsSlam{0%{transform:scale(3);opacity:0}60%{transform:scale(0.9);opacity:1}100%{transform:scale(1)}}';
   el.appendChild(sty);
 
-  // ── BEAT 0 (0-0.3s): Dark screen, TORCH flame logo pulses ──
-  var flame = document.createElement('div');
-  flame.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Teko';font-weight:700;font-size:48px;color:#FF6B00;text-shadow:0 0 30px rgba(255,107,0,0.6);animation:pgFlameIn " + (300 * speed) + "ms ease-out both;letter-spacing:6px;z-index:10;";
-  flame.textContent = 'TORCH';
-  el.appendChild(flame);
+  // ── BACKGROUND ELEMENTS ──
+  var bgGlow = document.createElement('div');
+  bgGlow.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:300px;height:300px;background:radial-gradient(circle,rgba(255,69,17,0.10) 0%,rgba(255,184,0,0.04) 40%,transparent 70%);pointer-events:none;z-index:0;';
+  el.appendChild(bgGlow);
+  var bgLine = document.createElement('div');
+  bgLine.style.cssText = 'position:absolute;top:0;bottom:0;left:50%;width:1px;background:linear-gradient(180deg,transparent 5%,rgba(255,184,0,0.08) 25%,rgba(255,69,17,0.12) 50%,rgba(255,184,0,0.08) 75%,transparent 95%);pointer-events:none;z-index:0;';
+  el.appendChild(bgLine);
 
-  SND.click(); // Muffled start sound
+  // ── A) TORCH HEADER ──
+  var header = document.createElement('div');
+  header.style.cssText = 'flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 0 12px;z-index:1;opacity:0;animation:pgFadeUp 0.6s ease-out both;';
+  header.innerHTML =
+    '<svg viewBox="0 0 44 44" width="36" height="44" fill="none" style="animation:pgFlame 2s ease-in-out infinite;"><defs><linearGradient id="pgf" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#FFB800"/></linearGradient></defs><path d="' + FLAME + '" fill="url(#pgf)"/></svg>' +
+    "<div style=\"font-family:'Teko';font-weight:700;font-size:16px;color:#FFB800;letter-spacing:10px;margin-top:6px;\">GAME DAY</div>" +
+    "<div style=\"font-family:'Teko';font-size:11px;color:#FF6B00;letter-spacing:6px;opacity:0.7;\">TORCH FOOTBALL</div>";
+  el.appendChild(header);
 
-  // ── BEAT 1 (0.3-0.8s): Diagonal split in team colors ──
-  setTimeout(function() {
-    flame.style.transition = 'opacity 0.2s';
-    flame.style.opacity = '0';
+  // ── B) AWAY TEAM BAND ──
+  var awayBand = document.createElement('div');
+  var ad = isFast ? '0.2s' : '0.5s';
+  var awayDelay = isFast ? '0.1s' : '0.4s';
+  awayBand.style.cssText = 'flex-shrink:0;display:flex;align-items:center;gap:14px;padding:20px 22px;border-left:5px solid ' + awayTeam.accent + ';z-index:1;' +
+    'background:linear-gradient(90deg,' + awayTeam.colors.primary + ' 0%,' + awayTeam.colors.primary + '80 85%,transparent 100%);' +
+    'opacity:0;animation:pgSlideL ' + ad + ' ease-out ' + awayDelay + ' both;';
+  awayBand.innerHTML = renderTeamBadge(awayId, 72) + buildTeamInfo(awayTeam, 'AWAY', 'left');
+  el.appendChild(awayBand);
 
-    var split = document.createElement('div');
-    split.style.cssText = 'position:absolute;inset:0;z-index:2;animation:pgSplit ' + (500 * speed) + 'ms ease-out both;';
-    split.innerHTML =
-      '<div style="position:absolute;top:0;left:0;width:50%;height:100%;background:linear-gradient(135deg,' + team.colors.primary + ' 0%,' + team.colors.primary + '88 100%);"></div>' +
-      '<div style="position:absolute;top:0;right:0;width:50%;height:100%;background:linear-gradient(225deg,' + opp.colors.primary + ' 0%,' + opp.colors.primary + '88 100%);"></div>';
-    el.appendChild(split);
-  }, 300 * speed);
+  // ── C) VS COLLISION ZONE ──
+  var vsZone = document.createElement('div');
+  var vsDelay = isFast ? '0.3s' : '0.8s';
+  vsZone.style.cssText = 'flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:12px;padding:16px 24px;z-index:1;' +
+    'background:linear-gradient(90deg,transparent 5%,rgba(255,69,17,0.06) 50%,transparent 95%);' +
+    'opacity:0;animation:pgFadeUp 0.4s ease-out ' + vsDelay + ' both;';
+  vsZone.innerHTML =
+    '<div style="flex:1;height:3px;background:linear-gradient(90deg,#FF4511,#FFB800);border-radius:2px;"></div>' +
+    "<div style=\"font-family:'Teko';font-weight:900;font-size:56px;color:#fff;-webkit-text-stroke:2px #FFB800;letter-spacing:4px;line-height:1;animation:pgVsGlow 2.5s ease-in-out infinite;\">VS</div>" +
+    '<div style="flex:1;height:3px;background:linear-gradient(90deg,#FFB800,#FF4511);border-radius:2px;"></div>';
+  el.appendChild(vsZone);
 
-  // ── BEAT 2 (0.8-1.5s): Team badges slam in from sides ──
-  setTimeout(function() {
-    // Left badge (player's team)
-    var badgeL = document.createElement('div');
-    badgeL.style.cssText = 'position:absolute;top:35%;left:18%;transform:translateX(-200px);z-index:5;animation:pgSlamL ' + (400 * speed) + 'ms cubic-bezier(0.22,1.3,0.36,1) both;';
-    badgeL.innerHTML = renderTeamBadge(GS.team, 90);
-    el.appendChild(badgeL);
+  // ── D) HOME TEAM BAND ──
+  var homeBand = document.createElement('div');
+  var homeDelay = isFast ? '0.2s' : '0.6s';
+  homeBand.style.cssText = 'flex-shrink:0;display:flex;align-items:center;gap:14px;padding:20px 22px;border-right:5px solid ' + homeTeam.accent + ';z-index:1;' +
+    'background:linear-gradient(270deg,' + homeTeam.colors.primary + ' 0%,' + homeTeam.colors.primary + '80 85%,transparent 100%);' +
+    'justify-content:flex-end;' +
+    'opacity:0;animation:pgSlideR ' + ad + ' ease-out ' + homeDelay + ' both;';
+  homeBand.innerHTML = buildTeamInfo(homeTeam, 'HOME', 'right') + renderTeamBadge(homeId, 72);
+  el.appendChild(homeBand);
 
-    // Right badge (opponent)
-    var badgeR = document.createElement('div');
-    badgeR.style.cssText = 'position:absolute;top:35%;right:18%;transform:translateX(200px);z-index:5;animation:pgSlamR ' + (400 * speed) + 'ms cubic-bezier(0.22,1.3,0.36,1) both;';
-    badgeR.innerHTML = renderTeamBadge(GS.opponent, 90);
-    el.appendChild(badgeR);
+  // ── E) WEATHER / CONDITIONS CARD ──
+  var weatherWrap = document.createElement('div');
+  var wxDelay = isFast ? '0.4s' : '1.2s';
+  weatherWrap.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1;padding:16px 24px;opacity:0;animation:pgFadeUp 0.5s ease-out ' + wxDelay + ' both;';
 
-    // White flash
-    var flash = document.createElement('div');
-    flash.style.cssText = 'position:absolute;inset:0;background:#fff;z-index:6;animation:pgFlash 150ms ease-out both;';
-    el.appendChild(flash);
+  var wxIcon = WEATHER_ICON[conditions.weather] || '☀️';
+  var wxName = (conditions.weather || 'clear').toUpperCase();
+  var wxTemp = WEATHER_TEMP[conditions.weather] || '72°';
+  var fieldSurface = FIELD_LABEL[conditions.field] || (conditions.field || 'TURF').toUpperCase();
 
-    SND.hit(); // Impact sound for badge slam
-  }, 800 * speed);
+  var wxCard = document.createElement('div');
+  wxCard.style.cssText = 'display:flex;align-items:center;border-radius:14px;background:rgba(255,184,0,0.04);border:1px solid #2a2a2a;padding:14px 0;width:100%;max-width:320px;';
+  wxCard.innerHTML =
+    // Column 1: Weather
+    '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">' +
+      '<div style="font-size:28px;line-height:1;">' + wxIcon + '</div>' +
+      "<div style=\"font-family:'Teko';font-size:14px;color:#FFB800;letter-spacing:2px;\">" + wxName + '</div>' +
+    '</div>' +
+    // Divider
+    '<div style="width:1px;height:40px;background:#2a2a2a;"></div>' +
+    // Column 2: Temperature
+    '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">' +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:#fff;\">" + wxTemp + '</div>' +
+      "<div style=\"font-family:'Rajdhani';font-size:10px;color:#555;letter-spacing:3px;\">TEMPERATURE</div>" +
+    '</div>' +
+    // Divider
+    '<div style="width:1px;height:40px;background:#2a2a2a;"></div>' +
+    // Column 3: Surface
+    '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">' +
+      "<div style=\"font-family:'Teko';font-size:24px;color:#888;\">" + fieldSurface + '</div>' +
+      "<div style=\"font-family:'Rajdhani';font-size:10px;color:#555;letter-spacing:3px;\">SURFACE</div>" +
+    '</div>';
+  weatherWrap.appendChild(wxCard);
 
-  // ── BEAT 3 (1.5-2.0s): "VS" slams center with screen shake ──
-  setTimeout(function() {
-    var vs = document.createElement('div');
-    vs.style.cssText = "position:absolute;top:42%;left:50%;z-index:8;font-family:'Teko';font-weight:700;font-size:56px;color:#fff;text-shadow:0 0 30px rgba(255,107,0,0.8),3px 3px 0 rgba(0,0,0,0.9);animation:pgVsSlam " + (300 * speed) + "ms cubic-bezier(0.22,1.3,0.36,1) both;letter-spacing:4px;";
-    vs.textContent = 'VS';
-    el.appendChild(vs);
+  // Shimmer bar
+  var shimmer = document.createElement('div');
+  shimmer.style.cssText = 'width:80%;height:2px;margin-top:16px;border-radius:1px;background:linear-gradient(90deg,#FF4511,#FFB800,#FF4511);background-size:200% 100%;animation:pgShimmer 3s linear infinite;';
+  weatherWrap.appendChild(shimmer);
+  el.appendChild(weatherWrap);
 
-    // Screen shake
-    el.style.animation = 'pgShake ' + (300 * speed) + 'ms ease-out';
-    setTimeout(function() { el.style.animation = ''; }, 350 * speed);
+  // ── SOUNDS ──
+  SND.click();
+  setTimeout(function() { SND.hit(); }, isFast ? 300 : 800);
 
-    // Particle burst at center
-    for (var i = 0; i < 12; i++) {
-      var p = document.createElement('div');
-      var angle = (i / 12) * 360;
-      var dist = 40 + Math.random() * 60;
-      p.style.cssText = 'position:absolute;top:45%;left:50%;width:4px;height:4px;border-radius:50%;background:#FFB800;z-index:7;' +
-        'transition:all ' + (400 + Math.random() * 300) + 'ms ease-out;transform:translate(-50%,-50%);opacity:1;';
-      el.appendChild(p);
-      setTimeout((function(particle, a, d) {
-        return function() {
-          particle.style.transform = 'translate(calc(-50% + ' + (Math.cos(a * Math.PI / 180) * d) + 'px), calc(-50% + ' + (Math.sin(a * Math.PI / 180) * d) + 'px))';
-          particle.style.opacity = '0';
-        };
-      })(p, angle, dist), 20);
-    }
-
-    SND.snap(); // VS impact
-    if (navigator.vibrate) try { navigator.vibrate(60); } catch(e) {}
-  }, 1500 * speed);
-
-  // ── BEAT 4 (2.0-3.0s): Team names + conditions ──
-  setTimeout(function() {
-    // Player team name (left)
-    var nameL = document.createElement('div');
-    nameL.style.cssText = "position:absolute;top:58%;left:18%;z-index:8;font-family:'Teko';font-weight:700;font-size:22px;color:#fff;letter-spacing:2px;font-style:italic;text-shadow:2px 2px 0 rgba(0,0,0,0.8);animation:pgWipeUp " + (300 * speed) + "ms ease-out both;";
-    nameL.textContent = team.name;
-    el.appendChild(nameL);
-
-    // "vs" connector between names
-    var vsLabel = document.createElement('div');
-    vsLabel.style.cssText = "position:absolute;top:58%;left:50%;transform:translateX(-50%);z-index:8;font-family:'Rajdhani';font-weight:700;font-size:14px;color:#555;letter-spacing:2px;animation:pgFadeIn " + (200 * speed) + "ms ease-out 50ms both;";
-    vsLabel.textContent = 'vs';
-    el.appendChild(vsLabel);
-
-    // Opponent name (right)
-    var nameR = document.createElement('div');
-    nameR.style.cssText = "position:absolute;top:58%;right:18%;z-index:8;font-family:'Teko';font-weight:700;font-size:22px;color:#fff;letter-spacing:2px;font-style:italic;text-shadow:2px 2px 0 rgba(0,0,0,0.8);text-align:right;animation:pgWipeUp " + (300 * speed) + "ms ease-out 100ms both;";
-    nameR.textContent = opp.name;
-    el.appendChild(nameR);
-
-    // Conditions badge
-    var condEl = document.createElement('div');
-    condEl.style.cssText = "position:absolute;top:68%;left:50%;transform:translateX(-50%);z-index:8;display:flex;gap:8px;font-family:'Rajdhani';font-weight:700;font-size:11px;color:#aaa;letter-spacing:1px;animation:pgFadeIn " + (400 * speed) + "ms ease-out 200ms both;";
-    condEl.innerHTML =
-      '<span style="color:#FFB800">' + conditions.weather.toUpperCase() + '</span>' +
-      '<span>\u00b7</span><span>' + conditions.field.toUpperCase() + '</span>' +
-      '<span>\u00b7</span><span style="color:' + (conditions.crowd === 'home' ? '#00ff44' : conditions.crowd === 'away' ? '#ff0040' : '#aaa') + '">' + conditions.crowd.toUpperCase() + '</span>';
-    el.appendChild(condEl);
-
-    // Season record if applicable
-    if (season.results && season.results.length > 0) {
-      var recordEl = document.createElement('div');
-      recordEl.style.cssText = "position:absolute;top:74%;left:50%;transform:translateX(-50%);z-index:8;font-family:'Rajdhani';font-size:10px;color:#666;animation:pgFadeIn " + (300 * speed) + "ms ease-out 300ms both;";
-      var wins = season.results.filter(function(r) { return r.won; }).length;
-      var losses = season.results.length - wins;
-      recordEl.textContent = 'GAME ' + gameNum + ' \u00b7 SEASON ' + wins + '-' + losses;
-      el.appendChild(recordEl);
-    }
-  }, 2000 * speed);
-
-  // ── BEAT 5 (3.0-4.0s): Stat comparison bars ──
-  setTimeout(function() {
-    var statsWrap = document.createElement('div');
-    statsWrap.style.cssText = 'position:absolute;top:80%;left:50%;transform:translateX(-50%);z-index:8;width:280px;display:flex;flex-direction:column;gap:4px;';
-
-    var stats = [
-      { label: 'OFF', left: team.ratings.offense, right: opp.ratings.offense },
-      { label: 'DEF', left: team.ratings.defense, right: opp.ratings.defense },
-    ];
-    stats.forEach(function(st, si) {
-      var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:4px;opacity:0;animation:pgFadeIn 200ms ease-out ' + (si * 200) + 'ms both;';
-      row.innerHTML =
-        "<div style=\"width:30px;font-family:'Rajdhani';font-size:9px;color:#888;text-align:right;\">" + st.label + "</div>" +
-        '<div style="flex:1;height:6px;background:#1E1610;border-radius:3px;overflow:hidden;display:flex;">' +
-          '<div style="height:100%;background:' + team.colors.primary + ';border-radius:3px;--fill:' + (st.left * 20) + '%;animation:pgBarFill 400ms ease-out ' + (si * 200 + 100) + 'ms both;"></div>' +
-        '</div>' +
-        '<div style="flex:1;height:6px;background:#1E1610;border-radius:3px;overflow:hidden;display:flex;justify-content:flex-end;">' +
-          '<div style="height:100%;background:' + opp.colors.primary + ';border-radius:3px;--fill:' + (st.right * 20) + '%;animation:pgBarFill 400ms ease-out ' + (si * 200 + 100) + 'ms both;"></div>' +
-        '</div>';
-      statsWrap.appendChild(row);
-    });
-    el.appendChild(statsWrap);
-  }, 3000 * speed);
-
-  // ── BEAT 6 (4.0-5.0s): Transition to gameplay ──
-  setTimeout(function() {
-    // Track games played for progressive shortening
+  // ── TAP TO SKIP ──
+  var skipped = false;
+  function skip() {
+    if (skipped) return;
+    skipped = true;
     localStorage.setItem('torch_games_played', String(gamesPlayed + 1));
-
-    // Fade to black then navigate
-    el.style.transition = 'opacity 0.4s';
+    el.style.transition = 'opacity 0.3s';
     el.style.opacity = '0';
-
     setTimeout(function() {
       setGs(function(s) { return Object.assign({}, s, { screen: 'gameplay' }); });
-    }, 400);
-  }, (isFast ? 2500 : 4500));
+    }, 300);
+  }
+  el.onclick = skip;
+
+  // ── AUTO-ADVANCE ──
+  setTimeout(function() {
+    if (!skipped) skip();
+  }, isFast ? 2500 : 4500);
 
   return el;
+}
+
+// ── Helper: build team info block ──
+function buildTeamInfo(t, label, align) {
+  var isRight = align === 'right';
+  var ta = isRight ? 'text-align:right;' : '';
+  var pillBg = label === 'HOME' ? 'background:rgba(255,184,0,0.2);color:#FFB800;' : 'background:rgba(255,255,255,0.08);color:#888;';
+
+  // School name without mascot — use school field
+  var schoolName = (t.school || '').toUpperCase();
+
+  // Flame pips
+  var offPips = renderFlamePips(t.ratings.offense, 5, '#00ff44', 13);
+  var defPips = renderFlamePips(t.ratings.defense, 5, '#4488ff', 13);
+
+  var pipsRow = isRight
+    ? '<div style="display:flex;align-items:center;gap:16px;justify-content:flex-end;margin-top:4px;">' +
+        "<span style=\"font-family:'Rajdhani';font-size:10px;color:#888;letter-spacing:1px;\">DEF</span>" + defPips +
+        "<span style=\"font-family:'Rajdhani';font-size:10px;color:#888;letter-spacing:1px;margin-left:4px;\">OFF</span>" + offPips +
+      '</div>'
+    : '<div style="display:flex;align-items:center;gap:16px;margin-top:4px;">' +
+        "<span style=\"font-family:'Rajdhani';font-size:10px;color:#888;letter-spacing:1px;\">OFF</span>" + offPips +
+        "<span style=\"font-family:'Rajdhani';font-size:10px;color:#888;letter-spacing:1px;margin-left:4px;\">DEF</span>" + defPips +
+      '</div>';
+
+  return '<div style="' + ta + 'flex:1;min-width:0;">' +
+    "<div style=\"display:inline-block;padding:2px 8px;border-radius:3px;font-family:'Rajdhani';font-weight:700;font-size:10px;letter-spacing:2px;" + pillBg + "\">" + label + '</div>' +
+    "<div style=\"font-family:'Rajdhani';font-size:12px;color:rgba(255,255,255,0.45);letter-spacing:2px;margin-top:4px;" + ta + "\">" + schoolName + '</div>' +
+    "<div style=\"font-family:'Teko';font-weight:700;font-size:38px;color:#fff;letter-spacing:2px;line-height:1;text-shadow:0 2px 8px " + t.colors.primary + ";" + ta + "\">" + t.name + '</div>' +
+    "<div style=\"font-family:'Teko';font-size:13px;color:" + t.accent + ";letter-spacing:3px;" + ta + "\">" + t.offScheme + '</div>' +
+    pipsRow +
+    '</div>';
 }

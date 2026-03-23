@@ -581,11 +581,9 @@ export function buildGameplay() {
         `<div class="T-sb-icon">${irBadge}</div>` +
       `</div>` +
       `<div class="T-sb-sit">` +
-        (isHumanCT ? hTorchHTML + '<div class="T-sb-sit-div"></div>' : '') +
-        `<div class="T-sb-sit-down">${dn} & ${conversionMode ? 'GOAL' : distLabel(s.distance, s.yardsToEndzone)}</div>` +
+        `<div class="T-sb-sit-down" style="font-family:'Teko';font-size:16px;font-weight:700;color:#FF6B00;letter-spacing:1px">${dn} & ${conversionMode ? 'GOAL' : distLabel(s.distance, s.yardsToEndzone)}</div>` +
         `<div class="T-sb-sit-div"></div>` +
-        `<div class="T-sb-sit-ball">BALL ON <span style="color:${possTeam.accent}">${ballLabel}</span></div>` +
-        (!isHumanCT ? '<div class="T-sb-sit-div"></div>' + hTorchHTML : '') +
+        `<div class="T-sb-sit-ball" style="font-family:'Teko';font-size:15px;font-weight:700;color:#e8e6ff;opacity:1;letter-spacing:1px">BALL ON <span style="color:${possTeam.accent}">${ballLabel}</span></div>` +
       `</div>`;
     drawTorchBanner();
   }
@@ -1541,8 +1539,8 @@ export function buildGameplay() {
       panel.appendChild(sideBar);
     }
     const inst = document.createElement('div'); inst.className = 'T-inst';
-    if (phase === 'play') inst.textContent = isOff ? 'Drag a play onto the field' : 'Drag a scheme onto the field';
-    else if (phase === 'player') inst.textContent = 'Drag a player onto the field';
+    if (phase === 'play') inst.textContent = isOff ? 'SELECT PLAY' : 'SELECT SCHEME';
+    else if (phase === 'player') inst.textContent = 'SELECT PLAYER';
     else if (phase === 'torch') { inst.textContent = 'TORCH CARD \u2014 Play one or skip'; inst.style.color = '#FFB800'; }
     else inst.textContent = '';
     panel.appendChild(inst);
@@ -1806,9 +1804,18 @@ export function buildGameplay() {
     // Track drive summary
     var r = res.result;
     var isPassPlay = playedPlay && playedPlay.completionRate !== null && playedPlay.completionRate !== undefined;
+    // ESPN-style play description
+    var espnDesc = '?';
+    if (r.isTouchdown) espnDesc = r.yards + '-yd TD ' + (isPassPlay ? 'Pass' : 'Run');
+    else if (r.isInterception) espnDesc = 'INTERCEPTION';
+    else if (r.isFumbleLost) espnDesc = 'FUMBLE';
+    else if (r.isSack) espnDesc = 'SACK';
+    else if (r.isIncomplete) espnDesc = 'Incomplete';
+    else if (isPassPlay) espnDesc = r.yards + '-yd Pass';
+    else espnDesc = r.yards + '-yd Run';
     driveSummaryLog.push({
       down: preSnap.down, dist: preSnap.distance,
-      playName: playedPlay ? playedPlay.name : '?',
+      playName: espnDesc,
       yards: r.yards, isTD: r.isTouchdown, isSack: r.isSack,
       isInc: r.isIncomplete, isInt: r.isInterception, isFumble: r.isFumbleLost
     });
