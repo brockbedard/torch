@@ -7,25 +7,26 @@
 **Production URL:** https://torch-two.vercel.app
 
 ### What's New
-- **CM3-Inspired Play-by-Play Pacing** — Lines appear one at a time with variable timing (Setup: 0.7s, Action: 1.1s, Climax: 2.5s). Current line highlighted, previous lines dimmed to 0.4 opacity.
-- **5-Tier Celebration System** — Scaling effects from Routine (Tier 1) to Clutch Game-Winner (Tier 5). Includes screen shake, impact bursts, full-screen takeovers, slow-mo fade, and massive football rain.
-- **Kinetic Progress Stepper** — Overhauled 1-2-3-4 stepper with breathing pulse animations on active steps, glowing checkmarks for completion, and moving "flow" animations on connector lines.
-- **Trophy Room Reviews** — Redesigned "YOUR SQUAD" and "YOUR PLAYS" screens using full-sized cards in a vertically scrolling grid.
-- **Enhanced Selection Tracking** — Green dot progress system (●/○) for Roster and Play selection, perfectly aligned with text labels.
+- **CM3-Inspired Play-by-Play Pacing** — Lines appear one at a time with variable timing. Current line highlighted, previous lines dimmed.
+- **Atmospheric Team Identity** — Added unique environmental effects to Team Selection: **Heat Haze** for Canyon Tech and **Static Sparks** for Iron Ridge.
+- **Star Power Overlays** — Featured star players (Rio Vasquez & Mack Torres) highlighted with large gold icons and full position names inside team cards.
+- **Kinetic Progress Stepper** — Overhauled 1-2-3-4 stepper shifted to **Purple (#bb00ff)** with breathing pulse animations and moving "flow" connector lines.
+- **5-Tier Celebration System** — Scaling effects from Routine to Clutch Game-Winner. Includes screen shake, impact bursts, and football rain.
 
 ### What Changed
-- **Unified Drafting UI** — Updated all draft headers to larger 32px "TORCH - PLAY NOW" branding.
-- **Improved Navigation** — Upscaled back arrows (10px) across all screens for better mobile accessibility.
-- **Purple Gameplay Highlights** — Card drop highlights and pulses shifted to Purple (#bb00ff) for maximum field contrast.
-- **Endzone Refinement** — Upscaled endzone text (14px) and fixed orientation so both sides read logically.
-- **Terminology Updates** — "AUTO" renamed to "AUTO-SELECT," "OFFENSE" to "OFFENSIVE PLAYS," and "PLAYERS" to "ROSTER."
-- **Difficulty Reversion** — Reverted difficulty buttons to stoplight color theme (Green/Yellow/Red) while maintaining unified button physics.
+- **Symmetric Team Selection** — Redesigned team cards for perfect symmetry and 1-screen mobile optimization. Moved Star info into stats box.
+- **Mascot Branding** — Updated names to **CANYON TECH CACTI** and **IRON RIDGE TRIDENTS**.
+- **Unified Drafting UI** — Updated all draft headers to larger 32px gold "TORCH" branding with consistent middle-dot subtitle.
+- **Refined Rating Stars** — Filled stars now match team accent colors (Gold/Teal) with crisp white outlines for empty slots.
+- **Clean Difficulty Buttons** — Stoplight-colored buttons (Easy/Medium/Hard) match main button physics with white text and clean selection borders.
+- **Improved Spacing** — Increased gaps between major page sections (20px) for better visual breathing room on high-res displays.
 
 ### Bug Fixes
-- Fixed SSL "bad record mac" network errors by forcing System CA.
-- Resolved blank screen error during transition from player draft to play draft.
-- Fixed vertical alignment of progress dots.
-- Removed redundant pre-draft tutorial modals.
+- Fixed swapped coach and stadium images in Team Selection.
+- Corrected "Vasquez" identity to full name "Rio Vasquez."
+- Fixed gray border artifacts on selected difficulty buttons.
+- Resolved blank screen error during draft transitions.
+- Consolidated redundant style injections in Progress Stepper.
 
 ---
 
