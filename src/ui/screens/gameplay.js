@@ -123,7 +123,7 @@ const CSS = `
 
 /* play-by-play terminal */
 /* Commentary — broadcast booth ticker */
-.T-narr{flex:0 0 auto;height:110px;background:rgba(10,8,4,0.85);border-top:2px solid #FF6B00;overflow-y:auto;padding:8px 12px}
+.T-narr{flex:1 1 auto;min-height:70px;max-height:120px;background:rgba(10,8,4,0.85);border-top:2px solid #FF6B00;overflow-y:auto;padding:8px 12px}
 .T-pbp{display:flex;flex-direction:column;gap:4px}
 .T-pbp-line{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:#fff;line-height:1.3;letter-spacing:.3px}
 .T-pbp-live{color:#fff}
@@ -613,7 +613,7 @@ export function buildGameplay() {
 
   // ── PLAY-BY-PLAY BOOTH (bottom third) ──
   const narr = document.createElement('div'); narr.className = 'T-narr';
-  narr.innerHTML = '<div class="T-pbp-idle">...<span class="T-pbp-cursor"></span></div>';
+  narr.innerHTML = '<div class="T-pbp-idle">Awaiting snap<span class="T-pbp-cursor"></span></div>';
   el.appendChild(narr);
 
   function setNarr(a, b) {
@@ -1282,7 +1282,7 @@ export function buildGameplay() {
           nextBtn.onclick = function() {
             SND.click();
             nextBtn.remove();
-            narr.innerHTML = '<div class="T-pbp-idle">...<span class="T-pbp-cursor"></span></div>';
+            narr.innerHTML = '<div class="T-pbp-idle">Awaiting snap<span class="T-pbp-cursor"></span></div>';
             var clashEl = strip.querySelector('.T-clash');
             if (clashEl) clashEl.remove();
             onDone();
