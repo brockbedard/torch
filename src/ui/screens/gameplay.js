@@ -20,6 +20,7 @@ import AudioStateManager from '../../engine/audioManager.js';
 import { renderTeamBadge } from '../../data/teamLogos.js';
 import { getConditionEffects } from '../../data/gameConditions.js';
 import { checkPlayCombos } from '../../data/playSequenceCombos.js';
+import { generateCommentary, generateContext } from '../../engine/commentary.js';
 
 /* ═══════════════════════════════════════════
    CSS
@@ -1809,9 +1810,11 @@ export function buildGameplay() {
         resultWrap.appendChild(labelEl);
         setTimeout(function() { labelEl.style.opacity = '1'; }, 100);
 
-        // Commentary line 1
-        var bd = breakdown(res.offPlay, res.defPlay, r, res.featuredOff, res.featuredDef);
-        setNarr(r.description, bd);
+        // Rich commentary via engine
+        var gameCtx = gs.getSummary();
+        var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
+        var ctx = generateContext(gameCtx, hTeam.name, oTeam.name, res);
+        setNarr(comm.line1, comm.line2 || ctx || '');
 
         if (isFirstGame) {
           if (r.comboFired && snapCount <= 4) showTooltip(el, 'first_combo', 'Match the right player with the right play for bonus yards!', { delay: 800 });
