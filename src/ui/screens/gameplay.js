@@ -446,15 +446,17 @@ export function buildGameplay() {
   var driveSummaryLog = []; // [{down, dist, playName, yards, isTD, isSack, isInc, isInt, isFumble, isPass}]
   var drivePassAtt = 0, drivePassComp = 0, drivePassYds = 0;
   var driveRushAtt = 0, driveRushYds = 0;
+  var driveRecYds = 0, driveRec = 0;
   var driveFirstDowns = 0;
-  var driveQBName = '', driveRBName = '';
+  var driveQBName = '', driveRBName = '', driveWRName = '';
   var driveCommLine1 = '', driveCommLine2 = '';
   function resetDriveSummary() {
     driveSummaryLog = [];
     drivePassAtt = 0; drivePassComp = 0; drivePassYds = 0;
     driveRushAtt = 0; driveRushYds = 0;
+    driveRec = 0; driveRecYds = 0;
     driveFirstDowns = 0;
-    driveQBName = ''; driveRBName = '';
+    driveQBName = ''; driveRBName = ''; driveWRName = '';
     driveCommLine1 = ''; driveCommLine2 = '';
   }
 
@@ -732,26 +734,37 @@ export function buildGameplay() {
       driveSummaryLog.forEach(function(e, i) {
         var isNewest = i === driveSummaryLog.length - 1;
         var resColor = e.isTD ? '#FFB800' : e.yards > 0 ? '#00ff44' : e.yards < 0 || e.isSack ? '#ff0040' : '#fff';
-        var resText = e.isTD ? 'TD' : e.isSack ? 'SACK' : e.isInt ? 'INT' : e.isFumble ? 'FUM' : e.isInc ? 'INC' : (e.yards >= 0 ? '+' : '') + e.yards;
+        var resText = e.isTD ? 'TD' : e.isSack ? 'SACK' : e.isInt ? 'INT' : e.isFumble ? 'FUM' : (e.isInc || e.yards === 0) ? 'NO GAIN' : (e.yards >= 0 ? '+' : '') + e.yards;
         var dn = ['','1st','2nd','3rd','4th'][e.down] || '';
-        html += '<div class="T-drive-row" style="opacity:' + (isNewest ? '1' : '0.55') + '">' +
-          '<div class="T-drive-row-dd">' + dn + ' & ' + e.dist + '</div>' +
+        var rowStyle = isNewest
+          ? 'opacity:1;border-left:3px solid #FF6B00;padding-left:6px;background:rgba(255,255,255,0.03)'
+          : 'opacity:0.5';
+        html += '<div class="T-drive-row" style="' + rowStyle + '">' +
+          '<div class="T-drive-row-dd" style="color:#888;font-size:13px">' + dn + ' & ' + e.dist + '</div>' +
           '<div class="T-drive-row-play">' + e.playName + '</div>' +
           '<div class="T-drive-row-res" style="color:' + resColor + '">' + resText + '</div>' +
           '</div>';
       });
     }
 
-    // QB / RB stat line — only show after first play
-    if (totalPlays > 0) {
+    // Stat lines — only show lines with actual stats
+    var statLines = [];
+    if (drivePassAtt > 0) {
       var qbLabel = driveQBName ? 'QB <span style="color:#fff">' + driveQBName + '</span>' : 'QB';
+      statLines.push('<span style="color:#FF6B00">' + qbLabel + '</span> <span style="color:#3df58a">' + drivePassComp + '/' + drivePassAtt + ', ' + drivePassYds + ' yds</span>');
+    }
+    if (driveRushAtt > 0) {
       var rbLabel = driveRBName ? 'RB <span style="color:#fff">' + driveRBName + '</span>' : 'RB';
-      var qbStats = '<span style="color:#3df58a">' + drivePassComp + '/' + drivePassAtt + ', ' + drivePassYds + ' yds</span>';
-      var rbStats = '<span style="color:#3df58a">' + driveRushAtt + ' car, ' + driveRushYds + ' yds</span>';
-      html += '<div class="T-drive-stats" style="font-family:\'Teko\';font-size:15px;font-weight:700">' +
-        '<div class="T-drive-stat"><span style="color:#FF6B00">' + qbLabel + '</span> ' + qbStats + '</div>' +
-        '<div class="T-drive-stat"><span style="color:#FF6B00">' + rbLabel + '</span> ' + rbStats + '</div>' +
-        '</div>';
+      statLines.push('<span style="color:#FF6B00">' + rbLabel + '</span> <span style="color:#3df58a">' + driveRushAtt + ' car, ' + driveRushYds + ' yds</span>');
+    }
+    if (driveRec > 0) {
+      var wrLabel = driveWRName ? 'WR <span style="color:#fff">' + driveWRName + '</span>' : 'WR';
+      statLines.push('<span style="color:#FF6B00">' + wrLabel + '</span> <span style="color:#3df58a">' + driveRec + ' rec, ' + driveRecYds + ' yds</span>');
+    }
+    if (statLines.length > 0) {
+      html += '<div class="T-drive-stats" style="font-family:\'Teko\';font-size:15px;font-weight:700">';
+      statLines.forEach(function(line) { html += '<div class="T-drive-stat">' + line + '</div>'; });
+      html += '</div>';
     }
 
     // Commentary text
@@ -1540,7 +1553,8 @@ export function buildGameplay() {
     // Side indicator + instruction
     if (phase === 'play' || phase === 'player' || phase === 'torch') {
       var sideBar = document.createElement('div');
-      sideBar.style.cssText = "text-align:center;padding:3px 0;font-family:'Teko';font-size:15px;letter-spacing:3px;flex-shrink:0;color:#FF6B00;background:linear-gradient(90deg,transparent,rgba(255,107,0,.06),transparent);";
+      var sideColor = isOff ? '#7ACC00' : '#4DA6FF';
+      sideBar.style.cssText = "text-align:center;padding:4px 0;font-family:'Teko';font-weight:700;font-size:14px;letter-spacing:2px;flex-shrink:0;color:" + sideColor + ";background:linear-gradient(90deg,transparent,rgba(255,107,0,.04),transparent);";
       sideBar.textContent = isOff ? 'YOUR OFFENSE' : 'YOUR DEFENSE';
       panel.appendChild(sideBar);
     }
@@ -1817,15 +1831,17 @@ export function buildGameplay() {
     else if (r.isFumbleLost) espnDesc = 'FUMBLE \u2014 recovered by ' + defName;
     else if (r.isSack) espnDesc = 'SACK by ' + defName + ' (-' + Math.abs(r.yards) + ')';
     else if (r.isIncomplete) espnDesc = 'Incomplete \u2014 intended for ' + offName;
-    else if (isPassPlay) espnDesc = r.yards + '-yd Pass to ' + offName;
+    else if (isPassPlay) espnDesc = r.yards + '-yd Pass to ' + offName + (defName ? ', tackled by ' + defName : '');
     else if (r.yards === 0) espnDesc = 'No gain by ' + offName;
     else espnDesc = r.yards + '-yd Run by ' + offName;
-    // Track QB/RB names
-    var snapQBName = '', snapRBName = '';
+    // Track QB/RB/WR names
+    var snapQBName = '', snapRBName = '', snapWRName = '';
     if (isPassPlay && res.featuredOff) snapQBName = offName;
+    if (isPassPlay && r.isComplete && res.featuredOff) { snapWRName = offName; driveRec++; driveRecYds += r.yards; }
     if (!isPassPlay && !r.isSack && res.featuredOff) snapRBName = offName;
     if (snapQBName && !driveQBName) driveQBName = snapQBName;
     if (snapRBName && !driveRBName) driveRBName = snapRBName;
+    if (snapWRName && !driveWRName) driveWRName = snapWRName;
     driveSummaryLog.push({
       down: preSnap.down, dist: preSnap.distance,
       playName: espnDesc,
