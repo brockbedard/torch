@@ -31,7 +31,7 @@ const CSS = `
 /* scoreboard */
 .T-sb{background:#0E0A04;border-bottom:1px solid #1E1610;flex-shrink:0;z-index:60;overflow:hidden}
 /* score row: 5 columns — icon | team+score | center | team+score | icon */
-.T-sb-row{display:grid;grid-template-columns:28px 1fr minmax(60px,auto) 1fr 28px;align-items:center;justify-items:center;padding:6px 8px;gap:4px}
+.T-sb-row{display:grid;grid-template-columns:36px 1fr minmax(60px,auto) 1fr 36px;align-items:center;justify-items:center;padding:6px 12px;gap:6px}
 .T-sb-icon{line-height:1;text-align:center;display:flex;align-items:center;justify-content:center}
 .T-sb-side{display:flex;flex-direction:column;align-items:center;padding:6px 6px;border-radius:6px;position:relative}
 .T-sb-side-glow{background:radial-gradient(ellipse,rgba(255,204,0,.2) 0%,rgba(255,204,0,.06) 50%,transparent 75%);box-shadow:0 0 20px rgba(255,204,0,.18)}
@@ -492,9 +492,9 @@ export function buildGameplay() {
     const hTorchHTML = `<span class="T-sb-sit-torch">T ${hTorch}</span>`;
     const isHumanCT = hAbbr === 'CT';
 
-    // Team badges (24px micro) replace old emoji icons
-    var ctBadge = renderTeamBadge(GS.team, 24);
-    var irBadge = renderTeamBadge(GS.opponent, 24);
+    // Team badges (32px) replace old emoji icons
+    var ctBadge = renderTeamBadge(GS.team, 32);
+    var irBadge = renderTeamBadge(GS.opponent, 32);
 
     bug.innerHTML =
       `<div class="T-sb-row">` +
