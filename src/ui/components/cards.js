@@ -163,7 +163,7 @@ export function buildHomeCard(type, w, h) {
 }
 
 // ====== PLAYER CARD — Madden Style (v0.21: badge replaces OVR) ======
-var POS_NAMES = {QB:'QB',WR:'WR',RB:'RB',FB:'FB',TE:'TE',SLOT:'SLOT',SB:'SB',
+var POS_NAMES = {QB:'QB',WR:'WR',RB:'RB',FB:'FB',TE:'TE',SLOT:'SLOT',SB:'SB',OL:'OL',
   CB:'CB',S:'S',LB:'LB',DL:'DL',DE:'DE',EDGE:'EDGE'};
 
 // Helmet SVG shell path (reused across all teams)

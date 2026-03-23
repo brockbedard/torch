@@ -98,11 +98,11 @@ const CSS = `
 .T-panel-def .T-card{}
 
 /* instruction */
-.T-inst{text-align:center;padding:4px 0 2px;font-family:'Rajdhani';font-size:8px;color:#666;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
+.T-inst{text-align:center;padding:3px 0 2px;font-family:'Rajdhani';font-size:10px;color:#777;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
 
 /* card tray — matches pregame draft card style */
-.T-tray{display:flex;gap:6px;padding:6px 6px;flex-shrink:0}
-.T-card{flex:1;height:150px;border-radius:6px;overflow:visible;display:flex;flex-direction:column;transition:all .15s ease;touch-action:none;position:relative;cursor:grab;opacity:.8}
+.T-tray{display:flex;gap:4px;padding:6px 4px;flex-shrink:0;overflow:hidden}
+.T-card{flex:1 1 0;min-width:0;height:150px;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;transition:all .15s ease;touch-action:none;position:relative;cursor:grab;opacity:.8}
 .T-card:active{cursor:grabbing}
 .T-card-sel{opacity:1;border-color:#00ff44 !important;box-shadow:0 0 18px rgba(0,255,68,.35),inset 0 0 12px rgba(0,255,68,.08) !important}
 .T-card-gone{opacity:.3;pointer-events:none}
@@ -111,7 +111,7 @@ const CSS = `
 .T-drag-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.85;transform:scale(1.05);filter:drop-shadow(0 4px 12px rgba(0,0,0,.6))}
 
 /* snap bar — uses btn-blitz style */
-.T-snap{padding:4px 6px;flex-shrink:0;display:flex;gap:4px;align-items:stretch;flex-direction:column}
+.T-snap{padding:6px 6px 8px;flex-shrink:0;display:flex;gap:4px;align-items:stretch;flex-direction:column;margin-bottom:2px}
 @keyframes T-pulse{0%,100%{box-shadow:6px 6px 0 #997a00, 10px 10px 0 #000, 0 0 20px rgba(255,204,0,.3)}50%{box-shadow:6px 6px 0 #997a00, 10px 10px 0 #000, 0 0 40px rgba(255,204,0,.6)}}
 
 /* 2min buttons */
@@ -210,7 +210,7 @@ const CSS = `
 .T-beat-cards{position:absolute;inset:0;z-index:55;display:flex;align-items:center;justify-content:center;gap:12px;pointer-events:none}
 .T-beat-card{padding:8px 12px;border-radius:8px;text-align:center;min-width:90px}
 .T-beat-result{position:absolute;inset:0;z-index:56;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;gap:4px}
-.T-beat-yds{font-family:'Teko';font-weight:700;font-size:42px;line-height:1;text-shadow:0 0 20px currentColor;animation:T-beat-yds 0.6s cubic-bezier(0.22,1.3,0.36,1) both}
+.T-beat-yds{font-family:'Teko';font-weight:700;font-size:64px;line-height:1;text-shadow:0 0 24px currentColor;animation:T-beat-yds 0.6s cubic-bezier(0.22,1.3,0.36,1) both}
 .T-beat-label{font-family:'Rajdhani';font-weight:700;font-size:14px;letter-spacing:1px;opacity:0.8}
 .T-beat-flash{position:absolute;inset:0;z-index:54;pointer-events:none;animation:T-beat-flash 0.3s ease-out forwards}
 `;
@@ -1374,7 +1374,7 @@ export function buildGameplay() {
     panel.innerHTML = '';
     const isOff = gs.possession === hAbbr;
     const sides = gs.getCurrentSides();
-    const players = isOff ? sides.offPlayers.slice(0,4) : sides.defPlayers.slice(0,4);
+    const players = isOff ? sides.offPlayers.slice(0,5) : sides.defPlayers.slice(0,5);
     var plays = isOff ? sides.offHand : sides.defHand;
     // Safety: ensure hand has cards (refill from full pool if empty/short)
     if (!plays || plays.length < 3) {
@@ -1392,7 +1392,7 @@ export function buildGameplay() {
     // Side indicator + instruction
     if (phase === 'play' || phase === 'player' || phase === 'torch') {
       var sideBar = document.createElement('div');
-      sideBar.style.cssText = "text-align:center;padding:2px 0;font-family:'Teko';font-size:13px;letter-spacing:3px;flex-shrink:0;color:#FF6B00;background:linear-gradient(90deg,transparent,rgba(255,107,0,.06),transparent);";
+      sideBar.style.cssText = "text-align:center;padding:3px 0;font-family:'Teko';font-size:15px;letter-spacing:3px;flex-shrink:0;color:#FF6B00;background:linear-gradient(90deg,transparent,rgba(255,107,0,.06),transparent);";
       sideBar.textContent = isOff ? 'YOUR OFFENSE' : 'YOUR DEFENSE';
       panel.appendChild(sideBar);
     }
@@ -1478,22 +1478,23 @@ export function buildGameplay() {
         return;
       }
       preSnapCards.forEach(function(tc, i) {
-        var c = buildTorchCard(tc);
-        c.className += ' T-card';
-        c.style.flex = '1';
-        c.style.height = '150px';
-        c.style.cursor = 'grab';
-        c.style.touchAction = 'none';
+        var c = document.createElement('div');
+        c.className = 'T-card';
+        var tcEl = buildTorchCard(tc);
+        tcEl.style.width = '100%';
+        tcEl.style.height = '100%';
+        c.appendChild(tcEl);
         c.onclick = function() {
           SND.click();
           selectedPreSnap = tc;
-          // Remove from inventory (single-use)
           var idx = torchInventory.indexOf(tc);
           if (idx >= 0) torchInventory.splice(idx, 1);
           if (GS.season) GS.season.torchCards = torchInventory.slice();
           phase = 'ready';
           drawField(); drawPanel();
         };
+        c.onmousedown = function(e) { startDrag('torch', tc, c, e); };
+        c.ontouchstart = function(e) { startDrag('torch', tc, c, e); };
         tray.appendChild(c);
       });
       // Skip button
@@ -1554,7 +1555,11 @@ export function buildGameplay() {
     const offCard = isOff ? selTorch : null;
     const defCard = isOff ? null : selTorch;
     var playedPlay = selPl;
+    var preTorchPts = getTorchPoints();
     const res = isOff ? gs.executeSnap(selPl, selP, null, null, offCard, defCard) : gs.executeSnap(null, null, selPl, selP, offCard, defCard);
+    var postTorchPts = getTorchPoints();
+    var torchEarned = postTorchPts - preTorchPts;
+    if (res) res._torchEarned = torchEarned;
 
     // Apply Game Day Condition modifiers to result
     if (res && res.result) {
@@ -1720,9 +1725,15 @@ export function buildGameplay() {
       if (res._combos && res._combos.length > 0) {
         comboHTML = '<div style="font-family:\'Teko\';font-weight:700;font-size:18px;color:#FFB800;letter-spacing:2px;margin-top:6px;text-shadow:0 0 12px rgba(255,184,0,0.5);animation:T-beat-yds 0.4s ease-out 0.3s both;opacity:0">' + res._combos.join(' + ') + '</div>';
       }
+      // TORCH points earned line
+      var torchHTML = '';
+      if (res._torchEarned && res._torchEarned > 0) {
+        torchHTML = '<div style="font-family:\'Rajdhani\';font-weight:700;font-size:13px;color:#FFB800;margin-top:6px;opacity:0;transition:opacity 0.3s 0.6s;letter-spacing:1px;">T +' + res._torchEarned + '</div>';
+      }
       resultEl.innerHTML =
-        '<div class="T-beat-yds" style="color:' + resultColor + ';font-size:' + (isTD ? '52px' : '42px') + '">' + resultText + '</div>' +
+        '<div class="T-beat-yds" style="color:' + resultColor + ';font-size:' + (isTD ? '72px' : '64px') + '">' + resultText + '</div>' +
         comboHTML +
+        torchHTML +
         '<div class="T-beat-label" style="color:' + resultColor + ';opacity:0;transition:opacity 0.3s">' + res.offPlay.name + ' vs ' + res.defPlay.name + '</div>';
       el.appendChild(resultEl);
 

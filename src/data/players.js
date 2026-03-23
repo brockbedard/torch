@@ -14,8 +14,9 @@ export const SENTINELS_OFFENSE = [
   { id: 'rdg_o2', name: 'Calloway', pos: 'QB', ovr: 80, badge: 'CROSSHAIR', isStar: false, num: 7 },
   { id: 'rdg_o3', name: 'Frazier', pos: 'WR', ovr: 78, badge: 'FOOTBALL', isStar: false, num: 4 },
   { id: 'rdg_o4', name: 'Vance', pos: 'WR', ovr: 76, badge: 'GLOVE', isStar: false, num: 82 },
-  { id: 'rdg_o5', name: 'Tran', pos: 'QB', ovr: 74, badge: 'BOLT', isStar: false, num: 14 },
-  { id: 'rdg_o6', name: 'Langley', pos: 'WR', ovr: 72, badge: 'CROSSHAIR', isStar: false, num: 17 },
+  { id: 'rdg_o5', name: 'Price', pos: 'OL', ovr: 74, badge: 'BRICK', isStar: false, num: 65 },
+  { id: 'rdg_o6', name: 'Tran', pos: 'QB', ovr: 74, badge: 'BOLT', isStar: false, num: 14 },
+  { id: 'rdg_o7', name: 'Langley', pos: 'WR', ovr: 72, badge: 'CROSSHAIR', isStar: false, num: 17 },
 ];
 
 export const SENTINELS_DEFENSE = [
@@ -35,8 +36,9 @@ export const WOLVES_OFFENSE = [
   { id: 'npa_o2', name: 'Briggs', pos: 'QB', ovr: 78, badge: 'CLIPBOARD', isStar: false, num: 12 },
   { id: 'npa_o3', name: 'Quick', pos: 'SB', ovr: 78, badge: 'CLEAT', isStar: false, num: 6 },
   { id: 'npa_o4', name: 'Hargrove', pos: 'SB', ovr: 74, badge: 'SPEED_LINES', isStar: false, num: 22 },
-  { id: 'npa_o5', name: 'Okafor', pos: 'FB', ovr: 74, badge: 'BRICK', isStar: false, num: 45 },
-  { id: 'npa_o6', name: 'Ballard', pos: 'SB', ovr: 72, badge: 'CLEAT', isStar: false, num: 8 },
+  { id: 'npa_o5', name: 'Maddox', pos: 'OL', ovr: 76, badge: 'BRICK', isStar: false, num: 72 },
+  { id: 'npa_o6', name: 'Okafor', pos: 'FB', ovr: 74, badge: 'BRICK', isStar: false, num: 45 },
+  { id: 'npa_o7', name: 'Ballard', pos: 'SB', ovr: 72, badge: 'CLEAT', isStar: false, num: 8 },
 ];
 
 export const WOLVES_DEFENSE = [
@@ -56,8 +58,9 @@ export const STAGS_OFFENSE = [
   { id: 'crv_o2', name: 'Cortland', pos: 'RB', ovr: 80, badge: 'CLEAT', isStar: false, num: 25 },
   { id: 'crv_o3', name: 'DaCosta', pos: 'WR', ovr: 78, badge: 'BOLT', isStar: false, num: 11 },
   { id: 'crv_o4', name: 'Booker', pos: 'WR', ovr: 76, badge: 'FOOTBALL', isStar: false, num: 9 },
-  { id: 'crv_o5', name: 'Watts', pos: 'QB', ovr: 76, badge: 'FLAME', isStar: false, num: 3 },
-  { id: 'crv_o6', name: 'Reyes', pos: 'RB', ovr: 72, badge: 'CLEAT', isStar: false, num: 28 },
+  { id: 'crv_o5', name: 'Odom', pos: 'OL', ovr: 74, badge: 'BRICK', isStar: false, num: 68 },
+  { id: 'crv_o6', name: 'Watts', pos: 'QB', ovr: 76, badge: 'FLAME', isStar: false, num: 3 },
+  { id: 'crv_o7', name: 'Reyes', pos: 'RB', ovr: 72, badge: 'CLEAT', isStar: false, num: 28 },
 ];
 
 export const STAGS_DEFENSE = [
@@ -77,8 +80,9 @@ export const SERPENTS_OFFENSE = [
   { id: 'bws_o2', name: 'Ash', pos: 'QB', ovr: 80, badge: 'CROSSHAIR', isStar: false, num: 10 },
   { id: 'bws_o3', name: 'Dupree', pos: 'WR', ovr: 78, badge: 'SPEED_LINES', isStar: false, num: 88 },
   { id: 'bws_o4', name: 'Slade', pos: 'WR', ovr: 76, badge: 'FOOTBALL', isStar: false, num: 7 },
-  { id: 'bws_o5', name: 'Osei', pos: 'QB', ovr: 74, badge: 'CROSSHAIR', isStar: false, num: 14 },
-  { id: 'bws_o6', name: 'Moreno', pos: 'SLOT', ovr: 72, badge: 'GLOVE', isStar: false, num: 19 },
+  { id: 'bws_o5', name: 'Cortez', pos: 'OL', ovr: 76, badge: 'BRICK', isStar: false, num: 75 },
+  { id: 'bws_o6', name: 'Osei', pos: 'QB', ovr: 74, badge: 'CROSSHAIR', isStar: false, num: 14 },
+  { id: 'bws_o7', name: 'Moreno', pos: 'SLOT', ovr: 72, badge: 'GLOVE', isStar: false, num: 19 },
 ];
 
 export const SERPENTS_DEFENSE = [

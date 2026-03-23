@@ -97,7 +97,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
     // Buy button
     var buyBtn = document.createElement('button');
     buyBtn.className = 'btn-blitz';
-    buyBtn.style.cssText = 'font-size:9px;padding:6px 12px;width:100%;' +
+    buyBtn.style.cssText = 'font-size:9px;padding:8px 12px;width:100%;position:relative;z-index:2;' +
       (canAfford ? 'background:var(--a-gold,#FFB800);color:#000;border-color:var(--torch,#FF4511);' : 'background:#333;color:#666;border-color:#333;cursor:not-allowed;');
     buyBtn.textContent = isFull && canAfford ? 'SWAP' : canAfford ? 'BUY' : "CAN'T AFFORD";
     buyBtn.disabled = !canAfford;

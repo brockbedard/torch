@@ -12,26 +12,27 @@
 export function calcOffenseTorchPoints(result, gotFirstDown) {
   let pts = 0;
 
+  // v0.22: TORCH points only go UP from plays. Bad plays earn 0, not negative.
   if (result.isSack) {
-    pts -= 10;
+    pts += 0;
   } else if (result.isIncomplete) {
-    pts -= 5;
+    pts += 0;
   } else if (result.isInterception || result.isFumbleLost) {
-    pts -= 25;
+    pts += 0;
   } else if (result.yards >= 8) {
     pts += 30;
   } else if (result.yards >= 4) {
     pts += 10;
   } else if (result.yards >= 1) {
-    pts += 0;
+    pts += 5;
   } else {
-    pts -= 10;
+    pts += 0;
   }
 
   if (gotFirstDown) pts += 10;
   if (result.isTouchdown) pts += 50;
 
-  pts += Math.floor(result.offComboPts);
+  pts += Math.max(0, Math.floor(result.offComboPts || 0));
   return pts;
 }
 
@@ -44,6 +45,7 @@ export function calcOffenseTorchPoints(result, gotFirstDown) {
 export function calcDefenseTorchPoints(result, allowedFirstDown) {
   let pts = 0;
 
+  // v0.22: TORCH points only go UP from plays. Allowing big plays earns 0, not negative.
   if (result.isSack) {
     pts += 25;
   } else if (result.isInterception || result.isFumbleLost) {
@@ -53,17 +55,14 @@ export function calcDefenseTorchPoints(result, allowedFirstDown) {
   } else if (result.yards <= 3) {
     pts += 10;
   } else if (result.yards <= 7) {
-    pts += 0;
-  } else if (result.yards <= 14) {
-    pts -= 5;
+    pts += 5;
   } else {
-    pts -= 15;
+    pts += 0; // Big plays allowed — no penalty, just no reward
   }
 
-  if (allowedFirstDown) pts -= 10;
-  if (result.isTouchdown) pts -= 30;
+  // No penalty for allowing first downs or TDs — just no bonus
   if (result.isSafety) pts += 30;
 
-  pts += Math.floor(result.defComboPts);
+  pts += Math.max(0, Math.floor(result.defComboPts || 0));
   return pts;
 }

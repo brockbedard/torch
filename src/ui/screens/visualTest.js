@@ -129,8 +129,8 @@ export function buildVisualTest() {
       screen: 'gameplay', team: 'sentinels', opponent: 'serpents',
       difficulty: 'EASY', humanReceives: false, _coinTossDone: true,
       isFirstSeason: false,
-      offRoster: offRoster.slice(0,4).map(function(p){return p.id;}),
-      defRoster: defRoster.slice(0,4).map(function(p){return p.id;}),
+      offRoster: offRoster.slice(0,5).map(function(p){return p.id;}),
+      defRoster: defRoster.slice(0,5).map(function(p){return p.id;}),
       offHand: getOffCards('sentinels').slice(0,5),
       defHand: getDefCards('sentinels').slice(0,5),
       gameConditions: { weather: 'clear', field: 'turf', crowd: 'home' },
@@ -156,8 +156,8 @@ export function buildVisualTest() {
       screen: 'gameplay', team: 'sentinels', opponent: 'serpents',
       difficulty: 'EASY', humanReceives: true, _coinTossDone: true,
       isFirstSeason: false,
-      offRoster: offRoster.slice(0,4).map(function(p){return p.id;}),
-      defRoster: defRoster.slice(0,4).map(function(p){return p.id;}),
+      offRoster: offRoster.slice(0,5).map(function(p){return p.id;}),
+      defRoster: defRoster.slice(0,5).map(function(p){return p.id;}),
       offHand: getOffCards('sentinels').slice(0,5),
       defHand: getDefCards('sentinels').slice(0,5),
       gameConditions: { weather: 'rain', field: 'grass', crowd: 'away' },
@@ -181,8 +181,9 @@ export function buildVisualTest() {
     var resultFrame = document.createElement('div');
     resultFrame.style.cssText = 'width:375px;height:300px;background:rgba(10,8,4,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;';
     resultFrame.innerHTML =
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:48px;color:#3df58a;text-shadow:0 0 20px rgba(61,245,138,0.5);animation:T-beat-yds 0.6s cubic-bezier(0.22,1.3,0.36,1) both;\">+14 YDS</div>" +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:64px;color:#3df58a;text-shadow:0 0 24px rgba(61,245,138,0.5);\">+14 YDS</div>" +
       "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#FFB800;letter-spacing:2px;text-shadow:0 0 12px rgba(255,184,0,0.5);\">SETUP!</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:#FFB800;letter-spacing:1px;\">T +25</div>" +
       "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:#3df58a;opacity:0.8;letter-spacing:1px;\">Bubble Screen vs Man-Zone Blend</div>";
     frame(resultFrame);
   })();
@@ -342,13 +343,47 @@ export function buildVisualTest() {
     });
   })();
 
+  // ============================================================
+  // 13. SCOREBUG CLOSE-UP
+  // ============================================================
+  section('SCOREBUG CLOSE-UP');
+  note('Isolated scorebug at 375px — down/distance/field position/TORCH points');
+  (function() {
+    var sb = document.createElement('div');
+    sb.style.cssText = 'width:375px;background:#0E0A04;border:1px solid #333;border-radius:8px;overflow:hidden;margin-bottom:12px;';
+    sb.innerHTML =
+      "<div style='display:flex;justify-content:space-between;align-items:center;padding:6px 8px;'>" +
+        "<div style='text-align:center;'><div style=\"font-family:'Teko';font-size:16px;color:#C4A265;\">SENTINELS</div><div style=\"font-family:'Rajdhani';font-size:24px;color:#fff;\">14</div></div>" +
+        "<div style='text-align:center;'><div style=\"font-family:'Teko';font-size:14px;color:#FFB800;\">FIRST HALF</div><div style=\"font-family:'Rajdhani';font-size:10px;color:#aaa;\">8/20</div></div>" +
+        "<div style='text-align:center;'><div style=\"font-family:'Teko';font-size:16px;color:#39FF14;\">SERPENTS</div><div style=\"font-family:'Rajdhani';font-size:24px;color:#fff;\">7</div></div>" +
+      "</div>" +
+      "<div style=\"text-align:center;padding:4px;background:rgba(0,0,0,0.4);font-family:'Rajdhani';font-size:10px;color:#FF6B00;\">2ND & 4 \u00b7 BALL ON RDG 35 \u00b7 <span style='color:#FFB800;'>T 185</span></div>";
+    frame(sb, 100);
+  })();
+
+  // ============================================================
+  // 14. POST-PLAY RESULT WITH TORCH POINTS
+  // ============================================================
+  section('POST-PLAY RESULT — with TORCH points earned');
+  note('Result overlay: yardage (64px), combo, TORCH earned, matchup');
+  (function() {
+    var rf = document.createElement('div');
+    rf.style.cssText = 'width:375px;height:280px;background:rgba(10,8,4,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid #333;border-radius:8px;';
+    rf.innerHTML =
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:64px;color:#3df58a;text-shadow:0 0 24px rgba(61,245,138,0.5);\">+6 YDS</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:#FFB800;letter-spacing:1px;\">T +15</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:#3df58a;opacity:0.8;letter-spacing:1px;\">Choice Route vs Plug the Middle</div>" +
+      "<div style=\"margin-top:8px;padding:6px 12px;background:rgba(0,0,0,0.4);border-radius:4px;font-family:'Rajdhani';font-size:10px;color:#FF6B00;\">NEW: 2ND & 4 \u00b7 BALL ON RDG 35</div>";
+    frame(rf, 290);
+  })();
+
   // Reset state
   resetGs();
 
   // Footer
   var foot = document.createElement('div');
   foot.style.cssText = "padding:30px 0;text-align:center;font-family:'Rajdhani';font-size:9px;color:#333;";
-  foot.textContent = 'TORCH v0.21 Visual Test Harness — Real Components';
+  foot.textContent = 'TORCH v0.22 Visual Test Harness — Real Components';
   el.appendChild(foot);
 
   return el;
