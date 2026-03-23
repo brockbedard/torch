@@ -407,10 +407,38 @@ export function buildVisualTest() {
   // ============================================================
   // 12. COMMENTARY SAMPLES
   // ============================================================
-  section('COMMENTARY SAMPLES');
-  note('Using real gameplay CSS classes (.T-narr, .T-pbp-line, etc.)');
+  // ============================================================
+  // CARD CLASH — 3 Tiers (static states)
+  // ============================================================
+  section('CARD CLASH — 3 Drama Tiers');
+  note('Static mockup of the 4-phase clash at each tier level');
   (function() {
-    // Inject gameplay CSS so commentary classes work
+    var tiers = [
+      { label: 'TIER 1 — Routine', dim: '20%', shake: 'None', particles: '8', dur: '0.8-1s', cardScale: '100%', bg: 'rgba(6,4,2,0.85)' },
+      { label: 'TIER 2 — Important (3rd down, red zone)', dim: '40%', shake: '3px', particles: '30', dur: '1.5s', cardScale: '110%', bg: 'rgba(6,4,2,0.88)' },
+      { label: 'TIER 3 — Game-Changing (TD, turnover, close game)', dim: '70%', shake: '8px', particles: '80+', dur: '2.5-3s', cardScale: '125%', bg: 'rgba(6,4,2,0.92)' },
+    ];
+    tiers.forEach(function(t) {
+      var row = document.createElement('div');
+      row.style.cssText = 'width:375px;background:' + t.bg + ';border:1px solid #333;border-radius:8px;padding:12px;margin-bottom:8px;display:flex;flex-direction:column;align-items:center;gap:6px;';
+      row.innerHTML =
+        "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:#FF6B00;letter-spacing:1px;align-self:flex-start;\">" + t.label + "</div>" +
+        '<div style="display:flex;gap:12px;align-items:center;">' +
+          "<div style='background:rgba(200,160,48,0.12);border:2px solid #c8a03066;border-radius:8px;padding:8px 10px;text-align:center;min-width:70px;transform:scale(" + t.cardScale.replace('%','').replace('1','1.').replace('100','1') + ");'>" +
+            "<div style=\"font-family:'Teko';font-size:16px;color:#fff;\">Jet Sweep</div>" +
+            "<div style=\"font-family:'Rajdhani';font-size:9px;color:#c8a030;\">Cortland \u00b7 RB</div></div>" +
+          "<div style='background:rgba(77,166,255,0.12);border:2px solid #4DA6FF66;border-radius:8px;padding:8px 10px;text-align:center;min-width:70px;transform:scale(" + t.cardScale.replace('%','').replace('1','1.').replace('100','1') + ");'>" +
+            "<div style=\"font-family:'Teko';font-size:16px;color:#fff;\">Zero Blitz</div>" +
+            "<div style=\"font-family:'Rajdhani';font-size:9px;color:#4DA6FF;\">Blackwell \u00b7 EDGE</div></div>" +
+        '</div>' +
+        "<div style=\"font-family:'Rajdhani';font-size:8px;color:#666;margin-top:2px;\">Dim: " + t.dim + " | Shake: " + t.shake + " | Particles: " + t.particles + " | Duration: " + t.dur + "</div>";
+      el.appendChild(row);
+    });
+  })();
+
+  section('COMMENTARY SAMPLES — 4 Emotional Tiers');
+  note('Tier 1: routine, Tier 2: elevated, Tier 3: intense, Tier 4: explosive');
+  (function() {
     var sty = document.createElement('style');
     sty.textContent =
       ".vt-narr{background:#0C0804;border-top:2px solid #FF6B00;padding:8px 12px;width:375px;margin-bottom:8px;border-radius:4px;}" +
@@ -420,11 +448,12 @@ export function buildVisualTest() {
     el.appendChild(sty);
 
     var samples = [
-      { type: 'ROUTINE GAIN', line: 'Calloway gains 4.', sub: 'Choice Route vs Plug the Middle', subColor: '#C4A265', combo: '' },
-      { type: 'SACK', line: 'SACKED! Blackwell brings him down for a loss of 6.', sub: 'Go Seam vs Zero Blitz', subColor: '#e03050', combo: '' },
-      { type: 'TOUCHDOWN', line: 'TOUCHDOWN! Monroe streaks down the sideline untouched!', sub: 'Streak vs Two-Deep Sit', subColor: '#FFB800', combo: 'SETUP! +4 yds' },
-      { type: 'INCOMPLETE', line: 'Pass falls incomplete.', sub: 'Fade & Stop vs Match Right', subColor: '#aaa', combo: '' },
-      { type: 'FUMBLE', line: 'FUMBLE! Ball is loose... Serpents recover!', sub: 'Inside Zone vs Stack the Box', subColor: '#e03050', combo: 'PREDICTABLE -3 yds' },
+      { type: 'TIER 1 — ROUTINE (60-70%)', line: 'Cortland hauls in a short pass for 4. Second and 6.', sub: '', subColor: '#aaa', combo: '' },
+      { type: 'TIER 2 — ELEVATED (20%)', line: 'Cortland bursts through the hole for 8 — and that moves the chains on a critical third down.', sub: 'First down Stags. Chains move.', subColor: '#00ff44', combo: '' },
+      { type: 'TIER 3 — INTENSE (8%)', line: 'Cortland! Cuts back — to the 40, the 45, he\'s got room! Picks up 18!', sub: 'Stags are moving.', subColor: '#FFB800', combo: '' },
+      { type: 'TIER 4 — EXPLOSIVE (2%)', line: 'TOUCHDOWN STAGS! Strand rolls right, buys time, and finds Cortland streaking down the sideline — 23-yard strike!', sub: 'The Stags take the lead with under two minutes to play!', subColor: '#FFB800', combo: 'SETUP! +4 yds' },
+      { type: 'SACK', line: 'SACK! Blackwell wraps up the QB for a loss of 7.', sub: 'That\'s a drive-killer. Serpents defense is swarming.', subColor: '#e03050', combo: '' },
+      { type: 'INTERCEPTION', line: 'PICKED! Tillery reads it all the way — turnover Boars!', sub: 'Momentum shift.', subColor: '#e03050', combo: '' },
     ];
     samples.forEach(function(s) {
       var block = document.createElement('div');

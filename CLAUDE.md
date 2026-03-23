@@ -4,7 +4,7 @@
 TORCH Football is a mobile card game (Balatro meets college football). 4 fictional college teams with distinct offensive/defensive schemes battle through 3-game seasons. Card-based play selection, badge combos, star player Heat Check, and TORCH points (score = wallet). Built with Vite + vanilla JS, deployed on Vercel.
 
 ## Version
-**v0.21.2 "New Blood — Polished"** — Feature-complete, two visual design passes.
+**v0.22.0 "Gameday"** — Broadcast-quality presentation, card clash animations, rich commentary, stadium audio system.
 
 ## How to Run
 ```bash
