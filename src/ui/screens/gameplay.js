@@ -36,7 +36,7 @@ const CSS = `
 .T-sb-icon{line-height:1;text-align:center;display:flex;align-items:center;justify-content:center}
 .T-sb-side{display:flex;flex-direction:column;align-items:center;padding:4px 6px;border-radius:6px;position:relative}
 .T-sb-side-glow{background:radial-gradient(ellipse,rgba(255,204,0,.15) 0%,rgba(255,204,0,.04) 50%,transparent 75%);box-shadow:0 0 16px rgba(255,204,0,.12);border:1px solid rgba(255,204,0,.15)}
-.T-sb-name{font-family:'Teko';font-weight:700;font-size:20px;font-style:italic;line-height:1;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px}
+.T-sb-name{font-family:'Teko';font-weight:700;font-size:20px;font-style:italic;line-height:1;letter-spacing:1px;white-space:nowrap;flex-shrink:1;min-width:0}
 .T-sb-score-row{position:relative;margin-top:2px;display:flex;justify-content:center}
 .T-sb-pos-arrow{position:absolute;top:50%;transform:translateY(-50%);font-size:14px;color:#00ff44;line-height:1}
 .T-sb-pos-arrow-l{left:-16px}
@@ -442,24 +442,23 @@ export function buildGameplay() {
   // Play Sequence Combos — track play history per drive
   var drivePlayHistory = []; // {cat, playId} entries for current drive
 
-  // Drive summary tracking
-  var driveSummaryLog = []; // [{down, dist, playName, yards, isTD, isSack, isInc, isInt, isFumble, isPass}]
-  var drivePassAtt = 0, drivePassComp = 0, drivePassYds = 0;
-  var driveRushAtt = 0, driveRushYds = 0;
-  var driveRecYds = 0, driveRec = 0;
+  // Drive summary tracking (play-by-play ticker resets per drive)
+  var driveSummaryLog = []; // [{down, dist, playName, yards, isTD, isSack, isInc, isInt, isFumble}]
   var driveFirstDowns = 0;
-  var driveQBName = '', driveRBName = '', driveWRName = '';
-  var driveDefStats = {}; // { name: { pos, tkl, pbu, int, sack } }
   var driveCommLine1 = '', driveCommLine2 = '';
+
+  // Game-wide stat accumulators (persist across drives)
+  var gamePassAtt = 0, gamePassComp = 0, gamePassYds = 0;
+  var gameRushAtt = 0, gameRushYds = 0;
+  var gameRecYds = 0, gameRec = 0;
+  var gameQBName = '', gameRBName = '', gameWRName = '';
+  var gameDefStats = {}; // { name: { pos, tkl, pbu, int, sack } }
+
   function resetDriveSummary() {
     driveSummaryLog = [];
-    drivePassAtt = 0; drivePassComp = 0; drivePassYds = 0;
-    driveRushAtt = 0; driveRushYds = 0;
-    driveRec = 0; driveRecYds = 0;
     driveFirstDowns = 0;
-    driveQBName = ''; driveRBName = ''; driveWRName = '';
-    driveDefStats = {};
     driveCommLine1 = ''; driveCommLine2 = '';
+    // Game-wide stats are NOT reset here
   }
 
   // TORCH card inventory (v0.21 — 3 slots, persisted in season)
@@ -576,12 +575,12 @@ export function buildGameplay() {
       `<div class="T-sb-row">` +
         `<div class="T-sb-icon">${ctBadge}</div>` +
         `<div class="T-sb-side${ctHasBall ? ' T-sb-side-glow' : ''}">` +
-          `<div class="T-sb-name" style="color:${ct.accent};font-size:${ct.name.length > 10 ? 14 : ct.name.length > 8 ? 16 : 20}px${ctHasBall ? ';text-shadow:0 0 12px '+ct.accent : ''}">${ct.name}</div>` +
+          `<div class="T-sb-name" style="color:${ct.accent};font-size:${ct.name.length > 8 ? 14 : ct.name.length > 5 ? 17 : 20}px${ctHasBall ? ';text-shadow:0 0 12px '+ct.accent : ''}">${ct.name}</div>` +
           `<div class="T-sb-score-row">${ctArrow}<span class="T-sb-pts${ctHasBall ? ' T-sb-pts-glow' : ''}">${s.ctScore}</span></div>` +
         `</div>` +
         `<div class="T-sb-center">${centerHTML}</div>` +
         `<div class="T-sb-side${!ctHasBall ? ' T-sb-side-glow' : ''}">` +
-          `<div class="T-sb-name" style="color:${ir.accent};font-size:${ir.name.length > 10 ? 14 : ir.name.length > 8 ? 16 : 20}px${!ctHasBall ? ';text-shadow:0 0 12px '+ir.accent : ''}">${ir.name}</div>` +
+          `<div class="T-sb-name" style="color:${ir.accent};font-size:${ir.name.length > 8 ? 14 : ir.name.length > 5 ? 17 : 20}px${!ctHasBall ? ';text-shadow:0 0 12px '+ir.accent : ''}">${ir.name}</div>` +
           `<div class="T-sb-score-row">${irArrow}<span class="T-sb-pts${!ctHasBall ? ' T-sb-pts-glow' : ''}">${s.irScore}</span></div>` +
         `</div>` +
         `<div class="T-sb-icon">${irBadge}</div>` +
@@ -785,30 +784,30 @@ export function buildGameplay() {
       });
     }
 
-    // Stat lines — only show lines with actual stats
+    // Stat lines — GAME-WIDE stats (not drive stats)
     // Team colors: offensive stats use human team accent, defensive stats use opponent accent
     var offStatColor = hTeam.accent || '#FF6B00';
     var defStatColor = oTeam.accent || '#FF6B00';
     var statLines = [];
-    if (drivePassAtt > 0) {
-      var qbLabel = driveQBName ? 'QB <span style="color:#fff">' + driveQBName + '</span>' : 'QB';
-      statLines.push('<span style="color:' + offStatColor + '">' + qbLabel + '</span> <span style="color:#3df58a">' + drivePassComp + '/' + drivePassAtt + ', ' + drivePassYds + ' yds</span>');
+    if (gamePassAtt > 0) {
+      var qbLabel = gameQBName ? 'QB <span style="color:#fff">' + gameQBName + '</span>' : 'QB';
+      statLines.push('<span style="color:' + offStatColor + '">' + qbLabel + '</span> <span style="color:#3df58a">' + gamePassComp + '/' + gamePassAtt + ', ' + gamePassYds + ' yds</span>');
     }
-    if (driveRushAtt > 0) {
-      var rbLabel = driveRBName ? 'RB <span style="color:#fff">' + driveRBName + '</span>' : 'RB';
-      statLines.push('<span style="color:' + offStatColor + '">' + rbLabel + '</span> <span style="color:#3df58a">' + driveRushAtt + ' car, ' + driveRushYds + ' yds</span>');
+    if (gameRushAtt > 0) {
+      var rbLabel = gameRBName ? 'RB <span style="color:#fff">' + gameRBName + '</span>' : 'RB';
+      statLines.push('<span style="color:' + offStatColor + '">' + rbLabel + '</span> <span style="color:#3df58a">' + gameRushAtt + ' car, ' + gameRushYds + ' yds</span>');
     }
-    if (driveRec > 0) {
-      var wrLabel = driveWRName ? 'WR <span style="color:#fff">' + driveWRName + '</span>' : 'WR';
-      statLines.push('<span style="color:' + offStatColor + '">' + wrLabel + '</span> <span style="color:#3df58a">' + driveRec + ' rec, ' + driveRecYds + ' yds</span>');
+    if (gameRec > 0) {
+      var wrLabel = gameWRName ? 'WR <span style="color:#fff">' + gameWRName + '</span>' : 'WR';
+      statLines.push('<span style="color:' + offStatColor + '">' + wrLabel + '</span> <span style="color:#3df58a">' + gameRec + ' rec, ' + gameRecYds + ' yds</span>');
     }
-    // Defensive stat line — find best defender
+    // Defensive stat line — find best defender (game-wide)
     var bestDef = null, bestDefName = '';
-    var defKeys = Object.keys(driveDefStats);
+    var defKeys = Object.keys(gameDefStats);
     if (defKeys.length > 0) {
       var bestScore = -1;
       defKeys.forEach(function(name) {
-        var d = driveDefStats[name];
+        var d = gameDefStats[name];
         var score = d.tkl + d.pbu * 2 + d.int * 5 + d.sack * 3;
         if (score > bestScore) { bestScore = score; bestDef = d; bestDefName = name; }
       });
@@ -1614,9 +1613,9 @@ export function buildGameplay() {
     // Side indicator + instruction
     if (phase === 'play' || phase === 'player' || phase === 'torch') {
       var sideBar = document.createElement('div');
-      var sideColor = isOff ? '#7ACC00' : '#4DA6FF';
+      var sideColor = hTeam.accent || '#FF6B00';
       sideBar.style.cssText = "text-align:center;padding:2px 0 0;font-family:'Teko';font-weight:700;font-size:14px;letter-spacing:2px;flex-shrink:0;color:" + sideColor + ";background:linear-gradient(90deg,transparent,rgba(255,107,0,.04),transparent);";
-      sideBar.textContent = isOff ? 'YOUR OFFENSE' : 'YOUR DEFENSE';
+      sideBar.textContent = hTeam.name + (isOff ? ' OFFENSE' : ' DEFENSE');
       panel.appendChild(sideBar);
     }
     const inst = document.createElement('div'); inst.className = 'T-inst';
@@ -1917,21 +1916,23 @@ export function buildGameplay() {
     else if (isPassPlay) espnDesc = r.yards + '-yd Pass to ' + receiverName + (defName ? ', tackled by ' + defName : '');
     else if (r.yards === 0) espnDesc = 'No gain by ' + rusherName + (defName ? ', tackled by ' + defName : '');
     else espnDesc = r.yards + '-yd Run by ' + rusherName + (defName ? ', tackled by ' + defName : '');
-    // Track QB/RB/WR names
+    // Track game-wide QB/RB/WR stats
     if (isPassPlay) {
-      if (qbName && !driveQBName) driveQBName = qbName;
+      gamePassAtt++;
+      if (qbName && !gameQBName) gameQBName = qbName;
       if (r.isComplete) {
-        var rcvName = receiverName;
-        if (!driveWRName) driveWRName = rcvName;
-        driveRec++; driveRecYds += r.yards;
+        gamePassComp++; gamePassYds += r.yards;
+        if (!gameWRName) gameWRName = receiverName;
+        gameRec++; gameRecYds += r.yards;
       }
     } else if (!r.isSack && res.featuredOff) {
-      if (!driveRBName) driveRBName = rusherName;
+      gameRushAtt++; gameRushYds += r.yards;
+      if (!gameRBName) gameRBName = rusherName;
     }
-    // Track defensive stats
+    // Track game-wide defensive stats
     if (defName) {
-      if (!driveDefStats[defName]) driveDefStats[defName] = { pos: res.featuredDef ? res.featuredDef.pos : '', tkl: 0, pbu: 0, int: 0, sack: 0 };
-      var ds = driveDefStats[defName];
+      if (!gameDefStats[defName]) gameDefStats[defName] = { pos: res.featuredDef ? res.featuredDef.pos : '', tkl: 0, pbu: 0, int: 0, sack: 0 };
+      var ds = gameDefStats[defName];
       if (r.isSack) ds.sack++;
       else if (r.isInterception) ds.int++;
       else if (r.isIncomplete) ds.pbu++;
