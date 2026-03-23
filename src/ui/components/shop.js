@@ -75,7 +75,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
     var isFull = inventory.length >= 3;
 
     var wrap = document.createElement('div');
-    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;max-width:120px;';
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;max-width:110px;overflow:hidden;';
 
     // Card visual
     var cardEl = buildTorchCard(card, 80, 112);
@@ -88,9 +88,9 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
     costEl.textContent = card.cost + 'P';
     wrap.appendChild(costEl);
 
-    // Effect text
+    // Effect text — clamped to 2 lines
     var effectEl = document.createElement('div');
-    effectEl.style.cssText = "font-family:'Rajdhani';font-size:8px;color:#aaa;text-align:center;line-height:1.2;";
+    effectEl.style.cssText = "font-family:'Rajdhani';font-size:7px;color:#aaa;text-align:center;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-height:1.8em;";
     effectEl.textContent = card.effect;
     wrap.appendChild(effectEl);
 
