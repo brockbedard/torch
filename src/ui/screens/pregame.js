@@ -8,8 +8,10 @@ import { SND } from '../../engine/sound.js';
 import { GS, setGs } from '../../state.js';
 import { TEAMS } from '../../data/teams.js';
 import { renderTeamBadge } from '../../data/teamLogos.js';
+import AudioStateManager from '../../engine/audioManager.js';
 
 export function buildPregame() {
+  AudioStateManager.setState('pre_game');
   var el = document.createElement('div');
   el.style.cssText = 'position:fixed;inset:0;background:#0A0804;z-index:1000;display:flex;align-items:center;justify-content:center;overflow:hidden;';
 

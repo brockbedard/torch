@@ -5,6 +5,7 @@
  */
 
 import { SND } from '../../engine/sound.js';
+import AudioStateManager from '../../engine/audioManager.js';
 import { GS, setGs, getTeam, getOffCards, getDefCards, shuffle } from '../../state.js';
 import { TEAMS, getSeasonOpponents } from '../../data/teams.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
@@ -46,6 +47,7 @@ function injectAnimations() {
 // ============================================================
 export function buildTeamSelect() {
   injectAnimations();
+  AudioStateManager.setState('pre_game');
   var el = document.createElement('div');
   el.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden;';
 

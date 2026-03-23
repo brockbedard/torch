@@ -2,6 +2,7 @@ import { SND } from '../../engine/sound.js';
 import { render, setGs, getOffCards, getDefCards, VERSION, VERSION_NAME } from '../../state.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { buildHomeCard } from '../components/cards.js';
+import AudioStateManager from '../../engine/audioManager.js';
 
 var DEV_LOG = [
   "v0.20.0 \u2014 Fire & Steel: Cards-hero layout, football-O wordmark, green offense/orange torch/blue defense triad, TORCH card premium treatment (animated flame, breathing glow, light cast, warm shimmer, ember sparks), warm scorched-black bg, steel blue defense, torch orange replaces purple, Font Awesome icons, Teko+Rajdhani font system.",
@@ -183,6 +184,7 @@ export function buildHome(){
   playBtn.textContent='KICK OFF';
   playBtn.onclick=function(){
     SND.click();
+    AudioStateManager.init(); // First user interaction — init audio
     var firstDone = localStorage.getItem('torch_first_season_done');
     setGs(function(s){ return Object.assign({}, s || {}, {screen:'teamSelect', team:null, isFirstSeason: !firstDone}); });
   };

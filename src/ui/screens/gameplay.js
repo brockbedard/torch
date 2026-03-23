@@ -16,6 +16,7 @@ import { TORCH_CARDS } from '../../data/torchCards.js';
 import { buildHomeCard, buildMaddenPlayer, buildPlayV1, buildTorchCard, injectCardStyles } from '../components/cards.js';
 import { showShop, renderInventory } from '../components/shop.js';
 import { showTooltip } from '../components/tooltip.js';
+import AudioStateManager from '../../engine/audioManager.js';
 import { getConditionEffects } from '../../data/gameConditions.js';
 import { checkPlayCombos } from '../../data/playSequenceCombos.js';
 
@@ -333,6 +334,7 @@ function resolveRoster(ids, pool) {
    BUILDER
    ═══════════════════════════════════════════ */
 export function buildGameplay() {
+  AudioStateManager.setState('normal_play');
   // v0.21: Map new team IDs to engine CT/IR slots.
   // Human always maps to CT slot, opponent to IR slot.
   const hAbbr = 'CT';
@@ -1692,12 +1694,12 @@ export function buildGameplay() {
         // Haptic
         if (navigator.vibrate && shakeIntensity > 0) try { navigator.vibrate(shakeIntensity > 3 ? 100 : 40); } catch(e) {}
 
-        // 300ms silence, then result sound
+        // 300ms silence, then result sound + audio state
         setTimeout(function() {
-          if (isTD) SND.td();
-          else if (isBad) SND.turnover();
-          else if (isExplosive) SND.bigPlay();
-          else SND.snap();
+          if (isTD) { SND.td(); AudioStateManager.setState('touchdown'); }
+          else if (isBad) { SND.turnover(); AudioStateManager.setState('turnover'); }
+          else if (isExplosive) { SND.bigPlay(); AudioStateManager.setState('big_moment'); }
+          else { SND.snap(); }
         }, 300);
       }, 800); // 800ms hitstop freeze
     }, 1200); // Beat 2 starts at 1200ms
@@ -1825,6 +1827,8 @@ export function buildGameplay() {
     phase = 'play';
     selP = null; selPl = null; selTorch = null; selectedPreSnap = null;
     panel.style.display = ''; // Restore panel visibility
+    // Return to normal audio state (or 2-min drill if active)
+    AudioStateManager.setState(gs.twoMinActive ? 'two_min_drill' : 'normal_play');
     drawBug(); drawField(); drawPanel();
     // Human always picks cards — on offense they pick offPlay+player,
     // on defense they pick defPlay+player. doSnap() passes them in the right slots.

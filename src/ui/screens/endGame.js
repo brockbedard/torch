@@ -7,8 +7,10 @@ import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam } from '../../state.js';
 import { TEAMS, getSeasonOpponents } from '../../data/teams.js';
 import { showShop } from '../components/shop.js';
+import AudioStateManager from '../../engine/audioManager.js';
 
 export function buildEndGame() {
+  AudioStateManager.setState('game_over');
   var el = document.createElement('div');
   el.className = 'sup';
   el.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;background:var(--bg);overflow-y:auto;';

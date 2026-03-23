@@ -7,8 +7,10 @@ import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam, getOtherTeam } from '../../state.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
 import { buildTorchCard } from '../components/cards.js';
+import AudioStateManager from '../../engine/audioManager.js';
 
 export function buildHalftime() {
+  AudioStateManager.setState('halftime');
   var el = document.createElement('div');
   el.className = 'sup';
   el.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;background:var(--bg);overflow-y:auto;';
