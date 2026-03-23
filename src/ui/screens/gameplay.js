@@ -1677,7 +1677,7 @@ export function buildGameplay() {
     dim.className = 'T-clash-dim';
     dim.style.opacity = '0';
     overlay.appendChild(dim);
-    el.appendChild(overlay);
+    document.body.appendChild(overlay);
 
     // ── PHASE 1: ALERT (0-300ms) — dim background ──
     requestAnimationFrame(function() {
