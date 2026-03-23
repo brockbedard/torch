@@ -58,7 +58,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
   var def = res.featuredDef;
   var offPlay = res.offPlay;
   var yards = r.yards || 0;
-  var isPass = offPlay.type === 'pass';
+  var isPass = r.playType === 'pass';
   var isHumanOnOff = gameState.possession === 'CT';
   var possTeam = isHumanOnOff ? humanTeamName : oppTeamName;
   var defTeam = isHumanOnOff ? oppTeamName : humanTeamName;
@@ -166,11 +166,12 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
 
   // ── POSITIVE GAIN ──
   if (yards > 0) {
+    var tackleTag = def ? ' ' + def.name + ' ' + pick(TACKLE_VERBS) + ' him.' : '';
     if (isPass) {
       if (tier <= 1) {
-        line1 = off.name + ' ' + pick(CATCH_VERBS) + ' a ' + (yards <= 5 ? 'short' : 'nice') + ' pass for ' + yards + '.';
+        line1 = off.name + ' ' + pick(CATCH_VERBS) + ' a ' + (yards <= 5 ? 'short' : 'nice') + ' pass for ' + yards + '.' + tackleTag;
       } else if (tier === 2) {
-        line1 = off.name + ' ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + ' for ' + yards + '!';
+        line1 = off.name + ' ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + ' for ' + yards + '!' + tackleTag;
         if (res.gotFirstDown) line2 = 'First down ' + possTeam + '. Chains move.';
       } else {
         line1 = off.name + '! ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + ' — ' + yards + ' yards!';
@@ -179,9 +180,9 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       }
     } else {
       if (tier <= 1) {
-        line1 = off.name + ' ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + ' for ' + yards + '.';
+        line1 = off.name + ' ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + ' for ' + yards + '.' + tackleTag;
       } else if (tier === 2) {
-        line1 = off.name + ' ' + pick(RUN_VERBS) + ' through for ' + yards + '!';
+        line1 = off.name + ' ' + pick(RUN_VERBS) + ' through for ' + yards + '!' + tackleTag;
         if (res.gotFirstDown) line2 = 'First down! ' + possTeam + ' keeps it moving.';
       } else {
         line1 = off.name + '! ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + ' — picks up ' + yards + '!';

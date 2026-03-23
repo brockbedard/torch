@@ -37,8 +37,11 @@ function gaussRandom(mean, stddev) {
 export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlayers, defPlayers, context) {
   const { playHistory, yardsToEndzone, ballPosition, down, distance, isConversion, scoreDiff, weather, momentum, coachBadge, difficulty, offenseIsHuman } = context;
 
+  const isPass = offPlay.completionRate !== null;
+
   const result = {
     yards: 0,
+    playType: isPass ? 'pass' : 'run',
     isComplete: false,
     isIncomplete: false,
     isSack: false,
@@ -56,8 +59,6 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     offTorchPts: 0,
     defTorchPts: 0,
   };
-
-  const isPass = offPlay.completionRate !== null;
   const isRun = !isPass;
   const is3rd4th = down >= 3;
 

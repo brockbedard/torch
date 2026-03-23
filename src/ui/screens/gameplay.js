@@ -32,22 +32,22 @@ const CSS = `
 /* scoreboard */
 .T-sb{background:#0E0A04;border-bottom:1px solid #1E1610;flex-shrink:0;z-index:60;overflow:hidden}
 /* score row: 5 columns — icon | team+score | center | team+score | icon */
-.T-sb-row{display:grid;grid-template-columns:36px 1fr minmax(60px,auto) 1fr 36px;align-items:center;justify-items:center;padding:6px 12px;gap:6px}
+.T-sb-row{display:grid;grid-template-columns:44px 1fr minmax(70px,auto) 1fr 44px;align-items:center;justify-items:center;padding:6px 10px;gap:4px}
 .T-sb-icon{line-height:1;text-align:center;display:flex;align-items:center;justify-content:center}
-.T-sb-side{display:flex;flex-direction:column;align-items:center;padding:6px 6px;border-radius:6px;position:relative}
-.T-sb-side-glow{background:radial-gradient(ellipse,rgba(255,204,0,.2) 0%,rgba(255,204,0,.06) 50%,transparent 75%);box-shadow:0 0 20px rgba(255,204,0,.18)}
-.T-sb-name{font-family:'Teko';font-size:18px;font-style:italic;line-height:1;letter-spacing:1px;white-space:nowrap}
+.T-sb-side{display:flex;flex-direction:column;align-items:center;padding:4px 6px;border-radius:6px;position:relative}
+.T-sb-side-glow{background:radial-gradient(ellipse,rgba(255,204,0,.15) 0%,rgba(255,204,0,.04) 50%,transparent 75%);box-shadow:0 0 16px rgba(255,204,0,.12);border:1px solid rgba(255,204,0,.15)}
+.T-sb-name{font-family:'Teko';font-weight:700;font-size:20px;font-style:italic;line-height:1;letter-spacing:1px;white-space:nowrap}
 .T-sb-score-row{position:relative;margin-top:2px;display:flex;justify-content:center}
-.T-sb-pos-arrow{position:absolute;top:50%;transform:translateY(-50%);font-size:12px;color:#c8a030;line-height:1}
-.T-sb-pos-arrow-l{left:-14px}
-.T-sb-pos-arrow-r{right:-14px}
+.T-sb-pos-arrow{position:absolute;top:50%;transform:translateY(-50%);font-size:14px;color:#00ff44;line-height:1}
+.T-sb-pos-arrow-l{left:-16px}
+.T-sb-pos-arrow-r{right:-16px}
 .T-sb-pts{font-family:'Rajdhani';font-size:28px;color:#e8e6ff;line-height:1}
 .T-sb-pts-glow{text-shadow:0 0 14px rgba(255,204,0,.5)}
-.T-sb-center{text-align:center;padding:0 8px;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);min-width:80px}
-.T-sb-half{font-family:'Teko';font-size:17px;color:#c8a030;letter-spacing:2px;line-height:1;white-space:nowrap}
-.T-sb-snap{font-family:'Rajdhani';font-size:12px;color:#e8e6ff;margin-top:3px;line-height:1;text-shadow:0 0 4px rgba(255,255,255,.2)}
-.T-sb-countdown{font-family:'Rajdhani';font-size:9px;color:#554f80;margin-top:5px;line-height:1}
-.T-sb-countdown-live{font-size:14px;color:#e03050;text-shadow:0 0 10px rgba(224,48,80,.5)}
+.T-sb-center{text-align:center;padding:0 6px;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);min-width:70px}
+.T-sb-half{font-family:'Teko';font-size:11px;color:#c8a030;letter-spacing:2px;line-height:1;white-space:nowrap}
+.T-sb-snap{font-family:'Teko';font-weight:700;font-size:22px;color:#e8e6ff;margin-top:2px;line-height:1;text-shadow:0 0 4px rgba(255,255,255,.2)}
+.T-sb-countdown{font-family:'Teko';font-size:18px;color:#554f80;margin-top:2px;line-height:1}
+.T-sb-countdown-live{font-size:24px;color:#e03050;text-shadow:0 0 10px rgba(224,48,80,.5);background:rgba(224,48,80,.1);padding:2px 8px;border-radius:4px}
 /* situation bar — always one line, never wraps */
 .T-sb-sit{display:flex;align-items:center;justify-content:center;padding:4px 8px;background:rgba(0,0,0,.4);border-top:1px solid rgba(255,255,255,.04);gap:6px;white-space:nowrap;overflow:hidden}
 .T-sb-sit-down{font-family:'Rajdhani';font-size:10px;color:#FF6B00;letter-spacing:.5px;flex-shrink:0}
@@ -449,6 +449,7 @@ export function buildGameplay() {
   var driveRecYds = 0, driveRec = 0;
   var driveFirstDowns = 0;
   var driveQBName = '', driveRBName = '', driveWRName = '';
+  var driveDefStats = {}; // { name: { pos, tkl, pbu, int, sack } }
   var driveCommLine1 = '', driveCommLine2 = '';
   function resetDriveSummary() {
     driveSummaryLog = [];
@@ -457,6 +458,7 @@ export function buildGameplay() {
     driveRec = 0; driveRecYds = 0;
     driveFirstDowns = 0;
     driveQBName = ''; driveRBName = ''; driveWRName = '';
+    driveDefStats = {};
     driveCommLine1 = ''; driveCommLine2 = '';
   }
 
@@ -566,9 +568,9 @@ export function buildGameplay() {
     const hTorchHTML = `<span class="T-sb-sit-torch">T ${hTorch}</span>`;
     const isHumanCT = hAbbr === 'CT';
 
-    // Team badges (32px) replace old emoji icons
-    var ctBadge = renderTeamBadge(GS.team, 32);
-    var irBadge = renderTeamBadge(GS.opponent, 32);
+    // Team badges (44px)
+    var ctBadge = renderTeamBadge(GS.team, 44);
+    var irBadge = renderTeamBadge(GS.opponent, 44);
 
     bug.innerHTML =
       `<div class="T-sb-row">` +
@@ -793,6 +795,26 @@ export function buildGameplay() {
     if (driveRec > 0) {
       var wrLabel = driveWRName ? 'WR <span style="color:#fff">' + driveWRName + '</span>' : 'WR';
       statLines.push('<span style="color:#FF6B00">' + wrLabel + '</span> <span style="color:#3df58a">' + driveRec + ' rec, ' + driveRecYds + ' yds</span>');
+    }
+    // Defensive stat line — find best defender
+    var bestDef = null, bestDefName = '';
+    var defKeys = Object.keys(driveDefStats);
+    if (defKeys.length > 0) {
+      var bestScore = -1;
+      defKeys.forEach(function(name) {
+        var d = driveDefStats[name];
+        var score = d.tkl + d.pbu * 2 + d.int * 5 + d.sack * 3;
+        if (score > bestScore) { bestScore = score; bestDef = d; bestDefName = name; }
+      });
+      if (bestDef && bestScore > 0) {
+        var defParts = [];
+        if (bestDef.tkl > 0) defParts.push(bestDef.tkl + ' tkl');
+        if (bestDef.pbu > 0) defParts.push(bestDef.pbu + ' PBU');
+        if (bestDef.int > 0) defParts.push(bestDef.int + ' INT');
+        if (bestDef.sack > 0) defParts.push(bestDef.sack + ' sack');
+        var defPos = bestDef.pos || 'DEF';
+        statLines.push('<span style="color:#FF6B00">' + defPos + ' <span style="color:#fff">' + bestDefName + '</span></span> <span style="color:#3df58a">' + defParts.join(', ') + '</span>');
+      }
     }
     if (statLines.length > 0) {
       html += '<div class="T-drive-stats" style="font-family:\'Teko\';font-size:15px;font-weight:700">';
@@ -1856,7 +1878,7 @@ export function buildGameplay() {
     var r = res.result;
     var offName = res.featuredOff ? res.featuredOff.name : '';
     var defName = res.featuredDef ? res.featuredDef.name : '';
-    var isPassPlay = playedPlay && playedPlay.completionRate !== null && playedPlay.completionRate !== undefined;
+    var isPassPlay = r.playType === 'pass';
     // ESPN-style play description with player names
     var espnDesc = '?';
     if (r.isTouchdown) espnDesc = r.yards + '-yd TD ' + (isPassPlay ? 'Pass to ' + offName : 'Run by ' + offName);
@@ -1883,6 +1905,15 @@ export function buildGameplay() {
     if (snapQBName && !driveQBName) driveQBName = snapQBName;
     if (snapRBName && !driveRBName) driveRBName = snapRBName;
     if (snapWRName && !driveWRName) driveWRName = snapWRName;
+    // Track defensive stats
+    if (defName) {
+      if (!driveDefStats[defName]) driveDefStats[defName] = { pos: res.featuredDef ? res.featuredDef.pos : '', tkl: 0, pbu: 0, int: 0, sack: 0 };
+      var ds = driveDefStats[defName];
+      if (r.isSack) ds.sack++;
+      else if (r.isInterception) ds.int++;
+      else if (r.isIncomplete) ds.pbu++;
+      else if (!r.isTouchdown) ds.tkl++;
+    }
     driveSummaryLog.push({
       down: preSnap.down, dist: preSnap.distance,
       playName: espnDesc,
