@@ -1765,50 +1765,81 @@ export function buildGameplay() {
       }, hitstopMs);
     }, peakTime);
 
-    // ── PHASE 4: SETTLE — result text + aftermath ──
+    // ── POST-PLAY 4-BEAT DISPLAY (Phase 6) ──
     function doSettle() {
-      // Remove skip handler
       overlay.onclick = null;
 
-      // Result text
+      // Intensity level: 1=quick (60%), 2=notable (30%), 3=big play (10%)
+      var level = tier; // Reuse drama tier from clash
+      var ydsFontSize = level === 3 ? '96px' : level === 2 ? '72px' : '64px';
+      var totalDur = level === 3 ? 5000 : level === 2 ? 3500 : 2200;
+      var gotFirstDown = res.gotFirstDown;
+
+      // ── BEAT 1: IMPACT (0-800ms) — yardage slams onto screen ──
       var resultWrap = document.createElement('div');
       resultWrap.className = 'T-clash-result';
       resultWrap.style.opacity = '0';
-
-      var comboHTML = '';
-      if (res._combos && res._combos.length > 0) {
-        comboHTML = '<div style="font-family:\'Teko\';font-weight:700;font-size:18px;color:#FFB800;letter-spacing:2px;margin-top:4px;text-shadow:0 0 12px rgba(255,184,0,0.5);">' + res._combos.join(' + ') + '</div>';
-      }
-      var torchHTML = '';
-      if (res._torchEarned && res._torchEarned > 0) {
-        torchHTML = '<div style="font-family:\'Rajdhani\';font-weight:700;font-size:13px;color:#FFB800;margin-top:4px;letter-spacing:1px;">T +' + res._torchEarned + '</div>';
-      }
-      resultWrap.innerHTML =
-        '<div class="T-clash-yds" style="color:' + resultColor + ';font-size:' + (isTD ? '72px' : '64px') + '">' + resultText + '</div>' +
-        comboHTML + torchHTML +
-        '<div class="T-clash-label" style="color:' + resultColor + '">' + res.offPlay.name + ' vs ' + res.defPlay.name + '</div>';
+      resultWrap.innerHTML = '<div class="T-clash-yds" style="color:' + resultColor + ';font-size:' + ydsFontSize + '">' + resultText + '</div>';
       overlay.appendChild(resultWrap);
-
       requestAnimationFrame(function() {
         resultWrap.style.opacity = '1';
-        resultWrap.style.transition = 'opacity 0.4s';
+        resultWrap.style.transition = 'opacity 0.3s';
       });
 
-      // Update board
+      // Update board immediately so scorebug shows new state
       drawBug();
       drawField();
 
-      // Commentary after 800ms
+      // ── BEAT 2: CONTEXT (800ms-2s) — first down flash, commentary ──
       setTimeout(function() {
+        // First down flash
+        if (gotFirstDown && !isTD) {
+          var fdFlash = document.createElement('div');
+          fdFlash.style.cssText = "font-family:'Teko';font-weight:700;font-size:24px;color:#00ff44;letter-spacing:3px;text-shadow:0 0 16px rgba(0,255,68,0.5);margin-top:8px;animation:T-clash-yds 0.5s ease-out both;";
+          fdFlash.textContent = 'FIRST DOWN';
+          resultWrap.appendChild(fdFlash);
+          SND.chime();
+        }
+
+        // Matchup label
+        var labelEl = document.createElement('div');
+        labelEl.className = 'T-clash-label';
+        labelEl.style.cssText = 'color:' + resultColor + ';opacity:0;transition:opacity 0.3s;margin-top:6px;';
+        labelEl.textContent = res.offPlay.name + ' vs ' + res.defPlay.name;
+        resultWrap.appendChild(labelEl);
+        setTimeout(function() { labelEl.style.opacity = '1'; }, 100);
+
+        // Commentary line 1
         var bd = breakdown(res.offPlay, res.defPlay, r, res.featuredOff, res.featuredDef);
         setNarr(r.description, bd);
+
         if (isFirstGame) {
           if (r.comboFired && snapCount <= 4) showTooltip(el, 'first_combo', 'Match the right player with the right play for bonus yards!', { delay: 800 });
           if (isTD) showTooltip(el, 'first_td', 'TORCH points are your score \u2014 and your wallet.', { delay: 1500 });
         }
       }, 800);
 
-      // Cleanup and proceed
+      // ── BEAT 3: REWARD (2-3.5s) — TORCH points + combos ──
+      setTimeout(function() {
+        // Combo flash
+        if (res._combos && res._combos.length > 0) {
+          var comboEl = document.createElement('div');
+          comboEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#FFB800;letter-spacing:2px;text-shadow:0 0 12px rgba(255,184,0,0.5);margin-top:6px;animation:T-clash-yds 0.4s ease-out both;";
+          comboEl.textContent = res._combos.join(' + ');
+          resultWrap.appendChild(comboEl);
+        }
+
+        // TORCH points earned
+        if (res._torchEarned && res._torchEarned > 0) {
+          var torchEl = document.createElement('div');
+          torchEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:#FFB800;margin-top:6px;letter-spacing:1px;opacity:0;transition:opacity 0.4s;";
+          torchEl.textContent = 'T +' + res._torchEarned;
+          resultWrap.appendChild(torchEl);
+          setTimeout(function() { torchEl.style.opacity = '1'; }, 100);
+        }
+      }, 2000);
+
+      // ── BEAT 4: READY (cleanup + proceed) ──
       setTimeout(function() {
         overlay.style.opacity = '0';
         overlay.style.transition = 'opacity 0.4s';
@@ -1832,7 +1863,7 @@ export function buildGameplay() {
           if (isFirstGame) showTooltip(el, 'first_shop', 'Spend points on TORCH cards for an edge. Buy it or pass!', { delay: 200 });
           triggerShop(shopTrigger, afterShop);
         } else { afterShop(); }
-      }, aftermathDur);
+      }, totalDur);
     }
   }
 
