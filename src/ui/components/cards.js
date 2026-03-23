@@ -7,6 +7,7 @@
 
 import { BADGE_ICON_PATHS } from '../../data/badgeIcons.js';
 import { TEAMS } from '../../data/teams.js';
+import { renderTeamBadge } from '../../data/teamLogos.js';
 
 // ====== CARD ANIMATIONS (inject once) ======
 var _stylesInjected = false;
@@ -253,30 +254,12 @@ export function buildMaddenPlayer(p, w, h) {
       + '</div>';
   }
 
-  // Team-colored helmet art — enhanced with fill, stroke, facemask, shadow
-  var helmW = lg ? 80 : 52;
-  var helmH = lg ? 64 : 42;
-  var helmColor = teamColor;
-  // Determine facemask color from team data if available
-  var helmTeamId = p.teamId || null;
-  var helmFm = '#ccc';
-  var helmStripe = helmColor;
-  if (helmTeamId && TEAMS[helmTeamId]) {
-    helmFm = TEAMS[helmTeamId].helmet.facemask;
-    helmStripe = TEAMS[helmTeamId].helmet.stripe;
-  }
-  var artArea = '<div style="position:absolute;top:'+(lg?'28':'18')+'px;left:0;right:0;bottom:'+(lg?'26':'18')+'px;display:flex;align-items:center;justify-content:center;">'
-    +'<svg viewBox="0 0 512 411" width="'+helmW+'" height="'+helmH+'" fill="none" style="position:absolute;filter:drop-shadow(2px 2px 4px rgba(0,0,0,0.5));">'
-    // Filled helmet shell
-    +'<path fill="'+helmColor+'" fill-rule="nonzero" d="'+HELMET_PATH+'"/>'
-    // Edge stroke for definition
-    +'<path fill="none" stroke="'+helmColor+'" stroke-width="4" stroke-opacity="0.3" fill-rule="nonzero" d="'+HELMET_PATH+'"/>'
-    // Facemask bars
-    +'<rect x="378" y="235" width="'+(lg?'90':'85')+'" height="'+(lg?'10':'8')+'" rx="'+(lg?'5':'4')+'" fill="'+helmFm+'" opacity="0.75"/>'
-    +'<rect x="378" y="260" width="'+(lg?'80':'75')+'" height="'+(lg?'10':'8')+'" rx="'+(lg?'5':'4')+'" fill="'+helmFm+'" opacity="0.75"/>'
-    // Stripe
-    +'<rect x="198" y="28" width="'+(lg?'18':'14')+'" height="'+(lg?'115':'100')+'" rx="'+(lg?'5':'4')+'" fill="'+helmStripe+'" opacity="0.5"/>'
-    +'</svg>'
+  // Team logo badge art (replaces helmet)
+  var badgeTeamId = p.teamId || null;
+  var badgeArtSize = lg ? 64 : 42;
+  var badgeArtHtml = badgeTeamId ? renderTeamBadge(badgeTeamId, badgeArtSize) : '';
+  var artArea = '<div style="position:absolute;top:'+(lg?'28':'18')+'px;left:0;right:0;bottom:'+(lg?'26':'18')+'px;display:flex;align-items:center;justify-content:center;opacity:0.85;">'
+    + badgeArtHtml
     +'</div>';
 
   // Bottom gradient

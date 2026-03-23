@@ -55,6 +55,29 @@ const CSS = `
 .T-sb-sit-ball{font-family:'Rajdhani';font-size:10px;color:#e8e6ff;opacity:.7;letter-spacing:.5px;flex-shrink:1;overflow:hidden;text-overflow:ellipsis}
 .T-sb-sit-torch{font-family:'Rajdhani';font-size:12px;color:#c8a030;letter-spacing:.5px;transition:transform .08s,text-shadow .08s;flex-shrink:0}
 
+/* TORCH points banner */
+.T-torch-banner{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;background:linear-gradient(90deg,rgba(255,184,0,0.12) 0%,rgba(255,69,17,0.12) 100%);border-top:2px solid #FFB800;border-bottom:2px solid #FFB800;flex-shrink:0}
+.T-torch-banner-flame{width:20px;height:20px;animation:T-flame-pulse 1.5s ease-in-out infinite}
+@keyframes T-flame-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.85}}
+.T-torch-banner-label{font-family:'Teko';font-weight:700;font-size:28px;color:#FFB800;letter-spacing:3px;line-height:1}
+.T-torch-banner-pts{font-family:'Teko';font-weight:700;font-size:32px;color:#fff;text-shadow:0 0 12px #FFB800;line-height:1;transition:transform .3s}
+
+/* drive summary */
+.T-drive{flex:1;overflow-y:auto;padding:12px 14px 16px;background:linear-gradient(180deg,rgba(10,8,4,0) 0%,rgba(10,8,4,0.95) 8%);font-family:'Rajdhani',sans-serif}
+.T-drive-hdr{display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:1px solid #2a2a2a}
+.T-drive-hdr-l{font-family:'Teko';font-weight:700;font-size:14px;color:#FF6B00;letter-spacing:2px;text-transform:uppercase;line-height:1}
+.T-drive-hdr-r{font-family:'Rajdhani';font-size:12px;font-weight:600;color:#aaa;line-height:1}
+.T-drive-hdr-r span{color:#fff}
+.T-drive-row{display:flex;align-items:center;gap:4px;padding:3px 0;font-size:12px;transition:opacity .3s}
+.T-drive-row-dd{font-family:'Teko';font-size:11px;color:#5a5a5a;min-width:52px;flex-shrink:0}
+.T-drive-row-play{font-family:'Rajdhani';font-size:12px;color:#fff;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.T-drive-row-res{font-family:'Teko';font-weight:700;font-size:14px;min-width:40px;text-align:right;flex-shrink:0}
+.T-drive-stats{border-top:1px solid #2a2a2a;margin-top:10px;padding-top:8px;display:flex;gap:20px}
+.T-drive-stat{font-family:'Rajdhani';font-size:11px;font-weight:600;color:#fff}
+.T-drive-comm{margin-top:8px;font-family:'Rajdhani';font-size:13px;font-weight:700;color:#e8e6ff;line-height:1.3;letter-spacing:.3px}
+.T-drive-comm-sub{font-family:'Rajdhani';font-size:11px;color:#C4A265;line-height:1.2;margin-top:2px}
+.T-drive-idle{font-family:'Rajdhani';font-size:11px;color:#444;letter-spacing:.5px;margin-top:8px}
+
 /* field strip — Tecmo Bowl inspired */
 .T-strip{height:160px;flex-shrink:0;position:relative;background:#1a6a1a;overflow:hidden;border-bottom:1px solid #1E1610}
 .T-field-turf{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.04) 50%,transparent 50%,transparent 100%);background-size:100% 12px}
@@ -419,6 +442,20 @@ export function buildGameplay() {
   // Play Sequence Combos — track play history per drive
   var drivePlayHistory = []; // {cat, playId} entries for current drive
 
+  // Drive summary tracking
+  var driveSummaryLog = []; // [{down, dist, playName, yards, isTD, isSack, isInc, isInt, isFumble, isPass}]
+  var drivePassAtt = 0, drivePassComp = 0, drivePassYds = 0;
+  var driveRushAtt = 0, driveRushYds = 0;
+  var driveFirstDowns = 0;
+  var driveCommLine1 = '', driveCommLine2 = '';
+  function resetDriveSummary() {
+    driveSummaryLog = [];
+    drivePassAtt = 0; drivePassComp = 0; drivePassYds = 0;
+    driveRushAtt = 0; driveRushYds = 0;
+    driveFirstDowns = 0;
+    driveCommLine1 = ''; driveCommLine2 = '';
+  }
+
   // TORCH card inventory (v0.21 — 3 slots, persisted in season)
   var torchInventory = (GS.season && GS.season.torchCards) ? GS.season.torchCards.slice() : [];
   var selectedPreSnap = null; // card object selected for current snap
@@ -550,7 +587,21 @@ export function buildGameplay() {
         `<div class="T-sb-sit-ball">BALL ON <span style="color:${possTeam.accent}">${ballLabel}</span></div>` +
         (!isHumanCT ? '<div class="T-sb-sit-div"></div>' + hTorchHTML : '') +
       `</div>`;
+    drawTorchBanner();
   }
+
+  // ── TORCH POINTS BANNER ──
+  const torchBanner = document.createElement('div'); torchBanner.className = 'T-torch-banner'; el.appendChild(torchBanner);
+  var torchBannerPtsEl = null;
+  function drawTorchBanner() {
+    var hTorch = hAbbr === 'CT' ? gs.getSummary().ctTorchPts : gs.getSummary().irTorchPts;
+    var flameSvg = '<svg class="T-torch-banner-flame" viewBox="0 0 44 44" fill="none"><defs><linearGradient id="tbf" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#FFB800"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#tbf)"/></svg>';
+    torchBanner.innerHTML = flameSvg +
+      '<div class="T-torch-banner-label">TORCH</div>' +
+      '<div class="T-torch-banner-pts">' + hTorch + '</div>';
+    torchBannerPtsEl = torchBanner.querySelector('.T-torch-banner-pts');
+  }
+  drawTorchBanner();
 
   // ── FIELD STRIP ──
   const strip = document.createElement('div'); strip.className = 'T-strip'; el.appendChild(strip);
@@ -651,16 +702,66 @@ export function buildGameplay() {
   // ── PANEL ──
   const panel = document.createElement('div'); panel.className = 'T-panel'; el.appendChild(panel);
 
-  // ── PLAY-BY-PLAY BOOTH (bottom third) ──
-  const narr = document.createElement('div'); narr.className = 'T-narr';
-  narr.innerHTML = '<div class="T-pbp-idle">Awaiting snap<span class="T-pbp-cursor"></span></div>';
+  // ── DRIVE SUMMARY PANEL (replaces old play-by-play booth) ──
+  const driveSummaryEl = document.createElement('div'); driveSummaryEl.className = 'T-drive'; el.appendChild(driveSummaryEl);
+
+  // Keep narr as a virtual container for backward compat — content mirrored into drive summary commentary
+  const narr = document.createElement('div'); narr.className = 'T-narr'; narr.style.display = 'none';
   el.appendChild(narr);
 
   function setNarr(a, b) {
+    driveCommLine1 = a || '';
+    driveCommLine2 = b || '';
+    // Also update narr for backward compat (used in play-by-play narration path)
     narr.innerHTML = '<div class="T-pbp"><div class="T-pbp-line T-pbp-live">' + a + '</div>' +
       (b ? '<div class="T-pbp-sub">' + b + '</div>' : '') + '</div>';
-    narr.scrollTop = narr.scrollHeight;
+    drawDriveSummary();
   }
+
+  function drawDriveSummary() {
+    var totalYds = 0, totalPlays = driveSummaryLog.length;
+    driveSummaryLog.forEach(function(e) { totalYds += e.yards; });
+
+    var html = '<div class="T-drive-hdr">' +
+      '<div class="T-drive-hdr-l">CURRENT DRIVE</div>' +
+      '<div class="T-drive-hdr-r"><span>' + totalPlays + '</span> plays \u00b7 <span>' + totalYds + '</span> yds \u00b7 <span>' + driveFirstDowns + '</span> 1st dn</div>' +
+      '</div>';
+
+    // Play-by-play ticker rows
+    if (driveSummaryLog.length > 0) {
+      driveSummaryLog.forEach(function(e, i) {
+        var isNewest = i === driveSummaryLog.length - 1;
+        var resColor = e.isTD ? '#FFB800' : e.yards > 0 ? '#00ff44' : e.yards < 0 || e.isSack ? '#ff0040' : '#fff';
+        var resText = e.isTD ? 'TD' : e.isSack ? 'SACK' : e.isInt ? 'INT' : e.isFumble ? 'FUM' : e.isInc ? 'INC' : (e.yards >= 0 ? '+' : '') + e.yards;
+        var dn = ['','1st','2nd','3rd','4th'][e.down] || '';
+        html += '<div class="T-drive-row" style="opacity:' + (isNewest ? '1' : '0.55') + '">' +
+          '<div class="T-drive-row-dd">' + dn + ' & ' + e.dist + '</div>' +
+          '<div class="T-drive-row-play">' + e.playName + '</div>' +
+          '<div class="T-drive-row-res" style="color:' + resColor + '">' + resText + '</div>' +
+          '</div>';
+      });
+    }
+
+    // QB / RB stat line
+    var qbLine = 'QB ' + drivePassComp + '/' + drivePassAtt + ', ' + drivePassYds + ' yds';
+    var rbLine = 'RB ' + driveRushAtt + ' car, ' + driveRushYds + ' yds';
+    html += '<div class="T-drive-stats">' +
+      '<div class="T-drive-stat">' + qbLine + '</div>' +
+      '<div class="T-drive-stat">' + rbLine + '</div>' +
+      '</div>';
+
+    // Commentary text
+    if (driveCommLine1) {
+      html += '<div class="T-drive-comm">' + driveCommLine1 + '</div>';
+      if (driveCommLine2) html += '<div class="T-drive-comm-sub">' + driveCommLine2 + '</div>';
+    } else {
+      html += '<div class="T-drive-idle">Awaiting snap</div>';
+    }
+
+    driveSummaryEl.innerHTML = html;
+    driveSummaryEl.scrollTop = driveSummaryEl.scrollHeight;
+  }
+  drawDriveSummary();
 
   function distLabel(dist, ydsToEz) {
     var yz = ydsToEz !== undefined ? ydsToEz : gs.getSummary().yardsToEndzone;
@@ -1701,6 +1802,25 @@ export function buildGameplay() {
     }
 
     driveSnaps.push(res);
+
+    // Track drive summary
+    var r = res.result;
+    var isPassPlay = playedPlay && playedPlay.completionRate !== null && playedPlay.completionRate !== undefined;
+    driveSummaryLog.push({
+      down: preSnap.down, dist: preSnap.distance,
+      playName: playedPlay ? playedPlay.name : '?',
+      yards: r.yards, isTD: r.isTouchdown, isSack: r.isSack,
+      isInc: r.isIncomplete, isInt: r.isInterception, isFumble: r.isFumbleLost
+    });
+    if (isPassPlay) {
+      drivePassAtt++;
+      if (r.isComplete) { drivePassComp++; drivePassYds += r.yards; }
+    } else if (!r.isSack) {
+      driveRushAtt++;
+      driveRushYds += r.yards;
+    }
+    if (res.gotFirstDown) driveFirstDowns++;
+
     var sides = gs.getCurrentSides();
     var teamId = GS.team;
     if (isOff) {
@@ -1944,7 +2064,7 @@ export function buildGameplay() {
         function afterShop() {
           if (res.gameEvent === 'touchdown') { showConv(res.scoringTeam); return; }
           if (posChanged(res.gameEvent, prevPoss)) {
-            showPossCut(res.gameEvent, function() { showDrive(driveSnaps, prevPoss, function() { driveSnaps=[]; drivePlayHistory=[]; if(!checkEnd()) nextSnap(); }); });
+            showPossCut(res.gameEvent, function() { showDrive(driveSnaps, prevPoss, function() { driveSnaps=[]; drivePlayHistory=[]; resetDriveSummary(); if(!checkEnd()) nextSnap(); }); });
           } else { if(!checkEnd()) nextSnap(); }
         }
         if (shopTrigger) {
@@ -1974,7 +2094,7 @@ export function buildGameplay() {
     panel.style.display = ''; // Restore panel visibility
     // Return to normal audio state (or 2-min drill if active)
     AudioStateManager.setState(gs.twoMinActive ? 'two_min_drill' : 'normal_play');
-    drawBug(); drawField(); drawPanel();
+    drawBug(); drawField(); drawPanel(); drawDriveSummary();
     // Human always picks cards — on offense they pick offPlay+player,
     // on defense they pick defPlay+player. doSnap() passes them in the right slots.
     // No auto-CPU here — the human taps SNAP every time.
@@ -2007,6 +2127,8 @@ export function buildGameplay() {
 
   function showPossCut(ev, done) {
     // Clear stale commentary from previous possession
+    driveCommLine1 = ''; driveCommLine2 = '';
+    drawDriveSummary();
     narr.innerHTML = '<div class="T-pbp-idle">Awaiting snap<span class="T-pbp-cursor"></span></div>';
     const s = gs.getSummary();
     const nt = s.possession==='CT' ? hTeam : oTeam;
@@ -2063,7 +2185,7 @@ export function buildGameplay() {
     if (!isH) {
       gs.handleConversion('xp'); drawBug();
       setNarr('Extra point is good.', '+1 point');
-      showPossCut('score', () => { showDrive(driveSnaps, team, () => { driveSnaps=[]; drivePlayHistory=[]; if(!checkEnd()) nextSnap(); }); });
+      showPossCut('score', () => { showDrive(driveSnaps, team, () => { driveSnaps=[]; drivePlayHistory=[]; resetDriveSummary(); if(!checkEnd()) nextSnap(); }); });
       return;
     }
     // Show conversion choice in the panel
@@ -2089,7 +2211,7 @@ export function buildGameplay() {
         if (c.id === 'xp') {
           gs.handleConversion('xp'); drawBug();
           setNarr('Extra point is GOOD!', '+1 point');
-          showPossCut('score', function() { showDrive(driveSnaps, team, function() { driveSnaps=[]; drivePlayHistory=[]; if(!checkEnd()) nextSnap(); }); });
+          showPossCut('score', function() { showDrive(driveSnaps, team, function() { driveSnaps=[]; drivePlayHistory=[]; resetDriveSummary(); if(!checkEnd()) nextSnap(); }); });
         } else {
           // Enter card selection for 2pt/3pt conversion
           conversionMode = { choice: c.id, team: team };
@@ -2148,7 +2270,7 @@ export function buildGameplay() {
     showClashOnField(fakeRes);
     runPlayByPlay(fakeRes, function() {
       drawBug(); drawField();
-      showPossCut('score', function() { showDrive(driveSnaps, cm.team, function() { driveSnaps=[]; drivePlayHistory=[]; if(!checkEnd()) nextSnap(); }); });
+      showPossCut('score', function() { showDrive(driveSnaps, cm.team, function() { driveSnaps=[]; drivePlayHistory=[]; resetDriveSummary(); if(!checkEnd()) nextSnap(); }); });
     });
   }
 
