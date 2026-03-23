@@ -345,6 +345,7 @@ export function buildVisualTest() {
       ctTorchPts: 185, irTorchPts: 120,
       humanTorchCards: [], cpuTorchCards: [],
       startSecondHalf: function() {},
+      stats: { ctTotalYards: 142, irTotalYards: 98, ctFirstDowns: 6, irFirstDowns: 4, ctTurnovers: 0, irTurnovers: 1, sackCount: 2, badgeCombos: 3, explosivePlays: 2, fourthDownConversions: 0, fourthDownAttempts: 1 },
     };
     mockGs({
       screen: 'halftime', team: 'sentinels', opponent: 'serpents',
@@ -435,6 +436,27 @@ export function buildVisualTest() {
         (s.combo ? "<div class='vt-pbp-combo'>" + s.combo + "</div>" : '');
       el.appendChild(block);
     });
+  })();
+
+  // ============================================================
+  // 12.5 POSSESSION CHANGE
+  // ============================================================
+  section('POSSESSION CHANGE — Your Ball');
+  note('Static mockup of the upgraded possession screen');
+  (function() {
+    var boars = TEAMS.sentinels;
+    var serpents = TEAMS.serpents;
+    var pc = document.createElement('div');
+    pc.style.cssText = 'width:375px;height:240px;background:#0A0804;border:1px solid #333;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;';
+    pc.innerHTML =
+      '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<div style="text-align:center;">' + renderTeamBadge('sentinels', 28) + "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:24px;color:#fff;\">21</div></div>" +
+        "<div style=\"font-family:'Teko';font-size:18px;color:#555;\">\u2014</div>" +
+        '<div style="text-align:center;">' + renderTeamBadge('serpents', 28) + "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:24px;color:#fff;\">14</div></div>" +
+      '</div>' +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:" + boars.accent + ";letter-spacing:3px;\">YOUR BALL</div>" +
+      "<div style=\"font-family:'Rajdhani';font-size:12px;color:#aaa;\">TOUCHDOWN.</div>";
+    frame(pc, 250);
   })();
 
   // ============================================================
