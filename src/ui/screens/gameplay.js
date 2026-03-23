@@ -212,9 +212,12 @@ const CSS = `
 @keyframes T-clash-yds{0%{transform:scale(0.3);opacity:0}50%{transform:scale(1.2);opacity:1}75%{transform:scale(0.95)}100%{transform:scale(1);opacity:1}}
 @keyframes T-clash-spark{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(0)}}
 @keyframes T-clash-settle{0%{transform:scale(1.15)}40%{transform:scale(0.95)}100%{transform:scale(1)}}
-/* Card deal animation */
-@keyframes T-deal-in{0%{transform:translateX(120px) scale(0.8);opacity:0}70%{opacity:1}100%{transform:translateX(0) scale(1);opacity:1}}
-.T-card-deal{animation:T-deal-in 0.3s cubic-bezier(0.22,1.3,0.36,1) both}
+/* Card deal: slide in face-down then flip to face-up */
+@keyframes T-deal-slide{0%{transform:translateX(100px);opacity:0}100%{transform:translateX(0);opacity:1}}
+@keyframes T-deal-flip{0%{transform:rotateY(180deg)}100%{transform:rotateY(0deg)}}
+.T-card-deal{perspective:600px}
+.T-card-deal .T-card-back{position:absolute;inset:0;backface-visibility:hidden;z-index:2;border-radius:6px;overflow:hidden}
+.T-card-deal .T-card-face{backface-visibility:hidden;transform:rotateY(180deg);width:100%;height:100%}
 /* Card selection lift */
 .T-card-lift{transform:scale(1.05) translateY(-4px);box-shadow:0 6px 20px rgba(0,255,68,0.3)!important;border-color:#00ff44!important}
 @keyframes T-clash-glow{0%,100%{box-shadow:0 0 8px currentColor}50%{box-shadow:0 0 20px currentColor}}
@@ -1468,13 +1471,37 @@ export function buildGameplay() {
           risk: getRisk(play.id), riskColor: catColor,
           svg: svg, bg: isOffPlay ? '#0A1A06' : '#0A1420'
         }, 80, 150);
-        // Wrap in T-card for flex sizing and drag + deal animation
+        // Wrap in T-card with card back → flip → face-up deal animation
         const c = document.createElement('div');
         c.className = 'T-card T-card-deal' + (isSel ? ' T-card-sel T-card-gone' : '');
-        c.style.animationDelay = (playIdx * 50) + 'ms';
+        c.style.cssText += 'transform-style:preserve-3d;';
+
+        // Card back (face-down) — use buildHomeCard from shared components
+        var backType = isOffPlay ? 'offense' : 'defense';
+        var cardBack = buildHomeCard(backType, 80, 150);
+        cardBack.className = 'T-card-back';
+        c.appendChild(cardBack);
+
+        // Card face (hidden until flip)
+        var faceWrap = document.createElement('div');
+        faceWrap.className = 'T-card-face';
         playCard.style.width = '100%';
         playCard.style.height = '100%';
-        c.appendChild(playCard);
+        faceWrap.appendChild(playCard);
+        c.appendChild(faceWrap);
+
+        // Slide in, then flip after delay
+        var slideDelay = playIdx * 120; // 120ms stagger (slower)
+        var flipDelay = slideDelay + 400; // flip 400ms after slide lands
+        c.style.animation = 'T-deal-slide 0.5s ease-out ' + slideDelay + 'ms both';
+        setTimeout(function() {
+          // Flip: hide back, show face
+          if (cardBack.parentNode) cardBack.style.display = 'none';
+          faceWrap.style.transform = 'rotateY(0deg)';
+          faceWrap.style.animation = 'T-deal-flip 0.3s ease-in-out both';
+          SND.cardSnap();
+        }, flipDelay);
+
         c.onclick = () => { if (phase==='busy') return; SND.select(); selPl = play; phase = 'player'; drawField(); drawPanel(); };
         c.onmousedown = function(e) { startDrag('play', play, c, e); };
         c.ontouchstart = function(e) { startDrag('play', play, c, e); };
@@ -1492,17 +1519,39 @@ export function buildGameplay() {
           teamColor: hTeam.colors ? hTeam.colors.primary : (hTeam.accent || '#FF4511'),
           teamId: GS.team
         }, 80, 150);
-        // Wrap in T-card for flex sizing + deal animation
+        // Wrap in T-card with card back → flip deal animation
         const c = document.createElement('div');
         c.className = 'T-card T-card-deal' + (isSel ? ' T-card-sel T-card-gone' : '') + (p.injured ? ' T-card-hurt' : '');
-        c.style.animationDelay = (pIdx * 50) + 'ms';
+        c.style.cssText += 'transform-style:preserve-3d;';
+
+        // Card back (offense card back for player cards)
+        var pBack = buildHomeCard(isOff ? 'offense' : 'defense', 80, 150);
+        pBack.className = 'T-card-back';
+        c.appendChild(pBack);
+
+        // Card face
+        var pFace = document.createElement('div');
+        pFace.className = 'T-card-face';
         // Star Heat Check: flame border when On Fire
         if (isHot) {
-          c.style.cssText += 'border:2px solid #FF4511 !important;box-shadow:0 0 12px rgba(255,69,17,0.5),0 0 24px rgba(255,69,17,0.2) !important;animation:T-urgent-border 1s ease-in-out infinite !important;';
+          c.style.cssText += 'border:2px solid #FF4511 !important;box-shadow:0 0 12px rgba(255,69,17,0.5),0 0 24px rgba(255,69,17,0.2) !important;';
         }
         playerCard.style.width = '100%';
         playerCard.style.height = '100%';
-        c.appendChild(playerCard);
+        pFace.appendChild(playerCard);
+        c.appendChild(pFace);
+
+        // Slide in then flip
+        var pSlideDelay = pIdx * 120;
+        var pFlipDelay = pSlideDelay + 400;
+        c.style.animation = 'T-deal-slide 0.5s ease-out ' + pSlideDelay + 'ms both';
+        setTimeout(function() {
+          if (pBack.parentNode) pBack.style.display = 'none';
+          pFace.style.transform = 'rotateY(0deg)';
+          pFace.style.animation = 'T-deal-flip 0.3s ease-in-out both';
+          SND.cardSnap();
+        }, pFlipDelay);
+
         c.onclick = () => {
           if (p.injured || phase==='busy') return; SND.select(); selP = p;
           phase = torchInventory.filter(function(c){return c.type==='pre-snap';}).length > 0 ? 'torch' : 'ready';
