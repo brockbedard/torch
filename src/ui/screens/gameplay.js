@@ -212,6 +212,11 @@ const CSS = `
 @keyframes T-clash-yds{0%{transform:scale(0.3);opacity:0}50%{transform:scale(1.2);opacity:1}75%{transform:scale(0.95)}100%{transform:scale(1);opacity:1}}
 @keyframes T-clash-spark{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(0)}}
 @keyframes T-clash-settle{0%{transform:scale(1.15)}40%{transform:scale(0.95)}100%{transform:scale(1)}}
+/* Card deal animation */
+@keyframes T-deal-in{0%{transform:translateX(120px) scale(0.8);opacity:0}70%{opacity:1}100%{transform:translateX(0) scale(1);opacity:1}}
+.T-card-deal{animation:T-deal-in 0.3s cubic-bezier(0.22,1.3,0.36,1) both}
+/* Card selection lift */
+.T-card-lift{transform:scale(1.05) translateY(-4px);box-shadow:0 6px 20px rgba(0,255,68,0.3)!important;border-color:#00ff44!important}
 @keyframes T-clash-glow{0%,100%{box-shadow:0 0 8px currentColor}50%{box-shadow:0 0 20px currentColor}}
 .T-clash-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:auto}
 .T-clash-dim{position:absolute;inset:0;background:rgba(6,4,2,0.85);transition:opacity 0.3s}
@@ -383,6 +388,28 @@ export function buildGameplay() {
   let driveSnaps = [];
   let prev2min = gs.twoMinActive;
   var snapCount = 0; // Track snap number for teach tooltips
+  var twoMinTimer = null; // Real-time clock interval for 2-minute drill
+
+  // Start/stop the real-time 2-minute clock
+  function start2MinClock() {
+    if (twoMinTimer) return;
+    AudioStateManager.setState('two_min_drill');
+    twoMinTimer = setInterval(function() {
+      if (!gs.twoMinActive || gs.gameOver || phase === 'busy') return;
+      gs.clockSeconds = Math.max(0, gs.clockSeconds - 1);
+      drawBug();
+      // Heartbeat below 15 seconds
+      if (gs.clockSeconds <= 15 && gs.clockSeconds > 0) SND.click();
+      // Time expired
+      if (gs.clockSeconds <= 0) {
+        stop2MinClock();
+        checkEnd();
+      }
+    }, 1000);
+  }
+  function stop2MinClock() {
+    if (twoMinTimer) { clearInterval(twoMinTimer); twoMinTimer = null; }
+  }
 
   // Progressive disclosure
   var isFirstGame = GS.isFirstSeason && (!GS.season || GS.season.currentGame === 0);
@@ -1402,7 +1429,7 @@ export function buildGameplay() {
     panel.className = 'T-panel ' + (isOff ? 'T-panel-off' : 'T-panel-def');
 
     // 2min check
-    if (gs.twoMinActive && !prev2min) { prev2min = true; el.classList.add('T-urgent'); show2MinWarn(); }
+    if (gs.twoMinActive && !prev2min) { prev2min = true; el.classList.add('T-urgent'); show2MinWarn(); start2MinClock(); }
 
     // Side indicator + instruction
     if (phase === 'play' || phase === 'player' || phase === 'torch') {
@@ -1422,7 +1449,7 @@ export function buildGameplay() {
     const tray = document.createElement('div'); tray.className = 'T-tray';
 
     if (phase === 'play') {
-      plays.forEach(play => {
+      plays.forEach((play, playIdx) => {
         const isSel = selPl === play;
         // Adapt game data to shared buildPlayV1 format
         var cat = {SHORT:'SHORT',QUICK:'QUICK',DEEP:'DEEP',RUN:'RUN',SCREEN:'SCREEN',OPTION:'OPTION',
@@ -1441,9 +1468,10 @@ export function buildGameplay() {
           risk: getRisk(play.id), riskColor: catColor,
           svg: svg, bg: isOffPlay ? '#0A1A06' : '#0A1420'
         }, 80, 150);
-        // Wrap in T-card for flex sizing and drag
+        // Wrap in T-card for flex sizing and drag + deal animation
         const c = document.createElement('div');
-        c.className = 'T-card' + (isSel ? ' T-card-sel T-card-gone' : '');
+        c.className = 'T-card T-card-deal' + (isSel ? ' T-card-sel T-card-gone' : '');
+        c.style.animationDelay = (playIdx * 50) + 'ms';
         playCard.style.width = '100%';
         playCard.style.height = '100%';
         c.appendChild(playCard);
@@ -1453,7 +1481,7 @@ export function buildGameplay() {
         tray.appendChild(c);
       });
     } else if (phase === 'player') {
-      players.forEach(p => {
+      players.forEach((p, pIdx) => {
         const isSel = selP === p;
         var isHot = (isOff && offStar && p.id === offStar.id && offStarHot) ||
                     (!isOff && defStar && p.id === defStar.id && defStarHot);
@@ -1464,9 +1492,10 @@ export function buildGameplay() {
           teamColor: hTeam.colors ? hTeam.colors.primary : (hTeam.accent || '#FF4511'),
           teamId: GS.team
         }, 80, 150);
-        // Wrap in T-card for flex sizing and drag
+        // Wrap in T-card for flex sizing + deal animation
         const c = document.createElement('div');
-        c.className = 'T-card' + (isSel ? ' T-card-sel T-card-gone' : '') + (p.injured ? ' T-card-hurt' : '');
+        c.className = 'T-card T-card-deal' + (isSel ? ' T-card-sel T-card-gone' : '') + (p.injured ? ' T-card-hurt' : '');
+        c.style.animationDelay = (pIdx * 50) + 'ms';
         // Star Heat Check: flame border when On Fire
         if (isHot) {
           c.style.cssText += 'border:2px solid #FF4511 !important;box-shadow:0 0 12px rgba(255,69,17,0.5),0 0 24px rgba(255,69,17,0.2) !important;animation:T-urgent-border 1s ease-in-out infinite !important;';
