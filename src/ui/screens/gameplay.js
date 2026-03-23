@@ -766,10 +766,12 @@ export function buildGameplay() {
       '<div class="T-drive-hdr-r" style="font-family:\'Teko\';font-size:16px;font-weight:700"><span>' + totalPlays + '</span> plays \u00b7 <span>' + totalYds + '</span> yds \u00b7 <span>' + driveFirstDowns + '</span> 1st dn</div>' +
       '</div>';
 
-    // Play-by-play ticker rows
+    // Play-by-play ticker rows (newest first)
     if (driveSummaryLog.length > 0) {
-      driveSummaryLog.forEach(function(e, i) {
-        var isNewest = i === driveSummaryLog.length - 1;
+      for (var _ti = driveSummaryLog.length - 1; _ti >= 0; _ti--) {
+        var e = driveSummaryLog[_ti];
+        var i = _ti;
+        var isNewest = _ti === driveSummaryLog.length - 1;
         var resColor = e.isTD ? '#FFB800' : e.yards > 0 ? '#00ff44' : e.yards < 0 || e.isSack ? '#ff0040' : '#fff';
         var resText = e.isTD ? 'TD' : e.isSack ? 'SACK' : e.isInt ? 'INT' : e.isFumble ? 'FUM' : (e.isInc || e.yards === 0) ? 'NO GAIN' : (e.yards >= 0 ? '+' : '') + e.yards;
         var dn = ['','1st','2nd','3rd','4th'][e.down] || '';
@@ -781,7 +783,7 @@ export function buildGameplay() {
           '<div class="T-drive-row-play">' + e.playName + '</div>' +
           '<div class="T-drive-row-res" style="color:' + resColor + '">' + resText + '</div>' +
           '</div>';
-      });
+      }
     }
 
     // Stat lines — GAME-WIDE stats (not drive stats)
