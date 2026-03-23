@@ -8,6 +8,7 @@ import { GS, setGs, setRender, getOffCards, getDefCards } from '../../state.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { TEAMS, getSeasonOpponents } from '../../data/teams.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
+import { renderTeamBadge } from '../../data/teamLogos.js';
 import { buildHome } from './home.js';
 import { buildTeamSelect } from './teamSelect.js';
 import { buildGameplay } from './gameplay.js';
@@ -88,6 +89,51 @@ export function buildVisualTest() {
     var homeEl = buildHome();
     frame(homeEl, 650);
   } catch(e) { note('ERROR: ' + e.message); }
+
+  // ============================================================
+  // 1.5 TEAM BADGE EMBLEMS — All 4 teams at all 4 sizes
+  // ============================================================
+  section('TEAM BADGE EMBLEMS — All sizes');
+  note('Hero (140px), Card (80px), Icon (40px), Micro (24px)');
+  (function() {
+    var sizes = [140, 80, 40, 24];
+    var sizeNames = ['Hero 140px', 'Card 80px', 'Icon 40px', 'Micro 24px'];
+    var teamIds = ['sentinels', 'wolves', 'stags', 'serpents'];
+    var badgeGrid = document.createElement('div');
+    badgeGrid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:375px;background:#0A0804;border:1px solid #333;border-radius:8px;padding:12px;margin-bottom:12px;';
+    // Header row
+    teamIds.forEach(function(tid) {
+      var h = document.createElement('div');
+      h.style.cssText = "text-align:center;font-family:'Rajdhani';font-size:8px;color:#aaa;letter-spacing:1px;";
+      h.textContent = TEAMS[tid].name;
+      badgeGrid.appendChild(h);
+    });
+    // Size rows
+    sizes.forEach(function(sz, si) {
+      teamIds.forEach(function(tid) {
+        var cell = document.createElement('div');
+        cell.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0;';
+        cell.innerHTML = renderTeamBadge(tid, sz);
+        var lbl = document.createElement('div');
+        lbl.style.cssText = "font-family:'Rajdhani';font-size:6px;color:#555;";
+        lbl.textContent = sizeNames[si];
+        cell.appendChild(lbl);
+        badgeGrid.appendChild(cell);
+      });
+    });
+    el.appendChild(badgeGrid);
+
+    // Grayscale test
+    note('Grayscale silhouette test — all 4 must be distinguishable');
+    var grayRow = document.createElement('div');
+    grayRow.style.cssText = 'display:flex;gap:16px;padding:8px;background:#0A0804;border:1px solid #333;border-radius:8px;width:375px;justify-content:center;margin-bottom:12px;filter:grayscale(1);';
+    teamIds.forEach(function(tid) {
+      var w = document.createElement('div');
+      w.innerHTML = renderTeamBadge(tid, 60);
+      grayRow.appendChild(w);
+    });
+    el.appendChild(grayRow);
+  })();
 
   // ============================================================
   // 2. TEAM SELECT — Game 2+ (difficulty visible)

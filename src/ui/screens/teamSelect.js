@@ -9,6 +9,7 @@ import { GS, setGs, getTeam, getOffCards, getDefCards, shuffle } from '../../sta
 import { TEAMS, getSeasonOpponents } from '../../data/teams.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { buildMaddenPlayer, teamHelmetSvg, renderFlamePips } from '../components/cards.js';
+import { renderTeamBadge } from '../../data/teamLogos.js';
 import { generateConditions, WEATHER, FIELD, CROWD } from '../../data/gameConditions.js';
 
 // ============================================================
@@ -90,95 +91,103 @@ export function buildTeamSelect() {
     }, 500);
   }
 
-  // ── 2x2 TEAM GRID ──
+  // ── 2x2 TEAM GRID (163×212px cards per spec) ──
   var grid = document.createElement('div');
-  grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;';
+  grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:0 16px;';
 
   var teamIds = Object.keys(TEAMS);
   teamIds.forEach(function(tid, idx) {
     var team = TEAMS[tid];
     var card = document.createElement('div');
     card.style.cssText =
-      // Gradient: team primary at top (15% opacity) → black at bottom
-      'background:linear-gradient(180deg,' + team.colors.primary + '26 0%,#0A0804 100%);' +
-      'border:2px solid ' + team.colors.primary + '55;border-radius:8px;padding:12px 10px 8px;' +
-      'cursor:pointer;transition:all 0.2s ease;display:flex;flex-direction:column;align-items:center;gap:3px;' +
-      'opacity:0;animation:tsCardIn 0.35s ease-out ' + (idx * 0.1) + 's both;position:relative;overflow:hidden;';
+      'height:212px;border-radius:10px;position:relative;overflow:hidden;cursor:pointer;' +
+      'border:2.5px solid ' + team.colors.primary + '66;' +
+      'box-shadow:0 4px 12px rgba(0,0,0,0.5);' +
+      'transition:all 0.25s cubic-bezier(0.22,1.3,0.36,1);' +
+      'opacity:0;animation:tsCardIn 0.35s ease-out ' + (idx * 0.1) + 's both;';
 
-    // Hover/active states handled via tap handler below
+    // Background: dark base + team-color gradient overlay from bottom
+    var bgLayer = document.createElement('div');
+    bgLayer.style.cssText = 'position:absolute;inset:0;background:linear-gradient(0deg,' + team.colors.primary + '99 0%,' + team.colors.primary + '33 40%,#0A0804 100%);z-index:0;';
+    card.appendChild(bgLayer);
 
-    // Helmet (48px) with glow halo
-    var helmWrap = document.createElement('div');
-    helmWrap.style.cssText = 'position:relative;margin-bottom:2px;';
-    // Glow halo behind helmet
-    var halo = document.createElement('div');
-    halo.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:radial-gradient(circle,' + team.colors.primary + '30,transparent 70%);pointer-events:none;';
-    helmWrap.appendChild(halo);
-    var helmInner = document.createElement('div');
-    helmInner.style.cssText = 'position:relative;filter:drop-shadow(0 2px 8px ' + team.colors.primary + '50);';
-    helmInner.innerHTML = teamHelmetSvg(tid, 48);
-    helmWrap.appendChild(helmInner);
-    card.appendChild(helmWrap);
+    // Badge emblem — hero size, filling top 55-60% of card
+    var badgeWrap = document.createElement('div');
+    badgeWrap.style.cssText = 'position:relative;z-index:1;display:flex;align-items:center;justify-content:center;height:55%;padding-top:8px;';
+    badgeWrap.innerHTML = renderTeamBadge(tid, 100);
+    card.appendChild(badgeWrap);
+
+    // Info area — bottom 45%
+    var info = document.createElement('div');
+    info.style.cssText = 'position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 8px 6px;';
 
     // Team name
     var nameEl = document.createElement('div');
-    nameEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:18px;color:#fff;letter-spacing:2px;line-height:1;text-shadow:1px 1px 0 rgba(0,0,0,0.8);";
+    nameEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:17px;color:#fff;letter-spacing:2px;line-height:1;text-shadow:1px 1px 0 rgba(0,0,0,0.8);";
     nameEl.textContent = team.name;
-    card.appendChild(nameEl);
+    info.appendChild(nameEl);
 
     // Playstyle pill
     var pill = document.createElement('div');
-    pill.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:7px;color:" + team.colors.primary + ";letter-spacing:1px;background:" + team.colors.primary + '22' + ";padding:2px 8px;border-radius:10px;border:1px solid " + team.colors.primary + '33;';
+    pill.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:9px;color:" + team.colors.secondary + ";letter-spacing:1px;border:1px solid " + team.colors.secondary + '55;padding:1px 8px;border-radius:10px;';
     pill.textContent = team.offScheme;
-    card.appendChild(pill);
+    info.appendChild(pill);
 
-    // Thin divider line in team color
-    var divider = document.createElement('div');
-    divider.style.cssText = 'width:80%;height:1px;background:' + team.colors.primary + '33;margin:3px 0 2px;';
-    card.appendChild(divider);
-
-    // Ratings (left) + Star callout (right) — side by side
+    // Ratings + Star — side by side row
     var infoRow = document.createElement('div');
-    infoRow.style.cssText = 'display:flex;width:100%;gap:6px;align-items:flex-start;';
+    infoRow.style.cssText = 'display:flex;width:100%;gap:4px;align-items:center;margin-top:2px;';
 
-    // Left: flame pip ratings
+    // Flame pip ratings (left)
     var ratingsWrap = document.createElement('div');
     ratingsWrap.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:1px;';
     var offRow = document.createElement('div');
-    offRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;font-family:'Rajdhani';font-size:7px;color:#888;";
-    offRow.innerHTML = '<span>OFF</span><span>' + renderFlamePips(team.ratings.offense, 5, team.colors.primary, 7) + '</span>';
+    offRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;font-family:'Rajdhani';font-size:8px;color:#aaa;";
+    offRow.innerHTML = '<span>OFF</span><span>' + renderFlamePips(team.ratings.offense, 5, team.colors.primary, 8) + '</span>';
     var defRow = document.createElement('div');
-    defRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;font-family:'Rajdhani';font-size:7px;color:#888;";
-    defRow.innerHTML = '<span>DEF</span><span>' + renderFlamePips(team.ratings.defense, 5, team.colors.primary, 7) + '</span>';
+    defRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;font-family:'Rajdhani';font-size:8px;color:#aaa;";
+    defRow.innerHTML = '<span>DEF</span><span>' + renderFlamePips(team.ratings.defense, 5, team.colors.primary, 8) + '</span>';
     ratingsWrap.appendChild(offRow);
     ratingsWrap.appendChild(defRow);
     infoRow.appendChild(ratingsWrap);
 
-    // Right: star player callout
+    // Star player callout (right)
     var offRoster = getOffenseRoster(tid);
     var star = offRoster.find(function(p) { return p.isStar; });
     if (star) {
       var starEl = document.createElement('div');
-      starEl.style.cssText = "flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:1px;";
+      starEl.style.cssText = "display:flex;flex-direction:column;align-items:flex-end;gap:1px;";
       starEl.innerHTML =
-        '<div style="display:flex;align-items:center;gap:2px;"><svg viewBox="0 0 24 24" width="8" height="8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z" fill="#FFB800"/></svg>' +
-        "<span style=\"font-family:'Rajdhani';font-weight:700;font-size:7px;color:#FFB800;\">" + star.starTitle + "</span></div>" +
-        "<div style=\"font-family:'Rajdhani';font-size:6px;color:#888;text-align:right;\">" + star.pos + "</div>";
+        '<div style="display:flex;align-items:center;gap:2px;"><svg viewBox="0 0 24 24" width="9" height="9"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z" fill="#FFB800"/></svg>' +
+        "<span style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:#FFB800;\">" + star.starTitle + "</span></div>" +
+        "<div style=\"font-family:'Rajdhani';font-size:7px;color:#aaa;\">" + star.pos + "</div>";
       infoRow.appendChild(starEl);
     }
-    card.appendChild(infoRow);
+    info.appendChild(infoRow);
+    card.appendChild(info);
 
-    // Motto
-    var motto = document.createElement('div');
-    motto.style.cssText = "font-family:'Rajdhani';font-size:6px;color:#555;font-style:italic;margin-top:2px;letter-spacing:0.5px;";
-    motto.textContent = '"' + team.motto + '"';
-    card.appendChild(motto);
-
-    // ── TAP HANDLER: starts the fighting-game animation ──
+    // ── TAP HANDLER: scale+glow → then fighting-game animation ──
     card.onclick = function() {
       SND.click();
-      startSelectionAnimation(el, tid, team, isFirst);
+      // Immediate: selected card scales up, others dim
+      var allCards = grid.querySelectorAll('[data-team]');
+      allCards.forEach(function(c) {
+        if (c.dataset.team === tid) {
+          c.style.transform = 'scale(1.1)';
+          c.style.borderColor = team.colors.secondary;
+          c.style.boxShadow = '0 0 24px ' + team.colors.primary + '88, 0 8px 20px rgba(0,0,0,0.6)';
+          c.style.zIndex = '10';
+        } else {
+          c.style.opacity = '0.4';
+          c.style.transform = 'scale(0.95)';
+          c.style.filter = 'brightness(0.5)';
+        }
+      });
+      // Brief flash then transition
+      setTimeout(function() {
+        startSelectionAnimation(el, tid, team, isFirst);
+      }, 400);
     };
+    card.dataset.team = tid;
 
     grid.appendChild(card);
   });
