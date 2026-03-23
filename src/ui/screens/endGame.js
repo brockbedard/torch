@@ -64,7 +64,7 @@ export function buildEndGame() {
 
   // Content
   var content = document.createElement('div');
-  content.style.cssText = 'flex:1;padding:12px 16px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;animation:fadeSlideUp 0.5s ease-out;';
+  content.style.cssText = 'padding:12px 16px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;animation:fadeSlideUp 0.5s ease-out;';
 
   // Score display
   var scoreBlock = document.createElement('div');

@@ -54,7 +54,7 @@ export function buildDailyDrive() {
   el.appendChild(hdr);
 
   var content = document.createElement('div');
-  content.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:24px 20px 20px;gap:12px;';
+  content.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px 20px 16px;gap:10px;';
 
   // Date display
   var dateEl = document.createElement('div');
