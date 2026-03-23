@@ -36,7 +36,7 @@ const CSS = `
 .T-sb-icon{line-height:1;text-align:center;display:flex;align-items:center;justify-content:center}
 .T-sb-side{display:flex;flex-direction:column;align-items:center;padding:4px 6px;border-radius:6px;position:relative}
 .T-sb-side-glow{background:radial-gradient(ellipse,rgba(255,204,0,.15) 0%,rgba(255,204,0,.04) 50%,transparent 75%);box-shadow:0 0 16px rgba(255,204,0,.12);border:1px solid rgba(255,204,0,.15)}
-.T-sb-name{font-family:'Teko';font-weight:700;font-size:20px;font-style:italic;line-height:1;letter-spacing:1px;white-space:nowrap}
+.T-sb-name{font-family:'Teko';font-weight:700;font-size:20px;font-style:italic;line-height:1;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px}
 .T-sb-score-row{position:relative;margin-top:2px;display:flex;justify-content:center}
 .T-sb-pos-arrow{position:absolute;top:50%;transform:translateY(-50%);font-size:14px;color:#00ff44;line-height:1}
 .T-sb-pos-arrow-l{left:-16px}
@@ -576,12 +576,12 @@ export function buildGameplay() {
       `<div class="T-sb-row">` +
         `<div class="T-sb-icon">${ctBadge}</div>` +
         `<div class="T-sb-side${ctHasBall ? ' T-sb-side-glow' : ''}">` +
-          `<div class="T-sb-name" style="color:${ct.accent}${ctHasBall ? ';text-shadow:0 0 12px '+ct.accent : ''}">${ct.name}</div>` +
+          `<div class="T-sb-name" style="color:${ct.accent};font-size:${ct.name.length > 10 ? 14 : ct.name.length > 8 ? 16 : 20}px${ctHasBall ? ';text-shadow:0 0 12px '+ct.accent : ''}">${ct.name}</div>` +
           `<div class="T-sb-score-row">${ctArrow}<span class="T-sb-pts${ctHasBall ? ' T-sb-pts-glow' : ''}">${s.ctScore}</span></div>` +
         `</div>` +
         `<div class="T-sb-center">${centerHTML}</div>` +
         `<div class="T-sb-side${!ctHasBall ? ' T-sb-side-glow' : ''}">` +
-          `<div class="T-sb-name" style="color:${ir.accent}${!ctHasBall ? ';text-shadow:0 0 12px '+ir.accent : ''}">${ir.name}</div>` +
+          `<div class="T-sb-name" style="color:${ir.accent};font-size:${ir.name.length > 10 ? 14 : ir.name.length > 8 ? 16 : 20}px${!ctHasBall ? ';text-shadow:0 0 12px '+ir.accent : ''}">${ir.name}</div>` +
           `<div class="T-sb-score-row">${irArrow}<span class="T-sb-pts${!ctHasBall ? ' T-sb-pts-glow' : ''}">${s.irScore}</span></div>` +
         `</div>` +
         `<div class="T-sb-icon">${irBadge}</div>` +
@@ -759,8 +759,11 @@ export function buildGameplay() {
     var totalYds = 0, totalPlays = driveSummaryLog.length;
     driveSummaryLog.forEach(function(e) { totalYds += e.yards; });
 
+    // Drive header — team-branded
+    var possTeamObj = gs.possession === 'CT' ? hTeam : oTeam;
+    var driveColor = possTeamObj.accent || '#FF6B00';
     var html = '<div class="T-drive-hdr">' +
-      '<div class="T-drive-hdr-l">CURRENT DRIVE</div>' +
+      '<div class="T-drive-hdr-l" style="color:' + driveColor + '">' + possTeamObj.name + ' DRIVE</div>' +
       '<div class="T-drive-hdr-r" style="font-family:\'Teko\';font-size:16px;font-weight:700"><span>' + totalPlays + '</span> plays \u00b7 <span>' + totalYds + '</span> yds \u00b7 <span>' + driveFirstDowns + '</span> 1st dn</div>' +
       '</div>';
 
@@ -1879,42 +1882,51 @@ export function buildGameplay() {
 
     // Track drive summary
     var r = res.result;
-    var offName = res.featuredOff ? res.featuredOff.name : '';
     var defName = res.featuredDef ? res.featuredDef.name : '';
     var isPassPlay = r.playType === 'pass';
+
+    // Resolve QB and receiver/rusher names properly
+    var teamQB = offRoster.find(function(p) { return p.pos === 'QB'; });
+    var qbName = teamQB ? teamQB.name : '';
+    var featuredPos = res.featuredOff ? res.featuredOff.pos : '';
+    var featuredName = res.featuredOff ? res.featuredOff.name : '';
+    // On pass plays: receiver = featuredOff if not a QB, otherwise pick a WR from roster
+    var receiverName = featuredName;
+    if (isPassPlay && featuredPos === 'QB') {
+      var wr = offRoster.find(function(p) { return p.pos === 'WR' || p.pos === 'TE' || p.pos === 'SLOT'; });
+      receiverName = wr ? wr.name : featuredName;
+    }
+    // On run plays: ball carrier = featuredOff
+    var rusherName = featuredName;
+
     // ESPN-style play description with player names
     var espnDesc = '?';
-    if (r.isTouchdown) espnDesc = r.yards + '-yd TD ' + (isPassPlay ? 'Pass to ' + offName : 'Run by ' + offName);
+    if (r.isTouchdown) espnDesc = r.yards + '-yd TD ' + (isPassPlay ? 'Pass to ' + receiverName : 'Run by ' + rusherName);
     else if (r.isInterception) espnDesc = 'INTERCEPTION by ' + defName;
     else if (r.isFumbleLost) espnDesc = 'FUMBLE \u2014 recovered by ' + defName;
     else if (r.isSack) espnDesc = 'SACK by ' + defName + ' (-' + Math.abs(r.yards) + ')';
     else if (r.isIncomplete) {
       var incVariants = [
         'Incomplete \u2014 broken up by ' + defName,
-        'Incomplete \u2014 overthrown, intended for ' + offName,
-        'Incomplete \u2014 dropped by ' + offName,
-        'Incomplete \u2014 ' + offName + ' couldn\'t hang on',
+        'Incomplete \u2014 overthrown, intended for ' + receiverName,
+        'Incomplete \u2014 dropped by ' + receiverName,
+        'Incomplete \u2014 ' + receiverName + ' couldn\'t hang on',
       ];
       espnDesc = incVariants[Math.floor(Math.random() * incVariants.length)];
     }
-    else if (isPassPlay) espnDesc = r.yards + '-yd Pass to ' + offName + (defName ? ', tackled by ' + defName : '');
-    else if (r.yards === 0) espnDesc = 'No gain by ' + offName + (defName ? ', tackled by ' + defName : '');
-    else espnDesc = r.yards + '-yd Run by ' + offName + (defName ? ', tackled by ' + defName : '');
-    // Track QB/RB/WR names — QB comes from roster, receiver/rusher from featuredOff
+    else if (isPassPlay) espnDesc = r.yards + '-yd Pass to ' + receiverName + (defName ? ', tackled by ' + defName : '');
+    else if (r.yards === 0) espnDesc = 'No gain by ' + rusherName + (defName ? ', tackled by ' + defName : '');
+    else espnDesc = r.yards + '-yd Run by ' + rusherName + (defName ? ', tackled by ' + defName : '');
+    // Track QB/RB/WR names
     if (isPassPlay) {
-      // Find the team's QB from the offensive roster (not the featured player)
-      var teamQB = offRoster.find(function(p) { return p.pos === 'QB'; });
-      var qbN = teamQB ? teamQB.name : '';
-      if (qbN && !driveQBName) driveQBName = qbN;
-      // featuredOff is the receiver target on pass plays
-      if (r.isComplete && res.featuredOff) {
-        var rcvName = offName;
+      if (qbName && !driveQBName) driveQBName = qbName;
+      if (r.isComplete) {
+        var rcvName = receiverName;
         if (!driveWRName) driveWRName = rcvName;
         driveRec++; driveRecYds += r.yards;
       }
     } else if (!r.isSack && res.featuredOff) {
-      // featuredOff is the ball carrier on run plays
-      if (!driveRBName) driveRBName = offName;
+      if (!driveRBName) driveRBName = rusherName;
     }
     // Track defensive stats
     if (defName) {
