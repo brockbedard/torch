@@ -217,6 +217,8 @@ const CSS = `
 @keyframes T-deal-flip{0%{transform:rotateY(180deg)}100%{transform:rotateY(0deg)}}
 .T-card-deal{perspective:600px}
 .T-card-deal .T-card-back{position:absolute;inset:0;backface-visibility:hidden;z-index:2;border-radius:6px;overflow:hidden}
+.T-card-deal .T-card-back>*{width:100%!important;height:100%!important}
+.T-card-deal .T-card-back>*>*{width:100%!important;height:100%!important}
 .T-card-deal .T-card-face{backface-visibility:hidden;transform:rotateY(180deg);width:100%;height:100%}
 /* Card selection lift */
 .T-card-lift{transform:scale(1.05) translateY(-4px);box-shadow:0 6px 20px rgba(0,255,68,0.3)!important;border-color:#00ff44!important}
