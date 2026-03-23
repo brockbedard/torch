@@ -74,8 +74,8 @@ const CSS = `
 .T-drive-row-res{font-family:'Teko';font-weight:700;font-size:14px;min-width:40px;text-align:right;flex-shrink:0}
 .T-drive-stats{border-top:1px solid #2a2a2a;margin-top:10px;padding-top:8px;display:flex;gap:20px}
 .T-drive-stat{font-family:'Rajdhani';font-size:11px;font-weight:600;color:#fff}
-.T-drive-comm{margin-top:8px;font-family:'Rajdhani';font-size:13px;font-weight:700;color:#e8e6ff;line-height:1.3;letter-spacing:.3px}
-.T-drive-comm-sub{font-family:'Rajdhani';font-size:11px;color:#C4A265;line-height:1.2;margin-top:2px}
+.T-drive-comm{margin-top:8px;font-family:'Rajdhani';font-size:16px;font-weight:700;color:#e8e6ff;line-height:1.3;letter-spacing:.3px}
+.T-drive-comm-sub{font-family:'Rajdhani';font-size:13px;color:#C4A265;line-height:1.2;margin-top:2px}
 .T-drive-idle{font-family:'Rajdhani';font-size:11px;color:#444;letter-spacing:.5px;margin-top:8px}
 
 /* field strip — Tecmo Bowl inspired */
@@ -124,7 +124,7 @@ const CSS = `
 .T-panel-def .T-card{}
 
 /* instruction */
-.T-inst{text-align:center;padding:3px 0 2px;font-family:'Rajdhani';font-size:10px;color:#777;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
+.T-inst{text-align:center;padding:1px 0 0;font-family:'Rajdhani';font-size:10px;color:#777;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
 
 /* card tray — matches pregame draft card style */
 .T-tray{display:flex;gap:4px;padding:6px 4px;flex-shrink:0;overflow:hidden}
@@ -605,6 +605,39 @@ export function buildGameplay() {
   }
   drawTorchBanner();
 
+  // Balatro-style TORCH points animation
+  var _torchAnimating = false;
+  function animateTorchBannerPts(earned) {
+    if (!torchBannerPtsEl || _torchAnimating) return;
+    _torchAnimating = true;
+    var hTorch = hAbbr === 'CT' ? gs.getSummary().ctTorchPts : gs.getSummary().irTorchPts;
+    var startVal = hTorch - earned;
+    var endVal = hTorch;
+
+    // Scale up + glow pulse
+    torchBannerPtsEl.style.transform = 'scale(1.2)';
+    torchBannerPtsEl.style.textShadow = '0 0 20px #FFB800, 0 0 40px rgba(255,184,0,0.5)';
+    torchBanner.style.boxShadow = '0 0 16px rgba(255,184,0,0.3)';
+
+    // Count up from old to new over 500ms
+    var duration = 500;
+    var start = performance.now();
+    function tick(now) {
+      var t = Math.min((now - start) / duration, 1);
+      var val = Math.round(startVal + (endVal - startVal) * t);
+      torchBannerPtsEl.textContent = val;
+      if (t < 1) { requestAnimationFrame(tick); }
+      else {
+        // Settle back
+        torchBannerPtsEl.style.transform = 'scale(1)';
+        torchBannerPtsEl.style.textShadow = '0 0 12px #FFB800';
+        torchBanner.style.boxShadow = '';
+        _torchAnimating = false;
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
   // ── FIELD STRIP ──
   const strip = document.createElement('div'); strip.className = 'T-strip'; el.appendChild(strip);
   function drawField() {
@@ -740,7 +773,7 @@ export function buildGameplay() {
           ? 'opacity:1;border-left:3px solid #FF6B00;padding-left:6px;background:rgba(255,255,255,0.03)'
           : 'opacity:0.5';
         html += '<div class="T-drive-row" style="' + rowStyle + '">' +
-          '<div class="T-drive-row-dd" style="color:#888;font-size:13px">' + dn + ' & ' + e.dist + '</div>' +
+          '<div class="T-drive-row-dd" style="color:#999;font-size:13px;font-weight:700">' + dn + ' & ' + e.dist + '</div>' +
           '<div class="T-drive-row-play">' + e.playName + '</div>' +
           '<div class="T-drive-row-res" style="color:' + resColor + '">' + resText + '</div>' +
           '</div>';
@@ -1554,7 +1587,7 @@ export function buildGameplay() {
     if (phase === 'play' || phase === 'player' || phase === 'torch') {
       var sideBar = document.createElement('div');
       var sideColor = isOff ? '#7ACC00' : '#4DA6FF';
-      sideBar.style.cssText = "text-align:center;padding:4px 0;font-family:'Teko';font-weight:700;font-size:14px;letter-spacing:2px;flex-shrink:0;color:" + sideColor + ";background:linear-gradient(90deg,transparent,rgba(255,107,0,.04),transparent);";
+      sideBar.style.cssText = "text-align:center;padding:2px 0 0;font-family:'Teko';font-weight:700;font-size:14px;letter-spacing:2px;flex-shrink:0;color:" + sideColor + ";background:linear-gradient(90deg,transparent,rgba(255,107,0,.04),transparent);";
       sideBar.textContent = isOff ? 'YOUR OFFENSE' : 'YOUR DEFENSE';
       panel.appendChild(sideBar);
     }
@@ -1830,10 +1863,18 @@ export function buildGameplay() {
     else if (r.isInterception) espnDesc = 'INTERCEPTION by ' + defName;
     else if (r.isFumbleLost) espnDesc = 'FUMBLE \u2014 recovered by ' + defName;
     else if (r.isSack) espnDesc = 'SACK by ' + defName + ' (-' + Math.abs(r.yards) + ')';
-    else if (r.isIncomplete) espnDesc = 'Incomplete \u2014 intended for ' + offName;
+    else if (r.isIncomplete) {
+      var incVariants = [
+        'Incomplete \u2014 broken up by ' + defName,
+        'Incomplete \u2014 overthrown, intended for ' + offName,
+        'Incomplete \u2014 dropped by ' + offName,
+        'Incomplete \u2014 ' + offName + ' couldn\'t hang on',
+      ];
+      espnDesc = incVariants[Math.floor(Math.random() * incVariants.length)];
+    }
     else if (isPassPlay) espnDesc = r.yards + '-yd Pass to ' + offName + (defName ? ', tackled by ' + defName : '');
-    else if (r.yards === 0) espnDesc = 'No gain by ' + offName;
-    else espnDesc = r.yards + '-yd Run by ' + offName;
+    else if (r.yards === 0) espnDesc = 'No gain by ' + offName + (defName ? ', tackled by ' + defName : '');
+    else espnDesc = r.yards + '-yd Run by ' + offName + (defName ? ', tackled by ' + defName : '');
     // Track QB/RB/WR names
     var snapQBName = '', snapRBName = '', snapWRName = '';
     if (isPassPlay && res.featuredOff) snapQBName = offName;
@@ -2043,19 +2084,19 @@ export function buildGameplay() {
           SND.chime();
         }
 
-        // Matchup label
-        var labelEl = document.createElement('div');
-        labelEl.className = 'T-clash-label';
-        labelEl.style.cssText = 'color:' + resultColor + ';opacity:0;transition:opacity 0.3s;margin-top:6px;';
-        labelEl.textContent = res.offPlay.name + ' vs ' + res.defPlay.name;
-        resultWrap.appendChild(labelEl);
-        setTimeout(function() { labelEl.style.opacity = '1'; }, 100);
-
-        // Rich commentary via engine
+        // Rich commentary via engine — show on overlay AND drive summary
         var gameCtx = gs.getSummary();
         var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
         var ctx = generateContext(gameCtx, hTeam.name, oTeam.name, res);
         setNarr(comm.line1, comm.line2 || ctx || '');
+
+        // Commentary label on overlay (replaces old play-name matchup label)
+        var labelEl = document.createElement('div');
+        labelEl.className = 'T-clash-label';
+        labelEl.style.cssText = "color:#e8e6ff;opacity:0;transition:opacity 0.3s;margin-top:8px;font-family:'Rajdhani';font-size:15px;font-weight:700;line-height:1.3;text-align:center;max-width:280px;";
+        labelEl.textContent = comm.line1;
+        resultWrap.appendChild(labelEl);
+        setTimeout(function() { labelEl.style.opacity = '1'; }, 100);
 
         if (isFirstGame) {
           if (r.comboFired && snapCount <= 4) showTooltip(el, 'first_combo', 'Match the right player with the right play for bonus yards!', { delay: 800 });
@@ -2073,13 +2114,9 @@ export function buildGameplay() {
           resultWrap.appendChild(comboEl);
         }
 
-        // TORCH points earned
-        if (res._torchEarned && res._torchEarned > 0) {
-          var torchEl = document.createElement('div');
-          torchEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:#FFB800;margin-top:6px;letter-spacing:1px;opacity:0;transition:opacity 0.4s;";
-          torchEl.textContent = 'T +' + res._torchEarned;
-          resultWrap.appendChild(torchEl);
-          setTimeout(function() { torchEl.style.opacity = '1'; }, 100);
+        // TORCH points — animate on the banner instead of overlay
+        if (res._torchEarned && res._torchEarned !== 0) {
+          animateTorchBannerPts(res._torchEarned);
         }
       }, 2000);
 

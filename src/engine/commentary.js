@@ -58,7 +58,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
   var def = res.featuredDef;
   var offPlay = res.offPlay;
   var yards = r.yards || 0;
-  var isPass = offPlay.type === 'pass' || (offPlay.completionRate !== undefined && offPlay.completionRate < 1);
+  var isPass = offPlay.type === 'pass';
   var isHumanOnOff = gameState.possession === 'CT';
   var possTeam = isHumanOnOff ? humanTeamName : oppTeamName;
   var defTeam = isHumanOnOff ? oppTeamName : humanTeamName;
@@ -138,13 +138,28 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
 
   // ── INCOMPLETE ──
   if (r.isIncomplete) {
-    var incTemplates = [
-      'Incomplete. ' + (coinFlip() ? def.name + ' was all over him.' : 'Pass falls harmlessly to the turf.'),
-      'No connection. ' + off.name + ' can\'t bring it in.',
-      'Thrown away — nothing was open.',
-      'Pass falls incomplete. ' + def.name + ' had tight coverage.',
-      'Dropped! ' + off.name + ' had a chance but couldn\'t hold on.',
-    ];
+    // Pick variant based on matchup: strong defense counter = broken up, otherwise vary
+    var covMods = offPlay.coverageMods || {};
+    var defCov = res.defPlay ? res.defPlay.baseCoverage : '';
+    var covResult = covMods[defCov] || {};
+    var defWon = (covResult.mean || 0) <= -2;
+    var incTemplates;
+    if (defWon) {
+      incTemplates = [
+        'Incomplete — broken up by ' + def.name + '!',
+        def.name + ' swats it away! Great coverage.',
+        'Pass broken up! ' + def.name + ' was draped all over ' + off.name + '.',
+        'No chance — ' + def.name + ' was step for step with ' + off.name + '.',
+      ];
+    } else {
+      incTemplates = [
+        'Incomplete — overthrown, intended for ' + off.name + '.',
+        'Dropped by ' + off.name + '! Had it in his hands.',
+        off.name + ' couldn\'t hang on. Ball hits the turf.',
+        'Thrown away — nothing was open.',
+        'Incomplete. ' + off.name + ' can\'t bring it in.',
+      ];
+    }
     line1 = pick(incTemplates);
     return { line1: line1, line2: line2 };
   }
