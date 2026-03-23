@@ -248,17 +248,35 @@ export class GameState {
       weather: this.weather,
       momentum: this.momentum,
       coachBadge: this.coachBadge,
+      difficulty: this.difficulty,
+      offenseIsHuman: sides.offenseIsHuman,
     };
 
     const result = resolveSnap(offPlay, defPlay, featuredOff, featuredDef,
       sides.offPlayers, sides.defPlayers, context);
 
-    // Easy difficulty yard adjustments
+    // Easy difficulty adjustments
     if (this.difficulty === 'EASY') {
-      if (sides.offenseIsHuman && !result.isSack && !result.isIncomplete && !result.isInterception && !result.isFumbleLost) {
-        result.yards = Math.min(result.yards + 2, ydsToEz); // +2 human bonus
+      if (sides.offenseIsHuman) {
+        // Cancel sacks 50% of the time — turn into short gains
+        if (result.isSack && Math.random() < 0.50) {
+          result.isSack = false;
+          result.yards = Math.floor(Math.random() * 3); // 0-2 yard gain instead
+          result.description = `${featuredOff.name} escapes pressure for ${result.yards}.`;
+        }
+        // Cancel interceptions 40% of the time — turn into incompletions
+        if (result.isInterception && Math.random() < 0.40) {
+          result.isInterception = false;
+          result.isIncomplete = true;
+          result.yards = 0;
+          result.description = `Pass broken up — close call!`;
+        }
+        // +3 yard bonus on completions and runs
+        if (!result.isSack && !result.isIncomplete && !result.isInterception && !result.isFumbleLost) {
+          result.yards = Math.min(result.yards + 3, ydsToEz);
+        }
       } else if (!sides.offenseIsHuman && !result.isSack && !result.isIncomplete) {
-        result.yards = Math.max(result.yards - 1, -5); // -1 CPU penalty
+        result.yards = Math.max(result.yards - 2, -5); // -2 CPU penalty
       }
     }
 
@@ -432,7 +450,9 @@ export class GameState {
     if (result.yards >= this.distance) {
       gotFirstDown = true;
       this.down = 1;
-      this.distance = Math.min(10, this.yardsToEndzone());
+      // Always reset to 10 (or goal if inside the 10)
+      const ydsLeft = this.yardsToEndzone();
+      this.distance = ydsLeft <= 10 ? ydsLeft : 10;
       if (this.possession === 'CT') {
         this.stats.ctFirstDowns++;
         this.ctTorchPts += 10;

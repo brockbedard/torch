@@ -123,6 +123,12 @@ export function buildPregame() {
     nameL.textContent = team.name;
     el.appendChild(nameL);
 
+    // "vs" connector between names
+    var vsLabel = document.createElement('div');
+    vsLabel.style.cssText = "position:absolute;top:58%;left:50%;transform:translateX(-50%);z-index:8;font-family:'Rajdhani';font-weight:700;font-size:14px;color:#555;letter-spacing:2px;animation:pgFadeIn " + (200 * speed) + "ms ease-out 50ms both;";
+    vsLabel.textContent = 'vs';
+    el.appendChild(vsLabel);
+
     // Opponent name (right)
     var nameR = document.createElement('div');
     nameR.style.cssText = "position:absolute;top:58%;right:18%;z-index:8;font-family:'Teko';font-weight:700;font-size:22px;color:#fff;letter-spacing:2px;font-style:italic;text-shadow:2px 2px 0 rgba(0,0,0,0.8);text-align:right;animation:pgWipeUp " + (300 * speed) + "ms ease-out 100ms both;";

@@ -35,7 +35,7 @@ function gaussRandom(mean, stddev) {
  * @returns {object} SnapResult
  */
 export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlayers, defPlayers, context) {
-  const { playHistory, yardsToEndzone, ballPosition, down, distance, isConversion, scoreDiff, weather, momentum, coachBadge } = context;
+  const { playHistory, yardsToEndzone, ballPosition, down, distance, isConversion, scoreDiff, weather, momentum, coachBadge, difficulty, offenseIsHuman } = context;
 
   const result = {
     yards: 0,
@@ -139,6 +139,9 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   mean += trailingBonus + revealBonus + fakeKneelBonus;
   variance += trailingVarBoost;
 
+  // Easy difficulty: boost mean yards for human offense
+  if (difficulty === 'EASY' && offenseIsHuman) mean += 2;
+
   // Weather Modifiers
   if (weather === 'WINDY' && isPass) mean -= 2.0;
   if (weather === 'SNOW' && isRun) mean -= 1.0;
@@ -167,6 +170,9 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
 
     // IRON_CURTAIN Coach Badge: +3% sack rate
     if (coachBadge === 'IRON_CURTAIN') sackRate += 0.03;
+
+    // Easy difficulty: reduce sack rate when human is on offense
+    if (difficulty === 'EASY' && offenseIsHuman) sackRate *= 0.4;
 
     sackRate = Math.max(0, Math.min(0.30, sackRate));
 
@@ -202,6 +208,9 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
 
     // MOMENTUM: If opponent has high momentum (>75), -5% completion rate (Home noise)
     if (momentum > 75) compRate -= 0.05;
+
+    // Easy difficulty: boost completion rate when human is on offense
+    if (difficulty === 'EASY' && offenseIsHuman) compRate += 0.15;
 
     compRate = Math.max(0.15, Math.min(0.95, compRate));
 
@@ -282,6 +291,9 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     // Red zone stuff boost
     if (yardsToEndzone <= 10) stuffRate += 0.08;
     else if (yardsToEndzone <= 20) stuffRate += 0.04;
+
+    // Easy difficulty: reduce stuff rate when human is on offense
+    if (difficulty === 'EASY' && offenseIsHuman) stuffRate *= 0.5;
 
     stuffRate = Math.max(0.05, Math.min(0.50, stuffRate));
 

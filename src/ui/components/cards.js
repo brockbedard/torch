@@ -358,7 +358,7 @@ export function buildPlayV1(p, w, h) {
     '<div style="height:3px;background:'+p.catColor+';border-radius:5px 5px 0 0;position:relative;z-index:1;"></div>' +
     // Name bar
     '<div style="background:'+p.catColor+'22;padding:4px 6px;border-bottom:1px solid '+p.catColor+'33;position:relative;z-index:1;">' +
-    '<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?14:11)+'px;color:#fff;letter-spacing:1px;line-height:1;white-space:nowrap;">'+p.name+'</div></div>' +
+    '<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?14: p.name.length>12?8:11)+'px;color:#fff;letter-spacing:'+(p.name.length>12?'0.5':'1')+'px;line-height:1;white-space:nowrap;">'+p.name+'</div></div>' +
     // Diagram center
     '<div style="flex:1;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;">'+svgTag+'</div>' +
     // Bottom bar: category + risk (risk is color-coded)

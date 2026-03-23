@@ -502,7 +502,7 @@ export function buildGameplay() {
 
     // Ball label
     const ydsToEz = s.yardsToEndzone;
-    const ballLabel = ydsToEz <= 50 ? defTeam.abbr + ' ' + ydsToEz : possTeam.abbr + ' ' + (100-ydsToEz);
+    const ballLabel = ydsToEz <= 50 ? 'OPP ' + ydsToEz : 'OWN ' + (100-ydsToEz);
 
     // TORCH points for human
     const hTorch = hAbbr === 'CT' ? s.ctTorchPts : s.irTorchPts;
@@ -663,16 +663,19 @@ export function buildGameplay() {
   }
 
   function distLabel(dist, ydsToEz) {
-    return (ydsToEz !== undefined ? ydsToEz : gs.getSummary().yardsToEndzone) <= dist ? 'GOAL' : dist;
+    var yz = ydsToEz !== undefined ? ydsToEz : gs.getSummary().yardsToEndzone;
+    if (yz <= dist) return 'GOAL';
+    // Cap distance display at 10 on 1st down (safety clamp)
+    var s = gs.getSummary();
+    if (s.down === 1 && dist > 10) dist = Math.min(10, yz);
+    return dist;
   }
 
   function ballSideLabel() {
     const s = gs.getSummary();
     const yds = s.yardsToEndzone;
-    const possT = s.possession === 'CT' ? hTeam : oTeam;
-    const defT = s.possession === 'CT' ? oTeam : hTeam;
-    if (yds <= 50) return defT.abbr + ' ' + yds;
-    return possT.abbr + ' ' + (100 - yds);
+    if (yds <= 50) return 'OPP ' + yds;
+    return 'OWN ' + (100 - yds);
   }
 
   function showClashOnField(res) {
@@ -1741,7 +1744,7 @@ export function buildGameplay() {
     var cardScale = tier === 1 ? 1.0 : tier === 2 ? 1.1 : 1.25;
     var aftermathDur = isTD ? 5000 : tier === 3 ? 3500 : tier === 2 ? 2500 : 1800;
 
-    var resultColor = isTD ? '#FFB800' : isGood ? '#3df58a' : isBad ? '#e03050' : '#c8a030';
+    var resultColor = isTD ? '#FFB800' : isGood ? '#3df58a' : isBad ? '#e03050' : r.yards > 0 ? '#c8a030' : '#aaa';
     var resultText = isTD ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTED' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : r.isSafety ? 'SAFETY' : (r.yards >= 0 ? '+' : '') + r.yards + ' YDS';
     var flashColor = isTD ? '#FFB800' : isGood ? '#3df58a' : isBad ? '#e03050' : 'transparent';
 
@@ -2003,6 +2006,8 @@ export function buildGameplay() {
   }
 
   function showPossCut(ev, done) {
+    // Clear stale commentary from previous possession
+    narr.innerHTML = '<div class="T-pbp-idle">Awaiting snap<span class="T-pbp-cursor"></span></div>';
     const s = gs.getSummary();
     const nt = s.possession==='CT' ? hTeam : oTeam;
     const isYourBall = s.possession === hAbbr;

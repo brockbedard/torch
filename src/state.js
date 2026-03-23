@@ -11,7 +11,7 @@ import { STAGS_OFF_PLAYS, STAGS_DEF_PLAYS } from './data/stagsPlays.js';
 import { SERPENTS_OFF_PLAYS, SERPENTS_DEF_PLAYS } from './data/serpentsPlays.js';
 import { getOffenseRoster, getDefenseRoster } from './data/players.js';
 
-export var VERSION = '0.22.0';
+export var VERSION = '0.22.1';
 export var VERSION_NAME = 'Gameday';
 
 export var GS = null;
