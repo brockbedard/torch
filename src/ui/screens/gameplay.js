@@ -783,18 +783,21 @@ export function buildGameplay() {
     }
 
     // Stat lines — only show lines with actual stats
+    // Team colors: offensive stats use human team accent, defensive stats use opponent accent
+    var offStatColor = hTeam.accent || '#FF6B00';
+    var defStatColor = oTeam.accent || '#FF6B00';
     var statLines = [];
     if (drivePassAtt > 0) {
       var qbLabel = driveQBName ? 'QB <span style="color:#fff">' + driveQBName + '</span>' : 'QB';
-      statLines.push('<span style="color:#FF6B00">' + qbLabel + '</span> <span style="color:#3df58a">' + drivePassComp + '/' + drivePassAtt + ', ' + drivePassYds + ' yds</span>');
+      statLines.push('<span style="color:' + offStatColor + '">' + qbLabel + '</span> <span style="color:#3df58a">' + drivePassComp + '/' + drivePassAtt + ', ' + drivePassYds + ' yds</span>');
     }
     if (driveRushAtt > 0) {
       var rbLabel = driveRBName ? 'RB <span style="color:#fff">' + driveRBName + '</span>' : 'RB';
-      statLines.push('<span style="color:#FF6B00">' + rbLabel + '</span> <span style="color:#3df58a">' + driveRushAtt + ' car, ' + driveRushYds + ' yds</span>');
+      statLines.push('<span style="color:' + offStatColor + '">' + rbLabel + '</span> <span style="color:#3df58a">' + driveRushAtt + ' car, ' + driveRushYds + ' yds</span>');
     }
     if (driveRec > 0) {
       var wrLabel = driveWRName ? 'WR <span style="color:#fff">' + driveWRName + '</span>' : 'WR';
-      statLines.push('<span style="color:#FF6B00">' + wrLabel + '</span> <span style="color:#3df58a">' + driveRec + ' rec, ' + driveRecYds + ' yds</span>');
+      statLines.push('<span style="color:' + offStatColor + '">' + wrLabel + '</span> <span style="color:#3df58a">' + driveRec + ' rec, ' + driveRecYds + ' yds</span>');
     }
     // Defensive stat line — find best defender
     var bestDef = null, bestDefName = '';
@@ -813,7 +816,7 @@ export function buildGameplay() {
         if (bestDef.int > 0) defParts.push(bestDef.int + ' INT');
         if (bestDef.sack > 0) defParts.push(bestDef.sack + ' sack');
         var defPos = bestDef.pos || 'DEF';
-        statLines.push('<span style="color:#FF6B00">' + defPos + ' <span style="color:#fff">' + bestDefName + '</span></span> <span style="color:#3df58a">' + defParts.join(', ') + '</span>');
+        statLines.push('<span style="color:' + defStatColor + '">' + defPos + ' <span style="color:#fff">' + bestDefName + '</span></span> <span style="color:#3df58a">' + defParts.join(', ') + '</span>');
       }
     }
     if (statLines.length > 0) {
@@ -1897,14 +1900,22 @@ export function buildGameplay() {
     else if (isPassPlay) espnDesc = r.yards + '-yd Pass to ' + offName + (defName ? ', tackled by ' + defName : '');
     else if (r.yards === 0) espnDesc = 'No gain by ' + offName + (defName ? ', tackled by ' + defName : '');
     else espnDesc = r.yards + '-yd Run by ' + offName + (defName ? ', tackled by ' + defName : '');
-    // Track QB/RB/WR names
-    var snapQBName = '', snapRBName = '', snapWRName = '';
-    if (isPassPlay && res.featuredOff) snapQBName = offName;
-    if (isPassPlay && r.isComplete && res.featuredOff) { snapWRName = offName; driveRec++; driveRecYds += r.yards; }
-    if (!isPassPlay && !r.isSack && res.featuredOff) snapRBName = offName;
-    if (snapQBName && !driveQBName) driveQBName = snapQBName;
-    if (snapRBName && !driveRBName) driveRBName = snapRBName;
-    if (snapWRName && !driveWRName) driveWRName = snapWRName;
+    // Track QB/RB/WR names — QB comes from roster, receiver/rusher from featuredOff
+    if (isPassPlay) {
+      // Find the team's QB from the offensive roster (not the featured player)
+      var teamQB = offRoster.find(function(p) { return p.pos === 'QB'; });
+      var qbN = teamQB ? teamQB.name : '';
+      if (qbN && !driveQBName) driveQBName = qbN;
+      // featuredOff is the receiver target on pass plays
+      if (r.isComplete && res.featuredOff) {
+        var rcvName = offName;
+        if (!driveWRName) driveWRName = rcvName;
+        driveRec++; driveRecYds += r.yards;
+      }
+    } else if (!r.isSack && res.featuredOff) {
+      // featuredOff is the ball carrier on run plays
+      if (!driveRBName) driveRBName = offName;
+    }
     // Track defensive stats
     if (defName) {
       if (!driveDefStats[defName]) driveDefStats[defName] = { pos: res.featuredDef ? res.featuredDef.pos : '', tkl: 0, pbu: 0, int: 0, sack: 0 };
