@@ -443,15 +443,49 @@ export function buildVisualTest() {
   section('SCOREBUG CLOSE-UP');
   note('Isolated scorebug at 375px — down/distance/field position/TORCH points');
   (function() {
+    var boars = TEAMS.sentinels;
+    var serpents = TEAMS.serpents;
     var sb = document.createElement('div');
-    sb.style.cssText = 'width:375px;background:#0E0A04;border:1px solid #333;border-radius:8px;overflow:hidden;margin-bottom:12px;';
+    sb.style.cssText = 'width:375px;background:#0C0804;border:1px solid #333;border-radius:8px;overflow:hidden;margin-bottom:12px;';
     sb.innerHTML =
-      "<div style='display:flex;justify-content:space-between;align-items:center;padding:6px 8px;'>" +
-        "<div style='text-align:center;'><div style=\"font-family:'Teko';font-size:16px;color:#C4A265;\">BOARS</div><div style=\"font-family:'Rajdhani';font-size:24px;color:#fff;\">14</div></div>" +
-        "<div style='text-align:center;'><div style=\"font-family:'Teko';font-size:14px;color:#FFB800;\">FIRST HALF</div><div style=\"font-family:'Rajdhani';font-size:10px;color:#aaa;\">8/20</div></div>" +
-        "<div style='text-align:center;'><div style=\"font-family:'Teko';font-size:16px;color:#39FF14;\">SERPENTS</div><div style=\"font-family:'Rajdhani';font-size:24px;color:#fff;\">7</div></div>" +
+      // Main row
+      "<div style='display:flex;align-items:center;padding:4px 6px;'>" +
+        // Left team (possession)
+        "<div style='display:flex;align-items:center;gap:4px;flex:1;padding:3px 6px;border-radius:4px 0 0 4px;background:rgba(255,255,255,0.04);'>" +
+          renderTeamBadge('sentinels', 24) +
+          "<div style='display:flex;flex-direction:column;align-items:center;'>" +
+            "<div style=\"font-family:'Teko';font-size:11px;color:" + boars.accent + ";font-style:italic;letter-spacing:1px;line-height:1;\">" + boars.abbr + "</div>" +
+            "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:28px;color:#E8E6FF;line-height:1;text-shadow:0 0 10px rgba(255,255,255,0.3);\">14</div>" +
+          "</div>" +
+        "</div>" +
+        // Center
+        "<div style='display:flex;flex-direction:column;align-items:center;padding:0 6px;min-width:60px;'>" +
+          "<div style=\"font-family:'Teko';font-size:11px;color:#FF6B00;letter-spacing:2px;line-height:1;\">1ST HALF</div>" +
+          "<div style=\"font-family:'Rajdhani';font-size:10px;color:#888;line-height:1;margin-top:1px;\">8/20</div>" +
+        "</div>" +
+        // Right team
+        "<div style='display:flex;align-items:center;gap:4px;flex:1;justify-content:flex-end;flex-direction:row-reverse;padding:3px 6px;border-radius:0 4px 4px 0;'>" +
+          renderTeamBadge('serpents', 24) +
+          "<div style='display:flex;flex-direction:column;align-items:center;'>" +
+            "<div style=\"font-family:'Teko';font-size:11px;color:" + serpents.accent + ";font-style:italic;letter-spacing:1px;line-height:1;\">" + serpents.abbr + "</div>" +
+            "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:28px;color:#E8E6FF;line-height:1;\">7</div>" +
+          "</div>" +
+        "</div>" +
       "</div>" +
-      "<div style=\"text-align:center;padding:4px;background:rgba(0,0,0,0.4);font-family:'Rajdhani';font-size:10px;color:#FF6B00;\">2ND & 4 \u00b7 BALL ON RDG 35 \u00b7 <span style='color:#FFB800;'>T 185</span></div>";
+      // Situation bar with mini-field
+      "<div style='display:flex;align-items:center;padding:3px 8px;background:rgba(0,0,0,0.5);border-top:1px solid rgba(255,255,255,0.04);gap:6px;white-space:nowrap;'>" +
+        "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:#FF6B00;\">2ND & 4</div>" +
+        "<div style='width:1px;height:12px;background:rgba(255,255,255,0.1);'></div>" +
+        // Mini field bar
+        "<div style='flex:1;height:8px;background:#1a1a1a;border-radius:4px;position:relative;overflow:hidden;min-width:60px;'>" +
+          "<div style='position:absolute;top:0;bottom:0;left:0;width:10%;background:" + boars.colors.primary + "88;border-radius:4px;'></div>" +
+          "<div style='position:absolute;top:0;bottom:0;right:0;width:10%;background:" + serpents.colors.primary + "88;border-radius:4px;'></div>" +
+          "<div style='position:absolute;top:-1px;left:65%;width:6px;height:10px;background:#FFB800;border-radius:3px;'></div>" +
+          "<div style='position:absolute;top:0;bottom:0;left:72%;width:2px;background:" + boars.accent + ";opacity:0.5;'></div>" +
+        "</div>" +
+        "<div style='width:1px;height:12px;background:rgba(255,255,255,0.1);'></div>" +
+        "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:#FFB800;\">T 185</div>" +
+      "</div>";
     frame(sb, 100);
   })();
 
