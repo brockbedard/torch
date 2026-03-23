@@ -116,11 +116,3 @@ export function getBench(roster) {
   return roster.slice(4);
 }
 
-// ============================================================
-// BACKWARDS COMPAT — old CT/IR exports for gameplay.js etc.
-// Maps to new team data. Remove when UI files are updated.
-// ============================================================
-export var CT_OFFENSE = STAGS_OFFENSE;   // Stags replace CT as the "aggressive" team
-export var CT_DEFENSE = STAGS_DEFENSE;
-export var IR_OFFENSE = WOLVES_OFFENSE;  // Wolves replace IR as the "physical" team
-export var IR_DEFENSE = WOLVES_DEFENSE;

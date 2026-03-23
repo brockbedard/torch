@@ -12,10 +12,7 @@ import { calcReturnYards } from './turnoverReturns.js';
 import { checkInjury, healInjuries } from './injuries.js';
 import { aiSelectPlay, aiSelectPlayer } from './aiOpponent.js';
 import { TORCH_CARDS } from '../data/torchCards.js';
-import { CT_OFF_PLAYS } from '../data/ctOffensePlays.js';
-import { CT_DEF_PLAYS } from '../data/ctDefensePlays.js';
-import { IR_OFF_PLAYS } from '../data/irOffensePlays.js';
-import { IR_DEF_PLAYS } from '../data/irDefensePlays.js';
+// Old CT/IR play imports removed — plays come from constructor args
 
 export class GameState {
   constructor({ humanTeam = 'CT', difficulty = 'MEDIUM', ctOffHand, ctDefHand, irOffHand, irDefHand,
@@ -486,9 +483,8 @@ export class GameState {
   useAudible(isOffense) {
     if (this.stats.audiblesUsed >= 1) return null;
 
-    const pool = isOffense
-      ? (this.possession === 'CT' ? CT_OFF_PLAYS : IR_OFF_PLAYS)
-      : (this.possession === 'CT' ? CT_DEF_PLAYS : IR_DEF_PLAYS);
+    const sides = this.getCurrentSides();
+    const pool = isOffense ? sides.offHand : sides.defHand;
     const newPlay = pool[Math.floor(Math.random() * pool.length)];
 
     this.stats.audiblesUsed++;

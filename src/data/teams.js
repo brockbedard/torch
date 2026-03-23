@@ -67,24 +67,6 @@ export const TEAMS = {
   },
 };
 
-// Backwards compat: array form for setup.js which calls TEAMS.forEach()
-// Old code expects team objects with: id, name, accent, icon, style, defStyle, players, defPlayers
-// Map new fields to old field names so setup.js doesn't crash.
-export var TEAMS_LIST = Object.keys(TEAMS).map(function(k) {
-  var t = TEAMS[k];
-  return Object.assign({}, t, {
-    color: t.colors.primary,
-    accent: t.colors.secondary,
-    icon: '',  // No emoji icons in v0.21
-    style: t.offScheme,
-    defStyle: t.defScheme,
-    desc: t.motto,
-    defDesc: t.defScheme,
-    bg: '#0A0804',
-    players: [],    // Empty — roster shown on team select in Phase 3
-    defPlayers: [],
-  });
-});
 
 // Helper: get team by id
 export function getTeamById(id) {
