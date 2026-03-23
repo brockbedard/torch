@@ -216,10 +216,8 @@ const CSS = `
 @keyframes T-deal-slide{0%{transform:translateX(100px);opacity:0}100%{transform:translateX(0);opacity:1}}
 @keyframes T-deal-flip{0%{transform:rotateY(180deg)}100%{transform:rotateY(0deg)}}
 .T-card-deal{perspective:600px}
-.T-card-deal .T-card-back{position:absolute;inset:0;backface-visibility:hidden;z-index:2;border-radius:6px;overflow:hidden}
-.T-card-deal .T-card-back>*{width:100%!important;height:100%!important}
-.T-card-deal .T-card-back>*>*{width:100%!important;height:100%!important}
-.T-card-deal .T-card-face{backface-visibility:hidden;transform:rotateY(180deg);width:100%;height:100%}
+.T-card-deal .T-card-back{position:absolute;inset:0;z-index:2;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px}
+.T-card-deal .T-card-face{width:100%;height:100%}
 /* Card selection lift */
 .T-card-lift{transform:scale(1.05) translateY(-4px);box-shadow:0 6px 20px rgba(0,255,68,0.3)!important;border-color:#00ff44!important}
 @keyframes T-clash-glow{0%,100%{box-shadow:0 0 8px currentColor}50%{box-shadow:0 0 20px currentColor}}
@@ -1478,10 +1476,14 @@ export function buildGameplay() {
         c.className = 'T-card T-card-deal' + (isSel ? ' T-card-sel T-card-gone' : '');
         c.style.cssText += 'transform-style:preserve-3d;';
 
-        // Card back (face-down) — use buildHomeCard from shared components
-        var backType = isOffPlay ? 'offense' : 'defense';
-        var cardBack = buildHomeCard(backType, 80, 150);
+        // Card back (face-down) — simple colored back matching mockup
+        var cardBack = document.createElement('div');
         cardBack.className = 'T-card-back';
+        var cbColor = isOffPlay ? '#96CC50' : '#6AAAEE';
+        var cbEdge = isOffPlay ? '#4A6A20' : '#385890';
+        var cbLabel = isOffPlay ? 'OFFENSE' : 'DEFENSE';
+        cardBack.style.cssText += 'background:radial-gradient(ellipse at 50% 40%,' + cbColor + ',' + cbEdge + ');border:2px solid ' + (isOffPlay ? '#7ACC00' : '#4DA6FF') + ';';
+        cardBack.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#000;letter-spacing:1px;opacity:0.7;\">" + cbLabel + "</div>";
         c.appendChild(cardBack);
 
         // Card face (hidden until flip)
@@ -1526,9 +1528,14 @@ export function buildGameplay() {
         c.className = 'T-card T-card-deal' + (isSel ? ' T-card-sel T-card-gone' : '') + (p.injured ? ' T-card-hurt' : '');
         c.style.cssText += 'transform-style:preserve-3d;';
 
-        // Card back (offense card back for player cards)
-        var pBack = buildHomeCard(isOff ? 'offense' : 'defense', 80, 150);
+        // Card back — simple colored back
+        var pBack = document.createElement('div');
         pBack.className = 'T-card-back';
+        var pbColor = isOff ? '#96CC50' : '#6AAAEE';
+        var pbEdge = isOff ? '#4A6A20' : '#385890';
+        var pbLabel = isOff ? 'OFFENSE' : 'DEFENSE';
+        pBack.style.cssText += 'background:radial-gradient(ellipse at 50% 40%,' + pbColor + ',' + pbEdge + ');border:2px solid ' + (isOff ? '#7ACC00' : '#4DA6FF') + ';';
+        pBack.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#000;letter-spacing:1px;opacity:0.7;\">" + pbLabel + "</div>";
         c.appendChild(pBack);
 
         // Card face
