@@ -213,7 +213,7 @@ const CSS = `
 @keyframes T-clash-settle{0%{transform:scale(1.15)}40%{transform:scale(0.95)}100%{transform:scale(1)}}
 @keyframes T-clash-glow{0%,100%{box-shadow:0 0 8px currentColor}50%{box-shadow:0 0 20px currentColor}}
 .T-clash-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:auto}
-.T-clash-dim{position:absolute;inset:0;background:rgba(0,0,0,0.3);transition:opacity 0.3s,backdrop-filter 0.3s}
+.T-clash-dim{position:absolute;inset:0;background:rgba(6,4,2,0.85);transition:opacity 0.3s}
 .T-clash-cards{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:12px;perspective:800px}
 .T-clash-card-wrap{border-radius:8px;overflow:hidden;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s,box-shadow 0.3s;transform-style:preserve-3d}
 .T-clash-card-off{background:rgba(200,160,48,0.12);border:2px solid #c8a03066;padding:10px 12px;text-align:center;min-width:80px}
@@ -1675,15 +1675,9 @@ export function buildGameplay() {
     overlay.onclick = onSkip;
     var dim = document.createElement('div');
     dim.className = 'T-clash-dim';
-    dim.style.opacity = '0';
+    dim.style.opacity = '1';
     overlay.appendChild(dim);
     document.body.appendChild(overlay);
-
-    // ── PHASE 1: ALERT (0-300ms) — dim background ──
-    requestAnimationFrame(function() {
-      dim.style.opacity = String(dimLevel);
-      if (tier === 3) dim.style.backdropFilter = 'blur(2px)';
-    });
     SND.cardSnap();
 
     // ── PHASE 2: BUILD (anticipation) — cards slide in face-down ──
