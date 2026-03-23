@@ -212,13 +212,13 @@ const CSS = `
 @keyframes T-clash-spark{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(0)}}
 @keyframes T-clash-settle{0%{transform:scale(1.15)}40%{transform:scale(0.95)}100%{transform:scale(1)}}
 @keyframes T-clash-glow{0%,100%{box-shadow:0 0 8px currentColor}50%{box-shadow:0 0 20px currentColor}}
-.T-clash-overlay{position:absolute;inset:0;z-index:50;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.T-clash-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:auto}
 .T-clash-dim{position:absolute;inset:0;background:rgba(0,0,0,0.3);transition:opacity 0.3s,backdrop-filter 0.3s}
-.T-clash-cards{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:8px;perspective:800px}
+.T-clash-cards{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:12px;perspective:800px}
 .T-clash-card-wrap{border-radius:8px;overflow:hidden;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s,box-shadow 0.3s;transform-style:preserve-3d}
 .T-clash-card-off{background:rgba(200,160,48,0.12);border:2px solid #c8a03066;padding:10px 12px;text-align:center;min-width:80px}
 .T-clash-card-def{background:rgba(77,166,255,0.12);border:2px solid #4DA6FF66;padding:10px 12px;text-align:center;min-width:80px}
-.T-clash-result{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:16px}
+.T-clash-result{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:20px}
 .T-clash-yds{font-family:'Teko';font-weight:700;font-size:64px;line-height:1;text-shadow:0 0 24px currentColor;animation:T-clash-yds 0.6s cubic-bezier(0.22,1.3,0.36,1) both}
 .T-clash-label{font-family:'Rajdhani';font-weight:700;font-size:14px;letter-spacing:1px;opacity:0.8}
 .T-clash-flash{position:absolute;inset:0;z-index:4;pointer-events:none;animation:T-clash-flash 0.3s ease-out forwards}
