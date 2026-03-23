@@ -112,7 +112,7 @@ export function buildCardMockup() {
   el.appendChild(sec('FLAME PIP RATINGS'));
   var pipRow = row();
   var pipData = [
-    { label: 'Sentinels OFF 4/5', filled: 4, color: '#C4A265' },
+    { label: 'Boars OFF 4/5', filled: 4, color: '#C4A265' },
     { label: 'Wolves DEF 4/5', filled: 4, color: '#D4D4D4' },
     { label: 'Stags OFF 5/5', filled: 5, color: '#F28C28' },
     { label: 'Serpents DEF 4/5', filled: 4, color: '#39FF14' },

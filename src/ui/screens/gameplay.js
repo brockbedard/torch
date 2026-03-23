@@ -6,14 +6,14 @@
 
 import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam, getOtherTeam, fmtClock, getOffCards, getDefCards } from '../../state.js';
-import { badgeSvg, BADGE_LABELS } from '../../data/badges.js';
+import { BADGE_LABELS } from '../../data/badges.js';
 import { GameState } from '../../engine/gameState.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { checkOffensiveBadgeCombo, checkDefensiveBadgeCombo } from '../../engine/badgeCombos.js';
 import { getPlayHistoryBonus } from '../../engine/playHistory.js';
 import { playSvg } from '../../data/playDiagrams.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
-import { buildHomeCard, buildMaddenPlayer, buildPlayV1, buildTorchCard, injectCardStyles } from '../components/cards.js';
+import { buildMaddenPlayer, buildPlayV1, buildTorchCard, injectCardStyles } from '../components/cards.js';
 import { showShop, renderInventory } from '../components/shop.js';
 import { showTooltip } from '../components/tooltip.js';
 import AudioStateManager from '../../engine/audioManager.js';
@@ -131,7 +131,6 @@ const CSS = `
 .T-pbp-line{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:#fff;line-height:1.3;letter-spacing:.3px}
 .T-pbp-live{color:#fff}
 .T-pbp-sub{font-family:'Rajdhani';font-size:13px;color:#C4A265;line-height:1.2}
-.T-pbp-combo{font-family:'Rajdhani';font-size:12px;color:#FFB800;font-style:italic}
 .T-pbp-result{font-family:'Rajdhani';font-size:12px;letter-spacing:.5px;line-height:1;margin-top:6px;white-space:nowrap;overflow:hidden}
 .T-pbp-down{font-family:'Rajdhani';font-size:10px;color:#FF6B00;margin-top:4px;letter-spacing:.5px;line-height:1;white-space:nowrap;overflow:hidden}
 .T-pbp-idle{font-family:'Rajdhani',sans-serif;font-size:11px;color:#444;letter-spacing:.5px}
@@ -182,8 +181,6 @@ const CSS = `
 
 /* conversion */
 .T-conv{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px}
-.T-conv-hdr{font-family:'Teko';font-size:36px;color:#3df58a;letter-spacing:3px}
-.T-conv-btn{width:100%;max-width:260px;padding:14px;font-family:'Rajdhani';font-size:7px;border-radius:8px;cursor:pointer;text-align:center;background:none;letter-spacing:.5px;line-height:1.6}
 
 /* drive summary */
 .T-drv{padding:10px 14px;text-align:center}
@@ -218,8 +215,6 @@ const CSS = `
 .T-card-deal{perspective:600px}
 .T-card-deal .T-card-back{position:absolute;inset:0;z-index:2;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px}
 .T-card-deal .T-card-face{width:100%;height:100%}
-/* Card selection lift */
-.T-card-lift{transform:scale(1.05) translateY(-4px);box-shadow:0 6px 20px rgba(0,255,68,0.3)!important;border-color:#00ff44!important}
 @keyframes T-clash-glow{0%,100%{box-shadow:0 0 8px currentColor}50%{box-shadow:0 0 20px currentColor}}
 .T-clash-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:auto}
 .T-clash-dim{position:absolute;inset:0;background:rgba(6,4,2,0.85);transition:opacity 0.3s}
