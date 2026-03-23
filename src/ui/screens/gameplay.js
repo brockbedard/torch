@@ -1630,6 +1630,7 @@ export function buildGameplay() {
         // Adapt game data to shared buildPlayV1 format
         var cat = {SHORT:'SHORT',QUICK:'QUICK',DEEP:'DEEP',RUN:'RUN',SCREEN:'SCREEN',OPTION:'OPTION',
           BLITZ:'BLITZ',ZONE:'ZONE',PRESSURE:'PRESSURE',HYBRID:'HYBRID'}[play.playType||play.cardType] || 'RUN';
+        var isOffPlay = ['SHORT','QUICK','DEEP','RUN','SCREEN','OPTION'].indexOf(cat) >= 0;
         // Use the shared buildPlayV1 builder with type-colored design
         var playCard = buildPlayV1({
           name: play.name,
