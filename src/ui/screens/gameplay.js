@@ -1944,13 +1944,6 @@ export function buildGameplay() {
       yards: r.yards, isTD: r.isTouchdown, isSack: r.isSack,
       isInc: r.isIncomplete, isInt: r.isInterception, isFumble: r.isFumbleLost
     });
-    if (isPassPlay) {
-      drivePassAtt++;
-      if (r.isComplete) { drivePassComp++; drivePassYds += r.yards; }
-    } else if (!r.isSack) {
-      driveRushAtt++;
-      driveRushYds += r.yards;
-    }
     if (res.gotFirstDown) driveFirstDowns++;
 
     var sides = gs.getCurrentSides();
