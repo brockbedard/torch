@@ -225,49 +225,48 @@ export function buildMaddenPlayer(p, w, h) {
   var border = tierBorderStyle(tier, isStar, teamColor);
   card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:'+(lg?8:6)+'px;border:'+border+';background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);position:relative;box-shadow:0 '+(lg?'4px 16px':'3px 10px')+' rgba(0,0,0,0.5);display:flex;flex-direction:column;overflow:hidden;';
 
-  // Star glow for star players
   if (isStar) {
     card.style.boxShadow += ',0 0 ' + (lg ? '12' : '8') + 'px rgba(255,184,0,0.3)';
   }
 
   var fullPos = POS_NAMES[p.pos] || p.pos;
 
-  // Badge icon SVG for center (replaces OVR number)
-  var badgePath = BADGE_ICON_PATHS[p.badge] || '';
-  var badgeSize = lg ? 24 : 16;
-  var badgeSvg = badgePath
-    ? '<svg viewBox="0 0 512 512" width="'+badgeSize+'" height="'+badgeSize+'"><path d="'+badgePath+'" fill="'+tc+'"/></svg>'
-    : '';
+  // 1. Top border bar in team color
+  var topBar = '<div style="height:3px;background:'+teamColor+';border-radius:'+(lg?6:4)+'px '+(lg?6:4)+'px 0 0;flex-shrink:0;"></div>';
 
-  // Top row: POS left, badge icon centered, #number right
-  var topArea = '<div style="position:relative;padding:'+(lg?'6':'4')+'px 0 '+(lg?'2':'1')+'px;z-index:2;text-align:center;">'
-    + badgeSvg
-    +'<div style="position:absolute;left:'+(lg?'8':'5')+'px;top:50%;transform:translateY(-50%);font-family:\'Teko\';font-weight:700;font-size:'+(lg?11:8)+'px;color:#fff;opacity:0.7;line-height:1;">'+fullPos+'</div>'
-    +'<div style="position:absolute;right:'+(lg?'8':'5')+'px;top:50%;transform:translateY(-50%);font-family:\'Teko\';font-weight:700;font-size:'+(lg?11:8)+'px;color:#fff;opacity:0.7;line-height:1;">#'+(p.num||'')+'</div>'
-    +'</div>';
-
-  // Star icon (pinned top-right for star players)
+  // 2. Star badge (top-right)
   var starIcon = '';
   if (isStar) {
-    starIcon = '<div style="position:absolute;top:'+(lg?'4':'3')+'px;right:'+(lg?'4':'3')+'px;z-index:5;width:'+(lg?'16':'12')+'px;height:'+(lg?'16':'12')+'px;">'
-      + '<svg viewBox="0 0 24 24" width="'+(lg?'16':'12')+'" height="'+(lg?'16':'12')+'"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z" fill="#FFB800"/></svg>'
+    starIcon = '<div style="position:absolute;top:4px;right:4px;z-index:5;filter:drop-shadow(0 1px 3px rgba(255,184,0,0.6));">'
+      + '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z" fill="#FFB800"/></svg>'
       + '</div>';
   }
 
-  // Team logo badge art (replaces helmet)
-  var badgeTeamId = p.teamId || null;
-  var badgeArtSize = lg ? 64 : 42;
-  var badgeArtHtml = badgeTeamId ? renderTeamBadge(badgeTeamId, badgeArtSize) : '';
-  var artArea = '<div style="position:absolute;top:'+(lg?'28':'18')+'px;left:0;right:0;bottom:'+(lg?'26':'18')+'px;display:flex;align-items:center;justify-content:center;opacity:0.85;">'
-    + badgeArtHtml
-    +'</div>';
+  // 3. Position + Number header row
+  var headerRow = '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px 2px;z-index:2;">'
+    + "<div style=\"font-family:'Teko';font-weight:700;font-size:12px;color:"+teamColor+";letter-spacing:2px;line-height:1;\">"+fullPos+'</div>'
+    + "<div style=\"font-family:'Teko';font-size:14px;color:rgba(255,255,255,0.35);line-height:1;\">#"+(p.num||'')+'</div>'
+    + '</div>';
 
-  // Bottom gradient
-  var botGrad = '<div style="position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(transparent,#0A0804);z-index:1;"></div>';
-  // Name bar
-  var nameBar = '<div style="position:absolute;bottom:0;left:0;right:0;z-index:2;background:'+teamColor+'33;padding:'+(lg?'6px 8px':'4px 5px')+';border-top:1px solid '+teamColor+'44;border-bottom:2px solid '+teamColor+';border-radius:0 0 '+(lg?'6':'4')+'px '+(lg?'6':'4')+'px;">'
-    +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+(lg?12:9)+'px;color:#fff;letter-spacing:'+(lg?'1':'0.5')+'px;text-align:center;line-height:1;white-space:nowrap;">'+(lg?p.name:p.name.split(' ').pop())+'</div></div>';
-  card.innerHTML = starIcon + topArea + artArea + botGrad + nameBar;
+  // 4. Team badge centered
+  var badgeTeamId = p.teamId || null;
+  var badgeArtHtml = badgeTeamId ? renderTeamBadge(badgeTeamId, lg ? 52 : 36) : '';
+  var artArea = '<div style="flex:1;display:flex;align-items:center;justify-content:center;opacity:0.85;z-index:1;">'
+    + badgeArtHtml + '</div>';
+
+  // 5. Player name
+  var nameFs = lg ? 16 : (p.name.length > 8 ? 10 : 12);
+  var nameLine = "<div style=\"font-family:'Teko';font-weight:700;font-size:"+nameFs+"px;color:#fff;text-align:center;letter-spacing:1px;line-height:1;padding:0 4px;z-index:2;\">"+p.name+'</div>';
+
+  // 6. Ability text
+  var abilityLine = p.ability
+    ? "<div style=\"font-family:'Rajdhani';font-size:9.5px;color:rgba(255,255,255,0.45);text-align:center;padding:2px 4px 0;line-height:1.2;z-index:2;\">"+p.ability+'</div>'
+    : '';
+
+  // Bottom accent
+  var botAccent = '<div style="height:2px;background:'+teamColor+';margin-top:auto;flex-shrink:0;border-radius:0 0 '+(lg?6:4)+'px '+(lg?6:4)+'px;"></div>';
+
+  card.innerHTML = starIcon + topBar + headerRow + artArea + nameLine + abilityLine + botAccent;
   return card;
 }
 
@@ -289,65 +288,71 @@ export function renderFlamePips(filled, total, filledColor, size) {
   return html;
 }
 
-// ====== PLAY CARD — V1 (name bar top, icon center, category+risk bottom) ======
+// ====== PLAY CARD — Style 2 (Type-Colored, Top Stripe + Type Pill) ======
 
-// Play type watermark icons — simple SVG paths at viewBox="0 0 48 48"
-var PLAY_TYPE_ICONS = {
-  'RUN':           'M14 24h20M34 24l-6-5M34 24l-6 5',                     // Arrow right
-  'QB RUN':        'M14 24h20M34 24l-6-5M34 24l-6 5',                     // Arrow right
-  'DRAW':          'M14 24h20M34 24l-6-5M34 24l-6 5',                     // Arrow right
-  'SHORT PASS':    'M12 30Q24 18 36 26M36 26l-4-5M36 26l-5 2',            // Short arc
-  'QUICK PASS':    'M12 30Q24 18 36 26M36 26l-4-5M36 26l-5 2',            // Short arc
-  'DEEP PASS':     'M8 36Q24 6 40 20M40 20l-3-6M40 20l-6 1',             // Long arc
-  'PLAY-ACTION':   'M10 32L24 18M24 18L38 28M24 18l-4 6',                // Fake + throw
-  'SCREEN':        'M32 16Q12 20 14 32L28 36M14 32l4-4M14 32l5 1',       // Curved loop
-  'OPTION':        'M12 24h12M24 24l10-8M24 24l10 8',                    // Fork/split
-  'RPO':           'M12 24h12M24 24l10-8M24 24l10 8',                    // Fork/split
-  'BLITZ':         'M24 8L24 40M24 8l-6 8M24 8l6 8M16 20l8-4M32 20l-8-4', // Charging arrows
-  'ZONE COVERAGE': 'M10 14h28v20h-28z',                                   // Shield/box
-  'MAN COVERAGE':  'M24 10a6 6 0 1 1 0 12 6 6 0 1 1 0-12zM18 30h12v8h-12z', // Lock shape
-  'PRESS COVERAGE':'M24 10a6 6 0 1 1 0 12 6 6 0 1 1 0-12zM18 30h12v8h-12z',
-  'HYBRID':        'M24 4v40M4 24h40',                                    // Cross/split
-  'SPY':           'M24 14a10 10 0 1 0 0 20 10 10 0 1 0 0-20zM24 20a4 4 0 1 0 0 8 4 4 0 1 0 0-8z', // Eye
+// Type color configs: bg, border, accent
+var TYPE_COLORS = {
+  DEEP:     { bg: '#0a1230', border: '#2255cc', accent: '#4488ff' },
+  SHORT:    { bg: '#0a2010', border: '#22aa44', accent: '#44dd66' },
+  QUICK:    { bg: '#1a1a05', border: '#aa8822', accent: '#ddbb44' },
+  SCREEN:   { bg: '#1a1205', border: '#cc8800', accent: '#ffaa22' },
+  RUN:      { bg: '#1a0f0a', border: '#8B4513', accent: '#c4733b' },
+  ZONE:     { bg: '#0a1225', border: '#2266aa', accent: '#4499dd' },
+  BLITZ:    { bg: '#200a0a', border: '#aa2222', accent: '#dd4444' },
+  HYBRID:   { bg: '#150a20', border: '#7733aa', accent: '#9955cc' },
+  PRESSURE: { bg: '#1a0f0a', border: '#aa5522', accent: '#cc7744' },
 };
 
-// Risk colors: green LOW, yellow MED, red HIGH
-var RISK_COLORS = { high:'#e03050', med:'#FFB800', low:'#3df58a' };
-var RISK_LABELS = { high:'HIGH', med:'MED', low:'LOW' };
+// Risk pip colors
+var RISK_PIP_COLORS = ['#3df58a', '#FFB800', '#e03050']; // 1=green, 2=orange, 3=red
 
 export function buildPlayV1(p, w, h) {
-  var svgTag = p.svg.replace('CATFILL', p.catColor)
-    .replace('SVGW', Math.round(w*0.75)).replace('SVGH', Math.round(h*0.45))
-    .replace('fill="none">', 'width="'+Math.round(w*0.75)+'" height="'+Math.round(h*0.45)+'" fill="none">');
   var card = document.createElement('div');
-  // Color tint: offense = green, defense = blue — visible at a glance
-  var isOffense = p.catColor === '#7ACC00';
-  var bgTint = isOffense ? '#122E0A' : '#0C1828';
-  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:2px solid '+p.catColor+'55;background:linear-gradient(180deg,'+bgTint+' 0%,#0A0804 80%);overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.5);display:flex;flex-direction:column;position:relative;';
+  // Resolve type colors
+  var typeKey = p.playType || p.cat || 'RUN';
+  // Normalize: "SHORT PASS" → "SHORT", "DEEP PASS" → "DEEP", etc.
+  if (typeKey.indexOf(' ') >= 0) typeKey = typeKey.split(' ')[0];
+  var tc = TYPE_COLORS[typeKey] || TYPE_COLORS['RUN'];
+  var isRunCard = p.isRun === true;
+  var borderW = isRunCard ? 3 : 2;
 
-  // Watermark icon in center — big and bold, immediately recognizable
-  var iconPath = PLAY_TYPE_ICONS[p.cat] || PLAY_TYPE_ICONS['RUN'];
-  var iconSize = Math.max(56, Math.round(w * 0.85));
-  var watermark = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:0;opacity:0.18;">' +
-    '<svg viewBox="0 0 48 48" width="'+iconSize+'" height="'+iconSize+'" fill="none" stroke="'+p.catColor+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="'+iconPath+'"/></svg></div>';
+  // Background pattern: diagonal lines for pass, horizontal for run
+  var bgPattern = isRunCard
+    ? 'repeating-linear-gradient(0deg,transparent,transparent 6px,rgba(255,255,255,0.03) 6px,rgba(255,255,255,0.03) 7px)'
+    : 'repeating-linear-gradient(135deg,transparent,transparent 4px,rgba(255,255,255,0.03) 4px,rgba(255,255,255,0.03) 5px)';
+  var stripeStyle = isRunCard
+    ? 'background:' + tc.accent + ';'
+    : 'background:linear-gradient(90deg,' + tc.accent + ',' + tc.border + ');';
 
-  // Risk indicator color
-  var riskColor = RISK_COLORS[p.risk] || '#aaa';
-  var riskLabel = RISK_LABELS[p.risk] || p.risk;
-  var riskFs = w > 90 ? 8 : 6;
+  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:10px;border:'+borderW+'px solid '+tc.border+';background:'+tc.bg+';background-image:'+bgPattern+';overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.5);display:flex;flex-direction:column;position:relative;';
 
-  card.innerHTML = watermark +
-    // Category stripe
-    '<div style="height:3px;background:'+p.catColor+';border-radius:5px 5px 0 0;position:relative;z-index:1;"></div>' +
-    // Name bar
-    '<div style="background:'+p.catColor+'22;padding:4px 6px;border-bottom:1px solid '+p.catColor+'33;position:relative;z-index:1;">' +
-    '<div style="font-family:\'Teko\';font-weight:700;font-size:'+(w>90?14: p.name.length>12?8:11)+'px;color:#fff;letter-spacing:'+(p.name.length>12?'0.5':'1')+'px;line-height:1;white-space:nowrap;">'+p.name+'</div></div>' +
-    // Diagram center
-    '<div style="flex:1;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;">'+svgTag+'</div>' +
-    // Bottom bar: category + risk (risk is color-coded)
-    '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px;background:rgba(0,0,0,0.3);border-top:1px solid #1E1610;position:relative;z-index:1;">' +
-    '<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+riskFs+'px;color:'+p.catColor+';letter-spacing:0.5px;">'+p.cat+'</div>' +
-    '<div style="font-family:\'Rajdhani\';font-weight:700;font-size:'+riskFs+'px;color:'+riskColor+';">'+riskLabel+'</div></div>';
+  // Risk: convert string to number (1-3)
+  var riskNum = p.risk === 'high' ? 3 : p.risk === 'med' ? 2 : typeof p.risk === 'number' ? p.risk : 1;
+  var riskPips = '';
+  for (var ri = 0; ri < 3; ri++) {
+    var pipColor = ri < riskNum ? RISK_PIP_COLORS[riskNum - 1] : 'rgba(255,255,255,0.08)';
+    riskPips += '<svg viewBox="0 0 12 16" width="10" height="13" style="margin-right:1px;"><path d="'+FLAME_PIP_PATH+'" fill="'+pipColor+'"/></svg>';
+  }
+
+  // Name font size — auto-shrink for long names
+  var nameFs = p.name.length > 14 ? 11 : p.name.length > 10 ? 13 : 15;
+
+  card.innerHTML =
+    // 1. Color stripe
+    '<div style="height:4px;border-radius:8px 8px 0 0;'+stripeStyle+'"></div>' +
+    // 2. Type pill (top-right)
+    '<div style="position:absolute;top:6px;right:6px;padding:1px 5px;border-radius:3px;background:'+tc.accent+'26;border:1px solid '+tc.accent+'66;z-index:2;">' +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:9px;color:"+tc.accent+";letter-spacing:2px;line-height:1.2;\">"+typeKey+'</div></div>' +
+    // 3. Play name
+    "<div style=\"padding:10px 8px 4px;padding-right:40px;font-family:'Teko';font-weight:700;font-size:"+nameFs+"px;color:#fff;letter-spacing:1px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;z-index:1;\">"+p.name+'</div>' +
+    // 4. Description
+    "<div style=\"padding:0 8px 8px;font-family:'Rajdhani';font-size:9px;color:rgba(255,255,255,0.5);line-height:1.3;min-height:24px;position:relative;z-index:1;\">"+(p.desc || '')+'</div>' +
+    // Spacer
+    '<div style="flex:1;"></div>' +
+    // 5. Footer bar
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:rgba(0,0,0,0.3);border-top:1px solid '+tc.accent+'33;position:relative;z-index:1;">' +
+      "<div style=\"font-family:'Teko';font-size:9px;color:#555;letter-spacing:1px;\">RISK</div>" +
+      '<div style="display:flex;align-items:center;">'+riskPips+'</div></div>';
   return card;
 }
 

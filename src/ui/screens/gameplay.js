@@ -345,17 +345,13 @@ function getRisk(id) { return HIGH_RISK_IDS.indexOf(id)>=0?'high':MED_RISK_IDS.i
 function mkPlayCardEl(play) {
   var cat = {SHORT:'SHORT',QUICK:'QUICK',DEEP:'DEEP',RUN:'RUN',SCREEN:'SCREEN',OPTION:'OPTION',
     BLITZ:'BLITZ',ZONE:'ZONE',PRESSURE:'PRESSURE',HYBRID:'HYBRID'}[play.playType||play.cardType] || 'RUN';
-  var isOffPlay = ['SHORT','QUICK','DEEP','RUN','SCREEN','OPTION'].indexOf(cat) >= 0;
-  var catColor = isOffPlay ? '#7ACC00' : '#4DA6FF';
-  var svg = playSvg(play.id, catColor);
-  svg = svg.replace('viewBox="0 0 60 50"','viewBox="4 4 52 44"')
-    .replace('width="60" height="50"','width="SVGW" height="SVGH" preserveAspectRatio="xMidYMid meet"')
-    .replace(/stroke-width="1.5"/g,'stroke-width="2.5"').replace(/stroke-width="1"/g,'stroke-width="2"')
-    .replace(/r="3.5"/g,'r="5"').replace(/r="2.5"/g,'r="4"');
   return buildPlayV1({
-    name: play.name, cat: cat, catColor: catColor,
-    risk: getRisk(play.id), riskColor: catColor,
-    svg: svg, bg: isOffPlay ? '#0A1A06' : '#0A1420'
+    name: play.name,
+    playType: cat,
+    isRun: play.isRun === true || play.type === 'run',
+    desc: play.desc || play.flavor || '',
+    risk: play.risk || getRisk(play.id),
+    cat: cat
   }, 80, 150);
 }
 
@@ -1634,19 +1630,14 @@ export function buildGameplay() {
         // Adapt game data to shared buildPlayV1 format
         var cat = {SHORT:'SHORT',QUICK:'QUICK',DEEP:'DEEP',RUN:'RUN',SCREEN:'SCREEN',OPTION:'OPTION',
           BLITZ:'BLITZ',ZONE:'ZONE',PRESSURE:'PRESSURE',HYBRID:'HYBRID'}[play.playType||play.cardType] || 'RUN';
-        var isOffPlay = ['SHORT','QUICK','DEEP','RUN','SCREEN','OPTION'].indexOf(cat) >= 0;
-        var catColor = isOffPlay ? '#7ACC00' : '#4DA6FF';
-        // Build SVG for play diagram
-        var svg = playSvg(play.id, catColor);
-        svg = svg.replace('viewBox="0 0 60 50"','viewBox="4 4 52 44"')
-          .replace('width="60" height="50"','width="SVGW" height="SVGH" preserveAspectRatio="xMidYMid meet"')
-          .replace(/stroke-width="1.5"/g,'stroke-width="2.5"').replace(/stroke-width="1"/g,'stroke-width="2"')
-          .replace(/r="3.5"/g,'r="5"').replace(/r="2.5"/g,'r="4"');
-        // Use the actual shared buildPlayV1 builder
+        // Use the shared buildPlayV1 builder with type-colored design
         var playCard = buildPlayV1({
-          name: play.name, cat: cat, catColor: catColor,
-          risk: getRisk(play.id), riskColor: catColor,
-          svg: svg, bg: isOffPlay ? '#0A1A06' : '#0A1420'
+          name: play.name,
+          playType: cat,
+          isRun: play.isRun === true || play.type === 'run',
+          desc: play.desc || play.flavor || '',
+          risk: play.risk || getRisk(play.id),
+          cat: cat
         }, 80, 150);
         // Wrap in T-card with card back → flip → face-up deal animation
         const c = document.createElement('div');
