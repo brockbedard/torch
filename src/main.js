@@ -19,10 +19,12 @@ function render() {
   try { screen.orientation.unlock(); } catch (e) {}
   let content;
 
-  // ?mockup param shows card design mockup page
-  if (window.location.search.includes('test')) {
+  // Dev-only routes — gated behind localStorage torch_dev flag
+  // Enable in console: localStorage.setItem('torch_dev','1')
+  var _devMode = !!localStorage.getItem('torch_dev');
+  if (_devMode && window.location.search.includes('test')) {
     content = buildVisualTest();
-  } else if (window.location.search.includes('mockup')) {
+  } else if (_devMode && window.location.search.includes('mockup')) {
     content = buildCardMockup();
   } else if (!GS) {
     content = buildHome();

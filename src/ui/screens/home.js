@@ -60,9 +60,9 @@ export function buildHome(){
   }
   el.appendChild(emberWrap);
 
-  // Dev changelog banner — localhost only
-  var host=window.location.hostname;
-  var isDev=host==='localhost'||host==='127.0.0.1'||/^192\.168\.\d+\.\d+$/.test(host)||/^10\.\d+\.\d+\.\d+$/.test(host);
+  // Dev tools — only visible when localStorage torch_dev is set
+  // Enable in console: localStorage.setItem('torch_dev','1')
+  var isDev=!!localStorage.getItem('torch_dev');
   if(isDev){
     var dismissed=false;
     var expanded=false;
