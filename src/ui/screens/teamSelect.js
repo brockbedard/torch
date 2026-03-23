@@ -366,7 +366,7 @@ function startSelectionAnimation(container, teamId, team, isFirst) {
     // Set state and navigate to gameplay
     setGs(function(s) {
       return Object.assign({}, s || {}, {
-        screen: 'gameplay',
+        screen: 'pregame',
         team: teamId,
         difficulty: difficulty,
         opponent: opponentId,

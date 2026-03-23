@@ -14,6 +14,7 @@ import { buildTeamSelect } from './teamSelect.js';
 import { buildGameplay } from './gameplay.js';
 import { buildEndGame } from './endGame.js';
 import { buildHalftime } from './halftime.js';
+import { buildPregame } from './pregame.js';
 import { buildDailyDrive } from './dailyDrive.js';
 import { showShop } from '../components/shop.js';
 import { buildTorchCard } from '../components/cards.js';
@@ -162,6 +163,53 @@ export function buildVisualTest() {
   } catch(e) { note('ERROR: ' + e.message); }
   // Restore tooltip state
   if (savedTip) localStorage.setItem('ts_tip_shown', savedTip);
+
+  // ============================================================
+  // 3.5 PREGAME SEQUENCE — Static keyframes
+  // ============================================================
+  section('PREGAME SEQUENCE — Boars vs Serpents');
+  note('Real buildPregame() — the 5-second sequence auto-plays. Showing initial state.');
+  (function() {
+    var offRoster = getOffenseRoster('sentinels');
+    var defRoster = getDefenseRoster('sentinels');
+    mockGs({
+      screen: 'pregame', team: 'sentinels', opponent: 'serpents',
+      difficulty: 'MEDIUM', humanReceives: true, _coinTossDone: true,
+      isFirstSeason: false,
+      offRoster: offRoster.slice(0,5).map(function(p){return p.id;}),
+      defRoster: defRoster.slice(0,5).map(function(p){return p.id;}),
+      offHand: getOffCards('sentinels').slice(0,5),
+      defHand: getDefCards('sentinels').slice(0,5),
+      gameConditions: { weather: 'clear', field: 'turf', crowd: 'home' },
+      season: { opponents: ['serpents','stags','wolves'], currentGame: 0, results: [], totalScore: 0, torchCards: [], carryoverPoints: 0 },
+    });
+    try {
+      var pgEl = buildPregame();
+      // Override fixed positioning for harness display
+      pgEl.style.position = 'relative';
+      pgEl.style.height = '500px';
+      frame(pgEl, 500);
+    } catch(e) { note('ERROR: ' + e.message); }
+  })();
+
+  // Static keyframe mockups showing each beat
+  note('Static keyframes — Beat 1: Split, Beat 3: VS Slam, Beat 4: Names + Conditions');
+  (function() {
+    var team = TEAMS.sentinels;
+    var opp = TEAMS.serpents;
+    // Beat 3: VS with badges
+    var kf = document.createElement('div');
+    kf.style.cssText = 'width:375px;height:200px;position:relative;border:1px solid #333;border-radius:8px;overflow:hidden;margin-bottom:8px;';
+    kf.innerHTML =
+      '<div style="position:absolute;inset:0;background:linear-gradient(135deg,' + team.colors.primary + '88 0%,' + team.colors.primary + '44 48%,transparent 48%,transparent 52%,' + opp.colors.primary + '44 52%,' + opp.colors.primary + '88 100%);"></div>' +
+      '<div style="position:absolute;top:30%;left:18%;">' + renderTeamBadge('sentinels', 70) + '</div>' +
+      '<div style="position:absolute;top:30%;right:18%;">' + renderTeamBadge('serpents', 70) + '</div>' +
+      "<div style=\"position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);font-family:'Teko';font-weight:700;font-size:48px;color:#fff;text-shadow:0 0 20px rgba(255,107,0,0.8);\">VS</div>" +
+      "<div style=\"position:absolute;top:60%;left:18%;font-family:'Teko';font-weight:700;font-size:20px;color:#fff;font-style:italic;\">" + team.name + "</div>" +
+      "<div style=\"position:absolute;top:60%;right:18%;font-family:'Teko';font-weight:700;font-size:20px;color:#fff;font-style:italic;text-align:right;\">" + opp.name + "</div>" +
+      "<div style=\"position:absolute;top:75%;left:50%;transform:translateX(-50%);font-family:'Rajdhani';font-weight:700;font-size:11px;color:#aaa;display:flex;gap:8px;\"><span style='color:#FFB800'>CLEAR</span><span>\u00b7</span><span>TURF</span><span>\u00b7</span><span style='color:#00ff44'>HOME</span></div>";
+    el.appendChild(kf);
+  })();
 
   // ============================================================
   // 4. GAMEPLAY — DEFENSE

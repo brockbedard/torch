@@ -8,6 +8,7 @@ import { buildGameplay } from './ui/screens/gameplay.js';
 import { buildHalftime } from './ui/screens/halftime.js';
 import { buildEndGame } from './ui/screens/endGame.js';
 import { buildDailyDrive } from './ui/screens/dailyDrive.js';
+import { buildPregame } from './ui/screens/pregame.js';
 
 const root = document.getElementById('root');
 
@@ -20,7 +21,8 @@ function render() {
   let content;
 
   // Dev-only routes — gated behind localStorage torch_dev flag
-  // Enable in console: localStorage.setItem('torch_dev','1')
+  // Enable via URL: ?dev (auto-sets flag) or console: localStorage.setItem('torch_dev','1')
+  if (window.location.search.includes('dev')) localStorage.setItem('torch_dev', '1');
   var _devMode = !!localStorage.getItem('torch_dev');
   if (_devMode && window.location.search.includes('test')) {
     content = buildVisualTest();
@@ -33,6 +35,7 @@ function render() {
       case 'teamSelect': content = buildTeamSelect(); break;
       case 'setup': content = buildTeamSelect(); break; // Legacy redirect
       case 'dailyDrive': content = buildDailyDrive(); break;
+      case 'pregame': content = buildPregame(); break;
       case 'gameplay': content = buildGameplay(); break;
       case 'halftime': content = buildHalftime(); break;
       case 'end_game': content = buildEndGame(); break;
