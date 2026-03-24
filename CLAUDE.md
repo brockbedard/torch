@@ -23,7 +23,7 @@ src/
 ├── state.js                   # Global state, version, hand management helpers
 ├── style.css                  # CSS custom properties / design system
 ├── data/
-│   ├── teams.js               # 4 teams: sentinels(Boars), wolves(Werewolves), stags, serpents
+│   ├── teams.js               # 4 teams: Boars (id: sentinels), Werewolves (id: wolves), Stags, Serpents
 │   ├── players.js             # 52 players (4 teams × 7 OFF + 6 DEF) with ability text
 │   ├── sentinelsPlays.js      # 10 OFF + 10 DEF plays with desc, isRun, risk
 │   ├── wolvesPlays.js         # 10 OFF + 10 DEF plays with desc, isRun, risk
@@ -145,6 +145,14 @@ Persistent panel below SNAP button replacing dead space:
 - Clock: Teko 18px; 24px red with bg during 2-minute drill
 - Possession: green 14px arrows + glow border on possessing side
 
+### UI Cleanup
+- "YOUR OFFENSE/DEFENSE" replaced with team-branded labels ("STAGS OFFENSE", "BOARS DEFENSE")
+- "SELECT SCHEME" and "DRAG A SCHEME ONTO THE FIELD" instruction text removed
+- TORCH points removed from down-and-distance bar (now in dedicated banner)
+- Down & distance text bumped to Teko 16-18px bold
+- Zero-yard plays show neutral color instead of gold
+- Incomplete descriptions varied: "broken up by", "overthrown", "dropped by"
+
 ### Engine Fixes
 - `snapResolver.js`: result includes `playType: 'run'|'pass'` — single source of truth
 - `commentary.js`: uses `result.playType` to select correct verb pool (never crosses run/pass)
@@ -179,6 +187,7 @@ Weather × Field × Crowd = 45 combinations. First game: Clear/Turf/Home. Shown 
 | Combo rate | Never | 40% | 80% |
 | Sack rate | 40% of base | Normal | Normal |
 | Completion boost | +15% | Normal | Normal |
+| Yard bonus | +3 | 0 | 0 |
 
 ## Shared Card Builders (src/ui/components/cards.js)
 **Single source of truth.** Never duplicate card HTML inline.
@@ -189,7 +198,7 @@ Weather × Field × Crowd = 45 combinations. First game: Clear/Turf/Home. Shown 
 | `buildMaddenPlayer(p, w, h)` | Player card (position hero, ability text) |
 | `buildPlayV1(p, w, h)` | Play card (type-colored, description, risk pips) |
 | `buildTorchCard(tc, w, h)` | Torch card (flame, tier border, text-safe) |
-| `teamHelmetSvg(teamId, size)` | Team-colored helmet with facemask |
+| `teamHelmetSvg(teamId, size)` | Team-colored helmet with facemask (legacy — not used in player cards) |
 | `renderFlamePips(filled, total, color, size)` | SVG flame rating pips |
 | `renderTeamBadge(teamId, size)` | Team mascot icon on dark circle |
 
@@ -227,4 +236,6 @@ No emoji in UI. No blue outside defense card backs.
 - Stats bottom sheet (swipe-up during gameplay)
 - AI Coaching Personality flavor text
 - Real crowd audio loops (system ready, files not sourced)
+- Pre-snap route diagrams on field (offense only, SVG overlay, research complete)
+- Defensive coverage diagrams on field
 - Multiplayer, dynasty mode, app store release
