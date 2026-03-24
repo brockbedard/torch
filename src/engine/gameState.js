@@ -255,30 +255,7 @@ export class GameState {
     const result = resolveSnap(offPlay, defPlay, featuredOff, featuredDef,
       sides.offPlayers, sides.defPlayers, context);
 
-    // Easy difficulty adjustments
-    if (this.difficulty === 'EASY') {
-      if (sides.offenseIsHuman) {
-        // Cancel sacks 50% of the time — turn into short gains
-        if (result.isSack && Math.random() < 0.50) {
-          result.isSack = false;
-          result.yards = Math.floor(Math.random() * 3); // 0-2 yard gain instead
-          result.description = `${featuredOff.name} escapes pressure for ${result.yards}.`;
-        }
-        // Cancel interceptions 40% of the time — turn into incompletions
-        if (result.isInterception && Math.random() < 0.40) {
-          result.isInterception = false;
-          result.isIncomplete = true;
-          result.yards = 0;
-          result.description = `Pass broken up — close call!`;
-        }
-        // +3 yard bonus on completions and runs
-        if (!result.isSack && !result.isIncomplete && !result.isInterception && !result.isFumbleLost) {
-          result.yards = Math.min(result.yards + 3, ydsToEz);
-        }
-      } else if (!sides.offenseIsHuman && !result.isSack && !result.isIncomplete) {
-        result.yards = Math.max(result.yards - 2, -5); // -2 CPU penalty
-      }
-    }
+    // Easy difficulty adjustments now handled in snapResolver.js
 
     // Update counters
     this.totalPlays++;

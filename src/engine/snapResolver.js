@@ -1,7 +1,7 @@
 /**
- * TORCH — Snap Resolver (THE CORE)
- * Ported EXACTLY from torch_sim.py resolve_snap function.
- * All stacking bonuses, coverage sack mechanic, red zone compression, etc.
+ * TORCH v0.23.0 — Snap Resolver (THE CORE)
+ * Retuned for exciting football: bigger plays, scheme differentiation,
+ * big play chance, softer covered results, explosive exploits.
  */
 
 import { checkOffensiveBadgeCombo, checkDefensiveBadgeCombo, isRunType } from './badgeCombos.js';
@@ -11,9 +11,6 @@ import { applySquadOVR } from './ovrSystem.js';
 
 /**
  * Box-Muller transform for gaussian random numbers.
- * @param {number} mean
- * @param {number} stddev
- * @returns {number}
  */
 function gaussRandom(mean, stddev) {
   let u = 0, v = 0;
@@ -25,14 +22,6 @@ function gaussRandom(mean, stddev) {
 
 /**
  * Resolve a single snap.
- * @param {object} offPlay - Offensive play card
- * @param {object} defPlay - Defensive play card
- * @param {object} featuredOff - Featured offensive player
- * @param {object} featuredDef - Featured defensive player
- * @param {object[]} offPlayers - Full offensive roster
- * @param {object[]} defPlayers - Full defensive roster
- * @param {object} context - { playHistory, yardsToEndzone, ballPosition, down, distance, isConversion, scoreDiff }
- * @returns {object} SnapResult
  */
 export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlayers, defPlayers, context) {
   const { playHistory, yardsToEndzone, ballPosition, down, distance, isConversion, scoreDiff, weather, momentum, coachBadge, difficulty, offenseIsHuman } = context;
@@ -62,7 +51,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   const isRun = !isPass;
   const is3rd4th = down >= 3;
 
-  // Trailing team bonus (Increased for better balance)
+  // ── TRAILING TEAM BONUS ──
   let trailingBonus = 0;
   let trailingVarBoost = 0;
   if (scoreDiff >= 14) {
@@ -73,7 +62,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     trailingVarBoost = 2;
   }
 
-  // Reveal Card Sim-Benefits (represented as passive mean boost)
+  // Reveal Card Sim-Benefits
   let revealBonus = 0;
   if (context.offCard && ['SCOUT_TEAM', 'FILM_LEAK', 'SIDELINE_PHONE', 'PERSONNEL_REPORT'].includes(context.offCard)) {
     revealBonus = 1;
@@ -82,34 +71,30 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   // FAKE KNEEL (SILVER): +6 mean yards (2-min only)
   let fakeKneelBonus = (context.offCard === 'FAKE_KNEEL' && context.twoMinActive) ? 6 : 0;
 
-  // Coverage modifiers
+  // ── COVERAGE MODIFIERS ──
   const cov = offPlay.coverageMods[defPlay.baseCoverage] || {};
   const covMean = cov.mean || 0;
   const covVar = cov.var || 0;
   const covInt = cov.int || 0;
 
-  let mean = offPlay.mean + covMean;
-  let variance = Math.max(1, offPlay.variance + covVar);
+  // ── BASE MEAN (25% bump from v0.22) ──
+  let mean = offPlay.mean * 1.25 + covMean;
+  let variance = Math.max(1, offPlay.variance * 1.15 + covVar);
 
   // Defensive card effects
   if (isRun) {
     mean += defPlay.runMeanMod;
-    // Cover 0 blitz vs run: +3 penalty (gaps abandoned)
-    if (defPlay.isCover0Blitz) {
-      mean += 3;
-    }
+    if (defPlay.isCover0Blitz) mean += 3;
   } else {
-    // Press man deep bonus for offense
     if ((defPlay.id === 'ct_press_man' || defPlay.id === 'ir_press_man') && offPlay.playType === 'DEEP') {
       mean += 2;
     }
   }
 
-  // Badge combos
+  // ── BADGE COMBOS ──
   const offCombo = checkOffensiveBadgeCombo(featuredOff.badge, offPlay, is3rd4th, isConversion || false);
   const defCombo = checkDefensiveBadgeCombo(featuredDef.badge, defPlay, offPlay);
 
-  // SCHEMER Coach Badge: +1 mean on all badge combos
   if (coachBadge === 'SCHEMER' && offCombo.yardBonus > 0) {
     offCombo.yardBonus += 1;
   }
@@ -140,8 +125,9 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   mean += trailingBonus + revealBonus + fakeKneelBonus;
   variance += trailingVarBoost;
 
-  // Easy difficulty: boost mean yards for human offense
-  if (difficulty === 'EASY' && offenseIsHuman) mean += 2;
+  // ── DIFFICULTY YARD BONUS ──
+  if (difficulty === 'EASY' && offenseIsHuman) mean += 3;
+  else if (difficulty === 'HARD' && offenseIsHuman) mean -= 1;
 
   // Weather Modifiers
   if (weather === 'WINDY' && isPass) mean -= 2.0;
@@ -149,38 +135,22 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
 
   // === PASS PLAY RESOLUTION ===
   if (isPass) {
-    // Sack check
+    // ── SACK CHECK ──
     let sackRate = offPlay.sackRate + defPlay.sackRateBonus + ovrMods.sackMod;
 
-    // Deep passes vs corner blitz: doubled
-    if (offPlay.playType === 'DEEP' && defPlay.id === 'ct_corner_blitz') {
-      sackRate *= 2;
-    }
-
-    // Coverage sack: good coverage + pressure = sack even without all-out blitz
-    if (defPlay.passMeanMod < 0 && defPlay.sackRateBonus >= 0.03) {
-      sackRate += 0.03;
-    }
-
-    // Red zone sack bump
+    if (offPlay.playType === 'DEEP' && defPlay.id === 'ct_corner_blitz') sackRate *= 2;
+    if (defPlay.passMeanMod < 0 && defPlay.sackRateBonus >= 0.03) sackRate += 0.03;
     if (yardsToEndzone <= 20) sackRate += 0.02;
     if (yardsToEndzone <= 10) sackRate += 0.02;
-
-    // Global sack rate bump (+3% to match Python 0.03)
-    sackRate += 0.03;
-
-    // IRON_CURTAIN Coach Badge: +3% sack rate
+    sackRate += 0.03; // Global bump
     if (coachBadge === 'IRON_CURTAIN') sackRate += 0.03;
-
-    // Easy difficulty: reduce sack rate when human is on offense
     if (difficulty === 'EASY' && offenseIsHuman) sackRate *= 0.4;
 
     sackRate = Math.max(0, Math.min(0.30, sackRate));
 
     if (Math.random() < sackRate) {
       result.isSack = true;
-      result.yards = -(4 + Math.floor(Math.random() * 7)); // -4 to -10
-      // Safety check
+      result.yards = -(4 + Math.floor(Math.random() * 7));
       if (ballPosition + result.yards <= 0) {
         result.isSafety = true;
         result.yards = 0;
@@ -189,28 +159,20 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
       return result;
     }
 
-    // Completion check
+    // ── COMPLETION CHECK (boosted rates by play type) ──
     let compRate = offPlay.completionRate + ovrMods.compMod + defPlay.passCompMod;
 
-    // Bad matchup completion penalty
-    if (covMean <= -2) {
-      compRate -= 0.08;
-    } else if (covMean <= -1) {
-      compRate -= 0.04;
-    }
+    // Play-type completion boost (v0.23)
+    var pt = offPlay.playType;
+    if (pt === 'QUICK' || pt === 'SHORT') compRate += 0.10;
+    else if (pt === 'SCREEN') compRate += 0.12;
+    // DEEP stays at base (already harder)
 
-    // Red zone completion squeeze
-    if (yardsToEndzone <= 10) {
-      compRate -= 0.05;
-    }
-
-    // RAIN: -5% completion rate
+    if (covMean <= -2) compRate -= 0.08;
+    else if (covMean <= -1) compRate -= 0.04;
+    if (yardsToEndzone <= 10) compRate -= 0.05;
     if (weather === 'RAIN') compRate -= 0.05;
-
-    // MOMENTUM: If opponent has high momentum (>75), -5% completion rate (Home noise)
     if (momentum > 75) compRate -= 0.05;
-
-    // Easy difficulty: boost completion rate when human is on offense
     if (difficulty === 'EASY' && offenseIsHuman) compRate += 0.15;
 
     compRate = Math.max(0.15, Math.min(0.95, compRate));
@@ -222,34 +184,32 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
       return result;
     }
 
-    // Complete — roll yards
+    // ── COMPLETE — ROLL YARDS ──
     result.isComplete = true;
-    const rawYards = gaussRandom(mean, variance * 0.5);
+    let rawYards = gaussRandom(mean, variance * 0.5);
+
+    // Big play chance (15% on completions)
+    if (Math.random() < 0.15) {
+      var bigMult = 1.4 + Math.random() * 0.8; // 1.4x to 2.2x
+      rawYards = mean * bigMult;
+      result.description = `EXPLOSIVE! ${featuredOff.name} breaks free for extra yards!`;
+    }
+
+    // Covered floor: even a well-covered completion gets some yards
+    if (covMean <= -2 && rawYards < 2) rawYards = 1 + Math.random() * 3;
+
     result.yards = Math.max(-5, Math.min(Math.round(rawYards), maxYards));
 
-    // SPEED_DEMON Coach Badge: +2 yards on explosive plays
     if (coachBadge === 'SPEED_DEMON' && result.yards >= 15) {
       result.yards = Math.min(result.yards + 2, maxYards);
     }
 
-    // INT check
+    // ── INT CHECK ──
     let intRate = offPlay.intRate + covInt + defPlay.intRateBonus + ovrMods.intMod;
-    // Global INT reduction (-0.5%)
     intRate -= 0.005;
-
-    // Special defensive effects on INT
-    if (defPlay.id === 'ir_robber' && (offPlay.id === 'mesh' || offPlay.id === 'slant' || offPlay.id === 'shallow_cross')) {
-      intRate += 0.04;
-    }
-    if (defPlay.id === 'ir_mod' && (offPlay.id === 'four_verts' || offPlay.id === 'go_route')) {
-      intRate += 0.03;
-    }
-
-    // EYE badge INT bonus on PA/option
-    if (featuredDef.badge === 'EYE' && (offPlay.id === 'pa_flat' || offPlay.id === 'pa_post' || offPlay.playType === 'OPTION')) {
-      intRate += 0.02;
-    }
-
+    if (defPlay.id === 'ir_robber' && (offPlay.id === 'mesh' || offPlay.id === 'slant' || offPlay.id === 'shallow_cross')) intRate += 0.04;
+    if (defPlay.id === 'ir_mod' && (offPlay.id === 'four_verts' || offPlay.id === 'go_route')) intRate += 0.03;
+    if (featuredDef.badge === 'EYE' && (offPlay.id === 'pa_flat' || offPlay.id === 'pa_post' || offPlay.playType === 'OPTION')) intRate += 0.02;
     intRate = Math.max(0, Math.min(0.20, intRate));
 
     if (Math.random() < intRate) {
@@ -263,7 +223,6 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     // Fumble after catch
     let fumbleRate = offPlay.fumbleRate;
     if (weather === 'SNOW') fumbleRate += 0.01;
-
     if (Math.random() < fumbleRate) {
       result.isFumble = true;
       result.isFumbleLost = Math.random() < 0.5;
@@ -276,31 +235,23 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   }
   // === RUN PLAY RESOLUTION ===
   else {
-    // Stuff rate: chance the run is blown up
-    let stuffRate = 0.20; // base 20% (balanced from 30%)
+    // ── STUFF CHECK ──
+    let stuffRate = 0.18; // base 18% (was 20%)
 
     if (defPlay.runDefMod < -2) stuffRate += 0.10;
     else if (defPlay.runDefMod < 0) stuffRate += 0.05;
-
-    // Cover 0 blitz = fewer stuffs (gaps abandoned)
     if (defPlay.isCover0Blitz) stuffRate -= 0.12;
-
-    // Bad matchup stuff boost
     if (covMean <= -2) stuffRate += 0.08;
     else if (covMean <= -1) stuffRate += 0.04;
-
-    // Red zone stuff boost
     if (yardsToEndzone <= 10) stuffRate += 0.08;
     else if (yardsToEndzone <= 20) stuffRate += 0.04;
-
-    // Easy difficulty: reduce stuff rate when human is on offense
     if (difficulty === 'EASY' && offenseIsHuman) stuffRate *= 0.5;
 
     stuffRate = Math.max(0.05, Math.min(0.50, stuffRate));
 
     if (Math.random() < stuffRate) {
-      // Stuffed: -2 to +1 yards
-      result.yards = -2 + Math.floor(Math.random() * 4);
+      // Stuffed: -1 to +2 yards (was -2 to +1 — softer)
+      result.yards = -1 + Math.floor(Math.random() * 4);
       if (ballPosition + result.yards <= 0) {
         result.isSafety = true;
         result.yards = 0;
@@ -311,7 +262,6 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
         result.description = `${featuredOff.name} squeezed for ${result.yards}.`;
       }
 
-      // Higher fumble rate on stuffs (1.5x)
       if (Math.random() < offPlay.fumbleRate * 1.5) {
         result.isFumble = true;
         result.isFumbleLost = Math.random() < 0.5;
@@ -322,10 +272,21 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
       return result;
     }
 
-    const rawYards = gaussRandom(mean, variance * 0.5);
+    // ── ROLL YARDS ──
+    let rawYards = gaussRandom(mean, variance * 0.5);
+
+    // Big play chance on runs (15%)
+    if (Math.random() < 0.15) {
+      var runBigMult = 1.4 + Math.random() * 0.8;
+      rawYards = mean * runBigMult;
+      result.description = `${featuredOff.name} breaks a tackle and keeps going!`;
+    }
+
+    // Covered floor for runs: minimum 1-3 yards (athletes don't get 0 on a handoff)
+    if (covMean <= -2 && rawYards < 2) rawYards = 1 + Math.random() * 2;
+
     result.yards = Math.max(-5, Math.min(Math.round(rawYards), maxYards));
 
-    // SPEED_DEMON Coach Badge: +2 yards on explosive plays
     if (coachBadge === 'SPEED_DEMON' && result.yards >= 15) {
       result.yards = Math.min(result.yards + 2, maxYards);
     }
@@ -336,7 +297,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
       result.yards = 0;
     }
 
-    // Run fumble (slightly higher than catches, +0.5%)
+    // Run fumble
     const runFumbleRate = offPlay.fumbleRate + 0.005;
     if (Math.random() < runFumbleRate) {
       result.isFumble = true;
@@ -349,6 +310,28 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     }
   }
 
+  // ── EASY DIFFICULTY POST-RESOLUTION BONUS ──
+  if (difficulty === 'EASY') {
+    if (offenseIsHuman) {
+      // Cancel sacks 50% of the time
+      if (result.isSack && Math.random() < 0.50) {
+        result.isSack = false;
+        result.yards = Math.floor(Math.random() * 3);
+        result.description = `${featuredOff.name} escapes pressure for ${result.yards}.`;
+      }
+      // Cancel interceptions 40% of the time
+      if (result.isInterception && Math.random() < 0.40) {
+        result.isInterception = false;
+        result.isIncomplete = true;
+        result.yards = 0;
+        result.description = `Pass broken up — close call!`;
+      }
+    } else if (!offenseIsHuman && !result.isSack && !result.isIncomplete) {
+      result.yards = Math.max(result.yards - 2, -5); // CPU penalty
+    }
+  }
+
+  // ── TORCH CARD EFFECTS ──
   // FLAG ON THE PLAY (SILVER): 75% chance to nullify big gains
   if (context.defCard === 'FLAG_ON_THE_PLAY' && result.yards >= 10 && !result.isTouchdown) {
     if (Math.random() < 0.75) {
@@ -357,7 +340,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     }
   }
 
-  // CHALLENGE FLAG (SILVER): 75% chance to overturn turnover/failed conversion
+  // CHALLENGE FLAG (SILVER): 75% chance to overturn turnover
   if (context.offCard === 'CHALLENGE_FLAG' && (result.isInterception || result.isFumbleLost || (isConversion && !result.isTouchdown))) {
     if (Math.random() < 0.75) {
       result.isInterception = false;
@@ -368,7 +351,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     }
   }
 
-  // TD check
+  // ── TD CHECK ──
   if (result.yards >= yardsToEndzone && !result.isFumbleLost && !result.isInterception) {
     result.isTouchdown = true;
     result.yards = yardsToEndzone;
