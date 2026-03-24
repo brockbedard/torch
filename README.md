@@ -1,115 +1,75 @@
-# 🔥 TORCH — The Football Card Game
+# TORCH Football
 
-Read the defense. Pick your play. Burn the coverage.
+**Balatro meets college football.** A mobile card game where you pick plays, match up against AI defenses, and build TORCH points through smart playcalling.
 
-A daily football puzzle game with card-based playcalling, AI commentary, and Wordle-style sharing.
+**Play now:** [torch-two.vercel.app](https://torch-two.vercel.app/)
 
 ---
+
+## What Is This
+
+TORCH is a single-player card game that simulates college football through play selection. Each snap, you pick an offensive play card and a player card, then watch them clash against the AI's defensive scheme. Smart matchups produce big gains; bad reads get you stuffed.
+
+4 fictional college teams with distinct schemes. 3-game seasons. TORCH points are your score AND your wallet — spend them on power-up cards or save them for the final tally.
+
+## Teams
+
+| Team | School | Offense | Defense |
+|------|--------|---------|---------|
+| **Boars** | Ridgemont | Run & Shoot | Press Man |
+| **Werewolves** | Northern Pines | Triple Option | Cover 3 Zone |
+| **Stags** | Crestview | Spread RPO | Swarm Blitz |
+| **Serpents** | Blackwater | Air Raid | Pattern Match |
 
 ## Quick Start
 
-### 1. Clone & enter the project
 ```bash
-git init torch-football
-cd torch-football
-# copy all project files here, or:
-# git clone <your-repo-url> && cd torch-football
+git clone https://github.com/brockbedard/torch.git
+cd torch
+npm install
+npx vite --host
 ```
 
-### 2. Run locally (no AI commentary — fallback text works fine)
-```bash
-npx serve public -l 3000
-```
-Open [http://localhost:3000](http://localhost:3000) on your phone or in a mobile-width browser window (430px).
+Open the Network URL on your phone for the best experience.
 
-That's it. The game is fully playable without any API key or backend.
+## Tech Stack
 
----
-
-## Enable AI Commentary (Optional)
-
-The game calls `/api/commentary` for Claude-powered play-by-play and defensive coordinator commentary. To enable this:
-
-### 1. Install Vercel CLI
-```bash
-npm i -g vercel
-```
-
-### 2. Set up your API key
-```bash
-cp .env.example .env
-# Edit .env and paste your Anthropic API key
-# Get one at https://console.anthropic.com/settings/keys
-```
-
-### 3. Run with API routes
-```bash
-vercel dev
-```
-This spins up both the static file server and the `/api/commentary` serverless function locally.
-
----
-
-## Deploy to Vercel
-
-```bash
-# First time — links to your Vercel account
-vercel
-
-# Production deploy
-vercel --prod
-```
-
-After deploying, add your `ANTHROPIC_API_KEY` in the Vercel dashboard:
-**Project Settings → Environment Variables → Add `ANTHROPIC_API_KEY`**
-
----
-
-## Using Claude Code
-
-This project includes a `CLAUDE.md` file that gives Claude Code full context about the game architecture, coding conventions, and known issues. To use it:
-
-### 1. Install Claude Code
-```bash
-npm i -g @anthropic-ai/claude-code
-```
-
-### 2. Run it from the project root
-```bash
-cd torch-football
-claude
-```
-
-Claude Code will automatically read `CLAUDE.md` and understand the project structure. Example prompts:
-
-- `"Add a new daily scenario for a 4th-and-goal situation against Cover 0"`
-- `"Refactor the buildGame function into smaller helper functions"`
-- `"Add a PWA manifest and service worker for offline play"`
-- `"The Vertical Threat scheme is overpowered — rebalance it"`
-- `"Split the monolith into ES modules with no build step"`
-
----
+- **Frontend:** Vite + vanilla JavaScript (no framework)
+- **Fonts:** Teko, Rajdhani, Barlow Condensed (Google Fonts)
+- **Audio:** Howler.js (crowd loops) + jsfxr (UI sounds)
+- **Engine:** Custom snap resolver with gaussian distribution, coverage modifiers, badge combos
+- **Hosting:** Vercel (static + serverless)
 
 ## Project Structure
 
 ```
-torch-football/
-├── public/
-│   └── index.html        # The entire game (single file, ~3400 lines)
-├── api/
-│   └── commentary.js     # Vercel serverless function → Anthropic API
-├── package.json
-├── vercel.json            # Vercel routing config
-├── CLAUDE.md              # Context file for Claude Code
-├── .env.example           # API key template
-└── .gitignore
+src/
+  main.js              # App router
+  state.js             # Global state + version
+  data/                # Teams, players (52), plays (80 with descriptions)
+  engine/              # Snap resolver, game state, AI, commentary
+  ui/components/       # Card builders (play, player, torch cards)
+  ui/screens/          # Home, team select, pregame, gameplay, halftime, end game
+  tests/               # Balance test harness
 ```
 
-## Tech Stack
+See [CLAUDE.md](CLAUDE.md) for full architecture docs, design system, and engine details.
 
-- **Frontend:** Vanilla HTML/CSS/JS (no framework, no build step)
-- **Fonts:** Bebas Neue, Press Start 2P, Barlow Condensed (Google Fonts)
-- **Audio:** Web Audio API (synthesized 8-bit sounds)
-- **AI:** Claude API via serverless proxy (with static fallbacks)
-- **Hosting:** Vercel (static + serverless)
-- **State:** In-memory `GS` object + localStorage for persistence
+## Deploy
+
+```bash
+npx vite build         # Production build
+vercel --prod          # Deploy to Vercel
+```
+
+## Dev Tools
+
+Add `?dev` to any URL or `localStorage.setItem('torch_dev', '1')`.
+
+- `?test` — Visual test harness
+- `?mockup` — Card component reference
+- `window.runBalanceTest(100)` — Simulate 1200 drives, log balance stats
+
+## Current Version
+
+**v0.23.0** — Retuned football engine with balance-tested difficulty. Color-coded play cards, position-hero player cards, drive summary with ESPN-style play-by-play, Banded Clash pregame, TORCH points banner, broadcast commentary.

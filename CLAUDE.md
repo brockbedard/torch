@@ -12,7 +12,7 @@ npx vite --host          # Local dev (port 5173, accessible via phone on LAN)
 npx vite build           # Production build (dist/)
 vercel --prod            # Deploy to production
 ```
-- **Branch:** `refactor-vite` (all work here)
+- **Branch:** `main` (primary), `refactor-vite` (legacy name, merged into main)
 - **GitHub:** https://github.com/brockbedard/torch.git
 - **Production:** https://torch-two.vercel.app/
 
