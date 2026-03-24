@@ -26,11 +26,14 @@ function gaussRandom(mean, stddev) {
 export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlayers, defPlayers, context) {
   const { playHistory, yardsToEndzone, ballPosition, down, distance, isConversion, scoreDiff, weather, momentum, coachBadge, difficulty, offenseIsHuman } = context;
 
-  const isPass = offPlay.completionRate !== null;
+  // ── RUN/PASS DETECTION (authoritative) ──
+  // Use the play's type/isRun field, NOT completionRate (which is 1.0 for some runs)
+  const isRunPlay = offPlay.isRun === true || offPlay.type === 'run';
+  const isPass = !isRunPlay;
 
   const result = {
     yards: 0,
-    playType: isPass ? 'pass' : 'run',
+    playType: isRunPlay ? 'run' : 'pass',
     isComplete: false,
     isIncomplete: false,
     isSack: false,
@@ -48,7 +51,6 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     offTorchPts: 0,
     defTorchPts: 0,
   };
-  const isRun = !isPass;
   const is3rd4th = down >= 3;
 
   // ── TRAILING TEAM BONUS ──
@@ -82,7 +84,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   let variance = Math.max(1, offPlay.variance * 1.15 + covVar);
 
   // Defensive card effects
-  if (isRun) {
+  if (isRunPlay) {
     mean += defPlay.runMeanMod;
     if (defPlay.isCover0Blitz) mean += 3;
   } else {
@@ -126,12 +128,16 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   variance += trailingVarBoost;
 
   // ── DIFFICULTY YARD BONUS ──
-  if (difficulty === 'EASY' && offenseIsHuman) mean += 3;
-  else if (difficulty === 'HARD' && offenseIsHuman) mean -= 1;
+  // Easy: +1.5 (was +3), with rubber-band: +0 if ahead by 21+
+  if (difficulty === 'EASY' && offenseIsHuman) {
+    mean += (scoreDiff <= -21) ? 0 : 1.5;
+  } else if (difficulty === 'HARD' && offenseIsHuman) {
+    mean -= 1;
+  }
 
   // Weather Modifiers
   if (weather === 'WINDY' && isPass) mean -= 2.0;
-  if (weather === 'SNOW' && isRun) mean -= 1.0;
+  if (weather === 'SNOW' && isRunPlay) mean -= 1.0;
 
   // === PASS PLAY RESOLUTION ===
   if (isPass) {
@@ -159,14 +165,13 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
       return result;
     }
 
-    // ── COMPLETION CHECK (boosted rates by play type) ──
+    // ── COMPLETION CHECK ──
     let compRate = offPlay.completionRate + ovrMods.compMod + defPlay.passCompMod;
 
-    // Play-type completion boost (v0.23)
+    // Play-type completion boost
     var pt = offPlay.playType;
     if (pt === 'QUICK' || pt === 'SHORT') compRate += 0.10;
     else if (pt === 'SCREEN') compRate += 0.12;
-    // DEEP stays at base (already harder)
 
     if (covMean <= -2) compRate -= 0.08;
     else if (covMean <= -1) compRate -= 0.04;
@@ -188,14 +193,14 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     result.isComplete = true;
     let rawYards = gaussRandom(mean, variance * 0.5);
 
-    // Big play chance (15% on completions)
-    if (Math.random() < 0.15) {
-      var bigMult = 1.4 + Math.random() * 0.8; // 1.4x to 2.2x
+    // Big play chance (7% on completions — was 15%)
+    if (Math.random() < 0.07) {
+      var bigMult = 1.4 + Math.random() * 0.8;
       rawYards = mean * bigMult;
       result.description = `EXPLOSIVE! ${featuredOff.name} breaks free for extra yards!`;
     }
 
-    // Covered floor: even a well-covered completion gets some yards
+    // Covered floor
     if (covMean <= -2 && rawYards < 2) rawYards = 1 + Math.random() * 3;
 
     result.yards = Math.max(-5, Math.min(Math.round(rawYards), maxYards));
@@ -233,10 +238,10 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
       }
     }
   }
-  // === RUN PLAY RESOLUTION ===
+  // === RUN PLAY RESOLUTION (skip completion check entirely) ===
   else {
     // ── STUFF CHECK ──
-    let stuffRate = 0.18; // base 18% (was 20%)
+    let stuffRate = 0.18;
 
     if (defPlay.runDefMod < -2) stuffRate += 0.10;
     else if (defPlay.runDefMod < 0) stuffRate += 0.05;
@@ -250,7 +255,6 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     stuffRate = Math.max(0.05, Math.min(0.50, stuffRate));
 
     if (Math.random() < stuffRate) {
-      // Stuffed: -1 to +2 yards (was -2 to +1 — softer)
       result.yards = -1 + Math.floor(Math.random() * 4);
       if (ballPosition + result.yards <= 0) {
         result.isSafety = true;
@@ -272,17 +276,17 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
       return result;
     }
 
-    // ── ROLL YARDS ──
+    // ── ROLL YARDS (no completion check — runs always "connect") ──
     let rawYards = gaussRandom(mean, variance * 0.5);
 
-    // Big play chance on runs (15%)
-    if (Math.random() < 0.15) {
+    // Big play chance on runs (7% — was 15%)
+    if (Math.random() < 0.07) {
       var runBigMult = 1.4 + Math.random() * 0.8;
       rawYards = mean * runBigMult;
       result.description = `${featuredOff.name} breaks a tackle and keeps going!`;
     }
 
-    // Covered floor for runs: minimum 1-3 yards (athletes don't get 0 on a handoff)
+    // Covered floor for runs
     if (covMean <= -2 && rawYards < 2) rawYards = 1 + Math.random() * 2;
 
     result.yards = Math.max(-5, Math.min(Math.round(rawYards), maxYards));
@@ -310,16 +314,14 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     }
   }
 
-  // ── EASY DIFFICULTY POST-RESOLUTION BONUS ──
+  // ── EASY DIFFICULTY POST-RESOLUTION ──
   if (difficulty === 'EASY') {
     if (offenseIsHuman) {
-      // Cancel sacks 50% of the time
       if (result.isSack && Math.random() < 0.50) {
         result.isSack = false;
         result.yards = Math.floor(Math.random() * 3);
         result.description = `${featuredOff.name} escapes pressure for ${result.yards}.`;
       }
-      // Cancel interceptions 40% of the time
       if (result.isInterception && Math.random() < 0.40) {
         result.isInterception = false;
         result.isIncomplete = true;
@@ -327,12 +329,11 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
         result.description = `Pass broken up — close call!`;
       }
     } else if (!offenseIsHuman && !result.isSack && !result.isIncomplete) {
-      result.yards = Math.max(result.yards - 2, -5); // CPU penalty
+      result.yards = Math.max(result.yards - 2, -5);
     }
   }
 
   // ── TORCH CARD EFFECTS ──
-  // FLAG ON THE PLAY (SILVER): 75% chance to nullify big gains
   if (context.defCard === 'FLAG_ON_THE_PLAY' && result.yards >= 10 && !result.isTouchdown) {
     if (Math.random() < 0.75) {
       result.yards = 0;
@@ -340,7 +341,6 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     }
   }
 
-  // CHALLENGE FLAG (SILVER): 75% chance to overturn turnover
   if (context.offCard === 'CHALLENGE_FLAG' && (result.isInterception || result.isFumbleLost || (isConversion && !result.isTouchdown))) {
     if (Math.random() < 0.75) {
       result.isInterception = false;
