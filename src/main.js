@@ -50,6 +50,14 @@ function render() {
 // Register render function with state manager
 setRender(render);
 
+// ===== DEV TOOLS =====
+if (localStorage.getItem('torch_dev') === '1' || window.location.search.includes('dev')) {
+  import('./tests/balanceTest.js').then(function(m) {
+    window.runBalanceTest = m.runBalanceTest;
+    console.log('[DEV] Balance test loaded. Run: window.runBalanceTest(100)');
+  });
+}
+
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
   render();
