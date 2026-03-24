@@ -324,34 +324,33 @@ export function buildPlayV1(p, w, h) {
     ? 'background:' + tc.accent + ';'
     : 'background:linear-gradient(90deg,' + tc.accent + ',' + tc.border + ');';
 
-  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:10px;border:'+borderW+'px solid '+tc.border+';background:'+tc.bg+';background-image:'+bgPattern+';overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,0.5);display:flex;flex-direction:column;position:relative;';
+  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;border:'+borderW+'px solid '+tc.border+';background:'+tc.bg+';background-image:'+bgPattern+';overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.5);display:flex;flex-direction:column;';
 
   // Risk: convert string to number (1-3)
   var riskNum = p.risk === 'high' ? 3 : p.risk === 'med' ? 2 : typeof p.risk === 'number' ? p.risk : 1;
   var riskPips = '';
   for (var ri = 0; ri < 3; ri++) {
     var pipColor = ri < riskNum ? RISK_PIP_COLORS[riskNum - 1] : 'rgba(255,255,255,0.08)';
-    riskPips += '<svg viewBox="0 0 12 16" width="10" height="13" style="margin-right:1px;"><path d="'+FLAME_PIP_PATH+'" fill="'+pipColor+'"/></svg>';
+    riskPips += '<svg viewBox="0 0 12 16" width="8" height="11" style="margin-right:1px;"><path d="'+FLAME_PIP_PATH+'" fill="'+pipColor+'"/></svg>';
   }
 
   // Name font size — auto-shrink for long names
-  var nameFs = p.name.length > 16 ? 10 : p.name.length > 12 ? 12 : 14;
+  var nameFs = p.name.length > 16 ? 10 : p.name.length > 12 ? 11 : 13;
 
   card.innerHTML =
     // 1. Color stripe
-    '<div style="height:4px;border-radius:8px 8px 0 0;'+stripeStyle+'"></div>' +
-    // 2. Type pill (top-right)
-    '<div style="position:absolute;top:6px;right:6px;padding:1px 5px;border-radius:3px;background:'+tc.accent+'26;border:1px solid '+tc.accent+'66;z-index:2;">' +
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:9px;color:"+tc.accent+";letter-spacing:2px;line-height:1.2;\">"+typeKey+'</div></div>' +
-    // 3. Play name
-    "<div style=\"padding:10px 8px 4px;padding-right:40px;font-family:'Teko';font-weight:700;font-size:"+nameFs+"px;color:#fff;letter-spacing:"+(nameFs <= 10 ? '0' : '1')+"px;line-height:1;white-space:nowrap;position:relative;z-index:1;\">"+p.name+'</div>' +
-    // 4. Description
-    "<div style=\"padding:0 8px 8px;font-family:'Rajdhani';font-size:9px;color:rgba(255,255,255,0.5);line-height:1.3;min-height:24px;position:relative;z-index:1;\">"+(p.desc || '')+'</div>' +
-    // Spacer
-    '<div style="flex:1;"></div>' +
-    // 5. Footer bar
-    '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:rgba(0,0,0,0.3);border-top:1px solid '+tc.accent+'33;position:relative;z-index:1;">' +
-      "<div style=\"font-family:'Teko';font-size:9px;color:#555;letter-spacing:1px;\">RISK</div>" +
+    '<div style="height:3px;flex-shrink:0;'+stripeStyle+'"></div>' +
+    // 2. Header: Play name + type pill on same row
+    '<div style="display:flex;align-items:baseline;gap:4px;padding:5px 5px 2px;">' +
+      "<div style=\"flex:1;min-width:0;font-family:'Teko';font-weight:700;font-size:"+nameFs+"px;color:#fff;letter-spacing:0.5px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\">"+p.name+'</div>' +
+      '<div style="flex-shrink:0;padding:1px 3px;border-radius:2px;background:'+tc.accent+'22;border:1px solid '+tc.accent+'44;">' +
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:8px;color:"+tc.accent+";letter-spacing:1px;line-height:1;\">"+typeKey+'</div></div>' +
+    '</div>' +
+    // 3. Description
+    "<div style=\"padding:0 5px;font-family:'Rajdhani';font-size:8.5px;color:rgba(255,255,255,0.45);line-height:1.25;flex:1;overflow:hidden;\">"+(p.desc || '')+'</div>' +
+    // 4. Footer bar: RISK + pips
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 5px;background:rgba(0,0,0,0.3);border-top:1px solid '+tc.accent+'22;flex-shrink:0;">' +
+      "<div style=\"font-family:'Teko';font-size:8px;color:#555;letter-spacing:1px;\">RISK</div>" +
       '<div style="display:flex;align-items:center;">'+riskPips+'</div></div>';
   return card;
 }

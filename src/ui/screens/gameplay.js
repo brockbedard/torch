@@ -127,7 +127,7 @@ const CSS = `
 .T-inst{text-align:center;padding:1px 0 0;font-family:'Rajdhani';font-size:10px;color:#777;letter-spacing:1px;flex-shrink:0;text-transform:uppercase}
 
 /* card tray — matches pregame draft card style */
-.T-tray{display:flex;gap:4px;padding:6px 4px;flex-shrink:0;overflow:hidden}
+.T-tray{display:flex;gap:3px;padding:4px 3px;flex-shrink:0;overflow:hidden}
 .T-card{flex:1 1 0;min-width:0;height:150px;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;transition:all .15s ease;touch-action:none;position:relative;cursor:grab;opacity:.8}
 .T-card:active{cursor:grabbing}
 .T-card-sel{opacity:1;border-color:#00ff44 !important;box-shadow:0 0 18px rgba(0,255,68,.35),inset 0 0 12px rgba(0,255,68,.08) !important}
