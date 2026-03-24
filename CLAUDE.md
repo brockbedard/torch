@@ -4,7 +4,7 @@
 TORCH Football is a mobile card game (Balatro meets college football). 4 fictional college teams with distinct offensive/defensive schemes battle through 3-game seasons. Card-based play selection, badge combos, star player Heat Check, and TORCH points (score = wallet). Built with Vite + vanilla JS, deployed on Vercel.
 
 ## Version
-**v0.22.5 "Gameday"** — Color-coded play cards, position-hero player cards, drive summary with player stats, Banded Clash pregame, TORCH banner, broadcast commentary on clash overlay.
+**v0.23.0 "Gameday"** — Retuned football engine with bigger plays, scheme differentiation, and balance-tested difficulty. Color-coded play cards, position-hero player cards, drive summary, Banded Clash pregame, TORCH banner.
 
 ## How to Run
 ```bash
@@ -94,6 +94,38 @@ Home → Daily Drive → Gameplay (1 half) → Result + Share
 
 **Counter-play:** Boars > Serpents > Stags > Werewolves > Boars
 
+## v0.23.0 — Football Engine Retuning
+
+### Snap Resolver Overhaul (snapResolver.js)
+- **Base yards +25%**: all play means multiplied by 1.25x, variance by 1.15x
+- **Big play chance (7%)**: on completions and runs, 7% chance of 1.4-2.2x multiplier — produces 2-3 explosive plays per half
+- **Softer covered results**: covered plays get a floor (1-3 yards on runs, 1-4 on passes) — still bad but not zero
+- **Completion rate boost**: QUICK/SHORT +10%, SCREEN +12%
+- **Stuff rate reduced**: 18% base (was 20%), outcome range -1 to +2 (was -2 to +1)
+
+### Run/Pass Detection Fix
+- Uses `offPlay.isRun`/`offPlay.type` instead of `completionRate` (which was 1.0 for some runs)
+- Runs skip the completion check entirely — they always "connect"
+- `result.playType` is now the single authoritative source for run vs pass
+
+### Difficulty Rebalance
+- Easy: +1.5 mean yards (was +3), rubber-band caps bonus at +0 when ahead by 21+
+- Hard: -1 mean yard penalty
+- Easy sack cancel 50%, INT cancel 40%, CPU -2 yard penalty
+
+### Balance Test Results (100 drives × 4 teams × 3 difficulties)
+```
+EASY:   59-71% scoring, 8.4-9.6 yds/play, 41-50 est pts/game
+MEDIUM: 28-40% scoring, 6.2-6.7 yds/play, 20-28 est pts/game
+HARD:   17-34% scoring, 5.1-6.4 yds/play, 12-24 est pts/game
+```
+Werewolves Triple Option fixed: 40% scoring on Medium (was 14%).
+
+### Balance Test Harness (src/tests/balanceTest.js)
+- `window.runBalanceTest(100)` in browser console (dev mode)
+- Simulates 1200 drives, logs stats with warning flags
+- Code-split, lazy-loaded behind dev flag
+
 ## v0.22.5 — What's New (since v0.22.0)
 
 ### Play Cards — Color-Coded by Type (cards.js)
@@ -153,11 +185,11 @@ Persistent panel below SNAP button replacing dead space:
 - Zero-yard plays show neutral color instead of gold
 - Incomplete descriptions varied: "broken up by", "overthrown", "dropped by"
 
-### Engine Fixes
+### Engine Fixes (v0.22.5)
 - `snapResolver.js`: result includes `playType: 'run'|'pass'` — single source of truth
 - `commentary.js`: uses `result.playType` to select correct verb pool (never crosses run/pass)
-- Easy difficulty heavily buffed: +15% completion, 60% sack reduction, +3 yard bonus
 - 1st down distance always resets to 10 (display clamped too)
+- See v0.23.0 section above for full engine retuning details
 
 ## Key Systems
 
@@ -187,7 +219,10 @@ Weather × Field × Crowd = 45 combinations. First game: Clear/Turf/Home. Shown 
 | Combo rate | Never | 40% | 80% |
 | Sack rate | 40% of base | Normal | Normal |
 | Completion boost | +15% | Normal | Normal |
-| Yard bonus | +3 | 0 | 0 |
+| Mean yard bonus | +1.5 (0 if ahead 21+) | 0 | -1 |
+| Sack cancel | 50% | None | None |
+| INT cancel | 40% | None | None |
+| CPU yard penalty | -2 | None | None |
 
 ## Shared Card Builders (src/ui/components/cards.js)
 **Single source of truth.** Never duplicate card HTML inline.
