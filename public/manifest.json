@@ -1,16 +1,17 @@
 {
-  "name": "TORCH — The Football Card Game",
+  "name": "TORCH Football",
   "short_name": "TORCH",
   "description": "Read the defense. Pick your play. Burn the coverage.",
   "start_url": "/",
-  "display": "standalone",
-  "background_color": "#07050e",
-  "theme_color": "#ffd700",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#09081A",
+  "theme_color": "#09081A",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>",
-      "sizes": "any",
-      "type": "image/svg+xml"
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
     }
   ]
 }

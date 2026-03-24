@@ -1,18 +1,30 @@
 {
   "name": "torch-football",
-  "version": "0.9.0",
+  "version": "0.23.0",
   "description": "TORCH — The Football Card Game",
   "scripts": {
-    "dev": "npx serve public -l 3000 -C",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "dev:api": "vercel dev",
-    "build": "echo 'Static site — no build step needed'",
     "deploy": "git add -A && git commit -m 'deploy' && git push && vercel --prod",
     "deploy:preview": "vercel"
   },
-  "keywords": ["football", "card-game", "daily-puzzle"],
+  "keywords": [
+    "football",
+    "card-game",
+    "daily-puzzle"
+  ],
   "license": "UNLICENSED",
   "private": true,
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "vite": "^8.0.0"
+  },
+  "dependencies": {
+    "howler": "^2.2.4",
+    "jsfxr": "^1.4.0"
   }
 }

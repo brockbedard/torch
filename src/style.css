@@ -1,0 +1,155 @@
+:root {
+  --bg: #0A0804; --bg-surface: #141008; --bg-raised: #1E1610;
+  --torch: #FF4511; --l-green: #00ff44; --a-gold: #FFB800;
+  --white: #ffffff; --glass: rgba(255, 255, 255, 0.1);
+  --chrome: linear-gradient(to bottom, #fff 0%, #888 50%, #fff 100%);
+  --p-red: #ff0040; --text: #fff; --muted: #aaa; --cyan: #4DA6FF; --orange: #FF4511; --danger: #ff0040;
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html,body {
+  background: var(--bg); width: 100%; height: 100%;
+  user-select: none; -webkit-user-select: none;
+}
+body { color: white; font-family: 'Barlow Condensed', sans-serif; display: flex; justify-content: center; font-size: 18px; }
+#root { 
+  width: 100%; max-width: 430px; height: 100vh; background: var(--bg); position: relative; 
+  overflow-y: auto; overflow-x: hidden; box-shadow: 0 0 100px rgba(255, 69, 17, 0.15);
+  padding-top: var(--safe-top); padding-bottom: var(--safe-bottom);
+  user-select: none; -webkit-user-select: none;
+  -webkit-overflow-scrolling: touch;
+}
+#root::after {
+  content: ""; position: fixed; inset: 0; width: 100%; max-width: 430px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 3px, 3px 100%; z-index: 1999; pointer-events: none; opacity: 0.6;
+}
+.px { font-family: 'Rajdhani', sans-serif; font-weight: 600; }
+.bn { font-family: 'Teko', sans-serif; font-weight: 700; }
+
+@keyframes sup{from{transform:translateY(26px);opacity:0;}to{transform:none;opacity:1;}}
+@keyframes fi{from{opacity:0;}to{opacity:1;}}
+/* Home screen — organic flame sway */
+@keyframes flameSway{
+  0%{opacity:0.85;transform:scale(1) skewX(0deg) translateY(0);filter:drop-shadow(0 0 25px var(--orange));}
+  25%{opacity:1;transform:scale(1.06) skewX(-2deg) translateY(-3px);filter:drop-shadow(0 0 35px var(--orange));}
+  50%{opacity:0.9;transform:scale(0.97) skewX(1.5deg) translateY(1px);filter:drop-shadow(0 0 28px var(--orange));}
+  75%{opacity:1;transform:scale(1.08) skewX(-1deg) translateY(-4px);filter:drop-shadow(0 0 40px var(--orange));}
+  100%{opacity:0.85;transform:scale(1) skewX(0deg) translateY(0);filter:drop-shadow(0 0 25px var(--orange));}
+}
+@keyframes flameInnerSway{
+  0%{opacity:0.85;transform:scale(1) skewX(1deg);}
+  30%{opacity:1;transform:scale(1.04) skewX(-1.5deg);}
+  60%{opacity:0.9;transform:scale(0.96) skewX(2deg);}
+  100%{opacity:0.85;transform:scale(1) skewX(1deg);}
+}
+/* Home screen — football hover */
+@keyframes ballHover{
+  0%,100%{transform:translate(-50%,-50%) translateY(0) rotate(-25deg);}
+  50%{transform:translate(-50%,-50%) translateY(-10px) rotate(-25deg);}
+}
+@keyframes ballIgnite{
+  0%,40%{opacity:0.3;transform:scale(0.8);}
+  50%{opacity:1;transform:scale(1.4);filter:drop-shadow(0 0 20px var(--orange));}
+  60%{opacity:0.9;transform:scale(1.1);}
+  100%{opacity:0.3;transform:scale(0.8);}
+}
+/* Home screen — entrance choreography */
+@keyframes homeRevealUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+@keyframes homeRevealScale{from{opacity:0;transform:scale(0.3);}to{opacity:1;transform:scale(1);}}
+@keyframes homeRevealBtn{from{opacity:0;transform:scale(0.92);}to{opacity:1;transform:scale(1);}}
+/* Home screen — CTA glow breathe (orange/torch branded) */
+@keyframes ctaGlow{
+  0%,100%{box-shadow:6px 6px 0 #8B4A00,10px 10px 0 #000,0 0 15px rgba(255,140,0,0.3);}
+  50%{box-shadow:6px 6px 0 #8B4A00,10px 10px 0 #000,0 0 30px rgba(255,140,0,0.5),0 0 50px rgba(255,94,26,0.15);}
+}
+/* Home screen — ember particles */
+@keyframes emberRise{
+  0%{opacity:0.7;transform:translateY(0) translateX(0) scale(1);}
+  100%{opacity:0;transform:translateY(-180px) translateX(var(--drift)) scale(0.3);}
+}
+/* Home screen — background drift */
+@keyframes bgDrift{
+  0%{transform:translate(0,0);}
+  25%{transform:translate(15px,-10px);}
+  50%{transform:translate(-10px,-18px);}
+  75%{transform:translate(-15px,8px);}
+  100%{transform:translate(0,0);}
+}
+/* Home screen — title shimmer (tamed — 30-40px range, no 80px spread) */
+@keyframes titleShimmer{
+  0%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,184,0,0.35);}
+  50%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 40px rgba(255,184,0,0.5);}
+  100%{text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,184,0,0.35);}
+}
+/* Home screen — card shimmer sweep */
+@keyframes cardShimmer{
+  0%,100%{background-position:-100px 0;}
+  50%{background-position:100px 0;}
+}
+/* Home screen — TORCH card breathing glow */
+@keyframes torchGlow{
+  0%,100%{opacity:0.15;transform:scale(1);}
+  50%{opacity:0.4;transform:scale(1.05);}
+}
+/* Home screen — TORCH card warm shimmer */
+@keyframes torchShimmer{
+  0%,100%{background-position:-120px 0;}
+  50%{background-position:120px 0;}
+}
+/* Home screen — TORCH card ember sparks */
+@keyframes torchSpark{
+  0%{opacity:0.8;transform:translateY(0) translateX(0) scale(1);}
+  100%{opacity:0;transform:translateY(-50px) translateX(var(--sx)) scale(0.2);}
+}
+/* Home screen — gentle fan float */
+@keyframes fanFloat{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-4px);}
+}
+/* Home screen — staggered card deal entrance */
+@keyframes cardDealIn{
+  0%{opacity:0;transform:translateY(40px) translateX(0) rotate(0deg) scale(0.7);}
+  100%{opacity:1;}
+}
+
+/* Old stadium UI classes removed — gameplay.js uses injected <style> block */
+
+.btn-blitz {
+  background: #fff; border: 4px solid var(--torch); padding: 15px;
+  font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 16px; color: var(--torch);
+  box-shadow: 6px 6px 0 var(--torch), 10px 10px 0 #000; cursor: pointer;
+  text-transform: uppercase; width: 100%; transition: all 0.1s; display: block; line-height: 1.2;
+  letter-spacing: 2px;
+}
+.btn-blitz:active:not(:disabled) { transform: translate(4px, 4px); box-shadow: 2px 2px 0 var(--torch), 4px 4px 0 #000; }
+.btn-blitz:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.chrome-header {
+  color: var(--a-gold); font-family: 'Teko', sans-serif; font-weight: 700;
+  font-size: 28px; letter-spacing: 3px; font-style: italic;
+  transform: skewX(-8deg); display: inline-block; margin-bottom: 20px;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.9), 0 0 12px rgba(255,204,0,0.3);
+}
+
+.play-card-blitz {
+  background: var(--glass); border: 2px solid var(--white); padding: 10px;
+  text-align: center; position: relative; overflow: hidden; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 90px;
+}
+.play-card-blitz.selected { background: var(--torch); border-color: var(--a-gold); box-shadow: 0 0 15px var(--torch); transform: scale(1.05); }
+
+.clash-card {
+  width: 110px; height: 150px; border: 4px solid var(--white); background: var(--bg-surface);
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  box-shadow: 0 0 20px rgba(255,255,255,0.2); padding: 6px; text-align: center;
+}
+.vs-circle {
+  width: 50px; height: 50px; border-radius: 50%; background: var(--p-red);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Teko', sans-serif; font-weight: 700; font-size: 24px; font-style: italic;
+  box-shadow: 0 0 30px var(--p-red); z-index: 2; color: white; margin: 0 -15px; flex-shrink: 0;
+}
+
+/* Gameplay is now portrait — no landscape enforcement or rotate overlay */
