@@ -4,7 +4,7 @@
 TORCH Football is a mobile card game (Balatro meets college football). 4 fictional college teams with distinct offensive/defensive schemes battle through 3-game seasons. Card-based play selection, badge combos, star player Heat Check, and TORCH points (score = wallet). Built with Vite + vanilla JS, deployed on Vercel.
 
 ## Version
-**v0.22.0 "Gameday"** — Broadcast-quality presentation with card clash animations, rich commentary engine, stadium audio system, and 5-second pregame sequence.
+**v0.22.5 "Gameday"** — Color-coded play cards, position-hero player cards, drive summary with player stats, Banded Clash pregame, TORCH banner, broadcast commentary on clash overlay.
 
 ## How to Run
 ```bash
@@ -24,11 +24,11 @@ src/
 ├── style.css                  # CSS custom properties / design system
 ├── data/
 │   ├── teams.js               # 4 teams: sentinels(Boars), wolves(Werewolves), stags, serpents
-│   ├── players.js             # 52 players (4 teams × 7 OFF + 6 DEF)
-│   ├── sentinelsPlays.js      # 10 OFF + 10 DEF plays (Run & Shoot / Press Man)
-│   ├── wolvesPlays.js         # 10 OFF + 10 DEF plays (Triple Option / Cover 3)
-│   ├── stagsPlays.js          # 10 OFF + 10 DEF plays (Spread RPO / Swarm Blitz)
-│   ├── serpentsPlays.js       # 10 OFF + 10 DEF plays (Air Raid / Pattern Match)
+│   ├── players.js             # 52 players (4 teams × 7 OFF + 6 DEF) with ability text
+│   ├── sentinelsPlays.js      # 10 OFF + 10 DEF plays with desc, isRun, risk
+│   ├── wolvesPlays.js         # 10 OFF + 10 DEF plays with desc, isRun, risk
+│   ├── stagsPlays.js          # 10 OFF + 10 DEF plays with desc, isRun, risk
+│   ├── serpentsPlays.js       # 10 OFF + 10 DEF plays with desc, isRun, risk
 │   ├── torchCards.js          # 8 TORCH cards (2 Gold, 4 Silver, 2 Bronze)
 │   ├── badges.js              # Badge enum + inline SVG icons
 │   ├── badgeIcons.js          # game-icons.net SVG paths for badge hero display
@@ -39,7 +39,7 @@ src/
 │   └── playDiagrams.js        # SVG play diagram generator
 ├── engine/
 │   ├── gameState.js           # GameState class — full game simulation
-│   ├── snapResolver.js        # Play resolution (yards, completions, turnovers)
+│   ├── snapResolver.js        # Play resolution + playType field on result
 │   ├── badgeCombos.js         # Badge combo checks (offense + defense)
 │   ├── playHistory.js         # Play history bonuses
 │   ├── ovrSystem.js           # OVR modifier calculations
@@ -49,18 +49,18 @@ src/
 │   ├── injuries.js            # Injury system
 │   ├── turnoverReturns.js     # Turnover return yard calculations
 │   ├── sound.js               # jsfxr UI sound effects
-│   ├── audioManager.js        # ★ Howler.js AudioStateManager (10 states, crowd loops)
-│   └── commentary.js          # ★ Template-based commentary engine (4 emotional tiers)
+│   ├── audioManager.js        # Howler.js AudioStateManager (10 states, crowd loops)
+│   └── commentary.js          # Template-based commentary engine (4 emotional tiers)
 ├── ui/
 │   ├── components/
-│   │   ├── cards.js           # ★ SHARED CARD BUILDERS (single source of truth)
+│   │   ├── cards.js           # ★ SHARED CARD BUILDERS (play cards, player cards, torch cards)
 │   │   ├── shop.js            # TORCH card shop bottom sheet
 │   │   └── tooltip.js         # First-time teach tooltip component
 │   └── screens/
 │       ├── home.js            # Home screen (card fan hero, wordmark, KICK OFF, DAILY DRIVE)
 │       ├── teamSelect.js      # Team select (2x2 grid + badge emblems + VS transition)
-│       ├── pregame.js         # ★ 5-second broadcast pregame sequence
-│       ├── gameplay.js        # Main game (field, card clash, 4-beat results, commentary)
+│       ├── pregame.js         # ★ Banded Clash pregame (away/home bands, VS, weather card)
+│       ├── gameplay.js        # ★ Main game (field, card clash, drive summary, commentary)
 │       ├── halftime.js        # Broadcast-style halftime report + coach pep talk + shop
 │       ├── endGame.js         # End game (badges, TORCH breakdown, Film Room good+bad)
 │       ├── dailyDrive.js      # Daily Drive mode
@@ -72,7 +72,7 @@ src/
 
 ## Screen Flow
 ```
-Home → Team Select → Pregame Sequence (5s) → Gameplay → Halftime → Gameplay → End Game
+Home → Team Select → Pregame (Banded Clash) → Gameplay → Halftime → Gameplay → End Game
                                                                                     ↓
                                                                           [Between-Game Shop]
                                                                                     ↓
@@ -94,81 +94,67 @@ Home → Daily Drive → Gameplay (1 half) → Result + Share
 
 **Counter-play:** Boars > Serpents > Stags > Werewolves > Boars
 
-**Team icons:** game-icons.net (CC BY 3.0 by Lorc/Delapouite). Rendered as team-colored fill on dark circular background at 4 sizes (140/80/40/24px).
+## v0.22.5 — What's New (since v0.22.0)
 
-## v0.22 "Gameday" — What's New
+### Play Cards — Color-Coded by Type (cards.js)
+Each play type has a unique color scheme (bg, border, accent):
+- **Offense:** DEEP (blue #4488ff), SHORT (green #44dd66), QUICK (gold #ddbb44), SCREEN (orange #ffaa22), RUN (brown #c4733b)
+- **Defense:** ZONE (blue #4499dd), BLITZ (red #dd4444), HYBRID (purple #9955cc), PRESSURE (copper #cc7744)
+- Pass plays get gradient stripe + diagonal pattern; run plays get solid stripe + horizontal pattern
+- Each card shows: play name, type pill, plain-English description, flame-pip risk indicator
+- Every play has a `desc` field (plain-English) and `isRun` field in the play data files
 
-### Pregame Sequence (pregame.js)
-5-second broadcast-style intro between team select and gameplay:
-- Beat 0: TORCH flame logo pulse
-- Beat 1: Diagonal screen split in team colors
-- Beat 2: Team badge emblems slam in from sides (scale overshoot)
-- Beat 3: "VS" slam with screen shake + particle burst
-- Beat 4: Team names, conditions badge, season record
-- Beat 5: Stat comparison bars + field reveal
-- Progressive shortening: full 5s first 5 games, then 2.5s fast
+### Player Cards — Position Hero Style (cards.js)
+- Large position abbreviation (Teko 22px, weight 900) as the hero element
+- 11 position colors: QB gold, WR green, RB orange, CB blue, S cyan, LB red, DL dark red, etc.
+- Shows: position + jersey number, player name, colored accent line, ability text
+- Every player has an `ability` field in players.js (52 unique abilities)
+- No team badges on player cards — identity from context
 
-### Audio System (audioManager.js)
-Howler.js-powered 3-layer audio with 10 states:
-- States: MENU, PRE_GAME, NORMAL_PLAY, BIG_MOMENT, TWO_MIN_DRILL, TOUCHDOWN, TURNOVER, HALFTIME, GAME_OVER, PAUSED
-- Ambient crowd loops crossfade between states (1s transitions)
-- Mute toggle persisted to localStorage, auto-mute on page hidden
-- Audio files in public/audio/ (crowd-idle/tense/building/roar/groan.ogg)
+### Pregame — Banded Clash (pregame.js)
+Full-screen symmetrical layout replacing old beat-by-beat sequence:
+- TORCH header with animated flame + GAME DAY branding
+- Away team band (left): badge, school, team name, scheme, OFF/DEF flame pips
+- VS collision zone with gradient bars and pulsing glow
+- Home team band (right): mirrored layout
+- Weather conditions card (icon + temperature + surface)
+- Auto-advance 4.5s, tap-to-skip, progressive shortening after 5 games
 
-### Card Clash Animation (gameplay.js)
-4-phase collision-based reveal replacing old 3-beat system:
-- Phase 1 (Alert): Background dims (20/40/70% by tier)
-- Phase 2 (Build): Cards slide in from sides, offense gold/defense blue
-- Phase 3 (Peak): Hitstop freeze (33/67/133ms), screen shake, particle burst, impact sound
-- Phase 4 (Settle): Winning card glows, losing dims, result text scales in
-- 3-tier drama scaling: routine (0.8s), important (1.5s), game-changing (2.5s)
-- Tap-to-skip jumps to Phase 4
+### TORCH Points Banner (gameplay.js)
+Full-width gold strip between scorebug and field:
+- Animated flame SVG + "TORCH" label + live points number
+- Balatro-style animation on point earn: scale 120%, count-up ticker, gold glow pulse
 
-### Post-Play Display (gameplay.js)
-4-beat sequence after every play:
-- Beat 1 (Impact): Yardage slams center (64/72/96px by intensity)
-- Beat 2 (Context): First down flash, scorebug updates, commentary line 1
-- Beat 3 (Reward): TORCH points + combo names stagger in
-- Beat 4 (Ready): Overlay fades, card tray restores
+### Drive Summary Panel (gameplay.js)
+Persistent panel below SNAP button replacing dead space:
+- Team-branded header: "{TEAM} DRIVE" in team accent color
+- Play-by-play ticker: newest play on top, ESPN-style descriptions with player names
+- Game-wide stat lines: QB/WR/RB (human offense) + best defender (human defense)
+- Both teams tracked separately with correct rosters
+- Commentary text (16px bold) from the commentary engine
 
-### Commentary Engine (commentary.js)
-Template-based play-by-play with vivid language:
-- 15 pass verbs, 15 run verbs, 9 catch verbs, 8 tackle verbs
-- 10 route modifiers, 9 run modifiers, field position awareness
-- 4 emotional tiers: routine → elevated → intense → explosive
-- Situational context: midfield crossing, red zone, lead changes, 4th down
-- Anti-repetition cooldown tracker
+### Commentary on Clash Overlay (gameplay.js)
+- Post-play overlay shows vivid commentary instead of "Play vs Play" matchup label
+- "T +5" TORCH points removed from overlay (now animated on banner)
+- Tackler names on every completed play in both commentary and drive summary
 
-### Card Deal Animation
-Cards deal face-down showing colored card backs (green offense, blue defense), then flip face-up:
-- 0.5s slide from right edge with 120ms stagger between cards
-- 300ms CSS perspective flip with card snap sound
-- Applied to both play cards and player cards
+### Scorebug Upgrades (gameplay.js)
+- Team names auto-scale: 20px (≤5 chars), 17px (6-8), 14px (9+) — never truncated
+- Team badges: 44px
+- Snap count: Teko 22px bold
+- Clock: Teko 18px; 24px red with bg during 2-minute drill
+- Possession: green 14px arrows + glow border on possessing side
 
-### 2-Minute Drill Real-Time Clock
-- setInterval ticks every 1s, decrements clock, updates scorebug
-- Pauses during snap animations
-- Heartbeat SFX below 15 seconds
-- Auto-ends game at 0:00
-
-### Broadcast Halftime (halftime.js)
-- Team badges + scores, drive summary stats
-- Situation-aware coach pep talk (winning/losing/tied variants)
-- Locker room shop with 3 TORCH cards
-
-### Upgraded Possession Change
-- Team badges + scores with "YOUR BALL" / "CHANGE OF POSSESSION"
-- Tap to skip, 2s auto-advance
-
-### End Game + Film Room (endGame.js)
-- Team badges on score display
-- TORCH points breakdown: "Base: 450 | Win Bonus: +100"
-- Film Room shows GOOD plays (green) AND bad plays (red) with coaching tips
+### Engine Fixes
+- `snapResolver.js`: result includes `playType: 'run'|'pass'` — single source of truth
+- `commentary.js`: uses `result.playType` to select correct verb pool (never crosses run/pass)
+- Easy difficulty heavily buffed: +15% completion, 60% sack reduction, +3 yard bonus
+- 1st down distance always resets to 10 (display clamped too)
 
 ## Key Systems
 
-### Hand Management (Option D)
-10-card playbook per side. Draw 4 at game start. Play 1 → bottom of deck → draw 1 from top. Always 4 in hand.
+### Hand Management
+10-card playbook per side. Draw 4 at game start. Play 1 → bottom of deck → draw 1 from top. Always 4 in hand. Player cards also 4 per hand.
 
 ### TORCH Card Economy (Score = Wallet)
 8 cards. 3 inventory slots. Single-use within a season. Shop opens at trigger moments. Points only go UP from plays (never negative). Spending is the only way points decrease.
@@ -183,10 +169,7 @@ Cards deal face-down showing colored card backs (green offense, blue defense), t
 `isFirstSeason` flag. First game: auto-Easy, teach tooltips, hidden difficulty/formation/Heat Check. Game 2+: full features.
 
 ### Game Day Conditions
-Weather × Field × Crowd = 45 combinations. First game: Clear/Turf/Home. Shown on pregame VS screen.
-
-### Play Sequence Combos
-5 hidden patterns discovered through play. Flash text on trigger, no explanation.
+Weather × Field × Crowd = 45 combinations. First game: Clear/Turf/Home. Shown on pregame weather card.
 
 ### Difficulty
 | Aspect | Easy | Medium | Hard |
@@ -194,6 +177,8 @@ Weather × Field × Crowd = 45 combinations. First game: Clear/Turf/Home. Shown 
 | Play selection | Random | Situational | 50% optimal + 25% sit + 25% random |
 | OVR modifier | -3 | Normal | +2 |
 | Combo rate | Never | 40% | 80% |
+| Sack rate | 40% of base | Normal | Normal |
+| Completion boost | +15% | Normal | Normal |
 
 ## Shared Card Builders (src/ui/components/cards.js)
 **Single source of truth.** Never duplicate card HTML inline.
@@ -201,8 +186,8 @@ Weather × Field × Crowd = 45 combinations. First game: Clear/Turf/Home. Shown 
 | Builder | Returns |
 |---------|---------|
 | `buildHomeCard(type, w, h)` | Card back (offense/torch/defense) |
-| `buildMaddenPlayer(p, w, h)` | Player card (badge, tier border, helmet) |
-| `buildPlayV1(p, w, h)` | Play card (type icon watermark, tinted bg, risk) |
+| `buildMaddenPlayer(p, w, h)` | Player card (position hero, ability text) |
+| `buildPlayV1(p, w, h)` | Play card (type-colored, description, risk pips) |
 | `buildTorchCard(tc, w, h)` | Torch card (flame, tier border, text-safe) |
 | `teamHelmetSvg(teamId, size)` | Team-colored helmet with facemask |
 | `renderFlamePips(filled, total, color, size)` | SVG flame rating pips |
@@ -233,6 +218,7 @@ No emoji in UI. No blue outside defense card backs.
 - 3-game seasons with card/point persistence.
 - Progressive disclosure — learn by playing, no tutorials.
 - TORCH points never decrease from plays (only from shop spending).
+- 4 cards in hand (plays and players).
 
 ## Specced But Not Built (v2+)
 - Additional TORCH cards (Prime Time, Challenge Flag, Double Down, etc.)

@@ -11,7 +11,7 @@ import { GameState } from '../../engine/gameState.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { checkOffensiveBadgeCombo, checkDefensiveBadgeCombo } from '../../engine/badgeCombos.js';
 import { getPlayHistoryBonus } from '../../engine/playHistory.js';
-import { playSvg } from '../../data/playDiagrams.js';
+// playSvg removed — play cards no longer use SVG diagrams
 import { TORCH_CARDS } from '../../data/torchCards.js';
 import { buildMaddenPlayer, buildPlayV1, buildTorchCard, injectCardStyles } from '../components/cards.js';
 import { showShop, renderInventory } from '../components/shop.js';

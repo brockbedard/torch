@@ -7,7 +7,7 @@
 
 import { BADGE_ICON_PATHS } from '../../data/badgeIcons.js';
 import { TEAMS } from '../../data/teams.js';
-import { renderTeamBadge } from '../../data/teamLogos.js';
+// renderTeamBadge removed — player cards no longer use team badges
 
 // ====== CARD ANIMATIONS (inject once) ======
 var _stylesInjected = false;
