@@ -1910,27 +1910,31 @@ export function buildGameplay() {
     else if (isPassPlay) espnDesc = r.yards + '-yd Pass to ' + receiverName + (defName ? ', tackled by ' + defName : '');
     else if (r.yards === 0) espnDesc = 'No gain by ' + rusherName + (defName ? ', tackled by ' + defName : '');
     else espnDesc = r.yards + '-yd Run by ' + rusherName + (defName ? ', tackled by ' + defName : '');
-    // Track game-wide QB/RB/WR stats
-    if (isPassPlay) {
-      gamePassAtt++;
-      if (qbName && !gameQBName) gameQBName = qbName;
-      if (r.isComplete) {
-        gamePassComp++; gamePassYds += r.yards;
-        if (!gameWRName) gameWRName = receiverName;
-        gameRec++; gameRecYds += r.yards;
+    // Track game-wide stats — only for the human's side
+    if (isOff) {
+      // Human on offense: track QB/RB/WR stats
+      if (isPassPlay) {
+        gamePassAtt++;
+        if (qbName && !gameQBName) gameQBName = qbName;
+        if (r.isComplete) {
+          gamePassComp++; gamePassYds += r.yards;
+          if (!gameWRName) gameWRName = receiverName;
+          gameRec++; gameRecYds += r.yards;
+        }
+      } else if (!r.isSack && res.featuredOff) {
+        gameRushAtt++; gameRushYds += r.yards;
+        if (!gameRBName) gameRBName = rusherName;
       }
-    } else if (!r.isSack && res.featuredOff) {
-      gameRushAtt++; gameRushYds += r.yards;
-      if (!gameRBName) gameRBName = rusherName;
-    }
-    // Track game-wide defensive stats
-    if (defName) {
-      if (!gameDefStats[defName]) gameDefStats[defName] = { pos: res.featuredDef ? res.featuredDef.pos : '', tkl: 0, pbu: 0, int: 0, sack: 0 };
-      var ds = gameDefStats[defName];
-      if (r.isSack) ds.sack++;
-      else if (r.isInterception) ds.int++;
-      else if (r.isIncomplete) ds.pbu++;
-      else if (!r.isTouchdown) ds.tkl++;
+    } else {
+      // Human on defense: track defensive stats
+      if (defName) {
+        if (!gameDefStats[defName]) gameDefStats[defName] = { pos: res.featuredDef ? res.featuredDef.pos : '', tkl: 0, pbu: 0, int: 0, sack: 0 };
+        var ds = gameDefStats[defName];
+        if (r.isSack) ds.sack++;
+        else if (r.isInterception) ds.int++;
+        else if (r.isIncomplete) ds.pbu++;
+        else if (!r.isTouchdown) ds.tkl++;
+      }
     }
     driveSummaryLog.push({
       down: preSnap.down, dist: preSnap.distance,
