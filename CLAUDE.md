@@ -34,9 +34,14 @@ src/
 │   ├── badgeIcons.js          # game-icons.net SVG paths for badge hero display
 │   ├── teamLogos.js           # game-icons.net team mascot SVGs (boar/werewolf/deer/serpent)
 │   ├── uiIcons.js             # Tabler Icons SVG paths for UI chrome
+│   ├── torchCardIcons.js       # 20 game-icons.net SVG paths for TORCH modifier cards
 │   ├── gameConditions.js      # Weather/field/crowd definitions + effects
 │   ├── playSequenceCombos.js  # 5 hidden play pattern combos
 │   └── playDiagrams.js        # SVG play diagram generator
+├── assets/
+│   └── torch-icons/           # 20 SVG source files from game-icons.net (CC BY 3.0)
+├── tests/
+│   └── balanceTest.js         # Balance test harness (window.runBalanceTest)
 ├── engine/
 │   ├── gameState.js           # GameState class — full game simulation
 │   ├── snapResolver.js        # Play resolution + playType field on result
@@ -196,8 +201,17 @@ Persistent panel below SNAP button replacing dead space:
 ### Hand Management
 10-card playbook per side. Draw 4 at game start. Play 1 → bottom of deck → draw 1 from top. Always 4 in hand. Player cards also 4 per hand.
 
-### TORCH Card Economy (Score = Wallet)
-8 cards. 3 inventory slots. Single-use within a season. Shop opens at trigger moments. Points only go UP from plays (never negative). Spending is the only way points decrease.
+### TORCH Modifier Cards (Score = Wallet)
+20 cards across 4 categories, 3 tiers (Bronze/Silver/Gold). Icons from game-icons.net (CC BY 3.0).
+- **Snap Modifiers** (10): single-play consumables (PICK SIX, UNCOVERABLE, DA BOMB, etc.)
+- **Drive Modifiers** (4): full-possession buffs (NO HUDDLE, IRON WALL, RED ZONE PKG, BALL CONTROL)
+- **Scheme Cards** (3): passive season-long (FILM ROOM, TEMPO KING, GUNSLINGER)
+- **Momentum** (3): auto-trigger on conditions (ON FIRE, TENDENCY BREAK, CLUTCH GENE)
+
+3 inventory slots. Single-use within a season. Shop opens at trigger moments (halftime, TD, turnover). Points only go UP from plays (never negative). Spending is the only way points decrease.
+
+Icon data: `src/data/torchCardIcons.js` — 20 SVG paths + `renderTorchCardIcon(key, size, color)` helper.
+Mockup: `mockups/torch-card-system-mockup.jsx` — React artifact with 5 tabbed views (Cards, Gameplay, Shop, Activate, Mini). Preview via `mockups/preview/`.
 
 ### Season Cycle
 3 games per season. Order: neutral → prey → predator. Cards + unspent points carry. +100/win, +200 sweep.
@@ -241,7 +255,9 @@ Weather × Field × Crowd = 45 combinations. First game: Clear/Turf/Home. Shown 
 Enable: `localStorage.setItem('torch_dev', '1')` or visit any URL with `?dev`.
 - `?test` — Visual test harness showing all screen states
 - `?mockup` — Card component reference page
+- `window.runBalanceTest(100)` — Simulate 1200 drives, log balance stats to console
 - DEV BUILD banner, Quick Play, Reset Daily Lock
+- `mockups/preview/` — TORCH card system React mockup (run with `npx vite` from that dir)
 
 ## Design System
 ```css
@@ -265,7 +281,9 @@ No emoji in UI. No blue outside defense card backs.
 - 4 cards in hand (plays and players).
 
 ## Specced But Not Built (v2+)
-- Additional TORCH cards (Prime Time, Challenge Flag, Double Down, etc.)
+- TORCH modifier card system (20 cards designed, icons sourced, mockup complete — needs gameplay integration)
+- Halftime TORCH shop with tier-based card offerings
+- Card activation animations (bronze/silver/gold escalation)
 - Heat Check Clutch Factor (4th quarter auto-fire)
 - Daily Drive shareable result grid (Wordle-style)
 - Stats bottom sheet (swipe-up during gameplay)
