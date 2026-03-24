@@ -444,11 +444,22 @@ export function buildGameplay() {
   var driveCommLine1 = '', driveCommLine2 = '';
 
   // Game-wide stat accumulators (persist across drives)
-  var gamePassAtt = 0, gamePassComp = 0, gamePassYds = 0;
-  var gameRushAtt = 0, gameRushYds = 0;
-  var gameRecYds = 0, gameRec = 0;
-  var gameQBName = '', gameRBName = '', gameWRName = '';
-  var gameDefStats = {}; // { name: { pos, tkl, pbu, int, sack } }
+  // Human offense stats
+  var hOffPassAtt = 0, hOffPassComp = 0, hOffPassYds = 0;
+  var hOffRushAtt = 0, hOffRushYds = 0;
+  var hOffRecYds = 0, hOffRec = 0;
+  var hOffQBName = '', hOffRBName = '', hOffWRName = '';
+  // Human defense stats (tracking human's defensive players)
+  var hDefStats = {}; // { name: { pos, tkl, pbu, int, sack } }
+  // CPU offense stats
+  var cOffPassAtt = 0, cOffPassComp = 0, cOffPassYds = 0;
+  var cOffRushAtt = 0, cOffRushYds = 0;
+  var cOffRecYds = 0, cOffRec = 0;
+  var cOffQBName = '', cOffRBName = '', cOffWRName = '';
+  // CPU defense stats (tracking CPU's defensive players)
+  var cDefStats = {}; // { name: { pos, tkl, pbu, int, sack } }
+  // CPU roster for QB lookup
+  var cpuOffRoster = getOffenseRoster(oppId);
 
   function resetDriveSummary() {
     driveSummaryLog = [];
@@ -782,30 +793,41 @@ export function buildGameplay() {
       }
     }
 
-    // Stat lines — GAME-WIDE stats (not drive stats)
-    // Team colors: offensive stats use human team accent, defensive stats use opponent accent
-    var offStatColor = hTeam.accent || '#FF6B00';
-    var defStatColor = oTeam.accent || '#FF6B00';
+    // Stat lines — show possessing team's OFF stats + defending team's DEF stats
+    var isHumanBall = gs.possession === hAbbr;
+    var offPA = isHumanBall ? hOffPassAtt : cOffPassAtt;
+    var offPC = isHumanBall ? hOffPassComp : cOffPassComp;
+    var offPY = isHumanBall ? hOffPassYds : cOffPassYds;
+    var offRA = isHumanBall ? hOffRushAtt : cOffRushAtt;
+    var offRY = isHumanBall ? hOffRushYds : cOffRushYds;
+    var offRC = isHumanBall ? hOffRec : cOffRec;
+    var offRCY = isHumanBall ? hOffRecYds : cOffRecYds;
+    var offQB = isHumanBall ? hOffQBName : cOffQBName;
+    var offRB = isHumanBall ? hOffRBName : cOffRBName;
+    var offWR = isHumanBall ? hOffWRName : cOffWRName;
+    var curDefStats = isHumanBall ? cDefStats : hDefStats;
+    var offStatColor = (isHumanBall ? hTeam : oTeam).accent || '#FF6B00';
+    var defStatColor = (isHumanBall ? oTeam : hTeam).accent || '#FF6B00';
     var statLines = [];
-    if (gamePassAtt > 0) {
-      var qbLabel = gameQBName ? 'QB <span style="color:#fff">' + gameQBName + '</span>' : 'QB';
-      statLines.push('<span style="color:' + offStatColor + '">' + qbLabel + '</span> <span style="color:#3df58a">' + gamePassComp + '/' + gamePassAtt + ', ' + gamePassYds + ' yds</span>');
+    if (offPA > 0) {
+      var qbLabel = offQB ? 'QB <span style="color:#fff">' + offQB + '</span>' : 'QB';
+      statLines.push('<span style="color:' + offStatColor + '">' + qbLabel + '</span> <span style="color:#3df58a">' + offPC + '/' + offPA + ', ' + offPY + ' yds</span>');
     }
-    if (gameRushAtt > 0) {
-      var rbLabel = gameRBName ? 'RB <span style="color:#fff">' + gameRBName + '</span>' : 'RB';
-      statLines.push('<span style="color:' + offStatColor + '">' + rbLabel + '</span> <span style="color:#3df58a">' + gameRushAtt + ' car, ' + gameRushYds + ' yds</span>');
+    if (offRA > 0) {
+      var rbLabel = offRB ? 'RB <span style="color:#fff">' + offRB + '</span>' : 'RB';
+      statLines.push('<span style="color:' + offStatColor + '">' + rbLabel + '</span> <span style="color:#3df58a">' + offRA + ' car, ' + offRY + ' yds</span>');
     }
-    if (gameRec > 0) {
-      var wrLabel = gameWRName ? 'WR <span style="color:#fff">' + gameWRName + '</span>' : 'WR';
-      statLines.push('<span style="color:' + offStatColor + '">' + wrLabel + '</span> <span style="color:#3df58a">' + gameRec + ' rec, ' + gameRecYds + ' yds</span>');
+    if (offRC > 0) {
+      var wrLabel = offWR ? 'WR <span style="color:#fff">' + offWR + '</span>' : 'WR';
+      statLines.push('<span style="color:' + offStatColor + '">' + wrLabel + '</span> <span style="color:#3df58a">' + offRC + ' rec, ' + offRCY + ' yds</span>');
     }
-    // Defensive stat line — find best defender (game-wide)
+    // Defensive stat line — best defender from the defending side
     var bestDef = null, bestDefName = '';
-    var defKeys = Object.keys(gameDefStats);
+    var defKeys = Object.keys(curDefStats);
     if (defKeys.length > 0) {
       var bestScore = -1;
       defKeys.forEach(function(name) {
-        var d = gameDefStats[name];
+        var d = curDefStats[name];
         var score = d.tkl + d.pbu * 2 + d.int * 5 + d.sack * 3;
         if (score > bestScore) { bestScore = score; bestDef = d; bestDefName = name; }
       });
@@ -1879,14 +1901,15 @@ export function buildGameplay() {
     var isPassPlay = r.playType === 'pass';
 
     // Resolve QB and receiver/rusher names properly
-    var teamQB = offRoster.find(function(p) { return p.pos === 'QB'; });
+    var currentOffRoster = isOff ? offRoster : cpuOffRoster;
+    var teamQB = currentOffRoster.find(function(p) { return p.pos === 'QB'; });
     var qbName = teamQB ? teamQB.name : '';
     var featuredPos = res.featuredOff ? res.featuredOff.pos : '';
     var featuredName = res.featuredOff ? res.featuredOff.name : '';
     // On pass plays: receiver = featuredOff if not a QB, otherwise pick a WR from roster
     var receiverName = featuredName;
     if (isPassPlay && featuredPos === 'QB') {
-      var wr = offRoster.find(function(p) { return p.pos === 'WR' || p.pos === 'TE' || p.pos === 'SLOT'; });
+      var wr = currentOffRoster.find(function(p) { return p.pos === 'WR' || p.pos === 'TE' || p.pos === 'SLOT'; });
       receiverName = wr ? wr.name : featuredName;
     }
     // On run plays: ball carrier = featuredOff
@@ -1910,30 +1933,52 @@ export function buildGameplay() {
     else if (isPassPlay) espnDesc = r.yards + '-yd Pass to ' + receiverName + (defName ? ', tackled by ' + defName : '');
     else if (r.yards === 0) espnDesc = 'No gain by ' + rusherName + (defName ? ', tackled by ' + defName : '');
     else espnDesc = r.yards + '-yd Run by ' + rusherName + (defName ? ', tackled by ' + defName : '');
-    // Track game-wide stats — only for the human's side
+    // Track game-wide stats for BOTH teams
     if (isOff) {
-      // Human on offense: track QB/RB/WR stats
+      // Human on offense → track human OFF stats + CPU DEF stats
       if (isPassPlay) {
-        gamePassAtt++;
-        if (qbName && !gameQBName) gameQBName = qbName;
+        hOffPassAtt++;
+        if (qbName && !hOffQBName) hOffQBName = qbName;
         if (r.isComplete) {
-          gamePassComp++; gamePassYds += r.yards;
-          if (!gameWRName) gameWRName = receiverName;
-          gameRec++; gameRecYds += r.yards;
+          hOffPassComp++; hOffPassYds += r.yards;
+          if (!hOffWRName) hOffWRName = receiverName;
+          hOffRec++; hOffRecYds += r.yards;
         }
       } else if (!r.isSack && res.featuredOff) {
-        gameRushAtt++; gameRushYds += r.yards;
-        if (!gameRBName) gameRBName = rusherName;
+        hOffRushAtt++; hOffRushYds += r.yards;
+        if (!hOffRBName) hOffRBName = rusherName;
+      }
+      // CPU defensive player stats
+      if (defName) {
+        if (!cDefStats[defName]) cDefStats[defName] = { pos: res.featuredDef ? res.featuredDef.pos : '', tkl: 0, pbu: 0, int: 0, sack: 0 };
+        var cds = cDefStats[defName];
+        if (r.isSack) cds.sack++;
+        else if (r.isInterception) cds.int++;
+        else if (r.isIncomplete) cds.pbu++;
+        else if (!r.isTouchdown) cds.tkl++;
       }
     } else {
-      // Human on defense: track defensive stats
+      // Human on defense → track CPU OFF stats + human DEF stats
+      if (isPassPlay) {
+        cOffPassAtt++;
+        if (qbName && !cOffQBName) cOffQBName = qbName;
+        if (r.isComplete) {
+          cOffPassComp++; cOffPassYds += r.yards;
+          if (!cOffWRName) cOffWRName = receiverName;
+          cOffRec++; cOffRecYds += r.yards;
+        }
+      } else if (!r.isSack && res.featuredOff) {
+        cOffRushAtt++; cOffRushYds += r.yards;
+        if (!cOffRBName) cOffRBName = rusherName;
+      }
+      // Human defensive player stats
       if (defName) {
-        if (!gameDefStats[defName]) gameDefStats[defName] = { pos: res.featuredDef ? res.featuredDef.pos : '', tkl: 0, pbu: 0, int: 0, sack: 0 };
-        var ds = gameDefStats[defName];
-        if (r.isSack) ds.sack++;
-        else if (r.isInterception) ds.int++;
-        else if (r.isIncomplete) ds.pbu++;
-        else if (!r.isTouchdown) ds.tkl++;
+        if (!hDefStats[defName]) hDefStats[defName] = { pos: res.featuredDef ? res.featuredDef.pos : '', tkl: 0, pbu: 0, int: 0, sack: 0 };
+        var hds = hDefStats[defName];
+        if (r.isSack) hds.sack++;
+        else if (r.isInterception) hds.int++;
+        else if (r.isIncomplete) hds.pbu++;
+        else if (!r.isTouchdown) hds.tkl++;
       }
     }
     driveSummaryLog.push({
