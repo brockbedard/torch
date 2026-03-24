@@ -342,7 +342,7 @@ export function buildPlayV1(p, w, h) {
     '<div style="height:3px;flex-shrink:0;'+stripeStyle+'"></div>' +
     // 2. Header: Play name + type pill on same row
     '<div style="display:flex;align-items:baseline;gap:4px;padding:5px 5px 2px;">' +
-      "<div style=\"flex:1;min-width:0;font-family:'Teko';font-weight:700;font-size:"+nameFs+"px;color:#fff;letter-spacing:0.5px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\">"+p.name+'</div>' +
+      "<div style=\"flex:1;min-width:0;font-family:'Teko';font-weight:700;font-size:"+nameFs+"px;color:#fff;letter-spacing:0.5px;line-height:1.1;\">"+p.name+'</div>' +
       '<div style="flex-shrink:0;padding:1px 3px;border-radius:2px;background:'+tc.accent+'22;border:1px solid '+tc.accent+'44;">' +
         "<div style=\"font-family:'Teko';font-weight:700;font-size:8px;color:"+tc.accent+";letter-spacing:1px;line-height:1;\">"+typeKey+'</div></div>' +
     '</div>' +
