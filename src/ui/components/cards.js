@@ -215,58 +215,47 @@ export function teamHelmetSvg(teamId, size) {
     + '</svg>';
 }
 
+// Position color map
+var POS_COLORS = {
+  QB:'#FFB800', WR:'#00ff44', SLOT:'#44dd66', RB:'#FF6B00', FB:'#FF6B00',
+  SB:'#FF6B00', TE:'#22aa44', OL:'#888888',
+  LB:'#ff4444', CB:'#4488ff', S:'#44ddff', DL:'#cc4444', DE:'#cc4444',
+  EDGE:'#ff4444', NB:'#6688ff'
+};
+
 export function buildMaddenPlayer(p, w, h) {
-  var tier = p.tier || playerTier(p.ovr);
   var isStar = p.isStar || false;
-  var tc = tierColor(tier, isStar);
   var teamColor = p.teamColor || '#FF4511';
-  var lg = w > 90;
-  var card = document.createElement('div');
-  var border = tierBorderStyle(tier, isStar, teamColor);
-  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:'+(lg?8:6)+'px;border:'+border+';background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);position:relative;box-shadow:0 '+(lg?'4px 16px':'3px 10px')+' rgba(0,0,0,0.5);display:flex;flex-direction:column;overflow:hidden;';
-
-  if (isStar) {
-    card.style.boxShadow += ',0 0 ' + (lg ? '12' : '8') + 'px rgba(255,184,0,0.3)';
-  }
-
+  var posColor = POS_COLORS[p.pos] || '#aaa';
   var fullPos = POS_NAMES[p.pos] || p.pos;
+  var card = document.createElement('div');
 
-  // 1. Top border bar in team color
-  var topBar = '<div style="height:3px;background:'+teamColor+';border-radius:'+(lg?6:4)+'px '+(lg?6:4)+'px 0 0;flex-shrink:0;"></div>';
+  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;border-top:3px solid '+posColor+';border-left:1px solid #2a2a2a;border-right:1px solid #2a2a2a;border-bottom:1px solid #2a2a2a;background:linear-gradient(180deg,'+teamColor+'14 0%,#0a0906 60%);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.5);display:flex;flex-direction:column;position:relative;';
 
-  // 2. Star badge (top-right)
+  // Star badge
   var starIcon = '';
   if (isStar) {
-    starIcon = '<div style="position:absolute;top:4px;right:4px;z-index:5;filter:drop-shadow(0 1px 3px rgba(255,184,0,0.6));">'
-      + '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z" fill="#FFB800"/></svg>'
+    starIcon = '<div style="position:absolute;top:3px;right:4px;z-index:5;filter:drop-shadow(0 1px 2px rgba(255,184,0,0.6));">'
+      + '<svg viewBox="0 0 24 24" width="10" height="10"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z" fill="#FFB800"/></svg>'
       + '</div>';
   }
 
-  // 3. Position + Number header row
-  var headerRow = '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px 2px;z-index:2;">'
-    + "<div style=\"font-family:'Teko';font-weight:700;font-size:12px;color:"+teamColor+";letter-spacing:2px;line-height:1;\">"+fullPos+'</div>'
-    + "<div style=\"font-family:'Teko';font-size:14px;color:rgba(255,255,255,0.35);line-height:1;\">#"+(p.num||'')+'</div>'
-    + '</div>';
-
-  // 4. Team badge centered
-  var badgeTeamId = p.teamId || null;
-  var badgeArtHtml = badgeTeamId ? renderTeamBadge(badgeTeamId, lg ? 52 : 36) : '';
-  var artArea = '<div style="flex:1;display:flex;align-items:center;justify-content:center;opacity:0.85;z-index:1;">'
-    + badgeArtHtml + '</div>';
-
-  // 5. Player name
-  var nameFs = lg ? 16 : (p.name.length > 8 ? 10 : 12);
-  var nameLine = "<div style=\"font-family:'Teko';font-weight:700;font-size:"+nameFs+"px;color:#fff;text-align:center;letter-spacing:1px;line-height:1;padding:0 4px;z-index:2;\">"+p.name+'</div>';
-
-  // 6. Ability text
-  var abilityLine = p.ability
-    ? "<div style=\"font-family:'Rajdhani';font-size:9.5px;color:rgba(255,255,255,0.45);text-align:center;padding:2px 4px 0;line-height:1.2;z-index:2;\">"+p.ability+'</div>'
-    : '';
-
-  // Bottom accent
-  var botAccent = '<div style="height:2px;background:'+teamColor+';margin-top:auto;flex-shrink:0;border-radius:0 0 '+(lg?6:4)+'px '+(lg?6:4)+'px;"></div>';
-
-  card.innerHTML = starIcon + topBar + headerRow + artArea + nameLine + abilityLine + botAccent;
+  // Content
+  var nameFs = p.name.length > 8 ? 13 : 16;
+  card.innerHTML = starIcon +
+    '<div style="padding:4px 6px 6px;display:flex;flex-direction:column;flex:1;min-height:0;">' +
+      // Position + Number row
+      "<div style=\"display:flex;align-items:baseline;gap:4px;\">" +
+        "<div style=\"font-family:'Teko';font-weight:900;font-size:22px;color:"+posColor+";line-height:1;\">"+fullPos+'</div>' +
+        "<div style=\"font-family:'Teko';font-size:12px;color:rgba(255,255,255,0.25);line-height:1;\">#"+(p.num||'')+'</div>' +
+      '</div>' +
+      // Player name
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:"+nameFs+"px;color:#fff;letter-spacing:0.5px;line-height:1;margin-top:1px;\">"+p.name+'</div>' +
+      // Position color accent line
+      '<div style="height:2px;background:linear-gradient(90deg,'+posColor+',transparent);margin:4px 0;flex-shrink:0;"></div>' +
+      // Ability text
+      (p.ability ? "<div style=\"font-family:'Rajdhani';font-size:8.5px;color:rgba(255,255,255,0.45);line-height:1.25;\">"+p.ability+'</div>' : '') +
+    '</div>';
   return card;
 }
 
