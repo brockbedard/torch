@@ -168,7 +168,7 @@ Cards deal face-down showing colored card backs (green offense, blue defense), t
 ## Key Systems
 
 ### Hand Management (Option D)
-10-card playbook per side. Draw 5 at game start. Play 1 → bottom of deck → draw 1 from top. Always 5 in hand.
+10-card playbook per side. Draw 4 at game start. Play 1 → bottom of deck → draw 1 from top. Always 4 in hand.
 
 ### TORCH Card Economy (Score = Wallet)
 8 cards. 3 inventory slots. Single-use within a season. Shop opens at trigger moments. Points only go UP from plays (never negative). Spending is the only way points decrease.

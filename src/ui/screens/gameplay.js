@@ -391,8 +391,8 @@ export function buildGameplay() {
     GS.engine = new GameState({
       humanTeam: hAbbr, difficulty: GS.difficulty||'EASY', coachBadge: GS.coachBadge||'SCHEMER',
       // Human = CT slot, Opponent = IR slot
-      ctOffHand: hOffPlays.slice(0,5), ctDefHand: hDefPlays.slice(0,5),
-      irOffHand: cOffPlays.slice(0,5), irDefHand: cDefPlays.slice(0,5),
+      ctOffHand: hOffPlays.slice(0,4), ctDefHand: hDefPlays.slice(0,4),
+      irOffHand: cOffPlays.slice(0,4), irDefHand: cDefPlays.slice(0,4),
       ctOffRoster: hOR, ctDefRoster: hDR,
       irOffRoster: cOffRoster, irDefRoster: cDefRoster,
     });
@@ -1615,12 +1615,12 @@ export function buildGameplay() {
     panel.innerHTML = '';
     const isOff = gs.possession === hAbbr;
     const sides = gs.getCurrentSides();
-    const players = isOff ? sides.offPlayers.slice(0,5) : sides.defPlayers.slice(0,5);
+    const players = isOff ? sides.offPlayers.slice(0,4) : sides.defPlayers.slice(0,4);
     var plays = isOff ? sides.offHand : sides.defHand;
     // Safety: ensure hand has cards (refill from full pool if empty/short)
     if (!plays || plays.length < 3) {
       var fullPool = isOff ? getOffCards(GS.team) : getDefCards(GS.team);
-      plays = fullPool.slice(0, 5);
+      plays = fullPool.slice(0, 4);
       if (isOff) sides.offHand = plays; else sides.defHand = plays;
     }
     // Hide panel during play-by-play so commentary sits directly under field
