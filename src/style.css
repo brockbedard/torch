@@ -29,6 +29,7 @@ body { color: white; font-family: 'Barlow Condensed', sans-serif; display: flex;
 .bn { font-family: 'Teko', sans-serif; font-weight: 700; }
 
 @keyframes sup{from{transform:translateY(26px);opacity:0;}to{transform:none;opacity:1;}}
+@keyframes T-shimmer{0%,100%{border-color:rgba(192,192,192,0.4)}50%{border-color:rgba(255,255,255,0.7)}}
 @keyframes fi{from{opacity:0;}to{opacity:1;}}
 /* Home screen — organic flame sway */
 @keyframes flameSway{

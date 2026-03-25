@@ -7,6 +7,8 @@
 
 import { BADGE_ICON_PATHS } from '../../data/badgeIcons.js';
 import { TEAMS } from '../../data/teams.js';
+import { renderTorchCardIcon, TORCH_CARD_ICONS } from '../../data/torchCardIcons.js';
+import { CATEGORY_COLORS, TIER_COLORS } from '../../data/torchCards.js';
 // renderTeamBadge removed — player cards no longer use team badges
 
 // ====== CARD ANIMATIONS (inject once) ======
@@ -344,24 +346,76 @@ export function buildPlayV1(p, w, h) {
   return card;
 }
 
-// ====== TORCH CARD — Centered Flame V1 ======
-var TIER_BORDER_COLORS = { GOLD:'#EBB010', SILVER:'#B0C4D4', BRONZE:'#A0522D' };
-var FLAME_PATH = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
+// ====== TORCH CARD — Icon + Category Colors ======
 
 export function buildTorchCard(tc, w, h) {
   w = w || 100;
   h = h || 140;
-  var bc = TIER_BORDER_COLORS[tc.tier] || '#B0C4D4';
+  var bc = (TIER_COLORS && TIER_COLORS[tc.tier]) || '#B0C4D4';
+  var catColor = (tc.category && CATEGORY_COLORS && CATEGORY_COLORS[tc.category]) || '#EBB010';
+  var isReactive = tc.type === 'reactive';
+  var isGold = tc.tier === 'GOLD';
+  var isSilver = tc.tier === 'SILVER';
+
   var card = document.createElement('div');
-  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:3px solid '+bc+';background:radial-gradient(ellipse at 50% 35%,#1a0800,#0A0804);position:relative;box-shadow:0 4px 16px rgba(0,0,0,0.5),0 0 12px rgba(255,69,17,0.15);display:flex;flex-direction:column;align-items:center;overflow:hidden;';
-  var flameH = Math.max(28, Math.round(h * 0.35));
-  var flameW = Math.max(24, Math.round(flameH * 0.75));
-  var nameFs = Math.max(10, Math.min(14, Math.round(w * 0.14)));
-  var effectFs = Math.max(7, Math.min(9, Math.round(w * 0.09)));
-  card.innerHTML = '<div style="font-family:\'Rajdhani\';font-weight:700;font-size:7px;color:'+bc+';letter-spacing:2px;text-align:center;padding:4px 0 0;opacity:0.7;">'+tc.tier+'</div>'
-    +'<div style="display:flex;align-items:center;justify-content:center;height:'+flameH+'px;margin-top:2px;flex-shrink:0;"><svg viewBox="0 0 44 44" width="'+flameW+'" height="'+flameW+'" fill="none"><defs><linearGradient id="tg_'+tc.tier+'_'+(_uid++)+'" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#EBB010"/></linearGradient></defs><path d="'+FLAME_PATH+'" fill="url(#tg_'+tc.tier+'_'+(_uid)+'" stroke="#FF4511" stroke-width="0.8"/></svg></div>'
-    +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+nameFs+'px;color:#fff;text-align:center;letter-spacing:0.5px;line-height:1.1;padding:0 4px;overflow:hidden;text-overflow:ellipsis;max-width:100%;word-wrap:break-word;">'+tc.name+'</div>'
-    +'<div style="font-family:\'Rajdhani\';font-size:'+effectFs+'px;color:#aaa;text-align:center;padding:1px 4px;line-height:1.1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:100%;">'+tc.effect+'</div>'
-    +'<div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:'+bc+';opacity:0.6;border-radius:0 0 5px 5px;"></div>';
+  var borderStyle = isReactive ? '2px dashed ' + bc : '2px solid ' + bc;
+  var glowStyle = isGold ? '0 0 12px ' + bc + '44,0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.5)';
+  if (isSilver) glowStyle = '0 0 8px rgba(192,192,192,0.2),' + glowStyle;
+
+  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:'+borderStyle+';background:radial-gradient(ellipse at 50% 30%,'+catColor+'0d,#0A0804 70%),#0A0804;position:relative;box-shadow:'+glowStyle+';display:flex;flex-direction:column;align-items:center;overflow:hidden;';
+
+  // Gold shimmer animation
+  if (isGold) card.style.animation = 'T-pulse 3s ease-in-out infinite';
+  // Silver shimmer
+  if (isSilver) card.style.animation = 'T-shimmer 3s ease-in-out infinite';
+
+  var iconSize = Math.max(20, Math.round(h * 0.28));
+  var nameFs = Math.max(9, Math.min(13, Math.round(w * 0.13)));
+  var effectFs = Math.max(6, Math.min(8, Math.round(w * 0.08)));
+  var tierFs = Math.max(6, Math.min(8, Math.round(w * 0.07)));
+
+  // Tier label
+  var tierEl = document.createElement('div');
+  tierEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:"+tierFs+"px;color:"+bc+";letter-spacing:2px;text-align:center;padding:3px 0 0;opacity:0.7;";
+  tierEl.textContent = tc.tier;
+  card.appendChild(tierEl);
+
+  // Icon (from torchCardIcons.js, colored by category)
+  var iconWrap = document.createElement('div');
+  iconWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;height:'+Math.round(h*0.35)+'px;flex-shrink:0;';
+  if (tc.iconKey && TORCH_CARD_ICONS[tc.iconKey]) {
+    var iconSvg = renderTorchCardIcon(tc.iconKey, iconSize, catColor);
+    if (iconSvg) {
+      iconSvg.style.filter = 'drop-shadow(0 0 6px ' + catColor + '44)';
+      iconWrap.appendChild(iconSvg);
+    }
+  }
+  card.appendChild(iconWrap);
+
+  // Name
+  var nameEl = document.createElement('div');
+  nameEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:"+nameFs+"px;color:#fff;text-align:center;letter-spacing:0.5px;line-height:1.1;padding:0 4px;overflow:hidden;text-overflow:ellipsis;max-width:100%;";
+  nameEl.textContent = tc.name;
+  card.appendChild(nameEl);
+
+  // Effect text
+  var effectEl = document.createElement('div');
+  effectEl.style.cssText = "font-family:'Rajdhani';font-size:"+effectFs+"px;color:#999;text-align:center;padding:1px 4px;line-height:1.15;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:100%;";
+  effectEl.textContent = tc.effect;
+  card.appendChild(effectEl);
+
+  // Reactive label
+  if (isReactive) {
+    var reactLabel = document.createElement('div');
+    reactLabel.style.cssText = "position:absolute;top:2px;right:3px;font-family:'Rajdhani';font-weight:700;font-size:5px;color:#4488FF;letter-spacing:1px;opacity:0.8;";
+    reactLabel.textContent = 'REACTIVE';
+    card.appendChild(reactLabel);
+  }
+
+  // Bottom tier bar
+  var bottom = document.createElement('div');
+  bottom.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:2px;background:'+bc+';opacity:0.5;border-radius:0 0 5px 5px;';
+  card.appendChild(bottom);
+
   return card;
 }

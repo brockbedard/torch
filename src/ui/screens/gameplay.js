@@ -1633,6 +1633,7 @@ export function buildGameplay() {
         if (dragItem.type === 'play') { selPl = dragItem.data; phase = 'player'; }
         else if (dragItem.type === 'player') { selP = dragItem.data; phase = torchInventory.filter(function(c){return c.type==='pre-snap';}).length > 0 ? 'torch' : 'ready'; }
         else if (dragItem.type === 'torch') {
+          selTorch = dragItem.data.id || dragItem.data;
           selectedPreSnap = dragItem.data;
           var tidx = torchInventory.indexOf(dragItem.data);
           if (tidx >= 0) torchInventory.splice(tidx, 1);
@@ -2985,6 +2986,7 @@ export function buildGameplay() {
   // ── DEV PANEL ──
   injectDevPanel(el, gs, {
     refresh: function() { drawBug(); drawField(); drawPanel(); drawDriveSummary(); },
+    setTorchInventory: function(inv) { torchInventory = inv; if (GS.season) GS.season.torchCards = inv.slice(); },
     applyState: function(s) {
       if (s.down) gs.down = s.down;
       if (s.distance) gs.distance = s.distance;

@@ -141,7 +141,11 @@ export function injectDevPanel(el, gs, callbacks) {
     if (id === 'dev-bronze') giveTorchCards(gs, 'BRONZE', callbacks);
     if (id === 'dev-silver') giveTorchCards(gs, 'SILVER', callbacks);
     if (id === 'dev-gold') giveTorchCards(gs, 'GOLD', callbacks);
-    if (id === 'dev-clear-cards') { gs.humanTorchCards = []; if (callbacks.refresh) callbacks.refresh(); }
+    if (id === 'dev-clear-cards') {
+      gs.humanTorchCards = [];
+      if (callbacks.setTorchInventory) callbacks.setTorchInventory([]);
+      if (callbacks.refresh) callbacks.refresh();
+    }
     if (id === 'dev-booster' && callbacks.openBooster) callbacks.openBooster();
 
     if (id === 'dev-force-td') _forceResult = 'td';
@@ -174,7 +178,8 @@ function updateStateReadout(gs) {
     ball: s.ballPosition, ydsToEz: s.yardsToEndzone,
     ct: s.ctScore, ir: s.irScore, half: s.half,
     torch: { ct: s.ctTorchPts, ir: s.irTorchPts },
-    cards: gs.humanTorchCards ? gs.humanTorchCards.length : 0,
+    engineCards: gs.humanTorchCards ? gs.humanTorchCards.length : 0,
+    uiCards: gs.humanTorchCards ? gs.humanTorchCards.join(',') : '',
   }, null, 1);
 }
 
@@ -183,6 +188,13 @@ function giveTorchCards(gs, tier, callbacks) {
   cards.forEach(function(c) {
     if (gs.humanTorchCards.length < 5) gs.humanTorchCards.push(c.id);
   });
+  // Sync to gameplay UI's torchInventory
+  if (callbacks.setTorchInventory) {
+    var inv = gs.humanTorchCards.map(function(id) {
+      return TORCH_CARDS.find(function(tc) { return tc.id === id; });
+    }).filter(Boolean);
+    callbacks.setTorchInventory(inv);
+  }
   if (callbacks.refresh) callbacks.refresh();
 }
 
