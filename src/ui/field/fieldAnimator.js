@@ -140,96 +140,191 @@ function quadBezier(p0, p1, p2, t) {
 }
 
 // ── POST-SNAP ANIMATION SEQUENCES ──
-// Returns keyframe arrays for each dot given the play result
+// Builds per-dot keyframe arrays + events for each play result type.
+// Each dot gets: [{time, x, y}, ...] interpolated via easing during playback.
+
 function buildPostSnapSequence(type, yardsGained, formation, fieldW, YPX, losYard, topYard) {
-  // Convert formation position to canvas coords
-  function toCanvas(p, timeOffsetYards) {
-    return {
-      x: p.x * fieldW,
-      y: (losYard + p.y + (timeOffsetYards || 0) - topYard) * YPX
-    };
+  function toC(p, extraY) {
+    return { x: p.x * fieldW, y: (losYard + p.y + (extraY || 0) - topYard) * YPX };
   }
+  function kf(time, x, y) { return { time: time, x: x, y: y }; }
 
   var form = formation;
-  var sequence = { offense: [], defense: [], ball: null, events: [] };
-  var settleYards = yardsGained;
+  var seq = { dotKeyframes: [], ball: null, events: [] };
+  var sy = yardsGained; // settle yards
 
-  if (type === 'complete' || type === 'touchdown') {
-    // QB drops back, throws; WR runs route, catches, gets tackled
-    var qb = form.offense.find(function(p) { return p.pos === 'QB'; }) || form.offense[1];
-    var wr = form.offense.find(function(p) { return p.pos === 'WR' || p.pos === 'SLOT'; }) || form.offense[3];
-    var cb = form.defense.find(function(p) { return p.pos === 'CB'; }) || form.defense[3];
-    var qbStart = toCanvas(qb);
-    var wrStart = toCanvas(wr);
-    var catchY = (losYard - settleYards * 0.6 - topYard) * YPX;
-    var settleY = (losYard - settleYards - topYard) * YPX;
-    var cbStart = toCanvas(cb);
+  // Start positions for all dots
+  var allDots = form.offense.concat(form.defense);
+  var starts = allDots.map(function(p) { return toC(p); });
 
-    // Ball flight: QB → arc → WR catch point
-    var midX = (qbStart.x + wrStart.x) / 2;
-    var midY = (qbStart.y + catchY) / 2 - 20; // arc apex
-    sequence.ball = {
-      startTime: 400, endTime: 700,
-      p0: qbStart,
-      p1: { x: midX, y: midY },
-      p2: { x: wr.x * fieldW, y: catchY }
-    };
-
-    // Events
-    sequence.events.push({ time: 400, type: 'throw', x: qbStart.x, y: qbStart.y });
-    sequence.events.push({ time: 700, type: 'catch', x: wr.x * fieldW, y: catchY });
-    if (type !== 'touchdown') {
-      sequence.events.push({ time: 1300, type: 'tackle', x: wr.x * fieldW, y: settleY });
-    } else {
-      sequence.events.push({ time: 1000, type: 'touchdown', x: wr.x * fieldW, y: settleY });
+  // Find key players by position
+  function findOff(pos) {
+    for (var i = 0; i < form.offense.length; i++) {
+      if (form.offense[i].pos === pos) return { idx: i, p: form.offense[i], c: toC(form.offense[i]) };
     }
-  } else if (type === 'run') {
-    var rb = form.offense.find(function(p) { return p.pos === 'RB' || p.pos === 'FB'; }) || form.offense[2];
-    var lb = form.defense.find(function(p) { return p.pos === 'LB'; }) || form.defense[3];
-    var rbStart = toCanvas(rb);
-    var settleY2 = (losYard - settleYards - topYard) * YPX;
-
-    sequence.events.push({ time: 150, type: 'handoff', x: 0.50 * fieldW, y: (losYard - 1 - topYard) * YPX });
-    sequence.events.push({ time: 1000, type: 'tackle', x: rbStart.x, y: settleY2 });
-  } else if (type === 'sack') {
-    var qbS = form.offense.find(function(p) { return p.pos === 'QB'; }) || form.offense[1];
-    var de = form.defense.find(function(p) { return p.pos === 'DE' || p.pos === 'DL'; }) || form.defense[0];
-    var qbSStart = toCanvas(qbS);
-    var sackY = (losYard + Math.abs(yardsGained) - topYard) * YPX;
-
-    sequence.events.push({ time: 800, type: 'sack', x: qbSStart.x + 10, y: sackY });
-  } else if (type === 'interception') {
-    var qbI = form.offense.find(function(p) { return p.pos === 'QB'; }) || form.offense[1];
-    var wrI = form.offense.find(function(p) { return p.pos === 'WR'; }) || form.offense[3];
-    var cbI = form.defense.find(function(p) { return p.pos === 'CB'; }) || form.defense[3];
-    var qbIStart = toCanvas(qbI);
-    var intY = (losYard - 8 - topYard) * YPX;
-
-    sequence.ball = {
-      startTime: 400, endTime: 700,
-      p0: qbIStart,
-      p1: { x: (qbIStart.x + cbI.x * fieldW) / 2, y: (qbIStart.y + intY) / 2 - 20 },
-      p2: { x: cbI.x * fieldW, y: intY }
-    };
-
-    sequence.events.push({ time: 400, type: 'throw', x: qbIStart.x, y: qbIStart.y });
-    sequence.events.push({ time: 700, type: 'interception', x: cbI.x * fieldW, y: intY });
-  } else if (type === 'incomplete') {
-    var qbInc = form.offense.find(function(p) { return p.pos === 'QB'; }) || form.offense[1];
-    var qbIncStart = toCanvas(qbInc);
-    var missY = (losYard - 10 - topYard) * YPX;
-
-    sequence.ball = {
-      startTime: 400, endTime: 700,
-      p0: qbIncStart,
-      p1: { x: 0.35 * fieldW, y: (qbIncStart.y + missY) / 2 - 15 },
-      p2: { x: 0.38 * fieldW, y: missY }
-    };
-    sequence.events.push({ time: 400, type: 'throw', x: qbIncStart.x, y: qbIncStart.y });
-    sequence.events.push({ time: 750, type: 'incomplete', x: 0.38 * fieldW, y: missY });
+    return null;
+  }
+  function findDef(pos) {
+    for (var i = 0; i < form.defense.length; i++) {
+      var di = form.offense.length + i;
+      if (form.defense[i].pos === pos) return { idx: di, p: form.defense[i], c: toC(form.defense[i]) };
+    }
+    return null;
   }
 
-  return sequence;
+  var qb = findOff('QB');
+  var wr = findOff('WR') || findOff('SLOT') || findOff('TE');
+  var rb = findOff('RB') || findOff('FB');
+  var cb = findDef('CB');
+  var lb = findDef('LB');
+  var dl0 = findDef('DL') || { idx: form.offense.length, c: starts[form.offense.length] };
+  var safety = findDef('S');
+
+  // Default: everyone stays put
+  var dotKF = allDots.map(function(p, i) {
+    var s = starts[i];
+    return [kf(0, s.x, s.y), kf(2000, s.x, s.y)];
+  });
+
+  var catchY, settleY, tackleX;
+
+  if (type === 'complete' || type === 'touchdown') {
+    var isTD = type === 'touchdown';
+    catchY = (losYard - sy * 0.6 - topYard) * YPX;
+    settleY = (losYard - sy - topYard) * YPX;
+    tackleX = wr ? wr.c.x : 0.50 * fieldW;
+
+    // QB: dropback → set → hold
+    if (qb) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(200,qb.c.x,qb.c.y+18), kf(400,qb.c.x,qb.c.y+12), kf(1500,qb.c.x,qb.c.y+12)];
+    // WR: route → catch → YAC → tackle
+    if (wr) {
+      var wrMid = { x: lerp(wr.c.x, 0.45*fieldW, 0.5), y: lerp(wr.c.y, catchY, 0.5) };
+      dotKF[wr.idx] = [kf(0,wr.c.x,wr.c.y), kf(200,wr.c.x,wr.c.y-15), kf(400,wrMid.x,wrMid.y), kf(700,tackleX,catchY), kf(750,tackleX,catchY), kf(isTD?1000:1300,tackleX,settleY), kf(2000,tackleX,settleY)];
+    }
+    // OL: push forward
+    for (var oi = 0; oi < form.offense.length; oi++) {
+      if (form.offense[oi].pos === 'OL') dotKF[oi] = [kf(0,starts[oi].x,starts[oi].y), kf(250,starts[oi].x,starts[oi].y-12), kf(1500,starts[oi].x,starts[oi].y-8)];
+    }
+    // CB: trails WR
+    if (cb && wr) dotKF[cb.idx] = [kf(0,cb.c.x,cb.c.y), kf(200,cb.c.x,cb.c.y-8), kf(400,lerp(cb.c.x,tackleX,0.3),lerp(cb.c.y,catchY,0.4)), kf(700,lerp(cb.c.x,tackleX,0.6),catchY+8), kf(1300,tackleX+5,settleY+4), kf(2000,tackleX+5,settleY+4)];
+    // DL: rush forward
+    for (var di = form.offense.length; di < allDots.length; di++) {
+      if (allDots[di].pos === 'DL') dotKF[di] = [kf(0,starts[di].x,starts[di].y), kf(300,starts[di].x,starts[di].y-8), kf(1500,starts[di].x,starts[di].y-4)];
+    }
+    // Safety closes late
+    if (safety) dotKF[safety.idx] = [kf(0,safety.c.x,safety.c.y), kf(400,safety.c.x,safety.c.y-6), kf(1300,lerp(safety.c.x,tackleX,0.5),settleY+12), kf(2000,lerp(safety.c.x,tackleX,0.5),settleY+12)];
+
+    // Ball
+    var qbPos = qb ? qb.c : starts[1];
+    var midX = (qbPos.x + tackleX) / 2;
+    seq.ball = { startTime: 400, endTime: 700, p0: { x: qbPos.x, y: qbPos.y + 12 }, p1: { x: midX, y: (qbPos.y+12+catchY)/2-20 }, p2: { x: tackleX, y: catchY } };
+    // Events
+    seq.events.push({ time: 400, type: 'throw', x: qbPos.x, y: qbPos.y+12 });
+    seq.events.push({ time: 700, type: 'catch', x: tackleX, y: catchY });
+    seq.events.push({ time: isTD?1000:1300, type: isTD?'touchdown':'tackle', x: tackleX, y: settleY });
+
+  } else if (type === 'run') {
+    var runner = rb || qb;
+    settleY = (losYard - sy - topYard) * YPX;
+    var runX = runner ? runner.c.x : 0.50 * fieldW;
+    var losY = (losYard - topYard) * YPX;
+
+    // Runner: mesh → hole → burst → tackle
+    if (runner) dotKF[runner.idx] = [kf(0,runner.c.x,runner.c.y), kf(150,0.50*fieldW,runner.c.y), kf(300,0.50*fieldW,losY), kf(500,runX,losY-15), kf(1000,runX,settleY), kf(1400,runX,settleY)];
+    // QB hands off, drifts away
+    if (qb && runner && runner.idx !== qb.idx) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(150,qb.c.x-5,qb.c.y-3), kf(300,qb.c.x+10,qb.c.y+8), kf(1400,qb.c.x+15,qb.c.y+12)];
+    // OL: fire forward
+    for (var oi2 = 0; oi2 < form.offense.length; oi2++) {
+      if (form.offense[oi2].pos === 'OL') dotKF[oi2] = [kf(0,starts[oi2].x,starts[oi2].y), kf(200,starts[oi2].x,starts[oi2].y-18), kf(500,starts[oi2].x,starts[oi2].y-22), kf(1400,starts[oi2].x,starts[oi2].y-18)];
+    }
+    // DL: get pushed back
+    for (var di2 = form.offense.length; di2 < allDots.length; di2++) {
+      if (allDots[di2].pos === 'DL') dotKF[di2] = [kf(0,starts[di2].x,starts[di2].y), kf(200,starts[di2].x,starts[di2].y+4), kf(500,starts[di2].x,starts[di2].y+8), kf(1400,starts[di2].x,starts[di2].y+6)];
+    }
+    // LB fills, tackles
+    if (lb) dotKF[lb.idx] = [kf(0,lb.c.x,lb.c.y), kf(300,lb.c.x,lb.c.y-6), kf(700,lerp(lb.c.x,runX,0.7),settleY+8), kf(1000,runX+4,settleY+2), kf(1400,runX+4,settleY+2)];
+
+    seq.events.push({ time: 150, type: 'handoff', x: 0.50*fieldW, y: runner?runner.c.y:losY });
+    seq.events.push({ time: 1000, type: 'tackle', x: runX, y: settleY });
+
+  } else if (type === 'sack') {
+    var sackY = (losYard + Math.abs(yardsGained) - topYard) * YPX;
+    var sackDE = dl0;
+
+    // QB: drop, scramble, caught
+    if (qb) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(200,qb.c.x,qb.c.y+16), kf(500,qb.c.x+10,qb.c.y+22), kf(800,qb.c.x+8,sackY), kf(1200,qb.c.x+8,sackY)];
+    // DE: speed rush, beats OL, sack
+    if (sackDE) dotKF[sackDE.idx] = [kf(0,sackDE.c.x,sackDE.c.y), kf(150,sackDE.c.x,sackDE.c.y-6), kf(350,sackDE.c.x+4,sackDE.c.y-16), kf(600,qb?qb.c.x+12:sackDE.c.x,sackDE.c.y-28), kf(800,qb?qb.c.x+8:sackDE.c.x,sackY), kf(1200,qb?qb.c.x+8:sackDE.c.x,sackY)];
+    // OL pushed back
+    for (var oi3 = 0; oi3 < form.offense.length; oi3++) {
+      if (form.offense[oi3].pos === 'OL') dotKF[oi3] = [kf(0,starts[oi3].x,starts[oi3].y), kf(200,starts[oi3].x,starts[oi3].y-6), kf(800,starts[oi3].x,starts[oi3].y+4), kf(1200,starts[oi3].x,starts[oi3].y+4)];
+    }
+
+    seq.events.push({ time: 800, type: 'sack', x: qb?qb.c.x+8:fieldW*0.5, y: sackY });
+
+  } else if (type === 'interception') {
+    var intY = (losYard - 8 - topYard) * YPX;
+    // QB throws, CB jumps route
+    if (qb) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(200,qb.c.x,qb.c.y+16), kf(400,qb.c.x,qb.c.y+10), kf(1800,qb.c.x,qb.c.y+10)];
+    if (wr) dotKF[wr.idx] = [kf(0,wr.c.x,wr.c.y), kf(200,wr.c.x,wr.c.y-10), kf(400,lerp(wr.c.x,0.40*fieldW,0.5),lerp(wr.c.y,intY,0.5)), kf(700,0.42*fieldW,intY), kf(1800,0.42*fieldW,intY)];
+    if (cb) dotKF[cb.idx] = [kf(0,cb.c.x,cb.c.y), kf(300,cb.c.x,cb.c.y-10), kf(600,lerp(cb.c.x,0.41*fieldW,0.7),intY-5), kf(700,0.41*fieldW,intY), kf(900,0.41*fieldW,intY), kf(1400,0.38*fieldW,intY+25), kf(1800,0.38*fieldW,intY+25)];
+
+    var qbPos2 = qb ? qb.c : starts[1];
+    seq.ball = { startTime: 400, endTime: 700, p0: { x: qbPos2.x, y: qbPos2.y+10 }, p1: { x: (qbPos2.x+0.41*fieldW)/2, y: (qbPos2.y+10+intY)/2-20 }, p2: { x: 0.41*fieldW, y: intY } };
+    seq.events.push({ time: 400, type: 'throw', x: qbPos2.x, y: qbPos2.y+10 });
+    seq.events.push({ time: 700, type: 'interception', x: 0.41*fieldW, y: intY });
+
+  } else if (type === 'incomplete') {
+    var missY = (losYard - 10 - topYard) * YPX;
+    if (qb) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(200,qb.c.x,qb.c.y+16), kf(400,qb.c.x,qb.c.y+10), kf(1200,qb.c.x,qb.c.y+10)];
+    if (wr) dotKF[wr.idx] = [kf(0,wr.c.x,wr.c.y), kf(200,wr.c.x,wr.c.y-12), kf(500,lerp(wr.c.x,0.38*fieldW,0.5),lerp(wr.c.y,missY,0.6)), kf(700,0.42*fieldW,missY), kf(1200,0.42*fieldW,missY)];
+    if (cb) dotKF[cb.idx] = [kf(0,cb.c.x,cb.c.y), kf(200,cb.c.x,cb.c.y-8), kf(700,0.41*fieldW,missY), kf(1200,0.41*fieldW,missY)];
+
+    var qbPos3 = qb ? qb.c : starts[1];
+    seq.ball = { startTime: 400, endTime: 700, p0: { x: qbPos3.x, y: qbPos3.y+10 }, p1: { x: 0.35*fieldW, y: (qbPos3.y+10+missY)/2-15 }, p2: { x: 0.38*fieldW, y: missY } };
+    seq.events.push({ time: 400, type: 'throw', x: qbPos3.x, y: qbPos3.y+10 });
+    seq.events.push({ time: 750, type: 'incomplete', x: 0.38*fieldW, y: missY });
+  }
+
+  seq.dotKeyframes = dotKF;
+  seq.dotColors = allDots.map(function(p, i) { return i < form.offense.length ? 'off' : 'def'; });
+  seq.dotNums = allDots.map(function(p) { return p.num; });
+  return seq;
+}
+
+// Interpolate a dot position from keyframes at a given time
+function interpDot(keyframes, t, easeFn) {
+  if (t <= keyframes[0].time) return keyframes[0];
+  if (t >= keyframes[keyframes.length-1].time) return keyframes[keyframes.length-1];
+  for (var i = 0; i < keyframes.length - 1; i++) {
+    if (t >= keyframes[i].time && t <= keyframes[i+1].time) {
+      var raw = (t - keyframes[i].time) / (keyframes[i+1].time - keyframes[i].time);
+      var e = easeFn ? easeFn(raw) : easeOutCubic(raw);
+      return { x: lerp(keyframes[i].x, keyframes[i+1].x, e), y: lerp(keyframes[i].y, keyframes[i+1].y, e) };
+    }
+  }
+  return keyframes[keyframes.length-1];
+}
+
+// ── GLOW SPRITE (for animated dots) ──
+var _animGlowCache = {};
+function getGlowSprite(rgb, radius, intensity) {
+  var key = rgb.join(',')+':'+radius+':'+intensity;
+  if (_animGlowCache[key]) return _animGlowCache[key];
+  var size = radius * 4;
+  var cv = document.createElement('canvas');
+  cv.width = size; cv.height = size;
+  var c = cv.getContext('2d');
+  var cx = size/2, cy = size/2;
+  var grad = c.createRadialGradient(cx,cy,0,cx,cy,radius);
+  grad.addColorStop(0, 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+(0.7*intensity)+')');
+  grad.addColorStop(0.3, 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+(0.3*intensity)+')');
+  grad.addColorStop(0.7, 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+(0.08*intensity)+')');
+  grad.addColorStop(1, 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',0)');
+  c.fillStyle = grad;
+  c.fillRect(0,0,size,size);
+  _animGlowCache[key] = cv;
+  return cv;
 }
 
 // ── MAIN ANIMATOR ──
@@ -321,8 +416,61 @@ export function createFieldAnimator(width, height) {
       }
     }
 
-    // Render base field
+    // Render base field (skip static dots if animating sequence)
+    if (_animSequence && _animSequence.dotKeyframes) {
+      renderState.skipDots = true;
+    }
     renderer.render(renderState);
+
+    // Draw animated dots from keyframes
+    if (_animSequence && _animSequence.dotKeyframes) {
+      var animElapsed2 = timestamp - _animStartTime;
+      var dkf = _animSequence.dotKeyframes;
+      var dColors = _animSequence.dotColors;
+      var dNums = _animSequence.dotNums;
+      var CORE_R = 12, DOT_R = 20;
+
+      // Pre-create core gradients
+      var offRGB = [242,140,40], defRGB = [59,165,93];
+      function drawAnimDot(cx2, cy2, rgb) {
+        // Dark backing
+        ctx.fillStyle = 'rgba(5,10,8,0.92)';
+        ctx.beginPath(); ctx.arc(cx2, cy2, CORE_R+2, 0, Math.PI*2); ctx.fill();
+        // Glow
+        var prev = ctx.globalCompositeOperation;
+        ctx.globalCompositeOperation = 'lighter';
+        var spr = getGlowSprite(rgb, DOT_R, 0.6);
+        ctx.drawImage(spr, cx2-DOT_R*2, cy2-DOT_R*2, DOT_R*4, DOT_R*4);
+        ctx.globalCompositeOperation = prev;
+        // Core
+        ctx.save(); ctx.translate(cx2, cy2);
+        var cg = ctx.createRadialGradient(0,0,0,0,0,CORE_R);
+        cg.addColorStop(0, 'rgba('+Math.min(255,rgb[0]+60)+','+Math.min(255,rgb[1]+60)+','+Math.min(255,rgb[2]+60)+',1)');
+        cg.addColorStop(0.5, 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',0.9)');
+        cg.addColorStop(1, 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',0)');
+        ctx.fillStyle = cg;
+        ctx.beginPath(); ctx.arc(0,0,CORE_R,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+      }
+
+      for (var di = 0; di < dkf.length; di++) {
+        var pos = interpDot(dkf[di], animElapsed2);
+        var rgb = dColors[di] === 'off' ? offRGB : defRGB;
+        drawAnimDot(pos.x, pos.y, rgb);
+      }
+      // Numbers on top
+      ctx.font = "700 11px 'Teko'";
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (var ni = 0; ni < dkf.length; ni++) {
+        var np = interpDot(dkf[ni], animElapsed2);
+        ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+        ctx.lineWidth = 2.5;
+        ctx.strokeText(dNums[ni], np.x, np.y);
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        ctx.fillText(dNums[ni], np.x, np.y);
+      }
+    }
 
     // Apply screen shake
     if (shake.active()) {

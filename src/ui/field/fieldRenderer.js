@@ -736,7 +736,9 @@ export function createFieldRenderer(width, height) {
     if (fdYard > losYard && fdYard <= 110) {
       drawFirstDownMarker(ctx, fdYard, topYard);
     }
-    drawPlayerDots(ctx, formation, losYard, topYard);
+    if (!state.skipDots) {
+      drawPlayerDots(ctx, formation, losYard, topYard);
+    }
   }
 
   return {
