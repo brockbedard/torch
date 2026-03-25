@@ -51,8 +51,8 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
   var hdr = document.createElement('div');
   hdr.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;";
   hdr.innerHTML =
-    "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:var(--a-gold,#EBB010);letter-spacing:2px;\">TORCH CARDS</div>" +
-    "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:var(--l-green,#00ff44);\">" + points + " PTS</div>";
+    "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:var(--a-gold,#EBB010);letter-spacing:3px;\">THE BOOSTER</div>" +
+    "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:var(--l-green,#00ff44);\">" + points + " PTS</div>";
   sheet.appendChild(hdr);
 
   // Inventory indicator (3 slots)
@@ -70,12 +70,14 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
   var offersRow = document.createElement('div');
   offersRow.style.cssText = 'display:flex;gap:8px;justify-content:center;';
 
-  offers.forEach(function(card) {
+  offers.forEach(function(card, offerIdx) {
     var canAfford = points >= card.cost;
     var isFull = inventory.length >= 3;
 
     var wrap = document.createElement('div');
-    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;max-width:110px;overflow:hidden;';
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;max-width:110px;overflow:hidden;opacity:0;transform:translateY(20px) scale(0.9);transition:opacity 0.3s,transform 0.3s;';
+    // Staggered deal-in animation
+    setTimeout(function() { wrap.style.opacity = '1'; wrap.style.transform = 'translateY(0) scale(1)'; }, 200 + offerIdx * 150);
 
     // Card visual
     var cardEl = buildTorchCard(card, 80, 112);
