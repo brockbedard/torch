@@ -152,6 +152,9 @@ function buildPostSnapSequence(type, yardsGained, formation, fieldW, YPX, losYar
   var form = formation;
   var seq = { dotKeyframes: [], ball: null, events: [] };
   var sy = yardsGained; // settle yards
+  // In portrait: offense moves DOWN the canvas (increasing Y) for positive yards.
+  // 1 yard gained = +YPX pixels on canvas.
+  var ydPx = YPX; // pixels per yard in the gain direction (down)
 
   // Start positions for all dots
   var allDots = form.offense.concat(form.defense);
@@ -190,99 +193,108 @@ function buildPostSnapSequence(type, yardsGained, formation, fieldW, YPX, losYar
 
   if (type === 'complete' || type === 'touchdown') {
     var isTD = type === 'touchdown';
-    catchY = (losYard - sy * 0.6 - topYard) * YPX;
-    settleY = (losYard - sy - topYard) * YPX;
+    // Downfield = +Y on canvas. Catch point is 60% of the way, settle is full yards.
+    catchY = (losYard + sy * 0.6 - topYard) * YPX;
+    settleY = (losYard + sy - topYard) * YPX;
     tackleX = wr ? wr.c.x : 0.50 * fieldW;
 
-    // QB: dropback → set → hold
-    if (qb) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(200,qb.c.x,qb.c.y+18), kf(400,qb.c.x,qb.c.y+12), kf(1500,qb.c.x,qb.c.y+12)];
-    // WR: route → catch → YAC → tackle
+    // QB: dropback (moves UP/backward = -Y), set, hold
+    if (qb) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(200,qb.c.x,qb.c.y-18), kf(400,qb.c.x,qb.c.y-12), kf(1500,qb.c.x,qb.c.y-12)];
+    // WR: route downfield (+Y), catch, YAC, tackle
     if (wr) {
       var wrMid = { x: lerp(wr.c.x, 0.45*fieldW, 0.5), y: lerp(wr.c.y, catchY, 0.5) };
-      dotKF[wr.idx] = [kf(0,wr.c.x,wr.c.y), kf(200,wr.c.x,wr.c.y-15), kf(400,wrMid.x,wrMid.y), kf(700,tackleX,catchY), kf(750,tackleX,catchY), kf(isTD?1000:1300,tackleX,settleY), kf(2000,tackleX,settleY)];
+      dotKF[wr.idx] = [kf(0,wr.c.x,wr.c.y), kf(200,wr.c.x,wr.c.y+15), kf(400,wrMid.x,wrMid.y), kf(700,tackleX,catchY), kf(750,tackleX,catchY), kf(isTD?1000:1300,tackleX,settleY), kf(2000,tackleX,settleY)];
     }
-    // OL: push forward
+    // OL: push forward (downfield = +Y)
     for (var oi = 0; oi < form.offense.length; oi++) {
-      if (form.offense[oi].pos === 'OL') dotKF[oi] = [kf(0,starts[oi].x,starts[oi].y), kf(250,starts[oi].x,starts[oi].y-12), kf(1500,starts[oi].x,starts[oi].y-8)];
+      if (form.offense[oi].pos === 'OL') dotKF[oi] = [kf(0,starts[oi].x,starts[oi].y), kf(250,starts[oi].x,starts[oi].y+12), kf(1500,starts[oi].x,starts[oi].y+8)];
     }
-    // CB: trails WR
-    if (cb && wr) dotKF[cb.idx] = [kf(0,cb.c.x,cb.c.y), kf(200,cb.c.x,cb.c.y-8), kf(400,lerp(cb.c.x,tackleX,0.3),lerp(cb.c.y,catchY,0.4)), kf(700,lerp(cb.c.x,tackleX,0.6),catchY+8), kf(1300,tackleX+5,settleY+4), kf(2000,tackleX+5,settleY+4)];
-    // DL: rush forward
+    // CB: trails WR downfield
+    if (cb && wr) dotKF[cb.idx] = [kf(0,cb.c.x,cb.c.y), kf(200,cb.c.x,cb.c.y+8), kf(400,lerp(cb.c.x,tackleX,0.3),lerp(cb.c.y,catchY,0.4)), kf(700,lerp(cb.c.x,tackleX,0.6),catchY-8), kf(1300,tackleX+5,settleY-4), kf(2000,tackleX+5,settleY-4)];
+    // DL: rush toward QB (backward = -Y, toward offense backfield)
     for (var di = form.offense.length; di < allDots.length; di++) {
       if (allDots[di].pos === 'DL') dotKF[di] = [kf(0,starts[di].x,starts[di].y), kf(300,starts[di].x,starts[di].y-8), kf(1500,starts[di].x,starts[di].y-4)];
     }
-    // Safety closes late
-    if (safety) dotKF[safety.idx] = [kf(0,safety.c.x,safety.c.y), kf(400,safety.c.x,safety.c.y-6), kf(1300,lerp(safety.c.x,tackleX,0.5),settleY+12), kf(2000,lerp(safety.c.x,tackleX,0.5),settleY+12)];
+    // Safety closes downfield toward tackle
+    if (safety) dotKF[safety.idx] = [kf(0,safety.c.x,safety.c.y), kf(400,safety.c.x,safety.c.y+6), kf(1300,lerp(safety.c.x,tackleX,0.5),settleY-12), kf(2000,lerp(safety.c.x,tackleX,0.5),settleY-12)];
 
-    // Ball
+    // Ball flight: QB position → arc → catch point
     var qbPos = qb ? qb.c : starts[1];
     var midX = (qbPos.x + tackleX) / 2;
-    seq.ball = { startTime: 400, endTime: 700, p0: { x: qbPos.x, y: qbPos.y + 12 }, p1: { x: midX, y: (qbPos.y+12+catchY)/2-20 }, p2: { x: tackleX, y: catchY } };
-    // Events
-    seq.events.push({ time: 400, type: 'throw', x: qbPos.x, y: qbPos.y+12 });
+    seq.ball = { startTime: 400, endTime: 700, p0: { x: qbPos.x, y: qbPos.y - 12 }, p1: { x: midX, y: (qbPos.y-12+catchY)/2-20 }, p2: { x: tackleX, y: catchY } };
+    seq.events.push({ time: 400, type: 'throw', x: qbPos.x, y: qbPos.y-12 });
     seq.events.push({ time: 700, type: 'catch', x: tackleX, y: catchY });
     seq.events.push({ time: isTD?1000:1300, type: isTD?'touchdown':'tackle', x: tackleX, y: settleY });
 
   } else if (type === 'run') {
     var runner = rb || qb;
-    settleY = (losYard - sy - topYard) * YPX;
+    // Downfield = +Y
+    settleY = (losYard + sy - topYard) * YPX;
     var runX = runner ? runner.c.x : 0.50 * fieldW;
     var losY = (losYard - topYard) * YPX;
 
-    // Runner: mesh → hole → burst → tackle
-    if (runner) dotKF[runner.idx] = [kf(0,runner.c.x,runner.c.y), kf(150,0.50*fieldW,runner.c.y), kf(300,0.50*fieldW,losY), kf(500,runX,losY-15), kf(1000,runX,settleY), kf(1400,runX,settleY)];
-    // QB hands off, drifts away
-    if (qb && runner && runner.idx !== qb.idx) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(150,qb.c.x-5,qb.c.y-3), kf(300,qb.c.x+10,qb.c.y+8), kf(1400,qb.c.x+15,qb.c.y+12)];
-    // OL: fire forward
+    // Runner: mesh → hole → burst downfield → tackle
+    if (runner) dotKF[runner.idx] = [kf(0,runner.c.x,runner.c.y), kf(150,0.50*fieldW,runner.c.y), kf(300,0.50*fieldW,losY), kf(500,runX,losY+15), kf(1000,runX,settleY), kf(1400,runX,settleY)];
+    // QB hands off, drifts backward (-Y)
+    if (qb && runner && runner.idx !== qb.idx) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(150,qb.c.x-5,qb.c.y+3), kf(300,qb.c.x+10,qb.c.y-8), kf(1400,qb.c.x+15,qb.c.y-12)];
+    // OL: fire forward downfield (+Y)
     for (var oi2 = 0; oi2 < form.offense.length; oi2++) {
-      if (form.offense[oi2].pos === 'OL') dotKF[oi2] = [kf(0,starts[oi2].x,starts[oi2].y), kf(200,starts[oi2].x,starts[oi2].y-18), kf(500,starts[oi2].x,starts[oi2].y-22), kf(1400,starts[oi2].x,starts[oi2].y-18)];
+      if (form.offense[oi2].pos === 'OL') dotKF[oi2] = [kf(0,starts[oi2].x,starts[oi2].y), kf(200,starts[oi2].x,starts[oi2].y+18), kf(500,starts[oi2].x,starts[oi2].y+22), kf(1400,starts[oi2].x,starts[oi2].y+18)];
     }
-    // DL: get pushed back
+    // DL: get pushed backward by OL (-Y, toward their own backfield)
     for (var di2 = form.offense.length; di2 < allDots.length; di2++) {
       if (allDots[di2].pos === 'DL') dotKF[di2] = [kf(0,starts[di2].x,starts[di2].y), kf(200,starts[di2].x,starts[di2].y+4), kf(500,starts[di2].x,starts[di2].y+8), kf(1400,starts[di2].x,starts[di2].y+6)];
     }
-    // LB fills, tackles
-    if (lb) dotKF[lb.idx] = [kf(0,lb.c.x,lb.c.y), kf(300,lb.c.x,lb.c.y-6), kf(700,lerp(lb.c.x,runX,0.7),settleY+8), kf(1000,runX+4,settleY+2), kf(1400,runX+4,settleY+2)];
+    // LB fills downfield toward runner, tackles
+    if (lb) dotKF[lb.idx] = [kf(0,lb.c.x,lb.c.y), kf(300,lb.c.x,lb.c.y-6), kf(700,lerp(lb.c.x,runX,0.7),settleY-8), kf(1000,runX+4,settleY-2), kf(1400,runX+4,settleY-2)];
 
     seq.events.push({ time: 150, type: 'handoff', x: 0.50*fieldW, y: runner?runner.c.y:losY });
     seq.events.push({ time: 1000, type: 'tackle', x: runX, y: settleY });
 
   } else if (type === 'sack') {
-    var sackY = (losYard + Math.abs(yardsGained) - topYard) * YPX;
+    // Sack: QB goes backward (-Y), DE rushes toward QB (-Y toward backfield)
+    var sackY = (losYard - Math.abs(yardsGained) - topYard) * YPX;
     var sackDE = dl0;
 
-    // QB: drop, scramble, caught
-    if (qb) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(200,qb.c.x,qb.c.y+16), kf(500,qb.c.x+10,qb.c.y+22), kf(800,qb.c.x+8,sackY), kf(1200,qb.c.x+8,sackY)];
-    // DE: speed rush, beats OL, sack
+    // QB: dropback (-Y), scramble, caught behind LOS
+    if (qb) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(200,qb.c.x,qb.c.y-16), kf(500,qb.c.x+10,qb.c.y-22), kf(800,qb.c.x+8,sackY), kf(1200,qb.c.x+8,sackY)];
+    // DE: speed rush toward QB backfield (-Y)
     if (sackDE) dotKF[sackDE.idx] = [kf(0,sackDE.c.x,sackDE.c.y), kf(150,sackDE.c.x,sackDE.c.y-6), kf(350,sackDE.c.x+4,sackDE.c.y-16), kf(600,qb?qb.c.x+12:sackDE.c.x,sackDE.c.y-28), kf(800,qb?qb.c.x+8:sackDE.c.x,sackY), kf(1200,qb?qb.c.x+8:sackDE.c.x,sackY)];
-    // OL pushed back
+    // OL: tries to block, gets pushed back (-Y)
     for (var oi3 = 0; oi3 < form.offense.length; oi3++) {
-      if (form.offense[oi3].pos === 'OL') dotKF[oi3] = [kf(0,starts[oi3].x,starts[oi3].y), kf(200,starts[oi3].x,starts[oi3].y-6), kf(800,starts[oi3].x,starts[oi3].y+4), kf(1200,starts[oi3].x,starts[oi3].y+4)];
+      if (form.offense[oi3].pos === 'OL') dotKF[oi3] = [kf(0,starts[oi3].x,starts[oi3].y), kf(200,starts[oi3].x,starts[oi3].y-6), kf(800,starts[oi3].x,starts[oi3].y-10), kf(1200,starts[oi3].x,starts[oi3].y-10)];
     }
 
     seq.events.push({ time: 800, type: 'sack', x: qb?qb.c.x+8:fieldW*0.5, y: sackY });
 
   } else if (type === 'interception') {
-    var intY = (losYard - 8 - topYard) * YPX;
-    // QB throws, CB jumps route
-    if (qb) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(200,qb.c.x,qb.c.y+16), kf(400,qb.c.x,qb.c.y+10), kf(1800,qb.c.x,qb.c.y+10)];
-    if (wr) dotKF[wr.idx] = [kf(0,wr.c.x,wr.c.y), kf(200,wr.c.x,wr.c.y-10), kf(400,lerp(wr.c.x,0.40*fieldW,0.5),lerp(wr.c.y,intY,0.5)), kf(700,0.42*fieldW,intY), kf(1800,0.42*fieldW,intY)];
-    if (cb) dotKF[cb.idx] = [kf(0,cb.c.x,cb.c.y), kf(300,cb.c.x,cb.c.y-10), kf(600,lerp(cb.c.x,0.41*fieldW,0.7),intY-5), kf(700,0.41*fieldW,intY), kf(900,0.41*fieldW,intY), kf(1400,0.38*fieldW,intY+25), kf(1800,0.38*fieldW,intY+25)];
+    // Ball goes downfield (+Y) to where CB intercepts
+    var intY = (losYard + 8 - topYard) * YPX;
+    // QB dropback (-Y)
+    if (qb) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(200,qb.c.x,qb.c.y-16), kf(400,qb.c.x,qb.c.y-10), kf(1800,qb.c.x,qb.c.y-10)];
+    // WR runs downfield (+Y)
+    if (wr) dotKF[wr.idx] = [kf(0,wr.c.x,wr.c.y), kf(200,wr.c.x,wr.c.y+10), kf(400,lerp(wr.c.x,0.40*fieldW,0.5),lerp(wr.c.y,intY,0.5)), kf(700,0.42*fieldW,intY), kf(1800,0.42*fieldW,intY)];
+    // CB jumps route, catches ball
+    if (cb) dotKF[cb.idx] = [kf(0,cb.c.x,cb.c.y), kf(300,cb.c.x,cb.c.y+10), kf(600,lerp(cb.c.x,0.41*fieldW,0.7),intY+5), kf(700,0.41*fieldW,intY), kf(900,0.41*fieldW,intY), kf(1400,0.38*fieldW,intY-25), kf(1800,0.38*fieldW,intY-25)];
 
     var qbPos2 = qb ? qb.c : starts[1];
-    seq.ball = { startTime: 400, endTime: 700, p0: { x: qbPos2.x, y: qbPos2.y+10 }, p1: { x: (qbPos2.x+0.41*fieldW)/2, y: (qbPos2.y+10+intY)/2-20 }, p2: { x: 0.41*fieldW, y: intY } };
-    seq.events.push({ time: 400, type: 'throw', x: qbPos2.x, y: qbPos2.y+10 });
+    seq.ball = { startTime: 400, endTime: 700, p0: { x: qbPos2.x, y: qbPos2.y-10 }, p1: { x: (qbPos2.x+0.41*fieldW)/2, y: (qbPos2.y-10+intY)/2 }, p2: { x: 0.41*fieldW, y: intY } };
+    seq.events.push({ time: 400, type: 'throw', x: qbPos2.x, y: qbPos2.y-10 });
     seq.events.push({ time: 700, type: 'interception', x: 0.41*fieldW, y: intY });
 
   } else if (type === 'incomplete') {
-    var missY = (losYard - 10 - topYard) * YPX;
-    if (qb) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(200,qb.c.x,qb.c.y+16), kf(400,qb.c.x,qb.c.y+10), kf(1200,qb.c.x,qb.c.y+10)];
-    if (wr) dotKF[wr.idx] = [kf(0,wr.c.x,wr.c.y), kf(200,wr.c.x,wr.c.y-12), kf(500,lerp(wr.c.x,0.38*fieldW,0.5),lerp(wr.c.y,missY,0.6)), kf(700,0.42*fieldW,missY), kf(1200,0.42*fieldW,missY)];
-    if (cb) dotKF[cb.idx] = [kf(0,cb.c.x,cb.c.y), kf(200,cb.c.x,cb.c.y-8), kf(700,0.41*fieldW,missY), kf(1200,0.41*fieldW,missY)];
+    // Ball goes downfield (+Y) but misses
+    var missY = (losYard + 10 - topYard) * YPX;
+    // QB dropback (-Y)
+    if (qb) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(200,qb.c.x,qb.c.y-16), kf(400,qb.c.x,qb.c.y-10), kf(1200,qb.c.x,qb.c.y-10)];
+    // WR runs downfield (+Y)
+    if (wr) dotKF[wr.idx] = [kf(0,wr.c.x,wr.c.y), kf(200,wr.c.x,wr.c.y+12), kf(500,lerp(wr.c.x,0.38*fieldW,0.5),lerp(wr.c.y,missY,0.6)), kf(700,0.42*fieldW,missY), kf(1200,0.42*fieldW,missY)];
+    // CB in coverage (+Y)
+    if (cb) dotKF[cb.idx] = [kf(0,cb.c.x,cb.c.y), kf(200,cb.c.x,cb.c.y+8), kf(700,0.41*fieldW,missY), kf(1200,0.41*fieldW,missY)];
 
     var qbPos3 = qb ? qb.c : starts[1];
-    seq.ball = { startTime: 400, endTime: 700, p0: { x: qbPos3.x, y: qbPos3.y+10 }, p1: { x: 0.35*fieldW, y: (qbPos3.y+10+missY)/2-15 }, p2: { x: 0.38*fieldW, y: missY } };
-    seq.events.push({ time: 400, type: 'throw', x: qbPos3.x, y: qbPos3.y+10 });
+    seq.ball = { startTime: 400, endTime: 700, p0: { x: qbPos3.x, y: qbPos3.y-10 }, p1: { x: 0.35*fieldW, y: (qbPos3.y-10+missY)/2 }, p2: { x: 0.38*fieldW, y: missY } };
+    seq.events.push({ time: 400, type: 'throw', x: qbPos3.x, y: qbPos3.y-10 });
     seq.events.push({ time: 750, type: 'incomplete', x: 0.38*fieldW, y: missY });
   }
 
