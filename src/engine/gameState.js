@@ -70,6 +70,14 @@ export class GameState {
     // Torch Cards (3 slots)
     this.humanTorchCards = [];
     this.cpuTorchCards = [];
+    // AI starting cards scale with difficulty
+    if (this.difficulty === 'MEDIUM') {
+      var bronzePool = TORCH_CARDS.filter(function(c) { return c.tier === 'BRONZE'; });
+      if (bronzePool.length > 0) this.cpuTorchCards.push(bronzePool[Math.floor(Math.random() * bronzePool.length)].id);
+    } else if (this.difficulty === 'HARD') {
+      var silverPool = TORCH_CARDS.filter(function(c) { return c.tier === 'SILVER'; });
+      if (silverPool.length > 0) this.cpuTorchCards.push(silverPool[Math.floor(Math.random() * silverPool.length)].id);
+    }
 
     // Stats
     this.stats = {
@@ -178,23 +186,35 @@ export class GameState {
     const offInv = sides.offenseIsHuman ? this.humanTorchCards : this.cpuTorchCards;
     const defInv = sides.offenseIsHuman ? this.cpuTorchCards : this.humanTorchCards;
 
-    // AI selects Torch Cards if not provided
+    // AI selects Torch Cards based on difficulty
+    // Easy: never uses cards. Medium: uses on 3rd down or 2-min. Hard: uses optimally.
     if (offCard === undefined || offCard === null) {
-      if (this.difficulty === 'RANDOM') {
-        if (offInv.length > 0 && Math.random() < 0.20) {
+      if (this.difficulty === 'EASY') {
+        // Easy AI never uses torch cards
+      } else if (this.difficulty === 'MEDIUM') {
+        if (offInv.length > 0 && (this.down >= 3 || this.twoMinActive) && Math.random() < 0.5) {
           offCard = offInv.splice(Math.floor(Math.random() * offInv.length), 1)[0];
         }
-      } else if (offInv.length > 0 && (this.down >= 3 || this.twoMinActive)) {
-        offCard = offInv.shift();
+      } else {
+        // Hard: use on 3rd down, 2-min, red zone, or trailing
+        var shouldUse = this.down >= 3 || this.twoMinActive || this.yardsToEndzone() <= 20 || this.getScoreDiff() > 7;
+        if (offInv.length > 0 && shouldUse) {
+          offCard = offInv.shift();
+        }
       }
     }
     if (defCard === undefined || defCard === null) {
-      if (this.difficulty === 'RANDOM') {
-        if (defInv.length > 0 && Math.random() < 0.20) {
+      if (this.difficulty === 'EASY') {
+        // Easy AI never uses torch cards
+      } else if (this.difficulty === 'MEDIUM') {
+        if (defInv.length > 0 && (this.down >= 3 || this.twoMinActive) && Math.random() < 0.4) {
           defCard = defInv.splice(Math.floor(Math.random() * defInv.length), 1)[0];
         }
-      } else if (defInv.length > 0 && (this.down >= 3 || this.twoMinActive)) {
-        defCard = defInv.shift();
+      } else {
+        var shouldUseDef = this.down >= 3 || this.twoMinActive || this.yardsToEndzone() <= 10;
+        if (defInv.length > 0 && shouldUseDef) {
+          defCard = defInv.shift();
+        }
       }
     }
 
@@ -619,42 +639,34 @@ export class GameState {
 
     const offers = [getOffer(), getOffer(), getOffer()];
 
-    if (isHuman && this.difficulty !== 'RANDOM') {
-      const affordable = offers.filter(id => {
-        const card = TORCH_CARDS.find(c => c.id === id);
-        return card.cost <= currentPts;
-      });
-      if (affordable.length > 0 && Math.random() < 0.5) {
-        // Buy most expensive affordable
+    if (isHuman) {
+      // Human sees the shop UI — no auto-buy
+      return purchased;
+    }
+    // AI buying logic based on difficulty
+    const affordable = offers.filter(id => {
+      const card = TORCH_CARDS.find(c => c.id === id);
+      return card && card.cost <= currentPts;
+    });
+    if (this.difficulty === 'EASY') {
+      // Easy AI never buys
+    } else if (this.difficulty === 'MEDIUM') {
+      // Medium: buy 1 cheapest
+      if (affordable.length > 0) {
         purchased.push(affordable.reduce((a, b) => {
-          const cardA = TORCH_CARDS.find(c => c.id === a);
-          const cardB = TORCH_CARDS.find(c => c.id === b);
-          return cardA.cost > cardB.cost ? a : b;
+          return TORCH_CARDS.find(c => c.id === a).cost < TORCH_CARDS.find(c => c.id === b).cost ? a : b;
         }));
       }
     } else {
-      if (this.difficulty === 'RANDOM') {
-        const affordable = offers.filter(id => TORCH_CARDS.find(c => c.id === id).cost <= currentPts);
-        if (affordable.length > 0 && Math.random() < 0.5) {
-          purchased.push(affordable[Math.floor(Math.random() * affordable.length)]);
-        }
-      } else if (this.difficulty === 'MEDIUM') {
-        const affordable = offers.filter(id => TORCH_CARDS.find(c => c.id === id).cost <= currentPts);
-        if (affordable.length > 0) {
-          purchased.push(affordable.reduce((a, b) => {
-            const cardA = TORCH_CARDS.find(c => c.id === a);
-            const cardB = TORCH_CARDS.find(c => c.id === b);
-            return cardA.cost < cardB.cost ? a : b;
-          }));
-        }
-      } else if (this.difficulty === 'HARD') {
-        const affordable = offers.filter(id => TORCH_CARDS.find(c => c.id === id).cost <= currentPts);
-        if (affordable.length > 0) {
-          purchased.push(affordable.reduce((a, b) => {
-            const cardA = TORCH_CARDS.find(c => c.id === a);
-            const cardB = TORCH_CARDS.find(c => c.id === b);
-            return cardA.cost > cardB.cost ? a : b;
-          }));
+      // Hard: buy up to 2, best value (most expensive affordable)
+      var sorted = affordable.slice().sort((a, b) => {
+        return TORCH_CARDS.find(c => c.id === b).cost - TORCH_CARDS.find(c => c.id === a).cost;
+      });
+      for (var bi = 0; bi < Math.min(2, sorted.length); bi++) {
+        var cardCost = TORCH_CARDS.find(c => c.id === sorted[bi]).cost;
+        if (cardCost <= currentPts) {
+          purchased.push(sorted[bi]);
+          currentPts -= cardCost;
         }
       }
     }
