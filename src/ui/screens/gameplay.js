@@ -1805,23 +1805,23 @@ export function buildGameplay() {
         tray.appendChild(c);
       });
     } else if (phase === 'torch') {
-      // Show TORCH cards from inventory (v0.21 — max 3 slots)
-      var preSnapCards = torchInventory.filter(function(c) { return c.type === 'pre-snap'; });
+      // Show TORCH cards — max 3 cards + skip = 4 slots (same as play/player)
+      var preSnapCards = torchInventory.filter(function(c) { return c.type === 'pre-snap'; }).slice(0, 3);
       if (preSnapCards.length === 0) {
-        // No pre-snap cards — skip torch phase
         phase = 'ready';
         drawField(); drawPanel();
         return;
       }
-      preSnapCards.forEach(function(tc, i) {
+      preSnapCards.forEach(function(tc) {
         var c = document.createElement('div');
         c.className = 'T-card';
-        var tcEl = buildTorchCard(tc);
+        var tcEl = buildTorchCard(tc, null, 150);
         tcEl.style.width = '100%';
         tcEl.style.height = '100%';
         c.appendChild(tcEl);
         c.onclick = function() {
           SND.click();
+          selTorch = tc.id;
           selectedPreSnap = tc;
           var idx = torchInventory.indexOf(tc);
           if (idx >= 0) torchInventory.splice(idx, 1);
@@ -1833,12 +1833,12 @@ export function buildGameplay() {
         c.ontouchstart = function(e) { startDrag('torch', tc, c, e); };
         tray.appendChild(c);
       });
-      // Skip button
+      // Skip button — always the 4th slot
       var skipBtn = document.createElement('div');
       skipBtn.className = 'T-card';
       skipBtn.style.cssText = 'border:2px dashed #554f8044;display:flex;align-items:center;justify-content:center;cursor:pointer;';
-      skipBtn.innerHTML = "<div style=\"font-family:'Rajdhani';font-size:7px;color:#554f80;text-align:center\">SKIP<br>TORCH</div>";
-      skipBtn.onclick = function() { SND.click(); selectedPreSnap = null; phase = 'ready'; drawField(); drawPanel(); };
+      skipBtn.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#554f80;text-align:center;letter-spacing:1px;\">SKIP</div>";
+      skipBtn.onclick = function() { SND.click(); selectedPreSnap = null; selTorch = null; phase = 'ready'; drawField(); drawPanel(); };
       tray.appendChild(skipBtn);
     }
     panel.appendChild(tray);

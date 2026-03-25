@@ -4,7 +4,7 @@
 TORCH Football is a mobile card game (Balatro meets college football). 4 fictional college teams with distinct offensive/defensive schemes battle through 3-game seasons. Card-based play selection, badge combos, star player Heat Check, and TORCH points (score = wallet). Built with Vite + vanilla JS, deployed on Vercel.
 
 ## Version
-**v0.24.0 "Scheme Identity"** — Real 7v7 football: 6 research-accurate formations, 13 pass concepts + 6 run concepts, team scheme identity (weighted draft pools, formation tendencies, animation styles per team). All 8 TORCH cards functional. Sequential points animation. Bug fixes (ovrSystem, conditions, card effects). UI refresh: team select with centered badges + KICK OFF flow, bigger home screen, pregame hold.
+**v0.25.0 "Torch Cards"** — 12 TORCH cards with real SVG icons, The Booster shop, AI card behavior, dev test harness. User perspective bias (colors, commentary, visual weight, timing, ambient mood). Broadcast-style possession changes, TD celebrations, warm gold rebrand. Conversion crash fixed.
 
 ## How to Run
 ```bash
@@ -219,6 +219,32 @@ Persistent panel below SNAP button replacing dead space:
 10-card playbook per side. Draw 4 at game start. Play 1 → draw 1 from remaining 6 (weighted by team scheme). Always 4 in hand. Player cards also 4 per hand.
 
 **Draw weighting** (`TEAM_DRAW_WEIGHTS` in state.js): When cycling a card, the replacement is selected with weighted probability based on the team's offensive identity. Boars see run cards 4x more often. Stags see quick/deep pass cards 3-4x more. Serpents are balanced (all 2x). This makes team selection change gameplay, not just colors.
+
+### TORCH Cards (Score = Wallet)
+12 cards across 3 tiers. Icons from game-icons.net (CC BY 3.0). Max 3 in hand. Single-use.
+
+| Tier | Card | Type | Cost | Effect |
+|------|------|------|------|--------|
+| Gold | SCOUT TEAM | pre-snap | 45 | See opponent's play before picking yours |
+| Gold | SURE HANDS | reactive | 50 | Cancel a turnover, drive continues |
+| Silver | HARD COUNT | pre-snap | 25 | Force opponent to random play |
+| Silver | DEEP SHOT | pre-snap | 25 | 2x yards on pass |
+| Silver | TRUCK STICK | pre-snap | 25 | 2x yards on run, no fumble |
+| Silver | CHALLENGE FLAG | reactive | 30 | Reroll snap, 50% better outcome |
+| Silver | PRIME TIME | pre-snap | 20 | Featured player OVR = 99 |
+| Bronze | PLAY ACTION | pre-snap | 10 | +5 yards vs run defense |
+| Bronze | SCRAMBLE DRILL | pre-snap | 10 | Convert negative to 0 yards |
+| Bronze | 12TH MAN | pre-snap | 15 | +4 yards + 2x TORCH points |
+| Bronze | ICE | pre-snap | 15 | Zero opponent OVR + combos |
+| Bronze | PERSONNEL REPORT | pre-snap | 10 | Reveal opponent's player |
+
+**Acquisition:** The Booster shop appears at halftime, after TDs, turnovers, 4th down stops. 3 cards offered (60% bronze, 30% silver, 10% gold). Buying spends TORCH points.
+
+**AI behavior:** Easy = 0 cards/never buys. Medium = starts 1 Bronze, buys 1 cheapest. Hard = starts 1 Silver, buys 2 best value. Uses on 3rd down, 2-min, red zone.
+
+**Categories** (icon fill color): information (gold), amplification (green), disruption (red), protection (blue).
+
+**Card rendering:** Real SVG icons from torchCardIcons.js. Bronze = static border. Silver = shimmer animation. Gold = glow pulse. Reactive cards = dashed border + "REACTIVE" label.
 
 ### TORCH Modifier Cards (Score = Wallet)
 20 cards across 4 categories, 3 tiers (Bronze/Silver/Gold). Icons from game-icons.net (CC BY 3.0).
