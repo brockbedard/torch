@@ -3,75 +3,277 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Field Renderer Test</title>
-<link href="https://fonts.googleapis.com/css2?family=Teko:wght@300..700&display=swap" rel="stylesheet">
+<title>TORCH Field — Game State Test</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@300..700&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:#050505;display:flex;flex-direction:column;align-items:center;padding:20px;font-family:'Teko',sans-serif;color:#fff}
-  h1{font-size:20px;letter-spacing:4px;color:#FFB800;margin-bottom:4px}
-  .sub{font-size:12px;color:#555;letter-spacing:2px;margin-bottom:16px}
-  .controls{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;justify-content:center}
-  button{background:#1a1a1a;border:1px solid #333;color:#aaa;font-family:'Teko';font-size:13px;padding:4px 12px;cursor:pointer;border-radius:4px;letter-spacing:1px}
+  body{background:#050505;display:flex;flex-direction:column;align-items:center;padding:12px;font-family:'Teko',sans-serif;color:#fff;max-width:400px;margin:0 auto}
+  h1{font-size:16px;letter-spacing:4px;color:#FFB800;margin-bottom:2px}
+  .sub{font-size:10px;color:#555;letter-spacing:2px;margin-bottom:8px}
+
+  .scorebug{width:100%;display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#0E0A04;border-radius:6px;margin-bottom:4px}
+  .team{text-align:center}
+  .team-name{font-size:14px;font-weight:700;letter-spacing:1px}
+  .team-score{font-size:22px;font-weight:700;font-family:'Rajdhani'}
+  .game-info{text-align:center;font-size:11px;color:#888;letter-spacing:1px}
+  .game-info .down{color:#FF6B00;font-size:14px;font-weight:700}
+
+  .field-wrap{border-radius:6px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.8);width:100%}
+
+  .section{margin-top:8px;width:100%}
+  .section-label{font-size:10px;color:#FF6B00;letter-spacing:2px;margin-bottom:3px}
+  .controls{display:flex;gap:3px;flex-wrap:wrap}
+  button{background:#1a1a1a;border:1px solid #333;color:#aaa;font-family:'Teko';font-size:11px;padding:3px 7px;cursor:pointer;border-radius:3px;letter-spacing:1px}
   button:hover{background:#222;color:#fff}
   button.active{background:#FF4511;color:#000;border-color:#FF4511}
-  .field-wrap{border-radius:6px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.8)}
-  .info{margin-top:12px;font-size:14px;color:#666;letter-spacing:1px}
+  .play-btn{border-color:#00ff4444}
+  .play-btn:hover{color:#00ff44}
+  .play-btn.bad{border-color:#ff444444}
+  .play-btn.bad:hover{color:#ff4444}
+  .play-btn.td{border-color:#FFB80044}
+  .play-btn.td:hover{color:#FFB800}
+
+  .drive-log{margin-top:8px;width:100%;max-height:120px;overflow-y:auto;font-family:'Rajdhani';font-size:11px}
+  .drive-log div{padding:2px 6px;border-bottom:1px solid #1a1a1a;display:flex;justify-content:space-between}
+  .drive-log .yards{font-weight:700}
+  .drive-log .positive{color:#00ff44}
+  .drive-log .negative{color:#ff4444}
+  .drive-log .special{color:#FFB800}
 </style>
 </head>
 <body>
-<h1>DIGITAL GLASS FLOOR — PORTRAIT</h1>
-<div class="sub">FIELD RENDERER TEST</div>
+<h1>TORCH FIELD — GAME SIM</h1>
+<div class="sub">FORMATIONS · PLAY TYPES · ANIMATIONS</div>
 
-<div class="controls" id="formations"></div>
-<div class="controls" id="positions"></div>
+<div class="scorebug">
+  <div class="team">
+    <div class="team-name" id="offTeam" style="color:#F28C28">STAGS</div>
+    <div class="team-score" id="offScore">0</div>
+  </div>
+  <div class="game-info">
+    <div class="down" id="downDist">1ST & 10</div>
+    <div id="ballPos">OWN 25</div>
+    <div id="halfInfo">1ST HALF · 0/20</div>
+  </div>
+  <div class="team">
+    <div class="team-name" id="defTeam" style="color:#C0C0C0">WOLVES</div>
+    <div class="team-score" id="defScore">0</div>
+  </div>
+</div>
+
 <div class="field-wrap" id="wrap"></div>
-<div class="info" id="info"></div>
+
+<div class="section">
+  <div class="section-label">TEAM</div>
+  <div class="controls" id="teams"></div>
+</div>
+
+<div class="section">
+  <div class="section-label">PLAY TYPE → AUTO-SELECTS FORMATION</div>
+  <div class="controls" id="playTypes"></div>
+</div>
+
+<div class="section">
+  <div class="section-label">SNAP — TAP TO RESOLVE</div>
+  <div class="controls" id="results"></div>
+</div>
+
+<div class="section">
+  <div class="section-label">MANUAL FORMATION</div>
+  <div class="controls" id="formations"></div>
+</div>
+
+<div class="drive-log" id="log"></div>
 
 <script type="module">
-import { createFieldRenderer } from './fieldRenderer.js';
+import { createFieldAnimator } from './fieldAnimator.js';
 
-const formations = ['shotgun_2x2', 'iform_under_center', 'trips_right', 'empty_5_wide'];
-const formLabels = ['Shotgun 2×2', 'I-Form', 'Trips Right', 'Empty 5 Wide'];
+// Game state
+let offTeam = 'stags';
+let defTeam = 'wolves';
+let ballYard = 25;
+let down = 1;
+let distance = 10;
+let offScore = 0;
+let defScore = 0;
+let snaps = 0;
+let currentPlayType = 'SHORT';
+let currentFormation = 'shotgun_spread';
 
-let currentFormation = 'shotgun_2x2';
-let ballYard = 50;
+const TEAM_COLORS = {
+  sentinels: { name: 'BOARS', color: '#C4A265' },
+  wolves: { name: 'WOLVES', color: '#C0C0C0' },
+  stags: { name: 'STAGS', color: '#F28C28' },
+  serpents: { name: 'SERPENTS', color: '#39FF14' },
+};
+
+const DOWN_LABELS = ['', '1ST', '2ND', '3RD', '4TH'];
 
 document.fonts.ready.then(() => {
-  const renderer = createFieldRenderer(375, 280);
-  document.getElementById('wrap').appendChild(renderer.canvas);
+  const field = createFieldAnimator(375, 280);
+  document.getElementById('wrap').appendChild(field.canvas);
 
-  function draw() {
-    const losYard = ballYard;
-    const fdYard = Math.min(losYard + 10, 110);
-    renderer.render({ ballYard, losYard, firstDownYard: fdYard, formation: currentFormation });
-    document.getElementById('info').textContent =
-      'BALL: ' + ballYard + ' YD | LOS: ' + losYard + ' | 1ST DOWN: ' + fdYard + ' | ' + currentFormation.toUpperCase();
+  function getFormation(playType, team) {
+    var teamOverrides = field.TEAM_FORMATION_MAP[team] || {};
+    return teamOverrides[playType] || field.PLAY_FORMATION_MAP[playType] || 'shotgun_spread';
   }
 
-  // Formation buttons
-  const fDiv = document.getElementById('formations');
-  formations.forEach((f, i) => {
-    const btn = document.createElement('button');
-    btn.textContent = formLabels[i];
-    btn.className = f === currentFormation ? 'active' : '';
-    btn.onclick = () => {
-      currentFormation = f;
-      fDiv.querySelectorAll('button').forEach(b => b.className = '');
+  function getState() {
+    return {
+      ballYard: ballYard,
+      losYard: ballYard,
+      firstDownYard: Math.min(ballYard + distance, 110),
+      formation: currentFormation
+    };
+  }
+
+  function updateUI() {
+    var ot = TEAM_COLORS[offTeam], dt = TEAM_COLORS[defTeam];
+    document.getElementById('offTeam').textContent = ot.name;
+    document.getElementById('offTeam').style.color = ot.color;
+    document.getElementById('defTeam').textContent = dt.name;
+    document.getElementById('defTeam').style.color = dt.color;
+    document.getElementById('offScore').textContent = offScore;
+    document.getElementById('defScore').textContent = defScore;
+    var ydsToEz = 110 - ballYard;
+    var ballLabel = ydsToEz <= 50 ? 'OPP ' + ydsToEz : 'OWN ' + (ballYard - 10);
+    document.getElementById('downDist').textContent = DOWN_LABELS[down] + ' & ' + (distance <= ydsToEz ? distance : 'GOAL');
+    document.getElementById('ballPos').textContent = 'BALL ON ' + ballLabel;
+    document.getElementById('halfInfo').textContent = '1ST HALF · ' + snaps + '/20';
+  }
+
+  function draw() {
+    field.render(getState());
+    updateUI();
+  }
+
+  function logPlay(desc, yards, cls) {
+    var log = document.getElementById('log');
+    var d = document.createElement('div');
+    d.innerHTML = '<span>' + desc + '</span><span class="yards ' + cls + '">' + (yards >= 0 ? '+' : '') + yards + '</span>';
+    log.insertBefore(d, log.firstChild);
+  }
+
+  function resolvePlay(type, yards) {
+    var oldBall = ballYard;
+    snaps++;
+
+    // Play the animation
+    field.playSequence(type, yards, getState());
+
+    // Update game state after animation
+    setTimeout(function() {
+      if (type === 'touchdown') {
+        offScore += 7;
+        logPlay(TEAM_COLORS[offTeam].name + ' TOUCHDOWN!', yards, 'special');
+        ballYard = 25; down = 1; distance = 10;
+      } else if (type === 'interception') {
+        logPlay('INTERCEPTION!', 0, 'negative');
+        var temp = offTeam; offTeam = defTeam; defTeam = temp;
+        ballYard = Math.max(20, 110 - ballYard); down = 1; distance = 10;
+      } else if (type === 'sack') {
+        logPlay('SACK! -' + yards + ' yds', -yards, 'negative');
+        ballYard = Math.max(1, ballYard - yards);
+        distance += yards;
+        down++;
+      } else if (type === 'incomplete') {
+        logPlay('Incomplete', 0, 'negative');
+        down++;
+      } else {
+        logPlay(yards + '-yd ' + (type === 'run' ? 'Run' : 'Pass'), yards, 'positive');
+        ballYard = Math.min(109, ballYard + yards);
+        if (yards >= distance) {
+          down = 1; distance = Math.min(10, 110 - ballYard);
+        } else {
+          distance -= yards; down++;
+        }
+      }
+
+      // Turnover on downs
+      if (down > 4) {
+        logPlay('TURNOVER ON DOWNS', 0, 'negative');
+        var temp = offTeam; offTeam = defTeam; defTeam = temp;
+        down = 1; distance = 10;
+      }
+
+      // Scroll field to new position
+      field.scrollTo(oldBall, ballYard, 400);
+
+      // Update formation for current play type
+      currentFormation = getFormation(currentPlayType, offTeam);
+
+      setTimeout(function() {
+        draw();
+      }, 450);
+    }, type === 'touchdown' || type === 'interception' ? 2000 : 1600);
+  }
+
+  // Team buttons
+  var teamDiv = document.getElementById('teams');
+  ['sentinels','wolves','stags','serpents'].forEach(function(t) {
+    var btn = document.createElement('button');
+    btn.textContent = TEAM_COLORS[t].name;
+    btn.style.color = TEAM_COLORS[t].color;
+    btn.onclick = function() {
+      offTeam = t;
+      // Pick a different defense
+      var others = ['sentinels','wolves','stags','serpents'].filter(function(x) { return x !== t; });
+      defTeam = others[Math.floor(Math.random() * others.length)];
+      currentFormation = getFormation(currentPlayType, offTeam);
+      draw();
+    };
+    teamDiv.appendChild(btn);
+  });
+
+  // Play type buttons
+  var ptDiv = document.getElementById('playTypes');
+  ['DEEP','SHORT','QUICK','SCREEN','RUN'].forEach(function(pt) {
+    var btn = document.createElement('button');
+    btn.textContent = pt;
+    btn.className = pt === currentPlayType ? 'active' : '';
+    btn.onclick = function() {
+      currentPlayType = pt;
+      currentFormation = getFormation(pt, offTeam);
+      ptDiv.querySelectorAll('button').forEach(function(b) { b.className = ''; });
       btn.className = 'active';
+      draw();
+    };
+    ptDiv.appendChild(btn);
+  });
+
+  // Result buttons
+  var resDiv = document.getElementById('results');
+  [
+    { label: '8-YD PASS', type: 'complete', yards: 8, cls: 'play-btn' },
+    { label: '18-YD DEEP', type: 'complete', yards: 18, cls: 'play-btn' },
+    { label: '4-YD RUN', type: 'run', yards: 4, cls: 'play-btn' },
+    { label: '12-YD RUN', type: 'run', yards: 12, cls: 'play-btn' },
+    { label: 'SACK', type: 'sack', yards: 6, cls: 'play-btn bad' },
+    { label: 'INC', type: 'incomplete', yards: 0, cls: 'play-btn bad' },
+    { label: 'INT', type: 'interception', yards: 0, cls: 'play-btn bad' },
+    { label: 'TD', type: 'touchdown', yards: 30, cls: 'play-btn td' },
+  ].forEach(function(r) {
+    var btn = document.createElement('button');
+    btn.textContent = r.label;
+    btn.className = r.cls;
+    btn.onclick = function() { resolvePlay(r.type, r.yards); };
+    resDiv.appendChild(btn);
+  });
+
+  // Manual formation buttons
+  var fDiv = document.getElementById('formations');
+  Object.keys(field.FORMATIONS).filter(function(k) { return k.indexOf('_') > 0 && k !== 'shotgun_2x2' && k !== 'iform_under_center'; }).forEach(function(f) {
+    var btn = document.createElement('button');
+    btn.textContent = f.replace(/_/g, ' ').toUpperCase();
+    btn.onclick = function() {
+      currentFormation = f;
       draw();
     };
     fDiv.appendChild(btn);
   });
 
-  // Position buttons
-  const pDiv = document.getElementById('positions');
-  [20, 30, 40, 50, 60, 70, 80, 90, 100].forEach(yd => {
-    const btn = document.createElement('button');
-    btn.textContent = yd > 60 ? 'OPP ' + (110 - yd) : yd === 60 ? 'MID' : 'OWN ' + (yd - 10);
-    btn.onclick = () => { ballYard = yd; draw(); };
-    pDiv.appendChild(btn);
-  });
-
+  // Init
+  currentFormation = getFormation(currentPlayType, offTeam);
   draw();
 });
 </script>

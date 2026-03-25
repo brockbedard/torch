@@ -35,90 +35,154 @@ const CFG = {
 
 // ── FORMATIONS ──
 // Positions as [widthPct (0-1, left-right), yardsFromLOS (positive = defense side)]
-// 7v7 formations — exactly 7 offense + 7 defense = 14 players
+// ── 7v7 FORMATIONS ──
+// Offense: 1 QB + 3 OL (C, LG, RG at LOS) + 3 skill (WR/RB/TE/FB/SLOT)
+// Defense: 3 DL (LDE, NT, RDE) + 4 coverage (LB/CB/S mix)
 // y = yards from LOS. Negative = behind LOS (offense), positive = past LOS (defense).
-// Dots have dark backing circles so they eclipse lines cleanly.
+
+// Shared OL positions (always the same 3)
+var OL = [
+  { pos: 'OL', x: 0.42, y: 0, num: 65 },
+  { pos: 'OL', x: 0.50, y: 0, num: 72 },
+  { pos: 'OL', x: 0.58, y: 0, num: 68 },
+];
+// Shared DL positions
+var DL = [
+  { pos: 'DL', x: 0.36, y: 1, num: 91 },
+  { pos: 'DL', x: 0.50, y: 1, num: 97 },
+  { pos: 'DL', x: 0.64, y: 1, num: 93 },
+];
+
 const FORMATIONS = {
-  'shotgun_2x2': {
-    offense: [
-      { pos: 'OL', x: 0.50, y: 0, num: 72 },
+  // ── OFFENSIVE FORMATIONS ──
+  'shotgun_spread': {
+    offense: OL.concat([
       { pos: 'QB', x: 0.50, y: -5, num: 7 },
-      { pos: 'RB', x: 0.42, y: -4, num: 25 },
-      { pos: 'WR', x: 0.12, y: 0, num: 1 },
-      { pos: 'WR', x: 0.28, y: -1, num: 82 },
-      { pos: 'WR', x: 0.72, y: -1, num: 4 },
-      { pos: 'WR', x: 0.88, y: 0, num: 11 },
-    ],
-    defense: [
-      { pos: 'DL', x: 0.40, y: 1, num: 90 },
-      { pos: 'DL', x: 0.60, y: 1, num: 93 },
-      { pos: 'LB', x: 0.35, y: 5, num: 55 },
-      { pos: 'LB', x: 0.65, y: 5, num: 42 },
-      { pos: 'CB', x: 0.12, y: 3, num: 24 },
-      { pos: 'CB', x: 0.88, y: 3, num: 2 },
-      { pos: 'S', x: 0.50, y: 11, num: 21 },
-    ],
+      { pos: 'WR', x: 0.10, y: 0, num: 1 },
+      { pos: 'SLOT', x: 0.75, y: -1, num: 3 },
+      { pos: 'WR', x: 0.90, y: 0, num: 11 },
+    ]),
+    defense: DL.concat([
+      { pos: 'CB', x: 0.10, y: 3, num: 24 },
+      { pos: 'CB', x: 0.90, y: 3, num: 2 },
+      { pos: 'LB', x: 0.50, y: 6, num: 55 },
+      { pos: 'S', x: 0.50, y: 13, num: 21 },
+    ]),
   },
-  'iform_under_center': {
-    offense: [
-      { pos: 'OL', x: 0.50, y: 0, num: 72 },
+  'trips_right': {
+    offense: OL.concat([
+      { pos: 'QB', x: 0.50, y: -5, num: 7 },
+      { pos: 'WR', x: 0.90, y: 0, num: 1 },
+      { pos: 'WR', x: 0.78, y: -1, num: 82 },
+      { pos: 'SLOT', x: 0.68, y: 0, num: 3 },
+    ]),
+    defense: DL.concat([
+      { pos: 'CB', x: 0.90, y: 2, num: 24 },
+      { pos: 'CB', x: 0.78, y: 3, num: 2 },
+      { pos: 'LB', x: 0.50, y: 6, num: 55 },
+      { pos: 'S', x: 0.40, y: 12, num: 21 },
+    ]),
+  },
+  'iform_tight': {
+    offense: OL.concat([
       { pos: 'QB', x: 0.50, y: -1, num: 7 },
-      { pos: 'FB', x: 0.50, y: -4, num: 34 },
-      { pos: 'RB', x: 0.50, y: -6, num: 25 },
-      { pos: 'WR', x: 0.12, y: 0, num: 1 },
-      { pos: 'WR', x: 0.88, y: 0, num: 11 },
-      { pos: 'TE', x: 0.65, y: 0, num: 82 },
-    ],
-    defense: [
-      { pos: 'DL', x: 0.40, y: 1, num: 90 },
-      { pos: 'DL', x: 0.60, y: 1, num: 93 },
+      { pos: 'FB', x: 0.50, y: -3, num: 34 },
+      { pos: 'RB', x: 0.50, y: -5, num: 25 },
+      { pos: 'TE', x: 0.68, y: 0, num: 82 },
+    ]),
+    defense: DL.concat([
       { pos: 'LB', x: 0.30, y: 4, num: 55 },
       { pos: 'LB', x: 0.50, y: 5, num: 42 },
       { pos: 'LB', x: 0.70, y: 4, num: 52 },
-      { pos: 'CB', x: 0.12, y: 3, num: 24 },
-      { pos: 'S', x: 0.50, y: 11, num: 21 },
-    ],
+      { pos: 'S', x: 0.50, y: 12, num: 21 },
+    ]),
   },
-  'trips_right': {
-    offense: [
-      { pos: 'OL', x: 0.50, y: 0, num: 72 },
-      { pos: 'QB', x: 0.50, y: -5, num: 7 },
-      { pos: 'RB', x: 0.42, y: -4, num: 25 },
+  'singleback_wing': {
+    offense: OL.concat([
+      { pos: 'QB', x: 0.50, y: -1, num: 7 },
+      { pos: 'RB', x: 0.40, y: -4, num: 25 },
+      { pos: 'TE', x: 0.68, y: -1, num: 82 },
       { pos: 'WR', x: 0.12, y: 0, num: 1 },
-      { pos: 'WR', x: 0.72, y: 0, num: 4 },
-      { pos: 'WR', x: 0.80, y: -1, num: 82 },
-      { pos: 'WR', x: 0.92, y: 0, num: 11 },
-    ],
-    defense: [
-      { pos: 'DL', x: 0.40, y: 1, num: 90 },
-      { pos: 'DL', x: 0.60, y: 1, num: 93 },
-      { pos: 'LB', x: 0.45, y: 5, num: 55 },
+    ]),
+    defense: DL.concat([
       { pos: 'CB', x: 0.12, y: 3, num: 24 },
-      { pos: 'CB', x: 0.72, y: 2, num: 2 },
-      { pos: 'CB', x: 0.92, y: 3, num: 5 },
-      { pos: 'S', x: 0.50, y: 11, num: 21 },
-    ],
+      { pos: 'LB', x: 0.40, y: 5, num: 55 },
+      { pos: 'LB', x: 0.65, y: 5, num: 42 },
+      { pos: 'S', x: 0.50, y: 12, num: 21 },
+    ]),
+  },
+  'bunch_left': {
+    offense: OL.concat([
+      { pos: 'QB', x: 0.50, y: -6, num: 7 },
+      { pos: 'WR', x: 0.20, y: 0, num: 1 },
+      { pos: 'WR', x: 0.12, y: -2, num: 82 },
+      { pos: 'SLOT', x: 0.28, y: -2, num: 3 },
+    ]),
+    defense: DL.concat([
+      { pos: 'CB', x: 0.12, y: 2, num: 24 },
+      { pos: 'CB', x: 0.28, y: 3, num: 2 },
+      { pos: 'LB', x: 0.50, y: 6, num: 55 },
+      { pos: 'S', x: 0.50, y: 13, num: 21 },
+    ]),
+  },
+  'pistol_twins': {
+    offense: OL.concat([
+      { pos: 'QB', x: 0.50, y: -3, num: 7 },
+      { pos: 'RB', x: 0.50, y: -6, num: 25 },
+      { pos: 'WR', x: 0.10, y: 0, num: 1 },
+      { pos: 'WR', x: 0.90, y: 0, num: 11 },
+    ]),
+    defense: DL.concat([
+      { pos: 'CB', x: 0.10, y: 3, num: 24 },
+      { pos: 'CB', x: 0.90, y: 3, num: 2 },
+      { pos: 'LB', x: 0.50, y: 6, num: 55 },
+      { pos: 'S', x: 0.50, y: 12, num: 21 },
+    ]),
   },
   'empty_5_wide': {
-    offense: [
-      { pos: 'OL', x: 0.50, y: 0, num: 72 },
+    offense: OL.concat([
       { pos: 'QB', x: 0.50, y: -5, num: 7 },
       { pos: 'WR', x: 0.08, y: 0, num: 1 },
       { pos: 'WR', x: 0.25, y: -1, num: 82 },
-      { pos: 'WR', x: 0.50, y: -3, num: 3 },
       { pos: 'WR', x: 0.75, y: -1, num: 4 },
       { pos: 'WR', x: 0.92, y: 0, num: 11 },
-    ],
-    defense: [
-      { pos: 'DL', x: 0.40, y: 1, num: 90 },
-      { pos: 'DL', x: 0.60, y: 1, num: 93 },
-      { pos: 'LB', x: 0.50, y: 5, num: 42 },
+    ]),
+    defense: DL.concat([
       { pos: 'CB', x: 0.08, y: 3, num: 24 },
-      { pos: 'CB', x: 0.25, y: 4, num: 2 },
-      { pos: 'CB', x: 0.75, y: 4, num: 5 },
-      { pos: 'S', x: 0.50, y: 11, num: 21 },
-    ],
+      { pos: 'CB', x: 0.92, y: 3, num: 2 },
+      { pos: 'LB', x: 0.50, y: 6, num: 42 },
+      { pos: 'S', x: 0.50, y: 13, num: 21 },
+    ]),
   },
+};
+
+// Backward compat aliases
+FORMATIONS['shotgun_2x2'] = FORMATIONS['shotgun_spread'];
+FORMATIONS['iform_under_center'] = FORMATIONS['iform_tight'];
+
+// ── PLAY TYPE → FORMATION MAPPING ──
+var PLAY_FORMATION_MAP = {
+  DEEP:   'empty_5_wide',
+  SHORT:  'shotgun_spread',
+  QUICK:  'bunch_left',
+  SCREEN: 'trips_right',
+  RUN:    'iform_tight',
+};
+
+// Per-team overrides
+var TEAM_FORMATION_MAP = {
+  sentinels: { SHORT: 'trips_right', SCREEN: 'empty_5_wide', RUN: 'shotgun_spread' },
+  wolves:    { DEEP: 'shotgun_spread', SHORT: 'singleback_wing', RUN: 'pistol_twins', SCREEN: 'iform_tight' },
+  stags:     { DEEP: 'trips_right', SHORT: 'pistol_twins', RUN: 'pistol_twins', SCREEN: 'shotgun_spread' },
+  serpents:  { SHORT: 'trips_right', QUICK: 'bunch_left', RUN: 'shotgun_spread' },
+};
+
+// ── DEFENSE SCHEME → FORMATION MAPPING ──
+var DEF_FORMATION_MAP = {
+  ZONE:     'shotgun_spread',   // uses cover_3 look (spread CBs, deep S)
+  BLITZ:    'iform_tight',      // uses zero_blitz look (LBs close)
+  PRESSURE: 'singleback_wing',  // press man look
+  HYBRID:   'shotgun_spread',   // pattern match look
 };
 
 // ── PRE-RENDERED GLOW SPRITE CACHE ──
@@ -675,5 +739,10 @@ export function createFieldRenderer(width, height) {
     drawPlayerDots(ctx, formation, losYard, topYard);
   }
 
-  return { canvas: canvas, render: render, FORMATIONS: FORMATIONS };
+  return {
+    canvas: canvas, render: render, FORMATIONS: FORMATIONS,
+    PLAY_FORMATION_MAP: PLAY_FORMATION_MAP,
+    TEAM_FORMATION_MAP: TEAM_FORMATION_MAP,
+    DEF_FORMATION_MAP: DEF_FORMATION_MAP
+  };
 }
