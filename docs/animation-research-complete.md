@@ -16,6 +16,7 @@
 | 9 | Mobile Scaling | Stay Canvas 2D, PWA now, Capacitor later, responsive sizing, particle pool, lazy-load, ~9KB total |
 | 10 | Ranked Impact Priorities | 25 features ranked, 5-phase implementation order, top 5 "premium feel" features |
 | 11 | Formation-Play Mapping System | 12 route templates, 6 defense modes, AnimationTimeline composition, 504 unique animations |
+| 12 | TORCH Card Special Animations | Tiered intros (bronze 300ms / silver 400ms / gold 500ms), 20 card-specific animations, persistent effects system, stacking priority, color palette |
 
 ---
 
