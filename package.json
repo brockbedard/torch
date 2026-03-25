@@ -24,7 +24,10 @@
     "vite": "^8.0.0"
   },
   "dependencies": {
+    "@vitejs/plugin-react": "^6.0.1",
     "howler": "^2.2.4",
-    "jsfxr": "^1.4.0"
+    "jsfxr": "^1.4.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   }
 }
