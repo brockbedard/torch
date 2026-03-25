@@ -248,10 +248,10 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
     } else {
       // Opponent gains against user — flat, factual, no energy
       if (isPass) {
-        line1 = off.name + ' catches it ' + pick(ROUTE_MODS) + '. ' + yards + ' yards.' + tackleTag;
+        line1 = off.name + ' catches it ' + pick(ROUTE_MODS) + '. Gain of ' + yards + '.' + tackleTag;
         if (res.gotFirstDown) line2 = 'First down ' + possTeam + '.';
       } else {
-        line1 = off.name + ' ' + pick(['finds a gap.','picks up yardage.','pushes ahead.']) + ' ' + yards + ' yards.' + tackleTag;
+        line1 = off.name + ' ' + pick(['finds a gap','picks up ' + yards,'pushes ahead for ' + yards]) + '.' + tackleTag;
         if (res.gotFirstDown) line2 = 'First down ' + possTeam + '.';
       }
     }

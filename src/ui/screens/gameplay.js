@@ -22,6 +22,7 @@ import { getConditionEffects } from '../../data/gameConditions.js';
 import { checkPlayCombos } from '../../data/playSequenceCombos.js';
 import { generateCommentary, generateContext } from '../../engine/commentary.js';
 import { initPointsAnim, playPointsSequence, isPointsAnimPlaying } from '../effects/torchPointsAnim.js';
+import { injectDevPanel, getForceResult } from '../components/devPanel.js';
 
 /* ═══════════════════════════════════════════
    CSS
@@ -165,6 +166,7 @@ const CSS = `
 
 /* celebrations */
 @keyframes T-shake{0%,100%{transform:translateX(0)}10%{transform:translateX(-6px)}20%{transform:translateX(6px)}30%{transform:translateX(-4px)}40%{transform:translateX(4px)}50%{transform:translateX(-2px)}60%{transform:translateX(2px)}}
+@keyframes T-td-confetti{0%{transform:translateY(0) rotate(0);opacity:0.9}20%{opacity:1}100%{transform:translateY(105vh) rotate(720deg);opacity:0}}
 .T-shaking{animation:T-shake .5s ease-out}
 @keyframes T-flash-green{0%{opacity:.6}100%{opacity:0}}
 @keyframes T-flash-red{0%{opacity:.6}100%{opacity:0}}
@@ -574,7 +576,7 @@ export function buildGameplay() {
 
     // Ball label
     const ydsToEz = s.yardsToEndzone;
-    const ballLabel = ydsToEz <= 50 ? 'OPP ' + ydsToEz : 'OWN ' + (100-ydsToEz);
+    const ballLabel = ydsToEz === 50 ? '50' : ydsToEz < 50 ? 'OPP ' + ydsToEz : 'OWN ' + (100-ydsToEz);
 
     // TORCH points for human
     const hTorch = hAbbr === 'CT' ? s.ctTorchPts : s.irTorchPts;
@@ -2327,26 +2329,111 @@ export function buildGameplay() {
       var holdMultiplier = isGoodForUser ? 1.5 : isBadForUser ? 0.9 : 1.0;
       var totalDur = Math.round((level === 3 ? 5000 : level === 2 ? 3500 : 2200) * holdMultiplier);
 
-      // ── BEAT 1: IMPACT (0-800ms) — yardage slams onto screen ──
-      var resultWrap = document.createElement('div');
-      resultWrap.className = 'T-clash-result';
-      if (resultPos) resultWrap.style.cssText = resultPos;
-      resultWrap.style.opacity = '0';
-      resultWrap.innerHTML = '<div class="T-clash-yds" style="color:' + resultColor + ';font-size:' + ydsFontSize + ';' + resultGlow + resultAnim + '">' + resultText + '</div>';
-      overlay.appendChild(resultWrap);
-      requestAnimationFrame(function() {
-        resultWrap.style.opacity = '1';
-        resultWrap.style.transition = 'opacity 0.3s';
-      });
+      // ── TD CELEBRATION — separate flow for touchdowns ──
+      if (isTD && isUserOff) {
+        // USER SCORES — "The Moment"
+        totalDur = 5500; // override hold time
 
-      // Update board immediately so scorebug shows new state
-      drawBug();
-      drawField();
+        // White flash
+        var tdFlash = document.createElement('div');
+        tdFlash.style.cssText = 'position:absolute;inset:0;background:#fff;z-index:10;opacity:0.8;transition:opacity 0.3s;';
+        overlay.appendChild(tdFlash);
+        setTimeout(function() { tdFlash.style.opacity = '0'; }, 150);
+        setTimeout(function() { tdFlash.remove(); }, 500);
 
-      // ── BEAT 2: CONTEXT (800ms-2s) — first down flash, commentary ──
+        // Haptic
+        if (navigator.vibrate) try { navigator.vibrate([30, 50, 80]); } catch(e) {}
+
+        // Result wrap — centered
+        var resultWrap = document.createElement('div');
+        resultWrap.className = 'T-clash-result';
+        resultWrap.style.opacity = '0';
+
+        // "TOUCHDOWN" — big spring slam
+        resultWrap.innerHTML =
+          "<div style=\"font-family:'Teko';font-weight:700;font-size:72px;color:#EBB010;letter-spacing:6px;text-shadow:0 0 40px rgba(235,176,16,0.5),0 0 80px rgba(235,176,16,0.25);animation:T-clash-yds 0.5s cubic-bezier(0.34,1.56,0.64,1) both;\">TOUCHDOWN</div>";
+        overlay.appendChild(resultWrap);
+        requestAnimationFrame(function() { resultWrap.style.opacity = '1'; resultWrap.style.transition = 'opacity 0.2s'; });
+
+        // Team name slides up after 600ms
+        setTimeout(function() {
+          var teamLine = document.createElement('div');
+          teamLine.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:" + hTeam.accent + ";letter-spacing:4px;text-shadow:0 0 16px " + hTeam.accent + "40;opacity:0;transform:translateY(10px);transition:opacity 0.3s,transform 0.3s;";
+          teamLine.textContent = hTeam.name.toUpperCase() + '!';
+          resultWrap.appendChild(teamLine);
+          requestAnimationFrame(function() { teamLine.style.opacity = '1'; teamLine.style.transform = 'translateY(0)'; });
+        }, 600);
+
+        // Confetti burst — team-colored particles rain down
+        setTimeout(function() {
+          for (var ci = 0; ci < 35; ci++) {
+            var conf = document.createElement('div');
+            var confX = 10 + Math.random() * 80;
+            var confSize = 3 + Math.random() * 4;
+            var confDur = 1500 + Math.random() * 1500;
+            var confDelay = Math.random() * 800;
+            var confColor = Math.random() > 0.5 ? hTeam.accent : (Math.random() > 0.5 ? '#EBB010' : '#fff');
+            conf.style.cssText = 'position:absolute;top:-10px;left:' + confX + '%;width:' + confSize + 'px;height:' + confSize + 'px;background:' + confColor + ';border-radius:1px;opacity:0.9;z-index:8;animation:T-td-confetti ' + confDur + 'ms ease-in ' + confDelay + 'ms both;';
+            overlay.appendChild(conf);
+          }
+        }, 400);
+
+        // Commentary at 1s
+        setTimeout(function() {
+          var gameCtx = gs.getSummary();
+          var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
+          setNarr(comm.line1, comm.line2 || '');
+          var labelEl = document.createElement('div');
+          labelEl.style.cssText = "color:#e8e6ff;opacity:0;transition:opacity 0.4s;margin-top:12px;font-family:'Rajdhani';font-size:16px;font-weight:700;line-height:1.3;text-align:center;max-width:280px;";
+          labelEl.textContent = comm.line1;
+          resultWrap.appendChild(labelEl);
+          requestAnimationFrame(function() { labelEl.style.opacity = '1'; });
+        }, 1000);
+
+        drawBug(); drawField();
+
+      } else if (isTD && !isUserOff) {
+        // OPPONENT SCORES — muted, move on
+        totalDur = 2500;
+        var resultWrap = document.createElement('div');
+        resultWrap.className = 'T-clash-result';
+        resultWrap.style.cssText = 'position:absolute;top:20%;left:50%;transform:translateX(-50%);width:90%;text-align:center;';
+        resultWrap.style.opacity = '0';
+        resultWrap.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:36px;color:#888;letter-spacing:3px;\">TOUCHDOWN</div>" +
+          "<div style=\"font-family:'Rajdhani';font-size:13px;color:#555;margin-top:4px;\">" + oTeam.name + " scores.</div>";
+        overlay.appendChild(resultWrap);
+        requestAnimationFrame(function() { resultWrap.style.opacity = '1'; resultWrap.style.transition = 'opacity 0.3s'; });
+
+        setTimeout(function() {
+          var gameCtx = gs.getSummary();
+          var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
+          setNarr(comm.line1, '');
+        }, 600);
+
+        drawBug(); drawField();
+
+      } else {
+        // ── NON-TD: Normal result display ──
+        var resultWrap = document.createElement('div');
+        resultWrap.className = 'T-clash-result';
+        if (resultPos) resultWrap.style.cssText = resultPos;
+        resultWrap.style.opacity = '0';
+        resultWrap.innerHTML = '<div class="T-clash-yds" style="color:' + resultColor + ';font-size:' + ydsFontSize + ';' + resultGlow + resultAnim + '">' + resultText + '</div>';
+        overlay.appendChild(resultWrap);
+        requestAnimationFrame(function() {
+          resultWrap.style.opacity = '1';
+          resultWrap.style.transition = 'opacity 0.3s';
+        });
+
+        drawBug(); drawField();
+      }
+
+      // ── BEAT 2: CONTEXT (800ms-2s) — first down, down & distance, commentary (non-TD only) ──
       setTimeout(function() {
+        if (isTD) return; // TD has its own commentary flow above
+
         // First down flash
-        if (gotFirstDown && !isTD) {
+        if (gotFirstDown) {
           var fdFlash = document.createElement('div');
           fdFlash.style.cssText = "font-family:'Teko';font-weight:700;font-size:24px;color:#00ff44;letter-spacing:3px;text-shadow:0 0 16px rgba(0,255,68,0.5);margin-top:8px;animation:T-clash-yds 0.5s ease-out both;";
           fdFlash.textContent = 'FIRST DOWN';
@@ -2354,25 +2441,24 @@ export function buildGameplay() {
           SND.chime();
         }
 
-        // New down & distance — prominent situational context
-        if (!isTD && !r.isInterception && !r.isFumbleLost) {
+        // New down & distance (skip if first down flash showing)
+        if (!r.isInterception && !r.isFumbleLost && !gotFirstDown) {
           var newS = gs.getSummary();
           var dnLabels = ['','1ST','2ND','3RD','4TH'];
           var dnText = (dnLabels[newS.down] || '') + ' & ' + newS.distance;
-          var dnColor = gotFirstDown ? '#00ff44' : newS.down >= 3 ? '#e03050' : '#EBB010';
+          var dnColor = newS.down >= 3 ? '#e03050' : '#EBB010';
           var dnEl = document.createElement('div');
           dnEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:" + dnColor + ";letter-spacing:3px;margin-top:6px;opacity:0.9;";
           dnEl.textContent = dnText;
           resultWrap.appendChild(dnEl);
         }
 
-        // Rich commentary via engine — show on overlay AND drive summary
+        // Commentary
         var gameCtx = gs.getSummary();
         var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
         var ctx = generateContext(gameCtx, hTeam.name, oTeam.name, res);
         setNarr(comm.line1, comm.line2 || ctx || '');
 
-        // Commentary label on overlay (replaces old play-name matchup label)
         var labelEl = document.createElement('div');
         labelEl.className = 'T-clash-label';
         labelEl.style.cssText = "color:#e8e6ff;opacity:0;transition:opacity 0.3s;margin-top:8px;font-family:'Rajdhani';font-size:15px;font-weight:700;line-height:1.3;text-align:center;max-width:280px;";
@@ -2382,7 +2468,6 @@ export function buildGameplay() {
 
         if (isFirstGame) {
           if (r.comboFired && snapCount <= 4) showTooltip(el, 'first_combo', 'Match the right player with the right play for bonus yards!', { delay: 800 });
-          if (isTD) showTooltip(el, 'first_td', 'TORCH points are your score \u2014 and your wallet.', { delay: 1500 });
         }
       }, 800);
 
@@ -2728,6 +2813,9 @@ export function buildGameplay() {
         description: convResult.success ? cm.choice.toUpperCase() + ' conversion is GOOD!' : cm.choice.toUpperCase() + ' conversion FAILED'
       },
       gotFirstDown: false,
+      playType: 'pass',
+      _torchEarned: 0,
+      _torchSources: [],
       _preSnap: {
         down: 1, distance: cm.choice === '2pt' ? 5 : 10,
         yardsToEndzone: cm.choice === '2pt' ? 5 : 10,
@@ -2893,6 +2981,29 @@ export function buildGameplay() {
   } else {
     drawPanel();
   }
+
+  // ── DEV PANEL ──
+  injectDevPanel(el, gs, {
+    refresh: function() { drawBug(); drawField(); drawPanel(); drawDriveSummary(); },
+    applyState: function(s) {
+      if (s.down) gs.down = s.down;
+      if (s.distance) gs.distance = s.distance;
+      if (s.ballPosition) gs.ballPosition = s.ballPosition;
+      if (s.ctScore !== undefined) gs.ctScore = s.ctScore;
+      if (s.irScore !== undefined) gs.irScore = s.irScore;
+      drawBug(); drawField(); drawPanel(); drawDriveSummary();
+    },
+    showPossCut: function(ev) {
+      showPossCut(ev, function() { nextSnap(); });
+    },
+    flipPossession: function() {
+      gs.flipPossession(gs.ballPosition);
+      drawBug(); drawField(); drawPanel(); drawDriveSummary();
+    },
+    openBooster: function() {
+      triggerShop('halftime', function() { drawBug(); drawField(); drawPanel(); });
+    },
+  });
 
   return el;
 }

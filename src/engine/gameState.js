@@ -542,7 +542,13 @@ export class GameState {
     const context = {
       playHistory: [], yardsToEndzone: fromYardLine,
       ballPosition: scoringTeam === 'CT' ? 100 - fromYardLine : fromYardLine,
-      down: 1, distance: fromYardLine, isConversion: true, scoreDiff: 0,
+      down: 1, distance: fromYardLine, isConversion: true,
+      scoreDiff: this.getScoreDiff(),
+      weather: this.weather || 'CLEAR',
+      momentum: this.momentum || 50,
+      coachBadge: this.coachBadge || '',
+      difficulty: this.difficulty || 'MEDIUM',
+      offenseIsHuman: sides.offenseIsHuman,
     };
 
     const result = resolveSnap(offPlay, defPlay, featuredOff, featuredDef,
