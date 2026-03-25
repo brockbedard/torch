@@ -331,50 +331,103 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     }
   }
 
-  // ── TORCH CARD EFFECTS (all 8 cards from torchCards.js) ──
+  // ── TORCH CARD EFFECTS (12 cards from torchCards.js v1) ──
   var oCard = context.offCard;
   var dCard = context.defCard;
 
-  // SCOUT TEAM (Gold, pre-snap): See opponent's play — handled in gameState.js (reveals defPlay to AI)
+  // SCOUT TEAM (Gold, pre-snap): reveals opponent play — handled in gameState.js
+  // PERSONNEL REPORT (Bronze, pre-snap): reveals opponent player — handled in gameplay.js
 
-  // SURE HANDS (Gold, reactive): Cancel a turnover on this snap
+  // SURE HANDS (Gold, reactive): Cancel a turnover
   if (oCard === 'sure_hands' && (result.isInterception || result.isFumbleLost)) {
     result.isInterception = false;
     result.isFumble = false;
     result.isFumbleLost = false;
     result.yards = Math.max(0, result.yards);
-    result.description = "SURE HANDS: Turnover cancelled! " + featuredOff.name + " holds on!";
+    result.description = "SURE HANDS! Turnover cancelled — " + featuredOff.name + " holds on!";
+    result.torchCardUsed = 'sure_hands';
   }
 
-  // HARD COUNT (Silver, pre-snap): Force opponent to discard — handled in gameplay.js (card selection phase)
-
-  // HOT ROUTE (Silver, pre-snap): Discard and redraw hand — handled in gameplay.js (card selection phase)
-
-  // FLAG ON THE PLAY (Silver, reactive): 75% chance to null a 10+ yard gain
-  if (dCard === 'flag_on_the_play' && result.yards >= 10 && !result.isTouchdown) {
-    if (Math.random() < 0.75) {
-      result.yards = 0;
-      result.description = "FLAG ON THE PLAY: Gain nullified by penalty!";
+  // CHALLENGE FLAG (Silver, reactive): Reroll, 50% chance of better outcome
+  if (oCard === 'challenge_flag') {
+    var origYards = result.yards;
+    var origTurnover = result.isInterception || result.isFumbleLost;
+    // Reroll the snap with same inputs
+    var reroll = resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlayers, defPlayers,
+      Object.assign({}, context, { offCard: null, defCard: null }));
+    var rerollBetter = reroll.yards > origYards || (origTurnover && !reroll.isInterception && !reroll.isFumbleLost);
+    if (Math.random() < 0.5 && rerollBetter) {
+      // Use the better reroll
+      Object.assign(result, reroll);
+      result.description = "CHALLENGE FLAG! Play overturned — " + result.yards + " yards!";
+    } else {
+      result.description = "CHALLENGE FLAG! Review stands. " + (origTurnover ? "Turnover confirmed." : origYards + " yards.");
     }
+    result.torchCardUsed = 'challenge_flag';
   }
 
-  // ONSIDE KICK (Silver, post-td): 35% recovery at 50 — handled in gameState.js (post-score phase)
+  // HARD COUNT (Silver, pre-snap): opponent play randomized — handled in gameplay.js
+
+  // DEEP SHOT (Silver, pre-snap): 2x yards on pass plays
+  if (oCard === 'deep_shot' && isPass && !result.isSack && !result.isInterception && !result.isFumbleLost && !result.isIncomplete) {
+    result.yards = Math.round(result.yards * 2);
+    result.description = "DEEP SHOT! " + featuredOff.name + " goes long — " + result.yards + " yards!";
+    result.torchCardUsed = 'deep_shot';
+  }
+
+  // TRUCK STICK (Silver, pre-snap): 2x yards on run, can't fumble
+  if (oCard === 'truck_stick' && isRunPlay && !result.isSack) {
+    result.yards = Math.round(Math.max(result.yards, 1) * 2);
+    result.isFumble = false;
+    result.isFumbleLost = false;
+    result.description = "TRUCK STICK! " + featuredOff.name + " trucks a defender — " + result.yards + " yards!";
+    result.torchCardUsed = 'truck_stick';
+  }
+
+  // PRIME TIME (Silver, pre-snap): featured player OVR = 99
+  // Already applied via ovrMods earlier — we add the difference here
+  if (oCard === 'prime_time') {
+    var primeBoost = Math.round(((99 - (featuredOff.ovr || 78)) / 5) * 0.5);
+    result.yards += primeBoost;
+    result.description = result.description || (featuredOff.name + " is in PRIME TIME mode! +" + primeBoost + " yard boost!");
+    result.torchCardUsed = 'prime_time';
+  }
+
+  // PLAY ACTION (Bronze, pre-snap): +5 yards if opponent played run defense
+  if (oCard === 'play_action') {
+    var isRunDef = defPlay && (defPlay.cardType === 'BLITZ' || defPlay.cardType === 'PRESSURE' || (defPlay.runDefMod && defPlay.runDefMod < -1));
+    if (isRunDef) {
+      result.yards += 5;
+      result.description = "PLAY ACTION! Defense bit on the run fake — +" + 5 + " yards!";
+    } else {
+      result.description = result.description || "Play action — defense wasn't fooled.";
+    }
+    result.torchCardUsed = 'play_action';
+  }
+
+  // SCRAMBLE DRILL (Bronze, pre-snap): convert negative play to 0 yards
+  if (oCard === 'scramble_drill' && result.yards < 0 && !result.isInterception && !result.isFumbleLost) {
+    result.yards = 0;
+    result.isSack = false;
+    result.description = "SCRAMBLE DRILL! " + featuredOff.name + " escapes the pressure — no loss!";
+    result.torchCardUsed = 'scramble_drill';
+  }
 
   // 12TH MAN (Bronze, pre-snap): +4 yards and double TORCH points
   if (oCard === 'twelfth_man') {
     result.yards += 4;
     result.torchMultiplier = 2;
-    if (!result.description) result.description = "12TH MAN: The crowd fuels a " + result.yards + "-yard gain!";
+    result.description = "12TH MAN! The crowd fuels a " + result.yards + "-yard gain!";
+    result.torchCardUsed = 'twelfth_man';
   }
 
-  // ICE (Bronze, pre-snap): Zero OVR bonus, no badge combo for opponent
+  // ICE (Bronze, pre-snap): Zero OVR bonus + no badge combo for opponent
   if (dCard === 'ice') {
-    // Undo OVR mods that were already applied (they came from applySquadOVR earlier)
     result.yards -= Math.round(ovrMods.meanMod);
-    // Zero out combo bonuses
     result.offComboYards = 0;
     result.offComboPts = 0;
-    if (!result.description || result.yards <= 0) result.description = "ICE: " + featuredOff.name + " is frozen out — no OVR, no combos!";
+    result.description = "ICE! " + featuredOff.name + " is frozen out — no OVR, no combos!";
+    result.torchCardUsed = 'ice';
   }
 
   // ── TD CHECK ──
