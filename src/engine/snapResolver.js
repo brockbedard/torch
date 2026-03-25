@@ -135,9 +135,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     mean -= 1;
   }
 
-  // Weather Modifiers
-  if (weather === 'WINDY' && isPass) mean -= 2.0;
-  if (weather === 'SNOW' && isRunPlay) mean -= 1.0;
+  // Weather modifiers applied post-resolution in gameplay.js via getConditionEffects()
 
   // === PASS PLAY RESOLUTION ===
   if (isPass) {
@@ -176,7 +174,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     if (covMean <= -2) compRate -= 0.08;
     else if (covMean <= -1) compRate -= 0.04;
     if (yardsToEndzone <= 10) compRate -= 0.05;
-    if (weather === 'RAIN') compRate -= 0.05;
+    // Rain completionMod applied post-resolution in gameplay.js
     if (momentum > 75) compRate -= 0.05;
     if (difficulty === 'EASY' && offenseIsHuman) compRate += 0.15;
 
@@ -227,7 +225,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
 
     // Fumble after catch
     let fumbleRate = offPlay.fumbleRate;
-    if (weather === 'SNOW') fumbleRate += 0.01;
+    fumbleRate += (context.fumbleRateMod || 0);  // Snow/rain fumble mod from conditions
     if (Math.random() < fumbleRate) {
       result.isFumble = true;
       result.isFumbleLost = Math.random() < 0.5;
@@ -333,22 +331,50 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     }
   }
 
-  // ── TORCH CARD EFFECTS ──
-  if (context.defCard === 'FLAG_ON_THE_PLAY' && result.yards >= 10 && !result.isTouchdown) {
+  // ── TORCH CARD EFFECTS (all 8 cards from torchCards.js) ──
+  var oCard = context.offCard;
+  var dCard = context.defCard;
+
+  // SCOUT TEAM (Gold, pre-snap): See opponent's play — handled in gameState.js (reveals defPlay to AI)
+
+  // SURE HANDS (Gold, reactive): Cancel a turnover on this snap
+  if (oCard === 'sure_hands' && (result.isInterception || result.isFumbleLost)) {
+    result.isInterception = false;
+    result.isFumble = false;
+    result.isFumbleLost = false;
+    result.yards = Math.max(0, result.yards);
+    result.description = "SURE HANDS: Turnover cancelled! " + featuredOff.name + " holds on!";
+  }
+
+  // HARD COUNT (Silver, pre-snap): Force opponent to discard — handled in gameplay.js (card selection phase)
+
+  // HOT ROUTE (Silver, pre-snap): Discard and redraw hand — handled in gameplay.js (card selection phase)
+
+  // FLAG ON THE PLAY (Silver, reactive): 75% chance to null a 10+ yard gain
+  if (dCard === 'flag_on_the_play' && result.yards >= 10 && !result.isTouchdown) {
     if (Math.random() < 0.75) {
       result.yards = 0;
-      result.description = "FLAG ON THE PLAY: Gain nullified by penalty.";
+      result.description = "FLAG ON THE PLAY: Gain nullified by penalty!";
     }
   }
 
-  if (context.offCard === 'CHALLENGE_FLAG' && (result.isInterception || result.isFumbleLost || (isConversion && !result.isTouchdown))) {
-    if (Math.random() < 0.75) {
-      result.isInterception = false;
-      result.isFumbleLost = false;
-      result.isTouchdown = isConversion;
-      result.yards = !isConversion ? 0 : yardsToEndzone;
-      result.description = "CHALLENGE FLAG: Play overturned by booth review!";
-    }
+  // ONSIDE KICK (Silver, post-td): 35% recovery at 50 — handled in gameState.js (post-score phase)
+
+  // 12TH MAN (Bronze, pre-snap): +4 yards and double TORCH points
+  if (oCard === 'twelfth_man') {
+    result.yards += 4;
+    result.torchMultiplier = 2;
+    if (!result.description) result.description = "12TH MAN: The crowd fuels a " + result.yards + "-yard gain!";
+  }
+
+  // ICE (Bronze, pre-snap): Zero OVR bonus, no badge combo for opponent
+  if (dCard === 'ice') {
+    // Undo OVR mods that were already applied (they came from applySquadOVR earlier)
+    result.yards -= Math.round(ovrMods.meanMod);
+    // Zero out combo bonuses
+    result.offComboYards = 0;
+    result.offComboPts = 0;
+    if (!result.description || result.yards <= 0) result.description = "ICE: " + featuredOff.name + " is frozen out — no OVR, no combos!";
   }
 
   // ── TD CHECK ──

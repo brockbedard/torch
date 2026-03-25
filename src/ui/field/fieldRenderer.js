@@ -40,170 +40,230 @@ const CFG = {
   defense: [59, 165, 93],   // Wolves green
 };
 
-// ── FORMATIONS ──
-// Positions as [widthPct (0-1, left-right), yardsFromLOS (positive = defense side)]
-// ── 7v7 FORMATIONS ──
-// Offense: 1 QB + 3 OL (C, LG, RG at LOS) + 3 skill (WR/RB/TE/FB/SLOT)
-// Defense: 3 DL (LDE, NT, RDE) + 4 coverage (LB/CB/S mix)
+// ── 7v7 FORMATIONS ── (Source: TORCH-7v7-FOOTBALL-RESEARCH.md)
+// Offense: 1 QB + 3 OL (LG, C, RG at LOS) + 3 skill (WR/RB/TE/SLOT)
+// Defense: 3 DL (DE, DT, DE) + 4 coverage (LB/CB/S)
 // y = yards from LOS. Negative = behind LOS (offense), positive = past LOS (defense).
 
-// Shared OL positions (wider splits so dots don't touch)
-// At 375px, 0.12 apart = 45px between centers (40px dot diameter = 5px gap)
+// OL cluster: ALWAYS 0.42, 0.50, 0.58 — tight ≤1yd splits per USA Football rules
 var OL = [
-  { pos: 'OL', x: 0.40, y: 0, num: 65 },
-  { pos: 'OL', x: 0.50, y: 0, num: 72 },
-  { pos: 'OL', x: 0.60, y: 0, num: 68 },
+  { pos: 'OL', x: 0.42, y: 0, num: 65 },  // LG
+  { pos: 'OL', x: 0.50, y: 0, num: 72 },  // C
+  { pos: 'OL', x: 0.58, y: 0, num: 68 },  // RG
 ];
-// Shared DL positions (aligned over OL gaps, 2 yards off = close but not touching)
+// DL: outside shade on guards + head-up on center, 1 yard off LOS
 var DL = [
-  { pos: 'DL', x: 0.38, y: 3, num: 91 },
-  { pos: 'DL', x: 0.50, y: 3, num: 97 },
-  { pos: 'DL', x: 0.62, y: 3, num: 93 },
+  { pos: 'DL', x: 0.35, y: 1, num: 91 },  // DE (weak)
+  { pos: 'DL', x: 0.50, y: 1, num: 97 },  // DT/NT
+  { pos: 'DL', x: 0.65, y: 1, num: 93 },  // DE (strong)
+];
+
+// ── DEFENSIVE ALIGNMENTS ── (Section 4)
+var DEF_BASE = [        // 3-1-2-1: Cover 1/3 base
+  { pos: 'LB', x: 0.50, y: 5, num: 55 },
+  { pos: 'CB', x: 0.10, y: 7, num: 24 },
+  { pos: 'CB', x: 0.90, y: 7, num: 2 },
+  { pos: 'S',  x: 0.50, y: 12, num: 21 },
+];
+var DEF_TWO_HIGH = [    // 3-1-1-2: Cover 2 shell — CBs play flat, S split deep halves
+  { pos: 'LB', x: 0.50, y: 5, num: 55 },
+  { pos: 'CB', x: 0.15, y: 5, num: 24 },
+  { pos: 'S',  x: 0.30, y: 12, num: 21 },
+  { pos: 'S',  x: 0.70, y: 12, num: 2 },
+];
+var DEF_COVER3 = [      // 3-0-3-1: three-under, one deep — no true LB
+  { pos: 'CB', x: 0.12, y: 6, num: 24 },
+  { pos: 'LB', x: 0.50, y: 5, num: 55 },
+  { pos: 'CB', x: 0.88, y: 6, num: 2 },
+  { pos: 'S',  x: 0.50, y: 12, num: 21 },
+];
+var DEF_PRESS = [       // 3-1-3-0: Cover 0 press man — no deep safety, max aggression
+  { pos: 'LB', x: 0.50, y: 3, num: 55 },
+  { pos: 'CB', x: 0.09, y: 0.5, num: 24 },
+  { pos: 'CB', x: 0.91, y: 0.5, num: 2 },
+  { pos: 'S',  x: 0.50, y: 5, num: 5 },
+];
+var DEF_NICKEL = [      // 3-2-1-1: extra LB for run support
+  { pos: 'LB', x: 0.38, y: 5, num: 55 },
+  { pos: 'LB', x: 0.62, y: 5, num: 42 },
+  { pos: 'CB', x: 0.50, y: 7, num: 24 },
+  { pos: 'S',  x: 0.50, y: 10, num: 21 },
 ];
 
 const FORMATIONS = {
-  // ── OFFENSIVE FORMATIONS ──
-  // Shotgun 2×2: balanced spread, 2 WRs each side. Pass-first look.
-  // Teams: Serpents (Air Raid), Boars (Run & Shoot)
-  'shotgun_spread': {
+  // ── Shotgun Deuce (2×2) ── Section 3A
+  // Balanced spread: 2 receivers each side, RB offset behind QB.
+  // Good for slant-arrow, smash, hitch concepts. Zone reads + draws.
+  'shotgun_deuce': {
     offense: OL.concat([
-      { pos: 'QB', x: 0.50, y: -5, num: 7 },
-      { pos: 'WR', x: 0.08, y: 0, num: 1 },    // split wide left
-      { pos: 'SLOT', x: 0.25, y: -1, num: 3 },  // slot left
-      { pos: 'WR', x: 0.92, y: 0, num: 11 },    // split wide right
+      { pos: 'WR',  x: 0.08, y: 0, num: 1 },     // wide left
+      { pos: 'WR',  x: 0.92, y: 0, num: 11 },     // wide right
+      { pos: 'QB',  x: 0.50, y: -4, num: 7 },     // shotgun
+      { pos: 'RB',  x: 0.55, y: -6, num: 25 },    // offset right behind QB
     ]),
-    defense: DL.concat([
-      { pos: 'CB', x: 0.08, y: 5, num: 24 },    // on WR #1
-      { pos: 'CB', x: 0.25, y: 5, num: 2 },     // on SLOT #3
-      { pos: 'CB', x: 0.92, y: 5, num: 5 },     // on WR #11
-      { pos: 'S', x: 0.50, y: 11, num: 21 },    // deep center
+    defense: DL.concat(DEF_BASE),
+  },
+  // ── Trips (3×1) ── Section 3B
+  // 3 receivers strong side, iso WR backside. Flood & mesh concepts.
+  // Trips to screen-right (QB's right). WR1 isolated backside.
+  'trips': {
+    offense: OL.concat([
+      { pos: 'WR',   x: 0.08, y: 0, num: 1 },     // iso backside (wide left)
+      { pos: 'WR',   x: 0.80, y: 0, num: 11 },    // trips outside
+      { pos: 'SLOT', x: 0.72, y: -1, num: 82 },   // trips middle (off LOS)
+      { pos: 'QB',   x: 0.50, y: -4, num: 7 },
+    ]),
+    defense: DL.concat([  // Cover 3 look — 3 under trips side, S deep
+      { pos: 'CB', x: 0.08, y: 7, num: 24 },      // on iso WR
+      { pos: 'CB', x: 0.80, y: 6, num: 2 },       // on trips outside
+      { pos: 'LB', x: 0.72, y: 5, num: 55 },      // robber under trips
+      { pos: 'S',  x: 0.55, y: 12, num: 21 },     // deep, cheated strong
     ]),
   },
-  // Trips Right: 3 WRs to QB's right (screen-left). Flood concepts.
-  // Teams: Serpents, Stags
-  'trips_right': {
+  // ── Twins (2×1 Open) ── Section 3C
+  // 2 receivers strong side (WR + SLOT), iso WR backside. RB in backfield.
+  // Strong side screen-right. Good for slant-wheel, comeback-vertical.
+  'twins': {
     offense: OL.concat([
-      { pos: 'QB', x: 0.50, y: -5, num: 7 },
-      { pos: 'WR', x: 0.25, y: 0, num: 1 },       // inside of trips (on LOS)
-      { pos: 'WR', x: 0.165, y: -1, num: 82 },    // middle of trips (equidistant)
-      { pos: 'WR', x: 0.08, y: 0, num: 11 },      // outside of trips (on LOS)
+      { pos: 'WR',   x: 0.08, y: 0, num: 1 },     // wide left (iso backside)
+      { pos: 'WR',   x: 0.92, y: 0, num: 11 },    // wide right (twins outside)
+      { pos: 'SLOT', x: 0.78, y: -1, num: 82 },   // slot right (twins inside, off LOS)
+      { pos: 'QB',   x: 0.50, y: -4, num: 7 },
     ]),
-    defense: DL.concat([
-      { pos: 'CB', x: 0.08, y: 5, num: 24 },     // on outside WR #11
-      { pos: 'CB', x: 0.165, y: 5, num: 2 },     // on middle WR #82
-      { pos: 'CB', x: 0.25, y: 5, num: 5 },      // on inside WR #1
-      { pos: 'S', x: 0.55, y: 11, num: 21 },     // deep, cheated weak side
+    defense: DL.concat(DEF_BASE),
+  },
+  // ── Tight Bunch ── Section 3D
+  // 3 skill players stacked/bunched within ~3 yards. Man-coverage killer.
+  // Bunch to screen-right. WR1 iso backside.
+  'bunch': {
+    offense: OL.concat([
+      { pos: 'WR',   x: 0.08, y: 0, num: 1 },     // iso backside
+      { pos: 'TE',   x: 0.65, y: 0, num: 82 },    // bunch point (on LOS, tight to RG)
+      { pos: 'WR',   x: 0.70, y: -1, num: 11 },   // stacked behind TE
+      { pos: 'QB',   x: 0.50, y: -4, num: 7 },
+    ]),
+    defense: DL.concat([  // Press/bracket on bunch, CB on iso
+      { pos: 'CB', x: 0.08, y: 7, num: 24 },      // on iso WR
+      { pos: 'CB', x: 0.67, y: 5, num: 2 },       // on bunch
+      { pos: 'LB', x: 0.50, y: 5, num: 55 },      // spy / hook zone
+      { pos: 'S',  x: 0.50, y: 12, num: 21 },     // deep middle
     ]),
   },
-  // I-Form Tight: power run. QB under center, FB lead, RB deep, WR split wide.
-  // Teams: Werewolves (Triple Option)
-  'iform_tight': {
+  // ── I-Form / Pistol ── Section 3E
+  // Power run formation. QB at pistol depth, RB directly behind. 2 WRs wide.
+  // Play-action devastating. OL fires forward in run blocking.
+  'iform_pistol': {
     offense: OL.concat([
-      { pos: 'QB', x: 0.50, y: -2, num: 7 },     // under center
-      { pos: 'FB', x: 0.50, y: -5, num: 34 },    // fullback lead blocker
-      { pos: 'RB', x: 0.50, y: -7, num: 25 },    // tailback
-      { pos: 'WR', x: 0.90, y: 0, num: 11 },     // split end right
-    ]),
-    defense: DL.concat([
-      { pos: 'LB', x: 0.35, y: 5, num: 55 },     // strong side LB
-      { pos: 'LB', x: 0.50, y: 6, num: 42 },     // middle LB
-      { pos: 'CB', x: 0.90, y: 5, num: 24 },     // on split end WR #11
-      { pos: 'S', x: 0.50, y: 11, num: 21 },     // deep center
-    ]),
-  },
-  // Singleback Wing: balanced run/pass. QB under center, RB offset, TE wing, WR split.
-  // Teams: Stags, Werewolves
-  'singleback_wing': {
-    offense: OL.concat([
-      { pos: 'QB', x: 0.50, y: -3, num: 7 },     // under center
-      { pos: 'RB', x: 0.35, y: -5, num: 25 },    // offset left
-      { pos: 'TE', x: 0.72, y: -1, num: 82 },    // wing TE off line
-      { pos: 'WR', x: 0.08, y: 0, num: 1 },      // split wide left
-    ]),
-    defense: DL.concat([
-      { pos: 'CB', x: 0.08, y: 5, num: 24 },
-      { pos: 'LB', x: 0.40, y: 6, num: 55 },
-      { pos: 'LB', x: 0.65, y: 6, num: 42 },
-      { pos: 'S', x: 0.50, y: 11, num: 21 },
-    ]),
-  },
-  // Bunch Left: 3 WRs clustered to QB's left (screen-right). Pick/rub routes.
-  // Teams: Boars (Run & Shoot), Serpents
-  'bunch_left': {
-    offense: OL.concat([
-      { pos: 'QB', x: 0.50, y: -5, num: 7 },
-      { pos: 'WR', x: 0.82, y: 0, num: 1 },       // point of bunch (on LOS)
-      { pos: 'WR', x: 0.74, y: -2, num: 82 },     // left wing (equidistant from #1)
-      { pos: 'SLOT', x: 0.90, y: -2, num: 3 },    // right wing (equidistant from #1)
-    ]),
-    defense: DL.concat([
-      { pos: 'CB', x: 0.74, y: 5, num: 24 },
-      { pos: 'CB', x: 0.90, y: 5, num: 2 },
-      { pos: 'LB', x: 0.50, y: 6, num: 55 },
-      { pos: 'S', x: 0.45, y: 11, num: 21 },
-    ]),
-  },
-  // Pistol Twins: QB in short shotgun, RB behind, mirrored WRs. Read-option/RPO.
-  // Teams: Stags (Spread RPO), Boars
-  'pistol_twins': {
-    offense: OL.concat([
-      { pos: 'QB', x: 0.50, y: -3, num: 7 },     // pistol depth
-      { pos: 'RB', x: 0.50, y: -6, num: 25 },    // behind QB
-      { pos: 'WR', x: 0.08, y: 0, num: 1 },      // wide left
-      { pos: 'WR', x: 0.92, y: 0, num: 11 },     // wide right
-    ]),
-    defense: DL.concat([
-      { pos: 'CB', x: 0.08, y: 5, num: 24 },
-      { pos: 'CB', x: 0.92, y: 5, num: 2 },
-      { pos: 'LB', x: 0.50, y: 6, num: 55 },
-      { pos: 'S', x: 0.50, y: 11, num: 21 },
-    ]),
-  },
-  // Empty 3-Wide: no backfield, 3 WRs spread on the LOS. Max pass protection.
-  // Teams: Serpents (Air Raid)
-  'empty_3_wide': {
-    offense: OL.concat([
-      { pos: 'QB', x: 0.50, y: -5, num: 7 },
       { pos: 'WR', x: 0.08, y: 0, num: 1 },       // wide left
-      { pos: 'WR', x: 0.25, y: 0, num: 82 },      // wide left slot (on LOS, spread)
       { pos: 'WR', x: 0.92, y: 0, num: 11 },      // wide right
+      { pos: 'QB', x: 0.50, y: -2, num: 7 },      // pistol depth
+      { pos: 'RB', x: 0.50, y: -5, num: 25 },     // directly behind QB
     ]),
-    defense: DL.concat([
-      { pos: 'CB', x: 0.08, y: 5, num: 24 },     // on WR #1
-      { pos: 'CB', x: 0.25, y: 5, num: 5 },      // on WR #82
-      { pos: 'CB', x: 0.92, y: 5, num: 2 },      // on WR #11
-      { pos: 'S', x: 0.50, y: 11, num: 21 },     // deep center
+    defense: DL.concat(DEF_NICKEL),  // Nickel: 2 LBs in box for run support
+  },
+  // ── Empty ── Section 3F
+  // No RB. All 3 skill out as receivers. Maximum passing threat.
+  // QB alone in backfield. QB draw is the only run option.
+  'empty': {
+    offense: OL.concat([
+      { pos: 'WR',   x: 0.05, y: 0, num: 1 },     // wide left
+      { pos: 'SLOT', x: 0.25, y: -1, num: 82 },   // left slot
+      { pos: 'WR',   x: 0.95, y: 0, num: 11 },    // wide right
+      { pos: 'QB',   x: 0.50, y: -5, num: 7 },    // alone, deep shotgun
     ]),
+    defense: DL.concat(DEF_COVER3),  // Cover 3: three-under zone, S deep
   },
 };
 
-// Backward compat aliases
-FORMATIONS['shotgun_2x2'] = FORMATIONS['shotgun_spread'];
-FORMATIONS['iform_under_center'] = FORMATIONS['iform_tight'];
+// Backward compat aliases (old names → new)
+FORMATIONS['shotgun_spread'] = FORMATIONS['shotgun_deuce'];
+FORMATIONS['shotgun_2x2'] = FORMATIONS['shotgun_deuce'];
+FORMATIONS['trips_right'] = FORMATIONS['trips'];
+FORMATIONS['iform_tight'] = FORMATIONS['iform_pistol'];
+FORMATIONS['iform_under_center'] = FORMATIONS['iform_pistol'];
+FORMATIONS['singleback_wing'] = FORMATIONS['twins'];
+FORMATIONS['bunch_left'] = FORMATIONS['bunch'];
+FORMATIONS['pistol_twins'] = FORMATIONS['twins'];
+FORMATIONS['empty_3_wide'] = FORMATIONS['empty'];
 
 // ── PLAY TYPE → FORMATION MAPPING ──
 var PLAY_FORMATION_MAP = {
-  DEEP:   'empty_3_wide',
-  SHORT:  'shotgun_spread',
-  QUICK:  'bunch_left',
-  SCREEN: 'trips_right',
-  RUN:    'iform_tight',
+  DEEP:   'empty',           // max receivers, vertical threats
+  SHORT:  'shotgun_deuce',   // balanced, 2-level reads
+  QUICK:  'bunch',           // pick/rub routes, quick release
+  SCREEN: 'trips',           // flood the trips side, screen to flat
+  RUN:    'iform_pistol',    // power run, play-action
 };
 
-// Per-team overrides
+// Per-team overrides (Source: TORCH-TEAM-SCHEME-IDENTITY.md)
+// Each team favors formations that match their offensive philosophy.
 var TEAM_FORMATION_MAP = {
-  sentinels: { SHORT: 'trips_right', SCREEN: 'empty_3_wide', RUN: 'shotgun_spread' },
-  wolves:    { DEEP: 'shotgun_spread', SHORT: 'singleback_wing', RUN: 'pistol_twins', SCREEN: 'iform_tight' },
-  stags:     { DEEP: 'trips_right', SHORT: 'pistol_twins', RUN: 'pistol_twins', SCREEN: 'shotgun_spread' },
-  serpents:  { SHORT: 'trips_right', QUICK: 'bunch_left', RUN: 'shotgun_spread' },
+  // Boars — Power Spread: I-Form 40%, Twins 30%, Deuce 20%, Trips 10%
+  sentinels: { DEEP: 'twins', SHORT: 'twins', QUICK: 'shotgun_deuce', SCREEN: 'twins', RUN: 'iform_pistol' },
+  // Werewolves — Spread Option: Deuce 35%, Pistol 25%, Trips 25%, Empty 10%
+  wolves:    { DEEP: 'trips', SHORT: 'shotgun_deuce', QUICK: 'shotgun_deuce', SCREEN: 'trips', RUN: 'shotgun_deuce' },
+  // Stags — Air Raid: Trips 35%, Deuce 30%, Empty 20%, Bunch 10%
+  stags:     { DEEP: 'empty', SHORT: 'trips', QUICK: 'trips', SCREEN: 'shotgun_deuce', RUN: 'shotgun_deuce' },
+  // Serpents — Multiple/Pro Style: Twins 25%, Bunch 20%, Deuce 20%, I-Form 15%, Trips 15%
+  serpents:  { DEEP: 'twins', SHORT: 'bunch', QUICK: 'bunch', SCREEN: 'twins', RUN: 'twins' },
 };
 
-// ── DEFENSE SCHEME → FORMATION MAPPING ──
+// Weighted formation pools for variety (team → playType → [[formation, weight], ...])
+// When rendering, pick from this pool randomly (weighted) instead of always the same formation.
+var TEAM_FORMATION_POOLS = {
+  sentinels: {
+    RUN:    [['iform_pistol',50],['twins',30],['shotgun_deuce',20]],
+    SHORT:  [['twins',35],['iform_pistol',30],['shotgun_deuce',25],['trips',10]],
+    DEEP:   [['twins',30],['shotgun_deuce',30],['trips',25],['empty',15]],
+    QUICK:  [['shotgun_deuce',35],['twins',35],['bunch',20],['trips',10]],
+    SCREEN: [['twins',40],['shotgun_deuce',30],['iform_pistol',20],['trips',10]],
+  },
+  wolves: {
+    RUN:    [['shotgun_deuce',40],['iform_pistol',30],['trips',20],['twins',10]],
+    SHORT:  [['shotgun_deuce',35],['trips',30],['twins',20],['iform_pistol',15]],
+    DEEP:   [['trips',35],['shotgun_deuce',30],['empty',20],['twins',15]],
+    QUICK:  [['shotgun_deuce',35],['trips',30],['twins',25],['empty',10]],
+    SCREEN: [['trips',35],['shotgun_deuce',35],['twins',20],['empty',10]],
+  },
+  stags: {
+    RUN:    [['shotgun_deuce',40],['trips',30],['twins',20],['iform_pistol',10]],
+    SHORT:  [['trips',35],['shotgun_deuce',30],['empty',20],['bunch',15]],
+    DEEP:   [['empty',30],['trips',30],['shotgun_deuce',25],['bunch',15]],
+    QUICK:  [['trips',35],['shotgun_deuce',30],['empty',20],['bunch',15]],
+    SCREEN: [['shotgun_deuce',35],['trips',35],['empty',20],['bunch',10]],
+  },
+  serpents: {
+    RUN:    [['twins',30],['iform_pistol',25],['shotgun_deuce',25],['bunch',20]],
+    SHORT:  [['bunch',25],['twins',25],['shotgun_deuce',20],['trips',20],['iform_pistol',10]],
+    DEEP:   [['twins',25],['trips',25],['empty',20],['shotgun_deuce',20],['bunch',10]],
+    QUICK:  [['bunch',30],['twins',25],['shotgun_deuce',25],['trips',20]],
+    SCREEN: [['twins',30],['bunch',25],['shotgun_deuce',25],['trips',20]],
+  },
+};
+
+// Pick a weighted-random formation for a team + play type
+function pickFormation(teamId, playType) {
+  var pools = TEAM_FORMATION_POOLS[teamId];
+  if (!pools) return null;
+  var pool = pools[playType];
+  if (!pool) return null;
+  var total = 0;
+  for (var i = 0; i < pool.length; i++) total += pool[i][1];
+  var r = Math.random() * total;
+  for (var j = 0; j < pool.length; j++) {
+    r -= pool[j][1];
+    if (r <= 0) return pool[j][0];
+  }
+  return pool[pool.length - 1][0];
+}
+
+// ── DEFENSE SCHEME → ALIGNMENT MAPPING ──
+// Maps TORCH's engine coverage names to the research's 5 defensive looks
 var DEF_FORMATION_MAP = {
-  ZONE:     'shotgun_spread',   // uses cover_3 look (spread CBs, deep S)
-  BLITZ:    'iform_tight',      // uses zero_blitz look (LBs close)
-  PRESSURE: 'singleback_wing',  // press man look
-  HYBRID:   'shotgun_spread',   // pattern match look
+  ZONE:     'shotgun_deuce',   // Base 3-1-2-1 (via deuce's default def)
+  BLITZ:    'iform_pistol',    // Nickel 3-2-1-1 (via iform's default def)
+  PRESSURE: 'bunch',           // Press bracket look
+  HYBRID:   'shotgun_deuce',   // Base / pattern match
 };
 
 // ── PRE-RENDERED GLOW SPRITE CACHE ──
@@ -327,9 +387,10 @@ export function createFieldRenderer(width, height) {
     nCtx.fillRect(Math.random() * width, Math.random() * height, 1, 1);
   }
 
-  function drawStaticField(centerYard) {
+  function drawStaticField(centerYard, extraYards) {
     var c = sCtx;
     var topYard = centerYard - VISIBLE_YARDS / 2;
+    var renderHeight = height + (extraYards || 0) * YPX;
 
     // Convert absolute yard to canvas Y
     function yardToY(absYard) {
@@ -338,7 +399,7 @@ export function createFieldRenderer(width, height) {
 
     // 1. Background
     c.fillStyle = CFG.bg;
-    c.fillRect(0, 0, fieldW, height);
+    c.fillRect(0, 0, fieldW, renderHeight);
 
     // 2a. Mowing stripes (alternating 5-yard bands — broadcast look)
     for (var myd = 0; myd < 120; myd += 5) {
@@ -355,23 +416,23 @@ export function createFieldRenderer(width, height) {
     lightGrad.addColorStop(0.4, 'rgba(140,180,140,0.015)');
     lightGrad.addColorStop(1, 'rgba(0,0,0,0)');
     c.fillStyle = lightGrad;
-    c.fillRect(0, 0, fieldW, height);
+    c.fillRect(0, 0, fieldW, renderHeight);
 
-    // 2c. Vignette (edge darkening)
+    // 2c. Vignette (edge darkening) — always based on visible height, not buffer
     var vigGrad = c.createRadialGradient(fieldW / 2, height / 2, Math.min(fieldW, height) * 0.35, fieldW / 2, height / 2, Math.max(fieldW, height) * 0.75);
     vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
     vigGrad.addColorStop(0.5, 'rgba(0,0,0,0.08)');
     vigGrad.addColorStop(1, 'rgba(0,0,0,0.25)');
     c.fillStyle = vigGrad;
-    c.fillRect(0, 0, fieldW, height);
+    c.fillRect(0, 0, fieldW, renderHeight);
 
     // 2d. Atmospheric depth (top = far = slightly darker)
-    var depthGrad = c.createLinearGradient(0, 0, 0, height);
+    var depthGrad = c.createLinearGradient(0, 0, 0, renderHeight);
     depthGrad.addColorStop(0, 'rgba(0,0,0,0.10)');
     depthGrad.addColorStop(0.35, 'rgba(0,0,0,0.03)');
     depthGrad.addColorStop(1, 'rgba(0,0,0,0)');
     c.fillStyle = depthGrad;
-    c.fillRect(0, 0, fieldW, height);
+    c.fillRect(0, 0, fieldW, renderHeight);
 
     // 3. End zones (yards 0-10 and 110-120)
     drawEndZonePortrait(c, 0, 10, true, topYard);
@@ -449,7 +510,7 @@ export function createFieldRenderer(width, height) {
 
     // 9. Noise overlay (pre-rendered)
     c.globalAlpha = CFG.noise.opacity;
-    c.drawImage(noiseCv, 0, 0, fieldW, height);
+    c.drawImage(noiseCv, 0, 0, fieldW, renderHeight);
     c.globalAlpha = 1;
 
     // 10. Double-line sideline border
@@ -627,7 +688,7 @@ export function createFieldRenderer(width, height) {
   }
 
   function drawPlayerDots(c, formation, losYard, topYard, offTeamId, defTeamId) {
-    var form = FORMATIONS[formation] || FORMATIONS['shotgun_spread'];
+    var form = FORMATIONS[formation] || FORMATIONS['shotgun_deuce'];
     var DOT_R = 24;
     var CORE_R = 14;
 
@@ -722,6 +783,8 @@ export function createFieldRenderer(width, height) {
 
   // ── PUBLIC RENDER ──
   var _lastCenter = -1;
+  var _staticPadding = 0;  // extra yards rendered below the visible window
+  var _staticTopYard = 0;  // topYard used when static was last rendered
 
   /**
    * Render the field.
@@ -730,26 +793,60 @@ export function createFieldRenderer(width, height) {
    * @param {number} state.losYard - LOS absolute yard
    * @param {number} state.firstDownYard - first down marker yard
    * @param {string} state.formation - formation key
+   * @param {number} [state.cameraPadding] - extra yards to pre-render below for smooth panning
    */
   function render(state) {
     var ballYard = state.ballYard || 50;
     var losYard = state.losYard || ballYard;
     var fdYard = state.firstDownYard || losYard + 10;
     var formation = state.formation || 'shotgun_2x2';
+    var cameraPadding = state.cameraPadding || 0;
 
     // Clamp center so we don't show beyond the field
     var center = Math.max(VISIBLE_YARDS / 2, Math.min(120 - VISIBLE_YARDS / 2, ballYard));
     var topYard = center - VISIBLE_YARDS / 2;
 
-    // Re-render static layer if center changed
-    if (Math.abs(center - _lastCenter) > 0.5) {
-      drawStaticField(center);
+    // Re-render static layer if center changed significantly OR padding changed
+    var needsRedraw = Math.abs(center - _lastCenter) > 0.5 || cameraPadding !== _staticPadding;
+    // During camera follow (cameraPadding > 0), use the padded static and pan via drawImage offset
+    if (cameraPadding > 0 && _staticPadding === cameraPadding && _lastCenter !== -1) {
+      // Check if the current view is still within the pre-rendered buffer
+      var bufferTopYard = _staticTopYard;
+      var bufferBottomYard = _staticTopYard + VISIBLE_YARDS + _staticPadding;
+      if (topYard >= bufferTopYard && topYard + VISIBLE_YARDS <= bufferBottomYard + 0.5) {
+        needsRedraw = false;  // pan within existing buffer, no redraw needed
+      }
+    }
+
+    if (needsRedraw) {
+      _staticPadding = cameraPadding;
+      if (cameraPadding > 0) {
+        // Render oversized static field (visible + padding) for smooth camera panning
+        var padPx = Math.round(cameraPadding * YPX * DPR);
+        staticCv.height = height * DPR + padPx;
+        sCtx.scale(DPR, DPR);
+        drawStaticField(center, cameraPadding);
+        _staticTopYard = topYard;
+      } else {
+        // Normal size
+        if (staticCv.height !== height * DPR) {
+          staticCv.height = height * DPR;
+          sCtx.scale(DPR, DPR);
+        }
+        drawStaticField(center, 0);
+        _staticTopYard = topYard;
+      }
       _lastCenter = center;
     }
 
-    // Composite: static + dynamic
+    // Composite: static → main canvas (pan by shifting source Y for camera follow)
     ctx.clearRect(0, 0, width, height);
-    ctx.drawImage(staticCv, 0, 0, width * DPR, height * DPR, 0, 0, width, height);
+    var srcOffY = 0;
+    if (_staticPadding > 0 && _staticTopYard !== topYard) {
+      srcOffY = Math.round((topYard - _staticTopYard) * YPX * DPR);
+      srcOffY = Math.max(0, Math.min(srcOffY, staticCv.height - height * DPR));
+    }
+    ctx.drawImage(staticCv, 0, srcOffY, width * DPR, height * DPR, 0, 0, width, height);
 
     // Down-and-distance zone shading (yellow tint between LOS and 1st down)
     if (fdYard > losYard && fdYard <= 110) {
@@ -775,6 +872,8 @@ export function createFieldRenderer(width, height) {
     canvas: canvas, render: render, FORMATIONS: FORMATIONS,
     PLAY_FORMATION_MAP: PLAY_FORMATION_MAP,
     TEAM_FORMATION_MAP: TEAM_FORMATION_MAP,
-    DEF_FORMATION_MAP: DEF_FORMATION_MAP
+    TEAM_FORMATION_POOLS: TEAM_FORMATION_POOLS,
+    DEF_FORMATION_MAP: DEF_FORMATION_MAP,
+    pickFormation: pickFormation
   };
 }

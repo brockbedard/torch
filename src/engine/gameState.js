@@ -207,7 +207,7 @@ export class GameState {
     if (offPlay === undefined || offPlay === null) {
       // Reveal Card Sim-Benefits
       let oppPlay = null;
-      if (['SCOUT_TEAM', 'FILM_LEAK', 'SIDELINE_PHONE', 'PERSONNEL_REPORT'].includes(offCard)) {
+      if (offCard === 'scout_team') {
         oppPlay = defPlay;
       }
       offPlay = aiSelectPlay(sides.offHand, 'offense', this.difficulty, { ...situation, oppPlay });
@@ -556,9 +556,27 @@ export class GameState {
       else this.irScore += points;
     }
 
-    this.flipPossession(50);
+    // ONSIDE KICK: 35% chance to recover at midfield instead of flipping possession
+    var onsideRecovery = false;
+    var scoringInv = scoringTeam === 'CT' ? this.humanTorchCards : this.cpuTorchCards;
+    var onsideIdx = scoringInv.indexOf('onside_kick');
+    if (onsideIdx >= 0) {
+      scoringInv.splice(onsideIdx, 1);  // consume the card
+      if (Math.random() < 0.35) {
+        onsideRecovery = true;
+        // Don't flip — scoring team keeps it at the 50
+        this.ballPosition = 50;
+        this.down = 1;
+        this.distance = 10;
+        this.drivePlays = 0;
+        this.drivePlayHistory = [];
+      }
+    }
+    if (!onsideRecovery) {
+      this.flipPossession(50);
+    }
     this._checkHalfEnd();
-    return { success, points: success ? points : 0, result };
+    return { success, points: success ? points : 0, result, onsideRecovery };
   }
 
   /** Halftime Booster Shop — port of halftime_booster logic from sim */

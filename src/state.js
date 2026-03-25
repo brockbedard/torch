@@ -11,8 +11,8 @@ import { STAGS_OFF_PLAYS, STAGS_DEF_PLAYS } from './data/stagsPlays.js';
 import { SERPENTS_OFF_PLAYS, SERPENTS_DEF_PLAYS } from './data/serpentsPlays.js';
 import { getOffenseRoster, getDefenseRoster } from './data/players.js';
 
-export var VERSION = '0.23.0';
-export var VERSION_NAME = 'Gameday';
+export var VERSION = '0.24.0';
+export var VERSION_NAME = 'Scheme Identity';
 
 export var GS = null;
 
@@ -59,6 +59,29 @@ export function getOffCards(teamId) {
 
 export function getDefCards(teamId) {
   return _playLookup[teamId] ? _playLookup[teamId].defense : [];
+}
+
+// ============================================================
+// TEAM SCHEME DRAW WEIGHTS — (Source: TORCH-TEAM-SCHEME-IDENTITY.md)
+// Weights bias which card you draw next from the available pool.
+// Higher weight = more likely to appear in your hand.
+// Maps playType → draw weight multiplier per team.
+// ============================================================
+
+export var TEAM_DRAW_WEIGHTS = {
+  // Boars — Power Spread: 55% run / 45% pass. Run cards dominate.
+  sentinels: { RUN: 4, SHORT: 1.5, DEEP: 1, QUICK: 1, SCREEN: 0.5 },
+  // Werewolves — Spread Option: 50/50 but QB-run heavy. Zone read + QB draw + balanced pass.
+  wolves:    { RUN: 3, SHORT: 2, DEEP: 1, QUICK: 2, SCREEN: 2 },
+  // Stags — Air Raid: 30% run / 70% pass. Quick + deep pass dominate.
+  stags:     { RUN: 0.5, SHORT: 3, DEEP: 3, QUICK: 4, SCREEN: 2 },
+  // Serpents — Multiple/Pro Style: 45/55 balanced. No bias — master of none.
+  serpents:  { RUN: 2, SHORT: 2, DEEP: 2, QUICK: 2, SCREEN: 2 },
+};
+
+export function getDrawWeight(teamId, playType) {
+  var tw = TEAM_DRAW_WEIGHTS[teamId];
+  return (tw && tw[playType]) || 1;
 }
 
 // ============================================================

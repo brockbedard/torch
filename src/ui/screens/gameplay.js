@@ -5,7 +5,7 @@
  */
 
 import { SND } from '../../engine/sound.js';
-import { GS, setGs, getTeam, getOtherTeam, fmtClock, getOffCards, getDefCards } from '../../state.js';
+import { GS, setGs, getTeam, getOtherTeam, fmtClock, getOffCards, getDefCards, getDrawWeight } from '../../state.js';
 import { BADGE_LABELS } from '../../data/badges.js';
 import { GameState } from '../../engine/gameState.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
@@ -21,6 +21,7 @@ import { renderTeamBadge } from '../../data/teamLogos.js';
 import { getConditionEffects } from '../../data/gameConditions.js';
 import { checkPlayCombos } from '../../data/playSequenceCombos.js';
 import { generateCommentary, generateContext } from '../../engine/commentary.js';
+import { initPointsAnim, playPointsSequence, isPointsAnimPlaying } from '../effects/torchPointsAnim.js';
 
 /* ═══════════════════════════════════════════
    CSS
@@ -367,6 +368,7 @@ function resolveRoster(ids, pool) {
    ═══════════════════════════════════════════ */
 export function buildGameplay() {
   AudioStateManager.setState('normal_play');
+  initPointsAnim();
   // v0.21: Map new team IDs to engine CT/IR slots.
   // Human always maps to CT slot, opponent to IR slot.
   const hAbbr = 'CT';
@@ -604,12 +606,20 @@ export function buildGameplay() {
   // ── TORCH POINTS BANNER ──
   const torchBanner = document.createElement('div'); torchBanner.className = 'T-torch-banner'; el.appendChild(torchBanner);
   var torchBannerPtsEl = null;
+  var _torchDisplayFrozen = false;  // true while waiting for points animation
+  var _torchFrozenValue = 0;
   function drawTorchBanner() {
     var hTorch = hAbbr === 'CT' ? gs.getSummary().ctTorchPts : gs.getSummary().irTorchPts;
+    var displayVal = _torchDisplayFrozen ? _torchFrozenValue : hTorch;
+    // If frozen or animating, just update the number — don't rebuild DOM (preserves animation elements)
+    if (torchBannerPtsEl && _torchDisplayFrozen) {
+      torchBannerPtsEl.textContent = displayVal;
+      return;
+    }
     var flameSvg = '<svg class="T-torch-banner-flame" viewBox="0 0 44 44" fill="none"><defs><linearGradient id="tbf" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#FFB800"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#tbf)"/></svg>';
     torchBanner.innerHTML = flameSvg +
       '<div class="T-torch-banner-label">TORCH</div>' +
-      '<div class="T-torch-banner-pts">' + hTorch + '</div>';
+      '<div class="T-torch-banner-pts">' + displayVal + '</div>';
     torchBannerPtsEl = torchBanner.querySelector('.T-torch-banner-pts');
   }
   drawTorchBanner();
@@ -1373,32 +1383,8 @@ export function buildGameplay() {
       // TORCH points for the USER's team only
       const userOnOff = (gs.possession === hAbbr) ? true : false; // was user on offense for this snap?
       // Note: possession may have flipped on turnovers, so check what it was BEFORE the snap
-      var userTorchBase = 0;
-      if (userOnOff) {
-        // User was on offense — earn offensive points
-        if (r.isSack) userTorchBase = -10;
-        else if (r.isIncomplete) userTorchBase = -5;
-        else if (r.isInterception || r.isFumbleLost) userTorchBase = -25;
-        else if (r.yards >= 8) userTorchBase = 30;
-        else if (r.yards >= 4) userTorchBase = 10;
-        else if (r.yards <= 0) userTorchBase = -10;
-        if (r.isTouchdown) userTorchBase += 50;
-        if (res.gotFirstDown) userTorchBase += 10;
-        userTorchBase += Math.floor(r.offComboPts || 0);
-      } else {
-        // User was on defense — earn defensive points
-        if (r.isSack) userTorchBase = 25;
-        else if (r.isInterception || r.isFumbleLost) userTorchBase = 40;
-        else if (r.yards <= 0) userTorchBase = 20;
-        else if (r.yards <= 3) userTorchBase = 10;
-        else if (r.yards >= 15) userTorchBase = -15;
-        else if (r.yards >= 8) userTorchBase = -5;
-        if (r.isTouchdown) userTorchBase -= 30;
-        if (res.gotFirstDown) userTorchBase -= 10;
-        if (r.isSafety) userTorchBase += 30;
-        userTorchBase += Math.floor(r.defComboPts || 0);
-      }
-      const torchEarned = userTorchBase;
+      // TORCH points (already computed in doSnap as res._torchSources / res._torchEarned)
+      var torchEarned = res._torchEarned || 0;
 
       narr.innerHTML = '';
       const pbp = document.createElement('div'); pbp.className = 'T-pbp';
@@ -1847,26 +1833,95 @@ export function buildGameplay() {
     const isOff = gs.possession === hAbbr;
     const prevPoss = gs.possession;
     const preSnap = gs.getSummary();
-    const offCard = isOff ? selTorch : null;
-    const defCard = isOff ? null : selTorch;
+    var offCard = isOff ? selTorch : null;
+    var defCard = isOff ? null : selTorch;
     var playedPlay = selPl;
+
+    // Pre-snap TORCH card effects
+    if (offCard === 'hard_count' || defCard === 'hard_count') {
+      // Force opponent to discard their play and get a random replacement
+      var sides = gs.getCurrentSides();
+      if (isOff) {
+        // Human offense used hard count → CPU defense gets random replacement
+        var defHand = sides.defHand;
+        if (defHand.length > 0) {
+          var ri = Math.floor(Math.random() * defHand.length);
+          var pool = getDefCards(GS.team === gs.humanTeam ? gs.cpuTeam : GS.team);
+          var avail = pool.filter(function(c) { return defHand.indexOf(c) === -1; });
+          if (avail.length > 0) defHand[ri] = avail[Math.floor(Math.random() * avail.length)];
+        }
+      }
+    }
+
     var preTorchPts = getTorchPoints();
+    // Freeze the display counter at the pre-snap value until animation plays
+    _torchFrozenValue = preTorchPts;
+    _torchDisplayFrozen = true;
     const res = isOff ? gs.executeSnap(selPl, selP, null, null, offCard, defCard) : gs.executeSnap(null, null, selPl, selP, offCard, defCard);
     var postTorchPts = getTorchPoints();
     var torchEarned = postTorchPts - preTorchPts;
+    // 12TH MAN doubles TORCH points
+    if (res && res.result && res.result.torchMultiplier && res.result.torchMultiplier > 1) {
+      var bonus = torchEarned * (res.result.torchMultiplier - 1);
+      if (gs.possession === 'CT') gs.ctTorchPts += bonus;
+      else gs.irTorchPts += bonus;
+      torchEarned *= res.result.torchMultiplier;
+    }
     if (res) res._torchEarned = torchEarned;
 
-    // Apply Game Day Condition modifiers to result
+    // Build TORCH sources for sequential animation
+    // Simple approach: use the actual diff. If points went up, animate it.
+    if (res && torchEarned > 0) {
+      var _r = res.result;
+      var _sources = [];
+      var _comboPts = Math.max(0, Math.floor(isOff ? (_r.offComboPts || 0) : (_r.defComboPts || 0)));
+      var _bonusPts = 0;
+      if (isOff) {
+        if (_r.isTouchdown) _bonusPts += 50;
+        if (res.gotFirstDown) _bonusPts += 10;
+      } else {
+        if (_r.isSafety) _bonusPts += 30;
+      }
+      // Clamp combo+bonus so they don't exceed the total
+      if (_comboPts + _bonusPts > torchEarned) {
+        _bonusPts = Math.max(0, torchEarned - _comboPts);
+        if (_comboPts > torchEarned) { _comboPts = torchEarned; _bonusPts = 0; }
+      }
+      var _playPts = torchEarned - _comboPts - _bonusPts;
+      if (_playPts > 0) _sources.push({ key: 'play', pts: _playPts });
+      if (_comboPts > 0) _sources.push({ key: 'combo', pts: _comboPts });
+      if (_bonusPts > 0) _sources.push({ key: 'bonus', pts: _bonusPts });
+      // Guaranteed: at least one source if torchEarned > 0
+      if (_sources.length === 0) _sources.push({ key: 'play', pts: torchEarned });
+      res._torchSources = _sources;
+    } else if (res) {
+      res._torchSources = [];
+    }
+
+    // Apply Game Day Condition modifiers to result (weather, field, crowd)
     if (res && res.result) {
       var r = res.result;
-      if (condEffects.completionMod && r.isIncomplete === false && !r.isSack) {
-        // Rain: increased chance of incompletion (already resolved, so we adjust yards down)
+      var isRun = playedPlay && (playedPlay.isRun === true || playedPlay.type === 'run');
+
+      // Rain: completionMod turns completed passes into incompletions
+      if (condEffects.completionMod && !isRun && r.isComplete && !r.isSack && !r.isInterception) {
+        if (Math.random() < Math.abs(condEffects.completionMod)) {
+          r.isComplete = false; r.isIncomplete = true;
+          r.yards = 0;
+          r.description = 'Ball slips in the rain — incomplete!';
+        }
       }
-      // Run mean modifier (snow, grass, mud)
+      // Rain/Snow: fumble rate increase on completed plays
+      if (condEffects.fumbleRateMod && !r.isIncomplete && !r.isSack && !r.isInterception && !r.isFumbleLost) {
+        if (Math.random() < condEffects.fumbleRateMod) {
+          r.isFumble = true; r.isFumbleLost = Math.random() < 0.5;
+          if (r.isFumbleLost) r.description = 'Wet ball! FUMBLE — defense recovers!';
+        }
+      }
+      // Run/pass mean modifiers (snow, grass, mud)
       var runMod = (condEffects.runMeanMod || 0) + (condEffects.allMeanMod || 0);
       var passMod = condEffects.allMeanMod || 0;
-      if (r.yards !== undefined && !r.isTouchdown && !r.isSack && !r.isInterception) {
-        var isRun = playedPlay && (playedPlay.type === 'run' || playedPlay.completionRate === undefined || playedPlay.completionRate === 1);
+      if (r.yards !== undefined && !r.isTouchdown && !r.isSack && !r.isInterception && !r.isFumbleLost) {
         r.yards += isRun ? runMod : passMod;
         if (r.yards < 0 && !r.isSack) r.yards = 0;
       }
@@ -1994,9 +2049,9 @@ export function buildGameplay() {
     var sides = gs.getCurrentSides();
     var teamId = GS.team;
     if (isOff) {
-      cycleCard(playedPlay, sides.offHand, getOffCards(teamId));
+      cycleCard(playedPlay, sides.offHand, getOffCards(teamId), teamId);
     } else {
-      cycleCard(playedPlay, sides.defHand, getDefCards(teamId));
+      cycleCard(playedPlay, sides.defHand, getDefCards(teamId), teamId);
     }
     selP = null; selPl = null; selTorch = null;
     drawField(); drawPanel();
@@ -2207,10 +2262,6 @@ export function buildGameplay() {
           resultWrap.appendChild(comboEl);
         }
 
-        // TORCH points — animate on the banner instead of overlay
-        if (res._torchEarned && res._torchEarned !== 0) {
-          animateTorchBannerPts(res._torchEarned);
-        }
       }, 2000);
 
       // ── BEAT 4: READY (cleanup + proceed) ──
@@ -2218,6 +2269,27 @@ export function buildGameplay() {
         overlay.style.opacity = '0';
         overlay.style.transition = 'opacity 0.4s';
         setTimeout(function() { overlay.remove(); }, 400);
+
+        // TORCH points — ALL increases go through the sequential flyer animation
+        var finalTotal = hAbbr === 'CT' ? gs.getSummary().ctTorchPts : gs.getSummary().irTorchPts;
+        var actualGain = finalTotal - _torchFrozenValue;
+        if (actualGain > 0 && torchBannerPtsEl) {
+          // Build sources from res._torchSources, or fall back to a single "play" source
+          var srcs = (res._torchSources && res._torchSources.length > 0) ? res._torchSources : [{ key: 'play', pts: actualGain }];
+          var isBigPlay = r.isTouchdown || r.isInterception || r.isFumbleLost || r.yards >= 15;
+          playPointsSequence({
+            counterEl: torchBannerPtsEl,
+            containerEl: torchBanner,
+            sources: srcs,
+            startValue: _torchFrozenValue,
+            shake: isBigPlay,
+            onComplete: function() { _torchDisplayFrozen = false; drawTorchBanner(); },
+          });
+        } else {
+          // No gain (0 or negative play) — just unfreeze silently
+          _torchDisplayFrozen = false;
+          drawTorchBanner();
+        }
 
         var shopTrigger = null;
         if (!gs.gameOver) {
@@ -2242,14 +2314,21 @@ export function buildGameplay() {
   }
 
   /** Cycle a played card — return it to deck, draw a replacement */
-  function cycleCard(playedCard, hand, fullPool) {
+  function cycleCard(playedCard, hand, fullPool, teamId) {
     if (!playedCard || !hand || !fullPool) return;
     var idx = hand.indexOf(playedCard);
     if (idx === -1) return;
-    // Cards NOT in hand
+    // Cards NOT in hand — weighted by team scheme identity
     var available = fullPool.filter(function(c) { return hand.indexOf(c) === -1; });
     if (available.length > 0) {
-      var replacement = available[Math.floor(Math.random() * available.length)];
+      var weights = available.map(function(c) { return getDrawWeight(teamId, c.playType); });
+      var total = weights.reduce(function(a, b) { return a + b; }, 0);
+      var r = Math.random() * total;
+      var replacement = available[available.length - 1];
+      for (var i = 0; i < available.length; i++) {
+        r -= weights[i];
+        if (r <= 0) { replacement = available[i]; break; }
+      }
       hand[idx] = replacement;
     }
   }

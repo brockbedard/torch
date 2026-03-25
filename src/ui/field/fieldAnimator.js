@@ -140,171 +140,6 @@ function quadBezier(p0, p1, p2, t) {
   return { x: u*u*p0.x + 2*u*t*p1.x + t*t*p2.x, y: u*u*p0.y + 2*u*t*p1.y + t*t*p2.y };
 }
 
-// ── POST-SNAP ANIMATION SEQUENCES ──
-// Builds per-dot keyframe arrays + events for each play result type.
-// Each dot gets: [{time, x, y}, ...] interpolated via easing during playback.
-
-function buildPostSnapSequence(type, yardsGained, formation, fieldW, YPX, losYard, topYard) {
-  function toC(p, extraY) {
-    return { x: p.x * fieldW, y: (losYard + p.y + (extraY || 0) - topYard) * YPX };
-  }
-  function kf(time, x, y) { return { time: time, x: x, y: y }; }
-
-  var form = formation;
-  var seq = { dotKeyframes: [], ball: null, events: [] };
-  var sy = yardsGained; // settle yards
-  // In portrait: offense moves DOWN the canvas (increasing Y) for positive yards.
-  // 1 yard gained = +YPX pixels on canvas.
-  var ydPx = YPX; // pixels per yard in the gain direction (down)
-
-  // Start positions for all dots
-  var allDots = form.offense.concat(form.defense);
-  var starts = allDots.map(function(p) { return toC(p); });
-
-  // Find key players by position
-  function findOff(pos) {
-    for (var i = 0; i < form.offense.length; i++) {
-      if (form.offense[i].pos === pos) return { idx: i, p: form.offense[i], c: toC(form.offense[i]) };
-    }
-    return null;
-  }
-  function findDef(pos) {
-    for (var i = 0; i < form.defense.length; i++) {
-      var di = form.offense.length + i;
-      if (form.defense[i].pos === pos) return { idx: di, p: form.defense[i], c: toC(form.defense[i]) };
-    }
-    return null;
-  }
-
-  var qb = findOff('QB');
-  var wr = findOff('WR') || findOff('SLOT') || findOff('TE');
-  var rb = findOff('RB') || findOff('FB');
-  var cb = findDef('CB');
-  var lb = findDef('LB');
-  var dl0 = findDef('DL') || { idx: form.offense.length, c: starts[form.offense.length] };
-  var safety = findDef('S');
-
-  // Default: everyone stays put
-  var dotKF = allDots.map(function(p, i) {
-    var s = starts[i];
-    return [kf(0, s.x, s.y), kf(2000, s.x, s.y)];
-  });
-
-  var catchY, settleY, tackleX;
-
-  if (type === 'complete' || type === 'touchdown') {
-    var isTD = type === 'touchdown';
-    // Downfield = +Y on canvas. Catch point is 60% of the way, settle is full yards.
-    catchY = (losYard + sy * 0.6 - topYard) * YPX;
-    settleY = (losYard + sy - topYard) * YPX;
-    tackleX = wr ? wr.c.x : 0.50 * fieldW;
-
-    // QB: dropback (moves UP/backward = -Y), set, hold
-    if (qb) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(200,qb.c.x,qb.c.y-18), kf(400,qb.c.x,qb.c.y-12), kf(1500,qb.c.x,qb.c.y-12)];
-    // WR: route downfield (+Y), catch, YAC, tackle
-    if (wr) {
-      var wrMid = { x: lerp(wr.c.x, 0.45*fieldW, 0.5), y: lerp(wr.c.y, catchY, 0.5) };
-      dotKF[wr.idx] = [kf(0,wr.c.x,wr.c.y), kf(200,wr.c.x,wr.c.y+15), kf(400,wrMid.x,wrMid.y), kf(700,tackleX,catchY), kf(750,tackleX,catchY), kf(isTD?1000:1300,tackleX,settleY), kf(2000,tackleX,settleY)];
-    }
-    // OL: push forward (downfield = +Y)
-    for (var oi = 0; oi < form.offense.length; oi++) {
-      if (form.offense[oi].pos === 'OL') dotKF[oi] = [kf(0,starts[oi].x,starts[oi].y), kf(250,starts[oi].x,starts[oi].y+12), kf(1500,starts[oi].x,starts[oi].y+8)];
-    }
-    // CB: trails WR downfield
-    if (cb && wr) dotKF[cb.idx] = [kf(0,cb.c.x,cb.c.y), kf(200,cb.c.x,cb.c.y+8), kf(400,lerp(cb.c.x,tackleX,0.3),lerp(cb.c.y,catchY,0.4)), kf(700,lerp(cb.c.x,tackleX,0.6),catchY-8), kf(1300,tackleX+5,settleY-4), kf(2000,tackleX+5,settleY-4)];
-    // DL: rush toward QB (backward = -Y, toward offense backfield)
-    for (var di = form.offense.length; di < allDots.length; di++) {
-      if (allDots[di].pos === 'DL') dotKF[di] = [kf(0,starts[di].x,starts[di].y), kf(300,starts[di].x,starts[di].y-8), kf(1500,starts[di].x,starts[di].y-4)];
-    }
-    // Safety closes downfield toward tackle
-    if (safety) dotKF[safety.idx] = [kf(0,safety.c.x,safety.c.y), kf(400,safety.c.x,safety.c.y+6), kf(1300,lerp(safety.c.x,tackleX,0.5),settleY-12), kf(2000,lerp(safety.c.x,tackleX,0.5),settleY-12)];
-
-    // Ball flight: QB position → arc → catch point
-    var qbPos = qb ? qb.c : starts[1];
-    var midX = (qbPos.x + tackleX) / 2;
-    seq.ball = { startTime: 400, endTime: 700, p0: { x: qbPos.x, y: qbPos.y - 12 }, p1: { x: midX, y: (qbPos.y-12+catchY)/2-20 }, p2: { x: tackleX, y: catchY } };
-    seq.events.push({ time: 400, type: 'throw', x: qbPos.x, y: qbPos.y-12 });
-    seq.events.push({ time: 700, type: 'catch', x: tackleX, y: catchY });
-    seq.events.push({ time: isTD?1000:1300, type: isTD?'touchdown':'tackle', x: tackleX, y: settleY });
-
-  } else if (type === 'run') {
-    var runner = rb || qb;
-    // Downfield = +Y
-    settleY = (losYard + sy - topYard) * YPX;
-    var runX = runner ? runner.c.x : 0.50 * fieldW;
-    var losY = (losYard - topYard) * YPX;
-
-    // Runner: mesh → hole → burst downfield → tackle
-    if (runner) dotKF[runner.idx] = [kf(0,runner.c.x,runner.c.y), kf(150,0.50*fieldW,runner.c.y), kf(300,0.50*fieldW,losY), kf(500,runX,losY+15), kf(1000,runX,settleY), kf(1400,runX,settleY)];
-    // QB hands off, drifts backward (-Y)
-    if (qb && runner && runner.idx !== qb.idx) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(150,qb.c.x-5,qb.c.y+3), kf(300,qb.c.x+10,qb.c.y-8), kf(1400,qb.c.x+15,qb.c.y-12)];
-    // OL: fire forward downfield (+Y)
-    for (var oi2 = 0; oi2 < form.offense.length; oi2++) {
-      if (form.offense[oi2].pos === 'OL') dotKF[oi2] = [kf(0,starts[oi2].x,starts[oi2].y), kf(200,starts[oi2].x,starts[oi2].y+18), kf(500,starts[oi2].x,starts[oi2].y+22), kf(1400,starts[oi2].x,starts[oi2].y+18)];
-    }
-    // DL: get pushed backward by OL (-Y, toward their own backfield)
-    for (var di2 = form.offense.length; di2 < allDots.length; di2++) {
-      if (allDots[di2].pos === 'DL') dotKF[di2] = [kf(0,starts[di2].x,starts[di2].y), kf(200,starts[di2].x,starts[di2].y+4), kf(500,starts[di2].x,starts[di2].y+8), kf(1400,starts[di2].x,starts[di2].y+6)];
-    }
-    // LB fills downfield toward runner, tackles
-    if (lb) dotKF[lb.idx] = [kf(0,lb.c.x,lb.c.y), kf(300,lb.c.x,lb.c.y-6), kf(700,lerp(lb.c.x,runX,0.7),settleY-8), kf(1000,runX+4,settleY-2), kf(1400,runX+4,settleY-2)];
-
-    seq.events.push({ time: 150, type: 'handoff', x: 0.50*fieldW, y: runner?runner.c.y:losY });
-    seq.events.push({ time: 1000, type: 'tackle', x: runX, y: settleY });
-
-  } else if (type === 'sack') {
-    // Sack: QB goes backward (-Y), DE rushes toward QB (-Y toward backfield)
-    var sackY = (losYard - Math.abs(yardsGained) - topYard) * YPX;
-    var sackDE = dl0;
-
-    // QB: dropback (-Y), scramble, caught behind LOS
-    if (qb) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(200,qb.c.x,qb.c.y-16), kf(500,qb.c.x+10,qb.c.y-22), kf(800,qb.c.x+8,sackY), kf(1200,qb.c.x+8,sackY)];
-    // DE: speed rush toward QB backfield (-Y)
-    if (sackDE) dotKF[sackDE.idx] = [kf(0,sackDE.c.x,sackDE.c.y), kf(150,sackDE.c.x,sackDE.c.y-6), kf(350,sackDE.c.x+4,sackDE.c.y-16), kf(600,qb?qb.c.x+12:sackDE.c.x,sackDE.c.y-28), kf(800,qb?qb.c.x+8:sackDE.c.x,sackY), kf(1200,qb?qb.c.x+8:sackDE.c.x,sackY)];
-    // OL: tries to block, gets pushed back (-Y)
-    for (var oi3 = 0; oi3 < form.offense.length; oi3++) {
-      if (form.offense[oi3].pos === 'OL') dotKF[oi3] = [kf(0,starts[oi3].x,starts[oi3].y), kf(200,starts[oi3].x,starts[oi3].y-6), kf(800,starts[oi3].x,starts[oi3].y-10), kf(1200,starts[oi3].x,starts[oi3].y-10)];
-    }
-
-    seq.events.push({ time: 800, type: 'sack', x: qb?qb.c.x+8:fieldW*0.5, y: sackY });
-
-  } else if (type === 'interception') {
-    // Ball goes downfield (+Y) to where CB intercepts
-    var intY = (losYard + 8 - topYard) * YPX;
-    // QB dropback (-Y)
-    if (qb) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(200,qb.c.x,qb.c.y-16), kf(400,qb.c.x,qb.c.y-10), kf(1800,qb.c.x,qb.c.y-10)];
-    // WR runs downfield (+Y)
-    if (wr) dotKF[wr.idx] = [kf(0,wr.c.x,wr.c.y), kf(200,wr.c.x,wr.c.y+10), kf(400,lerp(wr.c.x,0.40*fieldW,0.5),lerp(wr.c.y,intY,0.5)), kf(700,0.42*fieldW,intY), kf(1800,0.42*fieldW,intY)];
-    // CB jumps route, catches ball
-    if (cb) dotKF[cb.idx] = [kf(0,cb.c.x,cb.c.y), kf(300,cb.c.x,cb.c.y+10), kf(600,lerp(cb.c.x,0.41*fieldW,0.7),intY+5), kf(700,0.41*fieldW,intY), kf(900,0.41*fieldW,intY), kf(1400,0.38*fieldW,intY-25), kf(1800,0.38*fieldW,intY-25)];
-
-    var qbPos2 = qb ? qb.c : starts[1];
-    seq.ball = { startTime: 400, endTime: 700, p0: { x: qbPos2.x, y: qbPos2.y-10 }, p1: { x: (qbPos2.x+0.41*fieldW)/2, y: (qbPos2.y-10+intY)/2 }, p2: { x: 0.41*fieldW, y: intY } };
-    seq.events.push({ time: 400, type: 'throw', x: qbPos2.x, y: qbPos2.y-10 });
-    seq.events.push({ time: 700, type: 'interception', x: 0.41*fieldW, y: intY });
-
-  } else if (type === 'incomplete') {
-    // Ball goes downfield (+Y) but misses
-    var missY = (losYard + 10 - topYard) * YPX;
-    // QB dropback (-Y)
-    if (qb) dotKF[qb.idx] = [kf(0,qb.c.x,qb.c.y), kf(200,qb.c.x,qb.c.y-16), kf(400,qb.c.x,qb.c.y-10), kf(1200,qb.c.x,qb.c.y-10)];
-    // WR runs downfield (+Y)
-    if (wr) dotKF[wr.idx] = [kf(0,wr.c.x,wr.c.y), kf(200,wr.c.x,wr.c.y+12), kf(500,lerp(wr.c.x,0.38*fieldW,0.5),lerp(wr.c.y,missY,0.6)), kf(700,0.42*fieldW,missY), kf(1200,0.42*fieldW,missY)];
-    // CB in coverage (+Y)
-    if (cb) dotKF[cb.idx] = [kf(0,cb.c.x,cb.c.y), kf(200,cb.c.x,cb.c.y+8), kf(700,0.41*fieldW,missY), kf(1200,0.41*fieldW,missY)];
-
-    var qbPos3 = qb ? qb.c : starts[1];
-    seq.ball = { startTime: 400, endTime: 700, p0: { x: qbPos3.x, y: qbPos3.y-10 }, p1: { x: 0.35*fieldW, y: (qbPos3.y-10+missY)/2 }, p2: { x: 0.38*fieldW, y: missY } };
-    seq.events.push({ time: 400, type: 'throw', x: qbPos3.x, y: qbPos3.y-10 });
-    seq.events.push({ time: 750, type: 'incomplete', x: 0.38*fieldW, y: missY });
-  }
-
-  seq.dotKeyframes = dotKF;
-  seq.dotColors = allDots.map(function(p, i) { return i < form.offense.length ? 'off' : 'def'; });
-  seq.dotNums = allDots.map(function(p) { return p.num; });
-  return seq;
-}
-
 // Interpolate a dot position from keyframes at a given time
 function interpDot(keyframes, t, easeFn) {
   if (t <= keyframes[0].time) return keyframes[0];
@@ -357,7 +192,10 @@ export function createFieldAnimator(width, height) {
   var _animSequence = null;
   var _animDuration = 0;
   var _scrollAnim = null; // { from, to, start, duration }
-  var _cameraFollow = null; // { targetYPx, startTime, duration } — pans everything to follow action
+  var _cameraFollow = false; // true when play needs camera pan
+  var _animTopYard = 0; // topYard at animation start (for camera offset math)
+  var _camYShift = 0; // current pixel shift applied to dots for camera follow
+  var _camTarget = 0; // target pixel shift (smoothed toward by _camYShift)
   var _flashEffect = null; // { startTime, duration, rgb, type }
   var _ballFlight = null;
 
@@ -387,15 +225,22 @@ export function createFieldAnimator(width, height) {
     shake.update(dt);
     particles.update(dt);
 
-    // Scroll animation
+    // Scroll animation (uses pre-rendered padded buffer — no static redraws)
     var renderState = Object.assign({}, _lastState);
     if (_scrollAnim) {
       var elapsed = timestamp - _scrollAnim.start;
       var t = Math.min(elapsed / _scrollAnim.duration, 1);
       renderState.ballYard = lerp(_scrollAnim.from, _scrollAnim.to, easeInOutCubic(t));
       renderState.losYard = renderState.ballYard;
-      if (t >= 1) _scrollAnim = null;
-      else animating = true;
+      var scrollRange = Math.abs(_scrollAnim.to - _scrollAnim.from);
+      renderState.cameraPadding = Math.ceil(scrollRange) + 5;
+      if (t >= 1) {
+        _scrollAnim = null;
+        // Force a clean render at final position (no padding)
+        renderState.cameraPadding = 0;
+      } else {
+        animating = true;
+      }
     }
 
     // Process animation sequence events
@@ -424,10 +269,70 @@ export function createFieldAnimator(width, height) {
       if (animElapsed >= _animDuration) {
         _animSequence = null;
         _ballFlight = null;
+        _cameraFollow = false;
+        _camTarget = 0;
         trail.clear();
       } else {
         animating = true;
       }
+    }
+
+    // Camera follow: stays locked until throw/handoff, then smoothly tracks the ball carrier
+    if (_cameraFollow && _animSequence && _animSequence.dotKeyframes) {
+      var animT = timestamp - _animStartTime;
+
+      // Don't move camera until the ball is released (throw or handoff event)
+      var ballReleased = false;
+      var evts = _animSequence.events;
+      for (var ei2 = 0; ei2 < evts.length; ei2++) {
+        if ((evts[ei2].type === 'throw' || evts[ei2].type === 'handoff') && animT >= evts[ei2].time) {
+          ballReleased = true; break;
+        }
+      }
+
+      if (!ballReleased) {
+        _camTarget = 0;  // hold still pre-throw
+      } else {
+        // Track only offensive dots (first numOff), not defense
+        var dkf = _animSequence.dotKeyframes;
+        var numOff = _animSequence.dotColors ? _animSequence.dotColors.filter(function(c) { return c === 'off'; }).length : 7;
+        var maxPixY = 0;
+        for (var ci2 = 0; ci2 < numOff; ci2++) {
+          var cp = interpDot(dkf[ci2], animT);
+          if (cp.y > maxPixY) maxPixY = cp.y;
+        }
+        // Compute target camera offset
+        var maxAbsYard = _animTopYard + maxPixY / YPX;
+        var desiredTopYard = maxAbsYard - VISIBLE_YARDS * 0.75;
+        _camTarget = 0;
+        if (desiredTopYard > _animTopYard) {
+          var newCenter = Math.min(120 - VISIBLE_YARDS / 2, desiredTopYard + VISIBLE_YARDS / 2);
+          var newTopYard = newCenter - VISIBLE_YARDS / 2;
+          _camTarget = (newTopYard - _animTopYard) * YPX;
+        }
+      }
+      // Smooth dt-based damping — framerate independent, broadcast feel
+      // smoothTime ~0.5s means camera takes ~0.5s to reach the target
+      var smoothTime = 0.5;
+      var smoothFactor = 1 - Math.exp(-dt / smoothTime * 4);
+      _camYShift += (_camTarget - _camYShift) * smoothFactor;
+      if (Math.abs(_camYShift - _camTarget) < 0.3) _camYShift = _camTarget;
+    } else if (_camYShift > 0 && !_scrollAnim) {
+      // Smoothly return to zero when animation ends (before scroll starts)
+      var returnFactor = 1 - Math.exp(-dt / 0.35 * 4);
+      _camYShift += (0 - _camYShift) * returnFactor;
+      if (_camYShift < 0.5) _camYShift = 0;
+      animating = _camYShift > 0;  // keep ticking until fully settled
+    } else if (_scrollAnim) {
+      // During scroll, snap camera offset to zero so scroll controls the view
+      _camYShift = 0;
+    }
+
+    // Apply camera offset to field viewport via pre-rendered buffer (no static redraws)
+    if (_camYShift > 0 && !_scrollAnim) {
+      var camYards = _camYShift / YPX;
+      renderState.ballYard = Math.min(120 - VISIBLE_YARDS / 2, (_animTopYard + VISIBLE_YARDS / 2) + camYards);
+      renderState.cameraPadding = Math.ceil(camYards) + 5;
     }
 
     // Render base field (skip static dots if animating sequence)
@@ -435,16 +340,6 @@ export function createFieldAnimator(width, height) {
       renderState.skipDots = true;
     }
     renderer.render(renderState);
-
-    // Camera follow: pan canvas to keep action visible during animation
-    var _camOffset = 0;
-    if (_cameraFollow && _animSequence) {
-      var camElapsed = timestamp - _cameraFollow.startTime;
-      var camT = Math.min(camElapsed / _cameraFollow.duration, 1);
-      _camOffset = easeInOutCubic(camT) * _cameraFollow.targetYPx;
-      ctx.save();
-      ctx.translate(0, -_camOffset);
-    }
 
     // Draw animated dots from keyframes
     if (_animSequence && _animSequence.dotKeyframes) {
@@ -486,7 +381,7 @@ export function createFieldAnimator(width, height) {
       for (var di = 0; di < dkf.length; di++) {
         var pos = interpDot(dkf[di], animElapsed2);
         var rgb = dColors[di] === 'off' ? offRGB : defRGB;
-        drawAnimDot(pos.x, pos.y, rgb);
+        drawAnimDot(pos.x, pos.y - _camYShift, rgb);
       }
       // Numbers on top
       ctx.font = "700 11px 'Teko'";
@@ -496,9 +391,9 @@ export function createFieldAnimator(width, height) {
         var np = interpDot(dkf[ni], animElapsed2);
         ctx.strokeStyle = 'rgba(0,0,0,0.7)';
         ctx.lineWidth = 2.5;
-        ctx.strokeText(dNums[ni], np.x, np.y);
+        ctx.strokeText(dNums[ni], np.x, np.y - _camYShift);
         ctx.fillStyle = 'rgba(255,255,255,0.95)';
-        ctx.fillText(dNums[ni], np.x, np.y);
+        ctx.fillText(dNums[ni], np.x, np.y - _camYShift);
       }
     }
 
@@ -529,28 +424,24 @@ export function createFieldAnimator(width, height) {
 
     // Ball flight dot
     if (_ballFlight) {
+      var bfx = _ballFlight.x, bfy = _ballFlight.y - _camYShift;
       ctx.fillStyle = 'rgba(255,220,140,0.9)';
       ctx.beginPath();
-      ctx.arc(_ballFlight.x, _ballFlight.y, 5, 0, Math.PI * 2);
+      ctx.arc(bfx, bfy, 5, 0, Math.PI * 2);
       ctx.fill();
       // Glow
       ctx.globalCompositeOperation = 'lighter';
       ctx.fillStyle = 'rgba(255,200,100,0.3)';
       ctx.beginPath();
-      ctx.arc(_ballFlight.x, _ballFlight.y, 12, 0, Math.PI * 2);
+      ctx.arc(bfx, bfy, 12, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalCompositeOperation = 'source-over';
-      trail.push(_ballFlight.x, _ballFlight.y);
+      trail.push(bfx, bfy);
       trail.draw(ctx, [255, 220, 140]);
     }
 
     // Particles
     particles.draw(ctx);
-
-    // Close camera follow translate
-    if (_cameraFollow && _animSequence) {
-      ctx.restore();
-    }
 
     if (shake.active()) ctx.restore();
 
@@ -560,47 +451,45 @@ export function createFieldAnimator(width, height) {
   }
 
   function fireEvent(ev) {
+    var ex = ev.x, ey = ev.y - _camYShift; // camera-adjusted position
     switch (ev.type) {
       case 'throw':
-        particles.spawn(ev.x, ev.y, 6, OFF_COLORS, { speed: 60, decay: 4 });
+        particles.spawn(ex, ey, 6, OFF_COLORS, { speed: 60, decay: 4 });
         break;
       case 'catch':
-        particles.spawn(ev.x, ev.y, 10, OFF_COLORS, { speed: 80 });
-        _flashEffect = { startTime: performance.now(), duration: 200, x: ev.x, y: ev.y, type: 'white', rgb: [242,140,40] };
+        particles.spawn(ex, ey, 10, OFF_COLORS, { speed: 80 });
+        _flashEffect = { startTime: performance.now(), duration: 200, x: ex, y: ey, type: 'white', rgb: [242,140,40] };
         shake.add(0.15, 5);
         break;
       case 'tackle':
-        particles.spawn(ev.x, ev.y, 20, OFF_COLORS.concat(DEF_COLORS), { speed: 130 });
-        _flashEffect = { startTime: performance.now(), duration: 200, x: ev.x, y: ev.y, type: 'white', rgb: [255,200,100] };
+        particles.spawn(ex, ey, 20, OFF_COLORS.concat(DEF_COLORS), { speed: 130 });
+        _flashEffect = { startTime: performance.now(), duration: 200, x: ex, y: ey, type: 'white', rgb: [255,200,100] };
         shake.add(0.35, 3.5);
         trail.clear();
         break;
       case 'sack':
-        particles.spawn(ev.x, ev.y, 24, SACK_COLORS, { speed: 150 });
+        particles.spawn(ex, ey, 24, SACK_COLORS, { speed: 150 });
         _flashEffect = { startTime: performance.now(), duration: 150, type: 'red' };
         shake.add(0.6, 3);
         break;
       case 'interception':
-        particles.spawn(ev.x, ev.y, 18, INT_COLORS, { speed: 100 });
+        particles.spawn(ex, ey, 18, INT_COLORS, { speed: 100 });
         _flashEffect = { startTime: performance.now(), duration: 400, type: 'red' };
         shake.add(0.5, 2.5);
         trail.clear();
         break;
       case 'incomplete':
-        // Subtle — just a small puff
-        particles.spawn(ev.x, ev.y, 5, [[100,100,100]], { speed: 30, decay: 5 });
+        particles.spawn(ex, ey, 5, [[100,100,100]], { speed: 30, decay: 5 });
         break;
       case 'handoff':
-        particles.spawn(ev.x, ev.y, 6, OFF_COLORS, { speed: 40, decay: 5 });
+        particles.spawn(ex, ey, 6, OFF_COLORS, { speed: 40, decay: 5 });
         break;
       case 'touchdown':
-        // Big celebration
-        particles.spawn(ev.x, ev.y, 40, TD_COLORS, { speed: 200, gravity: 150, decay: 0.8 });
-        _flashEffect = { startTime: performance.now(), duration: 300, x: ev.x, y: ev.y, type: 'white', rgb: [255,220,50] };
+        particles.spawn(ex, ey, 40, TD_COLORS, { speed: 200, gravity: 150, decay: 0.8 });
+        _flashEffect = { startTime: performance.now(), duration: 300, x: ex, y: ey, type: 'white', rgb: [255,220,50] };
         shake.add(0.7, 2);
-        // Second burst delayed
         setTimeout(function() {
-          particles.spawn(ev.x, ev.y - 10, 25, TD_COLORS, { speed: 160, gravity: 120, decay: 1.0 });
+          particles.spawn(ex, ey - 10, 25, TD_COLORS, { speed: 160, gravity: 120, decay: 1.0 });
         }, 200);
         break;
     }
@@ -617,37 +506,45 @@ export function createFieldAnimator(width, height) {
     _lastState = state;
     var center = Math.max(VISIBLE_YARDS/2, Math.min(120-VISIBLE_YARDS/2, state.ballYard));
     var topYard = center - VISIBLE_YARDS / 2;
-    var form = renderer.FORMATIONS[state.formation] || renderer.FORMATIONS['shotgun_spread'];
+    var form = renderer.FORMATIONS[state.formation] || renderer.FORMATIONS['shotgun_deuce'];
     var playType = state.playType || 'SHORT';
     var defScheme = state.defScheme || 'ZONE';
 
     // Use the new composition-based builder
-    _animSequence = buildPlayAnimation(type, yardsGained, form, playType, defScheme, width, YPX, state.losYard, topYard);
+    _animSequence = buildPlayAnimation(type, yardsGained, form, playType, defScheme, width, YPX, state.losYard, topYard, state.offTeam);
     _animStartTime = performance.now();
     _animDuration = _animSequence.duration || 1500;
     _lastTickTime = performance.now();
     trail.clear();
     _ballFlight = null;
 
-    // Camera follow: if the settle point is off the bottom of the screen, pan down
+    // Save the initial viewport for camera offset math
+    _animTopYard = topYard;
+    _camYShift = 0;
+    _camTarget = 0;
+
+    // Camera follow: enable if the settle point would be off the bottom of the screen
     var settlePixelY = (state.losYard + yardsGained - topYard) * YPX;
-    var margin = height * 0.15; // keep 15% margin from bottom
-    _cameraFollow = null;
-    if (settlePixelY > height - margin) {
-      var panAmount = settlePixelY - (height - margin);
-      var catchPct = type === 'sack' ? 0.5 : (playType === 'RUN' ? 0.25 : 0.35);
-      _cameraFollow = {
-        targetYPx: panAmount,
-        startTime: performance.now() + _animDuration * catchPct,
-        duration: _animDuration * 0.35
-      };
+    _cameraFollow = settlePixelY > height * 0.80;
+
+    // Pre-render padded field buffer for smooth camera panning (no redraws during pan)
+    if (_cameraFollow) {
+      var extraYards = Math.ceil((settlePixelY - height * 0.75) / YPX) + 5;
+      var initState = Object.assign({}, state, { cameraPadding: extraYards });
+      renderer.render(initState);
     }
 
     requestTick();
   }
 
   function scrollTo(fromYard, toYard, duration) {
-    _scrollAnim = { from: fromYard, to: toYard, start: performance.now(), duration: duration || 400 };
+    _scrollAnim = { from: fromYard, to: toYard, start: performance.now(), duration: duration || 600 };
+    // Pre-render padded buffer covering both endpoints for smooth scroll (no redraws)
+    var lo = Math.min(fromYard, toYard);
+    var hi = Math.max(fromYard, toYard);
+    var scrollPadding = Math.ceil(hi - lo) + 5;
+    var initState = Object.assign({}, _lastState, { ballYard: lo, cameraPadding: scrollPadding });
+    renderer.render(initState);
     _lastTickTime = performance.now();
     requestTick();
   }
@@ -674,6 +571,8 @@ export function createFieldAnimator(width, height) {
     FORMATIONS: renderer.FORMATIONS,
     PLAY_FORMATION_MAP: renderer.PLAY_FORMATION_MAP,
     TEAM_FORMATION_MAP: renderer.TEAM_FORMATION_MAP,
-    DEF_FORMATION_MAP: renderer.DEF_FORMATION_MAP
+    TEAM_FORMATION_POOLS: renderer.TEAM_FORMATION_POOLS,
+    DEF_FORMATION_MAP: renderer.DEF_FORMATION_MAP,
+    pickFormation: renderer.pickFormation
   };
 }

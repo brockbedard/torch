@@ -22,9 +22,9 @@ export const TEAMS = {
   },
   wolves: {
     id: 'wolves',
-    name: 'WEREWOLVES',
+    name: 'WOLVES',
     school: 'Northern Pines',
-    mascot: 'Werewolves',
+    mascot: 'Wolves',
     abbr: 'NP',
     accent: '#C0C0C0', icon: '',
     colors: { primary: '#1A1A2E', secondary: '#C0C0C0' },

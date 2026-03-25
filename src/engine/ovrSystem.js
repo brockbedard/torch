@@ -25,7 +25,7 @@ function ovrMod(ovr, baseline = 75) {
  */
 export function applySquadOVR(offPlayers, defPlayers, offPlay, featuredOff, featuredDef) {
   const mods = { compMod: 0, sackMod: 0, meanMod: 0, intMod: 0 };
-  const isPass = offPlay.completionRate !== null;
+  const isPass = !(offPlay.isRun === true || offPlay.type === 'run');
 
   // Find QB
   const qb = offPlayers.find(p => p.pos === 'QB' && !p.injured);

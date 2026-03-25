@@ -1,6 +1,6 @@
 {
   "name": "torch-football",
-  "version": "0.23.0",
+  "version": "0.24.0",
   "description": "TORCH — The Football Card Game",
   "scripts": {
     "dev": "vite",
@@ -21,13 +21,13 @@
     "node": ">=18"
   },
   "devDependencies": {
-    "vite": "^8.0.0"
-  },
-  "dependencies": {
+    "vite": "^8.0.0",
     "@vitejs/plugin-react": "^6.0.1",
-    "howler": "^2.2.4",
-    "jsfxr": "^1.4.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
+  },
+  "dependencies": {
+    "howler": "^2.2.4",
+    "jsfxr": "^1.4.0"
   }
 }

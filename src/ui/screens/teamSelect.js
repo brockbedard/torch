@@ -49,13 +49,13 @@ export function buildTeamSelect() {
   injectAnimations();
   AudioStateManager.setState('pre_game');
   var el = document.createElement('div');
-  el.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden;';
+  el.style.cssText = 'height:100vh;height:100dvh;max-height:100dvh;display:flex;flex-direction:column;background:var(--bg);position:relative;overflow:hidden;';
 
   var isFirst = !GS || GS.isFirstSeason !== false;
 
   // ── HEADER ──
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'background:rgba(0,0,0,0.5);padding:8px 12px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-bottom:2px solid var(--a-gold);z-index:10;';
+  hdr.style.cssText = 'background:rgba(0,0,0,0.5);padding:6px 12px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;border-bottom:2px solid var(--a-gold);z-index:10;';
   var hdrTitle = document.createElement('div');
   hdrTitle.style.cssText = "font-family:'Teko',sans-serif;font-weight:700;font-size:24px;color:var(--a-gold);letter-spacing:3px;font-style:italic;transform:skewX(-8deg);text-shadow:2px 2px 0 rgba(0,0,0,0.9);";
   hdrTitle.textContent = 'TORCH FOOTBALL';
@@ -67,127 +67,125 @@ export function buildTeamSelect() {
   hdr.appendChild(backBtn);
   el.appendChild(hdr);
 
+  // Team vibe one-liners (plain-English play style hint)
+  var TEAM_VIBES = {
+    sentinels: 'Pound the rock. Physical, patient football.',
+    wolves: 'Relentless ground game. Wear them down.',
+    stags: 'Explosive and electric. Outscores everyone.',
+    serpents: 'Cerebral and methodical. Death by paper cuts.',
+  };
+
   // ── CONTENT ──
   var content = document.createElement('div');
-  content.style.cssText = 'flex:1;display:flex;flex-direction:column;padding:8px 12px 12px;gap:8px;justify-content:flex-start;';
+  content.style.cssText = 'flex:1;min-height:0;display:flex;flex-direction:column;padding:0 10px 0;gap:0;overflow:hidden;';
 
-  // Title
-  var title = document.createElement('div');
-  title.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:var(--a-gold);letter-spacing:2px;text-align:center;text-shadow:1px 1px 0 rgba(0,0,0,0.8);";
-  title.textContent = 'CHOOSE YOUR TEAM';
-  content.appendChild(title);
+  // Title + subtitle instruction
+  var instrWrap = document.createElement('div');
+  instrWrap.style.cssText = 'flex-shrink:0;text-align:center;padding:6px 20px 2px;';
+  instrWrap.innerHTML =
+    "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:var(--a-gold);letter-spacing:3px;\">CHOOSE YOUR TEAM</div>";
+  content.appendChild(instrWrap);
 
-  // First-time tooltip
-  if (isFirst && !localStorage.getItem('ts_tip_shown')) {
-    var tip = document.createElement('div');
-    tip.style.cssText = "text-align:center;font-family:'Rajdhani';font-weight:600;font-size:13px;color:rgba(255,255,255,0.8);padding:6px 12px;background:rgba(0,0,0,0.6);border-radius:8px;animation:tsTooltipIn 0.3s ease-out;";
-    tip.textContent = 'Each team plays differently. Tap to choose.';
-    content.appendChild(tip);
-    // Dismiss on any tap after a short delay
-    setTimeout(function() {
-      el.addEventListener('click', function dismissTip() {
-        if (tip.parentNode) tip.remove();
-        localStorage.setItem('ts_tip_shown', '1');
-        el.removeEventListener('click', dismissTip);
-      }, { once: true });
-    }, 500);
-  }
-
-  // ── 2x2 TEAM GRID (163×212px cards per spec) ──
+  // ── 2x2 TEAM GRID — fills available space ──
   var grid = document.createElement('div');
-  grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:0 16px;';
+  grid.style.cssText = 'flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;padding:4px 4px 2px;';
 
   var teamIds = Object.keys(TEAMS);
   teamIds.forEach(function(tid, idx) {
     var team = TEAMS[tid];
     var card = document.createElement('div');
     card.style.cssText =
-      'height:212px;border-radius:10px;position:relative;overflow:hidden;cursor:pointer;' +
-      'border:2.5px solid ' + team.colors.primary + '66;' +
-      'box-shadow:0 4px 12px rgba(0,0,0,0.5);' +
+      'min-height:0;border-radius:12px;position:relative;overflow:hidden;cursor:pointer;' +
+      'display:flex;flex-direction:column;' +
+      'border:2px solid ' + team.colors.primary + '88;' +
+      'box-shadow:0 4px 16px rgba(0,0,0,0.5);' +
       'transition:all 0.25s cubic-bezier(0.22,1.3,0.36,1);' +
-      'opacity:0;animation:tsCardIn 0.35s ease-out ' + (idx * 0.1) + 's both;';
+      'opacity:0;animation:tsCardIn 0.35s ease-out ' + (idx * 0.08) + 's both;';
 
-    // Background: dark base + team-color gradient overlay from bottom
+    // Background gradient — team color throughout so badge pops
     var bgLayer = document.createElement('div');
-    bgLayer.style.cssText = 'position:absolute;inset:0;background:linear-gradient(0deg,' + team.colors.primary + '99 0%,' + team.colors.primary + '33 40%,#0A0804 100%);z-index:0;';
+    bgLayer.style.cssText = 'position:absolute;inset:0;background:linear-gradient(0deg,' + team.colors.primary + 'dd 0%,' + team.colors.primary + '55 50%,' + team.colors.primary + '22 100%);z-index:0;';
     card.appendChild(bgLayer);
 
-    // Badge emblem — hero size, filling top 55-60% of card
+    // Badge — centered hero element, fills top portion
     var badgeWrap = document.createElement('div');
-    badgeWrap.style.cssText = 'position:relative;z-index:1;display:flex;align-items:center;justify-content:center;height:55%;padding-top:8px;';
-    badgeWrap.innerHTML = renderTeamBadge(tid, 100);
+    badgeWrap.style.cssText = 'position:relative;z-index:1;display:flex;justify-content:center;align-items:center;flex:1;min-height:0;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.6));';
+    badgeWrap.innerHTML = renderTeamBadge(tid, 115);
     card.appendChild(badgeWrap);
 
-    // Info area — bottom 45%
+    // Info area — bottom of card
     var info = document.createElement('div');
-    info.style.cssText = 'position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 8px 6px;';
+    info.style.cssText = 'position:relative;z-index:1;flex-shrink:0;padding:0 10px 10px;display:flex;flex-direction:column;gap:2px;';
 
-    // Team name
+    // School name
+    var schoolEl = document.createElement('div');
+    schoolEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:2.5px;text-transform:uppercase;";
+    schoolEl.textContent = (team.school || '').toUpperCase();
+    info.appendChild(schoolEl);
+
+    // Team name — consistent size
     var nameEl = document.createElement('div');
-    nameEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:17px;color:#fff;letter-spacing:2px;line-height:1;text-shadow:1px 1px 0 rgba(0,0,0,0.8);";
+    nameEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:#fff;letter-spacing:3px;line-height:0.9;text-shadow:2px 3px 0 rgba(0,0,0,0.8);white-space:nowrap;";
     nameEl.textContent = team.name;
     info.appendChild(nameEl);
 
-    // Playstyle pill
-    var pill = document.createElement('div');
-    pill.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:9px;color:" + team.colors.secondary + ";letter-spacing:1px;border:1px solid " + team.colors.secondary + '55;padding:1px 8px;border-radius:10px;';
-    pill.textContent = team.offScheme;
-    info.appendChild(pill);
+    // Divider
+    var divider = document.createElement('div');
+    divider.style.cssText = 'width:36px;height:2px;border-radius:1px;margin:4px 0;background:' + team.accent + ';';
+    info.appendChild(divider);
 
-    // Ratings + Star — side by side row
-    var infoRow = document.createElement('div');
-    infoRow.style.cssText = 'display:flex;width:100%;gap:4px;align-items:center;margin-top:2px;';
+    // Scheme
+    var schemeEl = document.createElement('div');
+    schemeEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:13px;color:" + team.accent + ";letter-spacing:1.5px;";
+    schemeEl.textContent = team.offScheme;
+    info.appendChild(schemeEl);
 
-    // Flame pip ratings (left)
+    // Vibe one-liner
+    var vibeEl = document.createElement('div');
+    vibeEl.style.cssText = "font-family:'Rajdhani';font-weight:500;font-size:12px;color:rgba(255,255,255,0.45);line-height:1.2;min-height:28px;";
+    vibeEl.textContent = TEAM_VIBES[tid] || '';
+    info.appendChild(vibeEl);
+
+    // Ratings: OFF and DEF on separate rows
     var ratingsWrap = document.createElement('div');
-    ratingsWrap.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:1px;';
-    var offRow = document.createElement('div');
-    offRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;font-family:'Rajdhani';font-size:8px;color:#aaa;";
-    offRow.innerHTML = '<span>OFF</span><span>' + renderFlamePips(team.ratings.offense, 5, team.colors.primary, 8) + '</span>';
-    var defRow = document.createElement('div');
-    defRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;font-family:'Rajdhani';font-size:8px;color:#aaa;";
-    defRow.innerHTML = '<span>DEF</span><span>' + renderFlamePips(team.ratings.defense, 5, team.colors.primary, 8) + '</span>';
-    ratingsWrap.appendChild(offRow);
-    ratingsWrap.appendChild(defRow);
-    infoRow.appendChild(ratingsWrap);
+    ratingsWrap.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-top:4px;';
+    ratingsWrap.innerHTML =
+      '<div style="display:flex;align-items:center;gap:5px;">' +
+        "<span style=\"font-family:'Rajdhani';font-size:10px;font-weight:700;color:#aaa;letter-spacing:0.5px;min-width:22px;\">OFF</span>" +
+        renderFlamePips(team.ratings.offense, 5, '#00ff44', 13) +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:5px;">' +
+        "<span style=\"font-family:'Rajdhani';font-size:10px;font-weight:700;color:#aaa;letter-spacing:0.5px;min-width:22px;\">DEF</span>" +
+        renderFlamePips(team.ratings.defense, 5, '#4488ff', 13) +
+      '</div>';
+    info.appendChild(ratingsWrap);
 
-    // Star player callout (right)
-    var offRoster = getOffenseRoster(tid);
-    var star = offRoster.find(function(p) { return p.isStar; });
-    if (star) {
-      var starEl = document.createElement('div');
-      starEl.style.cssText = "display:flex;flex-direction:column;align-items:flex-end;gap:1px;";
-      starEl.innerHTML =
-        '<div style="display:flex;align-items:center;gap:2px;"><svg viewBox="0 0 24 24" width="9" height="9"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z" fill="#FFB800"/></svg>' +
-        "<span style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:#FFB800;\">" + star.starTitle + "</span></div>" +
-        "<div style=\"font-family:'Rajdhani';font-size:7px;color:#aaa;\">" + star.pos + "</div>";
-      infoRow.appendChild(starEl);
-    }
-    info.appendChild(infoRow);
     card.appendChild(info);
 
-    // ── TAP HANDLER: scale+glow → then fighting-game animation ──
+    // ── TAP HANDLER — select team (don't auto-transition) ──
     card.onclick = function() {
       SND.click();
-      // Immediate: selected card scales up, others dim
+      selectedTeamId = tid;
+      selectedTeam = team;
       var allCards = grid.querySelectorAll('[data-team]');
       allCards.forEach(function(c) {
         if (c.dataset.team === tid) {
-          c.style.transform = 'scale(1.1)';
-          c.style.borderColor = team.colors.secondary;
+          c.style.transform = 'scale(1.05)';
+          c.style.borderColor = team.accent;
           c.style.boxShadow = '0 0 24px ' + team.colors.primary + '88, 0 8px 20px rgba(0,0,0,0.6)';
           c.style.zIndex = '10';
+          c.style.opacity = '1';
+          c.style.filter = '';
         } else {
-          c.style.opacity = '0.4';
-          c.style.transform = 'scale(0.95)';
+          c.style.opacity = '0.35';
+          c.style.transform = 'scale(0.96)';
           c.style.filter = 'brightness(0.5)';
+          c.style.zIndex = '1';
         }
       });
-      // Brief flash then transition
-      setTimeout(function() {
-        startSelectionAnimation(el, tid, team, isFirst);
-      }, 400);
+      // Show KICK OFF button
+      kickOffBtn.style.opacity = '1';
+      kickOffBtn.style.pointerEvents = 'auto';
     };
     card.dataset.team = tid;
 
@@ -195,10 +193,53 @@ export function buildTeamSelect() {
   });
   content.appendChild(grid);
 
+  // ── KICK OFF BUTTON (hidden until team selected) ──
+  var selectedTeamId = null;
+  var selectedTeam = null;
+  var kickOffBtn = document.createElement('button');
+  kickOffBtn.className = 'btn-blitz';
+  kickOffBtn.style.cssText = 'flex-shrink:0;margin:6px 20px 8px;border-color:#FF4511;color:#000;background:linear-gradient(180deg,#FFB800 0%,#FF4511 100%);font-size:22px;padding:14px 24px;letter-spacing:5px;opacity:0.3;pointer-events:none;transition:opacity 0.3s;text-align:center;display:block;width:calc(100% - 40px);';
+  kickOffBtn.textContent = 'KICK OFF!';
+  kickOffBtn.onclick = function() {
+    if (!selectedTeamId) return;
+    SND.click();
+    // Skip animation — go straight to pregame
+    var opponents = getSeasonOpponents(selectedTeamId);
+    var opponentId = opponents[0];
+    var humanReceives = Math.random() < 0.5;
+    var difficulty = GS && GS.difficulty ? GS.difficulty : 'EASY';
+    var conditions = generateConditions(isFirst && (!GS.season || !GS.season.currentGame));
+    setGs(function(s) {
+      return Object.assign({}, s || {}, {
+        screen: 'pregame',
+        team: selectedTeamId,
+        difficulty: difficulty,
+        opponent: opponentId,
+        humanReceives: humanReceives,
+        _coinTossDone: true,
+        offRoster: getOffenseRoster(selectedTeamId).slice(0, 4).map(function(p) { return p.id; }),
+        defRoster: getDefenseRoster(selectedTeamId).slice(0, 4).map(function(p) { return p.id; }),
+        offHand: getOffCards(selectedTeamId).slice(0, 4),
+        defHand: getDefCards(selectedTeamId).slice(0, 4),
+        gameConditions: conditions,
+        isFirstSeason: s ? s.isFirstSeason : true,
+        season: s && s.season ? s.season : {
+          opponents: opponents,
+          currentGame: 0,
+          results: [],
+          totalScore: 0,
+          torchCards: [],
+          carryoverPoints: 0,
+        },
+      });
+    });
+  };
+  content.appendChild(kickOffBtn);
+
   // ── DIFFICULTY ROW (hidden on first game) ──
   if (!isFirst) {
     var diffRow = document.createElement('div');
-    diffRow.style.cssText = 'display:flex;gap:8px;justify-content:center;margin-top:4px;';
+    diffRow.style.cssText = 'flex-shrink:0;display:flex;gap:8px;justify-content:center;padding:0 20px 4px;';
     var diffs = [
       { id: 'EASY', label: 'EASY', color: 'var(--l-green)' },
       { id: 'MEDIUM', label: 'MEDIUM', color: 'var(--a-gold)' },

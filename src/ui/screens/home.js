@@ -5,6 +5,7 @@ import { buildHomeCard } from '../components/cards.js';
 import AudioStateManager from '../../engine/audioManager.js';
 
 var DEV_LOG = [
+  "v0.24.0 \u2014 Scheme Identity: 6 real formations + 19 route concepts from 7v7 research. Team scheme identity (Boars power, Wolves option, Stags air raid, Serpents multiple). Weighted draft pools + formation tendencies. All 8 TORCH cards functional. Sequential points fly-in animation. Bug fixes (ovrSystem, conditions, card effects). Team select redesign with badges + KICK OFF. Wolves rename. Bigger home/pregame.",
   "v0.22.2 \u2014 Drive summary with player names, UI cleanup. ESPN-style descriptions now include player names (12-yd Pass to Monroe, SACK by Tillery). QB/RB stat line shows player names with color-coded stats, hidden until first play. Drive header stats enlarged to Teko 16px bold. Removed instruction text (SELECT PLAY/SCHEME) \u2014 YOUR OFFENSE/DEFENSE header is sufficient. Pregame Banded Clash layout, TORCH banner, team logo badges.",
   "v0.20.0 \u2014 Fire & Steel: Cards-hero layout, football-O wordmark, green offense/orange torch/blue defense triad, TORCH card premium treatment (animated flame, breathing glow, light cast, warm shimmer, ember sparks), warm scorched-black bg, steel blue defense, torch orange replaces purple, Font Awesome icons, Teko+Rajdhani font system.",
   "v0.19.0 \u2014 Premium UI: Layered atmosphere home screen, torch-pass football SVG, playing-card fan with football art, entrance choreography, Teko+Rajdhani font system, ember particles, title shimmer, CTA glow breathe.",
@@ -30,7 +31,7 @@ var DEV_LOG = [
 
 export function buildHome(){
   var el=document.createElement('div');
-  el.style.cssText='min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px 20px;position:relative;overflow:hidden;gap:0;';
+  el.style.cssText='height:100vh;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:20px 20px 24px;position:relative;overflow:hidden;';
 
   // === LAYERED BACKGROUND ===
   // Base: deep purple radial
@@ -100,7 +101,7 @@ export function buildHome(){
 
   // === CARD FAN — premium cards using shared buildHomeCard ===
   var cardFan=document.createElement('div');
-  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:340px;height:180px;margin-top:0;margin-bottom:16px;z-index:2;overflow:visible;animation:fanFloat 5s ease-in-out 1.5s infinite;';
+  cardFan.style.cssText='position:relative;display:flex;align-items:center;justify-content:center;width:340px;height:200px;z-index:2;overflow:visible;animation:fanFloat 5s ease-in-out 1.5s infinite;flex-shrink:0;';
   var fanTypes=['offense','torch','defense'];
   var fanAngles=[-18,0,18];
   var fanX=[-72,0,72];
@@ -143,7 +144,7 @@ export function buildHome(){
   // Create the football SVG element programmatically (avoids data URI encoding issues).
   // The span is sized to match a Teko O. The SVG inside uses overflow:visible + contain.
   var title=document.createElement('h1');
-  title.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:88px;line-height:0.85;color:#FFB800;text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,184,0,0.35);transform:skewX(-8deg);margin-bottom:0;text-align:center;letter-spacing:7px;z-index:2;animation:homeRevealUp 0.5s ease-out 0.4s both,titleShimmer 4s ease-in-out 2s infinite;position:relative;";
+  title.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:116px;line-height:0.85;color:#FFB800;text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,184,0,0.35);transform:skewX(-8deg);text-align:center;letter-spacing:7px;z-index:2;animation:homeRevealUp 0.5s ease-out 0.4s both,titleShimmer 4s ease-in-out 2s infinite;position:relative;flex-shrink:0;";
   title.textContent='T';
   // Football O span
   var oSpan=document.createElement('span');
@@ -165,24 +166,22 @@ export function buildHome(){
   rch.textContent='RCH';
   title.appendChild(rch);
   var sub=document.createElement('span');
-  sub.style.cssText="display:block;color:#FFF5E6;font-family:'Teko',sans-serif;font-weight:700;font-size:38px;letter-spacing:6px;text-shadow:2px 2px 0 rgba(0,0,0,0.8);margin-top:2px;";
+  sub.style.cssText="display:block;color:#FFF5E6;font-family:'Teko',sans-serif;font-weight:700;font-size:52px;letter-spacing:10px;text-shadow:2px 2px 0 rgba(0,0,0,0.8);margin-top:4px;";
   sub.textContent='FOOTBALL';
   title.appendChild(sub);
   el.append(title);
 
   // === TAGLINE ===
   var tagline=document.createElement('div');
-  tagline.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;color:rgba(255,224,160,0.7);letter-spacing:4px;text-align:center;margin-top:6px;margin-bottom:12px;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.6s both;text-shadow:0 0 10px rgba(255,180,0,0.2);text-transform:uppercase;";
-  tagline.textContent='DEAL THE PLAY';
-  el.append(tagline);
+  // tagline removed — cleaner look
 
   // === CTA BUTTON ===
   var playWrap=document.createElement('div');
-  playWrap.style.cssText='width:100%;z-index:2;position:relative;display:flex;flex-direction:column;gap:10px;opacity:0;animation:homeRevealBtn 0.4s ease-out 1.0s both;';
+  playWrap.style.cssText='width:100%;z-index:2;position:relative;display:flex;flex-direction:column;gap:10px;opacity:0;animation:homeRevealBtn 0.4s ease-out 1.0s both;flex-shrink:0;';
   var playBtn=document.createElement('button');
   playBtn.className='btn-blitz';
   playBtn.style.cssText='border-color:#FF4511;color:#000;background:linear-gradient(180deg,#FFB800 0%,#FF4511 100%);font-size:24px;padding:20px 24px;animation:ctaGlow 3s ease-in-out 0.3s infinite;letter-spacing:5px;';
-  playBtn.textContent='KICK OFF';
+  playBtn.textContent="LET'S GO!";
   playBtn.onclick=function(){
     SND.click();
     AudioStateManager.init(); // First user interaction — init audio
@@ -196,17 +195,7 @@ export function buildHome(){
   devBtn.textContent='DEV: RESET DAILY LOCK';
   devBtn.onclick=function(){localStorage.clear(); render();};
 
-  // Daily Drive button
-  var dailyBtn=document.createElement('button');
-  dailyBtn.className='btn-blitz';
-  dailyBtn.style.cssText='border-color:#555;color:#aaa;background:transparent;font-size:10px;padding:8px 16px;letter-spacing:2px;box-shadow:none;';
-  dailyBtn.textContent='DAILY DRIVE';
-  dailyBtn.onclick=function(){
-    SND.click();
-    setGs(function(s){ return Object.assign({}, s || {}, {screen:'dailyDrive'}); });
-  };
-
-  playWrap.append(playBtn,dailyBtn,devBtn);
+  playWrap.append(playBtn,devBtn);
   el.appendChild(playWrap);
 
   // DEV-ONLY: Quick Play — skip all drafts, straight to gameplay

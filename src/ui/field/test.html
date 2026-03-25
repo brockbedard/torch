@@ -98,7 +98,7 @@ let offScore = 0;
 let defScore = 0;
 let snaps = 0;
 let currentPlayType = 'SHORT';
-let currentFormation = 'shotgun_spread';
+let currentFormation = 'shotgun_deuce';
 
 const TEAM_COLORS = {
   sentinels: { name: 'BOARS', color: '#C4A265' },
@@ -114,8 +114,11 @@ document.fonts.ready.then(() => {
   document.getElementById('wrap').appendChild(field.canvas);
 
   function getFormation(playType, team) {
+    // Use weighted pool for variety, fall back to fixed map
+    var picked = field.pickFormation(team, playType);
+    if (picked) return picked;
     var teamOverrides = field.TEAM_FORMATION_MAP[team] || {};
-    return teamOverrides[playType] || field.PLAY_FORMATION_MAP[playType] || 'shotgun_spread';
+    return teamOverrides[playType] || field.PLAY_FORMATION_MAP[playType] || 'shotgun_deuce';
   }
 
   function getState() {
@@ -200,16 +203,17 @@ document.fonts.ready.then(() => {
         down = 1; distance = 10;
       }
 
-      // Scroll field to new position
-      field.scrollTo(oldBall, ballYard, 400);
-
       // Update formation for current play type
       currentFormation = getFormation(currentPlayType, offTeam);
 
+      // Brief pause before scrolling to new position (let camera settle)
       setTimeout(function() {
-        draw();
-      }, 450);
-    }, type === 'touchdown' || type === 'interception' ? 2000 : 1600);
+        field.scrollTo(oldBall, ballYard, 800);
+        setTimeout(function() {
+          draw();
+        }, 850);
+      }, 400);
+    }, type === 'touchdown' || type === 'interception' ? 5000 : 4500);
   }
 
   // Team buttons
@@ -266,7 +270,8 @@ document.fonts.ready.then(() => {
 
   // Manual formation buttons
   var fDiv = document.getElementById('formations');
-  Object.keys(field.FORMATIONS).filter(function(k) { return k.indexOf('_') > 0 && k !== 'shotgun_2x2' && k !== 'iform_under_center'; }).forEach(function(f) {
+  var CANONICAL = ['shotgun_deuce','trips','twins','bunch','iform_pistol','empty'];
+  CANONICAL.forEach(function(f) {
     var btn = document.createElement('button');
     btn.textContent = f.replace(/_/g, ' ').toUpperCase();
     btn.onclick = function() {

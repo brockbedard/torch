@@ -4,7 +4,7 @@
 TORCH Football is a mobile card game (Balatro meets college football). 4 fictional college teams with distinct offensive/defensive schemes battle through 3-game seasons. Card-based play selection, badge combos, star player Heat Check, and TORCH points (score = wallet). Built with Vite + vanilla JS, deployed on Vercel.
 
 ## Version
-**v0.23.0 "Gameday"** — Retuned football engine with bigger plays, scheme differentiation, and balance-tested difficulty. Color-coded play cards, position-hero player cards, drive summary, Banded Clash pregame, TORCH banner.
+**v0.24.0 "Scheme Identity"** — Real 7v7 football: 6 research-accurate formations, 13 pass concepts + 6 run concepts, team scheme identity (weighted draft pools, formation tendencies, animation styles per team). All 8 TORCH cards functional. Sequential points animation. Bug fixes (ovrSystem, conditions, card effects). UI refresh: team select with centered badges + KICK OFF flow, bigger home screen, pregame hold.
 
 ## How to Run
 ```bash
@@ -71,7 +71,15 @@ src/
 │       ├── dailyDrive.js      # Daily Drive mode
 │       ├── cardMockup.js      # Card design reference (?mockup, dev-only)
 │       └── visualTest.js      # Visual test harness (?test, dev-only)
-├── docs/                      # Specs, research, amendments
+│   ├── field/
+│   │   ├── fieldRenderer.js   # ★ Digital Glass Floor portrait field (Canvas 2D)
+│   │   ├── fieldAnimator.js   # Animation wrapper: shake, particles, camera follow
+│   │   ├── playBuilder.js     # ★ Concept-based play animations (13 pass + 6 run concepts)
+│   │   └── test.html          # Interactive field test harness (team/formation/play buttons)
+├── docs/research/
+│   ├── TORCH-7v7-FOOTBALL-RESEARCH.md    # ★ Football source of truth: formations, routes, coverages
+│   └── TORCH-TEAM-SCHEME-IDENTITY.md     # ★ Team scheme identity: draft weights, animation styles
+├── docs/                      # Other specs, amendments
 └── archive/                   # Dead files kept for historical reference
 ```
 
@@ -88,16 +96,25 @@ Home → Team Select → Pregame (Banded Clash) → Gameplay → Halftime → Ga
 Home → Daily Drive → Gameplay (1 half) → Result + Share
 ```
 
-## The 4 Teams
+## The 4 Teams (TORCH-TEAM-SCHEME-IDENTITY.md)
 
-| Team | Colors | Offense | Defense | OFF/DEF | Mascot Icon |
-|------|--------|---------|---------|---------|-------------|
-| **Boars** (Ridgemont) | Crimson #8B0000 / Gold #C4A265 | Run & Shoot | Press Man | 4/3 | boar-tusks.svg |
-| **Werewolves** (Northern Pines) | Midnight #1A1A2E / Silver #C0C0C0 | Triple Option | Cover 3 Zone | 3/4 | werewolf.svg |
-| **Stags** (Crestview) | Orange #F28C28 / Charcoal #1C1C1C | Spread RPO | Swarm Blitz | 5/2 | deer.svg |
-| **Serpents** (Blackwater) | Purple #2E0854 / Venom #39FF14 | Air Raid | Pattern Match | 3/4 | sea-serpent.svg |
+| Team | Scheme | Real Analog | Run/Pass | Formation Base | Def Shell |
+|------|--------|-------------|----------|----------------|-----------|
+| **Boars** (Ridgemont) | Power Spread | Georgia, Alabama | 55/45 | I-Form, Pistol, Twins | Cover 3 zone |
+| **Wolves** (N. Pines) | Spread Option | Oregon, Rich Rod WVU | 50/50 | Shotgun, Pistol, Trips | Cover 1 + spy |
+| **Stags** (Crestview) | Air Raid | Mike Leach, Lincoln Riley | 30/70 | Trips, Empty, Deuce | Cover 0 blitz |
+| **Serpents** (Blackwater) | Multiple/Pro | Saban, Kirby Smart | 45/55 | Twins, Bunch, all looks | Multiple/disguised |
 
 **Counter-play:** Boars > Serpents > Stags > Werewolves > Boars
+
+### Team Gameplay Differentiation Matrix
+| Dimension | Boars | Werewolves | Stags | Serpents |
+|-----------|-------|------------|-------|---------|
+| Draft pool | RUN 4x weight | RUN 3x, SCREEN 2x | QUICK 4x, DEEP 3x | All 2x (balanced) |
+| Best formation | I-Form / Pistol | Shotgun / Pistol | Trips / Empty | Bunch / Twins |
+| Animation feel | Physical, OL 1.4x | Fast, QB zone-read | Quick release 0.75x | Pre-snap WR motion |
+| Star player | RB | QB | WR1 | Versatile flex |
+| What beats them | Spread + quick pass | Contain QB + zone | Run the ball | Execute fundamentals |
 
 ## v0.23.0 — Football Engine Retuning
 
@@ -199,7 +216,9 @@ Persistent panel below SNAP button replacing dead space:
 ## Key Systems
 
 ### Hand Management
-10-card playbook per side. Draw 4 at game start. Play 1 → bottom of deck → draw 1 from top. Always 4 in hand. Player cards also 4 per hand.
+10-card playbook per side. Draw 4 at game start. Play 1 → draw 1 from remaining 6 (weighted by team scheme). Always 4 in hand. Player cards also 4 per hand.
+
+**Draw weighting** (`TEAM_DRAW_WEIGHTS` in state.js): When cycling a card, the replacement is selected with weighted probability based on the team's offensive identity. Boars see run cards 4x more often. Stags see quick/deep pass cards 3-4x more. Serpents are balanced (all 2x). This makes team selection change gameplay, not just colors.
 
 ### TORCH Modifier Cards (Score = Wallet)
 20 cards across 4 categories, 3 tiers (Bronze/Silver/Gold). Icons from game-icons.net (CC BY 3.0).
@@ -280,6 +299,41 @@ No emoji in UI. No blue outside defense card backs.
 - TORCH points never decrease from plays (only from shop spending).
 - 4 cards in hand (plays and players).
 
+## Digital Glass Floor — Field Renderer
+
+### Architecture (src/ui/field/)
+Canvas 2D portrait field renderer with animated player dots. 375×360px. NOT yet wired into gameplay.js (still uses old DOM field strip).
+
+- **fieldRenderer.js** — Static field + formations + player dot glow sprites
+- **fieldAnimator.js** — rAF loop, screen shake, particles, ball flight, camera follow
+- **playBuilder.js** — Concept-based animation: 13 pass concepts + 6 run concepts
+- **test.html** — Interactive test: `http://localhost:5173/src/ui/field/test.html`
+
+### 6 Offensive Formations (from TORCH-7v7-FOOTBALL-RESEARCH.md §3)
+`shotgun_deuce`, `trips`, `twins`, `bunch`, `iform_pistol`, `empty`
+- OL ALWAYS at x: 0.42, 0.50, 0.58 — variety from 3 skill player positions only
+- DL at x: 0.35, 0.50, 0.65 at y:1 (outside shade on guards)
+- 5 defensive alignments: Base 3-1-2-1, Two-High, Cover 3, Press Man, Nickel
+
+### Route Concepts (from research §5, not isolated routes)
+**Quick:** slant-arrow, hitch, quick-out | **Intermediate:** smash, flood, mesh, smash-seam, dagger, drive | **Deep:** post-corner, verticals, comeback-vertical, post-wheel
+**Run:** inside zone, power, draw, toss, zone read, QB draw
+Each concept assigns routes to ALL 3 skill players. Team concept weights bias selection.
+
+### Team Animation Styles (TEAM_ANIM_STYLE in playBuilder.js)
+| Team | olScale | throwTMod | Special |
+|------|---------|-----------|---------|
+| Boars | 1.4 | 1.0 | OL fires forward aggressively |
+| Werewolves | 1.0 | 0.85 | QB zone-read mesh motion |
+| Stags | 0.9 | 0.75 | Ball out fast — Air Raid quick game |
+| Serpents | 1.0 | 0.95 | Pre-snap WR motion across formation |
+
+### Formation Pools (TEAM_FORMATION_POOLS in fieldRenderer.js)
+Weighted random selection per team × play type. Boars get I-Form 50% on RUN, Stags get Trips 35% on SHORT, etc. Provides visual variety while maintaining team identity.
+
+### Camera Follow
+For big plays (settle point past 80% canvas height), the field viewport scrolls downfield in sync with the dots. Uses `ballYard` adjustment + pixel offset — no ctx.translate.
+
 ## Specced But Not Built (v2+)
 - TORCH modifier card system (20 cards designed, icons sourced, mockup complete — needs gameplay integration)
 - Halftime TORCH shop with tier-based card offerings
@@ -289,6 +343,7 @@ No emoji in UI. No blue outside defense card backs.
 - Stats bottom sheet (swipe-up during gameplay)
 - AI Coaching Personality flavor text
 - Real crowd audio loops (system ready, files not sourced)
-- Pre-snap route diagrams on field (offense only, SVG overlay, research complete)
-- Defensive coverage diagrams on field
+- Wire field renderer into gameplay.js (replace old DOM field strip with Canvas 2D)
+- Phase 2 juice: speed trails, screen shake tuning, impact flash (infrastructure exists)
+- Phase 3 identity: star player glow, team particles, variable play speed, turnover drama
 - Multiplayer, dynasty mode, app store release
