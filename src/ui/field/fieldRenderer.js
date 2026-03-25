@@ -50,115 +50,129 @@ const CFG = {
 // Shared OL positions (wider splits so dots don't touch)
 // At 375px, 0.12 apart = 45px between centers (40px dot diameter = 5px gap)
 var OL = [
-  { pos: 'OL', x: 0.44, y: 0, num: 65 },
+  { pos: 'OL', x: 0.40, y: 0, num: 65 },
   { pos: 'OL', x: 0.50, y: 0, num: 72 },
-  { pos: 'OL', x: 0.56, y: 0, num: 68 },
+  { pos: 'OL', x: 0.60, y: 0, num: 68 },
 ];
 // Shared DL positions (aligned over OL gaps, 2 yards off = close but not touching)
 var DL = [
-  { pos: 'DL', x: 0.38, y: 2, num: 91 },
-  { pos: 'DL', x: 0.50, y: 2, num: 97 },
-  { pos: 'DL', x: 0.62, y: 2, num: 93 },
+  { pos: 'DL', x: 0.38, y: 3, num: 91 },
+  { pos: 'DL', x: 0.50, y: 3, num: 97 },
+  { pos: 'DL', x: 0.62, y: 3, num: 93 },
 ];
 
 const FORMATIONS = {
   // ── OFFENSIVE FORMATIONS ──
+  // Shotgun 2×2: balanced spread, 2 WRs each side. Pass-first look.
+  // Teams: Serpents (Air Raid), Boars (Run & Shoot)
   'shotgun_spread': {
     offense: OL.concat([
       { pos: 'QB', x: 0.50, y: -5, num: 7 },
-      { pos: 'WR', x: 0.10, y: 0, num: 1 },
-      { pos: 'SLOT', x: 0.75, y: -1, num: 3 },
-      { pos: 'WR', x: 0.90, y: 0, num: 11 },
+      { pos: 'WR', x: 0.08, y: 0, num: 1 },    // split wide left
+      { pos: 'SLOT', x: 0.25, y: -1, num: 3 },  // slot left
+      { pos: 'WR', x: 0.92, y: 0, num: 11 },    // split wide right
     ]),
     defense: DL.concat([
-      { pos: 'CB', x: 0.10, y: 6, num: 24 },
-      { pos: 'CB', x: 0.90, y: 6, num: 2 },
-      { pos: 'LB', x: 0.50, y: 9, num: 55 },
-      { pos: 'S', x: 0.50, y: 15, num: 21 },
+      { pos: 'CB', x: 0.08, y: 5, num: 24 },    // on WR #1
+      { pos: 'CB', x: 0.25, y: 5, num: 2 },     // on SLOT #3
+      { pos: 'CB', x: 0.92, y: 5, num: 5 },     // on WR #11
+      { pos: 'S', x: 0.50, y: 11, num: 21 },    // deep center
     ]),
   },
+  // Trips Right: 3 WRs to QB's right (screen-left). Flood concepts.
+  // Teams: Serpents, Stags
   'trips_right': {
     offense: OL.concat([
       { pos: 'QB', x: 0.50, y: -5, num: 7 },
-      { pos: 'WR', x: 0.92, y: 0, num: 1 },
-      { pos: 'WR', x: 0.80, y: -2, num: 82 },
-      { pos: 'SLOT', x: 0.75, y: 0, num: 3 },
+      { pos: 'WR', x: 0.25, y: 0, num: 1 },       // inside of trips (on LOS)
+      { pos: 'WR', x: 0.165, y: -1, num: 82 },    // middle of trips (equidistant)
+      { pos: 'WR', x: 0.08, y: 0, num: 11 },      // outside of trips (on LOS)
     ]),
     defense: DL.concat([
-      { pos: 'CB', x: 0.90, y: 5, num: 24 },
-      { pos: 'CB', x: 0.78, y: 6, num: 2 },
-      { pos: 'LB', x: 0.50, y: 9, num: 55 },
-      { pos: 'S', x: 0.40, y: 15, num: 21 },
+      { pos: 'CB', x: 0.08, y: 5, num: 24 },     // on outside WR #11
+      { pos: 'CB', x: 0.165, y: 5, num: 2 },     // on middle WR #82
+      { pos: 'CB', x: 0.25, y: 5, num: 5 },      // on inside WR #1
+      { pos: 'S', x: 0.55, y: 11, num: 21 },     // deep, cheated weak side
     ]),
   },
+  // I-Form Tight: power run. QB under center, FB lead, RB deep, WR split wide.
+  // Teams: Werewolves (Triple Option)
   'iform_tight': {
     offense: OL.concat([
-      { pos: 'QB', x: 0.50, y: -2, num: 7 },
-      { pos: 'FB', x: 0.50, y: -5, num: 34 },
-      { pos: 'RB', x: 0.50, y: -8, num: 25 },
-      { pos: 'TE', x: 0.75, y: 0, num: 82 },
+      { pos: 'QB', x: 0.50, y: -2, num: 7 },     // under center
+      { pos: 'FB', x: 0.50, y: -5, num: 34 },    // fullback lead blocker
+      { pos: 'RB', x: 0.50, y: -7, num: 25 },    // tailback
+      { pos: 'WR', x: 0.90, y: 0, num: 11 },     // split end right
     ]),
     defense: DL.concat([
-      { pos: 'LB', x: 0.30, y: 7, num: 55 },
-      { pos: 'LB', x: 0.50, y: 8, num: 42 },
-      { pos: 'LB', x: 0.70, y: 7, num: 52 },
-      { pos: 'S', x: 0.50, y: 15, num: 21 },
+      { pos: 'LB', x: 0.35, y: 5, num: 55 },     // strong side LB
+      { pos: 'LB', x: 0.50, y: 6, num: 42 },     // middle LB
+      { pos: 'CB', x: 0.90, y: 5, num: 24 },     // on split end WR #11
+      { pos: 'S', x: 0.50, y: 11, num: 21 },     // deep center
     ]),
   },
+  // Singleback Wing: balanced run/pass. QB under center, RB offset, TE wing, WR split.
+  // Teams: Stags, Werewolves
   'singleback_wing': {
     offense: OL.concat([
-      { pos: 'QB', x: 0.50, y: -3, num: 7 },
-      { pos: 'RB', x: 0.35, y: -5, num: 25 },
-      { pos: 'TE', x: 0.75, y: -1, num: 82 },
-      { pos: 'WR', x: 0.10, y: 0, num: 1 },
+      { pos: 'QB', x: 0.50, y: -3, num: 7 },     // under center
+      { pos: 'RB', x: 0.35, y: -5, num: 25 },    // offset left
+      { pos: 'TE', x: 0.72, y: -1, num: 82 },    // wing TE off line
+      { pos: 'WR', x: 0.08, y: 0, num: 1 },      // split wide left
     ]),
     defense: DL.concat([
-      { pos: 'CB', x: 0.12, y: 6, num: 24 },
-      { pos: 'LB', x: 0.40, y: 8, num: 55 },
-      { pos: 'LB', x: 0.65, y: 8, num: 42 },
-      { pos: 'S', x: 0.50, y: 15, num: 21 },
+      { pos: 'CB', x: 0.08, y: 5, num: 24 },
+      { pos: 'LB', x: 0.40, y: 6, num: 55 },
+      { pos: 'LB', x: 0.65, y: 6, num: 42 },
+      { pos: 'S', x: 0.50, y: 11, num: 21 },
     ]),
   },
+  // Bunch Left: 3 WRs clustered to QB's left (screen-right). Pick/rub routes.
+  // Teams: Boars (Run & Shoot), Serpents
   'bunch_left': {
     offense: OL.concat([
-      { pos: 'QB', x: 0.50, y: -6, num: 7 },
-      { pos: 'WR', x: 0.22, y: 0, num: 1 },
-      { pos: 'WR', x: 0.08, y: -3, num: 82 },
-      { pos: 'SLOT', x: 0.22, y: -3, num: 3 },
+      { pos: 'QB', x: 0.50, y: -5, num: 7 },
+      { pos: 'WR', x: 0.82, y: 0, num: 1 },       // point of bunch (on LOS)
+      { pos: 'WR', x: 0.74, y: -2, num: 82 },     // left wing (equidistant from #1)
+      { pos: 'SLOT', x: 0.90, y: -2, num: 3 },    // right wing (equidistant from #1)
     ]),
     defense: DL.concat([
-      { pos: 'CB', x: 0.12, y: 5, num: 24 },
-      { pos: 'CB', x: 0.28, y: 6, num: 2 },
-      { pos: 'LB', x: 0.50, y: 9, num: 55 },
-      { pos: 'S', x: 0.50, y: 15, num: 21 },
+      { pos: 'CB', x: 0.74, y: 5, num: 24 },
+      { pos: 'CB', x: 0.90, y: 5, num: 2 },
+      { pos: 'LB', x: 0.50, y: 6, num: 55 },
+      { pos: 'S', x: 0.45, y: 11, num: 21 },
     ]),
   },
+  // Pistol Twins: QB in short shotgun, RB behind, mirrored WRs. Read-option/RPO.
+  // Teams: Stags (Spread RPO), Boars
   'pistol_twins': {
     offense: OL.concat([
-      { pos: 'QB', x: 0.50, y: -3, num: 7 },
-      { pos: 'RB', x: 0.50, y: -6, num: 25 },
-      { pos: 'WR', x: 0.10, y: 0, num: 1 },
-      { pos: 'WR', x: 0.90, y: 0, num: 11 },
-    ]),
-    defense: DL.concat([
-      { pos: 'CB', x: 0.10, y: 6, num: 24 },
-      { pos: 'CB', x: 0.90, y: 6, num: 2 },
-      { pos: 'LB', x: 0.50, y: 9, num: 55 },
-      { pos: 'S', x: 0.50, y: 15, num: 21 },
-    ]),
-  },
-  'empty_3_wide': {
-    offense: OL.concat([
-      { pos: 'QB', x: 0.50, y: -5, num: 7 },
-      { pos: 'WR', x: 0.08, y: 0, num: 1 },
-      { pos: 'WR', x: 0.25, y: -1, num: 82 },
-      { pos: 'WR', x: 0.92, y: 0, num: 11 },
+      { pos: 'QB', x: 0.50, y: -3, num: 7 },     // pistol depth
+      { pos: 'RB', x: 0.50, y: -6, num: 25 },    // behind QB
+      { pos: 'WR', x: 0.08, y: 0, num: 1 },      // wide left
+      { pos: 'WR', x: 0.92, y: 0, num: 11 },     // wide right
     ]),
     defense: DL.concat([
       { pos: 'CB', x: 0.08, y: 5, num: 24 },
       { pos: 'CB', x: 0.92, y: 5, num: 2 },
-      { pos: 'LB', x: 0.50, y: 8, num: 42 },
-      { pos: 'S', x: 0.50, y: 14, num: 21 },
+      { pos: 'LB', x: 0.50, y: 6, num: 55 },
+      { pos: 'S', x: 0.50, y: 11, num: 21 },
+    ]),
+  },
+  // Empty 3-Wide: no backfield, 3 WRs spread on the LOS. Max pass protection.
+  // Teams: Serpents (Air Raid)
+  'empty_3_wide': {
+    offense: OL.concat([
+      { pos: 'QB', x: 0.50, y: -5, num: 7 },
+      { pos: 'WR', x: 0.08, y: 0, num: 1 },       // wide left
+      { pos: 'WR', x: 0.25, y: 0, num: 82 },      // wide left slot (on LOS, spread)
+      { pos: 'WR', x: 0.92, y: 0, num: 11 },      // wide right
+    ]),
+    defense: DL.concat([
+      { pos: 'CB', x: 0.08, y: 5, num: 24 },     // on WR #1
+      { pos: 'CB', x: 0.25, y: 5, num: 5 },      // on WR #82
+      { pos: 'CB', x: 0.92, y: 5, num: 2 },      // on WR #11
+      { pos: 'S', x: 0.50, y: 11, num: 21 },     // deep center
     ]),
   },
 };
