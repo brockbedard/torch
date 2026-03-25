@@ -145,6 +145,53 @@ function getGlowSprite(rgb, radius, intensity) {
   return cv;
 }
 
+// ── PRE-RENDERED NEON LINE SPRITE CACHE ──
+var _neonCache = {};
+
+function getNeonLineSprite(lineW, rgb, alpha) {
+  var key = lineW + ':' + rgb.join(',') + ':' + alpha;
+  if (_neonCache[key]) return _neonCache[key];
+
+  var stripH = 20; // total height including glow
+  var cv = document.createElement('canvas');
+  cv.width = Math.ceil(lineW);
+  cv.height = stripH;
+  var c = cv.getContext('2d');
+  var cy = stripH / 2;
+  var r = rgb[0], g = rgb[1], b = rgb[2];
+
+  // Layer 1: Wide soft bloom
+  c.globalCompositeOperation = 'lighter';
+  var g1 = c.createLinearGradient(0, 0, 0, stripH);
+  g1.addColorStop(0, 'rgba(' + r + ',' + g + ',' + b + ',0)');
+  g1.addColorStop(0.3, 'rgba(' + r + ',' + g + ',' + b + ',' + (0.06 * alpha) + ')');
+  g1.addColorStop(0.5, 'rgba(' + r + ',' + g + ',' + b + ',' + (0.15 * alpha) + ')');
+  g1.addColorStop(0.7, 'rgba(' + r + ',' + g + ',' + b + ',' + (0.06 * alpha) + ')');
+  g1.addColorStop(1, 'rgba(' + r + ',' + g + ',' + b + ',0)');
+  c.fillStyle = g1;
+  c.fillRect(0, 0, lineW, stripH);
+
+  // Layer 2: Medium colored glow
+  c.strokeStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + (0.35 * alpha) + ')';
+  c.lineWidth = 5;
+  c.beginPath(); c.moveTo(0, cy); c.lineTo(lineW, cy); c.stroke();
+
+  // Layer 3: Bright core line
+  c.strokeStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + (0.6 * alpha) + ')';
+  c.lineWidth = 2;
+  c.beginPath(); c.moveTo(0, cy); c.lineTo(lineW, cy); c.stroke();
+
+  // Layer 4: White-hot center
+  var wr = Math.min(255, r + 100), wg = Math.min(255, g + 100), wb = Math.min(255, b + 100);
+  c.strokeStyle = 'rgba(' + wr + ',' + wg + ',' + wb + ',' + (0.8 * alpha) + ')';
+  c.lineWidth = 1;
+  c.beginPath(); c.moveTo(0, cy); c.lineTo(lineW, cy); c.stroke();
+
+  c.globalCompositeOperation = 'source-over';
+  _neonCache[key] = { cv: cv, h: stripH };
+  return _neonCache[key];
+}
+
 // ── PORTRAIT FIELD RENDERER ──
 
 /**
@@ -185,6 +232,16 @@ export function createFieldRenderer(width, height) {
   var sCtx = staticCv.getContext('2d');
   sCtx.scale(DPR, DPR);
 
+  // Pre-render noise texture once (avoids 600 fillRect calls per redraw)
+  var noiseCv = document.createElement('canvas');
+  noiseCv.width = width * DPR; noiseCv.height = height * DPR;
+  var nCtx = noiseCv.getContext('2d');
+  nCtx.scale(DPR, DPR);
+  for (var _ni = 0; _ni < CFG.noise.count; _ni++) {
+    nCtx.fillStyle = Math.random() > 0.5 ? '#fff' : '#000';
+    nCtx.fillRect(Math.random() * width, Math.random() * height, 1, 1);
+  }
+
   function drawStaticField(centerYard) {
     var c = sCtx;
     var topYard = centerYard - VISIBLE_YARDS / 2;
@@ -198,7 +255,38 @@ export function createFieldRenderer(width, height) {
     c.fillStyle = CFG.bg;
     c.fillRect(0, 0, fieldW, height);
 
-    // (LED tile grid removed — too distracting at portrait scale)
+    // 2a. Mowing stripes (alternating 5-yard bands — broadcast look)
+    for (var myd = 0; myd < 120; myd += 5) {
+      var my1 = (myd - topYard) * YPX;
+      var my2 = ((myd + 5) - topYard) * YPX;
+      if (my2 < 0 || my1 > height) continue;
+      c.fillStyle = (myd / 5) % 2 === 0 ? 'rgba(255,255,255,0.018)' : 'rgba(0,0,0,0.015)';
+      c.fillRect(0, my1, fieldW, my2 - my1);
+    }
+
+    // 2b. Stadium ambient light (center bright, edges dark)
+    var lightGrad = c.createRadialGradient(fieldW / 2, height / 2, 0, fieldW / 2, height / 2, fieldW * 0.7);
+    lightGrad.addColorStop(0, 'rgba(180,220,180,0.03)');
+    lightGrad.addColorStop(0.4, 'rgba(140,180,140,0.015)');
+    lightGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = lightGrad;
+    c.fillRect(0, 0, fieldW, height);
+
+    // 2c. Vignette (edge darkening)
+    var vigGrad = c.createRadialGradient(fieldW / 2, height / 2, Math.min(fieldW, height) * 0.35, fieldW / 2, height / 2, Math.max(fieldW, height) * 0.75);
+    vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
+    vigGrad.addColorStop(0.5, 'rgba(0,0,0,0.08)');
+    vigGrad.addColorStop(1, 'rgba(0,0,0,0.25)');
+    c.fillStyle = vigGrad;
+    c.fillRect(0, 0, fieldW, height);
+
+    // 2d. Atmospheric depth (top = far = slightly darker)
+    var depthGrad = c.createLinearGradient(0, 0, 0, height);
+    depthGrad.addColorStop(0, 'rgba(0,0,0,0.10)');
+    depthGrad.addColorStop(0.35, 'rgba(0,0,0,0.03)');
+    depthGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = depthGrad;
+    c.fillRect(0, 0, fieldW, height);
 
     // 3. End zones (yards 0-10 and 110-120)
     drawEndZonePortrait(c, 0, 10, true, topYard);
@@ -274,18 +362,29 @@ export function createFieldRenderer(width, height) {
       c.restore();
     }
 
-    // 9. Noise overlay
+    // 9. Noise overlay (pre-rendered)
     c.globalAlpha = CFG.noise.opacity;
-    for (var ni = 0; ni < CFG.noise.count; ni++) {
-      c.fillStyle = Math.random() > 0.5 ? '#fff' : '#000';
-      c.fillRect(Math.random() * fieldW, Math.random() * height, 1, 1);
-    }
+    c.drawImage(noiseCv, 0, 0, fieldW, height);
     c.globalAlpha = 1;
 
-    // 10. Border
-    c.strokeStyle = CFG.border.color;
-    c.lineWidth = CFG.border.w;
+    // 10. Double-line sideline border
+    c.strokeStyle = 'rgba(255,255,255,0.25)';
+    c.lineWidth = 2;
     c.strokeRect(1, 1, fieldW - 2, height - 2);
+    c.strokeStyle = 'rgba(255,255,255,0.08)';
+    c.lineWidth = 1;
+    c.strokeRect(5, 5, fieldW - 10, height - 10);
+    // Edge fade (out-of-bounds darkening)
+    var sideGradL = c.createLinearGradient(0, 0, 10, 0);
+    sideGradL.addColorStop(0, 'rgba(0,0,0,0.20)');
+    sideGradL.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = sideGradL;
+    c.fillRect(0, 0, 10, height);
+    var sideGradR = c.createLinearGradient(fieldW, 0, fieldW - 10, 0);
+    sideGradR.addColorStop(0, 'rgba(0,0,0,0.20)');
+    sideGradR.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = sideGradR;
+    c.fillRect(fieldW - 10, 0, 10, height);
   }
 
   function drawEndZonePortrait(c, ydStart, ydEnd, isTop, topYard) {
@@ -345,15 +444,27 @@ export function createFieldRenderer(width, height) {
   function drawNumPortrait(c, num, cx, cy, absYard, topYard, mirrored) {
     c.save();
     c.translate(cx, cy);
-    // In portrait, numbers are rotated 90° to read along sidelines
     c.rotate(mirrored ? Math.PI / 2 : -Math.PI / 2);
 
-    c.fillStyle = CFG.num.color;
     c.font = CFG.num.font;
     c.textBaseline = 'middle';
     var s = num.toString();
-    c.textAlign = 'right'; c.fillText(s[0], -CFG.num.gap, 0);
-    c.textAlign = 'left'; c.fillText(s[1] || '0', CFG.num.gap, 0);
+    var d0 = s[0], d1 = s[1] || '0';
+
+    // Shadow (recessed/embossed — pressed into turf)
+    c.fillStyle = 'rgba(0,0,0,0.18)';
+    c.textAlign = 'right'; c.fillText(d0, -CFG.num.gap + 1.5, 1.5);
+    c.textAlign = 'left'; c.fillText(d1, CFG.num.gap + 1.5, 1.5);
+
+    // Main paint
+    c.fillStyle = CFG.num.color;
+    c.textAlign = 'right'; c.fillText(d0, -CFG.num.gap, 0);
+    c.textAlign = 'left'; c.fillText(d1, CFG.num.gap, 0);
+
+    // Highlight (catch light)
+    c.fillStyle = 'rgba(255,255,255,0.03)';
+    c.textAlign = 'right'; c.fillText(d0, -CFG.num.gap - 0.5, -0.5);
+    c.textAlign = 'left'; c.fillText(d1, CFG.num.gap - 0.5, -0.5);
 
     // Directional arrows
     if (num !== 50) {
@@ -396,14 +507,13 @@ export function createFieldRenderer(width, height) {
 
   function drawLOS(c, losYard, topYard) {
     var y = (losYard - topYard) * YPX;
-    c.save();
-    c.shadowColor = 'rgba(59,130,246,0.3)';
-    c.shadowBlur = 6;
-    c.strokeStyle = 'rgba(59,130,246,0.45)';
-    c.lineWidth = 2;
-    c.beginPath(); c.moveTo(0, y); c.lineTo(fieldW, y); c.stroke();
-    c.restore();
-    // Badge label — inset from edge
+    // Neon line sprite (no shadowBlur — pure additive, fast)
+    var neon = getNeonLineSprite(fieldW, [59, 130, 246], 0.75);
+    var prevComp = c.globalCompositeOperation;
+    c.globalCompositeOperation = 'lighter';
+    c.drawImage(neon.cv, 0, y - neon.h / 2);
+    c.globalCompositeOperation = prevComp;
+    // Badge label
     c.fillStyle = 'rgba(59,130,246,0.7)';
     c.font = "700 8px 'Teko'";
     c.textAlign = 'center';
@@ -415,14 +525,13 @@ export function createFieldRenderer(width, height) {
 
   function drawFirstDownMarker(c, fdYard, topYard) {
     var y = (fdYard - topYard) * YPX;
-    c.save();
-    c.shadowColor = 'rgba(251,191,36,0.3)';
-    c.shadowBlur = 6;
-    c.strokeStyle = 'rgba(251,191,36,0.45)';
-    c.lineWidth = 2;
-    c.beginPath(); c.moveTo(0, y); c.lineTo(fieldW, y); c.stroke();
-    c.restore();
-    // Badge label — inset from edge
+    // Neon line sprite (no shadowBlur — pure additive, fast)
+    var neon = getNeonLineSprite(fieldW, [251, 191, 36], 0.75);
+    var prevComp = c.globalCompositeOperation;
+    c.globalCompositeOperation = 'lighter';
+    c.drawImage(neon.cv, 0, y - neon.h / 2);
+    c.globalCompositeOperation = prevComp;
+    // Badge label
     c.fillStyle = 'rgba(251,191,36,0.7)';
     c.fillRect(fieldW - 28, y - 6, 20, 12);
     c.fillStyle = '#000';
@@ -437,10 +546,21 @@ export function createFieldRenderer(width, height) {
     var DOT_R = 20;
     var CORE_R = 12; // solid opaque inner circle
 
-    // Helper: draw one player dot with dark backing so it eclipses lines
-    function drawDot(px, py, rgb) {
-      // 1. Dark backing circle — blocks whatever is underneath
-      c.fillStyle = 'rgba(5,10,8,0.9)';
+    // Pre-create core gradients (avoids 14 createRadialGradient per frame)
+    function makeCoreGrad(rgb) {
+      var g = c.createRadialGradient(0, 0, 0, 0, 0, CORE_R);
+      g.addColorStop(0, 'rgba(' + Math.min(255, rgb[0]+60) + ',' + Math.min(255, rgb[1]+60) + ',' + Math.min(255, rgb[2]+60) + ',1)');
+      g.addColorStop(0.5, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0.9)');
+      g.addColorStop(0.8, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0.6)');
+      g.addColorStop(1, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0)');
+      return g;
+    }
+    var offGrad = makeCoreGrad(CFG.offense);
+    var defGrad = makeCoreGrad(CFG.defense);
+
+    function drawDot(px, py, rgb, coreGrad) {
+      // 1. Dark backing circle — eclipses lines underneath
+      c.fillStyle = 'rgba(5,10,8,0.92)';
       c.beginPath();
       c.arc(px, py, CORE_R + 2, 0, Math.PI * 2);
       c.fill();
@@ -452,28 +572,27 @@ export function createFieldRenderer(width, height) {
       c.drawImage(sprite, px - DOT_R * 2, py - DOT_R * 2, DOT_R * 4, DOT_R * 4);
       c.globalCompositeOperation = prevComp;
 
-      // 3. Solid bright core (normal blending)
-      var grad = c.createRadialGradient(px, py, 0, px, py, CORE_R);
-      grad.addColorStop(0, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0.95)');
-      grad.addColorStop(0.6, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0.7)');
-      grad.addColorStop(1, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0.3)');
-      c.fillStyle = grad;
+      // 3. Solid bright core (pre-created gradient, translated)
+      c.save();
+      c.translate(px, py);
+      c.fillStyle = coreGrad;
       c.beginPath();
-      c.arc(px, py, CORE_R, 0, Math.PI * 2);
+      c.arc(0, 0, CORE_R, 0, Math.PI * 2);
       c.fill();
+      c.restore();
     }
 
     // Draw all players
     form.offense.forEach(function(p) {
       var px = p.x * fieldW;
       var py = (losYard + p.y - topYard) * YPX;
-      drawDot(px, py, CFG.offense);
+      drawDot(px, py, CFG.offense, offGrad);
     });
 
     form.defense.forEach(function(p) {
       var px = p.x * fieldW;
       var py = (losYard + p.y - topYard) * YPX;
-      drawDot(px, py, CFG.defense);
+      drawDot(px, py, CFG.defense, defGrad);
     });
 
     // Ball glow at QB position
@@ -491,14 +610,18 @@ export function createFieldRenderer(width, height) {
     var allPlayers = form.offense.map(function(p) { return { p: p, side: 'off', losY: losYard }; })
       .concat(form.defense.map(function(p) { return { p: p, side: 'def', losY: losYard }; }));
 
+    c.font = "700 11px 'Teko'"; // set once, not per player
     allPlayers.forEach(function(d) {
       var p = d.p;
       var px = p.x * fieldW;
       var py = (d.losY + p.y - topYard) * YPX;
-      c.font = "700 11px 'Teko'";
-      c.fillStyle = 'rgba(0,0,0,0.8)';
+      // White number with dark stroke — reads on any colored core
+      c.strokeStyle = 'rgba(0,0,0,0.7)';
+      c.lineWidth = 2.5;
       c.textAlign = 'center';
       c.textBaseline = 'middle';
+      c.strokeText(p.num, px, py);
+      c.fillStyle = 'rgba(255,255,255,0.95)';
       c.fillText(p.num, px, py);
     });
   }
@@ -533,6 +656,16 @@ export function createFieldRenderer(width, height) {
     // Composite: static + dynamic
     ctx.clearRect(0, 0, width, height);
     ctx.drawImage(staticCv, 0, 0, width * DPR, height * DPR, 0, 0, width, height);
+
+    // Down-and-distance zone shading (yellow tint between LOS and 1st down)
+    if (fdYard > losYard && fdYard <= 110) {
+      var zoneY1 = Math.max(0, (losYard - topYard) * YPX);
+      var zoneY2 = Math.min(height, (fdYard - topYard) * YPX);
+      if (zoneY2 > zoneY1) {
+        ctx.fillStyle = 'rgba(251,210,50,0.035)';
+        ctx.fillRect(0, zoneY1, width, zoneY2 - zoneY1);
+      }
+    }
 
     // Dynamic overlays
     drawLOS(ctx, losYard, topYard);
