@@ -6,6 +6,7 @@
  */
 
 import { createFieldRenderer } from './fieldRenderer.js';
+import { buildPlayAnimation } from './playBuilder.js';
 
 // ── EASING FUNCTIONS ──
 function easeOutExpo(t) { return t === 1 ? 1 : 1 - Math.pow(2, -10 * t); }
@@ -600,11 +601,14 @@ export function createFieldAnimator(width, height) {
     _lastState = state;
     var center = Math.max(VISIBLE_YARDS/2, Math.min(120-VISIBLE_YARDS/2, state.ballYard));
     var topYard = center - VISIBLE_YARDS / 2;
-    var form = renderer.FORMATIONS[state.formation] || renderer.FORMATIONS['shotgun_2x2'];
+    var form = renderer.FORMATIONS[state.formation] || renderer.FORMATIONS['shotgun_spread'];
+    var playType = state.playType || 'SHORT';
+    var defScheme = state.defScheme || 'ZONE';
 
-    _animSequence = buildPostSnapSequence(type, yardsGained, form, width, YPX, state.losYard, topYard);
+    // Use the new composition-based builder
+    _animSequence = buildPlayAnimation(type, yardsGained, form, playType, defScheme, width, YPX, state.losYard, topYard);
     _animStartTime = performance.now();
-    _animDuration = type === 'touchdown' || type === 'interception' ? 1800 : type === 'run' ? 1400 : type === 'sack' ? 1200 : 1500;
+    _animDuration = _animSequence.duration || 1500;
     _lastTickTime = performance.now();
     trail.clear();
     _ballFlight = null;
