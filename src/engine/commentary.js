@@ -74,132 +74,207 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
   var line1 = '';
   var line2 = null;
 
+  // User-biased sentiment: good for user = energetic, bad for user = flat
+  var isGoodForUser = isHumanOnOff
+    ? (yards > 0 || r.isTouchdown) && !r.isInterception && !r.isFumbleLost && !r.isSack
+    : (r.isSack || r.isInterception || r.isFumbleLost || r.isIncomplete || yards <= 0);
+  var isBadForUser = !isGoodForUser;
+
   // ── TOUCHDOWN ──
   if (r.isTouchdown) {
     var tdKey = 'td_' + Math.floor(Math.random() * 8);
-    if (isPass) {
-      var templates = [
-        'TOUCHDOWN ' + possTeam.toUpperCase() + '! ' + off.name + ' ' + pick(PASS_VERBS) + ' it to ' + (coinFlip() ? off.name : 'the end zone') + '!',
-        possTeam.toUpperCase() + ' SCORES! ' + off.name + ' ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + ' — ' + yards + '-yard strike!',
-        'HE\'S IN! ' + off.name + ' ' + pick(CATCH_VERBS) + ' the pass and walks into the end zone!',
-        'TOUCHDOWN! ' + yards + ' yards through the air — ' + possTeam + ' strike first!',
-      ];
-      line1 = pick(templates);
+    if (isHumanOnOff) {
+      // User scores — BIG energy
+      if (isPass) {
+        line1 = pick([
+          'TOUCHDOWN ' + possTeam.toUpperCase() + '!! ' + off.name + ' ' + pick(PASS_VERBS) + ' a DIME — ' + yards + '-yard STRIKE!',
+          'HE\'S IN!! ' + off.name + ' ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + ' — TOUCHDOWN!!',
+          possTeam.toUpperCase() + ' SCORES!! ' + yards + ' yards through the air! WHAT A THROW!',
+          'BALL GAME! ' + off.name + ' ' + pick(CATCH_VERBS) + ' it and walks in! TOUCHDOWN!',
+        ]);
+      } else {
+        line1 = pick([
+          'TOUCHDOWN ' + possTeam.toUpperCase() + '!! ' + off.name + ' ' + pick(RUN_VERBS) + ' in from ' + yards + ' out! UNSTOPPABLE!',
+          'HE\'S GONE!! ' + off.name + ' ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + ' — NOBODY TOUCHES HIM!',
+          off.name + ' punches it in! ' + yards + '-yard SCORE! ' + possTeam.toUpperCase() + '!',
+        ]);
+      }
+      line2 = possTeam + ' celebrates! The crowd is on their feet!';
     } else {
-      var templates2 = [
-        'TOUCHDOWN ' + possTeam.toUpperCase() + '! ' + off.name + ' ' + pick(RUN_VERBS) + ' in from ' + yards + ' yards out!',
-        'HE\'S GONE! ' + off.name + ' ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + ' — TOUCHDOWN!',
-        off.name + ' powers through for the score! ' + yards + '-yard ' + (yards > 10 ? 'burst' : 'push') + '!',
-      ];
-      line1 = pick(templates2);
+      // Opponent scores against user — flat, factual
+      if (isPass) {
+        line1 = pick([
+          possTeam + ' finds the end zone. ' + off.name + ', ' + yards + '-yard pass.',
+          off.name + ' catches a ' + yards + '-yard touchdown for ' + possTeam + '.',
+          'Score for ' + possTeam + '. ' + yards + ' yards.',
+        ]);
+      } else {
+        line1 = pick([
+          off.name + ' runs it in from ' + yards + ' out. ' + possTeam + ' scores.',
+          possTeam + ' punches it in. ' + yards + '-yard run.',
+        ]);
+      }
+      line2 = null; // No celebration for the opponent
     }
-    line2 = possTeam + ' celebrates. The crowd erupts.';
     trackTemplate(tdKey);
     return { line1: line1, line2: line2 };
   }
 
   // ── SACK ──
   if (r.isSack) {
-    var sackTemplates = [
-      'SACK! ' + def.name + ' ' + pick(TACKLE_VERBS) + ' the QB for a loss of ' + Math.abs(yards) + '.',
-      def.name + ' gets there! Dropped for a ' + Math.abs(yards) + '-yard loss.',
-      'Nowhere to throw — ' + def.name + ' ' + pick(TACKLE_VERBS) + ' him behind the line.',
-      'The pocket collapses. ' + def.name + ' brings the pressure and finishes it.',
-    ];
-    line1 = pick(sackTemplates);
-    if (tier >= 3) line2 = 'That\'s a drive-killer. ' + defTeam + ' defense is swarming.';
+    if (!isHumanOnOff) {
+      // User's defense got the sack — celebrate!
+      line1 = pick([
+        'SACK!! ' + def.name + ' BURIES the QB' + (Math.abs(yards) > 0 ? ' for -' + Math.abs(yards) + '!' : '!'),
+        def.name + ' GETS THERE!' + (Math.abs(yards) > 0 ? ' Dropped for a ' + Math.abs(yards) + '-yard loss!' : ' NO GAIN!'),
+        'NOWHERE TO THROW! ' + def.name + ' ' + pick(TACKLE_VERBS) + ' him! HUGE play!',
+        'The pocket COLLAPSES! ' + def.name + ' brings the HEAT!',
+      ]);
+      if (tier >= 3) line2 = 'Drive-killer! Your defense is SWARMING!';
+    } else {
+      // User's QB got sacked — flat
+      line1 = pick([
+        'Sacked. ' + def.name + ' gets through.' + (Math.abs(yards) > 0 ? ' Loss of ' + Math.abs(yards) + '.' : ''),
+        def.name + ' brings the pressure.' + (Math.abs(yards) > 0 ? ' Down for -' + Math.abs(yards) + '.' : ' No gain.'),
+      ]);
+    }
     return { line1: line1, line2: line2 };
   }
 
   // ── INTERCEPTION ──
   if (r.isInterception) {
-    var intTemplates = [
-      'INTERCEPTED! ' + def.name + ' jumps the route and picks it off!',
-      'PICKED! ' + def.name + ' reads it all the way — turnover ' + defTeam + '!',
-      'That\'s a turnover! ' + def.name + ' was sitting on that route the whole time.',
-      'Bad decision — ' + def.name + ' ' + pick(CATCH_VERBS) + ' it for the interception!',
-    ];
-    line1 = pick(intTemplates);
-    line2 = defTeam + ' takes over. Momentum shift.';
+    if (!isHumanOnOff) {
+      // User's defense gets the pick — celebrate!
+      line1 = pick([
+        'INTERCEPTED!! ' + def.name + ' JUMPS the route! WHAT A READ!',
+        'PICKED OFF!! ' + def.name + ' was sitting on that ALL DAY!',
+        'TURNOVER! ' + def.name + ' ' + pick(CATCH_VERBS) + ' it! ' + defTeam + ' ball!',
+        'BAD DECISION! ' + def.name + ' makes them PAY! PICKED!',
+      ]);
+      line2 = defTeam + ' takes over! Momentum is YOURS!';
+    } else {
+      // User threw a pick — flat, move on
+      line1 = pick([
+        'Intercepted. ' + def.name + ' picks it off.',
+        'Turnover. ' + def.name + ' reads the throw.',
+        'Bad throw. ' + def.name + ' comes away with it.',
+      ]);
+      line2 = defTeam + ' takes over.';
+    }
     return { line1: line1, line2: line2 };
   }
 
   // ── FUMBLE ──
   if (r.isFumbleLost) {
-    var fumTemplates = [
-      'FUMBLE! ' + off.name + ' loses the ball — ' + defTeam + ' recovers!',
-      'Stripped! ' + def.name + ' forces the fumble and ' + defTeam + ' has it!',
-      'Ball is loose! ' + defTeam + ' jumps on it. Turnover.',
-    ];
-    line1 = pick(fumTemplates);
-    line2 = 'That could be costly.';
+    if (!isHumanOnOff) {
+      // User's defense forces fumble — celebrate!
+      line1 = pick([
+        'FUMBLE!! ' + def.name + ' STRIPS the ball! ' + defTeam + ' RECOVERS!',
+        'STRIPPED! ' + def.name + ' forces it loose! TURNOVER!',
+        'BALL\'S OUT! ' + defTeam + ' jumps on it! HUGE play by ' + def.name + '!',
+      ]);
+      line2 = 'Your defense creates the turnover!';
+    } else {
+      // User fumbled — flat
+      line1 = pick([
+        'Fumble. ' + off.name + ' loses the ball. ' + defTeam + ' recovers.',
+        'Ball comes loose. ' + defTeam + ' has it.',
+      ]);
+      line2 = null;
+    }
     return { line1: line1, line2: line2 };
   }
 
   // ── INCOMPLETE ──
   if (r.isIncomplete) {
-    // Pick variant based on matchup: strong defense counter = broken up, otherwise vary
     var covMods = offPlay.coverageMods || {};
     var defCov = res.defPlay ? res.defPlay.baseCoverage : '';
     var covResult = covMods[defCov] || {};
     var defWon = (covResult.mean || 0) <= -2;
-    var incTemplates;
-    if (defWon) {
-      incTemplates = [
-        'Incomplete — broken up by ' + def.name + '!',
-        def.name + ' swats it away! Great coverage.',
-        'Pass broken up! ' + def.name + ' was draped all over ' + off.name + '.',
-        'No chance — ' + def.name + ' was step for step with ' + off.name + '.',
-      ];
+    if (!isHumanOnOff) {
+      // User's defense forces incomplete — positive
+      line1 = pick([
+        'Incomplete! ' + def.name + ' breaks it up! Great coverage!',
+        def.name + ' swats it away! Nothing doing for ' + possTeam + '.',
+        'Pass broken up! ' + def.name + ' was ALL OVER ' + off.name + '.',
+        'Thrown away. Your defense had everyone covered.',
+      ]);
     } else {
-      incTemplates = [
-        'Incomplete — overthrown, intended for ' + off.name + '.',
-        'Dropped by ' + off.name + '! Had it in his hands.',
-        off.name + ' couldn\'t hang on. Ball hits the turf.',
-        'Thrown away — nothing was open.',
-        'Incomplete. ' + off.name + ' can\'t bring it in.',
-      ];
+      // User's pass is incomplete — flat
+      if (defWon) {
+        line1 = pick([
+          'Incomplete. ' + def.name + ' breaks it up.',
+          'Pass broken up by ' + def.name + '.',
+        ]);
+      } else {
+        line1 = pick([
+          'Incomplete. Overthrown, intended for ' + off.name + '.',
+          'Dropped by ' + off.name + '.',
+          off.name + ' can\'t bring it in.',
+          'Thrown away. Nothing was open.',
+        ]);
+      }
     }
-    line1 = pick(incTemplates);
     return { line1: line1, line2: line2 };
   }
 
   // ── POSITIVE GAIN ──
   if (yards > 0) {
     var tackleTag = def ? ' ' + def.name + ' ' + pick(TACKLE_VERBS) + ' him.' : '';
-    if (isPass) {
-      if (tier <= 1) {
-        line1 = off.name + ' ' + pick(CATCH_VERBS) + ' a ' + (yards <= 5 ? 'short' : 'nice') + ' pass for ' + yards + '.' + tackleTag;
-      } else if (tier === 2) {
-        line1 = off.name + ' ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + ' for ' + yards + '!' + tackleTag;
-        if (res.gotFirstDown) line2 = 'First down ' + possTeam + '. Chains move.';
+    if (isHumanOnOff) {
+      // User gains yards — energetic
+      if (isPass) {
+        if (tier <= 1) {
+          line1 = off.name + ' ' + pick(CATCH_VERBS) + ' a ' + (yards <= 5 ? 'short' : 'nice') + ' pass for ' + yards + '!' + tackleTag;
+        } else if (tier === 2) {
+          line1 = off.name + ' ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + ' — ' + yards + ' yards!' + tackleTag;
+          if (res.gotFirstDown) line2 = 'FIRST DOWN ' + possTeam + '! Chains move!';
+        } else {
+          line1 = off.name + '! ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + ' — ' + yards + ' YARDS!';
+          if (yards >= 20) line2 = 'BIG chunk play! ' + possTeam + ' is ROLLING!';
+          else if (res.gotFirstDown) line2 = 'Moves the chains on a KEY down!';
+        }
       } else {
-        line1 = off.name + '! ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + ' — ' + yards + ' yards!';
-        if (yards >= 20) line2 = 'Big chunk play! ' + possTeam + ' is moving.';
-        else if (res.gotFirstDown) line2 = 'That moves the chains on a key down.';
+        if (tier <= 1) {
+          line1 = off.name + ' ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + ' for ' + yards + '!' + tackleTag;
+        } else if (tier === 2) {
+          line1 = off.name + ' ' + pick(RUN_VERBS) + ' through for ' + yards + '!' + tackleTag;
+          if (res.gotFirstDown) line2 = 'FIRST DOWN! ' + possTeam + ' keeps it moving!';
+        } else {
+          line1 = off.name + '! ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + ' — ' + yards + ' YARDS!';
+          if (yards >= 15) line2 = off.name + ' is RUNNING WILD out there!';
+        }
       }
     } else {
-      if (tier <= 1) {
-        line1 = off.name + ' ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + ' for ' + yards + '.' + tackleTag;
-      } else if (tier === 2) {
-        line1 = off.name + ' ' + pick(RUN_VERBS) + ' through for ' + yards + '!' + tackleTag;
-        if (res.gotFirstDown) line2 = 'First down! ' + possTeam + ' keeps it moving.';
+      // Opponent gains against user — flat, factual, no energy
+      if (isPass) {
+        line1 = off.name + ' catches it ' + pick(ROUTE_MODS) + '. ' + yards + ' yards.' + tackleTag;
+        if (res.gotFirstDown) line2 = 'First down ' + possTeam + '.';
       } else {
-        line1 = off.name + '! ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + ' — picks up ' + yards + '!';
-        if (yards >= 15) line2 = off.name + ' is running wild out there!';
+        line1 = off.name + ' ' + pick(['finds a gap.','picks up yardage.','pushes ahead.']) + ' ' + yards + ' yards.' + tackleTag;
+        if (res.gotFirstDown) line2 = 'First down ' + possTeam + '.';
       }
     }
     return { line1: line1, line2: line2 };
   }
 
   // ── NO GAIN / LOSS ──
-  var stuffTemplates = [
-    'Stuffed. ' + def.name + ' ' + pick(TACKLE_VERBS) + ' him at the line.',
-    'No gain. ' + defTeam + ' defense holds firm.',
-    off.name + ' is met immediately — nowhere to go.',
-    'Stacked up. ' + def.name + ' plugs the gap.',
-  ];
-  line1 = pick(stuffTemplates);
+  if (!isHumanOnOff) {
+    // User's defense stuffs them — positive!
+    line1 = pick([
+      'STUFFED! ' + def.name + ' ' + pick(TACKLE_VERBS) + ' him at the line!',
+      'NO GAIN! ' + defTeam + ' defense holds FIRM!',
+      'STACKED UP! ' + def.name + ' plugs the gap!',
+      'Going NOWHERE! ' + def.name + ' reads it perfectly!',
+    ]);
+  } else {
+    // User gets stuffed — flat
+    line1 = pick([
+      'Stuffed. ' + def.name + ' ' + pick(TACKLE_VERBS) + ' him at the line.',
+      'No gain. Defense holds.',
+      off.name + ' is met at the line of scrimmage.',
+    ]);
+  }
   return { line1: line1, line2: line2 };
 }
 
@@ -221,26 +296,27 @@ export function generateContext(gameState, humanTeamName, oppTeamName, res) {
   // Only fire ~30% of the time for non-critical moments
   if (!r || (!r.isTouchdown && !r.isInterception && !r.isFumbleLost && Math.random() > 0.3)) return null;
 
-  // Crossing midfield
-  if (ydsToEz <= 50 && ydsToEz > 45 && r && r.yards > 0) {
-    return possTeam + ' crosses midfield.';
+  // User-biased context
+  if (isHumanOff) {
+    // User on offense
+    if (ydsToEz <= 50 && ydsToEz > 45 && r && r.yards > 0) return possTeam + ' crosses midfield! Building momentum!';
+    if (ydsToEz <= 20 && ydsToEz > 15) return 'Inside the 20 — this is YOUR territory!';
+    if (r && r.isTouchdown && scoreDiff > 0 && scoreDiff <= 7) return 'YOU take the lead!';
+    if (r && r.isTouchdown && scoreDiff === 0) return 'All tied up!';
+    if (gameState.down === 4) return 'Fourth down. You have to go for it.';
+  } else {
+    // User on defense
+    if (ydsToEz <= 50 && ydsToEz > 45 && r && r.yards > 0) return possTeam + ' crosses midfield.';
+    if (ydsToEz <= 20 && ydsToEz > 15) return 'They\'re inside the 20. Bend, don\'t break.';
+    if (r && r.isTouchdown && scoreDiff < 0 && scoreDiff >= -7) return possTeam + ' takes the lead.';
+    if (r && r.isTouchdown && scoreDiff === 0) return 'Tied up.';
+    if (r && (r.isInterception || r.isFumbleLost)) return 'TURNOVER! You get the ball back!';
+    if (r && r.isSack && gameState.down >= 3) return 'Huge stop! They\'re going backwards!';
+    if (gameState.down === 4) return 'Fourth down. Make the stop!';
   }
-  // Red zone
-  if (ydsToEz <= 20 && ydsToEz > 15) {
-    return 'Inside the 20 — this is scoring range.';
-  }
-  // Two-minute warning
+
   if (gameState.twoMinActive && gameState.playsUsed <= 22) {
     return 'The clock is the enemy now.';
-  }
-  // Lead change (check if score just changed)
-  if (r && r.isTouchdown) {
-    if (scoreDiff > 0 && scoreDiff <= 7) return 'And just like that, they take the lead!';
-    if (scoreDiff === 0) return 'We\'re all tied up!';
-  }
-  // Fourth down
-  if (gameState.down === 4) {
-    return 'Fourth down. They have to go for it.';
   }
 
   return null;

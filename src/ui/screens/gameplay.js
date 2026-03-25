@@ -410,6 +410,26 @@ export function buildGameplay() {
   var snapCount = 0; // Track snap number for teach tooltips
   var twoMinTimer = null; // Real-time clock interval for 2-minute drill
 
+  // ── LAYER 6: Ambient mood — subtle brightness/vignette based on user momentum ──
+  var _moodHistory = []; // last 4 plays: +1 good, -1 bad, 0 neutral
+  var _moodVignette = null;
+  function updateMood(isGoodForUser, isBadForUser) {
+    _moodHistory.push(isGoodForUser ? 1 : isBadForUser ? -1 : 0);
+    if (_moodHistory.length > 4) _moodHistory.shift();
+    var sum = _moodHistory.reduce(function(a, b) { return a + b; }, 0);
+    var momentum = sum / _moodHistory.length; // -1.0 to 1.0
+    var brightness = 1.0 + momentum * 0.06; // 0.94 to 1.06 — subtle
+    var vignette = momentum < 0 ? Math.abs(momentum) * 0.12 : 0;
+    strip.style.filter = 'brightness(' + brightness.toFixed(3) + ')';
+    if (!_moodVignette) {
+      _moodVignette = document.createElement('div');
+      _moodVignette.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:50;transition:opacity 0.8s;';
+      _moodVignette.style.background = 'radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,0.4) 100%)';
+      el.appendChild(_moodVignette);
+    }
+    _moodVignette.style.opacity = vignette.toFixed(3);
+  }
+
   // Start/stop the real-time 2-minute clock
   function start2MinClock() {
     if (twoMinTimer) return;
@@ -790,8 +810,22 @@ export function buildGameplay() {
         var e = driveSummaryLog[_ti];
         var i = _ti;
         var isNewest = _ti === driveSummaryLog.length - 1;
-        var resColor = e.isTD ? '#EBB010' : e.yards > 0 ? '#00ff44' : e.yards < 0 || e.isSack ? '#ff0040' : '#fff';
-        var resText = e.isTD ? 'TD' : e.isSack ? 'SACK' : e.isInt ? 'INT' : e.isFumble ? 'FUM' : (e.isInc || e.yards === 0) ? 'NO GAIN' : (e.yards >= 0 ? '+' : '') + e.yards;
+        var resColor, resText;
+        if (e.isUserOff || e.isUserOff === undefined) {
+          // User on offense (or legacy entries without flag)
+          resColor = e.isTD ? '#EBB010' : e.yards > 0 ? '#00ff44' : e.yards < 0 || e.isSack ? '#ff0040' : '#fff';
+          resText = e.isTD ? 'TD' : e.isSack ? 'SACK' : e.isInt ? 'INT' : e.isFumble ? 'FUM' : (e.isInc || e.yards === 0) ? 'NO GAIN' : (e.yards >= 0 ? '+' : '') + e.yards;
+        } else {
+          // User on defense — flip colors
+          if (e.isTD) { resColor = '#ff0040'; resText = 'TD'; }
+          else if (e.isSack) { resColor = '#00ff44'; resText = 'SACK'; }
+          else if (e.isInt) { resColor = '#00ff44'; resText = 'INT'; }
+          else if (e.isFumble) { resColor = '#00ff44'; resText = 'FUM'; }
+          else if (e.isInc || e.yards === 0) { resColor = '#00ff44'; resText = 'NO GAIN'; }
+          else if (e.yards < 0) { resColor = '#00ff44'; resText = e.yards + ''; }
+          else if (e.yards <= 3) { resColor = '#fff'; resText = '+' + e.yards; }
+          else { resColor = '#ff0040'; resText = '+' + e.yards; }
+        }
         var dn = ['','1st','2nd','3rd','4th'][e.down] || '';
         var rowStyle = isNewest
           ? 'opacity:1;border-left:3px solid #FF6B00;padding-left:6px;background:rgba(255,255,255,0.03)'
@@ -819,20 +853,13 @@ export function buildGameplay() {
     var curDefStats = isHumanBall ? cDefStats : hDefStats;
     var offStatColor = (isHumanBall ? hTeam : oTeam).accent || '#FF6B00';
     var defStatColor = (isHumanBall ? oTeam : hTeam).accent || '#FF6B00';
-    var statLines = [];
-    if (offPA > 0) {
-      var qbLabel = offQB ? 'QB <span style="color:#fff">' + offQB + '</span>' : 'QB';
-      statLines.push('<span style="color:' + offStatColor + '">' + qbLabel + '</span> <span style="color:#3df58a">' + offPC + '/' + offPA + ', ' + offPY + ' yds</span>');
-    }
-    if (offRA > 0) {
-      var rbLabel = offRB ? 'RB <span style="color:#fff">' + offRB + '</span>' : 'RB';
-      statLines.push('<span style="color:' + offStatColor + '">' + rbLabel + '</span> <span style="color:#3df58a">' + offRA + ' car, ' + offRY + ' yds</span>');
-    }
-    if (offRC > 0) {
-      var wrLabel = offWR ? 'WR <span style="color:#fff">' + offWR + '</span>' : 'WR';
-      statLines.push('<span style="color:' + offStatColor + '">' + wrLabel + '</span> <span style="color:#3df58a">' + offRC + ' rec, ' + offRCY + ' yds</span>');
-    }
-    // Defensive stat line — best defender from the defending side
+    // Compact single-line stat bar: OFF stats (team color) | DEF stat (team color)
+    var offParts = [];
+    if (offPA > 0) offParts.push((offQB || 'QB') + ' ' + offPC + '/' + offPA + ', ' + offPY + 'y');
+    if (offRC > 0) offParts.push((offWR || 'WR') + ' ' + offRC + 'rec ' + offRCY + 'y');
+    else if (offRA > 0) offParts.push((offRB || 'RB') + ' ' + offRA + 'car ' + offRY + 'y');
+
+    var defPart = '';
     var bestDef = null, bestDefName = '';
     var defKeys = Object.keys(curDefStats);
     if (defKeys.length > 0) {
@@ -843,18 +870,28 @@ export function buildGameplay() {
         if (score > bestScore) { bestScore = score; bestDef = d; bestDefName = name; }
       });
       if (bestDef && bestScore > 0) {
-        var defParts = [];
-        if (bestDef.tkl > 0) defParts.push(bestDef.tkl + ' tkl');
-        if (bestDef.pbu > 0) defParts.push(bestDef.pbu + ' PBU');
-        if (bestDef.int > 0) defParts.push(bestDef.int + ' INT');
-        if (bestDef.sack > 0) defParts.push(bestDef.sack + ' sack');
-        var defPos = bestDef.pos || 'DEF';
-        statLines.push('<span style="color:' + defStatColor + '">' + defPos + ' <span style="color:#fff">' + bestDefName + '</span></span> <span style="color:#3df58a">' + defParts.join(', ') + '</span>');
+        var dp = [];
+        if (bestDef.tkl > 0) dp.push(bestDef.tkl + 'tkl');
+        if (bestDef.pbu > 0) dp.push(bestDef.pbu + 'PBU');
+        if (bestDef.int > 0) dp.push(bestDef.int + 'INT');
+        if (bestDef.sack > 0) dp.push(bestDef.sack + 'sck');
+        defPart = bestDefName + ' ' + dp.join(' ');
       }
     }
-    if (statLines.length > 0) {
-      html += '<div class="T-drive-stats" style="font-family:\'Teko\';font-size:15px;font-weight:700">';
-      statLines.forEach(function(line) { html += '<div class="T-drive-stat">' + line + '</div>'; });
+
+    if (offParts.length > 0 || defPart) {
+      var offTeamLabel = (isHumanBall ? hTeam : oTeam).name;
+      var defTeamLabel = (isHumanBall ? oTeam : hTeam).name;
+      html += '<div class="T-drive-stats" style="font-family:\'Rajdhani\';font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;gap:6px;flex-wrap:nowrap">';
+      if (offParts.length > 0) {
+        html += '<span style="color:' + offStatColor + '">' + offParts.join(' · ') + '</span>';
+      }
+      if (offParts.length > 0 && defPart) {
+        html += '<span style="color:#333">|</span>';
+      }
+      if (defPart) {
+        html += '<span style="color:' + defStatColor + '">' + defPart + '</span>';
+      }
       html += '</div>';
     }
 
@@ -1378,8 +1415,23 @@ export function buildGameplay() {
       else if (r.yards >= 13 || (r.isSack && r.yards <= -5)) tier = 3;
       else if (res.gotFirstDown || (r.yards >= 7 && r.yards <= 12)) tier = 2;
 
-      const resColor = r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
-      const yardLabel = r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE LOST' : r.isIncomplete?'INCOMPLETE' : (r.yards>=0?'+':'')+r.yards+' YDS';
+      // User-biased colors: green = good for user, red = bad for user
+      var resColor, yardLabel;
+      if (!isUserDef) {
+        // User on offense
+        resColor = r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
+        yardLabel = r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE LOST' : r.isIncomplete?'INCOMPLETE' : (r.yards>=0?'+':'')+r.yards+' YDS';
+      } else {
+        // User on defense — stops are green, opponent gains are red
+        if (r.isTouchdown) { resColor = '#e03050'; yardLabel = 'TOUCHDOWN'; }
+        else if (r.isSack) { resColor = '#3df58a'; yardLabel = Math.abs(r.yards) > 0 ? 'SACKED! -' + Math.abs(r.yards) : 'SACKED! NO GAIN'; }
+        else if (r.isInterception) { resColor = '#3df58a'; yardLabel = 'PICKED OFF!'; }
+        else if (r.isFumbleLost) { resColor = '#3df58a'; yardLabel = 'FUMBLE!'; }
+        else if (r.isIncomplete) { resColor = '#3df58a'; yardLabel = 'INCOMPLETE'; }
+        else if (r.yards <= 0) { resColor = '#3df58a'; yardLabel = r.yards < 0 ? 'STUFFED! ' + r.yards + ' YDS' : 'STUFFED! NO GAIN'; }
+        else if (r.yards <= 3) { resColor = '#c8a030'; yardLabel = 'GAINED ' + r.yards + ' YDS'; }
+        else { resColor = '#e03050'; yardLabel = 'GAINED ' + r.yards + ' YDS'; }
+      }
       // TORCH points for the USER's team only
       const userOnOff = (gs.possession === hAbbr) ? true : false; // was user on offense for this snap?
       // Note: possession may have flipped on turnovers, so check what it was BEFORE the snap
@@ -1977,7 +2029,7 @@ export function buildGameplay() {
     if (r.isTouchdown) espnDesc = r.yards + '-yd TD ' + (isPassPlay ? 'Pass to ' + receiverName : 'Run by ' + rusherName);
     else if (r.isInterception) espnDesc = 'INTERCEPTION by ' + defName;
     else if (r.isFumbleLost) espnDesc = 'FUMBLE \u2014 recovered by ' + defName;
-    else if (r.isSack) espnDesc = 'SACK by ' + defName + ' (-' + Math.abs(r.yards) + ')';
+    else if (r.isSack) espnDesc = 'SACK by ' + defName + (Math.abs(r.yards) > 0 ? ', loss of ' + Math.abs(r.yards) : '');
     else if (r.isIncomplete) {
       var incVariants = [
         'Incomplete \u2014 broken up by ' + defName,
@@ -1987,9 +2039,16 @@ export function buildGameplay() {
       ];
       espnDesc = incVariants[Math.floor(Math.random() * incVariants.length)];
     }
-    else if (isPassPlay) espnDesc = r.yards + '-yd Pass to ' + receiverName + (defName ? ', tackled by ' + defName : '');
-    else if (r.yards === 0) espnDesc = 'No gain by ' + rusherName + (defName ? ', tackled by ' + defName : '');
-    else espnDesc = r.yards + '-yd Run by ' + rusherName + (defName ? ', tackled by ' + defName : '');
+    else if (isPassPlay) {
+      if (r.yards > 0) espnDesc = 'Pass to ' + receiverName + ', gain of ' + r.yards + (defName ? ', tackled by ' + defName : '');
+      else if (r.yards < 0) espnDesc = 'Pass to ' + receiverName + ', loss of ' + Math.abs(r.yards) + (defName ? ', tackled by ' + defName : '');
+      else espnDesc = 'Pass to ' + receiverName + ', no gain' + (defName ? ', tackled by ' + defName : '');
+    }
+    else {
+      if (r.yards > 0) espnDesc = rusherName + ' runs for a gain of ' + r.yards + (defName ? ', tackled by ' + defName : '');
+      else if (r.yards < 0) espnDesc = rusherName + ' runs for a loss of ' + Math.abs(r.yards) + (defName ? ', tackled by ' + defName : '');
+      else espnDesc = rusherName + ' runs, no gain' + (defName ? ', tackled by ' + defName : '');
+    }
     // Track game-wide stats for BOTH teams
     if (isOff) {
       // Human on offense → track human OFF stats + CPU DEF stats
@@ -2042,7 +2101,8 @@ export function buildGameplay() {
       down: preSnap.down, dist: preSnap.distance,
       playName: espnDesc,
       yards: r.yards, isTD: r.isTouchdown, isSack: r.isSack,
-      isInc: r.isIncomplete, isInt: r.isInterception, isFumble: r.isFumbleLost
+      isInc: r.isIncomplete, isInt: r.isInterception, isFumble: r.isFumbleLost,
+      isUserOff: isOff
     });
     if (res.gotFirstDown) driveFirstDowns++;
 
@@ -2067,17 +2127,29 @@ export function buildGameplay() {
   // ── 4-PHASE CARD CLASH / REVEAL (v0.22 Phase 5) ──
   function run3BeatSnap(res, prevPoss, wasOffHot, wasDefHot) {
     var r = res.result;
-    var isGood = r.yards >= 4 || r.isTouchdown;
-    var isBad = r.isSack || r.isInterception || r.isFumbleLost || r.isSafety;
-    var isExplosive = r.yards >= 15;
     var isTD = r.isTouchdown;
+    var isExplosive = r.yards >= 15;
+    var isUserOff = prevPoss === hAbbr;
+
+    // User-biased sentiment: green = good for user, red = bad for user
+    var isGoodForUser, isBadForUser;
+    if (isUserOff) {
+      isGoodForUser = (r.yards >= 4 || isTD) && !r.isInterception && !r.isFumbleLost;
+      isBadForUser = r.isSack || r.isInterception || r.isFumbleLost || r.isSafety || r.yards < 0;
+    } else {
+      // User on defense — flip: stops are good, opponent gains are bad
+      isGoodForUser = r.isSack || r.isInterception || r.isFumbleLost || r.isSafety || r.yards <= 0 || r.isIncomplete;
+      isBadForUser = (r.yards >= 4 || isTD) && !r.isInterception && !r.isFumbleLost;
+    }
+    // Legacy aliases for tier/card glow logic
+    var isGood = isGoodForUser;
+    var isBad = isBadForUser;
 
     // Determine drama tier (1=routine, 2=important, 3=game-changing)
     var tier = 1;
     var s = gs.getSummary();
     if (isTD || r.isInterception || r.isFumbleLost) tier = 3;
     else if (r.isSack || isExplosive || s.down >= 3 || s.yardsToEndzone <= 20) tier = 2;
-    // Boost tier for close games in 2nd half
     if (s.half === 2 && Math.abs(s.ctScore - s.irScore) <= 7 && tier < 3) tier = Math.min(3, tier + 1);
 
     // Tier-based timing
@@ -2089,9 +2161,27 @@ export function buildGameplay() {
     var cardScale = tier === 1 ? 1.0 : tier === 2 ? 1.1 : 1.25;
     var aftermathDur = isTD ? 5000 : tier === 3 ? 3500 : tier === 2 ? 2500 : 1800;
 
-    var resultColor = isTD ? '#EBB010' : isGood ? '#3df58a' : isBad ? '#e03050' : r.yards > 0 ? '#c8a030' : '#aaa';
-    var resultText = isTD ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTED' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : r.isSafety ? 'SAFETY' : (r.yards >= 0 ? '+' : '') + r.yards + ' YDS';
-    var flashColor = isTD ? '#EBB010' : isGood ? '#3df58a' : isBad ? '#e03050' : 'transparent';
+    // User-biased result display
+    var resultColor, resultText;
+    if (isUserOff) {
+      resultColor = isTD ? '#EBB010' : isGoodForUser ? '#3df58a' : isBadForUser ? '#e03050' : r.yards > 0 ? '#c8a030' : '#aaa';
+      resultText = isTD ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTED' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : r.isSafety ? 'SAFETY' : (r.yards >= 0 ? '+' : '') + r.yards + ' YDS';
+    } else {
+      // User on defense — show opponent gains as bad, stops as good
+      if (isTD) { resultColor = '#e03050'; resultText = 'TOUCHDOWN'; }
+      else if (r.isSack) { resultColor = '#3df58a'; resultText = Math.abs(r.yards) > 0 ? 'SACKED! -' + Math.abs(r.yards) + ' YDS' : 'SACKED!'; }
+      else if (r.isInterception) { resultColor = '#3df58a'; resultText = 'PICKED OFF!'; }
+      else if (r.isFumbleLost) { resultColor = '#3df58a'; resultText = 'FUMBLE!'; }
+      else if (r.isIncomplete) { resultColor = '#3df58a'; resultText = 'INCOMPLETE'; }
+      else if (r.isSafety) { resultColor = '#3df58a'; resultText = 'SAFETY!'; }
+      else if (r.yards <= 0) { resultColor = '#3df58a'; resultText = r.yards < 0 ? 'STUFFED! ' + r.yards + ' YDS' : 'NO GAIN'; }
+      else if (r.yards <= 3) { resultColor = '#c8a030'; resultText = 'GAINED ' + r.yards + ' YDS'; }
+      else { resultColor = '#e03050'; resultText = 'GAINED ' + r.yards + ' YDS'; }
+    }
+    var flashColor = isGoodForUser ? '#3df58a' : isBadForUser ? '#e03050' : 'transparent';
+
+    // Layer 6: update ambient mood
+    updateMood(isGoodForUser, isBadForUser);
 
     panel.style.display = 'none';
     snapCount++;
@@ -2169,26 +2259,29 @@ export function buildGameplay() {
       // Haptic
       if (navigator.vibrate) try { navigator.vibrate(tier === 3 ? 100 : tier === 2 ? 50 : 20); } catch(e) {}
 
-      // Sound + audio state
-      if (isTD) { SND.td(); AudioStateManager.setState('touchdown'); }
-      else if (isBad) { SND.turnover(); AudioStateManager.setState('turnover'); }
-      else if (isExplosive) { SND.bigPlay(); AudioStateManager.setState('big_moment'); }
+      // Sound + audio state — biased to user perspective
+      if (isTD && isUserOff) { SND.td(); AudioStateManager.setState('touchdown'); }
+      else if (isTD && !isUserOff) { SND.turnover(); AudioStateManager.setState('turnover'); }
+      else if (isGoodForUser && tier >= 2) { SND.bigPlay(); AudioStateManager.setState('big_moment'); }
+      else if (isBadForUser) { SND.turnover(); AudioStateManager.setState('turnover'); }
       else { SND.snap(); }
 
       // Hitstop freeze then settle
       setTimeout(function() {
         if (skipped) { doSettle(); return; }
-        // Winning card glows, losing card dims
-        if (isGood || isTD) {
-          offCard.style.boxShadow = '0 0 16px #3df58a';
-          offCard.style.animation = 'T-clash-glow 1s ease-in-out infinite';
-          defCard.style.opacity = '0.5';
-          defCard.style.transform = 'scale(0.9)';
-        } else if (isBad) {
-          defCard.style.boxShadow = '0 0 16px #e03050';
-          defCard.style.animation = 'T-clash-glow 1s ease-in-out infinite';
-          offCard.style.opacity = '0.5';
-          offCard.style.transform = 'scale(0.9)';
+        // User's card glows on good result, dims on bad — always user-biased
+        var userCard = isUserOff ? offCard : defCard;
+        var oppCard = isUserOff ? defCard : offCard;
+        if (isGoodForUser) {
+          userCard.style.boxShadow = '0 0 16px #3df58a';
+          userCard.style.animation = 'T-clash-glow 1s ease-in-out infinite';
+          oppCard.style.opacity = '0.5';
+          oppCard.style.transform = 'scale(0.9)';
+        } else if (isBadForUser) {
+          oppCard.style.boxShadow = '0 0 16px #e03050';
+          oppCard.style.animation = 'T-clash-glow 1s ease-in-out infinite';
+          userCard.style.opacity = '0.5';
+          userCard.style.transform = 'scale(0.9)';
         }
         // Cards settle with overshoot
         cardsEl.style.animation = 'T-clash-settle 0.4s cubic-bezier(0.34,1.56,0.64,1) both';
@@ -2200,17 +2293,46 @@ export function buildGameplay() {
     function doSettle() {
       overlay.onclick = null;
 
-      // Intensity level: 1=quick (60%), 2=notable (30%), 3=big play (10%)
-      var level = tier; // Reuse drama tier from clash
-      var ydsFontSize = level === 3 ? '96px' : level === 2 ? '72px' : '64px';
-      var totalDur = level === 3 ? 5000 : level === 2 ? 3500 : 2200;
+      // ── LAYER 4: Visual weight — size based on user sentiment, not raw yards ──
+      var level = tier;
       var gotFirstDown = res.gotFirstDown;
+      // Scale font based on sentiment AND text length so it fits the overlay
+      var textLen = resultText.length;
+      var ydsFontSize, resultGlow, resultAnim, resultPos;
+      if (isGoodForUser) {
+        // Big, centered, glowing — but scale down for long text
+        var goodBase = level === 3 ? 72 : level === 2 ? 56 : 48;
+        if (textLen > 12) goodBase = Math.min(goodBase, 40);
+        else if (textLen > 8) goodBase = Math.min(goodBase, 48);
+        ydsFontSize = goodBase + 'px';
+        resultGlow = 'text-shadow:0 0 20px ' + resultColor + '60,0 0 40px ' + resultColor + '30;';
+        resultAnim = 'animation:T-clash-yds 0.4s cubic-bezier(0.34,1.56,0.64,1) both;';
+        resultPos = '';
+      } else if (isBadForUser) {
+        // Smaller, top area, muted — acknowledge and move on
+        var badBase = level === 3 ? 40 : 32;
+        if (textLen > 12) badBase = Math.min(badBase, 28);
+        ydsFontSize = badBase + 'px';
+        resultGlow = '';
+        resultAnim = 'animation:T-clash-yds 0.25s ease-out both;';
+        resultPos = 'position:absolute;top:20%;left:50%;transform:translateX(-50%);width:90%;text-align:center;';
+      } else {
+        ydsFontSize = textLen > 10 ? '36px' : '44px';
+        resultGlow = '';
+        resultAnim = 'animation:T-clash-yds 0.3s ease-out both;';
+        resultPos = '';
+      }
+
+      // ── LAYER 5: Timing — good lingers, bad moves on fast ──
+      var holdMultiplier = isGoodForUser ? 1.5 : isBadForUser ? 0.9 : 1.0;
+      var totalDur = Math.round((level === 3 ? 5000 : level === 2 ? 3500 : 2200) * holdMultiplier);
 
       // ── BEAT 1: IMPACT (0-800ms) — yardage slams onto screen ──
       var resultWrap = document.createElement('div');
       resultWrap.className = 'T-clash-result';
+      if (resultPos) resultWrap.style.cssText = resultPos;
       resultWrap.style.opacity = '0';
-      resultWrap.innerHTML = '<div class="T-clash-yds" style="color:' + resultColor + ';font-size:' + ydsFontSize + '">' + resultText + '</div>';
+      resultWrap.innerHTML = '<div class="T-clash-yds" style="color:' + resultColor + ';font-size:' + ydsFontSize + ';' + resultGlow + resultAnim + '">' + resultText + '</div>';
       overlay.appendChild(resultWrap);
       requestAnimationFrame(function() {
         resultWrap.style.opacity = '1';
@@ -2230,6 +2352,18 @@ export function buildGameplay() {
           fdFlash.textContent = 'FIRST DOWN';
           resultWrap.appendChild(fdFlash);
           SND.chime();
+        }
+
+        // New down & distance — prominent situational context
+        if (!isTD && !r.isInterception && !r.isFumbleLost) {
+          var newS = gs.getSummary();
+          var dnLabels = ['','1ST','2ND','3RD','4TH'];
+          var dnText = (dnLabels[newS.down] || '') + ' & ' + newS.distance;
+          var dnColor = gotFirstDown ? '#00ff44' : newS.down >= 3 ? '#e03050' : '#EBB010';
+          var dnEl = document.createElement('div');
+          dnEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:" + dnColor + ";letter-spacing:3px;margin-top:6px;opacity:0.9;";
+          dnEl.textContent = dnText;
+          resultWrap.appendChild(dnEl);
         }
 
         // Rich commentary via engine — show on overlay AND drive summary
@@ -2371,33 +2505,133 @@ export function buildGameplay() {
   }
 
   function showPossCut(ev, done) {
-    // Clear stale commentary from previous possession
     driveCommLine1 = ''; driveCommLine2 = '';
     drawDriveSummary();
     narr.innerHTML = '<div class="T-pbp-idle">Awaiting snap<span class="T-pbp-cursor"></span></div>';
-    const s = gs.getSummary();
-    const nt = s.possession==='CT' ? hTeam : oTeam;
-    const isYourBall = s.possession === hAbbr;
-    const ov = document.createElement('div'); ov.className = 'T-ov T-ov-black T-ov-poss';
-    ov.style.cssText = 'opacity:0;transition:opacity .25s;pointer-events:auto;cursor:pointer;';
-    ov.innerHTML =
-      // Score with team badges
-      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
-        '<div style="text-align:center;">' + renderTeamBadge(GS.team, 28) +
-          "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:24px;color:#fff;\">" + s.ctScore + '</div></div>' +
-        "<div style=\"font-family:'Teko';font-size:18px;color:#555;\">\u2014</div>" +
-        '<div style="text-align:center;">' + renderTeamBadge(GS.opponent, 28) +
-          "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:24px;color:#fff;\">" + s.irScore + '</div></div>' +
+    var s = gs.getSummary();
+    var newPossTeam = s.possession === 'CT' ? hTeam : oTeam;
+    var newPossId = s.possession === 'CT' ? GS.team : GS.opponent;
+    var otherTeam = s.possession === 'CT' ? oTeam : hTeam;
+    var otherId = s.possession === 'CT' ? GS.opponent : GS.team;
+    var isYourBall = s.possession === hAbbr;
+
+    // Determine if this is good or bad for the user
+    var isGoodForUser = false;
+    if (ev === 'interception' || ev === 'fumble_lost' || ev === 'turnover_on_downs' || ev === 'safety') {
+      isGoodForUser = isYourBall; // user forced the turnover and now has the ball
+    } else if (ev === 'touchdown' || ev === 'turnover_td' || ev === 'score') {
+      isGoodForUser = !isYourBall; // user just scored, now opponent gets ball (user had a good drive)
+    }
+
+    // Title and subtitle based on user perspective
+    var title, subtitle;
+    if (isGoodForUser) {
+      if (ev === 'interception') { title = 'PICKED OFF!'; subtitle = newPossTeam.name + ' ball!'; }
+      else if (ev === 'fumble_lost') { title = 'FUMBLE RECOVERY!'; subtitle = newPossTeam.name + ' ball!'; }
+      else if (ev === 'turnover_on_downs') { title = 'DEFENSE HOLDS!'; subtitle = 'Stopped on 4th down.'; }
+      else if (ev === 'safety') { title = 'SAFETY!'; subtitle = newPossTeam.name + ' gets the ball back!'; }
+      else { title = newPossTeam.name.toUpperCase() + ' BALL!'; subtitle = 'New drive.'; }
+    } else {
+      if (ev === 'interception') { title = 'TURNOVER'; subtitle = otherTeam.name + ' intercepts.'; }
+      else if (ev === 'fumble_lost') { title = 'TURNOVER'; subtitle = 'Fumble. ' + otherTeam.name + ' recovers.'; }
+      else if (ev === 'turnover_on_downs') { title = 'TURNOVER ON DOWNS'; subtitle = 'Failed to convert.'; }
+      else if (ev === 'touchdown' || ev === 'turnover_td' || ev === 'score') { title = 'NEW DRIVE'; subtitle = newPossTeam.name + ' ball.'; }
+      else { title = 'CHANGE OF POSSESSION'; subtitle = newPossTeam.name + ' ball.'; }
+    }
+
+    // Next situation context
+    var nextCtx = '1st & 10';
+    if (s.down && s.distance) nextCtx = ['','1st','2nd','3rd','4th'][s.down] + ' & ' + s.distance;
+    var fieldPos = s.yardsToEndzone ? (s.yardsToEndzone <= 50 ? 'OPP ' + s.yardsToEndzone : 'OWN ' + (100 - s.yardsToEndzone)) : '';
+
+    // Sizes based on sentiment
+    var userBadgeSize = isGoodForUser ? 90 : 50;
+    var oppBadgeSize = isGoodForUser ? 50 : 60;
+    var userScoreStyle = isGoodForUser ? "font-size:28px;color:#fff;" : "font-size:22px;color:#777;";
+    var oppScoreStyle = isGoodForUser ? "font-size:22px;color:#777;" : "font-size:28px;color:#fff;";
+    var titleColor = isGoodForUser ? newPossTeam.accent : '#888';
+    var titleSize = isGoodForUser ? '28px' : '20px';
+    var bgGrad = isGoodForUser
+      ? 'background:radial-gradient(ellipse at 50% 40%,' + newPossTeam.colors.primary + '18 0%,transparent 70%),#0A0804;'
+      : 'background:#0A0804;';
+
+    // Build overlay
+    var ov = document.createElement('div');
+    ov.className = 'T-ov T-ov-poss';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;opacity:0;transition:opacity .3s;pointer-events:auto;cursor:pointer;' + bgGrad;
+
+    // Team color edge flash for good moments
+    if (isGoodForUser) {
+      var edgeFlash = document.createElement('div');
+      edgeFlash.style.cssText = 'position:absolute;inset:0;pointer-events:none;border:3px solid ' + newPossTeam.accent + '40;opacity:0;animation:T-clash-flash 0.6s ease-out forwards;';
+      ov.appendChild(edgeFlash);
+    }
+
+    // Score bar with badges — user's team on left
+    var hScore = s.ctScore, oScore = s.irScore;
+    var leftId = GS.team, rightId = GS.opponent;
+    var leftSize = isYourBall ? userBadgeSize : oppBadgeSize;
+    var rightSize = isYourBall ? oppBadgeSize : userBadgeSize;
+    var leftScoreStyle = isYourBall ? userScoreStyle : oppScoreStyle;
+    var rightScoreStyle = isYourBall ? oppScoreStyle : userScoreStyle;
+
+    var scoreBar = document.createElement('div');
+    scoreBar.style.cssText = 'display:flex;align-items:center;gap:16px;';
+    scoreBar.innerHTML =
+      '<div style="text-align:center;opacity:0;animation:pgSlideL 0.3s ease-out 0.1s both;">' +
+        renderTeamBadge(leftId, leftSize) +
+        "<div style=\"font-family:'Rajdhani';font-weight:700;" + leftScoreStyle + "\">" + hScore + '</div>' +
       '</div>' +
-      // Header
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:" + nt.accent + ";letter-spacing:3px;margin-bottom:4px;\">" + (isYourBall ? 'YOUR BALL' : 'CHANGE OF POSSESSION') + '</div>' +
-      `<div class="T-poss-tag" style="font-family:'Rajdhani';font-size:12px;color:#aaa;">${tag(ev)}</div>`;
-    // Tap to skip
-    ov.onclick = function() { ov.style.opacity='0'; setTimeout(function() { ov.remove(); done(); }, 250); };
+      "<div style=\"font-family:'Teko';font-size:14px;color:#333;letter-spacing:2px;\">VS</div>" +
+      '<div style="text-align:center;opacity:0;animation:pgSlideR 0.3s ease-out 0.1s both;">' +
+        renderTeamBadge(rightId, rightSize) +
+        "<div style=\"font-family:'Rajdhani';font-weight:700;" + rightScoreStyle + "\">" + oScore + '</div>' +
+      '</div>';
+    ov.appendChild(scoreBar);
+
+    // Divider
+    var divider = document.createElement('div');
+    divider.style.cssText = 'width:60%;height:1px;margin:8px 0;background:linear-gradient(90deg,transparent,' + (isGoodForUser ? newPossTeam.accent + '66' : '#33333366') + ',transparent);';
+    ov.appendChild(divider);
+
+    // Title
+    var titleEl = document.createElement('div');
+    titleEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:" + titleSize + ";color:" + titleColor + ";letter-spacing:4px;text-align:center;";
+    if (isGoodForUser) titleEl.style.textShadow = '0 0 20px ' + newPossTeam.accent + '40';
+    titleEl.textContent = title;
+    ov.appendChild(titleEl);
+
+    // Subtitle
+    var subEl = document.createElement('div');
+    subEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:13px;color:" + (isGoodForUser ? '#ccc' : '#666') + ";letter-spacing:2px;";
+    subEl.textContent = subtitle;
+    ov.appendChild(subEl);
+
+    // Next situation
+    if (fieldPos) {
+      var ctxEl = document.createElement('div');
+      ctxEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:11px;color:#555;letter-spacing:1px;margin-top:6px;";
+      ctxEl.textContent = nextCtx + ' at ' + fieldPos;
+      ov.appendChild(ctxEl);
+    }
+
+    // Sound
+    if (isGoodForUser) { try { SND.chime(); } catch(e) {} }
+    else { try { SND.snap(); } catch(e) {} }
+
+    // Tap to skip + auto-advance
+    var dismissed = false;
+    function dismiss() {
+      if (dismissed) return;
+      dismissed = true;
+      ov.style.opacity = '0';
+      setTimeout(function() { if (ov.parentNode) ov.remove(); done(); }, 300);
+    }
+    ov.onclick = dismiss;
     el.appendChild(ov);
-    requestAnimationFrame(() => ov.style.opacity='1');
-    // Auto-advance after 2s
-    setTimeout(() => { if (ov.parentNode) { ov.style.opacity='0'; setTimeout(() => { ov.remove(); done(); }, 250); } }, 2000);
+    requestAnimationFrame(function() { ov.style.opacity = '1'; });
+    var autoTime = isGoodForUser ? 2800 : 2000;
+    setTimeout(function() { if (!dismissed) dismiss(); }, autoTime);
   }
 
   // ── DRIVE SUMMARY ──
