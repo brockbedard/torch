@@ -110,7 +110,7 @@ const TEAM_COLORS = {
 const DOWN_LABELS = ['', '1ST', '2ND', '3RD', '4TH'];
 
 document.fonts.ready.then(() => {
-  const field = createFieldAnimator(375, 280);
+  const field = createFieldAnimator(375, 360);
   document.getElementById('wrap').appendChild(field.canvas);
 
   function getFormation(playType, team) {
@@ -123,7 +123,9 @@ document.fonts.ready.then(() => {
       ballYard: ballYard,
       losYard: ballYard,
       firstDownYard: Math.min(ballYard + distance, 110),
-      formation: currentFormation
+      formation: currentFormation,
+      offTeam: offTeam,
+      defTeam: defTeam
     };
   }
 

@@ -23,10 +23,17 @@ const CFG = {
   firstDown: { color: 'rgba(251,191,36,0.85)', w: 3, blur: 10 },
   noise: { opacity: 0.04, count: 600 },
   flame: { path: 'M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z', color: '#FF4511', alpha: 0.12 },
+  // Team dot color map (accent colors — visible on dark field)
+  teamDotColors: {
+    sentinels: [196, 162, 101],  // Boars gold
+    wolves:    [192, 192, 192],  // Wolves silver
+    stags:     [242, 140, 40],   // Stags orange
+    serpents:  [57, 255, 20],    // Serpents green
+  },
   football: {
     bodyPath: 'M247.5 25.4c-13.5 3.3-26.4 7.2-38.6 11.7C142.9 61.6 96.7 103.6 66 153.6C47.8 183.4 35.1 215.9 26.9 249L264.5 486.6c13.5-3.3 26.4-7.2 38.6-11.7c66-24.5 112.2-66.5 142.9-116.5c18.3-29.8 30.9-62.3 39.1-95.3L247.5 25.4zM495.2 205.3c6.1-56.8 1.4-112.2-7.7-156.4c-2.7-12.9-13-22.9-26.1-25.1c-58.2-9.7-109.9-12-155.6-7.9L495.2 205.3zM206.1 496L16.8 306.7c-6.1 56.8-1.4 112.2 7.7 156.4c2.7 12.9 13 22.9 26.1 25.1c58.2 9.7 109.9 12 155.6 7.9z',
     lacesPath: 'M260.7 164.7c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6z',
-    alpha: 0.30, scale: 0.065
+    alpha: 0.13, scale: 0.065
   },
   // Player dot glow colors
   offense: [242, 140, 40],  // Stags orange
@@ -40,17 +47,18 @@ const CFG = {
 // Defense: 3 DL (LDE, NT, RDE) + 4 coverage (LB/CB/S mix)
 // y = yards from LOS. Negative = behind LOS (offense), positive = past LOS (defense).
 
-// Shared OL positions (always the same 3)
+// Shared OL positions (wider splits so dots don't touch)
+// At 375px, 0.12 apart = 45px between centers (40px dot diameter = 5px gap)
 var OL = [
-  { pos: 'OL', x: 0.42, y: 0, num: 65 },
+  { pos: 'OL', x: 0.44, y: 0, num: 65 },
   { pos: 'OL', x: 0.50, y: 0, num: 72 },
-  { pos: 'OL', x: 0.58, y: 0, num: 68 },
+  { pos: 'OL', x: 0.56, y: 0, num: 68 },
 ];
-// Shared DL positions
+// Shared DL positions (aligned over OL gaps, 2 yards off = close but not touching)
 var DL = [
-  { pos: 'DL', x: 0.36, y: 1, num: 91 },
-  { pos: 'DL', x: 0.50, y: 1, num: 97 },
-  { pos: 'DL', x: 0.64, y: 1, num: 93 },
+  { pos: 'DL', x: 0.38, y: 2, num: 91 },
+  { pos: 'DL', x: 0.50, y: 2, num: 97 },
+  { pos: 'DL', x: 0.62, y: 2, num: 93 },
 ];
 
 const FORMATIONS = {
@@ -63,66 +71,66 @@ const FORMATIONS = {
       { pos: 'WR', x: 0.90, y: 0, num: 11 },
     ]),
     defense: DL.concat([
-      { pos: 'CB', x: 0.10, y: 3, num: 24 },
-      { pos: 'CB', x: 0.90, y: 3, num: 2 },
-      { pos: 'LB', x: 0.50, y: 6, num: 55 },
-      { pos: 'S', x: 0.50, y: 13, num: 21 },
+      { pos: 'CB', x: 0.10, y: 6, num: 24 },
+      { pos: 'CB', x: 0.90, y: 6, num: 2 },
+      { pos: 'LB', x: 0.50, y: 9, num: 55 },
+      { pos: 'S', x: 0.50, y: 15, num: 21 },
     ]),
   },
   'trips_right': {
     offense: OL.concat([
       { pos: 'QB', x: 0.50, y: -5, num: 7 },
-      { pos: 'WR', x: 0.90, y: 0, num: 1 },
-      { pos: 'WR', x: 0.78, y: -1, num: 82 },
-      { pos: 'SLOT', x: 0.68, y: 0, num: 3 },
+      { pos: 'WR', x: 0.92, y: 0, num: 1 },
+      { pos: 'WR', x: 0.80, y: -2, num: 82 },
+      { pos: 'SLOT', x: 0.75, y: 0, num: 3 },
     ]),
     defense: DL.concat([
-      { pos: 'CB', x: 0.90, y: 2, num: 24 },
-      { pos: 'CB', x: 0.78, y: 3, num: 2 },
-      { pos: 'LB', x: 0.50, y: 6, num: 55 },
-      { pos: 'S', x: 0.40, y: 12, num: 21 },
+      { pos: 'CB', x: 0.90, y: 5, num: 24 },
+      { pos: 'CB', x: 0.78, y: 6, num: 2 },
+      { pos: 'LB', x: 0.50, y: 9, num: 55 },
+      { pos: 'S', x: 0.40, y: 15, num: 21 },
     ]),
   },
   'iform_tight': {
     offense: OL.concat([
-      { pos: 'QB', x: 0.50, y: -1, num: 7 },
-      { pos: 'FB', x: 0.50, y: -3, num: 34 },
-      { pos: 'RB', x: 0.50, y: -5, num: 25 },
-      { pos: 'TE', x: 0.68, y: 0, num: 82 },
+      { pos: 'QB', x: 0.50, y: -2, num: 7 },
+      { pos: 'FB', x: 0.50, y: -5, num: 34 },
+      { pos: 'RB', x: 0.50, y: -8, num: 25 },
+      { pos: 'TE', x: 0.75, y: 0, num: 82 },
     ]),
     defense: DL.concat([
-      { pos: 'LB', x: 0.30, y: 4, num: 55 },
-      { pos: 'LB', x: 0.50, y: 5, num: 42 },
-      { pos: 'LB', x: 0.70, y: 4, num: 52 },
-      { pos: 'S', x: 0.50, y: 12, num: 21 },
+      { pos: 'LB', x: 0.30, y: 7, num: 55 },
+      { pos: 'LB', x: 0.50, y: 8, num: 42 },
+      { pos: 'LB', x: 0.70, y: 7, num: 52 },
+      { pos: 'S', x: 0.50, y: 15, num: 21 },
     ]),
   },
   'singleback_wing': {
     offense: OL.concat([
-      { pos: 'QB', x: 0.50, y: -1, num: 7 },
-      { pos: 'RB', x: 0.40, y: -4, num: 25 },
-      { pos: 'TE', x: 0.68, y: -1, num: 82 },
-      { pos: 'WR', x: 0.12, y: 0, num: 1 },
+      { pos: 'QB', x: 0.50, y: -3, num: 7 },
+      { pos: 'RB', x: 0.35, y: -5, num: 25 },
+      { pos: 'TE', x: 0.75, y: -1, num: 82 },
+      { pos: 'WR', x: 0.10, y: 0, num: 1 },
     ]),
     defense: DL.concat([
-      { pos: 'CB', x: 0.12, y: 3, num: 24 },
-      { pos: 'LB', x: 0.40, y: 5, num: 55 },
-      { pos: 'LB', x: 0.65, y: 5, num: 42 },
-      { pos: 'S', x: 0.50, y: 12, num: 21 },
+      { pos: 'CB', x: 0.12, y: 6, num: 24 },
+      { pos: 'LB', x: 0.40, y: 8, num: 55 },
+      { pos: 'LB', x: 0.65, y: 8, num: 42 },
+      { pos: 'S', x: 0.50, y: 15, num: 21 },
     ]),
   },
   'bunch_left': {
     offense: OL.concat([
       { pos: 'QB', x: 0.50, y: -6, num: 7 },
-      { pos: 'WR', x: 0.20, y: 0, num: 1 },
-      { pos: 'WR', x: 0.12, y: -2, num: 82 },
-      { pos: 'SLOT', x: 0.28, y: -2, num: 3 },
+      { pos: 'WR', x: 0.22, y: 0, num: 1 },
+      { pos: 'WR', x: 0.08, y: -3, num: 82 },
+      { pos: 'SLOT', x: 0.22, y: -3, num: 3 },
     ]),
     defense: DL.concat([
-      { pos: 'CB', x: 0.12, y: 2, num: 24 },
-      { pos: 'CB', x: 0.28, y: 3, num: 2 },
-      { pos: 'LB', x: 0.50, y: 6, num: 55 },
-      { pos: 'S', x: 0.50, y: 13, num: 21 },
+      { pos: 'CB', x: 0.12, y: 5, num: 24 },
+      { pos: 'CB', x: 0.28, y: 6, num: 2 },
+      { pos: 'LB', x: 0.50, y: 9, num: 55 },
+      { pos: 'S', x: 0.50, y: 15, num: 21 },
     ]),
   },
   'pistol_twins': {
@@ -133,25 +141,24 @@ const FORMATIONS = {
       { pos: 'WR', x: 0.90, y: 0, num: 11 },
     ]),
     defense: DL.concat([
-      { pos: 'CB', x: 0.10, y: 3, num: 24 },
-      { pos: 'CB', x: 0.90, y: 3, num: 2 },
-      { pos: 'LB', x: 0.50, y: 6, num: 55 },
-      { pos: 'S', x: 0.50, y: 12, num: 21 },
+      { pos: 'CB', x: 0.10, y: 6, num: 24 },
+      { pos: 'CB', x: 0.90, y: 6, num: 2 },
+      { pos: 'LB', x: 0.50, y: 9, num: 55 },
+      { pos: 'S', x: 0.50, y: 15, num: 21 },
     ]),
   },
-  'empty_5_wide': {
+  'empty_3_wide': {
     offense: OL.concat([
       { pos: 'QB', x: 0.50, y: -5, num: 7 },
       { pos: 'WR', x: 0.08, y: 0, num: 1 },
       { pos: 'WR', x: 0.25, y: -1, num: 82 },
-      { pos: 'WR', x: 0.75, y: -1, num: 4 },
       { pos: 'WR', x: 0.92, y: 0, num: 11 },
     ]),
     defense: DL.concat([
-      { pos: 'CB', x: 0.08, y: 3, num: 24 },
-      { pos: 'CB', x: 0.92, y: 3, num: 2 },
-      { pos: 'LB', x: 0.50, y: 6, num: 42 },
-      { pos: 'S', x: 0.50, y: 13, num: 21 },
+      { pos: 'CB', x: 0.08, y: 5, num: 24 },
+      { pos: 'CB', x: 0.92, y: 5, num: 2 },
+      { pos: 'LB', x: 0.50, y: 8, num: 42 },
+      { pos: 'S', x: 0.50, y: 14, num: 21 },
     ]),
   },
 };
@@ -162,7 +169,7 @@ FORMATIONS['iform_under_center'] = FORMATIONS['iform_tight'];
 
 // ── PLAY TYPE → FORMATION MAPPING ──
 var PLAY_FORMATION_MAP = {
-  DEEP:   'empty_5_wide',
+  DEEP:   'empty_3_wide',
   SHORT:  'shotgun_spread',
   QUICK:  'bunch_left',
   SCREEN: 'trips_right',
@@ -171,7 +178,7 @@ var PLAY_FORMATION_MAP = {
 
 // Per-team overrides
 var TEAM_FORMATION_MAP = {
-  sentinels: { SHORT: 'trips_right', SCREEN: 'empty_5_wide', RUN: 'shotgun_spread' },
+  sentinels: { SHORT: 'trips_right', SCREEN: 'empty_3_wide', RUN: 'shotgun_spread' },
   wolves:    { DEEP: 'shotgun_spread', SHORT: 'singleback_wing', RUN: 'pistol_twins', SCREEN: 'iform_tight' },
   stags:     { DEEP: 'trips_right', SHORT: 'pistol_twins', RUN: 'pistol_twins', SCREEN: 'shotgun_spread' },
   serpents:  { SHORT: 'trips_right', QUICK: 'bunch_left', RUN: 'shotgun_spread' },
@@ -274,8 +281,8 @@ export function createFieldRenderer(width, height) {
   ctx.scale(DPR, DPR);
 
   // Portrait: width = sideline-to-sideline, height = yard axis
-  // Show ~30 yards for more spread — yards feel bigger, more room for action
-  var VISIBLE_YARDS = 30;
+  // Show ~25 yards — big dots, zoomed in, plenty of spacing
+  var VISIBLE_YARDS = 25;
   var YPX = height / VISIBLE_YARDS; // pixels per yard in portrait
   var fieldW = width; // sideline to sideline
 
@@ -605,12 +612,16 @@ export function createFieldRenderer(width, height) {
     c.fillText('1ST', fieldW - 18, y);
   }
 
-  function drawPlayerDots(c, formation, losYard, topYard) {
-    var form = FORMATIONS[formation] || FORMATIONS['shotgun_2x2'];
-    var DOT_R = 20;
-    var CORE_R = 12; // solid opaque inner circle
+  function drawPlayerDots(c, formation, losYard, topYard, offTeamId, defTeamId) {
+    var form = FORMATIONS[formation] || FORMATIONS['shotgun_spread'];
+    var DOT_R = 24;
+    var CORE_R = 14;
 
-    // Pre-create core gradients (avoids 14 createRadialGradient per frame)
+    // Team colors (dynamic per team, fallback to defaults)
+    var offRGB = (offTeamId && CFG.teamDotColors[offTeamId]) || CFG.offense;
+    var defRGB = (defTeamId && CFG.teamDotColors[defTeamId]) || CFG.defense;
+
+    // Pre-create core gradients
     function makeCoreGrad(rgb) {
       var g = c.createRadialGradient(0, 0, 0, 0, 0, CORE_R);
       g.addColorStop(0, 'rgba(' + Math.min(255, rgb[0]+60) + ',' + Math.min(255, rgb[1]+60) + ',' + Math.min(255, rgb[2]+60) + ',1)');
@@ -619,24 +630,29 @@ export function createFieldRenderer(width, height) {
       g.addColorStop(1, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0)');
       return g;
     }
-    var offGrad = makeCoreGrad(CFG.offense);
-    var defGrad = makeCoreGrad(CFG.defense);
+    var offGrad = makeCoreGrad(offRGB);
+    var defGrad = makeCoreGrad(defRGB);
 
     function drawDot(px, py, rgb, coreGrad) {
-      // 1. Dark backing circle — eclipses lines underneath
+      // 1. Dark backing circle — eclipses LOS/1st-down lines underneath
       c.fillStyle = 'rgba(5,10,8,0.92)';
       c.beginPath();
-      c.arc(px, py, CORE_R + 2, 0, Math.PI * 2);
+      c.arc(px, py, CORE_R + 4, 0, Math.PI * 2);
       c.fill();
 
-      // 2. Outer glow ring (additive)
+      // 2. Two-layer glow (additive)
       var prevComp = c.globalCompositeOperation;
       c.globalCompositeOperation = 'lighter';
-      var sprite = getGlowSprite(rgb, DOT_R, 0.6);
+      // Outer soft glow
+      var outerSprite = getGlowSprite(rgb, Math.round(DOT_R * 1.5), 0.35);
+      var outerSz = DOT_R * 6;
+      c.drawImage(outerSprite, px - outerSz / 2, py - outerSz / 2, outerSz, outerSz);
+      // Main glow
+      var sprite = getGlowSprite(rgb, DOT_R, 0.8);
       c.drawImage(sprite, px - DOT_R * 2, py - DOT_R * 2, DOT_R * 4, DOT_R * 4);
       c.globalCompositeOperation = prevComp;
 
-      // 3. Solid bright core (pre-created gradient, translated)
+      // 3. Solid bright core
       c.save();
       c.translate(px, py);
       c.fillStyle = coreGrad;
@@ -650,13 +666,13 @@ export function createFieldRenderer(width, height) {
     form.offense.forEach(function(p) {
       var px = p.x * fieldW;
       var py = (losYard + p.y - topYard) * YPX;
-      drawDot(px, py, CFG.offense, offGrad);
+      drawDot(px, py, offRGB, offGrad);
     });
 
     form.defense.forEach(function(p) {
       var px = p.x * fieldW;
       var py = (losYard + p.y - topYard) * YPX;
-      drawDot(px, py, CFG.defense, defGrad);
+      drawDot(px, py, defRGB, defGrad);
     });
 
     // Ball glow at QB position
@@ -737,7 +753,7 @@ export function createFieldRenderer(width, height) {
       drawFirstDownMarker(ctx, fdYard, topYard);
     }
     if (!state.skipDots) {
-      drawPlayerDots(ctx, formation, losYard, topYard);
+      drawPlayerDots(ctx, formation, losYard, topYard, state.offTeam, state.defTeam);
     }
   }
 

@@ -359,7 +359,7 @@ export function createFieldAnimator(width, height) {
   var _flashEffect = null; // { startTime, duration, rgb, type }
   var _ballFlight = null;
 
-  var VISIBLE_YARDS = 30;
+  var VISIBLE_YARDS = 25;
   var YPX = height / VISIBLE_YARDS;
 
   // Offense/defense colors for particles
@@ -440,18 +440,24 @@ export function createFieldAnimator(width, height) {
       var dkf = _animSequence.dotKeyframes;
       var dColors = _animSequence.dotColors;
       var dNums = _animSequence.dotNums;
-      var CORE_R = 12, DOT_R = 20;
+      var CORE_R = 14, DOT_R = 24;
 
-      // Pre-create core gradients
-      var offRGB = [242,140,40], defRGB = [59,165,93];
+      // Team colors (dynamic)
+      var TEAM_COLORS = { sentinels:[196,162,101], wolves:[192,192,192], stags:[242,140,40], serpents:[57,255,20] };
+      var offRGB = (renderState.offTeam && TEAM_COLORS[renderState.offTeam]) || [242,140,40];
+      var defRGB = (renderState.defTeam && TEAM_COLORS[renderState.defTeam]) || [59,165,93];
+
       function drawAnimDot(cx2, cy2, rgb) {
-        // Dark backing
+        // Dark backing (large enough to eclipse lines)
         ctx.fillStyle = 'rgba(5,10,8,0.92)';
-        ctx.beginPath(); ctx.arc(cx2, cy2, CORE_R+2, 0, Math.PI*2); ctx.fill();
-        // Glow
+        ctx.beginPath(); ctx.arc(cx2, cy2, CORE_R+4, 0, Math.PI*2); ctx.fill();
+        // Two-layer glow (additive)
         var prev = ctx.globalCompositeOperation;
         ctx.globalCompositeOperation = 'lighter';
-        var spr = getGlowSprite(rgb, DOT_R, 0.6);
+        var outerSpr = getGlowSprite(rgb, Math.round(DOT_R*1.5), 0.35);
+        var outerSz = DOT_R * 6;
+        ctx.drawImage(outerSpr, cx2-outerSz/2, cy2-outerSz/2, outerSz, outerSz);
+        var spr = getGlowSprite(rgb, DOT_R, 0.8);
         ctx.drawImage(spr, cx2-DOT_R*2, cy2-DOT_R*2, DOT_R*4, DOT_R*4);
         ctx.globalCompositeOperation = prev;
         // Core
