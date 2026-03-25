@@ -418,22 +418,12 @@ export function createFieldAnimator(width, height) {
         }
       }
 
-      // Ball flight (yard-space bezier → pixel conversion per frame)
+      // Ball flight
       if (_animSequence.ball) {
         var bf = _animSequence.ball;
         if (animElapsed >= bf.startTime && animElapsed <= bf.endTime) {
           var bt = (animElapsed - bf.startTime) / (bf.endTime - bf.startTime);
-          var easedBt = easeOutCubic(bt);
-          if (bf.p0xPct !== undefined) {
-            // Yard-space ball: interpolate in yard-space, convert to pixels
-            var bxPct = quadBezierVal(bf.p0xPct, bf.p1xPct, bf.p2xPct, easedBt);
-            var byYards = quadBezierVal(bf.p0yYards, bf.p1yYards, bf.p2yYards, easedBt);
-            var bPx = { x: bxPct * width, y: (_curLosYard + byYards - _curTopYard) * YPX };
-            _ballFlight = bPx;
-          } else {
-            // Legacy pixel-space ball
-            _ballFlight = quadBezier(bf.p0, bf.p1, bf.p2, easedBt);
-          }
+          _ballFlight = quadBezier(bf.p0, bf.p1, bf.p2, easeOutCubic(bt));
         } else if (animElapsed > bf.endTime) {
           _ballFlight = null;
         }
@@ -468,11 +458,7 @@ export function createFieldAnimator(width, height) {
       var dNums = _animSequence.dotNums;
       var CORE_R = 14, DOT_R = 24;
 
-      // Convert yard-space keyframe position to canvas pixels
-      var isYardSpace = _animSequence.yardSpace;
-      function yardToPixel(xPct, yYards) {
-        return { x: xPct * width, y: (_curLosYard + yYards - _curTopYard) * YPX };
-      }
+      // Pixel-space keyframes — drawn directly
 
       // Team colors (dynamic)
       var TEAM_COLORS = { sentinels:[196,162,101], wolves:[192,192,192], stags:[242,140,40], serpents:[57,255,20] };
@@ -504,8 +490,7 @@ export function createFieldAnimator(width, height) {
       }
 
       for (var di = 0; di < dkf.length; di++) {
-        var raw = interpDot(dkf[di], animElapsed2);
-        var pos = isYardSpace ? yardToPixel(raw.x, raw.y) : raw;
+        var pos = interpDot(dkf[di], animElapsed2);
         var rgb = dColors[di] === 'off' ? offRGB : defRGB;
         drawAnimDot(pos.x, pos.y, rgb);
       }
@@ -514,8 +499,7 @@ export function createFieldAnimator(width, height) {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       for (var ni = 0; ni < dkf.length; ni++) {
-        var rawN = interpDot(dkf[ni], animElapsed2);
-        var np = isYardSpace ? yardToPixel(rawN.x, rawN.y) : rawN;
+        var np = interpDot(dkf[ni], animElapsed2);
         ctx.strokeStyle = 'rgba(0,0,0,0.7)';
         ctx.lineWidth = 2.5;
         ctx.strokeText(dNums[ni], np.x, np.y);
@@ -648,24 +632,6 @@ export function createFieldAnimator(width, height) {
     _lastTickTime = performance.now();
     trail.clear();
     _ballFlight = null;
-
-    // Auto-scroll the field to follow big gains mid-animation
-    // If the play gains more than half the visible window, scroll at the catch point
-    if (Math.abs(yardsGained) > VISIBLE_YARDS * 0.4) {
-      var catchPct = type === 'sack' ? 0.65 : (playType === 'RUN' ? 0.30 : 0.42);
-      var scrollDelay = _animDuration * catchPct;
-      var scrollDuration = _animDuration * 0.3; // scroll over 30% of remaining play
-      var newBallYard = Math.max(VISIBLE_YARDS/2, Math.min(120-VISIBLE_YARDS/2, state.losYard + yardsGained));
-
-      setTimeout(function() {
-        _scrollAnim = {
-          from: state.ballYard,
-          to: newBallYard,
-          start: performance.now(),
-          duration: scrollDuration
-        };
-      }, scrollDelay);
-    }
 
     requestTick();
   }

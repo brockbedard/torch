@@ -1,19 +1,25 @@
 /**
- * TORCH — Play Animation Builder (Phase 1, v3)
- * All keyframes in YARD SPACE: kf(time, xPct, yYards)
- *   xPct: 0-1 across field width
- *   yYards: yards from LOS (positive = downfield, negative = backfield)
- * The animator converts to canvas pixels per-frame using current topYard.
- * This means field scrolling works perfectly — dots stay pinned to their yard positions.
+ * TORCH — Play Animation Builder (Phase 1, v4)
+ * Keyframes in PIXEL SPACE — computed once at play start.
+ * Field scroll handled separately in the animator (only the background moves).
  */
 
 function lerp(a, b, t) { return a + (b - a) * t; }
-function kf(time, xPct, yYards) { return { time: time, xPct: xPct, yYards: yYards }; }
+function kf(time, x, y) { return { time: time, x: x, y: y }; }
 
 export function buildPlayAnimation(resultType, yardsGained, formation, playType, defScheme, fieldW, ypx, losYard, topYard) {
   var form = formation;
   var allDots = form.offense.concat(form.defense);
   var numOff = form.offense.length;
+
+  // Convert (xPct, yardsFromLOS) to canvas pixels
+  function px(xPct, yYards) {
+    return { x: xPct * fieldW, y: (losYard + yYards - topYard) * ypx };
+  }
+  function pkf(time, xPct, yYards) {
+    var p = px(xPct, yYards);
+    return kf(time, p.x, p.y);
+  }
 
   // ── TIMING ──
   var isTD = resultType === 'touchdown';
@@ -33,12 +39,13 @@ export function buildPlayAnimation(resultType, yardsGained, formation, playType,
   var catchDepth = Math.min(yardsGained * 0.6, 20);
   var settleDepth = yardsGained;
 
-  // ── INIT: every dot starts at its formation position, stays put ──
+  // ── INIT ──
   var dotKF = allDots.map(function(p) {
-    return [kf(0, p.x, p.y), kf(dur, p.x, p.y)];
+    var s = px(p.x, p.y);
+    return [kf(0, s.x, s.y), kf(dur, s.x, s.y)];
   });
 
-  var seq = { dotKeyframes: dotKF, ball: null, events: [], yardSpace: true };
+  var seq = { dotKeyframes: dotKF, ball: null, events: [], duration: dur, yardsGained: yardsGained };
 
   // ── FIND PLAYERS ──
   var qbIdx = -1, wrIdx = -1, decoyIdx = -1, rbIdx = -1;
@@ -60,67 +67,66 @@ export function buildPlayAnimation(resultType, yardsGained, formation, playType,
   var qb = qbIdx >= 0 ? form.offense[qbIdx] : { x: 0.50, y: -5 };
 
   // ===================================================================
-  // OL: pass block (slide back, pocket) or run block (fire forward, spread)
+  // OL
   // ===================================================================
   for (var oi = 0; oi < numOff; oi++) {
     if (form.offense[oi].pos !== 'OL') continue;
     var ol = form.offense[oi];
-    var spread = ol.x < 0.50 ? -0.02 : ol.x > 0.50 ? 0.02 : 0;
+    var spr = ol.x < 0.50 ? -0.02 : ol.x > 0.50 ? 0.02 : 0;
     if (isRun) {
-      dotKF[oi] = [kf(0,ol.x,ol.y), kf(dur*0.08,ol.x,ol.y), kf(dur*0.20,ol.x+spread,ol.y+3), kf(dur*0.40,ol.x+spread,ol.y+3), kf(dur,ol.x+spread,ol.y+2.5)];
+      dotKF[oi] = [pkf(0,ol.x,ol.y), pkf(dur*0.08,ol.x,ol.y), pkf(dur*0.20,ol.x+spr,ol.y+3), pkf(dur*0.40,ol.x+spr,ol.y+3), pkf(dur,ol.x+spr,ol.y+2.5)];
     } else {
-      dotKF[oi] = [kf(0,ol.x,ol.y), kf(dur*0.05,ol.x,ol.y), kf(dur*0.18,ol.x+spread,ol.y-1), kf(dur,ol.x+spread,ol.y-1)];
+      dotKF[oi] = [pkf(0,ol.x,ol.y), pkf(dur*0.05,ol.x,ol.y), pkf(dur*0.18,ol.x+spr,ol.y-1), pkf(dur,ol.x+spr,ol.y-1)];
     }
   }
 
   // ===================================================================
-  // QB: dropback/throw, handoff, or sack scramble
+  // QB
   // ===================================================================
   if (qbIdx >= 0) {
     if (resultType === 'sack') {
-      var sackDepth = -(Math.abs(yardsGained));
-      dotKF[qbIdx] = [kf(0,qb.x,qb.y), kf(dur*0.15,qb.x,qb.y-3), kf(dur*0.35,qb.x,qb.y-2), kf(dur*0.50,qb.x+0.06,qb.y-3), kf(dur*0.65,qb.x+0.05,sackDepth), kf(dur,qb.x+0.05,sackDepth)];
-      seq.events.push({ time: dur*0.65, type: 'sack', xPct: qb.x+0.05, yYards: sackDepth });
+      var sd = -(Math.abs(yardsGained));
+      dotKF[qbIdx] = [pkf(0,qb.x,qb.y), pkf(dur*0.15,qb.x,qb.y-3), pkf(dur*0.35,qb.x,qb.y-2), pkf(dur*0.50,qb.x+0.06,qb.y-3), pkf(dur*0.65,qb.x+0.05,sd), pkf(dur,qb.x+0.05,sd)];
+      var sackPx = px(qb.x+0.05, sd);
+      seq.events.push({ time: dur*0.65, type: 'sack', x: sackPx.x, y: sackPx.y });
     } else if (isRun && rbIdx >= 0) {
       var rb = form.offense[rbIdx];
-      var meshX = (qb.x + rb.x) / 2, meshY = (qb.y + rb.y) / 2 + 1;
-      dotKF[qbIdx] = [kf(0,qb.x,qb.y), kf(throwT,meshX,meshY), kf(throwT+dur*0.08,qb.x+0.08,qb.y-2), kf(dur,qb.x+0.08,qb.y-2)];
-      seq.events.push({ time: throwT, type: 'handoff', xPct: meshX, yYards: meshY });
+      var mx = (qb.x+rb.x)/2, my = (qb.y+rb.y)/2+1;
+      dotKF[qbIdx] = [pkf(0,qb.x,qb.y), pkf(throwT,mx,my), pkf(throwT+dur*0.08,qb.x+0.08,qb.y-2), pkf(dur,qb.x+0.08,qb.y-2)];
+      var meshPx = px(mx, my);
+      seq.events.push({ time: throwT, type: 'handoff', x: meshPx.x, y: meshPx.y });
     } else {
-      dotKF[qbIdx] = [kf(0,qb.x,qb.y), kf(dur*0.12,qb.x,qb.y-3), kf(dur*0.18,qb.x,qb.y-2), kf(throwT,qb.x,qb.y-2), kf(dur,qb.x,qb.y-2)];
-      seq.events.push({ time: throwT, type: 'throw', xPct: qb.x, yYards: qb.y-2 });
+      dotKF[qbIdx] = [pkf(0,qb.x,qb.y), pkf(dur*0.12,qb.x,qb.y-3), pkf(dur*0.18,qb.x,qb.y-2), pkf(throwT,qb.x,qb.y-2), pkf(dur,qb.x,qb.y-2)];
+      var throwPx = px(qb.x, qb.y-2);
+      seq.events.push({ time: throwT, type: 'throw', x: throwPx.x, y: throwPx.y });
     }
   }
 
   // ===================================================================
-  // PRIMARY TARGET (WR route or RB run)
+  // PRIMARY TARGET
   // ===================================================================
   var targetIdx = isRun ? rbIdx : wrIdx;
   if (targetIdx >= 0 && resultType !== 'sack') {
     var tp = form.offense[targetIdx];
 
     if (isRun) {
-      var rb2 = form.offense[targetIdx];
-      var meshX2 = (rb2.x + qb.x) / 2, meshY2 = (rb2.y + qb.y) / 2 + 1;
-      var holeX = Math.random() > 0.5 ? 0.50 : (rb2.x < 0.50 ? 0.20 : 0.80);
-      dotKF[targetIdx] = [kf(0,rb2.x,rb2.y), kf(throwT,meshX2,meshY2), kf(catchT*0.5,holeX,1), kf(catchT,holeX,catchDepth), kf(tackleT,holeX+0.02,settleDepth), kf(dur,holeX+0.02,settleDepth)];
-      seq.events.push({ time: tackleT, type: isTD?'touchdown':'tackle', xPct: holeX+0.02, yYards: settleDepth });
+      var mx2 = (tp.x+qb.x)/2, my2 = (tp.y+qb.y)/2+1;
+      var holeX = Math.random() > 0.5 ? 0.50 : (tp.x < 0.50 ? 0.20 : 0.80);
+      dotKF[targetIdx] = [pkf(0,tp.x,tp.y), pkf(throwT,mx2,my2), pkf(catchT*0.5,holeX,1), pkf(catchT,holeX,catchDepth), pkf(tackleT,holeX+0.02,settleDepth), pkf(dur,holeX+0.02,settleDepth)];
+      var tacklePx = px(holeX+0.02, settleDepth);
+      seq.events.push({ time: tackleT, type: isTD?'touchdown':'tackle', x: tacklePx.x, y: tacklePx.y });
     } else {
-      // Pick route shape
-      var stemDepth, catchX, settleX;
-      var routeType;
-      if (playType === 'DEEP') {
-        stemDepth = 12; routeType = ['go','post','corner'][Math.floor(Math.random()*3)];
-      } else if (playType === 'QUICK') {
-        stemDepth = 3; routeType = Math.random()>0.5 ? 'hitch' : 'slant';
-      } else if (playType === 'SCREEN') {
-        stemDepth = 0; routeType = 'screen';
-      } else {
-        stemDepth = 7; routeType = ['slant','curl','out','dig'][Math.floor(Math.random()*4)];
-      }
+      // Route selection
+      var stemDepth, routeName;
+      if (playType === 'DEEP') { stemDepth = 12; routeName = ['go','post','corner'][Math.floor(Math.random()*3)]; }
+      else if (playType === 'QUICK') { stemDepth = 3; routeName = Math.random()>0.5?'hitch':'slant'; }
+      else if (playType === 'SCREEN') { stemDepth = 0; routeName = 'screen'; }
+      else { stemDepth = 7; routeName = ['slant','curl','out','dig'][Math.floor(Math.random()*4)]; }
 
-      var stemX = tp.x, stemY = stemDepth;
-      switch (routeType) {
+      var stemX = tp.x, catchX, settleX;
+      var stemY = stemDepth;
+
+      switch (routeName) {
         case 'go': catchX = tp.x; break;
         case 'post': catchX = lerp(tp.x, 0.50, 0.5); break;
         case 'corner': catchX = tp.x + (tp.x < 0.50 ? -0.15 : 0.15); break;
@@ -132,24 +138,30 @@ export function buildPlayAnimation(resultType, yardsGained, formation, playType,
         case 'screen': stemX = tp.x + (tp.x < 0.50 ? -0.08 : 0.08); stemY = -1; catchX = stemX; break;
         default: catchX = tp.x;
       }
-      settleX = catchX + (Math.random() - 0.5) * 0.04;
+      settleX = catchX + (Math.random()-0.5) * 0.04;
 
       if (resultType === 'incomplete') {
-        dotKF[targetIdx] = [kf(0,tp.x,tp.y), kf(dur*0.15,stemX,stemY), kf(throwT,catchX,catchDepth), kf(catchT,catchX,catchDepth), kf(dur,catchX,catchDepth)];
-        var missX = catchX + 0.05;
-        seq.ball = { startTime: throwT, endTime: catchT, p0xPct: qb.x, p0yYards: qb.y-2, p1xPct: (qb.x+missX)/2, p1yYards: (qb.y-2+catchDepth+2)/2, p2xPct: missX, p2yYards: catchDepth+2 };
-        seq.events.push({ time: catchT, type: 'incomplete', xPct: missX, yYards: catchDepth+2 });
+        dotKF[targetIdx] = [pkf(0,tp.x,tp.y), pkf(dur*0.15,stemX,stemY), pkf(throwT,catchX,catchDepth), pkf(catchT,catchX,catchDepth), pkf(dur,catchX,catchDepth)];
+        var missP = px(catchX+0.05, catchDepth+2);
+        var throwP = px(qb.x, qb.y-2);
+        seq.ball = { startTime: throwT, endTime: catchT, p0: throwP, p1: {x:(throwP.x+missP.x)/2,y:(throwP.y+missP.y)/2-15}, p2: missP };
+        seq.events.push({ time: catchT, type: 'incomplete', x: missP.x, y: missP.y });
       } else if (resultType === 'interception') {
         var intDepth = 8;
-        dotKF[targetIdx] = [kf(0,tp.x,tp.y), kf(dur*0.15,stemX,stemY), kf(catchT,catchX,intDepth), kf(dur,catchX,intDepth)];
+        dotKF[targetIdx] = [pkf(0,tp.x,tp.y), pkf(dur*0.15,stemX,stemY), pkf(catchT,catchX,intDepth), pkf(dur,catchX,intDepth)];
         var cbP = cbIndices[0] >= 0 ? allDots[cbIndices[0]] : tp;
-        seq.ball = { startTime: throwT, endTime: catchT, p0xPct: qb.x, p0yYards: qb.y-2, p1xPct: (qb.x+cbP.x)/2, p1yYards: (qb.y-2+intDepth)/2, p2xPct: cbP.x, p2yYards: intDepth };
-        seq.events.push({ time: catchT, type: 'interception', xPct: cbP.x, yYards: intDepth });
+        var intP = px(cbP.x, intDepth);
+        var throwP2 = px(qb.x, qb.y-2);
+        seq.ball = { startTime: throwT, endTime: catchT, p0: throwP2, p1: {x:(throwP2.x+intP.x)/2,y:(throwP2.y+intP.y)/2}, p2: intP };
+        seq.events.push({ time: catchT, type: 'interception', x: intP.x, y: intP.y });
       } else {
-        dotKF[targetIdx] = [kf(0,tp.x,tp.y), kf(dur*0.10,tp.x,tp.y), kf(dur*0.18,stemX,stemY), kf(throwT,catchX,catchDepth-1), kf(catchT,catchX,catchDepth), kf(tackleT,settleX,settleDepth), kf(dur,settleX,settleDepth)];
-        seq.ball = { startTime: throwT, endTime: catchT, p0xPct: qb.x, p0yYards: qb.y-2, p1xPct: (qb.x+catchX)/2, p1yYards: (qb.y-2+catchDepth)/2-2, p2xPct: catchX, p2yYards: catchDepth };
-        seq.events.push({ time: catchT, type: 'catch', xPct: catchX, yYards: catchDepth });
-        seq.events.push({ time: tackleT, type: isTD?'touchdown':'tackle', xPct: settleX, yYards: settleDepth });
+        dotKF[targetIdx] = [pkf(0,tp.x,tp.y), pkf(dur*0.10,tp.x,tp.y), pkf(dur*0.18,stemX,stemY), pkf(throwT,catchX,catchDepth-1), pkf(catchT,catchX,catchDepth), pkf(tackleT,settleX,settleDepth), pkf(dur,settleX,settleDepth)];
+        var catchPx = px(catchX, catchDepth);
+        var throwP3 = px(qb.x, qb.y-2);
+        seq.ball = { startTime: throwT, endTime: catchT, p0: throwP3, p1: {x:(throwP3.x+catchPx.x)/2,y:(throwP3.y+catchPx.y)/2-20}, p2: catchPx };
+        seq.events.push({ time: catchT, type: 'catch', x: catchPx.x, y: catchPx.y });
+        var tacklePx2 = px(settleX, settleDepth);
+        seq.events.push({ time: tackleT, type: isTD?'touchdown':'tackle', x: tacklePx2.x, y: tacklePx2.y });
       }
     }
   }
@@ -159,27 +171,27 @@ export function buildPlayAnimation(resultType, yardsGained, formation, playType,
   // ===================================================================
   if (decoyIdx >= 0 && !isRun && resultType !== 'sack') {
     var dc = form.offense[decoyIdx];
-    dotKF[decoyIdx] = [kf(0,dc.x,dc.y), kf(dur*0.10,dc.x,dc.y), kf(dur*0.25,dc.x,5), kf(dur*0.40,lerp(dc.x,0.50,0.3),7), kf(dur,lerp(dc.x,0.50,0.3),7)];
+    dotKF[decoyIdx] = [pkf(0,dc.x,dc.y), pkf(dur*0.10,dc.x,dc.y), pkf(dur*0.25,dc.x,5), pkf(dur*0.40,lerp(dc.x,0.50,0.3),7), pkf(dur,lerp(dc.x,0.50,0.3),7)];
   }
 
   // ===================================================================
-  // DL: rush / get blocked / sack
+  // DL
   // ===================================================================
   for (var di = numOff; di < allDots.length; di++) {
     if (allDots[di].pos !== 'DL') continue;
     var dl = allDots[di];
     if (resultType === 'sack' && di === numOff) {
       var sEvt = seq.events.find(function(e) { return e.type === 'sack'; });
-      dotKF[di] = [kf(0,dl.x,dl.y), kf(dur*0.08,dl.x,dl.y), kf(dur*0.20,dl.x,dl.y-2), kf(dur*0.40,qb.x+0.03,qb.y-1), kf(dur*0.65,sEvt?sEvt.xPct:dl.x,sEvt?sEvt.yYards:dl.y), kf(dur,sEvt?sEvt.xPct:dl.x,sEvt?sEvt.yYards:dl.y)];
+      dotKF[di] = [pkf(0,dl.x,dl.y), pkf(dur*0.08,dl.x,dl.y), pkf(dur*0.20,dl.x,dl.y-2), pkf(dur*0.40,qb.x+0.03,qb.y-1), pkf(dur*0.65,sEvt?sEvt.x/fieldW:dl.x,sEvt?(topYard+sEvt.y/ypx-losYard):dl.y), pkf(dur,sEvt?sEvt.x/fieldW:dl.x,sEvt?(topYard+sEvt.y/ypx-losYard):dl.y)];
     } else if (isRun) {
-      dotKF[di] = [kf(0,dl.x,dl.y), kf(dur*0.08,dl.x,dl.y), kf(dur*0.25,dl.x,dl.y+1), kf(dur,dl.x,dl.y+1)];
+      dotKF[di] = [pkf(0,dl.x,dl.y), pkf(dur*0.08,dl.x,dl.y), pkf(dur*0.25,dl.x,dl.y+1), pkf(dur,dl.x,dl.y+1)];
     } else {
-      dotKF[di] = [kf(0,dl.x,dl.y), kf(dur*0.08,dl.x,dl.y), kf(dur*0.30,dl.x,dl.y-1.5), kf(dur,dl.x,dl.y-1.5)];
+      dotKF[di] = [pkf(0,dl.x,dl.y), pkf(dur*0.08,dl.x,dl.y), pkf(dur*0.30,dl.x,dl.y-1.5), pkf(dur,dl.x,dl.y-1.5)];
     }
   }
 
   // ===================================================================
-  // CBs: shadow WR / zone / INT
+  // CBs
   // ===================================================================
   var targetKF = targetIdx >= 0 ? dotKF[targetIdx] : null;
   for (var ci = 0; ci < cbIndices.length; ci++) {
@@ -187,37 +199,39 @@ export function buildPlayAnimation(resultType, yardsGained, formation, playType,
     var cb = allDots[cbDI];
     if (resultType === 'interception' && ci === 0) {
       var iEvt = seq.events.find(function(e) { return e.type === 'interception'; });
-      dotKF[cbDI] = [kf(0,cb.x,cb.y), kf(dur*0.15,cb.x,cb.y+1), kf(catchT*0.8,iEvt?iEvt.xPct-0.02:cb.x,iEvt?iEvt.yYards-1:cb.y), kf(catchT,iEvt?iEvt.xPct:cb.x,iEvt?iEvt.yYards:cb.y), kf(catchT+dur*0.05,iEvt?iEvt.xPct:cb.x,iEvt?iEvt.yYards:cb.y), kf(dur*0.80,cb.x-0.05,-5), kf(dur,cb.x-0.05,-5)];
+      var retPx = px(cb.x-0.05, -5);
+      dotKF[cbDI] = [pkf(0,cb.x,cb.y), pkf(dur*0.15,cb.x,cb.y+1), kf(catchT*0.8,iEvt?iEvt.x-5:px(cb.x,cb.y).x,iEvt?iEvt.y-5:px(cb.x,cb.y).y), kf(catchT,iEvt?iEvt.x:px(cb.x,cb.y).x,iEvt?iEvt.y:px(cb.x,cb.y).y), kf(catchT+dur*0.05,iEvt?iEvt.x:px(cb.x,cb.y).x,iEvt?iEvt.y:px(cb.x,cb.y).y), kf(dur*0.80,retPx.x,retPx.y), kf(dur,retPx.x,retPx.y)];
     } else if (targetKF && ci === 0) {
-      var sep = Math.max(0.5, Math.min(3, yardsGained * 0.15));
+      // Shadow primary receiver with lag and separation
+      var sep = Math.max(3, Math.min(15, yardsGained * 0.8));
       dotKF[cbDI] = targetKF.map(function(wk) {
-        return kf(Math.min(wk.time + dur*0.03, dur), wk.xPct + (cb.x > wk.xPct ? sep*0.05 : -sep*0.05), wk.yYards - sep*0.3);
+        return kf(Math.min(wk.time + dur*0.03, dur), wk.x + (cb.x > 0.50 ? sep : -sep), wk.y - sep * 0.5);
       });
     } else {
-      dotKF[cbDI] = [kf(0,cb.x,cb.y), kf(dur*0.15,cb.x,cb.y+2), kf(dur*0.50,cb.x,cb.y+3), kf(dur*0.80,lerp(cb.x,0.50,0.15),cb.y+4), kf(dur,lerp(cb.x,0.50,0.15),cb.y+4)];
+      dotKF[cbDI] = [pkf(0,cb.x,cb.y), pkf(dur*0.15,cb.x,cb.y+2), pkf(dur*0.50,cb.x,cb.y+3), pkf(dur*0.80,lerp(cb.x,0.50,0.15),cb.y+4), pkf(dur,lerp(cb.x,0.50,0.15),cb.y+4)];
     }
   }
 
   // ===================================================================
-  // LB: read then react
+  // LB
   // ===================================================================
   if (lbIdx >= 0) {
     var lb = allDots[lbIdx];
     if (isRun) {
       var tEvt = seq.events.find(function(e) { return e.type === 'tackle' || e.type === 'touchdown'; });
-      dotKF[lbIdx] = [kf(0,lb.x,lb.y), kf(dur*0.12,lb.x,lb.y), kf(dur*0.20,lb.x,lb.y+0.5), kf(tackleT,tEvt?tEvt.xPct+0.02:0.50,tEvt?tEvt.yYards-1:settleDepth-1), kf(dur,tEvt?tEvt.xPct+0.02:0.50,tEvt?tEvt.yYards-1:settleDepth-1)];
+      dotKF[lbIdx] = [pkf(0,lb.x,lb.y), pkf(dur*0.12,lb.x,lb.y), pkf(dur*0.20,lb.x,lb.y+0.5), kf(tackleT,tEvt?tEvt.x+5:px(0.50,settleDepth-1).x,tEvt?tEvt.y-10:px(0.50,settleDepth-1).y), kf(dur,tEvt?tEvt.x+5:px(0.50,settleDepth-1).x,tEvt?tEvt.y-10:px(0.50,settleDepth-1).y)];
     } else {
-      dotKF[lbIdx] = [kf(0,lb.x,lb.y), kf(dur*0.12,lb.x,lb.y), kf(dur*0.30,lb.x,lb.y+2), kf(throwT,lb.x,lb.y+2), kf(dur*0.60,lerp(lb.x,0.50,0.2),lb.y+3), kf(dur,lerp(lb.x,0.50,0.2),lb.y+3)];
+      dotKF[lbIdx] = [pkf(0,lb.x,lb.y), pkf(dur*0.12,lb.x,lb.y), pkf(dur*0.30,lb.x,lb.y+2), pkf(throwT,lb.x,lb.y+2), pkf(dur*0.60,lerp(lb.x,0.50,0.2),lb.y+3), pkf(dur,lerp(lb.x,0.50,0.2),lb.y+3)];
     }
   }
 
   // ===================================================================
-  // Safety: deep read, late react
+  // Safety
   // ===================================================================
   if (safetyIdx >= 0) {
     var sf = allDots[safetyIdx];
-    var sfReact = yardsGained > 12 ? 0.5 : 0.15;
-    dotKF[safetyIdx] = [kf(0,sf.x,sf.y), kf(dur*0.30,sf.x,sf.y), kf(dur*0.50,sf.x,sf.y+sfReact*2), kf(tackleT,lerp(sf.x,0.50,sfReact*0.3),sf.y+sfReact*8), kf(dur,lerp(sf.x,0.50,sfReact*0.3),sf.y+sfReact*8)];
+    var sfR = yardsGained > 12 ? 0.5 : 0.15;
+    dotKF[safetyIdx] = [pkf(0,sf.x,sf.y), pkf(dur*0.30,sf.x,sf.y), pkf(dur*0.50,sf.x,sf.y+sfR*2), pkf(tackleT,lerp(sf.x,0.50,sfR*0.3),sf.y+sfR*8), pkf(dur,lerp(sf.x,0.50,sfR*0.3),sf.y+sfR*8)];
   }
 
   // ===================================================================
@@ -225,7 +239,6 @@ export function buildPlayAnimation(resultType, yardsGained, formation, playType,
   // ===================================================================
   seq.dotColors = allDots.map(function(_, i) { return i < numOff ? 'off' : 'def'; });
   seq.dotNums = allDots.map(function(p) { return p.num; });
-  seq.duration = dur;
 
   return seq;
 }
