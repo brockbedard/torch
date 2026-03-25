@@ -57,11 +57,11 @@ const CSS = `
 .T-sb-sit-torch{font-family:'Rajdhani';font-size:12px;color:#c8a030;letter-spacing:.5px;transition:transform .08s,text-shadow .08s;flex-shrink:0}
 
 /* TORCH points banner */
-.T-torch-banner{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;background:linear-gradient(90deg,rgba(255,184,0,0.12) 0%,rgba(255,69,17,0.12) 100%);border-top:2px solid #FFB800;border-bottom:2px solid #FFB800;flex-shrink:0}
+.T-torch-banner{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;background:linear-gradient(90deg,rgba(235,176,16,0.12) 0%,rgba(255,69,17,0.12) 100%);border-top:2px solid #EBB010;border-bottom:2px solid #EBB010;flex-shrink:0}
 .T-torch-banner-flame{width:20px;height:20px;animation:T-flame-pulse 1.5s ease-in-out infinite}
 @keyframes T-flame-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.85}}
-.T-torch-banner-label{font-family:'Teko';font-weight:700;font-size:28px;color:#FFB800;letter-spacing:3px;line-height:1}
-.T-torch-banner-pts{font-family:'Teko';font-weight:700;font-size:32px;color:#fff;text-shadow:0 0 12px #FFB800;line-height:1;transition:transform .3s}
+.T-torch-banner-label{font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:3px;line-height:1}
+.T-torch-banner-pts{font-family:'Teko';font-weight:700;font-size:32px;color:#fff;text-shadow:0 0 12px #EBB010;line-height:1;transition:transform .3s}
 
 /* drive summary */
 .T-drive{flex:1;overflow-y:auto;padding:12px 14px 16px;background:linear-gradient(180deg,rgba(10,8,4,0) 0%,rgba(10,8,4,0.95) 8%);font-family:'Rajdhani',sans-serif}
@@ -257,8 +257,8 @@ const CSS = `
    ═══════════════════════════════════════════ */
 function mqColor(q) { return q === 'green' ? '#3df58a' : q === 'red' ? '#e03050' : '#c8a030'; }
 function typeColor(t) {
-  return { SHORT:'#3df58a',QUICK:'#FFB800',DEEP:'#e03050',RUN:'#e07020',SCREEN:'#e060a0',
-    OPTION:'#e07020',BLITZ:'#e03050',ZONE:'#3df58a',PRESSURE:'#FFB800',HYBRID:'#FF6B00' }[t] || '#aaa';
+  return { SHORT:'#3df58a',QUICK:'#EBB010',DEEP:'#e03050',RUN:'#e07020',SCREEN:'#e060a0',
+    OPTION:'#e07020',BLITZ:'#e03050',ZONE:'#3df58a',PRESSURE:'#EBB010',HYBRID:'#FF6B00' }[t] || '#aaa';
 }
 
 function matchupQ(player, play, history, isOff) {
@@ -616,7 +616,7 @@ export function buildGameplay() {
       torchBannerPtsEl.textContent = displayVal;
       return;
     }
-    var flameSvg = '<svg class="T-torch-banner-flame" viewBox="0 0 44 44" fill="none"><defs><linearGradient id="tbf" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#FFB800"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#tbf)"/></svg>';
+    var flameSvg = '<svg class="T-torch-banner-flame" viewBox="0 0 44 44" fill="none"><defs><linearGradient id="tbf" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#EBB010"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#tbf)"/></svg>';
     torchBanner.innerHTML = flameSvg +
       '<div class="T-torch-banner-label">TORCH</div>' +
       '<div class="T-torch-banner-pts">' + displayVal + '</div>';
@@ -635,8 +635,8 @@ export function buildGameplay() {
 
     // Scale up + glow pulse
     torchBannerPtsEl.style.transform = 'scale(1.2)';
-    torchBannerPtsEl.style.textShadow = '0 0 20px #FFB800, 0 0 40px rgba(255,184,0,0.5)';
-    torchBanner.style.boxShadow = '0 0 16px rgba(255,184,0,0.3)';
+    torchBannerPtsEl.style.textShadow = '0 0 20px #EBB010, 0 0 40px rgba(235,176,16,0.5)';
+    torchBanner.style.boxShadow = '0 0 16px rgba(235,176,16,0.3)';
 
     // Count up from old to new over 500ms
     var duration = 500;
@@ -649,7 +649,7 @@ export function buildGameplay() {
       else {
         // Settle back
         torchBannerPtsEl.style.transform = 'scale(1)';
-        torchBannerPtsEl.style.textShadow = '0 0 12px #FFB800';
+        torchBannerPtsEl.style.textShadow = '0 0 12px #EBB010';
         torchBanner.style.boxShadow = '';
         _torchAnimating = false;
       }
@@ -790,7 +790,7 @@ export function buildGameplay() {
         var e = driveSummaryLog[_ti];
         var i = _ti;
         var isNewest = _ti === driveSummaryLog.length - 1;
-        var resColor = e.isTD ? '#FFB800' : e.yards > 0 ? '#00ff44' : e.yards < 0 || e.isSack ? '#ff0040' : '#fff';
+        var resColor = e.isTD ? '#EBB010' : e.yards > 0 ? '#00ff44' : e.yards < 0 || e.isSack ? '#ff0040' : '#fff';
         var resText = e.isTD ? 'TD' : e.isSack ? 'SACK' : e.isInt ? 'INT' : e.isFumble ? 'FUM' : (e.isInc || e.yards === 0) ? 'NO GAIN' : (e.yards >= 0 ? '+' : '') + e.yards;
         var dn = ['','1st','2nd','3rd','4th'][e.down] || '';
         var rowStyle = isNewest
@@ -919,7 +919,7 @@ export function buildGameplay() {
     var center = document.createElement('div');
     center.className = 'T-clash-center';
     if (torchCard) {
-      var clashTierCol = torchCard.tier === 'GOLD' ? '#FFB800' : torchCard.tier === 'SILVER' ? '#B0C4D4' : '#A0522D';
+      var clashTierCol = torchCard.tier === 'GOLD' ? '#EBB010' : torchCard.tier === 'SILVER' ? '#B0C4D4' : '#A0522D';
       center.innerHTML =
         "<div style=\"background:radial-gradient(ellipse at 50% 35%,#1a0800,#0A0804);border:3px solid " + clashTierCol + ";border-radius:6px;padding:6px 10px;box-shadow:0 0 16px rgba(255,69,17,.3)\">" +
           "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:5px;color:" + clashTierCol + ";text-align:center;letter-spacing:1px;opacity:0.7\">" + torchCard.tier + "</div>" +
@@ -1407,7 +1407,7 @@ export function buildGameplay() {
           
           if (idx >= 2 && idx < lines.length - 1) {
             if (r.isSack || r.isInterception || r.isFumbleLost) thinkLine.style.color = '#F03030';
-            else if (r.yards >= 8 || r.isTouchdown) thinkLine.style.color = '#FFB800';
+            else if (r.yards >= 8 || r.isTouchdown) thinkLine.style.color = '#EBB010';
           }
           if (idx === lines.length - 1 && lines.length > 3) {
             if (r.isTouchdown || r.isInterception || r.isFumbleLost) thinkLine.style.color = r.isTouchdown ? '#4DA6FF' : '#F03030';
@@ -1626,7 +1626,7 @@ export function buildGameplay() {
       panel.appendChild(sideBar);
     }
     const inst = document.createElement('div'); inst.className = 'T-inst';
-    if (phase === 'torch') { inst.textContent = 'TORCH CARD \u2014 Play one or skip'; inst.style.color = '#FFB800'; }
+    if (phase === 'torch') { inst.textContent = 'TORCH CARD \u2014 Play one or skip'; inst.style.color = '#EBB010'; }
     else inst.textContent = '';
     panel.appendChild(inst);
 
@@ -1819,7 +1819,7 @@ export function buildGameplay() {
 
       const go = document.createElement('button');
       go.className = 'btn-blitz';
-      go.style.cssText = 'background:linear-gradient(180deg,#FFB800,#FF4511);border-color:#FF4511;color:#000;font-size:16px;animation:T-pulse 1.8s ease-in-out infinite;';
+      go.style.cssText = 'background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;font-size:16px;animation:T-pulse 1.8s ease-in-out infinite;';
       go.textContent = conversionMode ? 'ATTEMPT' : 'SNAP';
       go.onclick = conversionMode ? () => { SND.snap(); doConversionSnap(); } : () => { SND.snap(); doSnap(); };
       sz.appendChild(go);
@@ -2089,9 +2089,9 @@ export function buildGameplay() {
     var cardScale = tier === 1 ? 1.0 : tier === 2 ? 1.1 : 1.25;
     var aftermathDur = isTD ? 5000 : tier === 3 ? 3500 : tier === 2 ? 2500 : 1800;
 
-    var resultColor = isTD ? '#FFB800' : isGood ? '#3df58a' : isBad ? '#e03050' : r.yards > 0 ? '#c8a030' : '#aaa';
+    var resultColor = isTD ? '#EBB010' : isGood ? '#3df58a' : isBad ? '#e03050' : r.yards > 0 ? '#c8a030' : '#aaa';
     var resultText = isTD ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTED' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : r.isSafety ? 'SAFETY' : (r.yards >= 0 ? '+' : '') + r.yards + ' YDS';
-    var flashColor = isTD ? '#FFB800' : isGood ? '#3df58a' : isBad ? '#e03050' : 'transparent';
+    var flashColor = isTD ? '#EBB010' : isGood ? '#3df58a' : isBad ? '#e03050' : 'transparent';
 
     panel.style.display = 'none';
     snapCount++;
@@ -2162,7 +2162,7 @@ export function buildGameplay() {
         var angle = (i / particleCount) * 360 + Math.random() * 30;
         var dist = 20 + Math.random() * (tier === 3 ? 80 : 40);
         var sz = 2 + Math.random() * 3;
-        spark.style.cssText = 'position:absolute;width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;background:' + (Math.random() > 0.5 ? '#FFB800' : '#fff') + ';z-index:5;top:50%;left:50%;--sx:' + (Math.cos(angle * Math.PI / 180) * dist) + 'px;--sy:' + (Math.sin(angle * Math.PI / 180) * dist) + 'px;animation:T-clash-spark ' + (300 + Math.random() * 400) + 'ms ease-out both;';
+        spark.style.cssText = 'position:absolute;width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;background:' + (Math.random() > 0.5 ? '#EBB010' : '#fff') + ';z-index:5;top:50%;left:50%;--sx:' + (Math.cos(angle * Math.PI / 180) * dist) + 'px;--sy:' + (Math.sin(angle * Math.PI / 180) * dist) + 'px;animation:T-clash-spark ' + (300 + Math.random() * 400) + 'ms ease-out both;';
         overlay.appendChild(spark);
       }
 
@@ -2257,7 +2257,7 @@ export function buildGameplay() {
         // Combo flash
         if (res._combos && res._combos.length > 0) {
           var comboEl = document.createElement('div');
-          comboEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#FFB800;letter-spacing:2px;text-shadow:0 0 12px rgba(255,184,0,0.5);margin-top:6px;animation:T-clash-yds 0.4s ease-out both;";
+          comboEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:2px;text-shadow:0 0 12px rgba(235,176,16,0.5);margin-top:6px;animation:T-clash-yds 0.4s ease-out both;";
           comboEl.textContent = res._combos.join(' + ');
           resultWrap.appendChild(comboEl);
         }
@@ -2548,7 +2548,7 @@ export function buildGameplay() {
 
     // Coin animation
     ov.innerHTML =
-      "<div style='width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#FFB800,#B8860B);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 0 25px rgba(255,204,0,.4);animation:T-coin 1.5s ease-out forwards'>T</div>" +
+      "<div style='width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#EBB010,#B8860B);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 0 25px rgba(255,204,0,.4);animation:T-coin 1.5s ease-out forwards'>T</div>" +
       "<div style=\"font-family:'Teko';font-size:24px;color:#fff;letter-spacing:2px\">COIN TOSS...</div>";
 
     el.appendChild(ov);

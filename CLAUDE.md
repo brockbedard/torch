@@ -282,7 +282,7 @@ Enable: `localStorage.setItem('torch_dev', '1')` or visit any URL with `?dev`.
 ```css
 --bg: #0A0804;         /* Scorched black background */
 --torch: #FF4511;      /* Brand, CTA */
---a-gold: #FFB800;     /* Titles, highlights */
+--a-gold: #EBB010;     /* Warm Gold — titles, highlights */
 --l-green: #00ff44;    /* Success, first downs */
 --p-red: #ff0040;      /* Danger, turnovers */
 Torch orange: #FF6B00  /* Commentary border, side indicators */

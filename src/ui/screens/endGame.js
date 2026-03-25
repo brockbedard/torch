@@ -50,9 +50,9 @@ export function buildEndGame() {
 
   // Header
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'background:rgba(0,0,0,0.7);padding:10px 14px;text-align:center;flex-shrink:0;border-bottom:3px solid ' + (humanWon ? '#00ff44' : tied ? '#FFB800' : '#ff0040') + ';';
+  hdr.style.cssText = 'background:rgba(0,0,0,0.7);padding:10px 14px;text-align:center;flex-shrink:0;border-bottom:3px solid ' + (humanWon ? '#00ff44' : tied ? '#EBB010' : '#ff0040') + ';';
   hdr.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:30px;letter-spacing:4px;font-style:italic;transform:skewX(-8deg);" +
-    (humanWon ? 'color:#00ff44;animation:victoryPulse 2s infinite;' : tied ? 'color:#FFB800;' : 'color:#ff0040;') + "\">" +
+    (humanWon ? 'color:#00ff44;animation:victoryPulse 2s infinite;' : tied ? 'color:#EBB010;' : 'color:#ff0040;') + "\">" +
     (humanWon ? 'VICTORY' : tied ? 'TIE GAME' : 'DEFEAT') + '</div>';
   el.appendChild(hdr);
 
@@ -74,17 +74,17 @@ export function buildEndGame() {
 
   // TORCH points with breakdown
   var torchBlock = document.createElement('div');
-  torchBlock.style.cssText = 'background:var(--bg-surface);border:1px solid #FFB800;border-radius:8px;padding:10px 16px;text-align:center;width:100%;max-width:300px;';
+  torchBlock.style.cssText = 'background:var(--bg-surface);border:1px solid #EBB010;border-radius:8px;padding:10px 16px;text-align:center;width:100%;max-width:300px;';
   torchBlock.innerHTML =
-    "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#FFB800;letter-spacing:2px;margin-bottom:4px;\">TORCH POINTS</div>" +
-    "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:28px;color:#FFB800;text-shadow:0 0 12px rgba(255,184,0,0.4);\">" + (humanTorch + winBonus) + "</div>" +
+    "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#EBB010;letter-spacing:2px;margin-bottom:4px;\">TORCH POINTS</div>" +
+    "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:28px;color:#EBB010;text-shadow:0 0 12px rgba(235,176,16,0.4);\">" + (humanTorch + winBonus) + "</div>" +
     "<div style=\"font-family:'Rajdhani';font-size:9px;color:#aaa;margin-top:4px;\">Base: " + humanTorch + (winBonus ? ' | Win Bonus: +' + winBonus : '') + "</div>";
   content.appendChild(torchBlock);
 
   // Season progress
   var seasonBlock = document.createElement('div');
   seasonBlock.style.cssText = 'background:var(--bg-surface);border:1px solid #333;border-radius:8px;padding:10px 14px;width:100%;max-width:300px;';
-  seasonBlock.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#FFB800;letter-spacing:2px;margin-bottom:6px;\">GAME " + (gameNum + 1) + " OF 3 COMPLETE</div>";
+  seasonBlock.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#EBB010;letter-spacing:2px;margin-bottom:6px;\">GAME " + (gameNum + 1) + " OF 3 COMPLETE</div>";
   var resultsRow = document.createElement('div');
   resultsRow.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;';
   var opponents = season.opponents || getSeasonOpponents(GS.team);
@@ -139,7 +139,7 @@ export function buildEndGame() {
   if (isLastGame) {
     var returnBtn = document.createElement('button');
     returnBtn.className = 'btn-blitz';
-    returnBtn.style.cssText = "width:100%;max-width:300px;font-size:14px;background:linear-gradient(180deg,#FFB800,#FF4511);border-color:#FF4511;color:#000;letter-spacing:2px;";
+    returnBtn.style.cssText = "width:100%;max-width:300px;font-size:14px;background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;letter-spacing:2px;";
     returnBtn.textContent = 'NEW SEASON';
     returnBtn.onclick = function() {
       SND.click();
@@ -154,7 +154,7 @@ export function buildEndGame() {
 
     var shopBtn = document.createElement('button');
     shopBtn.className = 'btn-blitz';
-    shopBtn.style.cssText = "width:100%;max-width:300px;font-size:11px;background:var(--bg-surface);border-color:#FFB800;color:#FFB800;";
+    shopBtn.style.cssText = "width:100%;max-width:300px;font-size:11px;background:var(--bg-surface);border-color:#EBB010;color:#EBB010;";
     shopBtn.textContent = 'TORCH CARD SHOP (' + humanTorch + ' PTS)';
     shopBtn.onclick = function() {
       SND.click();
@@ -167,7 +167,7 @@ export function buildEndGame() {
 
     var nextBtn = document.createElement('button');
     nextBtn.className = 'btn-blitz';
-    nextBtn.style.cssText = "width:100%;max-width:300px;font-size:14px;background:linear-gradient(180deg,#FFB800,#FF4511);border-color:#FF4511;color:#000;letter-spacing:2px;";
+    nextBtn.style.cssText = "width:100%;max-width:300px;font-size:14px;background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;letter-spacing:2px;";
     nextBtn.textContent = 'NEXT GAME \u2192';
     nextBtn.onclick = function() {
       SND.snap();

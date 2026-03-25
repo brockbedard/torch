@@ -65,18 +65,18 @@ export function buildPregame() {
 
   // ── BACKGROUND ──
   var bgNoise = document.createElement('div');
-  bgNoise.style.cssText = 'position:absolute;inset:0;background-image:radial-gradient(ellipse at 50% 30%,rgba(255,69,17,0.06) 0%,transparent 60%),radial-gradient(ellipse at 50% 70%,rgba(255,184,0,0.04) 0%,transparent 60%);pointer-events:none;z-index:0;';
+  bgNoise.style.cssText = 'position:absolute;inset:0;background-image:radial-gradient(ellipse at 50% 30%,rgba(255,69,17,0.06) 0%,transparent 60%),radial-gradient(ellipse at 50% 70%,rgba(235,176,16,0.04) 0%,transparent 60%);pointer-events:none;z-index:0;';
   el.appendChild(bgNoise);
   var bgLine = document.createElement('div');
-  bgLine.style.cssText = 'position:absolute;top:0;bottom:0;left:50%;width:1px;background:linear-gradient(180deg,transparent 0%,rgba(255,184,0,0.06) 30%,rgba(255,69,17,0.10) 50%,rgba(255,184,0,0.06) 70%,transparent 100%);pointer-events:none;z-index:0;';
+  bgLine.style.cssText = 'position:absolute;top:0;bottom:0;left:50%;width:1px;background:linear-gradient(180deg,transparent 0%,rgba(235,176,16,0.06) 30%,rgba(255,69,17,0.10) 50%,rgba(235,176,16,0.06) 70%,transparent 100%);pointer-events:none;z-index:0;';
   el.appendChild(bgLine);
 
   // ── A) TORCH HEADER ──
   var header = document.createElement('div');
   header.style.cssText = 'flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:28px 0 10px;z-index:1;opacity:0;animation:pgFadeDown ' + t.dur + 's ease-out ' + t.hdr + 's both;';
   header.innerHTML =
-    '<svg viewBox="0 0 44 44" width="56" height="64" fill="none" style="animation:pgFlame 2s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(255,69,17,0.5));"><defs><linearGradient id="pgf" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#FFB800"/></linearGradient></defs><path d="' + FLAME + '" fill="url(#pgf)"/></svg>' +
-    "<div style=\"font-family:'Teko';font-weight:700;font-size:36px;color:#FFB800;letter-spacing:12px;margin-top:8px;text-shadow:0 0 20px rgba(255,184,0,0.3);\">GAME DAY</div>" +
+    '<svg viewBox="0 0 44 44" width="56" height="64" fill="none" style="animation:pgFlame 2s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(255,69,17,0.5));"><defs><linearGradient id="pgf" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#EBB010"/></linearGradient></defs><path d="' + FLAME + '" fill="url(#pgf)"/></svg>' +
+    "<div style=\"font-family:'Teko';font-weight:700;font-size:36px;color:#EBB010;letter-spacing:12px;margin-top:8px;text-shadow:0 0 20px rgba(235,176,16,0.3);\">GAME DAY</div>" +
     "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#FF6B00;letter-spacing:8px;opacity:0.7;\">TORCH FOOTBALL</div>";
   el.appendChild(header);
 
@@ -110,16 +110,16 @@ export function buildPregame() {
   // Radial glow behind VS
   var vsGlow = document.createElement('div');
   vsGlow.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;';
-  vsGlow.innerHTML = '<div style="width:80px;height:80px;background:radial-gradient(circle,rgba(255,184,0,0.15) 0%,transparent 70%);animation:pgVsGlow 2.5s ease-in-out infinite;"></div>';
+  vsGlow.innerHTML = '<div style="width:80px;height:80px;background:radial-gradient(circle,rgba(235,176,16,0.15) 0%,transparent 70%);animation:pgVsGlow 2.5s ease-in-out infinite;"></div>';
   vsZone.appendChild(vsGlow);
   // Bars + VS text
   vsZone.innerHTML +=
-    '<div style="flex:1;height:2px;border-radius:1px;background:linear-gradient(90deg,transparent 10%,#FF4511 50%,#FFB800);"></div>' +
+    '<div style="flex:1;height:2px;border-radius:1px;background:linear-gradient(90deg,transparent 10%,#FF4511 50%,#EBB010);"></div>' +
     "<div style=\"position:relative;padding:0 16px;font-family:'Teko';font-weight:900;font-size:48px;color:#fff;letter-spacing:6px;line-height:1;\">" +
-      "<span style=\"position:absolute;inset:0;display:flex;align-items:center;justify-content:center;-webkit-text-stroke:2px #FFB800;color:transparent;font-family:'Teko';font-weight:900;font-size:48px;letter-spacing:6px;\">VS</span>" +
+      "<span style=\"position:absolute;inset:0;display:flex;align-items:center;justify-content:center;-webkit-text-stroke:2px #EBB010;color:transparent;font-family:'Teko';font-weight:900;font-size:48px;letter-spacing:6px;\">VS</span>" +
       'VS' +
     '</div>' +
-    '<div style="flex:1;height:2px;border-radius:1px;background:linear-gradient(270deg,transparent 10%,#FF4511 50%,#FFB800);"></div>';
+    '<div style="flex:1;height:2px;border-radius:1px;background:linear-gradient(270deg,transparent 10%,#FF4511 50%,#EBB010);"></div>';
   matchup.appendChild(vsZone);
 
   // ── D) HOME TEAM PANEL ──
@@ -156,7 +156,7 @@ export function buildPregame() {
   wxCard.innerHTML =
     '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">' +
       '<div style="font-size:22px;line-height:1;">' + wxIcon + '</div>' +
-      "<div style=\"font-family:'Teko';font-size:13px;color:#FFB800;letter-spacing:2px;\">" + wxName + '</div>' +
+      "<div style=\"font-family:'Teko';font-size:13px;color:#EBB010;letter-spacing:2px;\">" + wxName + '</div>' +
     '</div>' +
     '<div style="width:1px;height:36px;background:rgba(255,255,255,0.06);"></div>' +
     '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">' +
@@ -172,7 +172,7 @@ export function buildPregame() {
 
   // Shimmer bar
   var shimmer = document.createElement('div');
-  shimmer.style.cssText = 'width:70%;height:2px;margin-top:14px;border-radius:1px;background:linear-gradient(90deg,#FF4511,#FFB800,#FF4511);background-size:200% 100%;animation:pgShimmer 3s linear infinite;';
+  shimmer.style.cssText = 'width:70%;height:2px;margin-top:14px;border-radius:1px;background:linear-gradient(90deg,#FF4511,#EBB010,#FF4511);background-size:200% 100%;animation:pgShimmer 3s linear infinite;';
   condWrap.appendChild(shimmer);
 
   // Tap hint
@@ -216,7 +216,7 @@ function buildTeamInfo(tm, label, align) {
   var isRight = align === 'right';
   var ta = isRight ? 'text-align:right;' : '';
   var pillBg = label === 'HOME'
-    ? 'background:rgba(255,184,0,0.15);color:#FFB800;'
+    ? 'background:rgba(235,176,16,0.15);color:#EBB010;'
     : 'background:rgba(255,255,255,0.06);color:#777;';
 
   var schoolName = (tm.school || '').toUpperCase();

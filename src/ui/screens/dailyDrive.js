@@ -126,7 +126,7 @@ export function buildDailyDrive() {
 
     var startBtn = document.createElement('button');
     startBtn.className = 'btn-blitz';
-    startBtn.style.cssText = 'font-size:16px;padding:14px 32px;background:linear-gradient(180deg,#FFB800,#FF4511);border-color:#FF4511;color:#000;letter-spacing:3px;';
+    startBtn.style.cssText = 'font-size:16px;padding:14px 32px;background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;letter-spacing:3px;';
     startBtn.textContent = 'START DRIVE';
     startBtn.onclick = function() {
       SND.snap();

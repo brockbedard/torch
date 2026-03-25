@@ -60,7 +60,7 @@ export function buildHomeCard(type, w, h) {
   var outer = document.createElement('div');
   if (isTorch) {
     var framePad = Math.max(2, Math.round(4 * sc));
-    outer.style.cssText = 'position:relative;width:'+(w+framePad*2)+'px;height:'+(h+framePad*2)+'px;border-radius:'+Math.round(12*sc)+'px;background:linear-gradient(135deg,#FFB800,#fff,#FFB800);padding:'+framePad+'px;box-shadow:0 0 '+Math.round(20*sc)+'px rgba(255,184,0,0.4),0 4px 16px rgba(0,0,0,0.5);';
+    outer.style.cssText = 'position:relative;width:'+(w+framePad*2)+'px;height:'+(h+framePad*2)+'px;border-radius:'+Math.round(12*sc)+'px;background:linear-gradient(135deg,#EBB010,#fff,#EBB010);padding:'+framePad+'px;box-shadow:0 0 '+Math.round(20*sc)+'px rgba(235,176,16,0.4),0 4px 16px rgba(0,0,0,0.5);';
   } else {
     outer.style.cssText = 'position:relative;width:'+w+'px;height:'+h+'px;';
   }
@@ -179,15 +179,15 @@ function playerTier(ovr) {
 
 // Tier border colors
 function tierBorderStyle(tier, isStar, teamColor) {
-  if (isStar) return '2px solid #FFB800';
-  if (tier === 'star') return '2px solid #FFB800';
+  if (isStar) return '2px solid #EBB010';
+  if (tier === 'star') return '2px solid #EBB010';
   if (tier === 'starter') return '2px solid ' + (teamColor || '#aaa');
   return '1px solid ' + (teamColor ? teamColor + '80' : '#aaa80');
 }
 
 // Tier glow color for helmet/badge
 function tierColor(tier, isStar) {
-  if (isStar || tier === 'star') return '#FFB800';
+  if (isStar || tier === 'star') return '#EBB010';
   if (tier === 'starter') return '#B0C4D4';
   return '#A0522D';
 }
@@ -217,7 +217,7 @@ export function teamHelmetSvg(teamId, size) {
 
 // Position color map
 var POS_COLORS = {
-  QB:'#FFB800', WR:'#00ff44', SLOT:'#44dd66', RB:'#FF6B00', FB:'#FF6B00',
+  QB:'#EBB010', WR:'#00ff44', SLOT:'#44dd66', RB:'#FF6B00', FB:'#FF6B00',
   SB:'#FF6B00', TE:'#22aa44', OL:'#888888',
   LB:'#ff4444', CB:'#4488ff', S:'#44ddff', DL:'#cc4444', DE:'#cc4444',
   EDGE:'#ff4444', NB:'#6688ff'
@@ -235,8 +235,8 @@ export function buildMaddenPlayer(p, w, h) {
   // Star badge
   var starIcon = '';
   if (isStar) {
-    starIcon = '<div style="position:absolute;top:3px;right:4px;z-index:5;filter:drop-shadow(0 1px 2px rgba(255,184,0,0.6));">'
-      + '<svg viewBox="0 0 24 24" width="10" height="10"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z" fill="#FFB800"/></svg>'
+    starIcon = '<div style="position:absolute;top:3px;right:4px;z-index:5;filter:drop-shadow(0 1px 2px rgba(235,176,16,0.6));">'
+      + '<svg viewBox="0 0 24 24" width="10" height="10"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z" fill="#EBB010"/></svg>'
       + '</div>';
   }
 
@@ -266,7 +266,7 @@ var FLAME_PIP_PATH = 'M6 0C6 0 2 5 1.5 8C1 11 3 13.5 5 14.5C5 14.5 3.5 11 5 8C5.
 // Returns an HTML string
 export function renderFlamePips(filled, total, filledColor, size) {
   total = total || 5;
-  filledColor = filledColor || '#FFB800';
+  filledColor = filledColor || '#EBB010';
   size = size || 10;
   var h = Math.round(size * 1.3);
   var html = '';
@@ -293,7 +293,7 @@ var TYPE_COLORS = {
 };
 
 // Risk pip colors
-var RISK_PIP_COLORS = ['#3df58a', '#FFB800', '#e03050']; // 1=green, 2=orange, 3=red
+var RISK_PIP_COLORS = ['#3df58a', '#EBB010', '#e03050']; // 1=green, 2=orange, 3=red
 
 export function buildPlayV1(p, w, h) {
   var card = document.createElement('div');
@@ -345,7 +345,7 @@ export function buildPlayV1(p, w, h) {
 }
 
 // ====== TORCH CARD — Centered Flame V1 ======
-var TIER_BORDER_COLORS = { GOLD:'#FFB800', SILVER:'#B0C4D4', BRONZE:'#A0522D' };
+var TIER_BORDER_COLORS = { GOLD:'#EBB010', SILVER:'#B0C4D4', BRONZE:'#A0522D' };
 var FLAME_PATH = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
 
 export function buildTorchCard(tc, w, h) {
@@ -359,7 +359,7 @@ export function buildTorchCard(tc, w, h) {
   var nameFs = Math.max(10, Math.min(14, Math.round(w * 0.14)));
   var effectFs = Math.max(7, Math.min(9, Math.round(w * 0.09)));
   card.innerHTML = '<div style="font-family:\'Rajdhani\';font-weight:700;font-size:7px;color:'+bc+';letter-spacing:2px;text-align:center;padding:4px 0 0;opacity:0.7;">'+tc.tier+'</div>'
-    +'<div style="display:flex;align-items:center;justify-content:center;height:'+flameH+'px;margin-top:2px;flex-shrink:0;"><svg viewBox="0 0 44 44" width="'+flameW+'" height="'+flameW+'" fill="none"><defs><linearGradient id="tg_'+tc.tier+'_'+(_uid++)+'" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#FFB800"/></linearGradient></defs><path d="'+FLAME_PATH+'" fill="url(#tg_'+tc.tier+'_'+(_uid)+'" stroke="#FF4511" stroke-width="0.8"/></svg></div>'
+    +'<div style="display:flex;align-items:center;justify-content:center;height:'+flameH+'px;margin-top:2px;flex-shrink:0;"><svg viewBox="0 0 44 44" width="'+flameW+'" height="'+flameW+'" fill="none"><defs><linearGradient id="tg_'+tc.tier+'_'+(_uid++)+'" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#EBB010"/></linearGradient></defs><path d="'+FLAME_PATH+'" fill="url(#tg_'+tc.tier+'_'+(_uid)+'" stroke="#FF4511" stroke-width="0.8"/></svg></div>'
     +'<div style="font-family:\'Teko\';font-weight:700;font-size:'+nameFs+'px;color:#fff;text-align:center;letter-spacing:0.5px;line-height:1.1;padding:0 4px;overflow:hidden;text-overflow:ellipsis;max-width:100%;word-wrap:break-word;">'+tc.name+'</div>'
     +'<div style="font-family:\'Rajdhani\';font-size:'+effectFs+'px;color:#aaa;text-align:center;padding:1px 4px;line-height:1.1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:100%;">'+tc.effect+'</div>'
     +'<div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:'+bc+';opacity:0.6;border-radius:0 0 5px 5px;"></div>';

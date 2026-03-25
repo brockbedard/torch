@@ -144,7 +144,7 @@ export function buildHome(){
   // Create the football SVG element programmatically (avoids data URI encoding issues).
   // The span is sized to match a Teko O. The SVG inside uses overflow:visible + contain.
   var title=document.createElement('h1');
-  title.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:116px;line-height:0.85;color:#FFB800;text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(255,184,0,0.35);transform:skewX(-8deg);text-align:center;letter-spacing:7px;z-index:2;animation:homeRevealUp 0.5s ease-out 0.4s both,titleShimmer 4s ease-in-out 2s infinite;position:relative;flex-shrink:0;";
+  title.style.cssText="font-family:'Teko',sans-serif;font-weight:700;font-size:116px;line-height:0.85;color:#EBB010;text-shadow:2px 2px 0 rgba(0,0,0,0.9),4px 4px 0 #1a0a00,0 0 25px rgba(235,176,16,0.35);transform:skewX(-8deg);text-align:center;letter-spacing:7px;z-index:2;animation:homeRevealUp 0.5s ease-out 0.4s both,titleShimmer 4s ease-in-out 2s infinite;position:relative;flex-shrink:0;";
   title.textContent='T';
   // Football O span
   var oSpan=document.createElement('span');
@@ -180,7 +180,7 @@ export function buildHome(){
   playWrap.style.cssText='width:100%;z-index:2;position:relative;display:flex;flex-direction:column;gap:10px;opacity:0;animation:homeRevealBtn 0.4s ease-out 1.0s both;flex-shrink:0;';
   var playBtn=document.createElement('button');
   playBtn.className='btn-blitz';
-  playBtn.style.cssText='border-color:#FF4511;color:#000;background:linear-gradient(180deg,#FFB800 0%,#FF4511 100%);font-size:24px;padding:20px 24px;animation:ctaGlow 3s ease-in-out 0.3s infinite;letter-spacing:5px;';
+  playBtn.style.cssText='border-color:#FF4511;color:#000;background:linear-gradient(180deg,#EBB010 0%,#FF4511 100%);font-size:24px;padding:20px 24px;animation:ctaGlow 3s ease-in-out 0.3s infinite;letter-spacing:5px;text-align:center;display:block;width:100%;';
   playBtn.textContent="LET'S GO!";
   playBtn.onclick=function(){
     SND.click();

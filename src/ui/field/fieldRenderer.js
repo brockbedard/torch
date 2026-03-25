@@ -18,7 +18,7 @@ const CFG = {
   border: { color: 'rgba(255,255,255,0.30)', w: 2.5 },
   hash: { color: 'rgba(255,255,255,0.08)', len: 5.25 },
   num: { color: 'rgba(255,245,220,0.10)', font: "700 34px 'Teko'", gap: 2, arrowOff: 22, arrowSz: 6, arrowColor: 'rgba(255,120,20,0.10)' },
-  endZone: { fill: 'rgba(255,69,17,0.04)', stripe: '#FF4511', stripeAlpha: 0.012, textColor: 'rgba(255,69,17,0.12)', textStroke: 'rgba(255,69,17,0.08)', textHighlight: 'rgba(255,184,0,0.04)', innerBorder: 'rgba(255,69,17,0.10)' },
+  endZone: { fill: 'rgba(255,69,17,0.04)', stripe: '#FF4511', stripeAlpha: 0.012, textColor: 'rgba(255,69,17,0.12)', textStroke: 'rgba(255,69,17,0.08)', textHighlight: 'rgba(235,176,16,0.04)', innerBorder: 'rgba(255,69,17,0.10)' },
   los: { color: 'rgba(59,130,246,0.85)', w: 3, blur: 10 },
   firstDown: { color: 'rgba(251,191,36,0.85)', w: 3, blur: 10 },
   noise: { opacity: 0.04, count: 600 },

@@ -54,7 +54,7 @@ export function buildVisualTest() {
 
   function section(title) {
     var s = document.createElement('div');
-    s.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:var(--a-gold,#FFB800);letter-spacing:3px;margin:32px 0 8px;padding:8px 0;border-bottom:2px solid #1E1610;";
+    s.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:var(--a-gold,#EBB010);letter-spacing:3px;margin:32px 0 8px;padding:8px 0;border-bottom:2px solid #1E1610;";
     s.textContent = '=== ' + title + ' ===';
     el.appendChild(s);
   }
@@ -207,7 +207,7 @@ export function buildVisualTest() {
       "<div style=\"position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);font-family:'Teko';font-weight:700;font-size:48px;color:#fff;text-shadow:0 0 20px rgba(255,107,0,0.8);\">VS</div>" +
       "<div style=\"position:absolute;top:60%;left:18%;font-family:'Teko';font-weight:700;font-size:20px;color:#fff;font-style:italic;\">" + team.name + "</div>" +
       "<div style=\"position:absolute;top:60%;right:18%;font-family:'Teko';font-weight:700;font-size:20px;color:#fff;font-style:italic;text-align:right;\">" + opp.name + "</div>" +
-      "<div style=\"position:absolute;top:75%;left:50%;transform:translateX(-50%);font-family:'Rajdhani';font-weight:700;font-size:11px;color:#aaa;display:flex;gap:8px;\"><span style='color:#FFB800'>CLEAR</span><span>\u00b7</span><span>TURF</span><span>\u00b7</span><span style='color:#00ff44'>HOME</span></div>";
+      "<div style=\"position:absolute;top:75%;left:50%;transform:translateX(-50%);font-family:'Rajdhani';font-weight:700;font-size:11px;color:#aaa;display:flex;gap:8px;\"><span style='color:#EBB010'>CLEAR</span><span>\u00b7</span><span>TURF</span><span>\u00b7</span><span style='color:#00ff44'>HOME</span></div>";
     el.appendChild(kf);
   })();
 
@@ -276,8 +276,8 @@ export function buildVisualTest() {
     resultFrame.style.cssText = 'width:375px;height:300px;background:rgba(10,8,4,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;';
     resultFrame.innerHTML =
       "<div style=\"font-family:'Teko';font-weight:700;font-size:64px;color:#3df58a;text-shadow:0 0 24px rgba(61,245,138,0.5);\">+14 YDS</div>" +
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#FFB800;letter-spacing:2px;text-shadow:0 0 12px rgba(255,184,0,0.5);\">SETUP!</div>" +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:#FFB800;letter-spacing:1px;\">T +25</div>" +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;letter-spacing:2px;text-shadow:0 0 12px rgba(235,176,16,0.5);\">SETUP!</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:#EBB010;letter-spacing:1px;\">T +25</div>" +
       "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:#3df58a;opacity:0.8;letter-spacing:1px;\">Bubble Screen vs Man-Zone Blend</div>";
     frame(resultFrame);
   })();
@@ -290,7 +290,7 @@ export function buildVisualTest() {
   (function() {
     var trayFrame = document.createElement('div');
     trayFrame.style.cssText = 'width:375px;background:#0A0804;';
-    trayFrame.innerHTML = "<div style=\"text-align:center;padding:4px 0;font-family:'Rajdhani';font-size:9px;color:#FFB800;letter-spacing:1px;\">TORCH CARD \u2014 Play one or skip</div>";
+    trayFrame.innerHTML = "<div style=\"text-align:center;padding:4px 0;font-family:'Rajdhani';font-size:9px;color:#EBB010;letter-spacing:1px;\">TORCH CARD \u2014 Play one or skip</div>";
     var tray = document.createElement('div');
     tray.style.cssText = 'display:flex;gap:6px;padding:6px;';
     var tc1 = buildTorchCard(TORCH_CARDS[0], 90, 130);
@@ -444,14 +444,14 @@ export function buildVisualTest() {
       ".vt-narr{background:#0C0804;border-top:2px solid #FF6B00;padding:8px 12px;width:375px;margin-bottom:8px;border-radius:4px;}" +
       ".vt-pbp-line{font-family:'Rajdhani';font-size:15px;color:#fff;font-weight:700;line-height:1.4;}" +
       ".vt-pbp-sub{font-family:'Rajdhani';font-size:13px;margin-top:4px;}" +
-      ".vt-pbp-combo{font-family:'Rajdhani';font-size:12px;color:#FFB800;font-style:italic;margin-top:2px;}";
+      ".vt-pbp-combo{font-family:'Rajdhani';font-size:12px;color:#EBB010;font-style:italic;margin-top:2px;}";
     el.appendChild(sty);
 
     var samples = [
       { type: 'TIER 1 — ROUTINE (60-70%)', line: 'Cortland hauls in a short pass for 4. Second and 6.', sub: '', subColor: '#aaa', combo: '' },
       { type: 'TIER 2 — ELEVATED (20%)', line: 'Cortland bursts through the hole for 8 — and that moves the chains on a critical third down.', sub: 'First down Stags. Chains move.', subColor: '#00ff44', combo: '' },
-      { type: 'TIER 3 — INTENSE (8%)', line: 'Cortland! Cuts back — to the 40, the 45, he\'s got room! Picks up 18!', sub: 'Stags are moving.', subColor: '#FFB800', combo: '' },
-      { type: 'TIER 4 — EXPLOSIVE (2%)', line: 'TOUCHDOWN STAGS! Strand rolls right, buys time, and finds Cortland streaking down the sideline — 23-yard strike!', sub: 'The Stags take the lead with under two minutes to play!', subColor: '#FFB800', combo: 'SETUP! +4 yds' },
+      { type: 'TIER 3 — INTENSE (8%)', line: 'Cortland! Cuts back — to the 40, the 45, he\'s got room! Picks up 18!', sub: 'Stags are moving.', subColor: '#EBB010', combo: '' },
+      { type: 'TIER 4 — EXPLOSIVE (2%)', line: 'TOUCHDOWN STAGS! Strand rolls right, buys time, and finds Cortland streaking down the sideline — 23-yard strike!', sub: 'The Stags take the lead with under two minutes to play!', subColor: '#EBB010', combo: 'SETUP! +4 yds' },
       { type: 'SACK', line: 'SACK! Blackwell wraps up the QB for a loss of 7.', sub: 'That\'s a drive-killer. Serpents defense is swarming.', subColor: '#e03050', combo: '' },
       { type: 'INTERCEPTION', line: 'PICKED! Tillery reads it all the way — turnover Boars!', sub: 'Momentum shift.', subColor: '#e03050', combo: '' },
     ];
@@ -531,11 +531,11 @@ export function buildVisualTest() {
         "<div style='flex:1;height:8px;background:#1a1a1a;border-radius:4px;position:relative;overflow:hidden;min-width:60px;'>" +
           "<div style='position:absolute;top:0;bottom:0;left:0;width:10%;background:" + boars.colors.primary + "88;border-radius:4px;'></div>" +
           "<div style='position:absolute;top:0;bottom:0;right:0;width:10%;background:" + serpents.colors.primary + "88;border-radius:4px;'></div>" +
-          "<div style='position:absolute;top:-1px;left:65%;width:6px;height:10px;background:#FFB800;border-radius:3px;'></div>" +
+          "<div style='position:absolute;top:-1px;left:65%;width:6px;height:10px;background:#EBB010;border-radius:3px;'></div>" +
           "<div style='position:absolute;top:0;bottom:0;left:72%;width:2px;background:" + boars.accent + ";opacity:0.5;'></div>" +
         "</div>" +
         "<div style='width:1px;height:12px;background:rgba(255,255,255,0.1);'></div>" +
-        "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:#FFB800;\">T 185</div>" +
+        "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:#EBB010;\">T 185</div>" +
       "</div>";
     frame(sb, 100);
   })();
@@ -550,7 +550,7 @@ export function buildVisualTest() {
     rf.style.cssText = 'width:375px;height:280px;background:rgba(10,8,4,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid #333;border-radius:8px;';
     rf.innerHTML =
       "<div style=\"font-family:'Teko';font-weight:700;font-size:64px;color:#3df58a;text-shadow:0 0 24px rgba(61,245,138,0.5);\">+6 YDS</div>" +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:#FFB800;letter-spacing:1px;\">T +15</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:#EBB010;letter-spacing:1px;\">T +15</div>" +
       "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:#3df58a;opacity:0.8;letter-spacing:1px;\">Choice Route vs Plug the Middle</div>" +
       "<div style=\"margin-top:8px;padding:6px 12px;background:rgba(0,0,0,0.4);border-radius:4px;font-family:'Rajdhani';font-size:10px;color:#FF6B00;\">NEW: 2ND & 4 \u00b7 BALL ON RDG 35</div>";
     frame(rf, 290);

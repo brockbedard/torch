@@ -29,7 +29,7 @@
 const SOURCES = {
   play:   { label: 'PLAY',   color: '#F1F5F9', glow: 'rgba(241,245,249,0.3)' },
   combo:  { label: 'COMBO',  color: '#FF6B2B', glow: 'rgba(255,107,43,0.4)' },
-  streak: { label: 'STREAK', color: '#FFB800', glow: 'rgba(255,184,0,0.4)' },
+  streak: { label: 'STREAK', color: '#EBB010', glow: 'rgba(235,176,16,0.4)' },
   bonus:  { label: 'BONUS',  color: '#22D3EE', glow: 'rgba(34,211,238,0.4)' },
 };
 
@@ -186,16 +186,16 @@ function rollCounter(el, from, to, duration = 400) {
 // ─── COUNTER POP ─────────────────────────────────────────────
 function popCounter(containerEl, counterEl, intensity = 1) {
   const maxScale = 1 + 0.15 * intensity;
-  const goldGlow = 'rgba(255,184,0,0.45)';
+  const goldGlow = 'rgba(235,176,16,0.45)';
 
   // Scale pop
   containerEl.style.transition = 'transform 0.12s ease-out, box-shadow 0.3s, border-color 0.3s';
   containerEl.style.transform = `scale(${maxScale})`;
-  containerEl.style.boxShadow = `0 0 ${16 + intensity * 20}px rgba(255,184,0,${0.15 + intensity * 0.2})`;
-  containerEl.style.borderColor = `rgba(255,184,0,${0.2 + intensity * 0.3})`;
+  containerEl.style.boxShadow = `0 0 ${16 + intensity * 20}px rgba(235,176,16,${0.15 + intensity * 0.2})`;
+  containerEl.style.borderColor = `rgba(235,176,16,${0.2 + intensity * 0.3})`;
 
   // Text glow
-  counterEl.style.color = intensity > 0.8 ? '#FFE066' : '#FFB800';
+  counterEl.style.color = intensity > 0.8 ? '#FFE066' : '#EBB010';
   counterEl.style.textShadow = `0 0 ${10 + intensity * 10}px ${goldGlow}`;
 
   // Flame brightness (if flame icon exists as sibling/child)
@@ -218,7 +218,7 @@ function popCounter(containerEl, counterEl, intensity = 1) {
 }
 
 // ─── PARTICLES ───────────────────────────────────────────────
-function burstParticles(containerEl, count = 6, color = '#FFB800') {
+function burstParticles(containerEl, count = 6, color = '#EBB010') {
   for (let i = 0; i < count; i++) {
     const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
     const dist = 35 + Math.random() * 30;
@@ -306,7 +306,7 @@ function hideSourceLabel() {
 function showPulseRing(containerEl) {
   const ring = document.createElement('div');
   ring.className = 'tp-pulse-ring';
-  ring.style.border = '1px solid #FFB800';
+  ring.style.border = '1px solid #EBB010';
   containerEl.appendChild(ring);
   setTimeout(() => ring.remove(), 650);
 }

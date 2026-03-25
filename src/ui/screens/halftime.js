@@ -123,7 +123,7 @@ export function buildHalftime() {
   // Resume button
   var resumeBtn = document.createElement('button');
   resumeBtn.className = 'btn-blitz';
-  resumeBtn.style.cssText = "width:100%;max-width:320px;font-size:14px;background:linear-gradient(180deg,#FFB800,#FF4511);border-color:#FF4511;color:#000;letter-spacing:2px;";
+  resumeBtn.style.cssText = "width:100%;max-width:320px;font-size:14px;background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;letter-spacing:2px;";
   resumeBtn.textContent = 'START SECOND HALF \u2192';
   resumeBtn.onclick = function() {
     SND.snap();

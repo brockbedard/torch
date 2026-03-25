@@ -45,13 +45,13 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
 
   // Sheet
   var sheet = document.createElement('div');
-  sheet.style.cssText = 'position:relative;z-index:1;background:var(--bg-surface,#141008);border-top:2px solid var(--a-gold,#FFB800);border-radius:12px 12px 0 0;padding:14px 12px 20px;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.22,1.3,0.36,1);';
+  sheet.style.cssText = 'position:relative;z-index:1;background:var(--bg-surface,#141008);border-top:2px solid var(--a-gold,#EBB010);border-radius:12px 12px 0 0;padding:14px 12px 20px;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.22,1.3,0.36,1);';
 
   // Header
   var hdr = document.createElement('div');
   hdr.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;";
   hdr.innerHTML =
-    "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:var(--a-gold,#FFB800);letter-spacing:2px;\">TORCH CARDS</div>" +
+    "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:var(--a-gold,#EBB010);letter-spacing:2px;\">TORCH CARDS</div>" +
     "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:var(--l-green,#00ff44);\">" + points + " PTS</div>";
   sheet.appendChild(hdr);
 
@@ -61,7 +61,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
   for (var s = 0; s < 3; s++) {
     var slot = document.createElement('div');
     var hasCard = inventory[s];
-    slot.style.cssText = "flex:1;height:4px;border-radius:2px;background:" + (hasCard ? 'var(--a-gold,#FFB800)' : '#333') + ";";
+    slot.style.cssText = "flex:1;height:4px;border-radius:2px;background:" + (hasCard ? 'var(--a-gold,#EBB010)' : '#333') + ";";
     invRow.appendChild(slot);
   }
   sheet.appendChild(invRow);
@@ -98,7 +98,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
     var buyBtn = document.createElement('button');
     buyBtn.className = 'btn-blitz';
     buyBtn.style.cssText = 'font-size:9px;padding:8px 12px;width:100%;position:relative;z-index:2;' +
-      (canAfford ? 'background:var(--a-gold,#FFB800);color:#000;border-color:var(--torch,#FF4511);' : 'background:#333;color:#666;border-color:#333;cursor:not-allowed;');
+      (canAfford ? 'background:var(--a-gold,#EBB010);color:#000;border-color:var(--torch,#FF4511);' : 'background:#333;color:#666;border-color:#333;cursor:not-allowed;');
     buyBtn.textContent = isFull && canAfford ? 'SWAP' : canAfford ? 'BUY' : "CAN'T AFFORD";
     buyBtn.disabled = !canAfford;
 
@@ -159,7 +159,7 @@ function showSwapUI(sheet, inventory, newCard, points, onSwap) {
   sheet.innerHTML = '';
 
   var title = document.createElement('div');
-  title.style.cssText = "font-family:'Teko';font-weight:700;font-size:16px;color:var(--a-gold,#FFB800);letter-spacing:2px;text-align:center;margin-bottom:8px;";
+  title.style.cssText = "font-family:'Teko';font-weight:700;font-size:16px;color:var(--a-gold,#EBB010);letter-spacing:2px;text-align:center;margin-bottom:8px;";
   title.textContent = 'DROP A CARD TO MAKE ROOM';
   sheet.appendChild(title);
 
@@ -215,7 +215,7 @@ export function renderInventory(inventory) {
     var card = inventory[i];
     var slot = document.createElement('div');
     if (card) {
-      var tierCol = card.tier === 'GOLD' ? '#FFB800' : card.tier === 'SILVER' ? '#B0C4D4' : '#A0522D';
+      var tierCol = card.tier === 'GOLD' ? '#EBB010' : card.tier === 'SILVER' ? '#B0C4D4' : '#A0522D';
       slot.style.cssText = "width:40px;height:16px;border-radius:3px;background:#1a0800;border:1px solid " + tierCol + ";display:flex;align-items:center;justify-content:center;";
       slot.innerHTML = "<span style=\"font-family:'Rajdhani';font-size:6px;color:" + tierCol + ";letter-spacing:0.5px;white-space:nowrap;\">" + card.name + "</span>";
     } else {

@@ -41,7 +41,7 @@ export function showTooltip(container, id, text, opts) {
 
     // Tooltip text
     var tip = document.createElement('div');
-    tip.style.cssText = "position:relative;z-index:1;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:13px;color:rgba(255,255,255,0.9);text-align:center;line-height:1.5;padding:16px 24px;background:rgba(20,16,8,0.95);border:1px solid rgba(255,184,0,0.3);border-radius:8px;max-width:280px;";
+    tip.style.cssText = "position:relative;z-index:1;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:13px;color:rgba(255,255,255,0.9);text-align:center;line-height:1.5;padding:16px 24px;background:rgba(20,16,8,0.95);border:1px solid rgba(235,176,16,0.3);border-radius:8px;max-width:280px;";
     tip.textContent = text;
     overlay.appendChild(tip);
 

@@ -198,7 +198,7 @@ export function buildTeamSelect() {
   var selectedTeam = null;
   var kickOffBtn = document.createElement('button');
   kickOffBtn.className = 'btn-blitz';
-  kickOffBtn.style.cssText = 'flex-shrink:0;margin:6px 20px 8px;border-color:#FF4511;color:#000;background:linear-gradient(180deg,#FFB800 0%,#FF4511 100%);font-size:22px;padding:14px 24px;letter-spacing:5px;opacity:0.3;pointer-events:none;transition:opacity 0.3s;text-align:center;display:block;width:calc(100% - 40px);';
+  kickOffBtn.style.cssText = 'flex-shrink:0;margin:6px 20px 8px;border-color:#FF4511;color:#000;background:linear-gradient(180deg,#EBB010 0%,#FF4511 100%);font-size:24px;padding:20px 24px;letter-spacing:5px;opacity:0.3;pointer-events:none;transition:opacity 0.3s;text-align:center;display:block;width:calc(100% - 40px);animation:ctaGlow 3s ease-in-out 0.3s infinite;';
   kickOffBtn.textContent = 'KICK OFF!';
   kickOffBtn.onclick = function() {
     if (!selectedTeamId) return;
@@ -390,7 +390,7 @@ function startSelectionAnimation(container, teamId, team, isFirst) {
     var condBar = document.createElement('div');
     condBar.style.cssText = "position:absolute;top:65%;left:50%;transform:translateX(-50%);z-index:3;display:flex;gap:12px;font-family:'Rajdhani';font-weight:700;font-size:10px;color:#aaa;letter-spacing:0.5px;white-space:nowrap;";
     condBar.innerHTML =
-      '<span style="color:#FFB800">' + weather.name.toUpperCase() + '</span>' +
+      '<span style="color:#EBB010">' + weather.name.toUpperCase() + '</span>' +
       '<span>\u00b7</span>' +
       '<span>' + field.name.toUpperCase() + '</span>' +
       '<span>\u00b7</span>' +

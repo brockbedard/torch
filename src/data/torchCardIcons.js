@@ -127,7 +127,7 @@ export const TORCH_CARD_ICONS = {
 // Render helper
 export function renderTorchCardIcon(iconKey, size, color) {
   size = size || 48;
-  color = color || '#FFB800';
+  color = color || '#EBB010';
   var icon = TORCH_CARD_ICONS[iconKey];
   if (!icon) return null;
   var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
