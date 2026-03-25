@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Renderer Test</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@300..700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#050505;display:flex;flex-direction:column;align-items:center;padding:20px;font-family:'Teko',sans-serif;color:#fff}
+  h1{font-size:20px;letter-spacing:4px;color:#FFB800;margin-bottom:4px}
+  .sub{font-size:12px;color:#555;letter-spacing:2px;margin-bottom:16px}
+  .controls{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;justify-content:center}
+  button{background:#1a1a1a;border:1px solid #333;color:#aaa;font-family:'Teko';font-size:13px;padding:4px 12px;cursor:pointer;border-radius:4px;letter-spacing:1px}
+  button:hover{background:#222;color:#fff}
+  button.active{background:#FF4511;color:#000;border-color:#FF4511}
+  .field-wrap{border-radius:6px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.8)}
+  .info{margin-top:12px;font-size:14px;color:#666;letter-spacing:1px}
+</style>
+</head>
+<body>
+<h1>DIGITAL GLASS FLOOR — PORTRAIT</h1>
+<div class="sub">FIELD RENDERER TEST</div>
+
+<div class="controls" id="formations"></div>
+<div class="controls" id="positions"></div>
+<div class="field-wrap" id="wrap"></div>
+<div class="info" id="info"></div>
+
+<script type="module">
+import { createFieldRenderer } from './fieldRenderer.js';
+
+const formations = ['shotgun_2x2', 'iform_under_center', 'trips_right', 'empty_5_wide'];
+const formLabels = ['Shotgun 2×2', 'I-Form', 'Trips Right', 'Empty 5 Wide'];
+
+let currentFormation = 'shotgun_2x2';
+let ballYard = 50;
+
+document.fonts.ready.then(() => {
+  const renderer = createFieldRenderer(375, 280);
+  document.getElementById('wrap').appendChild(renderer.canvas);
+
+  function draw() {
+    const losYard = ballYard;
+    const fdYard = Math.min(losYard + 10, 110);
+    renderer.render({ ballYard, losYard, firstDownYard: fdYard, formation: currentFormation });
+    document.getElementById('info').textContent =
+      'BALL: ' + ballYard + ' YD | LOS: ' + losYard + ' | 1ST DOWN: ' + fdYard + ' | ' + currentFormation.toUpperCase();
+  }
+
+  // Formation buttons
+  const fDiv = document.getElementById('formations');
+  formations.forEach((f, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = formLabels[i];
+    btn.className = f === currentFormation ? 'active' : '';
+    btn.onclick = () => {
+      currentFormation = f;
+      fDiv.querySelectorAll('button').forEach(b => b.className = '');
+      btn.className = 'active';
+      draw();
+    };
+    fDiv.appendChild(btn);
+  });
+
+  // Position buttons
+  const pDiv = document.getElementById('positions');
+  [20, 30, 40, 50, 60, 70, 80, 90, 100].forEach(yd => {
+    const btn = document.createElement('button');
+    btn.textContent = yd > 60 ? 'OPP ' + (110 - yd) : yd === 60 ? 'MID' : 'OWN ' + (yd - 10);
+    btn.onclick = () => { ballYard = yd; draw(); };
+    pDiv.appendChild(btn);
+  });
+
+  draw();
+});
+</script>
+</body>
+</html>

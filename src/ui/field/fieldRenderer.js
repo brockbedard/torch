@@ -13,12 +13,12 @@
 const CFG = {
   bg: '#050a08',
   tile: { size: 40, color: 'rgba(0,255,100,0.05)' },
-  yard: { color: 'rgba(255,255,255,0.25)', w10: 1.5, w5: 1 },
-  goal: { color: 'rgba(255,160,20,0.45)', w: 3, glowColor: 'rgba(255,140,0,0.3)', glowBlur: 6 },
-  border: { color: 'rgba(255,255,255,0.45)', w: 2.5 },
-  hash: { color: 'rgba(255,255,255,0.15)', len: 5.25 },
-  num: { color: 'rgba(255,245,220,0.16)', font: "700 34px 'Teko'", gap: 2, arrowOff: 22, arrowSz: 6, arrowColor: 'rgba(255,120,20,0.18)' },
-  endZone: { fill: 'rgba(255,69,17,0.06)', stripe: '#FF4511', stripeAlpha: 0.02, textColor: 'rgba(255,69,17,0.18)', textStroke: 'rgba(255,69,17,0.12)', textHighlight: 'rgba(255,184,0,0.06)', innerBorder: 'rgba(255,69,17,0.15)' },
+  yard: { color: 'rgba(255,255,255,0.15)', w10: 1.5, w5: 1 },
+  goal: { color: 'rgba(255,160,20,0.30)', w: 3, glowColor: 'rgba(255,140,0,0.2)', glowBlur: 6 },
+  border: { color: 'rgba(255,255,255,0.30)', w: 2.5 },
+  hash: { color: 'rgba(255,255,255,0.08)', len: 5.25 },
+  num: { color: 'rgba(255,245,220,0.10)', font: "700 34px 'Teko'", gap: 2, arrowOff: 22, arrowSz: 6, arrowColor: 'rgba(255,120,20,0.10)' },
+  endZone: { fill: 'rgba(255,69,17,0.04)', stripe: '#FF4511', stripeAlpha: 0.012, textColor: 'rgba(255,69,17,0.12)', textStroke: 'rgba(255,69,17,0.08)', textHighlight: 'rgba(255,184,0,0.04)', innerBorder: 'rgba(255,69,17,0.10)' },
   los: { color: 'rgba(59,130,246,0.85)', w: 3, blur: 10 },
   firstDown: { color: 'rgba(251,191,36,0.85)', w: 3, blur: 10 },
   noise: { opacity: 0.04, count: 600 },
@@ -35,107 +35,88 @@ const CFG = {
 
 // ── FORMATIONS ──
 // Positions as [widthPct (0-1, left-right), yardsFromLOS (positive = defense side)]
+// 7v7 formations — exactly 7 offense + 7 defense = 14 players
+// y = yards from LOS. Negative = behind LOS (offense), positive = past LOS (defense).
+// Dots have dark backing circles so they eclipse lines cleanly.
 const FORMATIONS = {
   'shotgun_2x2': {
     offense: [
-      // OL (3 tight linemen at LOS)
-      { pos: 'OL', x: 0.42, y: 0, num: 65, star: false },
-      { pos: 'OL', x: 0.50, y: 0, num: 72, star: false },
-      { pos: 'OL', x: 0.58, y: 0, num: 68, star: false },
-      // QB in shotgun (5 yards back)
-      { pos: 'QB', x: 0.50, y: -5, num: 7, star: true },
-      // 2 WRs left
-      { pos: 'WR', x: 0.15, y: 0, num: 1, star: true },
-      { pos: 'WR', x: 0.25, y: -1, num: 82, star: false },
-      // 2 WRs right
-      { pos: 'WR', x: 0.75, y: -1, num: 4, star: false },
-      { pos: 'WR', x: 0.85, y: 0, num: 11, star: false },
+      { pos: 'OL', x: 0.50, y: 0, num: 72 },
+      { pos: 'QB', x: 0.50, y: -5, num: 7 },
+      { pos: 'RB', x: 0.42, y: -4, num: 25 },
+      { pos: 'WR', x: 0.12, y: 0, num: 1 },
+      { pos: 'WR', x: 0.28, y: -1, num: 82 },
+      { pos: 'WR', x: 0.72, y: -1, num: 4 },
+      { pos: 'WR', x: 0.88, y: 0, num: 11 },
     ],
     defense: [
-      // DL
-      { pos: 'DL', x: 0.37, y: 1, num: 90, star: false },
-      { pos: 'DL', x: 0.50, y: 1, num: 95, star: false },
-      { pos: 'DL', x: 0.63, y: 1, num: 93, star: false },
-      // LBs
-      { pos: 'LB', x: 0.35, y: 5, num: 55, star: true },
-      { pos: 'LB', x: 0.65, y: 5, num: 42, star: false },
-      // CBs
-      { pos: 'CB', x: 0.15, y: 3, num: 24, star: false },
-      { pos: 'CB', x: 0.85, y: 3, num: 2, star: false },
-      // Safety
-      { pos: 'S', x: 0.50, y: 11, num: 21, star: false },
+      { pos: 'DL', x: 0.40, y: 1, num: 90 },
+      { pos: 'DL', x: 0.60, y: 1, num: 93 },
+      { pos: 'LB', x: 0.35, y: 5, num: 55 },
+      { pos: 'LB', x: 0.65, y: 5, num: 42 },
+      { pos: 'CB', x: 0.12, y: 3, num: 24 },
+      { pos: 'CB', x: 0.88, y: 3, num: 2 },
+      { pos: 'S', x: 0.50, y: 11, num: 21 },
     ],
   },
   'iform_under_center': {
     offense: [
-      { pos: 'OL', x: 0.42, y: 0, num: 65, star: false },
-      { pos: 'OL', x: 0.50, y: 0, num: 72, star: false },
-      { pos: 'OL', x: 0.58, y: 0, num: 68, star: false },
-      { pos: 'QB', x: 0.50, y: -1, num: 7, star: true },
-      { pos: 'FB', x: 0.50, y: -4, num: 34, star: false },
-      { pos: 'RB', x: 0.50, y: -6, num: 25, star: true },
-      { pos: 'WR', x: 0.12, y: 0, num: 1, star: false },
-      { pos: 'WR', x: 0.88, y: 0, num: 11, star: false },
+      { pos: 'OL', x: 0.50, y: 0, num: 72 },
+      { pos: 'QB', x: 0.50, y: -1, num: 7 },
+      { pos: 'FB', x: 0.50, y: -4, num: 34 },
+      { pos: 'RB', x: 0.50, y: -6, num: 25 },
+      { pos: 'WR', x: 0.12, y: 0, num: 1 },
+      { pos: 'WR', x: 0.88, y: 0, num: 11 },
+      { pos: 'TE', x: 0.65, y: 0, num: 82 },
     ],
     defense: [
-      { pos: 'DL', x: 0.37, y: 1, num: 90, star: false },
-      { pos: 'DL', x: 0.50, y: 1, num: 95, star: false },
-      { pos: 'DL', x: 0.63, y: 1, num: 93, star: false },
-      { pos: 'LB', x: 0.30, y: 4, num: 55, star: true },
-      { pos: 'LB', x: 0.50, y: 5, num: 42, star: false },
-      { pos: 'LB', x: 0.70, y: 4, num: 52, star: false },
-      { pos: 'CB', x: 0.12, y: 3, num: 24, star: false },
-      { pos: 'CB', x: 0.88, y: 3, num: 2, star: false },
-      { pos: 'S', x: 0.50, y: 11, num: 21, star: false },
+      { pos: 'DL', x: 0.40, y: 1, num: 90 },
+      { pos: 'DL', x: 0.60, y: 1, num: 93 },
+      { pos: 'LB', x: 0.30, y: 4, num: 55 },
+      { pos: 'LB', x: 0.50, y: 5, num: 42 },
+      { pos: 'LB', x: 0.70, y: 4, num: 52 },
+      { pos: 'CB', x: 0.12, y: 3, num: 24 },
+      { pos: 'S', x: 0.50, y: 11, num: 21 },
     ],
   },
   'trips_right': {
     offense: [
-      { pos: 'OL', x: 0.42, y: 0, num: 65, star: false },
-      { pos: 'OL', x: 0.50, y: 0, num: 72, star: false },
-      { pos: 'OL', x: 0.58, y: 0, num: 68, star: false },
-      { pos: 'QB', x: 0.50, y: -5, num: 7, star: true },
-      { pos: 'RB', x: 0.42, y: -4, num: 25, star: false },
-      { pos: 'WR', x: 0.12, y: 0, num: 1, star: true },
-      { pos: 'WR', x: 0.72, y: 0, num: 4, star: false },
-      { pos: 'WR', x: 0.80, y: -1, num: 82, star: false },
-      { pos: 'WR', x: 0.90, y: 0, num: 11, star: false },
+      { pos: 'OL', x: 0.50, y: 0, num: 72 },
+      { pos: 'QB', x: 0.50, y: -5, num: 7 },
+      { pos: 'RB', x: 0.42, y: -4, num: 25 },
+      { pos: 'WR', x: 0.12, y: 0, num: 1 },
+      { pos: 'WR', x: 0.72, y: 0, num: 4 },
+      { pos: 'WR', x: 0.80, y: -1, num: 82 },
+      { pos: 'WR', x: 0.92, y: 0, num: 11 },
     ],
     defense: [
-      { pos: 'DL', x: 0.37, y: 1, num: 90, star: false },
-      { pos: 'DL', x: 0.50, y: 1, num: 95, star: false },
-      { pos: 'DL', x: 0.63, y: 1, num: 93, star: false },
-      { pos: 'LB', x: 0.40, y: 5, num: 55, star: true },
-      { pos: 'LB', x: 0.60, y: 5, num: 42, star: false },
-      { pos: 'CB', x: 0.12, y: 3, num: 24, star: false },
-      { pos: 'CB', x: 0.72, y: 2, num: 2, star: false },
-      { pos: 'CB', x: 0.90, y: 3, num: 5, star: false },
-      { pos: 'S', x: 0.50, y: 11, num: 21, star: false },
+      { pos: 'DL', x: 0.40, y: 1, num: 90 },
+      { pos: 'DL', x: 0.60, y: 1, num: 93 },
+      { pos: 'LB', x: 0.45, y: 5, num: 55 },
+      { pos: 'CB', x: 0.12, y: 3, num: 24 },
+      { pos: 'CB', x: 0.72, y: 2, num: 2 },
+      { pos: 'CB', x: 0.92, y: 3, num: 5 },
+      { pos: 'S', x: 0.50, y: 11, num: 21 },
     ],
   },
   'empty_5_wide': {
     offense: [
-      { pos: 'OL', x: 0.42, y: 0, num: 65, star: false },
-      { pos: 'OL', x: 0.50, y: 0, num: 72, star: false },
-      { pos: 'OL', x: 0.58, y: 0, num: 68, star: false },
-      { pos: 'QB', x: 0.50, y: -5, num: 7, star: true },
-      { pos: 'WR', x: 0.08, y: 0, num: 1, star: true },
-      { pos: 'WR', x: 0.25, y: -1, num: 82, star: false },
-      { pos: 'WR', x: 0.75, y: -1, num: 4, star: false },
-      { pos: 'WR', x: 0.92, y: 0, num: 11, star: false },
-      { pos: 'WR', x: 0.50, y: -3, num: 3, star: false },
+      { pos: 'OL', x: 0.50, y: 0, num: 72 },
+      { pos: 'QB', x: 0.50, y: -5, num: 7 },
+      { pos: 'WR', x: 0.08, y: 0, num: 1 },
+      { pos: 'WR', x: 0.25, y: -1, num: 82 },
+      { pos: 'WR', x: 0.50, y: -3, num: 3 },
+      { pos: 'WR', x: 0.75, y: -1, num: 4 },
+      { pos: 'WR', x: 0.92, y: 0, num: 11 },
     ],
     defense: [
-      { pos: 'DL', x: 0.37, y: 1, num: 90, star: false },
-      { pos: 'DL', x: 0.63, y: 1, num: 93, star: false },
-      { pos: 'LB', x: 0.35, y: 5, num: 55, star: true },
-      { pos: 'LB', x: 0.50, y: 5, num: 42, star: false },
-      { pos: 'LB', x: 0.65, y: 5, num: 52, star: false },
-      { pos: 'CB', x: 0.08, y: 3, num: 24, star: false },
-      { pos: 'CB', x: 0.25, y: 4, num: 2, star: false },
-      { pos: 'CB', x: 0.75, y: 4, num: 5, star: false },
-      { pos: 'CB', x: 0.92, y: 3, num: 31, star: false },
-      { pos: 'S', x: 0.50, y: 11, num: 21, star: false },
+      { pos: 'DL', x: 0.40, y: 1, num: 90 },
+      { pos: 'DL', x: 0.60, y: 1, num: 93 },
+      { pos: 'LB', x: 0.50, y: 5, num: 42 },
+      { pos: 'CB', x: 0.08, y: 3, num: 24 },
+      { pos: 'CB', x: 0.25, y: 4, num: 2 },
+      { pos: 'CB', x: 0.75, y: 4, num: 5 },
+      { pos: 'S', x: 0.50, y: 11, num: 21 },
     ],
   },
 };
@@ -182,8 +163,8 @@ export function createFieldRenderer(width, height) {
   ctx.scale(DPR, DPR);
 
   // Portrait: width = sideline-to-sideline, height = yard axis
-  // We show a window of ~45 yards centered on ball position
-  var VISIBLE_YARDS = 45;
+  // Show ~30 yards for more spread — yards feel bigger, more room for action
+  var VISIBLE_YARDS = 30;
   var YPX = height / VISIBLE_YARDS; // pixels per yard in portrait
   var fieldW = width; // sideline to sideline
 
@@ -217,14 +198,7 @@ export function createFieldRenderer(width, height) {
     c.fillStyle = CFG.bg;
     c.fillRect(0, 0, fieldW, height);
 
-    // 2. LED tile grid
-    c.strokeStyle = CFG.tile.color;
-    c.lineWidth = 1;
-    var ts = CFG.tile.size * (YPX / 7.88); // scale tile size proportionally
-    var offsetY = -(topYard * YPX) % ts;
-    for (var gx = 0; gx < fieldW; gx += ts)
-      for (var gy = offsetY; gy < height; gy += ts)
-        c.strokeRect(gx, gy, ts, ts);
+    // (LED tile grid removed — too distracting at portrait scale)
 
     // 3. End zones (yards 0-10 and 110-120)
     drawEndZonePortrait(c, 0, 10, true, topYard);
@@ -290,6 +264,7 @@ export function createFieldRenderer(width, height) {
     if (midY > -40 && midY < height + 40) {
       c.save();
       c.translate(fieldW / 2, midY);
+      c.rotate(-Math.PI / 2); // rotate 90° for portrait
       c.globalAlpha = CFG.flame.alpha;
       var fsc = 1.5;
       c.scale(fsc, fsc);
@@ -337,7 +312,7 @@ export function createFieldRenderer(width, height) {
 
     // "TORCH" text — horizontal in portrait, centered in end zone
     c.save();
-    var textY = isTop ? (ydStart + 5) : (ydEnd - 5);
+    var textY = (ydStart + ydEnd) / 2; // true center of end zone
     var ty = (textY - topYard) * YPX;
     if (ty > -50 && ty < height + 50) {
       c.translate(fieldW / 2, ty);
@@ -422,78 +397,94 @@ export function createFieldRenderer(width, height) {
   function drawLOS(c, losYard, topYard) {
     var y = (losYard - topYard) * YPX;
     c.save();
-    c.shadowColor = CFG.los.color;
-    c.shadowBlur = CFG.los.blur;
-    c.strokeStyle = CFG.los.color;
-    c.lineWidth = CFG.los.w;
+    c.shadowColor = 'rgba(59,130,246,0.3)';
+    c.shadowBlur = 6;
+    c.strokeStyle = 'rgba(59,130,246,0.45)';
+    c.lineWidth = 2;
     c.beginPath(); c.moveTo(0, y); c.lineTo(fieldW, y); c.stroke();
     c.restore();
-    // Badge label
-    c.fillStyle = 'rgba(59,130,246,0.9)';
-    c.font = "700 9px 'Teko'";
-    c.textAlign = 'left';
+    // Badge label — inset from edge
+    c.fillStyle = 'rgba(59,130,246,0.7)';
+    c.font = "700 8px 'Teko'";
+    c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.fillRect(2, y - 7, 22, 14);
+    c.fillRect(8, y - 6, 20, 12);
     c.fillStyle = '#fff';
-    c.fillText('LOS', 5, y);
+    c.fillText('LOS', 18, y);
   }
 
   function drawFirstDownMarker(c, fdYard, topYard) {
     var y = (fdYard - topYard) * YPX;
     c.save();
-    c.shadowColor = CFG.firstDown.color;
-    c.shadowBlur = CFG.firstDown.blur;
-    c.strokeStyle = CFG.firstDown.color;
-    c.lineWidth = CFG.firstDown.w;
+    c.shadowColor = 'rgba(251,191,36,0.3)';
+    c.shadowBlur = 6;
+    c.strokeStyle = 'rgba(251,191,36,0.45)';
+    c.lineWidth = 2;
     c.beginPath(); c.moveTo(0, y); c.lineTo(fieldW, y); c.stroke();
     c.restore();
-    // Badge label
-    c.fillStyle = 'rgba(251,191,36,0.9)';
-    c.fillRect(fieldW - 24, y - 7, 22, 14);
+    // Badge label — inset from edge
+    c.fillStyle = 'rgba(251,191,36,0.7)';
+    c.fillRect(fieldW - 28, y - 6, 20, 12);
     c.fillStyle = '#000';
-    c.font = "700 9px 'Teko'";
-    c.textAlign = 'right';
+    c.font = "700 8px 'Teko'";
+    c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.fillText('1ST', fieldW - 4, y);
+    c.fillText('1ST', fieldW - 18, y);
   }
 
   function drawPlayerDots(c, formation, losYard, topYard) {
     var form = FORMATIONS[formation] || FORMATIONS['shotgun_2x2'];
+    var DOT_R = 20;
+    var CORE_R = 12; // solid opaque inner circle
 
-    // Draw offense
-    var prevComp = c.globalCompositeOperation;
-    c.globalCompositeOperation = 'lighter';
+    // Helper: draw one player dot with dark backing so it eclipses lines
+    function drawDot(px, py, rgb) {
+      // 1. Dark backing circle — blocks whatever is underneath
+      c.fillStyle = 'rgba(5,10,8,0.9)';
+      c.beginPath();
+      c.arc(px, py, CORE_R + 2, 0, Math.PI * 2);
+      c.fill();
 
+      // 2. Outer glow ring (additive)
+      var prevComp = c.globalCompositeOperation;
+      c.globalCompositeOperation = 'lighter';
+      var sprite = getGlowSprite(rgb, DOT_R, 0.6);
+      c.drawImage(sprite, px - DOT_R * 2, py - DOT_R * 2, DOT_R * 4, DOT_R * 4);
+      c.globalCompositeOperation = prevComp;
+
+      // 3. Solid bright core (normal blending)
+      var grad = c.createRadialGradient(px, py, 0, px, py, CORE_R);
+      grad.addColorStop(0, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0.95)');
+      grad.addColorStop(0.6, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0.7)');
+      grad.addColorStop(1, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0.3)');
+      c.fillStyle = grad;
+      c.beginPath();
+      c.arc(px, py, CORE_R, 0, Math.PI * 2);
+      c.fill();
+    }
+
+    // Draw all players
     form.offense.forEach(function(p) {
       var px = p.x * fieldW;
       var py = (losYard + p.y - topYard) * YPX;
-      var isOL = p.pos === 'OL';
-      var radius = p.star ? 18 : isOL ? 10 : 13;
-      var intensity = p.star ? 1.0 : isOL ? 0.5 : 0.65;
-      var sprite = getGlowSprite(CFG.offense, radius, intensity);
-      c.drawImage(sprite, px - radius * 2, py - radius * 2, radius * 4, radius * 4);
+      drawDot(px, py, CFG.offense);
     });
 
     form.defense.forEach(function(p) {
       var px = p.x * fieldW;
       var py = (losYard + p.y - topYard) * YPX;
-      var radius = p.star ? 15 : 11;
-      var intensity = p.star ? 1.0 : 0.5;
-      var sprite = getGlowSprite(CFG.defense, radius, intensity);
-      c.drawImage(sprite, px - radius * 2, py - radius * 2, radius * 4, radius * 4);
+      drawDot(px, py, CFG.defense);
     });
-
-    c.globalCompositeOperation = prevComp;
 
     // Ball glow at QB position
     var qb = form.offense.find(function(p) { return p.pos === 'QB'; });
     if (qb) {
       var bx = qb.x * fieldW;
       var by = (losYard + qb.y - topYard) * YPX;
-      var ballSprite = getGlowSprite([255, 220, 140], 10, 0.8);
-      c.globalCompositeOperation = 'lighter';
-      c.drawImage(ballSprite, bx - 20, by - 20, 40, 40);
-      c.globalCompositeOperation = prevComp;
+      c.fillStyle = 'rgba(255,220,140,0.4)';
+      c.beginPath();
+      c.arc(bx, by, 6, 0, Math.PI * 2);
+      c.fill();
     }
 
     // Jersey numbers on top (not additive)
@@ -504,7 +495,7 @@ export function createFieldRenderer(width, height) {
       var p = d.p;
       var px = p.x * fieldW;
       var py = (d.losY + p.y - topYard) * YPX;
-      c.font = "700 " + (p.star ? 10 : 8) + "px 'Teko'";
+      c.font = "700 11px 'Teko'";
       c.fillStyle = 'rgba(0,0,0,0.8)';
       c.textAlign = 'center';
       c.textBaseline = 'middle';
