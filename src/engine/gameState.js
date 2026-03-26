@@ -161,6 +161,169 @@ export class GameState {
     return { returnTD: false, startYard: ownYardLine };
   }
 
+  /** Resolve a punt from current field position. Returns { netYards, result, label } */
+  punt() {
+    // Gross distance distribution (~42 yd average)
+    var GROSS = [
+      { min: 25, max: 34, weight: 10 },
+      { min: 35, max: 39, weight: 20 },
+      { min: 40, max: 44, weight: 35 },
+      { min: 45, max: 49, weight: 25 },
+      { min: 50, max: 58, weight: 10 },
+    ];
+    var RETURN = [
+      { ret: 0, weight: 40, label: 'Fair catch' },
+      { ret: 8, weight: 35, label: 'Short return' },
+      { ret: 19, weight: 20, label: 'Decent return' },
+      { ret: 35, weight: 5, label: 'Big return' },
+    ];
+
+    // Roll gross
+    var total = GROSS.reduce(function(s, g) { return s + g.weight; }, 0);
+    var r = Math.random() * total;
+    var gross = 42;
+    for (var i = 0; i < GROSS.length; i++) {
+      r -= GROSS[i].weight;
+      if (r <= 0) { gross = GROSS[i].min + Math.floor(Math.random() * (GROSS[i].max - GROSS[i].min + 1)); break; }
+    }
+
+    // Landing spot (in 0-100 coordinates)
+    var landingYdsToEz = Math.max(0, this.yardsToEndzone() - gross);
+    // Touchback check if landing inside opponent's 10
+    var isTouchback = false;
+    if (landingYdsToEz < 10 && Math.random() < 0.6) {
+      isTouchback = true;
+    }
+
+    // Return yards
+    var retYards = 0;
+    var retLabel = 'Fair catch';
+    if (!isTouchback) {
+      var rt = Math.random() * 100;
+      for (var j = 0; j < RETURN.length; j++) {
+        rt -= RETURN[j].weight;
+        if (rt <= 0) {
+          retYards = RETURN[j].ret + Math.floor(Math.random() * 5 - 2);
+          retLabel = RETURN[j].label;
+          break;
+        }
+      }
+    }
+
+    // Calculate new ball position for receiving team
+    var receiverYdsFromOwnEz;
+    if (isTouchback) {
+      receiverYdsFromOwnEz = 25;
+    } else {
+      receiverYdsFromOwnEz = Math.max(5, landingYdsToEz + retYards);
+      // Cap: can't return past midfield easily
+      receiverYdsFromOwnEz = Math.min(50, receiverYdsFromOwnEz);
+    }
+
+    // Convert to 0-100 coordinate for new possessing team
+    var newPoss = this.possession === 'CT' ? 'IR' : 'CT';
+    var newBallPos = newPoss === 'CT' ? receiverYdsFromOwnEz : 100 - receiverYdsFromOwnEz;
+
+    var netYards = gross - retYards;
+    var label = isTouchback ? 'Punt — ' + gross + ' yards — Touchback' : 'Punt — ' + gross + ' yards — ' + retLabel + ' to the ' + receiverYdsFromOwnEz;
+
+    this.totalPlays++;
+    if (!this.twoMinActive) this.playsUsed++;
+    this.flipPossession(newBallPos);
+    this._checkHalfEnd();
+
+    return { gross: gross, netYards: netYards, isTouchback: isTouchback, retLabel: retLabel, label: label, newBallPos: receiverYdsFromOwnEz };
+  }
+
+  /** Attempt a field goal. Returns { made, distance, label } */
+  attemptFieldGoal() {
+    var ydsToEz = this.yardsToEndzone();
+    var fgDist = ydsToEz + 17; // 10yd endzone + 7yd snap
+
+    // Make rates by distance
+    var makePercent;
+    if (fgDist <= 29) makePercent = 88;
+    else if (fgDist <= 39) makePercent = 80;
+    else if (fgDist <= 49) makePercent = 68;
+    else makePercent = 50;
+
+    // Difficulty mod for AI kicks
+    var diffMod = { EASY: -5, MEDIUM: 0, HARD: 8 }[this.difficulty] || 0;
+    var sides = this.getCurrentSides();
+    if (!sides.offenseIsHuman) makePercent += diffMod;
+
+    var made = Math.random() * 100 < makePercent;
+
+    this.totalPlays++;
+    if (!this.twoMinActive) this.playsUsed++;
+
+    if (made) {
+      // Award 3 points
+      if (this.possession === 'CT') this.ctScore += 3;
+      else this.irScore += 3;
+      var label = fgDist + '-yard field goal is GOOD! +3';
+      this.kickoffFlip();
+      this._checkHalfEnd();
+      return { made: true, distance: fgDist, label: label };
+    } else {
+      // Missed: opponent gets ball at LOS or the 20, whichever is farther from their endzone
+      var losYds = 100 - ydsToEz; // LOS in terms of opponent's yards from own EZ
+      var spotYds = Math.max(20, losYds);
+      var newPoss = this.possession === 'CT' ? 'IR' : 'CT';
+      var newBallPos = newPoss === 'CT' ? spotYds : 100 - spotYds;
+      var label2 = fgDist + '-yard field goal NO GOOD!';
+      this.flipPossession(newBallPos);
+      this._checkHalfEnd();
+      return { made: false, distance: fgDist, label: label2 };
+    }
+  }
+
+  /** Check if the team can punt/FG (past the 50 into opponent territory) */
+  canSpecialTeams() {
+    return this.yardsToEndzone() <= 50;
+  }
+
+  /** Check if field goal is in range (max 50-yard FG) */
+  canAttemptFG() {
+    return this.canSpecialTeams() && (this.yardsToEndzone() + 17) <= 50;
+  }
+
+  /** AI 4th down decision */
+  ai4thDownDecision() {
+    var dist = this.distance;
+    var ydsToEz = this.yardsToEndzone();
+    var scoreDiff = this.possession === 'CT' ? this.ctScore - this.irScore : this.irScore - this.ctScore;
+    var desperate = scoreDiff <= -14 && this.twoMinActive;
+    var aggMod = { EASY: -15, MEDIUM: 0, HARD: 15 }[this.difficulty] || 0;
+
+    // Must go for it in own territory
+    if (!this.canSpecialTeams()) return 'go_for_it';
+
+    // Always go for it: short yardage, desperate, or inside the 5
+    if (dist <= 2) return 'go_for_it';
+    if (desperate) return 'go_for_it';
+    if (ydsToEz <= 5) return 'go_for_it';
+
+    // FG range decisions
+    if (this.canAttemptFG() && dist >= 6) {
+      if (Math.random() * 100 < 85 + aggMod) return 'field_goal';
+    }
+
+    // Medium distance (3-5 yards)
+    if (dist >= 3 && dist <= 5) {
+      if (Math.random() * 100 < 65 + aggMod) return 'go_for_it';
+      return 'punt';
+    }
+
+    // Long distance (6+), outside FG range
+    if (dist >= 6 && !this.canAttemptFG()) {
+      if (Math.random() * 100 < 80 - aggMod) return 'punt';
+      return 'go_for_it';
+    }
+
+    return 'go_for_it';
+  }
+
   /** Flip possession after score/turnover/failed 4th */
   flipPossession(newBallPos) {
     this.possession = this.possession === 'CT' ? 'IR' : 'CT';

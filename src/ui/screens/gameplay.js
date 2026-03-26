@@ -1882,32 +1882,116 @@ export function buildGameplay() {
     }
     panel.appendChild(tray);
 
-    // ── TEACH TOOLTIPS (first game only) ──
+    // ── SPIKE/KNEEL — always visible during 2-min drill on offense, regardless of phase ──
+    if (gs.twoMinActive && isOff && phase !== 'busy') {
+      var clockBtns = document.createElement('div');
+      clockBtns.style.cssText = 'display:flex;gap:6px;padding:4px 8px;flex-shrink:0;';
+      var spk = document.createElement('button'); spk.className = 'T-2btn T-spike'; spk.textContent = 'SPIKE';
+      spk.style.cssText += 'flex:1;';
+      spk.onclick = function() {
+        SND.click();
+        var spikeResult = gs.spike();
+        stop2MinClock();
+        // Log spike in drive summary
+        driveSummaryLog.push({ down: gs.down - 1, dist: gs.distance, playName: 'SPIKE — clock stopped', yards: 0, isUserOff: true });
+        selP = null; selPl = null; phase = 'play';
+        drawBug(); drawField(); drawDriveSummary();
+        setNarr('Ball spiked. Clock stopped.', fmtClock(Math.max(0, gs.clockSeconds)) + ' left');
+        if (!checkEnd()) drawPanel();
+      };
+      clockBtns.appendChild(spk);
+      var hS = hAbbr === 'CT' ? gs.ctScore : gs.irScore;
+      var cS = hAbbr === 'CT' ? gs.irScore : gs.ctScore;
+      if (hS > cS) {
+        var kn = document.createElement('button'); kn.className = 'T-2btn T-kneel'; kn.textContent = 'KNEEL';
+        kn.style.cssText += 'flex:1;';
+        kn.onclick = function() {
+          SND.click();
+          gs.kneel();
+          driveSummaryLog.push({ down: gs.down - 1, dist: gs.distance, playName: 'KNEEL — clock running', yards: 0, isUserOff: true });
+          selP = null; selPl = null; phase = 'play';
+          drawBug(); drawField(); drawDriveSummary();
+          setNarr('QB kneels.', fmtClock(Math.max(0, gs.clockSeconds)) + ' left');
+          if (!checkEnd()) drawPanel();
+        };
+        clockBtns.appendChild(kn);
+      }
+      panel.appendChild(clockBtns);
+    }
 
     // Snap bar — only appears when both cards placed
     if (phase === 'ready') {
-      const sz = document.createElement('div'); sz.className = 'T-snap';
+      var sz = document.createElement('div'); sz.className = 'T-snap';
 
-      if (gs.twoMinActive && isOff) {
-        const btns = document.createElement('div'); btns.className = 'T-2btns';
-        const spk = document.createElement('button'); spk.className = 'T-2btn T-spike'; spk.textContent = 'SPIKE';
-        spk.onclick = () => { SND.click(); gs.spike(); selP=null;selPl=null;phase='play'; drawBug();drawField(); setNarr('Ball spiked.',fmtClock(Math.max(0,gs.clockSeconds))+' left'); if(!checkEnd()) drawPanel(); };
-        btns.appendChild(spk);
-        const hS = hAbbr==='CT'?gs.ctScore:gs.irScore, cS = hAbbr==='CT'?gs.irScore:gs.ctScore;
-        if (hS > cS) {
-          const kn = document.createElement('button'); kn.className = 'T-2btn T-kneel'; kn.textContent = 'KNEEL';
-          kn.onclick = () => { SND.click(); gs.kneel(); selP=null;selPl=null;phase='play'; drawBug();drawField(); setNarr('QB kneels.',fmtClock(Math.max(0,gs.clockSeconds))+' left'); if(!checkEnd()) drawPanel(); };
-          btns.appendChild(kn);
+      // 4th down decision UI (only when player is on offense past the 50)
+      if (gs.down === 4 && isOff && gs.canSpecialTeams() && !conversionMode) {
+        var fourthBar = document.createElement('div');
+        fourthBar.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;';
+
+        // GO FOR IT (always available)
+        var goForIt = document.createElement('button');
+        goForIt.className = 'btn-blitz';
+        goForIt.style.cssText = 'flex:1;font-size:11px;padding:10px 6px;background:#141008;color:#00ff44;border-color:#00ff44;';
+        goForIt.textContent = 'GO FOR IT';
+        goForIt.onclick = function() { SND.snap(); doSnap(); };
+        fourthBar.appendChild(goForIt);
+
+        // PUNT (always available past 50)
+        var puntBtn = document.createElement('button');
+        puntBtn.className = 'btn-blitz';
+        puntBtn.style.cssText = 'flex:1;font-size:11px;padding:10px 6px;background:#141008;color:#4DA6FF;border-color:#4DA6FF;';
+        puntBtn.textContent = 'PUNT';
+        puntBtn.onclick = function() {
+          SND.snap();
+          phase = 'busy';
+          var puntResult = gs.punt();
+          driveSummaryLog.push({ down: 4, dist: gs.distance, playName: puntResult.label, yards: 0, isUserOff: true });
+          showSpecialTeamsResult(puntResult.label, '#4DA6FF', function() {
+            driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
+            showPossCut('punt', function() { if (!checkEnd()) nextSnap(); });
+          });
+        };
+        fourthBar.appendChild(puntBtn);
+
+        // FIELD GOAL (only in range)
+        var fgBtn = document.createElement('button');
+        fgBtn.className = 'btn-blitz';
+        if (gs.canAttemptFG()) {
+          var fgDist = gs.yardsToEndzone() + 17;
+          fgBtn.style.cssText = 'flex:1;font-size:11px;padding:10px 6px;background:#141008;color:#EBB010;border-color:#EBB010;';
+          fgBtn.textContent = 'FG (' + fgDist + ' YD)';
+          fgBtn.onclick = function() {
+            SND.snap();
+            phase = 'busy';
+            var fgResult = gs.attemptFieldGoal();
+            driveSummaryLog.push({ down: 4, dist: gs.distance, playName: fgResult.label, yards: 0, isTD: false, isUserOff: true });
+            var fgColor = fgResult.made ? '#00ff44' : '#e03050';
+            showSpecialTeamsResult(fgResult.label, fgColor, function() {
+              driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
+              if (fgResult.made) {
+                showPossCut('score', function() { if (!checkEnd()) nextSnap(); });
+              } else {
+                showPossCut('missed_fg', function() { if (!checkEnd()) nextSnap(); });
+              }
+            });
+          };
+        } else {
+          fgBtn.style.cssText = 'flex:1;font-size:9px;padding:10px 6px;background:#0a0a0a;color:#444;border-color:#333;cursor:not-allowed;';
+          fgBtn.textContent = 'OUT OF RANGE';
+          fgBtn.disabled = true;
         }
-        sz.appendChild(btns);
-      }
+        fourthBar.appendChild(fgBtn);
 
-      const go = document.createElement('button');
-      go.className = 'btn-blitz';
-      go.style.cssText = 'background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;font-size:16px;animation:T-pulse 1.8s ease-in-out infinite;';
-      go.textContent = conversionMode ? 'ATTEMPT' : 'SNAP';
-      go.onclick = conversionMode ? () => { SND.snap(); doConversionSnap(); } : () => { SND.snap(); doSnap(); };
-      sz.appendChild(go);
+        sz.appendChild(fourthBar);
+      } else {
+        // Normal SNAP button
+        var go = document.createElement('button');
+        go.className = 'btn-blitz';
+        go.style.cssText = 'background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;font-size:16px;animation:T-pulse 1.8s ease-in-out infinite;';
+        go.textContent = conversionMode ? 'ATTEMPT' : 'SNAP';
+        go.onclick = conversionMode ? function() { SND.snap(); doConversionSnap(); } : function() { SND.snap(); doSnap(); };
+        sz.appendChild(go);
+      }
       panel.appendChild(sz);
     }
   }
@@ -1915,8 +1999,35 @@ export function buildGameplay() {
   // ── SNAP ──
   function doSnap() {
     phase = 'busy';
-    const isOff = gs.possession === hAbbr;
-    const prevPoss = gs.possession;
+    // Restart real-time clock if it was stopped (spike/incomplete/out of bounds)
+    if (gs.twoMinActive && !twoMinTimer) start2MinClock();
+
+    var isOff = gs.possession === hAbbr;
+
+    // AI 4th down decision — user is on defense, AI has 4th down
+    if (!isOff && gs.down === 4 && !conversionMode) {
+      var aiDecision = gs.ai4thDownDecision();
+      if (aiDecision === 'punt') {
+        var puntResult = gs.punt();
+        showSpecialTeamsResult('OPPONENT PUNTS\n' + puntResult.label, '#4DA6FF', function() {
+          driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
+          showPossCut('punt', function() { if (!checkEnd()) nextSnap(); });
+        });
+        return;
+      }
+      if (aiDecision === 'field_goal') {
+        var fgResult = gs.attemptFieldGoal();
+        var fgColor = fgResult.made ? '#e03050' : '#00ff44'; // bad for user if made, good if missed
+        showSpecialTeamsResult('OPPONENT ATTEMPTS ' + fgResult.distance + '-YARD FIELD GOAL\n' + (fgResult.made ? 'IT\'S GOOD! +3' : 'NO GOOD!'), fgColor, function() {
+          driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
+          showPossCut(fgResult.made ? 'score' : 'missed_fg', function() { if (!checkEnd()) nextSnap(); });
+        });
+        return;
+      }
+      // else: go_for_it — proceed with normal snap
+    }
+
+    var prevPoss = gs.possession;
     const preSnap = gs.getSummary();
     var offCard = isOff ? selTorch : null;
     var defCard = isOff ? null : selTorch;
@@ -2167,6 +2278,11 @@ export function buildGameplay() {
     // Check star activation
     var wasOffHot = offStarHot, wasDefHot = defStarHot;
     checkStarActivation(res);
+
+    // Stop real-time clock on clock-stopping plays (incomplete, spike already handled, turnovers)
+    if (gs.twoMinActive && res.result && (res.result.isIncomplete || res.result.isInterception || res.result.isFumbleLost || res.result.isTouchdown)) {
+      stop2MinClock();
+    }
 
     run3BeatSnap(res, prevPoss, wasOffHot, wasDefHot);
   }
@@ -2658,7 +2774,7 @@ export function buildGameplay() {
 
   // ── POSSESSION CUT ──
   function posChanged(ev, prev) {
-    if (ev && ['interception','fumble_lost','turnover_on_downs','safety','turnover_td'].includes(ev)) return true;
+    if (ev && ['interception','fumble_lost','turnover_on_downs','safety','turnover_td','punt','missed_fg'].includes(ev)) return true;
     return gs.possession !== prev;
   }
 
@@ -2687,12 +2803,16 @@ export function buildGameplay() {
       if (ev === 'interception') { title = 'PICKED OFF!'; subtitle = newPossTeam.name + ' ball!'; }
       else if (ev === 'fumble_lost') { title = 'FUMBLE RECOVERY!'; subtitle = newPossTeam.name + ' ball!'; }
       else if (ev === 'turnover_on_downs') { title = 'DEFENSE HOLDS!'; subtitle = 'Stopped on 4th down.'; }
+      else if (ev === 'punt') { title = newPossTeam.name.toUpperCase() + ' BALL!'; subtitle = 'After the punt.'; }
+      else if (ev === 'missed_fg') { title = 'NO GOOD!'; subtitle = 'Missed field goal. ' + newPossTeam.name + ' ball!'; }
       else if (ev === 'safety') { title = 'SAFETY!'; subtitle = newPossTeam.name + ' gets the ball back!'; }
       else { title = newPossTeam.name.toUpperCase() + ' BALL!'; subtitle = 'New drive.'; }
     } else {
       if (ev === 'interception') { title = 'TURNOVER'; subtitle = otherTeam.name + ' intercepts.'; }
       else if (ev === 'fumble_lost') { title = 'TURNOVER'; subtitle = 'Fumble. ' + otherTeam.name + ' recovers.'; }
       else if (ev === 'turnover_on_downs') { title = 'TURNOVER ON DOWNS'; subtitle = 'Failed to convert.'; }
+      else if (ev === 'punt') { title = 'PUNT'; subtitle = newPossTeam.name + ' ball.'; }
+      else if (ev === 'missed_fg') { title = 'FIELD GOAL GOOD'; subtitle = newPossTeam.name + ' ball.'; }
       else if (ev === 'touchdown' || ev === 'turnover_td' || ev === 'score') { title = 'NEW DRIVE'; subtitle = newPossTeam.name + ' ball.'; }
       else { title = 'CHANGE OF POSSESSION'; subtitle = newPossTeam.name + ' ball.'; }
     }
@@ -3218,6 +3338,18 @@ export function buildGameplay() {
       ov.appendChild(continueBtn);
       setTimeout(function() { continueBtn.style.opacity = '1'; }, 1500);
     }, 1500);
+  }
+
+  // Special teams result overlay (punt, FG, kickoff)
+  function showSpecialTeamsResult(text, color, onDone) {
+    var stOv = document.createElement('div');
+    stOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.85);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;';
+    stOv.innerHTML =
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + color + ";letter-spacing:3px;text-align:center;max-width:320px;text-shadow:0 0 20px " + color + "40;\">" + text + "</div>";
+    stOv.onclick = function() { stOv.style.opacity = '0'; setTimeout(function() { stOv.remove(); if (onDone) onDone(); }, 200); };
+    el.appendChild(stOv);
+    requestAnimationFrame(function() { stOv.style.opacity = '1'; });
+    setTimeout(function() { if (stOv.parentNode) { stOv.style.opacity = '0'; setTimeout(function() { stOv.remove(); if (onDone) onDone(); }, 200); } }, 2500);
   }
 
   // Brief kickoff result overlay
