@@ -82,6 +82,11 @@ export function injectDevPanel(el, gs, callbacks) {
   html += section('GAME FLOW');
   html += btn('Replay Coin Toss', 'dev-coin-toss', '#EBB010');
   html += btn('Force Kickoff', 'dev-kickoff', '#EBB010');
+  html += btn('Jump to Halftime', 'dev-halftime', '#FF6B00');
+  html += btn('Jump to 2-Min Drill', 'dev-2min', '#e03050');
+  html += btn('Jump to 4th Down (past 50)', 'dev-4th-past50', '#EBB010');
+  html += btn('Jump to 4th Down (own territory)', 'dev-4th-own', '#888');
+  html += btn('Force End Game', 'dev-endgame', '#e03050');
 
   // ── FORCE RESULT ──
   html += section('FORCE NEXT RESULT');
@@ -145,6 +150,31 @@ export function injectDevPanel(el, gs, callbacks) {
 
     if (id === 'dev-coin-toss' && callbacks.showCoinToss) callbacks.showCoinToss();
     if (id === 'dev-kickoff' && callbacks.showKickoff) callbacks.showKickoff();
+    if (id === 'dev-halftime') {
+      gs.needsHalftime = true;
+      gs.half = 1;
+      setGs(function(s) { return Object.assign({}, s, { screen: 'halftime' }); });
+    }
+    if (id === 'dev-2min') {
+      gs.playsUsed = gs.playsPerHalf;
+      gs.twoMinActive = true;
+      gs.clockSeconds = 120;
+      if (callbacks.refresh) callbacks.refresh();
+    }
+    if (id === 'dev-4th-past50') {
+      gs.down = 4; gs.distance = 5;
+      gs.ballPosition = gs.possession === 'CT' ? 72 : 28; // opponent's 28
+      if (callbacks.refresh) callbacks.refresh();
+    }
+    if (id === 'dev-4th-own') {
+      gs.down = 4; gs.distance = 8;
+      gs.ballPosition = gs.possession === 'CT' ? 35 : 65; // own 35
+      if (callbacks.refresh) callbacks.refresh();
+    }
+    if (id === 'dev-endgame') {
+      gs.gameOver = true;
+      setGs(function(s) { return Object.assign({}, s, { screen: 'end_game', finalEngine: gs, humanAbbr: 'CT' }); });
+    }
 
     if (id === 'dev-bronze') giveTorchCards(gs, 'BRONZE', callbacks);
     if (id === 'dev-silver') giveTorchCards(gs, 'SILVER', callbacks);

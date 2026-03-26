@@ -218,7 +218,7 @@ export function buildTeamSelect() {
       difficulty: difficulty,
       opponent: opponentId,
       humanReceives: humanReceives,
-      _coinTossDone: true,
+      _coinTossDone: false,
       offRoster: getOffenseRoster(selectedTeamId).slice(0, 4).map(function(p) { return p.id; }),
       defRoster: getDefenseRoster(selectedTeamId).slice(0, 4).map(function(p) { return p.id; }),
       offHand: getOffCards(selectedTeamId).slice(0, 4),
@@ -415,7 +415,7 @@ function startSelectionAnimation(container, teamId, team, isFirst) {
         difficulty: difficulty,
         opponent: opponentId,
         humanReceives: humanReceives,
-        _coinTossDone: true,
+        _coinTossDone: false,
         // Pre-populate roster/hand data for gameplay
         offRoster: offRoster.slice(0, 4).map(function(p) { return p.id; }),
         defRoster: defRoster.slice(0, 4).map(function(p) { return p.id; }),

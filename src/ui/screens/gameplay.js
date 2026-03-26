@@ -2954,20 +2954,33 @@ export function buildGameplay() {
     el.appendChild(ov);
     requestAnimationFrame(function() { ov.style.opacity = '1'; });
 
-    // Phase 1: Tap to flip
+    // Phase 1: Tap to flip — 3D coin with team logos on each side
     var coin = document.createElement('div');
-    coin.style.cssText = 'width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#EBB010,#B8860B);display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px rgba(235,176,16,0.4);cursor:pointer;transition:transform 0.1s;';
-    coin.innerHTML = renderTeamBadge(GS.team, 60);
+    coin.style.cssText = 'width:100px;height:100px;perspective:400px;cursor:pointer;';
+    var coinInner = document.createElement('div');
+    coinInner.style.cssText = 'width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 1.5s cubic-bezier(0.22,1,0.36,1);';
+    // Front: user's team
+    var coinFront = document.createElement('div');
+    coinFront.style.cssText = 'position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,#EBB010,#B8860B);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;box-shadow:0 0 30px rgba(235,176,16,0.4);';
+    coinFront.innerHTML = renderTeamBadge(GS.team, 70);
+    // Back: opponent's team
+    var coinBack = document.createElement('div');
+    coinBack.style.cssText = 'position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,#B8860B,#EBB010);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 30px rgba(235,176,16,0.4);';
+    coinBack.innerHTML = renderTeamBadge(GS.opponent, 70);
+    coinInner.appendChild(coinFront);
+    coinInner.appendChild(coinBack);
+    coin.appendChild(coinInner);
     var label = document.createElement('div');
-    label.style.cssText = "font-family:'Teko';font-weight:700;font-size:22px;color:#EBB010;letter-spacing:3px;";
+    label.style.cssText = "font-family:'Teko';font-weight:700;font-size:22px;color:#EBB010;letter-spacing:3px;margin-top:8px;";
     label.textContent = 'TAP TO FLIP';
     ov.appendChild(coin);
     ov.appendChild(label);
 
     coin.onclick = function() {
       coin.onclick = null;
-      coin.style.transition = 'transform 1.5s cubic-bezier(0.22,1,0.36,1)';
-      coin.style.transform = 'rotateY(1800deg)';
+      // Land on winner's side: even rotations = front (human), odd half = back (opponent)
+      var rotations = humanWins ? 1800 : 1980; // 1800 = 5 full turns (front), 1980 = 5.5 turns (back)
+      coinInner.style.transform = 'rotateY(' + rotations + 'deg)';
       label.textContent = '';
       SND.snap();
 
@@ -3008,32 +3021,23 @@ export function buildGameplay() {
           // CPU won — AI chooses (weighted by difficulty)
           var aiTakesCard = Math.random() < ({ EASY: 0.6, MEDIUM: 0.5, HARD: 0.4 }[gs.difficulty] || 0.5);
           var aiMsg = document.createElement('div');
-          aiMsg.style.cssText = "font-family:'Rajdhani';font-size:14px;color:#888;text-align:center;margin-top:8px;";
-          if (aiTakesCard) {
-            aiMsg.textContent = oTeam.name + ' draws a Torch Card. You receive.';
-            // Give AI a card
-            var aiCard = offers[Math.floor(Math.random() * offers.length)];
-            gs.cpuTorchCards.push(aiCard.id);
-          } else {
-            aiMsg.textContent = oTeam.name + ' receives the kick. You draw a card.';
-          }
+          aiMsg.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:#888;text-align:center;margin-top:8px;letter-spacing:1px;";
+          aiMsg.textContent = aiTakesCard
+            ? oTeam.name + ' CHOOSES TO DRAW A TORCH CARD'
+            : oTeam.name + ' CHOOSES TO RECEIVE';
           ov.appendChild(aiMsg);
 
           setTimeout(function() {
             if (!aiTakesCard) {
-              // Human gets to pick a face-down card
-              showFaceDownCards(ov, offers, false, onDone);
+              // AI receives, human gets a card
+              var youGet = document.createElement('div');
+              youGet.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;text-align:center;margin-top:8px;";
+              youGet.textContent = 'YOU DRAW A TORCH CARD';
+              ov.appendChild(youGet);
+              setTimeout(function() { showFaceDownCards(ov, offers, false, onDone); }, 800);
             } else {
-              var playBtn = document.createElement('button');
-              playBtn.className = 'btn-blitz';
-              playBtn.style.cssText = "width:80%;max-width:300px;font-size:16px;background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;letter-spacing:3px;margin-top:12px;";
-              playBtn.textContent = 'PLAY BALL';
-              playBtn.onclick = function() {
-                SND.snap();
-                ov.style.opacity = '0';
-                setTimeout(function() { ov.remove(); onDone({ chose: 'receive' }); }, 250);
-              };
-              ov.appendChild(playBtn);
+              // AI draws — show the same face-down interface, AI auto-picks after 1.5s
+              showAICardPick(ov, offers, onDone);
             }
           }, 1500);
         }
@@ -3045,56 +3049,175 @@ export function buildGameplay() {
   function showFaceDownCards(ov, offers, humanKicks, onDone) {
     ov.innerHTML = '';
     var title = document.createElement('div');
-    title.style.cssText = "font-family:'Teko';font-weight:700;font-size:22px;color:#EBB010;letter-spacing:3px;text-align:center;";
+    title.style.cssText = "font-family:'Teko';font-weight:700;font-size:24px;color:#EBB010;letter-spacing:3px;text-align:center;";
     title.textContent = 'TAP A CARD TO REVEAL';
     ov.appendChild(title);
 
+    var subtitle = document.createElement('div');
+    subtitle.style.cssText = "font-family:'Rajdhani';font-size:12px;color:#888;text-align:center;margin-top:4px;max-width:280px;";
+    subtitle.textContent = 'Torch cards give you an edge on any snap. Use them wisely \u2014 they cost TORCH points to buy more.';
+    ov.appendChild(subtitle);
+
     var cardRow = document.createElement('div');
-    cardRow.style.cssText = 'display:flex;gap:10px;justify-content:center;margin-top:16px;';
+    cardRow.style.cssText = 'display:flex;gap:12px;justify-content:center;margin-top:20px;';
 
     offers.forEach(function(card, idx) {
       var wrap = document.createElement('div');
-      wrap.style.cssText = 'width:90px;height:126px;border-radius:8px;background:radial-gradient(ellipse at 50% 35%,#1a0800,#0A0804);border:2px solid #EBB01044;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s;opacity:0;transform:translateY(20px);';
-      wrap.innerHTML = "<div style=\"font-family:'Teko';font-size:36px;color:#EBB01044;\">?</div>";
-      // Stagger deal-in
-      setTimeout(function() { wrap.style.opacity = '1'; wrap.style.transform = 'translateY(0)'; }, 200 + idx * 100);
+      wrap.style.cssText = 'width:100px;height:140px;border-radius:10px;background:linear-gradient(135deg,#1a1208,#0E0A04);border:2px solid #EBB01033;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.4s;opacity:0;transform:translateY(30px) scale(0.9);box-shadow:0 4px 16px rgba(0,0,0,0.5);';
+      wrap.innerHTML = "<div style=\"font-family:'Teko';font-size:42px;color:#EBB01055;\">?</div>";
+      setTimeout(function() { wrap.style.opacity = '1'; wrap.style.transform = 'translateY(0) scale(1)'; }, 300 + idx * 150);
 
       wrap.onclick = function() {
-        // Reveal this card, fade others
         cardRow.querySelectorAll('div').forEach(function(c) { c.onclick = null; });
-        wrap.style.border = '2px solid #EBB010';
-        wrap.style.boxShadow = '0 0 20px rgba(235,176,16,0.4)';
-        wrap.style.transform = 'scale(1.05)';
-        wrap.innerHTML = '';
-        var revealed = buildTorchCard(card, 86, 120);
-        revealed.style.width = '100%';
-        revealed.style.height = '100%';
-        wrap.appendChild(revealed);
         SND.snap();
 
         // Fade non-selected
         cardRow.querySelectorAll('div').forEach(function(c) {
-          if (c !== wrap) c.style.opacity = '0.2';
+          if (c !== wrap) { c.style.opacity = '0.15'; c.style.transform = 'scale(0.9)'; }
         });
+
+        // Flip animation: shrink → swap content → expand
+        wrap.style.transform = 'scale(0.8) rotateY(90deg)';
+        wrap.style.borderColor = '#EBB010';
+
+        setTimeout(function() {
+          // Replace with revealed card
+          wrap.innerHTML = '';
+          wrap.style.width = '120px';
+          wrap.style.height = '168px';
+          wrap.style.background = 'transparent';
+          wrap.style.border = 'none';
+          wrap.style.boxShadow = '0 0 30px rgba(235,176,16,0.4)';
+          var revealed = buildTorchCard(card, 120, 168);
+          wrap.appendChild(revealed);
+          wrap.style.transform = 'scale(1.08) rotateY(0deg)';
+        }, 300);
+
+        // Show card name + effect below
+        setTimeout(function() {
+          var tierColors = { GOLD: '#EBB010', SILVER: '#C0C0C0', BRONZE: '#CD7F32' };
+          var tierCol = tierColors[card.tier] || '#EBB010';
+          var info = document.createElement('div');
+          info.style.cssText = 'text-align:center;margin-top:16px;opacity:0;transform:translateY(10px);transition:opacity 0.4s,transform 0.4s;';
+          info.innerHTML =
+            "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:" + tierCol + ";letter-spacing:2px;\">" + card.tier + "</div>" +
+            "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:#fff;letter-spacing:2px;margin-top:2px;\">" + card.name + "</div>" +
+            "<div style=\"font-family:'Rajdhani';font-size:13px;color:#ccc;margin-top:4px;max-width:260px;line-height:1.4;\">" + card.effect + "</div>";
+          ov.appendChild(info);
+          requestAnimationFrame(function() { info.style.opacity = '1'; info.style.transform = 'translateY(0)'; });
+        }, 600);
 
         // Award card to human
         if (gs.humanTorchCards.length < 3) gs.humanTorchCards.push(card.id);
-        // Sync to torchInventory
         var cardObj = TORCH_CARDS.find(function(tc) { return tc.id === card.id; });
         if (cardObj) torchInventory.push(cardObj);
         if (GS.season) GS.season.torchCards = torchInventory.slice();
 
-        setTimeout(function() {
+        // Hold for 3 seconds so player can read, then continue
+        var continueBtn = document.createElement('button');
+        continueBtn.className = 'btn-blitz';
+        continueBtn.style.cssText = "width:80%;max-width:280px;font-size:14px;background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;letter-spacing:3px;margin-top:20px;opacity:0;transition:opacity 0.3s;";
+        continueBtn.textContent = 'CONTINUE';
+        continueBtn.onclick = function() {
           ov.style.opacity = '0';
           setTimeout(function() {
             ov.remove();
             onDone({ chose: humanKicks ? 'card' : 'card_cpu_receives', card: card });
           }, 250);
-        }, 1200);
+        };
+        ov.appendChild(continueBtn);
+        setTimeout(function() { continueBtn.style.opacity = '1'; }, 1500);
       };
       cardRow.appendChild(wrap);
     });
     ov.appendChild(cardRow);
+  }
+
+  // AI picks a face-down card — same visual as human but auto-selects
+  function showAICardPick(ov, offers, onDone) {
+    ov.innerHTML = '';
+    var title = document.createElement('div');
+    title.style.cssText = "font-family:'Teko';font-weight:700;font-size:22px;color:" + oTeam.accent + ";letter-spacing:3px;text-align:center;";
+    title.textContent = oTeam.name + ' IS CHOOSING...';
+    ov.appendChild(title);
+
+    var subtitle = document.createElement('div');
+    subtitle.style.cssText = "font-family:'Rajdhani';font-size:12px;color:#888;text-align:center;margin-top:4px;max-width:280px;";
+    subtitle.textContent = 'Torch cards give you an edge on any snap. Use them wisely \u2014 they cost TORCH points to buy more.';
+    ov.appendChild(subtitle);
+
+    var cardRow = document.createElement('div');
+    cardRow.style.cssText = 'display:flex;gap:12px;justify-content:center;margin-top:20px;';
+    var wraps = [];
+
+    offers.forEach(function(card, idx) {
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'width:100px;height:140px;border-radius:10px;background:linear-gradient(135deg,#1a1208,#0E0A04);border:2px solid ' + oTeam.accent + '33;display:flex;align-items:center;justify-content:center;transition:all 0.4s;opacity:0;transform:translateY(30px) scale(0.9);box-shadow:0 4px 16px rgba(0,0,0,0.5);';
+      wrap.innerHTML = "<div style=\"font-family:'Teko';font-size:42px;color:" + oTeam.accent + "55;\">?</div>";
+      setTimeout(function() { wrap.style.opacity = '1'; wrap.style.transform = 'translateY(0) scale(1)'; }, 300 + idx * 150);
+      wraps.push(wrap);
+      cardRow.appendChild(wrap);
+    });
+    ov.appendChild(cardRow);
+
+    // AI auto-picks after 1.5s
+    var pickIdx = Math.floor(Math.random() * offers.length);
+    var pickedCard = offers[pickIdx];
+
+    setTimeout(function() {
+      var picked = wraps[pickIdx];
+      // Fade others
+      wraps.forEach(function(w, i) {
+        if (i !== pickIdx) { w.style.opacity = '0.15'; w.style.transform = 'scale(0.9)'; }
+      });
+
+      // Flip picked card
+      picked.style.transform = 'scale(0.8) rotateY(90deg)';
+      picked.style.borderColor = oTeam.accent;
+
+      setTimeout(function() {
+        picked.innerHTML = '';
+        picked.style.width = '120px';
+        picked.style.height = '168px';
+        picked.style.background = 'transparent';
+        picked.style.border = 'none';
+        picked.style.boxShadow = '0 0 30px ' + oTeam.accent + '66';
+        var revealed = buildTorchCard(pickedCard, 120, 168);
+        picked.appendChild(revealed);
+        picked.style.transform = 'scale(1.08) rotateY(0deg)';
+        SND.snap();
+      }, 300);
+
+      // Show card info
+      setTimeout(function() {
+        title.textContent = oTeam.name + ' DREW:';
+        var tierColors = { GOLD: '#EBB010', SILVER: '#C0C0C0', BRONZE: '#CD7F32' };
+        var tierCol = tierColors[pickedCard.tier] || '#EBB010';
+        var info = document.createElement('div');
+        info.style.cssText = 'text-align:center;margin-top:16px;opacity:0;transform:translateY(10px);transition:opacity 0.4s,transform 0.4s;';
+        info.innerHTML =
+          "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:" + tierCol + ";letter-spacing:2px;\">" + pickedCard.tier + "</div>" +
+          "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:#fff;letter-spacing:2px;margin-top:2px;\">" + pickedCard.name + "</div>" +
+          "<div style=\"font-family:'Rajdhani';font-size:13px;color:#ccc;margin-top:4px;max-width:260px;line-height:1.4;\">" + pickedCard.effect + "</div>";
+        ov.appendChild(info);
+        requestAnimationFrame(function() { info.style.opacity = '1'; info.style.transform = 'translateY(0)'; });
+      }, 600);
+
+      // Give AI the card
+      gs.cpuTorchCards.push(pickedCard.id);
+
+      // Continue button
+      var continueBtn = document.createElement('button');
+      continueBtn.className = 'btn-blitz';
+      continueBtn.style.cssText = "width:80%;max-width:280px;font-size:14px;background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;letter-spacing:3px;margin-top:20px;opacity:0;transition:opacity 0.3s;";
+      continueBtn.textContent = 'CONTINUE';
+      continueBtn.onclick = function() {
+        ov.style.opacity = '0';
+        setTimeout(function() { ov.remove(); onDone({ chose: 'receive' }); }, 250);
+      };
+      ov.appendChild(continueBtn);
+      setTimeout(function() { continueBtn.style.opacity = '1'; }, 1500);
+    }, 1500);
   }
 
   // Brief kickoff result overlay
