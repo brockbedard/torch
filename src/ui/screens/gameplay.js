@@ -1187,63 +1187,6 @@ export function buildGameplay() {
     }
   }
 
-  /** AI commentary — 4s timeout, returns lines array or null */
-  async function fetchAICommentary(res) {
-    var r = res.result;
-    var pre = res._preSnap || gs.getSummary(); // use pre-snap for situation
-    var s = gs.getSummary(); // post-snap for results
-    var sides = gs.getCurrentSides();
-    var oNames = sides.offPlayers.slice(0,4).map(function(p){return p.name+' '+p.pos+' '+p.ovr;}).join(', ');
-    var dNames = sides.defPlayers.slice(0,4).map(function(p){return p.name+' '+p.pos+' '+p.ovr;}).join(', ');
-    var possName = pre.possession === 'CT' ? hTeam.name : oTeam.name;
-    var defName = pre.possession === 'CT' ? oTeam.name : hTeam.name;
-    var isBig = r.isTouchdown || r.isInterception || r.isFumbleLost || r.isSack || r.yards >= 15;
-    var lineCount = isBig ? '7-9' : '5-6';
-
-    var distStr = pre.yardsToEndzone <= pre.distance ? 'goal' : pre.distance;
-    var prompt = 'You are a legendary college football radio play-by-play announcer. Call this play LIVE. Be CREATIVE — never repeat the same phrasing twice in a game. Vary sentence structure, word choice, and energy.\n\n' +
-      'RULES: Write ' + lineCount + ' lines. One sentence each. Build tension from snap to result.\n' +
-      '- QB throws/hands off. Skill players catch/run. Defenders tackle.\n' +
-      '- Reference players by LAST NAME. Both featured players must appear.\n' +
-      '- VARY your language: use different verbs, sentence openers, rhythms each play.\n' +
-      '- Routine plays: professional, quick, matter-of-fact. Big plays: CAPS, excitement.\n' +
-      '- Include one post-play analysis line. Reference the play call or coverage scheme.\n' +
-      '- DO NOT start every call the same way. Mix up: start with the situation, the defense, the crowd, the stakes.\n\n' +
-      'SITUATION: ' + possName + ' ' + pre.ctScore + '-' + pre.irScore + ' ' + defName + '\n' +
-      pre.down + (pre.down===1?'st':pre.down===2?'nd':pre.down===3?'rd':'th') + ' and ' + distStr + ' at the ' + ballSideLabel() + '\n' +
-      'H' + pre.half + ' Snap ' + pre.playsUsed + '/20' + (pre.playsUsed >= 18 ? ' LATE' : '') +
-      (pre.yardsToEndzone <= 20 ? ' RED ZONE' : '') + (pre.down >= 3 ? ' MUST CONVERT' : '') + '\n\n' +
-      'OFF: ' + oNames + '\nDEF: ' + dNames + '\n' +
-      'Featured: ' + res.featuredOff.name + ' (' + res.featuredOff.pos + ') vs ' + res.featuredDef.name + ' (' + res.featuredDef.pos + ')\n' +
-      'Play: ' + res.offPlay.name + ' vs ' + res.defPlay.name + '\n' +
-      'Result: ' + r.description + ' (' + r.yards + ' yds)' +
-      (r.isTouchdown?' TD':'') + (r.isSack?' SACK':'') + (r.isInterception?' INT':'') + (r.isFumbleLost?' FUMBLE':'') + (r.isIncomplete?' INC':'') +
-      (r.offComboPts > 0 ? ' Badge combo +' + r.offComboYards + 'yds' : '') + '\n';
-
-    try {
-      var ac = new AbortController();
-      var to = setTimeout(function() { ac.abort(); }, 4000);
-      var resp = await fetch('/api/commentary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: ac.signal,
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 350,
-          system: 'College football radio PBP announcer. One sentence per line. ' + lineCount + ' lines. CAPS for big moments. Players by last name.',
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-      clearTimeout(to);
-      if (!resp.ok) return null;
-      var data = await resp.json();
-      var text = data.content && data.content[0] && data.content[0].text;
-      if (!text) return null;
-      var lines = text.split('\n').filter(function(l) { return l.trim().length > 0; }).slice(0, 12);
-      return lines.length >= 3 ? lines : null;
-    } catch (e) { return null; }
-  }
-
   function runPlayByPlay(res, onDone) {
     const r = res.result;
     const off = res.featuredOff;
@@ -1270,13 +1213,7 @@ export function buildGameplay() {
     const tackler = Math.random() < 0.6 ? def : randDef;
 
     showClashOnField(res);
-
-    // Try AI commentary, fall back to templates
-    fetchAICommentary(res).then(function(aiLines) {
-      renderPBPLines(aiLines || buildTemplateLines(), res, onDone);
-    }).catch(function() {
-      renderPBPLines(buildTemplateLines(), res, onDone);
-    });
+    renderPBPLines(buildTemplateLines(), res, onDone);
 
     function buildTemplateLines() {
     // Use pre-snap state for situation lines, post-snap for result/context
