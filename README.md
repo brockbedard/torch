@@ -1,76 +1,76 @@
 # TORCH Football
 
-**Balatro meets college football.** A mobile card game where you call plays, exploit defensive weaknesses, and spend your score to gain an edge. Your TORCH points are your score AND your wallet.
+![Version](https://img.shields.io/badge/version-0.25.2-EBB010?style=flat-square)
+![Status](https://img.shields.io/badge/status-Active%20Development-brightgreen?style=flat-square)
+![Platform](https://img.shields.io/badge/platform-Web%20(Mobile%20First)-blue?style=flat-square)
+![License](https://img.shields.io/badge/license-Private-gray?style=flat-square)
 
-**Play now:** [torch-two.vercel.app](https://torch-two.vercel.app/)
+**Balatro meets college football.** Call plays. Read defenses. Spend your score.
+
+[**Play Now**](https://torch-two.vercel.app/) | [Releases](https://github.com/brockbedard/torch/releases)
 
 ---
 
-## What Is This
+## The Pitch
 
-TORCH is a single-player football card game. Each snap, you pick a play card and a player card, then clash against the AI's defensive scheme. Smart matchups produce big gains; bad reads get you stuffed. Spend TORCH points on power-up cards from The Booster shop — or save them for a higher final score.
+TORCH is a mobile-first card game where every snap is a tactical puzzle. Pick a play card. Pick a player card. Match up against the AI's defensive scheme. Smart reads produce explosive gains — bad matchups get you stuffed.
 
-4 fictional college teams. Each plays real football with a distinct scheme identity. Picking your team changes your playbook, your draft pool, and how your offense looks on the field.
+**The twist:** Your TORCH points are your score AND your wallet. Spend them on power-up cards from The Booster to gain an edge — or save them for a higher final tally. Every purchase is a gamble.
 
-## The 4 Teams
+4 fictional college teams with real offensive scheme identities. The team you pick changes the game you play, not just the colors on screen.
 
-| Team | School | Scheme | Identity |
-|------|--------|--------|----------|
-| **Boars** | Ridgemont | Power Spread | Run-first. Physical. Patient. |
-| **Wolves** | Northern Pines | Spread Option | QB runs. Zone read. Speed kills. |
-| **Stags** | Crestview | Air Raid | Quick throws. 4 receivers. Tempo. |
-| **Serpents** | Blackwater | Multiple/Pro | Unpredictable. Disguise. Adapt. |
+## Teams
 
-## Features
+| | Team | Scheme | Run/Pass | Identity |
+|--|------|--------|----------|----------|
+| **Ridgemont** | **Boars** | Power Spread | 55/45 | Smash-mouth. Physical. Patient. |
+| **Northern Pines** | **Wolves** | Spread Option | 50/50 | QB runs. Zone read. Speed kills. |
+| **Crestview** | **Stags** | Air Raid | 30/70 | Quick throws. Tempo. Outscore everyone. |
+| **Blackwater** | **Serpents** | Multiple/Pro | 45/55 | Unpredictable. Disguise. Adapt. |
 
-- **80 play cards** across 4 teams with real football concepts
-- **52 players** with position abilities and OVR ratings
-- **12 TORCH cards** — power-ups you buy with your score (Bronze/Silver/Gold)
+Each team has a weighted draft pool, formation tendencies, and unique animation style based on real college football archetypes (Georgia, Oregon, Mike Leach's Air Raid, Nick Saban's multiple looks).
+
+## Key Features
+
+- **80 play cards** with real football concepts — not random names
+- **52 players** across 4 rosters with OVR ratings and abilities
+- **12 TORCH cards** — Bronze/Silver/Gold power-ups you buy with your score
 - **The Booster** — card shop at halftime, after TDs, turnovers, and big stops
-- **User-biased presentation** — the game is on YOUR side (colors, commentary, timing, mood)
+- **User-biased presentation** — green = good for you, red = bad. Always. The commentary, timing, visual weight, and ambient mood are all on your side
 - **Broadcast-style UI** — ESPN-inspired possession changes, TD celebrations with confetti
+- **Scheme identity** — team selection changes your playbook, card draw weights, and field animations
 - **3-game seasons** with card and point persistence
-- **Red zone tutorial** for first-time players
+- **Red zone onboarding** — first-time players start at the 9-yard line with a tutorial
 
-## Quick Start
+## TORCH Cards
+
+Your score is your wallet. Buying power costs points.
+
+| Tier | Examples | Cost Range |
+|------|----------|------------|
+| **Gold** | Scout Team (see opponent's play), Sure Hands (cancel turnover) | 180-200 pts |
+| **Silver** | Deep Shot (2x pass yards), Truck Stick (2x run yards), Challenge Flag (reroll snap) | 75-120 pts |
+| **Bronze** | Play Action (+5 vs run D), 12th Man (+4 yds + 2x points), Ice (zero opponent OVR) | 30-50 pts |
+
+## Tech
+
+Built with Vite + vanilla JavaScript. No framework. ~16K lines across 67 source files.
 
 ```bash
 git clone https://github.com/brockbedard/torch.git
-cd torch
-npm install
-npx vite --host
+cd torch && npm install
+npx vite --host    # → localhost:5173
 ```
 
-Open the Network URL on your phone for the best experience.
-
-## Tech Stack
-
-- **Frontend:** Vite + vanilla JavaScript (no framework)
-- **Rendering:** HTML5 Canvas 2D (field renderer with 7v7 formations and animations)
-- **Fonts:** Teko, Rajdhani, Barlow Condensed (Google Fonts)
-- **Audio:** Howler.js (crowd loops) + jsfxr (UI sounds)
-- **Engine:** Custom snap resolver with gaussian distribution, coverage modifiers, badge combos
-- **Icons:** game-icons.net SVG paths (CC BY 3.0)
-- **Hosting:** Vercel (static)
-- **Testing:** 639 automated engine assertions + 1200-drive balance test
-
-## Project Structure
-
-```
-src/
-  main.js              # App router
-  state.js             # Global state, version, hand management, team draw weights
-  data/                # Teams, players (52), plays (80), torch cards (12), icons
-  engine/              # Snap resolver, game state, AI, commentary, TORCH points
-  ui/components/       # Card builders, shop, tooltips, dev panel
-  ui/effects/          # TORCH points fly-in animation
-  ui/field/            # Canvas 2D field renderer, animator, play builder
-  ui/screens/          # Home, team select, pregame, gameplay, halftime, end game
-  tests/               # Smoke test (639 assertions), balance test, game simulation
-docs/research/         # 7v7 football research, team scheme identity
-```
-
-See [CLAUDE.md](CLAUDE.md) for full architecture docs, design system, and engine details.
+| Layer | Stack |
+|-------|-------|
+| Frontend | Vanilla JS, HTML5 Canvas 2D |
+| Fonts | Teko, Rajdhani, Barlow Condensed |
+| Audio | Howler.js + jsfxr |
+| Engine | Custom gaussian snap resolver with coverage modifiers |
+| Icons | game-icons.net (CC BY 3.0) |
+| Hosting | Vercel |
+| Testing | 639 automated assertions + 1200-drive balance test |
 
 ## Environments
 
@@ -80,19 +80,19 @@ See [CLAUDE.md](CLAUDE.md) for full architecture docs, design system, and engine
 | Preview | `dev` | Auto-generated per push |
 | Production | `main` | [torch-two.vercel.app](https://torch-two.vercel.app/) |
 
-## Dev Tools
+## Development
 
-Add `?dev` to any URL to activate the in-game dev panel.
+```bash
+npx vite --host              # Local dev with hot reload
+localhost:5173/?dev           # Activate dev panel (force results, give cards, apply state)
+```
 
-- **Dev Panel** — Jump to gameplay, force results, give torch cards, apply game state
-- **Smoke Test** — `node --input-type=module -e "import{runSmokeTest}from'./src/tests/smokeTest.js';runSmokeTest();"`
-- **Balance Test** — `node --input-type=module -e "import{runBalanceTest}from'./src/tests/balanceTest.js';runBalanceTest(100);"`
-- **Game Sim** — `node --input-type=module -e "import{runGameSim}from'./src/tests/gameSimTest.js';runGameSim(100);"`
+Full architecture docs, engine specs, and design system in [CLAUDE.md](CLAUDE.md).
 
 ## Current Version
 
-**v0.25.2** — Economy rebalance, 12 TORCH cards with real SVG icons, The Booster shop, AI card behavior, user perspective bias, broadcast UI, red zone onboarding, automated testing.
+**v0.25.2** — 12 TORCH cards, economy rebalance, user perspective bias, broadcast UI, red zone onboarding, automated testing. [Full changelog](https://github.com/brockbedard/torch/releases/tag/v0.25.2).
 
-## License
+---
 
-Private. All rights reserved.
+Built by [@brockbedard](https://github.com/brockbedard). Football research sourced from USA Football ADM, RRQB Training, and real college scheme analysis.
