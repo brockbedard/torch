@@ -204,18 +204,15 @@ export function buildTeamSelect() {
   if (!selectedTeamId) return;
   SND.click();
 
-  // v0.23: Red Zone Tutorial for first-time players
-  var isTutorial = isFirst && (!GS || !GS.season || GS.season.currentGame === 0);
-
   // Skip animation — go straight to pregame
   var opponents = getSeasonOpponents(selectedTeamId);
   var opponentId = opponents[0];
-  var humanReceives = isTutorial ? true : Math.random() < 0.5;
+  var humanReceives = Math.random() < 0.5;
   var difficulty = GS && GS.difficulty ? GS.difficulty : 'EASY';
-  var conditions = generateConditions(isTutorial);
+  var conditions = generateConditions(isFirst && (!GS.season || !GS.season.currentGame));
 
   setGs(function(s) {
-    const newState = Object.assign({}, s || {}, {
+    return Object.assign({}, s || {}, {
       screen: 'pregame',
       team: selectedTeamId,
       difficulty: difficulty,
@@ -233,22 +230,10 @@ export function buildTeamSelect() {
         currentGame: 0,
         results: [],
         totalScore: 0,
-        torchCards: isTutorial ? ['sure_hands'] : [],
+        torchCards: [],
         carryoverPoints: 0,
       },
     });
-
-    if (isTutorial) {
-      // Force Red Zone state for tutorial
-      newState.ballPos = 91; // 9 yards from goal
-      newState.down = 1;
-      newState.distance = 9;
-      newState.yardLine = 9;
-      newState.side = 'opp';
-      newState.possession = 'CT'; // Human always starts with ball in tutorial
-    }
-
-    return newState;
   });
   };  content.appendChild(kickOffBtn);
 

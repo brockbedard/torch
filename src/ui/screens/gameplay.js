@@ -15,7 +15,7 @@ import { getPlayHistoryBonus } from '../../engine/playHistory.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
 import { buildMaddenPlayer, buildPlayV1, buildTorchCard, injectCardStyles } from '../components/cards.js';
 import { showShop, renderInventory } from '../components/shop.js';
-import { showTooltip } from '../components/tooltip.js';
+// tooltip system removed — will be rebuilt in v2
 import AudioStateManager from '../../engine/audioManager.js';
 import { renderTeamBadge } from '../../data/teamLogos.js';
 import { getConditionEffects } from '../../data/gameConditions.js';
@@ -400,11 +400,7 @@ export function buildGameplay() {
       irOffHand: cOffPlays.slice(0,4), irDefHand: cDefPlays.slice(0,4),
       ctOffRoster: hOR, ctDefRoster: hDR,
       irOffRoster: cOffRoster, irDefRoster: cDefRoster,
-      // v0.23: Initial state overrides for tutorial
-      initialBallPos: GS.ballPos,
-      initialDown: GS.down,
-      initialDistance: GS.distance,
-      initialPossession: GS.possession || (GS.humanReceives ? hAbbr : 'IR'),
+      initialPossession: GS.humanReceives ? hAbbr : 'IR',
     });
   }
   const gs = GS.engine;
@@ -459,7 +455,7 @@ export function buildGameplay() {
   }
 
   // Progressive disclosure
-  var isFirstGame = GS.isFirstSeason && (!GS.season || GS.season.currentGame === 0);
+  var isFirstGame = false; // tutorial system disabled — will be rebuilt
   var isFirstSeason = GS.isFirstSeason;
 
   // Game Day Conditions (v0.21)
@@ -559,31 +555,13 @@ export function buildGameplay() {
     });
   }
 
-  // Tutorial sequence
-  function runTutorial() {
-    if (!isFirstGame) return;
-    
-    // Step 1: Welcome
-    showTooltip(el, 'tut_welcome', "WELCOME TO THE RED ZONE! You're just 9 yards from scoring your first touchdown.", { delay: 1000 });
-    
-    // Step 2: Mechanics (triggered after 5s or when first tooltip is dismissed)
-    setTimeout(() => {
-      showTooltip(el, 'tut_mechanics', "Drag a PLAY and a PLAYER to the field to start your drive.", { delay: 500 });
-    }, 6000);
-
-    // Step 3: Torch Cards
-    setTimeout(() => {
-      showTooltip(el, 'tut_torch', "Check your TORCH cards on the right. You have 'SURE HANDS' to prevent turnovers!", { delay: 500 });
-    }, 12000);
-  }
+  // Tutorial system disabled — will be rebuilt as v2 onboarding
 
   // dom
   const el = document.createElement('div');
   el.className = 'T';
   const sty = document.createElement('style'); sty.textContent = CSS; el.appendChild(sty);
 
-  // Initialize tutorial
-  runTutorial();
 
   // ── SCOREBOARD ──
   const bug = document.createElement('div'); bug.className = 'T-sb'; el.appendChild(bug);
@@ -1807,15 +1785,6 @@ export function buildGameplay() {
     panel.appendChild(tray);
 
     // ── TEACH TOOLTIPS (first game only) ──
-    if (isFirstGame && snapCount === 0) {
-      if (phase === 'play') {
-        showTooltip(el, 'first_play', 'Tap a play card to call it.', { delay: 600 });
-      } else if (phase === 'player') {
-        showTooltip(el, 'first_player', 'Now pick who runs it.', { delay: 400 });
-      } else if (phase === 'ready') {
-        showTooltip(el, 'first_snap', 'Hit SNAP!', { delay: 400 });
-      }
-    }
 
     // Snap bar — only appears when both cards placed
     if (phase === 'ready') {
@@ -2430,9 +2399,6 @@ export function buildGameplay() {
         resultWrap.appendChild(labelEl);
         setTimeout(function() { labelEl.style.opacity = '1'; }, 100);
 
-        if (isFirstGame) {
-          if (r.comboFired && snapCount <= 4) showTooltip(el, 'first_combo', 'Match the right player with the right play for bonus yards!', { delay: 800 });
-        }
       }, 800);
 
       // ── BEAT 3: REWARD (2-3.5s) — TORCH points + combos ──
@@ -2494,7 +2460,6 @@ export function buildGameplay() {
           } else { if(!checkEnd()) nextSnap(); }
         }
         if (shopTrigger) {
-          if (isFirstGame) showTooltip(el, 'first_shop', 'Spend points on TORCH cards for an edge. Buy it or pass!', { delay: 200 });
           triggerShop(shopTrigger, afterShop);
         } else { afterShop(); }
       }, totalDur);
