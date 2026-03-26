@@ -71,6 +71,13 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
     while (offers.length < 3) offers.push(getRandomCard(weights));
   }
 
+  // Skip Booster if user can't afford ANY card
+  var cheapest = offers.reduce(function(min, c) { return c.cost < min ? c.cost : min; }, Infinity);
+  if (points < cheapest) {
+    if (onClose) onClose();
+    return;
+  }
+
   // Card offers — horizontal row
   var offersRow = document.createElement('div');
   offersRow.style.cssText = 'display:flex;gap:10px;justify-content:center;padding:0 4px;';
@@ -83,9 +90,8 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
     wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;max-width:120px;opacity:0;transform:translateY(16px) scale(0.95);transition:opacity 0.3s,transform 0.3s;';
     setTimeout(function() { wrap.style.opacity = '1'; wrap.style.transform = 'translateY(0) scale(1)'; }, 200 + offerIdx * 150);
 
-    // Card visual — compact size
+    // Card visual — compact size (readable even if can't afford)
     var cardEl = buildTorchCard(card, 100, 130);
-    if (!canAfford) cardEl.style.opacity = '0.35';
     wrap.appendChild(cardEl);
 
     // Cost badge
@@ -116,7 +122,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
         }
       };
     } else {
-      buyBtn.style.cssText = "font-size:10px;padding:8px 16px;width:100%;background:#1a1a1a;color:#555;border-color:#333;font-family:'Rajdhani';font-weight:700;letter-spacing:1px;cursor:not-allowed;";
+      buyBtn.style.cssText = "font-size:10px;padding:8px 16px;width:100%;min-width:90px;background:#1a1a1a;color:#555;border-color:#333;font-family:'Rajdhani';font-weight:700;letter-spacing:1px;cursor:not-allowed;";
       buyBtn.textContent = 'NEED ' + (card.cost - points) + ' MORE';
       buyBtn.disabled = true;
     }

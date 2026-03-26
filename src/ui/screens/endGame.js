@@ -168,12 +168,12 @@ export function buildEndGame() {
     var nextBtn = document.createElement('button');
     nextBtn.className = 'btn-blitz';
     nextBtn.style.cssText = "width:100%;max-width:300px;font-size:14px;background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;letter-spacing:2px;";
-    nextBtn.textContent = 'NEXT GAME \u2192';
+    nextBtn.textContent = 'PLAY AGAIN';
     nextBtn.onclick = function() {
       SND.snap();
-      season.currentGame = gameNum + 1;
+      // Single-game format — go back to team select, keep TORCH points
       setGs(function(s) {
-        return Object.assign({}, s, { screen: 'teamSelect', opponent: nextOppId, engine: null, finalEngine: null, season: season });
+        return Object.assign({}, s, { screen: 'teamSelect', opponent: null, engine: null, finalEngine: null, season: Object.assign({}, season, { currentGame: 0, results: [] }) });
       });
     };
     content.appendChild(nextBtn);

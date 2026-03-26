@@ -30,14 +30,19 @@ export function generateConditions(isFirstGame, seed) {
   if (isFirstGame) {
     return { weather: 'clear', field: 'turf', crowd: 'home' };
   }
-  // Simple seeded random (or pure random if no seed)
-  var weatherKeys = Object.keys(WEATHER);
-  var fieldKeys = Object.keys(FIELD);
-  var crowdKeys = Object.keys(CROWD);
+  // Weighted random weather: Clear 60%, Heat 15%, Rain 10%, Wind 10%, Snow 5%
+  var wr = Math.random();
+  var weather = wr < 0.60 ? 'clear' : wr < 0.75 ? 'heat' : wr < 0.85 ? 'rain' : wr < 0.95 ? 'wind' : 'snow';
+  // Field: turf 60%, grass 30%, mud 10%
+  var fr = Math.random();
+  var field = fr < 0.60 ? 'turf' : fr < 0.90 ? 'grass' : 'mud';
+  // Crowd: home 50%, neutral 30%, away 20%
+  var cr = Math.random();
+  var crowd = cr < 0.50 ? 'home' : cr < 0.80 ? 'neutral' : 'away';
   return {
-    weather: weatherKeys[Math.floor(Math.random() * weatherKeys.length)],
-    field: fieldKeys[Math.floor(Math.random() * fieldKeys.length)],
-    crowd: crowdKeys[Math.floor(Math.random() * crowdKeys.length)],
+    weather: weather,
+    field: field,
+    crowd: crowd,
   };
 }
 

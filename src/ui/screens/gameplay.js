@@ -67,7 +67,7 @@ const CSS = `
 /* drive summary */
 .T-drive{flex:1;overflow-y:auto;padding:12px 14px 16px;background:linear-gradient(180deg,rgba(10,8,4,0) 0%,rgba(10,8,4,0.95) 8%);font-family:'Rajdhani',sans-serif}
 .T-drive-hdr{display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:1px solid #2a2a2a}
-.T-drive-hdr-l{font-family:'Teko';font-weight:700;font-size:14px;color:#FF6B00;letter-spacing:2px;text-transform:uppercase;line-height:1}
+.T-drive-hdr-l{font-family:'Teko';font-weight:700;font-size:17px;color:#FF6B00;letter-spacing:3px;text-transform:uppercase;line-height:1}
 .T-drive-hdr-r{font-family:'Rajdhani';font-size:12px;font-weight:600;color:#aaa;line-height:1}
 .T-drive-hdr-r span{color:#fff}
 .T-drive-row{display:flex;align-items:center;gap:4px;padding:3px 0;font-size:12px;transition:opacity .3s}
@@ -647,12 +647,39 @@ export function buildGameplay() {
       return;
     }
     var flameSvg = '<svg class="T-torch-banner-flame" viewBox="0 0 44 44" fill="none"><defs><linearGradient id="tbf" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#EBB010"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#tbf)"/></svg>';
+    var cardCount = torchInventory.length;
+    var countBadge = cardCount > 0 ? '<span style="font-family:\'Rajdhani\';font-size:11px;color:#EBB010;opacity:0.7;margin-left:4px;">(' + cardCount + ')</span>' : '';
     torchBanner.innerHTML = flameSvg +
       '<div class="T-torch-banner-label">TORCH</div>' +
-      '<div class="T-torch-banner-pts">' + displayVal + '</div>';
+      '<div class="T-torch-banner-pts">' + displayVal + countBadge + '</div>';
     torchBannerPtsEl = torchBanner.querySelector('.T-torch-banner-pts');
   }
   drawTorchBanner();
+
+  // Tap torch banner to view inventory
+  torchBanner.style.cursor = 'pointer';
+  torchBanner.onclick = function() {
+    if (torchInventory.length === 0) return;
+    var trayOv = document.createElement('div');
+    trayOv.style.cssText = 'position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:auto;';
+    var trayBd = document.createElement('div');
+    trayBd.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.5);';
+    trayBd.onclick = function() { trayOv.remove(); };
+    trayOv.appendChild(trayBd);
+    var tray = document.createElement('div');
+    tray.style.cssText = 'position:relative;z-index:1;background:#141008;border-top:2px solid #EBB010;border-radius:12px 12px 0 0;padding:14px 12px 20px;';
+    var hTorch = hAbbr === 'CT' ? gs.getSummary().ctTorchPts : gs.getSummary().irTorchPts;
+    tray.innerHTML = "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;\"><div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;letter-spacing:2px;\">YOUR TORCH CARDS</div><div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:#00ff44;\">" + hTorch + " PTS</div></div>";
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:10px;justify-content:center;';
+    torchInventory.forEach(function(tc) {
+      var ce = buildTorchCard(tc, 100, 140);
+      row.appendChild(ce);
+    });
+    tray.appendChild(row);
+    trayOv.appendChild(tray);
+    el.appendChild(trayOv);
+  };
 
   // Balatro-style TORCH points animation
   var _torchAnimating = false;
@@ -815,18 +842,32 @@ export function buildGameplay() {
       '</div>';
 
     // Play-by-play ticker rows (newest first)
+    // Drive log — show last 4 plays full, compress older ones
     if (driveSummaryLog.length > 0) {
-      for (var _ti = driveSummaryLog.length - 1; _ti >= 0; _ti--) {
+      var logLen = driveSummaryLog.length;
+      var showFull = Math.min(4, logLen); // last 4 full
+      var compressed = logLen - showFull;
+
+      // Compressed older plays on one line
+      if (compressed > 0) {
+        var compParts = [];
+        for (var _ci = 0; _ci < compressed; _ci++) {
+          var ce = driveSummaryLog[_ci];
+          var cy = ce.isTD ? 'TD' : ce.isSack ? 'SK' : ce.isInt ? 'INT' : ce.isFumble ? 'FUM' : ce.isInc ? 'INC' : (ce.yards >= 0 ? '+' : '') + ce.yards;
+          compParts.push(cy);
+        }
+        html += '<div style="font-family:\'Rajdhani\';font-size:10px;color:#555;padding:2px 0;border-bottom:1px solid #1a1a1a;">' + compParts.join(' | ') + '</div>';
+      }
+
+      // Full entries (newest first within the visible window)
+      for (var _ti = logLen - 1; _ti >= compressed; _ti--) {
         var e = driveSummaryLog[_ti];
-        var i = _ti;
-        var isNewest = _ti === driveSummaryLog.length - 1;
+        var isNewest = _ti === logLen - 1;
         var resColor, resText;
         if (e.isUserOff || e.isUserOff === undefined) {
-          // User on offense (or legacy entries without flag)
           resColor = e.isTD ? '#EBB010' : e.yards > 0 ? '#00ff44' : e.yards < 0 || e.isSack ? '#ff0040' : '#fff';
           resText = e.isTD ? 'TD' : e.isSack ? 'SACK' : e.isInt ? 'INT' : e.isFumble ? 'FUM' : (e.isInc || e.yards === 0) ? 'NO GAIN' : (e.yards >= 0 ? '+' : '') + e.yards;
         } else {
-          // User on defense — flip colors
           if (e.isTD) { resColor = '#ff0040'; resText = 'TD'; }
           else if (e.isSack) { resColor = '#00ff44'; resText = 'SACK'; }
           else if (e.isInt) { resColor = '#00ff44'; resText = 'INT'; }
@@ -837,12 +878,15 @@ export function buildGameplay() {
           else { resColor = '#ff0040'; resText = '+' + e.yards; }
         }
         var dn = ['','1st','2nd','3rd','4th'][e.down] || '';
+        // Newest play highlighted with color tint + bigger text
+        var rowBg = isNewest ? 'background:' + resColor + '0d;' : '';
         var rowStyle = isNewest
-          ? 'opacity:1;border-left:3px solid #FF6B00;padding-left:6px;background:rgba(255,255,255,0.03)'
+          ? 'opacity:1;border-left:3px solid #FF6B00;padding-left:6px;' + rowBg + 'animation:T-clash-yds 0.3s ease-out;'
           : 'opacity:0.5';
+        var playFs = isNewest ? 'font-size:13px;font-weight:700;' : '';
         html += '<div class="T-drive-row" style="' + rowStyle + '">' +
           '<div class="T-drive-row-dd" style="color:#999;font-size:13px;font-weight:700">' + dn + ' & ' + e.dist + '</div>' +
-          '<div class="T-drive-row-play">' + e.playName + '</div>' +
+          '<div class="T-drive-row-play" style="' + playFs + '">' + e.playName + '</div>' +
           '<div class="T-drive-row-res" style="color:' + resColor + '">' + resText + '</div>' +
           '</div>';
       }
@@ -1619,7 +1663,7 @@ export function buildGameplay() {
     if (phase === 'play' || phase === 'player' || phase === 'torch') {
       var sideBar = document.createElement('div');
       var sideColor = hTeam.accent || '#FF6B00';
-      sideBar.style.cssText = "text-align:center;padding:2px 0 0;font-family:'Teko';font-weight:700;font-size:14px;letter-spacing:2px;flex-shrink:0;color:" + sideColor + ";background:linear-gradient(90deg,transparent,rgba(255,107,0,.04),transparent);";
+      sideBar.style.cssText = "text-align:center;padding:3px 0 1px;font-family:'Teko';font-weight:700;font-size:18px;letter-spacing:3px;flex-shrink:0;color:" + sideColor + ";background:linear-gradient(90deg,transparent,rgba(255,107,0,.06),transparent);";
       sideBar.textContent = hTeam.name + (isOff ? ' OFFENSE' : ' DEFENSE');
       panel.appendChild(sideBar);
     }
