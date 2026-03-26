@@ -26,7 +26,7 @@ const CFG = {
   // Team dot color map (accent colors — visible on dark field)
   teamDotColors: {
     sentinels: [196, 162, 101],  // Boars gold
-    wolves:    [192, 192, 192],  // Wolves silver
+    wolves:    [232, 84, 143],  // Dolphins pink
     stags:     [242, 140, 40],   // Stags orange
     serpents:  [57, 255, 20],    // Serpents green
   },
@@ -200,7 +200,7 @@ var PLAY_FORMATION_MAP = {
 var TEAM_FORMATION_MAP = {
   // Boars — Power Spread: I-Form 40%, Twins 30%, Deuce 20%, Trips 10%
   sentinels: { DEEP: 'twins', SHORT: 'twins', QUICK: 'shotgun_deuce', SCREEN: 'twins', RUN: 'iform_pistol' },
-  // Werewolves — Spread Option: Deuce 35%, Pistol 25%, Trips 25%, Empty 10%
+  // Dolphins — Spread Option: Deuce 35%, Pistol 25%, Trips 25%, Empty 10%
   wolves:    { DEEP: 'trips', SHORT: 'shotgun_deuce', QUICK: 'shotgun_deuce', SCREEN: 'trips', RUN: 'shotgun_deuce' },
   // Stags — Air Raid: Trips 35%, Deuce 30%, Empty 20%, Bunch 10%
   stags:     { DEEP: 'empty', SHORT: 'trips', QUICK: 'trips', SCREEN: 'shotgun_deuce', RUN: 'shotgun_deuce' },

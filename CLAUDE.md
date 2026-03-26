@@ -44,13 +44,13 @@ src/
 ├── state.js                   # Global state, version, hand management, team draw weights
 ├── style.css                  # CSS custom properties / design system
 ├── data/
-│   ├── teams.js               # 4 teams: Boars (sentinels), Wolves (wolves), Stags, Serpents
+│   ├── teams.js               # 4 teams: Boars (sentinels), Dolphins (wolves), Stags, Serpents
 │   ├── players.js             # 52 players (4 teams x 7 OFF + 6 DEF) with ability text
 │   ├── *Plays.js              # 10 OFF + 10 DEF plays per team (80 total)
 │   ├── torchCards.js           # 12 TORCH cards (2 Gold, 5 Silver, 5 Bronze)
 │   ├── torchCardIcons.js       # 20 game-icons.net SVG paths + renderTorchCardIcon()
 │   ├── badges.js              # Badge enum + inline SVG icons
-│   ├── teamLogos.js           # Team mascot SVGs (boar/wolf/deer/serpent)
+│   ├── teamLogos.js           # Team mascot SVGs (boar/dolphin/deer/serpent)
 │   └── gameConditions.js      # Weather/field/crowd (45 combos)
 ├── engine/
 │   ├── gameState.js           # GameState class — full game simulation
@@ -97,14 +97,14 @@ src/
 | Team | Scheme | Real Analog | Run/Pass | Def Shell |
 |------|--------|-------------|----------|-----------|
 | **Boars** (Ridgemont) | Power Spread | Georgia, Alabama | 55/45 | Cover 3 zone |
-| **Wolves** (N. Pines) | Spread Option | Oregon, Rich Rod WVU | 50/50 | Cover 1 + spy |
+| **Dolphins** (Coral Bay) | Spread Option | Oregon, Rich Rod WVU | 50/50 | Cover 1 + spy |
 | **Stags** (Crestview) | Air Raid | Mike Leach, Lincoln Riley | 30/70 | Cover 0 blitz |
 | **Serpents** (Blackwater) | Multiple/Pro | Saban, Kirby Smart | 45/55 | Multiple/disguised |
 
-**Counter-play:** Boars > Serpents > Stags > Wolves > Boars
+**Counter-play:** Boars > Serpents > Stags > Dolphins > Boars
 
 ### Team Differentiation
-| Dimension | Boars | Wolves | Stags | Serpents |
+| Dimension | Boars | Dolphins | Stags | Serpents |
 |-----------|-------|--------|-------|---------|
 | Draft pool | RUN 4x | RUN 3x, SCREEN 2x | QUICK 4x, DEEP 3x | All 2x |
 | Best formation | I-Form / Pistol | Shotgun / Pistol | Trips / Empty | Bunch / Twins |

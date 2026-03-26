@@ -70,7 +70,7 @@ export function buildTeamSelect() {
   // Team vibe one-liners (plain-English play style hint)
   var TEAM_VIBES = {
     sentinels: 'Pound the rock. Physical, patient football.',
-    wolves: 'Relentless ground game. Wear them down.',
+    wolves: 'Speed kills. Zone read. Ride the current.',
     stags: 'Explosive and electric. Outscores everyone.',
     serpents: 'Cerebral and methodical. Death by paper cuts.',
   };

@@ -24,7 +24,7 @@ TORCH is a mobile-first card game where every snap is a tactical puzzle. Pick a 
 | | Team | Scheme | Run/Pass | Identity |
 |--|------|--------|----------|----------|
 | **Ridgemont** | **Boars** | Power Spread | 55/45 | Smash-mouth. Physical. Patient. |
-| **Northern Pines** | **Wolves** | Spread Option | 50/50 | QB runs. Zone read. Speed kills. |
+| **Coral Bay** | **Dolphins** | Spread Option | 50/50 | QB runs. Zone read. Speed kills. |
 | **Crestview** | **Stags** | Air Raid | 30/70 | Quick throws. Tempo. Outscore everyone. |
 | **Blackwater** | **Serpents** | Multiple/Pro | 45/55 | Unpredictable. Disguise. Adapt. |
 

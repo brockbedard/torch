@@ -15,7 +15,7 @@ import { getOffenseRoster, getDefenseRoster } from '../data/players.js';
 
 var TEAMS = [
   { id: 'sentinels', name: 'BOARS', off: SENTINELS_OFF_PLAYS, def: SENTINELS_DEF_PLAYS },
-  { id: 'wolves', name: 'WEREWOLVES', off: WOLVES_OFF_PLAYS, def: WOLVES_DEF_PLAYS },
+  { id: 'wolves', name: 'DOLPHINS', off: WOLVES_OFF_PLAYS, def: WOLVES_DEF_PLAYS },
   { id: 'stags', name: 'STAGS', off: STAGS_OFF_PLAYS, def: STAGS_DEF_PLAYS },
   { id: 'serpents', name: 'SERPENTS', off: SERPENTS_OFF_PLAYS, def: SERPENTS_DEF_PLAYS },
 ];

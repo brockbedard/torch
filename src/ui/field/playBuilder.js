@@ -243,7 +243,7 @@ var TEAM_CONCEPT_WEIGHTS = {
     smash: 2, dagger: 2, post_corner: 3, comeback_vertical: 2,
     slant_arrow: 1, mesh: 1, hitch_concept: 1, flood: 1, verticals: 1,
   },
-  // Werewolves — Spread Option: zone read, QB draw, mesh/crosses, speed
+  // Dolphins — Spread Option: zone read, QB draw, mesh/crosses, speed
   wolves: {
     zone_read: 4, inside_zone: 3, draw: 2, toss: 2, power: 1,
     mesh: 3, slant_arrow: 2, drive: 2, flood: 2,
@@ -288,7 +288,7 @@ var TEAM_ANIM_STYLE = {
     preSnapMotion: false, // No pre-snap motion
     qbZoneRead: false,    // No zone-read QB motion
   },
-  // Werewolves: FAST. QB in motion on zone reads. Quick snaps.
+  // Dolphins: FAST. QB in motion on zone reads. Quick snaps.
   wolves: {
     olScale: 1.0,
     throwTMod: 0.85,     // Slightly faster overall tempo
@@ -493,7 +493,7 @@ export function buildPlayAnimation(resultType, yardsGained, formation, playType,
       var carrierIdx = roles.rbIdx >= 0 ? roles.rbIdx : roles.qbIdx;
       var cs = starts[carrierIdx];
       if (style.qbZoneRead && (conceptKey === 'zone_read' || conceptKey === 'inside_zone')) {
-        // Werewolves zone-read: QB rides the mesh, then keeps or gives
+        // Dolphins zone-read: QB rides the mesh, then keeps or gives
         // QB runs parallel with RB for a beat, creating the read moment
         var keepSide = qs.x > 0.5*fieldW ? 1 : -1;
         var meshX = lerp(qs.x, cs.x, 0.4);

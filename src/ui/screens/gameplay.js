@@ -1597,10 +1597,10 @@ export function buildGameplay() {
     panel.innerHTML = '';
     const isOff = gs.possession === hAbbr;
     const sides = gs.getCurrentSides();
-    // Filter out OL — only show skill position players (QB, WR, RB, TE on offense; DB, LB, S on defense)
+    // Filter out OL/DL — only show skill position players, then take 4
     var allPlayers = isOff ? sides.offPlayers : sides.defPlayers;
-    var players = allPlayers.filter(function(p) { return p.pos !== 'OL' && p.pos !== 'DL'; }).slice(0, 4);
-    if (players.length === 0) players = allPlayers.slice(0, 4); // fallback
+    var skillPlayers = allPlayers.filter(function(p) { return p.pos !== 'OL' && p.pos !== 'DL'; });
+    var players = skillPlayers.length >= 4 ? skillPlayers.slice(0, 4) : allPlayers.slice(0, 4);
     var plays = isOff ? sides.offHand : sides.defHand;
     // Safety: ensure hand has cards (refill from full pool if empty/short)
     if (!plays || plays.length < 3) {

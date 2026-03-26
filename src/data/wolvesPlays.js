@@ -1,5 +1,5 @@
 /**
- * TORCH — Northern Pines Timber Wolves Offensive Plays (Triple Option / Flexbone)
+ * TORCH — Coral Bay Dolphins Offensive Plays (Triple Option / Flexbone)
  * 10 plays, run-heavy with option reads and play-action bombs.
  */
 
@@ -269,7 +269,7 @@ export const WOLVES_OFF_PLAYS = [
 ];
 
 /**
- * TORCH — Northern Pines Timber Wolves Defensive Plays (Zone Read / Cover 3)
+ * TORCH — Coral Bay Dolphins Defensive Plays (Zone Read / Cover 3)
  * 10 plays, zone heavy, conservative, gap-sound.
  */
 

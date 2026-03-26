@@ -53,7 +53,7 @@ export function aiSelectPlay(hand, playType, difficulty, situation) {
       // so 'Wolves' (run heavy) actually run the ball even on Easy.
       const weights = filtered.map(p => {
         let w = 1.0;
-        // If team is Northern Pines (Wolves), favor OPTION and RUN
+        // If team is Coral Bay (Wolves), favor OPTION and RUN
         if (situation.teamId === 'wolves') {
           if (p.cat === 'OPTION' || p.playType === 'RUN') w *= 2.0;
           if (p.playType === 'DEEP') w *= 0.5;

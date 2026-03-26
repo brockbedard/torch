@@ -221,7 +221,7 @@ function buildTeamInfo(tm, label, align) {
 
   var schoolName = (tm.school || '').toUpperCase();
 
-  // Auto-scale team name for long names (WEREWOLVES = 10 chars)
+  // Auto-scale team name for long names (DOLPHINS = 10 chars)
   var nameLen = (tm.name || '').length;
   var nameFontSize = nameLen <= 5 ? 44 : nameLen <= 7 ? 38 : nameLen <= 9 ? 32 : 26;
 
