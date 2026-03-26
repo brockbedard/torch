@@ -3,7 +3,7 @@
   "short_name": "TORCH",
   "description": "Read the defense. Pick your play. Burn the coverage.",
   "start_url": "/",
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "portrait",
   "background_color": "#09081A",
   "theme_color": "#09081A",
