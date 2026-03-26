@@ -59,16 +59,19 @@ export function showDetail(target, data) {
   detail.innerHTML = html;
   document.body.appendChild(detail);
 
-  // Position logic (prefer right, then left, then top)
-  let x = rect.right + 10;
-  let y = rect.top;
+  // Position logic — constrain to screen with 16px padding
+  var maxW = Math.min(240, window.innerWidth - 32);
+  detail.style.width = maxW + 'px';
+  var x = rect.left + rect.width / 2 - maxW / 2; // center on target
+  var y = rect.top - detail.offsetHeight - 10; // prefer above
 
-  if (x + 240 > window.innerWidth) {
-    x = rect.left - 250;
-  }
-  if (y + detail.offsetHeight > window.innerHeight) {
-    y = window.innerHeight - detail.offsetHeight - 20;
-  }
+  // Clamp horizontal
+  if (x < 16) x = 16;
+  if (x + maxW > window.innerWidth - 16) x = window.innerWidth - 16 - maxW;
+  // If no room above, go below
+  if (y < 10) y = rect.bottom + 10;
+  // Clamp vertical
+  if (y + detail.offsetHeight > window.innerHeight - 10) y = window.innerHeight - detail.offsetHeight - 10;
 
   detail.style.left = `${x}px`;
   detail.style.top = `${y}px`;

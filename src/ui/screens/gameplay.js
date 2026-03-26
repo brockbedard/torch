@@ -412,6 +412,7 @@ export function buildGameplay() {
   let prev2min = gs.twoMinActive;
   var snapCount = 0; // Track snap number for teach tooltips
   var twoMinTimer = null; // Real-time clock interval for 2-minute drill
+  var _fourthDownDecided = false; // true after player clicks GO FOR IT (hides the bar)
 
   // ── LAYER 6: Ambient mood — subtle brightness/vignette based on user momentum ──
   var _moodHistory = []; // last 4 plays: +1 good, -1 bad, 0 neutral
@@ -1672,6 +1673,74 @@ export function buildGameplay() {
     else inst.textContent = '';
     panel.appendChild(inst);
 
+    // 4th down decision bar — appears ABOVE cards so player sees it first
+    var is4thPastMid = gs.down === 4 && isOff && gs.canSpecialTeams() && !conversionMode && !_fourthDownDecided;
+    if (is4thPastMid && phase === 'play') {
+      var fourthBar = document.createElement('div');
+      fourthBar.style.cssText = "display:flex;gap:6px;padding:6px 8px;flex-shrink:0;background:rgba(255,255,255,0.03);border-bottom:1px solid #2a2a2a;";
+
+      // Context label
+      var ctxLabel = document.createElement('div');
+      var ydsToEz = gs.yardsToEndzone();
+      ctxLabel.style.cssText = "font-family:'Teko';font-weight:700;font-size:14px;color:#e03050;letter-spacing:2px;width:100%;text-align:center;margin-bottom:4px;";
+      ctxLabel.textContent = '4TH & ' + gs.distance + ' AT OPP ' + ydsToEz;
+      fourthBar.insertBefore(ctxLabel, fourthBar.firstChild);
+      fourthBar.style.flexWrap = 'wrap';
+
+      var goForIt = document.createElement('button');
+      goForIt.className = 'btn-blitz';
+      goForIt.style.cssText = 'flex:1;font-size:12px;padding:10px 6px;background:#141008;color:#00ff44;border-color:#00ff44;';
+      goForIt.textContent = 'GO FOR IT';
+      goForIt.onclick = function() {
+        SND.click();
+        _fourthDownDecided = true;  // flag to hide the bar on redraw
+        drawPanel();
+      };
+
+      var puntBtn = document.createElement('button');
+      puntBtn.className = 'btn-blitz';
+      puntBtn.style.cssText = 'flex:1;font-size:12px;padding:10px 6px;background:#141008;color:#4DA6FF;border-color:#4DA6FF;';
+      puntBtn.textContent = 'PUNT';
+      puntBtn.onclick = function() {
+        SND.snap();
+        phase = 'busy';
+        var puntResult = gs.punt();
+        driveSummaryLog.push({ down: 4, dist: gs.distance, playName: puntResult.label, yards: 0, isUserOff: true });
+        showSpecialTeamsResult(puntResult.label, '#4DA6FF', function() {
+          driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
+          showPossCut('punt', function() { if (!checkEnd()) nextSnap(); });
+        });
+      };
+
+      var fgBtn = document.createElement('button');
+      fgBtn.className = 'btn-blitz';
+      if (gs.canAttemptFG()) {
+        var fgDist = ydsToEz + 17;
+        fgBtn.style.cssText = 'flex:1;font-size:12px;padding:10px 6px;background:#141008;color:#EBB010;border-color:#EBB010;';
+        fgBtn.textContent = 'FG (' + fgDist + 'yd)';
+        fgBtn.onclick = function() {
+          SND.snap();
+          phase = 'busy';
+          var fgResult = gs.attemptFieldGoal();
+          driveSummaryLog.push({ down: 4, dist: gs.distance, playName: fgResult.label, yards: 0, isUserOff: true });
+          var fgColor = fgResult.made ? '#00ff44' : '#e03050';
+          showSpecialTeamsResult(fgResult.label, fgColor, function() {
+            driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
+            showPossCut(fgResult.made ? 'score' : 'missed_fg', function() { if (!checkEnd()) nextSnap(); });
+          });
+        };
+      } else {
+        fgBtn.style.cssText = 'flex:1;font-size:10px;padding:10px 6px;background:#0a0a0a;color:#444;border-color:#333;cursor:not-allowed;';
+        fgBtn.textContent = 'OUT OF RANGE';
+        fgBtn.disabled = true;
+      }
+
+      fourthBar.appendChild(goForIt);
+      fourthBar.appendChild(puntBtn);
+      fourthBar.appendChild(fgBtn);
+      panel.appendChild(fourthBar);
+    }
+
     // Card tray — show one card type at a time based on phase
     const tray = document.createElement('div'); tray.className = 'T-tray';
 
@@ -1923,75 +1992,13 @@ export function buildGameplay() {
     if (phase === 'ready') {
       var sz = document.createElement('div'); sz.className = 'T-snap';
 
-      // 4th down decision UI (only when player is on offense past the 50)
-      if (gs.down === 4 && isOff && gs.canSpecialTeams() && !conversionMode) {
-        var fourthBar = document.createElement('div');
-        fourthBar.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;';
-
-        // GO FOR IT (always available)
-        var goForIt = document.createElement('button');
-        goForIt.className = 'btn-blitz';
-        goForIt.style.cssText = 'flex:1;font-size:11px;padding:10px 6px;background:#141008;color:#00ff44;border-color:#00ff44;';
-        goForIt.textContent = 'GO FOR IT';
-        goForIt.onclick = function() { SND.snap(); doSnap(); };
-        fourthBar.appendChild(goForIt);
-
-        // PUNT (always available past 50)
-        var puntBtn = document.createElement('button');
-        puntBtn.className = 'btn-blitz';
-        puntBtn.style.cssText = 'flex:1;font-size:11px;padding:10px 6px;background:#141008;color:#4DA6FF;border-color:#4DA6FF;';
-        puntBtn.textContent = 'PUNT';
-        puntBtn.onclick = function() {
-          SND.snap();
-          phase = 'busy';
-          var puntResult = gs.punt();
-          driveSummaryLog.push({ down: 4, dist: gs.distance, playName: puntResult.label, yards: 0, isUserOff: true });
-          showSpecialTeamsResult(puntResult.label, '#4DA6FF', function() {
-            driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
-            showPossCut('punt', function() { if (!checkEnd()) nextSnap(); });
-          });
-        };
-        fourthBar.appendChild(puntBtn);
-
-        // FIELD GOAL (only in range)
-        var fgBtn = document.createElement('button');
-        fgBtn.className = 'btn-blitz';
-        if (gs.canAttemptFG()) {
-          var fgDist = gs.yardsToEndzone() + 17;
-          fgBtn.style.cssText = 'flex:1;font-size:11px;padding:10px 6px;background:#141008;color:#EBB010;border-color:#EBB010;';
-          fgBtn.textContent = 'FG (' + fgDist + ' YD)';
-          fgBtn.onclick = function() {
-            SND.snap();
-            phase = 'busy';
-            var fgResult = gs.attemptFieldGoal();
-            driveSummaryLog.push({ down: 4, dist: gs.distance, playName: fgResult.label, yards: 0, isTD: false, isUserOff: true });
-            var fgColor = fgResult.made ? '#00ff44' : '#e03050';
-            showSpecialTeamsResult(fgResult.label, fgColor, function() {
-              driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
-              if (fgResult.made) {
-                showPossCut('score', function() { if (!checkEnd()) nextSnap(); });
-              } else {
-                showPossCut('missed_fg', function() { if (!checkEnd()) nextSnap(); });
-              }
-            });
-          };
-        } else {
-          fgBtn.style.cssText = 'flex:1;font-size:9px;padding:10px 6px;background:#0a0a0a;color:#444;border-color:#333;cursor:not-allowed;';
-          fgBtn.textContent = 'OUT OF RANGE';
-          fgBtn.disabled = true;
-        }
-        fourthBar.appendChild(fgBtn);
-
-        sz.appendChild(fourthBar);
-      } else {
-        // Normal SNAP button
-        var go = document.createElement('button');
-        go.className = 'btn-blitz';
-        go.style.cssText = 'background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;font-size:16px;animation:T-pulse 1.8s ease-in-out infinite;';
-        go.textContent = conversionMode ? 'ATTEMPT' : 'SNAP';
-        go.onclick = conversionMode ? function() { SND.snap(); doConversionSnap(); } : function() { SND.snap(); doSnap(); };
-        sz.appendChild(go);
-      }
+      // Normal SNAP button (4th down options are above the card tray now)
+      var go = document.createElement('button');
+      go.className = 'btn-blitz';
+      go.style.cssText = 'background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;font-size:16px;animation:T-pulse 1.8s ease-in-out infinite;';
+      go.textContent = conversionMode ? 'ATTEMPT' : 'SNAP';
+      go.onclick = conversionMode ? function() { SND.snap(); doConversionSnap(); } : function() { SND.snap(); doSnap(); };
+      sz.appendChild(go);
       panel.appendChild(sz);
     }
   }
@@ -2004,28 +2011,7 @@ export function buildGameplay() {
 
     var isOff = gs.possession === hAbbr;
 
-    // AI 4th down decision — user is on defense, AI has 4th down
-    if (!isOff && gs.down === 4 && !conversionMode) {
-      var aiDecision = gs.ai4thDownDecision();
-      if (aiDecision === 'punt') {
-        var puntResult = gs.punt();
-        showSpecialTeamsResult('OPPONENT PUNTS\n' + puntResult.label, '#4DA6FF', function() {
-          driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
-          showPossCut('punt', function() { if (!checkEnd()) nextSnap(); });
-        });
-        return;
-      }
-      if (aiDecision === 'field_goal') {
-        var fgResult = gs.attemptFieldGoal();
-        var fgColor = fgResult.made ? '#e03050' : '#00ff44'; // bad for user if made, good if missed
-        showSpecialTeamsResult('OPPONENT ATTEMPTS ' + fgResult.distance + '-YARD FIELD GOAL\n' + (fgResult.made ? 'IT\'S GOOD! +3' : 'NO GOOD!'), fgColor, function() {
-          driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
-          showPossCut(fgResult.made ? 'score' : 'missed_fg', function() { if (!checkEnd()) nextSnap(); });
-        });
-        return;
-      }
-      // else: go_for_it — proceed with normal snap
-    }
+    // AI 4th down decisions are handled in nextSnap() before cards are shown
 
     var prevPoss = gs.possession;
     const preSnap = gs.getSummary();
@@ -2744,9 +2730,49 @@ export function buildGameplay() {
   function nextSnap() {
     phase = 'play';
     selP = null; selPl = null; selTorch = null; selectedPreSnap = null;
-    panel.style.display = ''; // Restore panel visibility
-    // Return to normal audio state (or 2-min drill if active)
+    _fourthDownDecided = false;
+    panel.style.display = '';
     AudioStateManager.setState(gs.twoMinActive ? 'two_min_drill' : 'normal_play');
+
+    // AI 4th down decision — resolve BEFORE showing cards to the player
+    var isUserDef = gs.possession !== hAbbr;
+    if (isUserDef && gs.down === 4) {
+      var aiDec = gs.ai4thDownDecision();
+      if (aiDec === 'punt') {
+        phase = 'busy';
+        showSpecialTeamsResult(oTeam.name + ' ELECTS TO PUNT', '#4DA6FF', function() {
+          var puntResult = gs.punt();
+          showSpecialTeamsResult(puntResult.label, '#4DA6FF', function() {
+            driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
+            showPossCut('punt', function() { if (!checkEnd()) nextSnap(); });
+          });
+        });
+        return;
+      }
+      if (aiDec === 'field_goal') {
+        phase = 'busy';
+        var fgDist3 = gs.yardsToEndzone() + 17;
+        showSpecialTeamsResult(oTeam.name + ' ATTEMPTS A ' + fgDist3 + '-YARD FIELD GOAL', '#EBB010', function() {
+          var fgResult = gs.attemptFieldGoal();
+          var fgColor = fgResult.made ? '#e03050' : '#00ff44';
+          showSpecialTeamsResult(fgResult.made ? 'IT\'S GOOD! +3' : 'NO GOOD!', fgColor, function() {
+            driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
+            showPossCut(fgResult.made ? 'score' : 'missed_fg', function() { if (!checkEnd()) nextSnap(); });
+          });
+        });
+        return;
+      }
+      if (aiDec === 'go_for_it') {
+        // Brief flash then proceed to normal card selection
+        var goFlash = document.createElement('div');
+        goFlash.style.cssText = "position:fixed;top:30%;left:50%;transform:translateX(-50%);z-index:650;font-family:'Teko';font-weight:700;font-size:24px;color:#e03050;letter-spacing:3px;text-shadow:0 0 16px rgba(224,48,80,0.4);pointer-events:none;opacity:0;transition:opacity 0.3s;";
+        goFlash.textContent = oTeam.name + ' GOES FOR IT!';
+        el.appendChild(goFlash);
+        requestAnimationFrame(function() { goFlash.style.opacity = '1'; });
+        setTimeout(function() { goFlash.style.opacity = '0'; setTimeout(function() { goFlash.remove(); }, 200); }, 1200);
+      }
+    }
+
     drawBug(); drawField(); drawPanel(); drawDriveSummary();
     // Human always picks cards — on offense they pick offPlay+player,
     // on defense they pick defPlay+player. doSnap() passes them in the right slots.
@@ -3175,7 +3201,7 @@ export function buildGameplay() {
 
     var subtitle = document.createElement('div');
     subtitle.style.cssText = "font-family:'Rajdhani';font-size:12px;color:#888;text-align:center;margin-top:4px;max-width:280px;";
-    subtitle.textContent = 'Torch cards give you an edge on any snap. Use them wisely \u2014 they cost TORCH points to buy more.';
+    subtitle.textContent = 'Torch cards are single-use power-ups. Some work on offense, some on defense. They cost TORCH points to buy more.';
     ov.appendChild(subtitle);
 
     var cardRow = document.createElement('div');
@@ -3258,12 +3284,12 @@ export function buildGameplay() {
     ov.innerHTML = '';
     var title = document.createElement('div');
     title.style.cssText = "font-family:'Teko';font-weight:700;font-size:22px;color:" + oTeam.accent + ";letter-spacing:3px;text-align:center;";
-    title.textContent = oTeam.name + ' IS CHOOSING...';
+    title.textContent = oTeam.name + ' ARE CHOOSING...';
     ov.appendChild(title);
 
     var subtitle = document.createElement('div');
     subtitle.style.cssText = "font-family:'Rajdhani';font-size:12px;color:#888;text-align:center;margin-top:4px;max-width:280px;";
-    subtitle.textContent = 'Torch cards give you an edge on any snap. Use them wisely \u2014 they cost TORCH points to buy more.';
+    subtitle.textContent = 'Torch cards are single-use power-ups. Some work on offense, some on defense. They cost TORCH points to buy more.';
     ov.appendChild(subtitle);
 
     var cardRow = document.createElement('div');
@@ -3447,6 +3473,7 @@ export function buildGameplay() {
       gs.flipPossession(gs.ballPosition);
       drawBug(); drawField(); drawPanel(); drawDriveSummary();
     },
+    reset4thDown: function() { _fourthDownDecided = false; },
     showCoinToss: function() {
       showCoinToss(function(result) {
         var humanReceives = result.chose === 'receive' || result.chose === 'card_cpu_receives';

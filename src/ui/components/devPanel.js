@@ -163,12 +163,14 @@ export function injectDevPanel(el, gs, callbacks) {
     }
     if (id === 'dev-4th-past50') {
       gs.down = 4; gs.distance = 5;
-      gs.ballPosition = gs.possession === 'CT' ? 72 : 28; // opponent's 28
+      gs.ballPosition = gs.possession === 'CT' ? 72 : 28;
+      if (callbacks.reset4thDown) callbacks.reset4thDown();
       if (callbacks.refresh) callbacks.refresh();
     }
     if (id === 'dev-4th-own') {
       gs.down = 4; gs.distance = 8;
-      gs.ballPosition = gs.possession === 'CT' ? 35 : 65; // own 35
+      gs.ballPosition = gs.possession === 'CT' ? 35 : 65;
+      if (callbacks.reset4thDown) callbacks.reset4thDown();
       if (callbacks.refresh) callbacks.refresh();
     }
     if (id === 'dev-endgame') {
