@@ -49,7 +49,18 @@ export function aiSelectPlay(hand, playType, difficulty, situation) {
     if (filtered.length === 0) filtered = available;
 
     if (difficulty === 'EASY') {
-      return filtered[Math.floor(Math.random() * filtered.length)];
+      // v0.23: Not purely random anymore. Weight slightly towards team archetype
+      // so 'Wolves' (run heavy) actually run the ball even on Easy.
+      const weights = filtered.map(p => {
+        let w = 1.0;
+        // If team is Northern Pines (Wolves), favor OPTION and RUN
+        if (situation.teamId === 'wolves') {
+          if (p.cat === 'OPTION' || p.playType === 'RUN') w *= 2.0;
+          if (p.playType === 'DEEP') w *= 0.5;
+        }
+        return w;
+      });
+      return weightedChoice(filtered, weights);
     }
 
     // Medium/Hard: weight by situation

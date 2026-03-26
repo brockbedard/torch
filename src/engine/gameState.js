@@ -16,7 +16,8 @@ import { TORCH_CARDS } from '../data/torchCards.js';
 
 export class GameState {
   constructor({ humanTeam = 'CT', difficulty = 'MEDIUM', ctOffHand, ctDefHand, irOffHand, irDefHand,
-                ctOffRoster, ctDefRoster, irOffRoster, irDefRoster, coachBadge = 'SCHEMER' }) {
+                ctOffRoster, ctDefRoster, irOffRoster, irDefRoster, coachBadge = 'SCHEMER',
+                initialBallPos, initialDown, initialDistance, initialPossession }) {
     // Teams
     this.humanTeam = humanTeam;
     this.cpuTeam = humanTeam === 'CT' ? 'IR' : 'CT';
@@ -45,10 +46,10 @@ export class GameState {
     this.irScore = 0;
 
     // Ball state
-    this.possession = this.cpuTeam; // CPU receives first
-    this.ballPosition = 50;
-    this.down = 1;
-    this.distance = 10;
+    this.possession = initialPossession || this.cpuTeam; // Default: CPU receives first
+    this.ballPosition = initialBallPos !== undefined ? initialBallPos : 50;
+    this.down = initialDown !== undefined ? initialDown : 1;
+    this.distance = initialDistance !== undefined ? initialDistance : 10;
 
     // Half/clock
     this.half = 1;
@@ -61,7 +62,7 @@ export class GameState {
     this.drivePlayHistory = [];
     this.totalPlays = 0;
     this.drivePlays = 0;
-    this.inRedZone = false;
+    this.inRedZone = this.yardsToEndzone() <= 20;
 
     // TORCH points
     this.ctTorchPts = 0;
@@ -96,7 +97,7 @@ export class GameState {
       fourthDownAttempts: 0, fourthDownConversions: 0,
       threeAndOuts: 0, longDrives: 0,
       badgeCombos: 0, historyBonuses: 0,
-      redZoneTrips: 0, redZoneTDs: 0,
+      redZoneTrips: this.inRedZone ? 1 : 0, redZoneTDs: 0,
       twoMinScores: 0, turnoverTDs: 0,
       audiblesUsed: 0,
     };
@@ -716,9 +717,9 @@ export class GameState {
   /** End the game */
   _endGame() {
     this.gameOver = true;
-    // Win bonus
-    if (this.ctScore > this.irScore) this.ctTorchPts += 100;
-    else if (this.irScore > this.ctScore) this.irTorchPts += 100;
+    // Win bonus recalibrated for v0.23
+    if (this.ctScore > this.irScore) this.ctTorchPts += 20;
+    else if (this.irScore > this.ctScore) this.irTorchPts += 20;
   }
 
   /** Get a summary of the current game state for UI */

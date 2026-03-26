@@ -201,40 +201,56 @@ export function buildTeamSelect() {
   kickOffBtn.style.cssText = 'flex-shrink:0;margin:6px 20px 8px;border-color:#FF4511;color:#000;background:linear-gradient(180deg,#EBB010 0%,#FF4511 100%);font-size:24px;padding:20px 24px;letter-spacing:5px;opacity:0.3;pointer-events:none;transition:opacity 0.3s;text-align:center;display:block;width:calc(100% - 40px);animation:ctaGlow 3s ease-in-out 0.3s infinite;';
   kickOffBtn.textContent = 'KICK OFF!';
   kickOffBtn.onclick = function() {
-    if (!selectedTeamId) return;
-    SND.click();
-    // Skip animation — go straight to pregame
-    var opponents = getSeasonOpponents(selectedTeamId);
-    var opponentId = opponents[0];
-    var humanReceives = Math.random() < 0.5;
-    var difficulty = GS && GS.difficulty ? GS.difficulty : 'EASY';
-    var conditions = generateConditions(isFirst && (!GS.season || !GS.season.currentGame));
-    setGs(function(s) {
-      return Object.assign({}, s || {}, {
-        screen: 'pregame',
-        team: selectedTeamId,
-        difficulty: difficulty,
-        opponent: opponentId,
-        humanReceives: humanReceives,
-        _coinTossDone: true,
-        offRoster: getOffenseRoster(selectedTeamId).slice(0, 4).map(function(p) { return p.id; }),
-        defRoster: getDefenseRoster(selectedTeamId).slice(0, 4).map(function(p) { return p.id; }),
-        offHand: getOffCards(selectedTeamId).slice(0, 4),
-        defHand: getDefCards(selectedTeamId).slice(0, 4),
-        gameConditions: conditions,
-        isFirstSeason: s ? s.isFirstSeason : true,
-        season: s && s.season ? s.season : {
-          opponents: opponents,
-          currentGame: 0,
-          results: [],
-          totalScore: 0,
-          torchCards: [],
-          carryoverPoints: 0,
-        },
-      });
+  if (!selectedTeamId) return;
+  SND.click();
+
+  // v0.23: Red Zone Tutorial for first-time players
+  var isTutorial = isFirst && (!GS || !GS.season || GS.season.currentGame === 0);
+
+  // Skip animation — go straight to pregame
+  var opponents = getSeasonOpponents(selectedTeamId);
+  var opponentId = opponents[0];
+  var humanReceives = isTutorial ? true : Math.random() < 0.5;
+  var difficulty = GS && GS.difficulty ? GS.difficulty : 'EASY';
+  var conditions = generateConditions(isTutorial);
+
+  setGs(function(s) {
+    const newState = Object.assign({}, s || {}, {
+      screen: 'pregame',
+      team: selectedTeamId,
+      difficulty: difficulty,
+      opponent: opponentId,
+      humanReceives: humanReceives,
+      _coinTossDone: true,
+      offRoster: getOffenseRoster(selectedTeamId).slice(0, 4).map(function(p) { return p.id; }),
+      defRoster: getDefenseRoster(selectedTeamId).slice(0, 4).map(function(p) { return p.id; }),
+      offHand: getOffCards(selectedTeamId).slice(0, 4),
+      defHand: getDefCards(selectedTeamId).slice(0, 4),
+      gameConditions: conditions,
+      isFirstSeason: s ? s.isFirstSeason : true,
+      season: s && s.season ? s.season : {
+        opponents: opponents,
+        currentGame: 0,
+        results: [],
+        totalScore: 0,
+        torchCards: isTutorial ? ['sure_hands'] : [],
+        carryoverPoints: 0,
+      },
     });
-  };
-  content.appendChild(kickOffBtn);
+
+    if (isTutorial) {
+      // Force Red Zone state for tutorial
+      newState.ballPos = 91; // 9 yards from goal
+      newState.down = 1;
+      newState.distance = 9;
+      newState.yardLine = 9;
+      newState.side = 'opp';
+      newState.possession = 'CT'; // Human always starts with ball in tutorial
+    }
+
+    return newState;
+  });
+  };  content.appendChild(kickOffBtn);
 
   // ── DIFFICULTY ROW (hidden on first game) ──
   if (!isFirst) {

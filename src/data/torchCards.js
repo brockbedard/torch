@@ -15,66 +15,66 @@ export const TORCH_CARDS = [
   // ═══ GOLD (2) ═══
   {
     id: 'scout_team', name: 'SCOUT TEAM', iconKey: 'filmRoom',
-    tier: 'GOLD', cost: 45, type: 'pre-snap', category: 'information',
+    tier: 'GOLD', cost: 180, type: 'pre-snap', category: 'information',
     effect: 'See the opponent\'s play before you pick yours',
   },
   {
     id: 'sure_hands', name: 'SURE HANDS', iconKey: 'pickSix',
-    tier: 'GOLD', cost: 50, type: 'reactive', category: 'protection',
+    tier: 'GOLD', cost: 200, type: 'reactive', category: 'protection',
     effect: 'Cancel a turnover (INT or fumble). Drive continues.',
   },
 
   // ═══ SILVER (5) ═══
   {
     id: 'hard_count', name: 'HARD COUNT', iconKey: 'hardCount',
-    tier: 'SILVER', cost: 25, type: 'pre-snap', category: 'disruption',
+    tier: 'SILVER', cost: 90, type: 'pre-snap', category: 'disruption',
     effect: 'Force opponent to discard their play and pick randomly',
   },
   {
     id: 'deep_shot', name: 'DEEP SHOT', iconKey: 'player',
-    tier: 'SILVER', cost: 25, type: 'pre-snap', category: 'amplification',
+    tier: 'SILVER', cost: 100, type: 'pre-snap', category: 'amplification',
     effect: 'Next pass play gets 2x yards',
   },
   {
     id: 'truck_stick', name: 'TRUCK STICK', iconKey: 'truckStick',
-    tier: 'SILVER', cost: 25, type: 'pre-snap', category: 'amplification',
+    tier: 'SILVER', cost: 100, type: 'pre-snap', category: 'amplification',
     effect: 'Next run gets 2x yards, can\'t fumble',
   },
   {
     id: 'challenge_flag', name: 'CHALLENGE FLAG', iconKey: 'tendencyBreak',
-    tier: 'SILVER', cost: 30, type: 'reactive', category: 'protection',
+    tier: 'SILVER', cost: 120, type: 'reactive', category: 'protection',
     effect: 'After seeing result, reroll. 50% chance of better outcome.',
   },
   {
     id: 'prime_time', name: 'PRIME TIME', iconKey: 'onFire',
-    tier: 'SILVER', cost: 20, type: 'pre-snap', category: 'amplification',
+    tier: 'SILVER', cost: 75, type: 'pre-snap', category: 'amplification',
     effect: 'Featured player\'s OVR counts as 99 this snap',
   },
 
   // ═══ BRONZE (5) ═══
   {
     id: 'play_action', name: 'PLAY ACTION', iconKey: 'playAction',
-    tier: 'BRONZE', cost: 10, type: 'pre-snap', category: 'amplification',
+    tier: 'BRONZE', cost: 35, type: 'pre-snap', category: 'amplification',
     effect: '+5 yards if opponent played run defense',
   },
   {
     id: 'scramble_drill', name: 'SCRAMBLE DRILL', iconKey: 'scrambleDrill',
-    tier: 'BRONZE', cost: 10, type: 'pre-snap', category: 'protection',
+    tier: 'BRONZE', cost: 40, type: 'pre-snap', category: 'protection',
     effect: 'Convert negative play to 0 yards',
   },
   {
     id: 'twelfth_man', name: '12TH MAN', iconKey: 'dominance',
-    tier: 'BRONZE', cost: 15, type: 'pre-snap', category: 'amplification',
+    tier: 'BRONZE', cost: 50, type: 'pre-snap', category: 'amplification',
     effect: '+4 yards and double TORCH points this snap',
   },
   {
     id: 'ice', name: 'ICE', iconKey: 'noFlyZone',
-    tier: 'BRONZE', cost: 15, type: 'pre-snap', category: 'disruption',
+    tier: 'BRONZE', cost: 50, type: 'pre-snap', category: 'disruption',
     effect: 'Opponent\'s featured player provides zero OVR bonus',
   },
   {
     id: 'personnel_report', name: 'PERSONNEL REPORT', iconKey: 'scout',
-    tier: 'BRONZE', cost: 10, type: 'pre-snap', category: 'information',
+    tier: 'BRONZE', cost: 30, type: 'pre-snap', category: 'information',
     effect: 'Reveal opponent\'s featured player before you pick yours',
   },
 ];

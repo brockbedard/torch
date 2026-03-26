@@ -9,6 +9,8 @@ import { BADGE_ICON_PATHS } from '../../data/badgeIcons.js';
 import { TEAMS } from '../../data/teams.js';
 import { renderTorchCardIcon, TORCH_CARD_ICONS } from '../../data/torchCardIcons.js';
 import { CATEGORY_COLORS, TIER_COLORS } from '../../data/torchCards.js';
+import { attachDetailListeners } from './detailTooltip.js';
+
 // renderTeamBadge removed — player cards no longer use team badges
 
 // ====== CARD ANIMATIONS (inject once) ======
@@ -416,6 +418,16 @@ export function buildTorchCard(tc, w, h) {
   var bottom = document.createElement('div');
   bottom.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:2px;background:'+bc+';opacity:0.5;border-radius:0 0 5px 5px;';
   card.appendChild(bottom);
+
+  // v0.23: Balatro-style details
+  attachDetailListeners(card, {
+    title: tc.name,
+    text: tc.effect,
+    keywords: [
+      { word: tc.tier, definition: 'Card quality tier. Gold cards are game-breakingly powerful.' },
+      { word: tc.category, definition: 'Strategic classification — ' + (tc.category === 'information' ? 'reveal hidden data' : tc.category === 'amplification' ? 'boost your own success' : tc.category === 'disruption' ? 'sabotage the opponent' : 'negate bad outcomes') }
+    ]
+  });
 
   return card;
 }

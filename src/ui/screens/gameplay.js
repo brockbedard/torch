@@ -400,6 +400,11 @@ export function buildGameplay() {
       irOffHand: cOffPlays.slice(0,4), irDefHand: cDefPlays.slice(0,4),
       ctOffRoster: hOR, ctDefRoster: hDR,
       irOffRoster: cOffRoster, irDefRoster: cDefRoster,
+      // v0.23: Initial state overrides for tutorial
+      initialBallPos: GS.ballPos,
+      initialDown: GS.down,
+      initialDistance: GS.distance,
+      initialPossession: GS.possession || (GS.humanReceives ? hAbbr : 'IR'),
     });
   }
   const gs = GS.engine;
@@ -554,10 +559,31 @@ export function buildGameplay() {
     });
   }
 
+  // Tutorial sequence
+  function runTutorial() {
+    if (!isFirstGame) return;
+    
+    // Step 1: Welcome
+    showTooltip(el, 'tut_welcome', "WELCOME TO THE RED ZONE! You're just 9 yards from scoring your first touchdown.", { delay: 1000 });
+    
+    // Step 2: Mechanics (triggered after 5s or when first tooltip is dismissed)
+    setTimeout(() => {
+      showTooltip(el, 'tut_mechanics', "Drag a PLAY and a PLAYER to the field to start your drive.", { delay: 500 });
+    }, 6000);
+
+    // Step 3: Torch Cards
+    setTimeout(() => {
+      showTooltip(el, 'tut_torch', "Check your TORCH cards on the right. You have 'SURE HANDS' to prevent turnovers!", { delay: 500 });
+    }, 12000);
+  }
+
   // dom
   const el = document.createElement('div');
   el.className = 'T';
   const sty = document.createElement('style'); sty.textContent = CSS; el.appendChild(sty);
+
+  // Initialize tutorial
+  runTutorial();
 
   // ── SCOREBOARD ──
   const bug = document.createElement('div'); bug.className = 'T-sb'; el.appendChild(bug);
@@ -2331,8 +2357,8 @@ export function buildGameplay() {
       var totalDur = Math.round((level === 3 ? 5000 : level === 2 ? 3500 : 2200) * holdMultiplier);
 
       // ── TD CELEBRATION — separate flow for touchdowns ──
-      if (isTD && isUserOff) {
-        // USER SCORES — "The Moment"
+      if (isTD && isUserOff && !res._isConversion) {
+        // USER SCORES — "The Moment" (not for conversions)
         totalDur = 5500; // override hold time
 
         // White flash
@@ -2393,8 +2419,8 @@ export function buildGameplay() {
 
         drawBug(); drawField();
 
-      } else if (isTD && !isUserOff) {
-        // OPPONENT SCORES — muted, move on
+      } else if (isTD && (!isUserOff || res._isConversion)) {
+        // OPPONENT SCORES or CONVERSION result — standard display
         totalDur = 2500;
         var resultWrap = document.createElement('div');
         resultWrap.className = 'T-clash-result';
@@ -2520,7 +2546,12 @@ export function buildGameplay() {
           else if ((!wasOffHot && offStarHot) || (!wasDefHot && defStarHot)) shopTrigger = 'starActivation';
         }
         function afterShop() {
-          if (res.gameEvent === 'touchdown') { showConv(res.scoringTeam); return; }
+          if (res.gameEvent === 'touchdown' && !res._isConversion) { showConv(res.scoringTeam); return; }
+          if (res._isConversion) {
+            // After conversion, go straight to possession change
+            showPossCut('score', function() { showDrive(driveSnaps, prevPoss, function() { driveSnaps=[]; drivePlayHistory=[]; resetDriveSummary(); if(!checkEnd()) nextSnap(); }); });
+            return;
+          }
           if (posChanged(res.gameEvent, prevPoss)) {
             showPossCut(res.gameEvent, function() { showDrive(driveSnaps, prevPoss, function() { driveSnaps=[]; drivePlayHistory=[]; resetDriveSummary(); if(!checkEnd()) nextSnap(); }); });
           } else { if(!checkEnd()) nextSnap(); }
@@ -2834,12 +2865,21 @@ export function buildGameplay() {
 
     drawField(); drawPanel();
 
-    // Show clash and run play-by-play like a normal snap
-    showClashOnField(fakeRes);
-    runPlayByPlay(fakeRes, function() {
-      drawBug(); drawField();
-      showPossCut('score', function() { showDrive(driveSnaps, cm.team, function() { driveSnaps=[]; drivePlayHistory=[]; resetDriveSummary(); if(!checkEnd()) nextSnap(); }); });
-    });
+    // Override result text for conversion context
+    if (convResult.success) {
+      fakeRes.result.description = (cm.choice === '2pt' ? '2-point' : '3-point') + ' conversion is GOOD! +' + convResult.points + '!';
+    } else {
+      fakeRes.result.description = (cm.choice === '2pt' ? '2-point' : '3-point') + ' conversion FAILED.';
+    }
+    // Mark as conversion so Beat 4 skips the TD celebration + conversion loop
+    fakeRes._isConversion = true;
+    fakeRes.gameEvent = 'conversion';
+
+    drawField(); drawPanel();
+
+    // Run through the full 3-beat snap display (clash, result, commentary)
+    var prevPossConv = cm.team;
+    run3BeatSnap(fakeRes, prevPossConv, false, false);
   }
 
   // ── 2-MIN WARNING (dramatic overlay) ──

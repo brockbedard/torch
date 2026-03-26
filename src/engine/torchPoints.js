@@ -12,27 +12,28 @@
 export function calcOffenseTorchPoints(result, gotFirstDown) {
   let pts = 0;
 
-  // v0.22: TORCH points only go UP from plays. Bad plays earn 0, not negative.
+  // v0.23: Recalibrated for ~150-250 pts/game
   if (result.isSack) {
     pts += 0;
   } else if (result.isIncomplete) {
     pts += 0;
   } else if (result.isInterception || result.isFumbleLost) {
     pts += 0;
-  } else if (result.yards >= 8) {
-    pts += 30;
-  } else if (result.yards >= 4) {
+  } else if (result.yards >= 15) { // Big play
     pts += 10;
-  } else if (result.yards >= 1) {
+  } else if (result.yards >= 8) {
     pts += 5;
-  } else {
-    pts += 0;
+  } else if (result.yards >= 4) {
+    pts += 2;
+  } else if (result.yards >= 1) {
+    pts += 1;
   }
 
-  if (gotFirstDown) pts += 10;
-  if (result.isTouchdown) pts += 50;
+  if (gotFirstDown) pts += 2;
+  if (result.isTouchdown) pts += 15;
 
-  pts += Math.max(0, Math.floor(result.offComboPts || 0));
+  // Combo points also scaled down
+  pts += Math.max(0, Math.floor((result.offComboPts || 0) / 4));
   return pts;
 }
 
@@ -45,24 +46,21 @@ export function calcOffenseTorchPoints(result, gotFirstDown) {
 export function calcDefenseTorchPoints(result, allowedFirstDown) {
   let pts = 0;
 
-  // v0.22: TORCH points only go UP from plays. Allowing big plays earns 0, not negative.
+  // v0.23: Recalibrated for ~150-250 pts/game
   if (result.isSack) {
-    pts += 25;
+    pts += 8;
   } else if (result.isInterception || result.isFumbleLost) {
-    pts += 40;
+    pts += 12;
   } else if (result.yards <= 0) {
-    pts += 20;
-  } else if (result.yards <= 3) {
-    pts += 10;
-  } else if (result.yards <= 7) {
     pts += 5;
-  } else {
-    pts += 0; // Big plays allowed — no penalty, just no reward
+  } else if (result.yards <= 3) {
+    pts += 3;
+  } else if (result.yards <= 7) {
+    pts += 1;
   }
 
-  // No penalty for allowing first downs or TDs — just no bonus
-  if (result.isSafety) pts += 30;
+  if (result.isSafety) pts += 10;
 
-  pts += Math.max(0, Math.floor(result.defComboPts || 0));
+  pts += Math.max(0, Math.floor((result.defComboPts || 0) / 4));
   return pts;
 }
