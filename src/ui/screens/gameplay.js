@@ -246,8 +246,8 @@ const CSS = `
 .T-clash-dim{position:absolute;inset:0;background:rgba(6,4,2,0.85);transition:opacity 0.3s}
 .T-clash-cards{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:12px;perspective:800px}
 .T-clash-card-wrap{border-radius:8px;overflow:hidden;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s,box-shadow 0.3s;transform-style:preserve-3d}
-.T-clash-card-off{background:rgba(200,160,48,0.12);border:2px solid #c8a03066;padding:10px 12px;text-align:center;min-width:80px}
-.T-clash-card-def{background:rgba(77,166,255,0.12);border:2px solid #4DA6FF66;padding:10px 12px;text-align:center;min-width:80px}
+.T-clash-card-off{background:rgba(255,255,255,0.06);border:2px solid rgba(255,255,255,0.2);padding:10px 12px;text-align:center;min-width:80px}
+.T-clash-card-def{background:rgba(255,255,255,0.06);border:2px solid rgba(255,255,255,0.2);padding:10px 12px;text-align:center;min-width:80px}
 .T-clash-result{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:20px}
 .T-clash-yds{font-family:'Teko';font-weight:700;font-size:64px;line-height:1;text-shadow:0 0 24px currentColor;animation:T-clash-yds 0.6s cubic-bezier(0.22,1.3,0.36,1) both}
 .T-clash-label{font-family:'Rajdhani';font-weight:700;font-size:14px;letter-spacing:1px;opacity:0.8}
@@ -1010,10 +1010,10 @@ export function buildGameplay() {
     // User's card (always face-up) on left, AI's card (flips) on right
     var userPlayName = isUserOnOff ? res.offPlay.name : res.defPlay.name;
     var userPlaySub = isUserOnOff ? (res.offPlay.playType || '') : (res.defPlay.cardType || '');
-    var userColor = isUserOnOff ? '#EBB010' : '#4488ff';
+    var userColor = hTeam.accent || '#EBB010';
     var aiPlayName = isUserOnOff ? res.defPlay.name : res.offPlay.name;
     var aiPlaySub = isUserOnOff ? (res.defPlay.cardType || '') : (res.offPlay.playType || '');
-    var aiColor = isUserOnOff ? '#e03050' : '#c8a030';
+    var aiColor = oTeam.accent || '#e03050';
 
     var userCard = clashCard(userPlayName, userPlaySub, userColor, true);
     var vsEl = document.createElement('div');
@@ -2253,21 +2253,23 @@ export function buildGameplay() {
     cardsEl.className = 'T-clash-cards';
     var slideMs = Math.max(300, anticipationMs);
 
-    // Offense card
+    // Offense card — user's team color if user is on offense, opponent's if not
+    var offTeamColor = (prevPoss === hAbbr) ? hTeam.accent : oTeam.accent;
+    var defTeamColor = (prevPoss === hAbbr) ? oTeam.accent : hTeam.accent;
     var offCard = document.createElement('div');
     offCard.className = 'T-clash-card-wrap T-clash-card-off';
-    offCard.style.cssText = 'animation:T-clash-slideL ' + slideMs + 'ms cubic-bezier(0.22,1.3,0.36,1) both;transform:scale(' + cardScale + ');';
+    offCard.style.cssText = 'animation:T-clash-slideL ' + slideMs + 'ms cubic-bezier(0.22,1.3,0.36,1) both;transform:scale(' + cardScale + ');border-color:' + offTeamColor + '66;background:' + offTeamColor + '18;';
     offCard.innerHTML =
       "<div style=\"font-family:'Teko';font-size:18px;color:#fff;line-height:1;letter-spacing:1px\">" + res.offPlay.name + '</div>' +
-      "<div style=\"font-family:'Rajdhani';font-size:10px;color:#c8a030;margin-top:3px\">" + res.featuredOff.name + ' \u00b7 ' + res.featuredOff.pos + '</div>';
+      "<div style=\"font-family:'Rajdhani';font-size:10px;color:" + offTeamColor + ";margin-top:3px\">" + res.featuredOff.name + ' \u00b7 ' + res.featuredOff.pos + '</div>';
 
     // Defense card
     var defCard = document.createElement('div');
     defCard.className = 'T-clash-card-wrap T-clash-card-def';
-    defCard.style.cssText = 'animation:T-clash-slideR ' + slideMs + 'ms cubic-bezier(0.22,1.3,0.36,1) both;transform:scale(' + cardScale + ');';
+    defCard.style.cssText = 'animation:T-clash-slideR ' + slideMs + 'ms cubic-bezier(0.22,1.3,0.36,1) both;transform:scale(' + cardScale + ');border-color:' + defTeamColor + '66;background:' + defTeamColor + '18;';
     defCard.innerHTML =
       "<div style=\"font-family:'Teko';font-size:18px;color:#fff;line-height:1;letter-spacing:1px\">" + res.defPlay.name + '</div>' +
-      "<div style=\"font-family:'Rajdhani';font-size:10px;color:#4DA6FF;margin-top:3px\">" + res.featuredDef.name + ' \u00b7 ' + res.featuredDef.pos + '</div>';
+      "<div style=\"font-family:'Rajdhani';font-size:10px;color:" + defTeamColor + ";margin-top:3px\">" + res.featuredDef.name + ' \u00b7 ' + res.featuredDef.pos + '</div>';
 
     cardsEl.appendChild(offCard);
     cardsEl.appendChild(defCard);
