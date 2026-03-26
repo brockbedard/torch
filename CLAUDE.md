@@ -298,11 +298,21 @@ Weather × Field × Crowd = 45 combinations. First game: Clear/Turf/Home. Shown 
 
 ## Dev Tools
 Enable: `localStorage.setItem('torch_dev', '1')` or visit any URL with `?dev`.
+- `?dev` — In-game dev panel: jump to gameplay, force results, give torch cards, apply state, bias test
 - `?test` — Visual test harness showing all screen states
 - `?mockup` — Card component reference page
-- `window.runBalanceTest(100)` — Simulate 1200 drives, log balance stats to console
+- `/smoke` — Post-deploy smoke test (engine + balance + build). **RUN AFTER EVERY PRODUCTION DEPLOY.**
+- `/balance` — Balance test only (1200 drives, interpret against target ranges)
+- `window.runBalanceTest(100)` — Balance test from browser console
 - DEV BUILD banner, Quick Play, Reset Daily Lock
-- `mockups/preview/` — TORCH card system React mockup (run with `npx vite` from that dir)
+
+### Automated Tests (run after every deploy)
+```bash
+# Engine smoke test (639 assertions, ~2s)
+node --input-type=module -e "import { runSmokeTest } from './src/tests/smokeTest.js'; runSmokeTest();"
+# Balance test (1200 drives, ~5s)
+node --input-type=module -e "import { runBalanceTest } from './src/tests/balanceTest.js'; runBalanceTest(100);"
+```
 
 ## Design System
 ```css
