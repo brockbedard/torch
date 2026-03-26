@@ -12,9 +12,19 @@ npx vite --host          # Local dev (port 5173, accessible via phone on LAN)
 npx vite build           # Production build (dist/)
 vercel --prod            # Deploy to production
 ```
-- **Branch:** `main` (primary), `refactor-vite` (legacy name, merged into main)
+- **Branch:** `main` (primary — all development happens here)
 - **GitHub:** https://github.com/brockbedard/torch.git
-- **Production:** https://torch-two.vercel.app/
+- **Production:** https://torch-two.vercel.app/ (deploy via `vercel --prod` from `main`)
+- **Preview:** Auto-generated on every `git push` — Vercel creates a unique URL for testing
+- **Local:** `localhost:5173` — auto-reloads on file save
+
+### Deployment Workflow
+```
+Local dev (file save) → localhost:5173 (instant)
+git push              → Preview URL (auto, shareable)
+vercel --prod         → torch-two.vercel.app (manual, tagged)
+```
+After every `vercel --prod`, run `/smoke` to verify.
 
 ## File Structure
 ```
