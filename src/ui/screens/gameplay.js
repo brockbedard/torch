@@ -937,53 +937,48 @@ export function buildGameplay() {
   function showClashOnField(res) {
     SND.hit();
     var clash = document.createElement('div'); clash.className = 'T-clash';
-    var offColor = '#c8a030';
-    var defColor = '#e03050';
-    var hasTorch = res.offCard || res.defCard;
-    var torchCard = null;
-    if (hasTorch) {
-      var tcId = res.offCard || res.defCard;
-      torchCard = TORCH_CARDS.find(function(c) { return c.id === tcId; });
+    var isUserOnOff = (res._preSnap ? res._preSnap.possession === hAbbr : gs.possession === hAbbr);
+
+    // Build a compact card element matching the game's card style
+    function clashCard(name, sub, color, faceUp) {
+      var card = document.createElement('div');
+      card.style.cssText = 'flex:1;max-width:42%;border-radius:8px;overflow:hidden;border:2px solid ' + color + ';background:#0A0804;padding:8px 10px;transition:transform 0.4s;';
+      if (!faceUp) {
+        // Face-down card — colored back, flips after 400ms
+        card.style.background = 'radial-gradient(ellipse at 50% 40%,' + color + '44,' + color + '11)';
+        card.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:" + color + ";letter-spacing:1px;text-align:center;opacity:0.5;\">?</div>";
+        setTimeout(function() {
+          card.style.transform = 'rotateY(90deg)';
+          setTimeout(function() {
+            card.style.background = '#0A0804';
+            card.innerHTML = "<div style=\"font-family:'Teko';font-size:16px;font-weight:700;color:#fff;line-height:1.1;\">" + name + "</div>" +
+              "<div style=\"font-family:'Rajdhani';font-size:10px;font-weight:700;color:" + color + ";margin-top:2px;letter-spacing:0.5px;\">" + sub + "</div>";
+            card.style.transform = 'rotateY(0)';
+          }, 200);
+        }, 400);
+      } else {
+        card.innerHTML = "<div style=\"font-family:'Teko';font-size:16px;font-weight:700;color:#fff;line-height:1.1;\">" + name + "</div>" +
+          "<div style=\"font-family:'Rajdhani';font-size:10px;font-weight:700;color:" + color + ";margin-top:2px;letter-spacing:0.5px;\">" + sub + "</div>";
+      }
+      return card;
     }
 
-    // Build compact clash cards that fit the field strip
-    function clashCard(name, sub, color) {
-      return '<div class="T-clash-card" style="border-color:' + color + '">' +
-        "<div style=\"padding:8px 10px 6px\">" +
-          "<div style=\"font-family:'Teko';font-size:18px;color:#fff;line-height:1\">" + name + "</div>" +
-          "<div style=\"font-family:'Rajdhani';font-size:11px;font-weight:bold;color:" + color + ";margin-top:3px;letter-spacing:.5px\">" + sub + "</div>" +
-        "</div></div>";
-    }
+    // User's card (always face-up) on left, AI's card (flips) on right
+    var userPlayName = isUserOnOff ? res.offPlay.name : res.defPlay.name;
+    var userPlaySub = isUserOnOff ? (res.offPlay.playType || '') : (res.defPlay.cardType || '');
+    var userColor = isUserOnOff ? '#EBB010' : '#4488ff';
+    var aiPlayName = isUserOnOff ? res.defPlay.name : res.offPlay.name;
+    var aiPlaySub = isUserOnOff ? (res.defPlay.cardType || '') : (res.offPlay.playType || '');
+    var aiColor = isUserOnOff ? '#e03050' : '#c8a030';
 
-    // Left: offense cards
-    var left = document.createElement('div');
-    left.className = 'T-clash-side';
-    left.innerHTML =
-      clashCard(res.offPlay.name, res.offPlay.playType || res.offPlay.cardType, offColor) +
-      clashCard(res.featuredOff.name, res.featuredOff.pos + ' \u00b7 OVR ' + res.featuredOff.ovr, offColor);
+    var userCard = clashCard(userPlayName, userPlaySub, userColor, true);
+    var vsEl = document.createElement('div');
+    vsEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:16px;color:#555;display:flex;align-items:center;padding:0 6px;";
+    vsEl.textContent = 'VS';
+    var aiCard = clashCard(aiPlayName, aiPlaySub, aiColor, false);
 
-    // Center: VS (flex child between left and right — guaranteed centered)
-    var center = document.createElement('div');
-    center.className = 'T-clash-center';
-    if (torchCard) {
-      var clashTierCol = torchCard.tier === 'GOLD' ? '#EBB010' : torchCard.tier === 'SILVER' ? '#B0C4D4' : '#A0522D';
-      center.innerHTML =
-        "<div style=\"background:radial-gradient(ellipse at 50% 35%,#1a0800,#0A0804);border:3px solid " + clashTierCol + ";border-radius:6px;padding:6px 10px;box-shadow:0 0 16px rgba(255,69,17,.3)\">" +
-          "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:5px;color:" + clashTierCol + ";text-align:center;letter-spacing:1px;opacity:0.7\">" + torchCard.tier + "</div>" +
-          "<div style=\"font-family:'Teko';font-weight:700;font-size:13px;color:#fff;line-height:1;text-align:center\">" + torchCard.name + "</div>" +
-        "</div>";
-    } else {
-      center.innerHTML = '<div class="T-clash-vs">VS</div>';
-    }
-
-    // Right: defense cards
-    var right = document.createElement('div');
-    right.className = 'T-clash-side';
-    right.innerHTML =
-      clashCard(res.defPlay.name, res.defPlay.cardType || 'DEF', defColor) +
-      clashCard(res.featuredDef.name, res.featuredDef.pos + ' \u00b7 OVR ' + res.featuredDef.ovr, defColor);
-
-    clash.append(left, center, right);
+    clash.style.cssText += 'display:flex;align-items:stretch;gap:0;padding:4px 8px;';
+    clash.append(userCard, vsEl, aiCard);
     strip.appendChild(clash);
   }
 
@@ -1883,6 +1878,20 @@ export function buildGameplay() {
     var defCard = isOff ? null : selTorch;
     var playedPlay = selPl;
 
+    // Torch card activation moment
+    if (selectedPreSnap && selectedPreSnap.name) {
+      var tcCard = selectedPreSnap;
+      var tcTierCol = tcCard.tier === 'GOLD' ? '#EBB010' : tcCard.tier === 'SILVER' ? '#C0C0C0' : '#CD7F32';
+      var tcOv = document.createElement('div');
+      tcOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,' + (tcCard.tier === 'GOLD' ? '0.6' : '0.3') + ');opacity:0;transition:opacity 0.15s;pointer-events:none;';
+      tcOv.innerHTML =
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:24px;color:" + tcTierCol + ";letter-spacing:3px;text-shadow:0 0 16px " + tcTierCol + "60;\">" + tcCard.name + "</div>" +
+        "<div style=\"font-family:'Rajdhani';font-size:12px;color:#ccc;margin-top:4px;max-width:280px;text-align:center;\">" + tcCard.effect + "</div>";
+      el.appendChild(tcOv);
+      requestAnimationFrame(function() { tcOv.style.opacity = '1'; });
+      setTimeout(function() { tcOv.style.opacity = '0'; setTimeout(function() { tcOv.remove(); }, 200); }, tcCard.tier === 'GOLD' ? 1200 : tcCard.tier === 'SILVER' ? 800 : 500);
+    }
+
     // Pre-snap TORCH card effects
     if (offCard === 'hard_count' || defCard === 'hard_count') {
       // Force opponent to discard their play and get a random replacement
@@ -2323,54 +2332,76 @@ export function buildGameplay() {
 
       // ── TD CELEBRATION — separate flow for touchdowns ──
       if (isTD && isUserOff && !res._isConversion) {
-        // USER SCORES — "The Moment" (not for conversions)
-        totalDur = 5500; // override hold time
+        // USER SCORES — "The Moment"
+        totalDur = 4500;
+        var teamAccent = hTeam.accent || '#EBB010';
+
+        // Full dark overlay behind everything
+        var tdDim = document.createElement('div');
+        tdDim.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.8);z-index:8;';
+        overlay.appendChild(tdDim);
 
         // White flash
         var tdFlash = document.createElement('div');
-        tdFlash.style.cssText = 'position:absolute;inset:0;background:#fff;z-index:10;opacity:0.8;transition:opacity 0.3s;';
+        tdFlash.style.cssText = 'position:absolute;inset:0;background:#fff;z-index:12;opacity:0.9;transition:opacity 0.2s;';
         overlay.appendChild(tdFlash);
         setTimeout(function() { tdFlash.style.opacity = '0'; }, 150);
-        setTimeout(function() { tdFlash.remove(); }, 500);
+        setTimeout(function() { tdFlash.remove(); }, 400);
 
         // Haptic
         if (navigator.vibrate) try { navigator.vibrate([30, 50, 80]); } catch(e) {}
 
+        // Team logo pulsing behind text
+        var logoBg = document.createElement('div');
+        logoBg.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9;opacity:0.12;animation:T-flame-pulse 1.5s ease-in-out infinite;';
+        logoBg.innerHTML = renderTeamBadge(GS.team, 200);
+        overlay.appendChild(logoBg);
+
         // Result wrap — centered
         var resultWrap = document.createElement('div');
         resultWrap.className = 'T-clash-result';
+        resultWrap.style.cssText = 'z-index:10;';
         resultWrap.style.opacity = '0';
 
-        // "TOUCHDOWN" — big spring slam
-        resultWrap.innerHTML =
-          "<div style=\"font-family:'Teko';font-weight:700;font-size:72px;color:#EBB010;letter-spacing:6px;text-shadow:0 0 40px rgba(235,176,16,0.5),0 0 80px rgba(235,176,16,0.25);animation:T-clash-yds 0.5s cubic-bezier(0.34,1.56,0.64,1) both;\">TOUCHDOWN</div>";
+        // "TOUCHDOWN" — auto-sized to fit screen width
+        var tdTextEl = document.createElement('div');
+        tdTextEl.style.cssText = "font-family:'Teko';font-weight:700;color:" + teamAccent + ";letter-spacing:6px;text-shadow:0 0 40px " + teamAccent + "80,0 0 80px " + teamAccent + "40;animation:T-clash-yds 0.5s cubic-bezier(0.34,1.56,0.64,1) both;white-space:nowrap;font-size:72px;";
+        tdTextEl.textContent = 'TOUCHDOWN';
+        resultWrap.appendChild(tdTextEl);
         overlay.appendChild(resultWrap);
-        requestAnimationFrame(function() { resultWrap.style.opacity = '1'; resultWrap.style.transition = 'opacity 0.2s'; });
 
-        // Team name slides up after 600ms
+        // Auto-size TOUCHDOWN text to fit container
+        requestAnimationFrame(function() {
+          resultWrap.style.opacity = '1'; resultWrap.style.transition = 'opacity 0.2s';
+          var maxW = (overlay.offsetWidth || 375) - 40;
+          var fs = 72;
+          while (tdTextEl.scrollWidth > maxW && fs > 28) { fs -= 2; tdTextEl.style.fontSize = fs + 'px'; }
+        });
+
+        // Team name slides up
         setTimeout(function() {
           var teamLine = document.createElement('div');
-          teamLine.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:" + hTeam.accent + ";letter-spacing:4px;text-shadow:0 0 16px " + hTeam.accent + "40;opacity:0;transform:translateY(10px);transition:opacity 0.3s,transform 0.3s;";
+          teamLine.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:" + teamAccent + ";letter-spacing:4px;text-shadow:0 0 16px " + teamAccent + "40;opacity:0;transform:translateY(10px);transition:opacity 0.3s,transform 0.3s;";
           teamLine.textContent = hTeam.name.toUpperCase() + '!';
           resultWrap.appendChild(teamLine);
           requestAnimationFrame(function() { teamLine.style.opacity = '1'; teamLine.style.transform = 'translateY(0)'; });
-        }, 600);
+        }, 500);
 
-        // Confetti burst — team-colored particles rain down
+        // Confetti — 50 particles in team colors
         setTimeout(function() {
-          for (var ci = 0; ci < 35; ci++) {
+          for (var ci = 0; ci < 50; ci++) {
             var conf = document.createElement('div');
-            var confX = 10 + Math.random() * 80;
-            var confSize = 3 + Math.random() * 4;
-            var confDur = 1500 + Math.random() * 1500;
-            var confDelay = Math.random() * 800;
-            var confColor = Math.random() > 0.5 ? hTeam.accent : (Math.random() > 0.5 ? '#EBB010' : '#fff');
-            conf.style.cssText = 'position:absolute;top:-10px;left:' + confX + '%;width:' + confSize + 'px;height:' + confSize + 'px;background:' + confColor + ';border-radius:1px;opacity:0.9;z-index:8;animation:T-td-confetti ' + confDur + 'ms ease-in ' + confDelay + 'ms both;';
+            var confX = 5 + Math.random() * 90;
+            var confSize = 3 + Math.random() * 5;
+            var confDur = 1500 + Math.random() * 2000;
+            var confDelay = Math.random() * 600;
+            var confColor = Math.random() > 0.4 ? teamAccent : (Math.random() > 0.5 ? '#EBB010' : '#fff');
+            conf.style.cssText = 'position:absolute;top:-10px;left:' + confX + '%;width:' + confSize + 'px;height:' + confSize + 'px;background:' + confColor + ';border-radius:1px;opacity:0.9;z-index:11;animation:T-td-confetti ' + confDur + 'ms ease-in ' + confDelay + 'ms both;';
             overlay.appendChild(conf);
           }
-        }, 400);
+        }, 300);
 
-        // Commentary at 1s
+        // Commentary at 800ms
         setTimeout(function() {
           var gameCtx = gs.getSummary();
           var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
@@ -2380,27 +2411,27 @@ export function buildGameplay() {
           labelEl.textContent = comm.line1;
           resultWrap.appendChild(labelEl);
           requestAnimationFrame(function() { labelEl.style.opacity = '1'; });
-        }, 1000);
+        }, 800);
 
         drawBug(); drawField();
 
       } else if (isTD && (!isUserOff || res._isConversion)) {
-        // OPPONENT SCORES or CONVERSION result — standard display
-        totalDur = 2500;
+        // OPPONENT SCORES or CONVERSION — muted, move on fast
+        totalDur = 1800;
         var resultWrap = document.createElement('div');
         resultWrap.className = 'T-clash-result';
-        resultWrap.style.cssText = 'position:absolute;top:20%;left:50%;transform:translateX(-50%);width:90%;text-align:center;';
+        resultWrap.style.cssText = 'position:absolute;top:22%;left:50%;transform:translateX(-50%);width:90%;text-align:center;';
         resultWrap.style.opacity = '0';
-        resultWrap.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:36px;color:#888;letter-spacing:3px;\">TOUCHDOWN</div>" +
-          "<div style=\"font-family:'Rajdhani';font-size:13px;color:#555;margin-top:4px;\">" + oTeam.name + " scores.</div>";
+        resultWrap.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:#666;letter-spacing:2px;\">TOUCHDOWN</div>" +
+          "<div style=\"font-family:'Rajdhani';font-size:12px;color:#444;margin-top:4px;\">" + oTeam.name + " scores.</div>";
         overlay.appendChild(resultWrap);
-        requestAnimationFrame(function() { resultWrap.style.opacity = '1'; resultWrap.style.transition = 'opacity 0.3s'; });
+        requestAnimationFrame(function() { resultWrap.style.opacity = '1'; resultWrap.style.transition = 'opacity 0.25s'; });
 
         setTimeout(function() {
           var gameCtx = gs.getSummary();
           var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
           setNarr(comm.line1, '');
-        }, 600);
+        }, 400);
 
         drawBug(); drawField();
 
@@ -2424,13 +2455,16 @@ export function buildGameplay() {
       setTimeout(function() {
         if (isTD) return; // TD has its own commentary flow above
 
-        // First down flash
+        // First down — big broadcast-style slide-in
         if (gotFirstDown) {
+          var fdColor = isUserOff ? '#00ff44' : '#888';
+          var fdText = isUserOff ? 'FIRST DOWN!' : 'First down.';
           var fdFlash = document.createElement('div');
-          fdFlash.style.cssText = "font-family:'Teko';font-weight:700;font-size:24px;color:#00ff44;letter-spacing:3px;text-shadow:0 0 16px rgba(0,255,68,0.5);margin-top:8px;animation:T-clash-yds 0.5s ease-out both;";
-          fdFlash.textContent = 'FIRST DOWN';
+          fdFlash.style.cssText = "font-family:'Teko';font-weight:700;font-size:" + (isUserOff ? '42px' : '24px') + ";color:" + fdColor + ";letter-spacing:4px;text-shadow:0 0 20px " + fdColor + "60;margin-top:8px;opacity:0;transform:translateX(-20px);transition:opacity 0.3s,transform 0.3s;";
+          fdFlash.textContent = fdText;
           resultWrap.appendChild(fdFlash);
-          SND.chime();
+          requestAnimationFrame(function() { fdFlash.style.opacity = '1'; fdFlash.style.transform = 'translateX(0)'; });
+          if (isUserOff) SND.chime();
         }
 
         // New down & distance (skip if first down flash showing)
@@ -2847,16 +2881,23 @@ export function buildGameplay() {
   function show2MinWarn() {
     shakeScreen();
     flashField('rgba(224,48,80,.3)');
-    const ov = document.createElement('div'); ov.className = 'T-ov T-ov-black T-ov-poss';
-    ov.style.cssText = 'opacity:0;transition:opacity .25s';
+
+    // Red flash pulse on edges
+    var edgePulse = document.createElement('div');
+    edgePulse.style.cssText = 'position:fixed;inset:0;z-index:599;border:4px solid #e03050;opacity:0.8;pointer-events:none;animation:T-flash-green 0.6s ease-out;';
+    edgePulse.style.borderColor = '#e03050';
+    el.appendChild(edgePulse);
+    setTimeout(function() { edgePulse.remove(); }, 600);
+
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);opacity:0;transition:opacity .25s;pointer-events:auto;cursor:pointer;';
     ov.innerHTML =
-      '<div class="T-poss-score" style="color:#e03050;font-size:28px">2:00</div>'+
-      '<div class="T-poss-who" style="color:#e03050;font-size:24px;letter-spacing:4px">2-MINUTE WARNING</div>'+
-      "<div class=\"T-poss-tag\" style=\"color:#e03050;opacity:.7\">The clock is live. SPIKE and KNEEL available.</div>"+
-      "<div style=\"font-family:'Rajdhani';font-size:9px;color:#554f80;margin-top:8px\">Every second counts from here.</div>";
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:48px;color:#e03050;letter-spacing:6px;text-shadow:0 0 30px rgba(224,48,80,0.5);animation:T-clash-yds 0.4s cubic-bezier(0.34,1.56,0.64,1) both;\">2-MINUTE WARNING</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:14px;color:#888;letter-spacing:2px;margin-top:8px;\">The clock is live. Every second counts.</div>";
+    ov.onclick = function() { ov.style.opacity = '0'; setTimeout(function() { ov.remove(); }, 250); };
     el.appendChild(ov);
-    requestAnimationFrame(() => ov.style.opacity='1');
-    setTimeout(() => { ov.style.opacity='0'; setTimeout(() => ov.remove(), 250); }, 2500);
+    requestAnimationFrame(function() { ov.style.opacity = '1'; });
+    setTimeout(function() { if (ov.parentNode) { ov.style.opacity = '0'; setTimeout(function() { ov.remove(); }, 250); } }, 2000);
   }
 
   // ── COIN TOSS OVERLAY ──
