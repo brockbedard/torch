@@ -37,18 +37,18 @@ export const TEAMS = {
   },
   stags: {
     id: 'stags',
-    name: 'STAGS',
-    school: 'Crestview College',
-    mascot: 'Stags',
-    abbr: 'CRV',
-    accent: '#F28C28', icon: '',
-    colors: { primary: '#F28C28', secondary: '#1C1C1C' },
-    helmet: { base: '#F28C28', facemask: '#1C1C1C', stripe: '#1C1C1C' },
-    motto: 'Strike First, Strike Fast',
-    offScheme: 'SPREAD RPO',
-    defScheme: 'SWARM BLITZ',
+    name: 'SPECTRES',
+    school: 'Hollowridge',
+    mascot: 'Spectres',
+    abbr: 'HLR',
+    accent: '#85C1E9', icon: '',
+    colors: { primary: '#5DADE2', secondary: '#1B4F72' },
+    helmet: { base: '#5DADE2', facemask: '#1B4F72', stripe: '#85C1E9' },
+    motto: 'Strike From The Shadows',
+    offScheme: 'AIR RAID',
+    defScheme: 'COVER 0 BLITZ',
     ratings: { offense: 5, defense: 2 },
-    vibe: 'Explosive. Electric. Wins 52-48 or loses 52-48.',
+    vibe: 'Quick throws. Tempo. Outscore everyone.',
   },
   serpents: {
     id: 'serpents',
@@ -79,7 +79,7 @@ export function getTeamIds() {
 }
 
 // Counter-play matrix: which offense is strong/weak vs which defense
-// Circular: Sentinels > Serpents > Stags > Wolves > Sentinels
+// Circular: Sentinels > Serpents > Spectres > Wolves > Sentinels
 export const COUNTER_PLAY = {
   sentinels: { strong: 'wolves', weak: 'stags', neutral: 'serpents' },
   wolves:    { strong: 'sentinels', weak: 'serpents', neutral: 'stags' },

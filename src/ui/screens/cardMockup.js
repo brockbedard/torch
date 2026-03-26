@@ -114,9 +114,9 @@ export function buildCardMockup() {
   var pipData = [
     { label: 'Boars OFF 4/5', filled: 4, color: '#C4A265' },
     { label: 'Wolves DEF 4/5', filled: 4, color: '#D4D4D4' },
-    { label: 'Stags OFF 5/5', filled: 5, color: '#F28C28' },
+    { label: 'Spectres OFF 5/5', filled: 5, color: '#F28C28' },
     { label: 'Serpents DEF 4/5', filled: 4, color: '#39FF14' },
-    { label: 'Stags DEF 2/5', filled: 2, color: '#F28C28' },
+    { label: 'Spectres DEF 2/5', filled: 2, color: '#F28C28' },
   ];
   pipData.forEach(function(pd) {
     var w2 = document.createElement('div');

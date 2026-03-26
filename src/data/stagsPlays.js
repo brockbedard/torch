@@ -1,5 +1,5 @@
 /**
- * TORCH — Crestview Stags Offensive Plays (Spread RPO)
+ * TORCH — Hollowridge Spectres Offensive Plays (Spread RPO)
  * 10 plays, balanced RPO with tempo and QB as weapon.
  */
 
@@ -268,7 +268,7 @@ export const STAGS_OFF_PLAYS = [
 ];
 
 /**
- * TORCH — Crestview Stags Defensive Plays (Swarm Blitz / Cover 0)
+ * TORCH — Hollowridge Spectres Defensive Plays (Swarm Blitz / Cover 0)
  * 10 plays, blitz heavy, high risk.
  */
 

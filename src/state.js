@@ -73,7 +73,7 @@ export var TEAM_DRAW_WEIGHTS = {
   sentinels: { RUN: 4, SHORT: 1.5, DEEP: 1, QUICK: 1, SCREEN: 0.5 },
   // Dolphins — Spread Option: 50/50 but QB-run heavy. Zone read + QB draw + balanced pass.
   wolves:    { RUN: 3, SHORT: 2, DEEP: 1, QUICK: 2, SCREEN: 2 },
-  // Stags — Air Raid: 30% run / 70% pass. Quick + deep pass dominate.
+  // Spectres — Air Raid: 30% run / 70% pass. Quick + deep pass dominate.
   stags:     { RUN: 0.5, SHORT: 3, DEEP: 3, QUICK: 4, SCREEN: 2 },
   // Serpents — Multiple/Pro Style: 45/55 balanced. No bias — master of none.
   serpents:  { RUN: 2, SHORT: 2, DEEP: 2, QUICK: 2, SCREEN: 2 },

@@ -51,9 +51,9 @@ export const WOLVES_DEFENSE = [
 ];
 
 // ============================================================
-// CRESTVIEW STAGS — Spread RPO + Swarm Blitz
+// CRESTVIEW SPECTRES — Spread RPO + Swarm Blitz
 // ============================================================
-export const STAGS_OFFENSE = [
+export const SPECTRES_OFFENSE = [
   { id: 'crv_o1', name: 'Strand', pos: 'QB', ovr: 84, badge: 'FLAME', isStar: true, starTitle: 'The Spark', num: 1, ability: 'Dual threat — runs and throws' },
   { id: 'crv_o2', name: 'Cortland', pos: 'RB', ovr: 80, badge: 'CLEAT', isStar: false, num: 25, ability: 'Hits the hole and goes' },
   { id: 'crv_o3', name: 'DaCosta', pos: 'WR', ovr: 78, badge: 'BOLT', isStar: false, num: 11, ability: 'Explosive after the catch' },
@@ -63,7 +63,7 @@ export const STAGS_OFFENSE = [
   { id: 'crv_o7', name: 'Reyes', pos: 'RB', ovr: 72, badge: 'CLEAT', isStar: false, num: 28, ability: 'Catches out of the backfield' },
 ];
 
-export const STAGS_DEFENSE = [
+export const SPECTRES_DEFENSE = [
   { id: 'crv_d1', name: 'Blackwell', pos: 'EDGE', ovr: 84, badge: 'SPEED_LINES', isStar: true, starTitle: 'Chaos', num: 99, ability: 'Unblockable off the edge' },
   { id: 'crv_d2', name: 'Tate', pos: 'LB', ovr: 80, badge: 'SPEED_LINES', isStar: false, num: 52, ability: 'Sideline to sideline range' },
   { id: 'crv_d3', name: 'Ross', pos: 'CB', ovr: 78, badge: 'PADLOCK', isStar: false, num: 24, ability: 'Physical at the line' },
@@ -100,7 +100,7 @@ export const SERPENTS_DEFENSE = [
 var _rosters = {
   sentinels: { offense: SENTINELS_OFFENSE, defense: SENTINELS_DEFENSE },
   wolves:    { offense: WOLVES_OFFENSE, defense: WOLVES_DEFENSE },
-  stags:     { offense: STAGS_OFFENSE, defense: STAGS_DEFENSE },
+  spectres:     { offense: SPECTRES_OFFENSE, defense: SPECTRES_DEFENSE },
   serpents:  { offense: SERPENTS_OFFENSE, defense: SERPENTS_DEFENSE },
 };
 

@@ -249,7 +249,7 @@ var TEAM_CONCEPT_WEIGHTS = {
     mesh: 3, slant_arrow: 2, drive: 2, flood: 2,
     verticals: 2, post_corner: 1, comeback_vertical: 1,
   },
-  // Stags — Air Raid: quick game, mesh, deep shots, screens
+  // Spectres — Air Raid: quick game, mesh, deep shots, screens
   stags: {
     slant_arrow: 4, mesh: 4, hitch_concept: 3, quick_out: 3,
     verticals: 3, post_corner: 3, smash_seam: 2, dagger: 2, flood: 2,
@@ -295,7 +295,7 @@ var TEAM_ANIM_STYLE = {
     preSnapMotion: false,
     qbZoneRead: true,    // QB has give/keep read motion
   },
-  // Stags: SHARP. Quick release. Wide spacing. Precise.
+  // Spectres: SHARP. Quick release. Wide spacing. Precise.
   stags: {
     olScale: 0.9,        // Less OL movement (pass-first)
     throwTMod: 0.75,     // Ball comes out FAST — Air Raid quick game
@@ -458,7 +458,7 @@ export function buildPlayAnimation(resultType, yardsGained, formation, playType,
   var isTD = resultType === 'touchdown';
   var isRun = resultType === 'run' || (playType === 'RUN' && resultType !== 'sack' && resultType !== 'interception' && resultType !== 'incomplete');
   // Base timing scaled ~3x for realistic pace (3-5s per play)
-  var tMod = style.throwTMod;  // Stags: 0.75 (quick release), Wolves: 0.85 (tempo)
+  var tMod = style.throwTMod;  // Spectres: 0.75 (quick release), Wolves: 0.85 (tempo)
   var throwT = Math.round((isRun ? 500 : 1200) * tMod);
   var catchT = Math.round((isRun ? 1200 : 2100) * tMod);
   var tackleT = isTD ? 3200 : (isRun ? 2800 : Math.round(3500 * tMod));

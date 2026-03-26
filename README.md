@@ -25,7 +25,7 @@ TORCH is a mobile-first card game where every snap is a tactical puzzle. Pick a 
 |--|------|--------|----------|----------|
 | **Ridgemont** | **Boars** | Power Spread | 55/45 | Smash-mouth. Physical. Patient. |
 | **Coral Bay** | **Dolphins** | Spread Option | 50/50 | QB runs. Zone read. Speed kills. |
-| **Crestview** | **Stags** | Air Raid | 30/70 | Quick throws. Tempo. Outscore everyone. |
+| **Hollowridge** | **Spectres** | Air Raid | 30/70 | Quick throws. Tempo. Outscore everyone. |
 | **Blackwater** | **Serpents** | Multiple/Pro | 45/55 | Unpredictable. Disguise. Adapt. |
 
 Each team has a weighted draft pool, formation tendencies, and unique animation style based on real college football archetypes (Georgia, Oregon, Mike Leach's Air Raid, Nick Saban's multiple looks).

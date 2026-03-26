@@ -449,9 +449,9 @@ export function buildVisualTest() {
 
     var samples = [
       { type: 'TIER 1 — ROUTINE (60-70%)', line: 'Cortland hauls in a short pass for 4. Second and 6.', sub: '', subColor: '#aaa', combo: '' },
-      { type: 'TIER 2 — ELEVATED (20%)', line: 'Cortland bursts through the hole for 8 — and that moves the chains on a critical third down.', sub: 'First down Stags. Chains move.', subColor: '#00ff44', combo: '' },
-      { type: 'TIER 3 — INTENSE (8%)', line: 'Cortland! Cuts back — to the 40, the 45, he\'s got room! Picks up 18!', sub: 'Stags are moving.', subColor: '#EBB010', combo: '' },
-      { type: 'TIER 4 — EXPLOSIVE (2%)', line: 'TOUCHDOWN STAGS! Strand rolls right, buys time, and finds Cortland streaking down the sideline — 23-yard strike!', sub: 'The Stags take the lead with under two minutes to play!', subColor: '#EBB010', combo: 'SETUP! +4 yds' },
+      { type: 'TIER 2 — ELEVATED (20%)', line: 'Cortland bursts through the hole for 8 — and that moves the chains on a critical third down.', sub: 'First down Spectres. Chains move.', subColor: '#00ff44', combo: '' },
+      { type: 'TIER 3 — INTENSE (8%)', line: 'Cortland! Cuts back — to the 40, the 45, he\'s got room! Picks up 18!', sub: 'Spectres are moving.', subColor: '#EBB010', combo: '' },
+      { type: 'TIER 4 — EXPLOSIVE (2%)', line: 'TOUCHDOWN SPECTRES! Strand rolls right, buys time, and finds Cortland streaking down the sideline — 23-yard strike!', sub: 'The Spectres take the lead with under two minutes to play!', subColor: '#EBB010', combo: 'SETUP! +4 yds' },
       { type: 'SACK', line: 'SACK! Blackwell wraps up the QB for a loss of 7.', sub: 'That\'s a drive-killer. Serpents defense is swarming.', subColor: '#e03050', combo: '' },
       { type: 'INTERCEPTION', line: 'PICKED! Tillery reads it all the way — turnover Boars!', sub: 'Momentum shift.', subColor: '#e03050', combo: '' },
     ];

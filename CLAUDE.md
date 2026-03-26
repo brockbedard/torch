@@ -44,13 +44,13 @@ src/
 ├── state.js                   # Global state, version, hand management, team draw weights
 ├── style.css                  # CSS custom properties / design system
 ├── data/
-│   ├── teams.js               # 4 teams: Boars (sentinels), Dolphins (wolves), Stags, Serpents
+│   ├── teams.js               # 4 teams: Boars (sentinels), Dolphins (wolves), Spectres, Serpents
 │   ├── players.js             # 52 players (4 teams x 7 OFF + 6 DEF) with ability text
 │   ├── *Plays.js              # 10 OFF + 10 DEF plays per team (80 total)
 │   ├── torchCards.js           # 12 TORCH cards (2 Gold, 5 Silver, 5 Bronze)
 │   ├── torchCardIcons.js       # 20 game-icons.net SVG paths + renderTorchCardIcon()
 │   ├── badges.js              # Badge enum + inline SVG icons
-│   ├── teamLogos.js           # Team mascot SVGs (boar/dolphin/deer/serpent)
+│   ├── teamLogos.js           # Team mascot SVGs (boar/dolphin/spectre/serpent)
 │   └── gameConditions.js      # Weather/field/crowd (45 combos)
 ├── engine/
 │   ├── gameState.js           # GameState class — full game simulation
@@ -98,13 +98,13 @@ src/
 |------|--------|-------------|----------|-----------|
 | **Boars** (Ridgemont) | Power Spread | Georgia, Alabama | 55/45 | Cover 3 zone |
 | **Dolphins** (Coral Bay) | Spread Option | Oregon, Rich Rod WVU | 50/50 | Cover 1 + spy |
-| **Stags** (Crestview) | Air Raid | Mike Leach, Lincoln Riley | 30/70 | Cover 0 blitz |
+| **Spectres** (Hollowridge) | Air Raid | Mike Leach, Lincoln Riley | 30/70 | Cover 0 blitz |
 | **Serpents** (Blackwater) | Multiple/Pro | Saban, Kirby Smart | 45/55 | Multiple/disguised |
 
-**Counter-play:** Boars > Serpents > Stags > Dolphins > Boars
+**Counter-play:** Boars > Serpents > Spectres > Dolphins > Boars
 
 ### Team Differentiation
-| Dimension | Boars | Dolphins | Stags | Serpents |
+| Dimension | Boars | Dolphins | Spectres | Serpents |
 |-----------|-------|--------|-------|---------|
 | Draft pool | RUN 4x | RUN 3x, SCREEN 2x | QUICK 4x, DEEP 3x | All 2x |
 | Best formation | I-Form / Pistol | Shotgun / Pistol | Trips / Empty | Bunch / Twins |
@@ -155,7 +155,7 @@ The game is always on the user's side. This is enforced across 6 layers:
 ### Hand Management
 10-card playbook per side. Draw 4 at game start. Play 1 → draw 1 from remaining 6 (weighted by team scheme). Always 4 in hand. Player cards also 4 per hand.
 
-**Draw weighting** (`TEAM_DRAW_WEIGHTS` in state.js): Boars see run cards 4x more. Stags see quick/deep pass cards 3-4x more. Serpents balanced (all 2x).
+**Draw weighting** (`TEAM_DRAW_WEIGHTS` in state.js): Boars see run cards 4x more. Spectres see quick/deep pass cards 3-4x more. Serpents balanced (all 2x).
 
 ### Season Cycle
 3 games per season. Order: neutral → prey → predator. Cards + unspent points carry. +20/win.

@@ -350,7 +350,7 @@ export function createFieldAnimator(width, height) {
       var CORE_R = 14, DOT_R = 24;
 
       // Team colors (dynamic)
-      var TEAM_COLORS = { sentinels:[196,162,101], wolves:[232,84,143], stags:[242,140,40], serpents:[57,255,20] };
+      var TEAM_COLORS = { sentinels:[196,162,101], wolves:[232,84,143], stags:[93,173,226], serpents:[57,255,20] };
       var offRGB = (renderState.offTeam && TEAM_COLORS[renderState.offTeam]) || [242,140,40];
       var defRGB = (renderState.defTeam && TEAM_COLORS[renderState.defTeam]) || [59,165,93];
 

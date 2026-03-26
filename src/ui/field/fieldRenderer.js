@@ -27,7 +27,7 @@ const CFG = {
   teamDotColors: {
     sentinels: [196, 162, 101],  // Boars gold
     wolves:    [232, 84, 143],  // Dolphins pink
-    stags:     [242, 140, 40],   // Stags orange
+    stags:     [93, 173, 226],   // Spectres ice blue
     serpents:  [57, 255, 20],    // Serpents green
   },
   football: {
@@ -36,7 +36,7 @@ const CFG = {
     alpha: 0.13, scale: 0.065
   },
   // Player dot glow colors
-  offense: [242, 140, 40],  // Stags orange
+  offense: [242, 140, 40],  // Spectres orange
   defense: [59, 165, 93],   // Wolves green
 };
 
@@ -202,7 +202,7 @@ var TEAM_FORMATION_MAP = {
   sentinels: { DEEP: 'twins', SHORT: 'twins', QUICK: 'shotgun_deuce', SCREEN: 'twins', RUN: 'iform_pistol' },
   // Dolphins — Spread Option: Deuce 35%, Pistol 25%, Trips 25%, Empty 10%
   wolves:    { DEEP: 'trips', SHORT: 'shotgun_deuce', QUICK: 'shotgun_deuce', SCREEN: 'trips', RUN: 'shotgun_deuce' },
-  // Stags — Air Raid: Trips 35%, Deuce 30%, Empty 20%, Bunch 10%
+  // Spectres — Air Raid: Trips 35%, Deuce 30%, Empty 20%, Bunch 10%
   stags:     { DEEP: 'empty', SHORT: 'trips', QUICK: 'trips', SCREEN: 'shotgun_deuce', RUN: 'shotgun_deuce' },
   // Serpents — Multiple/Pro Style: Twins 25%, Bunch 20%, Deuce 20%, I-Form 15%, Trips 15%
   serpents:  { DEEP: 'twins', SHORT: 'bunch', QUICK: 'bunch', SCREEN: 'twins', RUN: 'twins' },
