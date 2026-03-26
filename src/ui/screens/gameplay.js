@@ -2933,81 +2933,181 @@ export function buildGameplay() {
   }
 
   // ── COIN TOSS OVERLAY ──
+  // Generate 3 face-down torch card offers (55% Bronze, 35% Silver, 10% Gold)
+  function rollCoinTossCards() {
+    var cards = [];
+    for (var i = 0; i < 3; i++) {
+      var r = Math.random();
+      var tier = r < 0.55 ? 'BRONZE' : r < 0.90 ? 'SILVER' : 'GOLD';
+      var pool = TORCH_CARDS.filter(function(c) { return c.tier === tier; });
+      cards.push(pool[Math.floor(Math.random() * pool.length)]);
+    }
+    return cards;
+  }
+
   function showCoinToss(onDone) {
-    var pool = TORCH_CARDS.filter(function(c) { return c.tier !== 'GOLD'; });
-    var shuffled = pool.slice().sort(function() { return Math.random() - 0.5; });
-    var offers = shuffled.slice(0, 3);
     var humanWins = Math.random() < 0.5;
+    var offers = rollCoinTossCards();
 
     var ov = document.createElement('div');
-    ov.className = 'T-ov T-ov-black';
-    ov.style.cssText += 'pointer-events:auto;flex-direction:column;gap:14px;padding:20px;opacity:0;transition:opacity .3s;';
-
-    // Coin animation
-    ov.innerHTML =
-      "<div style='width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#EBB010,#B8860B);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 0 25px rgba(255,204,0,.4);animation:T-coin 1.5s ease-out forwards'>T</div>" +
-      "<div style=\"font-family:'Teko';font-size:24px;color:#fff;letter-spacing:2px\">COIN TOSS...</div>";
-
+    ov.style.cssText = 'position:fixed;inset:0;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(10,8,4,0.95);opacity:0;transition:opacity .3s;pointer-events:auto;';
     el.appendChild(ov);
     requestAnimationFrame(function() { ov.style.opacity = '1'; });
 
-    setTimeout(function() {
-      var winner = humanWins ? hTeam.name : oTeam.name;
-      ov.innerHTML = '';
+    // Phase 1: Tap to flip
+    var coin = document.createElement('div');
+    coin.style.cssText = 'width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#EBB010,#B8860B);display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px rgba(235,176,16,0.4);cursor:pointer;transition:transform 0.1s;';
+    coin.innerHTML = renderTeamBadge(GS.team, 60);
+    var label = document.createElement('div');
+    label.style.cssText = "font-family:'Teko';font-weight:700;font-size:22px;color:#EBB010;letter-spacing:3px;";
+    label.textContent = 'TAP TO FLIP';
+    ov.appendChild(coin);
+    ov.appendChild(label);
 
-      // Result
-      var resultDiv = document.createElement('div');
-      resultDiv.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:340px;';
-      resultDiv.innerHTML =
-        "<div style=\"font-family:'Teko';font-size:26px;color:var(--a-gold);letter-spacing:2px\">" + winner + " WINS THE TOSS</div>";
+    coin.onclick = function() {
+      coin.onclick = null;
+      coin.style.transition = 'transform 1.5s cubic-bezier(0.22,1,0.36,1)';
+      coin.style.transform = 'rotateY(1800deg)';
+      label.textContent = '';
+      SND.snap();
 
-      if (humanWins) {
-        resultDiv.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Rajdhani';font-size:7px;color:var(--muted);letter-spacing:1px\">CHOOSE YOUR REWARD</div>");
+      setTimeout(function() {
+        // Phase 2: Result + Choice
+        ov.innerHTML = '';
+        var winner = humanWins ? hTeam.name : oTeam.name;
+        var resultEl = document.createElement('div');
+        resultEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:3px;text-align:center;";
+        resultEl.textContent = humanWins ? 'YOU WON THE TOSS!' : winner + ' WINS THE TOSS';
+        ov.appendChild(resultEl);
 
-        var cardRow = document.createElement('div');
-        cardRow.style.cssText = 'display:flex;gap:6px;width:100%;';
-        offers.forEach(function(card) {
-          var ce = document.createElement('div');
-          var tierCol = card.tier === 'SILVER' ? '#aaa' : '#CD7F32';
-          ce.style.cssText = 'flex:1;background:var(--bg-surface);border:2px solid ' + tierCol + ';border-radius:6px;padding:10px 6px;cursor:pointer;text-align:center;transition:all .15s;';
-          ce.innerHTML =
-            "<div style=\"font-family:'Rajdhani';font-size:7px;font-weight:bold;color:" + tierCol + ";letter-spacing:1px;margin-bottom:3px\">" + card.tier + "</div>" +
-            "<div style=\"font-family:'Teko';font-size:14px;color:#fff;line-height:1.1;margin-bottom:3px\">" + card.name + "</div>" +
-            "<div style=\"font-family:'Rajdhani';font-size:7px;color:var(--muted);line-height:1.3\">" + card.effect + "</div>";
-          ce.onclick = function() {
+        if (humanWins) {
+          // Human chooses: Torch Card or Receive
+          var choiceWrap = document.createElement('div');
+          choiceWrap.style.cssText = 'display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px;margin-top:12px;';
+
+          var cardBtn = document.createElement('button');
+          cardBtn.className = 'btn-blitz';
+          cardBtn.style.cssText = "width:100%;font-size:13px;padding:14px;background:#141008;color:#EBB010;border-color:#EBB010;text-align:left;";
+          cardBtn.innerHTML = "<div style=\"font-family:'Teko';font-size:18px;letter-spacing:2px;\">DRAW A TORCH CARD</div><div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:2px;\">Pick 1 of 3 mystery cards \u2014 but you kick off to them</div>";
+          cardBtn.onclick = function() { showFaceDownCards(ov, offers, true, onDone); };
+
+          var recBtn = document.createElement('button');
+          recBtn.className = 'btn-blitz';
+          recBtn.style.cssText = "width:100%;font-size:13px;padding:14px;background:#141008;color:#00ff44;border-color:#00ff44;text-align:left;";
+          recBtn.innerHTML = "<div style=\"font-family:'Teko';font-size:18px;letter-spacing:2px;\">RECEIVE THE KICK</div><div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:2px;\">Start with the ball \u2014 but no free card until halftime</div>";
+          recBtn.onclick = function() {
             SND.snap();
-            ce.style.transform = 'scale(1.1)';
-            ce.style.boxShadow = '0 0 30px var(--a-gold)';
-            setTimeout(function() { ov.style.opacity = '0'; setTimeout(function() { ov.remove(); onDone([card]); }, 250); }, 400);
+            ov.style.opacity = '0';
+            setTimeout(function() { ov.remove(); onDone({ chose: 'receive' }); }, 250);
           };
-          cardRow.appendChild(ce);
+
+          choiceWrap.appendChild(cardBtn);
+          choiceWrap.appendChild(recBtn);
+          ov.appendChild(choiceWrap);
+        } else {
+          // CPU won — AI chooses (weighted by difficulty)
+          var aiTakesCard = Math.random() < ({ EASY: 0.6, MEDIUM: 0.5, HARD: 0.4 }[gs.difficulty] || 0.5);
+          var aiMsg = document.createElement('div');
+          aiMsg.style.cssText = "font-family:'Rajdhani';font-size:14px;color:#888;text-align:center;margin-top:8px;";
+          if (aiTakesCard) {
+            aiMsg.textContent = oTeam.name + ' draws a Torch Card. You receive.';
+            // Give AI a card
+            var aiCard = offers[Math.floor(Math.random() * offers.length)];
+            gs.cpuTorchCards.push(aiCard.id);
+          } else {
+            aiMsg.textContent = oTeam.name + ' receives the kick. You draw a card.';
+          }
+          ov.appendChild(aiMsg);
+
+          setTimeout(function() {
+            if (!aiTakesCard) {
+              // Human gets to pick a face-down card
+              showFaceDownCards(ov, offers, false, onDone);
+            } else {
+              var playBtn = document.createElement('button');
+              playBtn.className = 'btn-blitz';
+              playBtn.style.cssText = "width:80%;max-width:300px;font-size:16px;background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;letter-spacing:3px;margin-top:12px;";
+              playBtn.textContent = 'PLAY BALL';
+              playBtn.onclick = function() {
+                SND.snap();
+                ov.style.opacity = '0';
+                setTimeout(function() { ov.remove(); onDone({ chose: 'receive' }); }, 250);
+              };
+              ov.appendChild(playBtn);
+            }
+          }, 1500);
+        }
+      }, 1600);
+    };
+  }
+
+  // Face-down card selection (used by coin toss and halftime)
+  function showFaceDownCards(ov, offers, humanKicks, onDone) {
+    ov.innerHTML = '';
+    var title = document.createElement('div');
+    title.style.cssText = "font-family:'Teko';font-weight:700;font-size:22px;color:#EBB010;letter-spacing:3px;text-align:center;";
+    title.textContent = 'TAP A CARD TO REVEAL';
+    ov.appendChild(title);
+
+    var cardRow = document.createElement('div');
+    cardRow.style.cssText = 'display:flex;gap:10px;justify-content:center;margin-top:16px;';
+
+    offers.forEach(function(card, idx) {
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'width:90px;height:126px;border-radius:8px;background:radial-gradient(ellipse at 50% 35%,#1a0800,#0A0804);border:2px solid #EBB01044;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s;opacity:0;transform:translateY(20px);';
+      wrap.innerHTML = "<div style=\"font-family:'Teko';font-size:36px;color:#EBB01044;\">?</div>";
+      // Stagger deal-in
+      setTimeout(function() { wrap.style.opacity = '1'; wrap.style.transform = 'translateY(0)'; }, 200 + idx * 100);
+
+      wrap.onclick = function() {
+        // Reveal this card, fade others
+        cardRow.querySelectorAll('div').forEach(function(c) { c.onclick = null; });
+        wrap.style.border = '2px solid #EBB010';
+        wrap.style.boxShadow = '0 0 20px rgba(235,176,16,0.4)';
+        wrap.style.transform = 'scale(1.05)';
+        wrap.innerHTML = '';
+        var revealed = buildTorchCard(card, 86, 120);
+        revealed.style.width = '100%';
+        revealed.style.height = '100%';
+        wrap.appendChild(revealed);
+        SND.snap();
+
+        // Fade non-selected
+        cardRow.querySelectorAll('div').forEach(function(c) {
+          if (c !== wrap) c.style.opacity = '0.2';
         });
-        resultDiv.appendChild(cardRow);
 
-        resultDiv.insertAdjacentHTML('beforeend', "<div style=\"font-family:'Rajdhani';font-size:7px;color:var(--muted);letter-spacing:2px\">\u2014 OR \u2014</div>");
+        // Award card to human
+        if (gs.humanTorchCards.length < 3) gs.humanTorchCards.push(card.id);
+        // Sync to torchInventory
+        var cardObj = TORCH_CARDS.find(function(tc) { return tc.id === card.id; });
+        if (cardObj) torchInventory.push(cardObj);
+        if (GS.season) GS.season.torchCards = torchInventory.slice();
 
-        var recBtn = document.createElement('button');
-        recBtn.className = 'btn-blitz';
-        recBtn.style.cssText = 'width:100%;font-size:11px;background:var(--a-gold);border-color:var(--a-gold);color:#000;';
-        recBtn.textContent = 'RECEIVE AT THE 50';
-        recBtn.onclick = function() { SND.snap(); ov.style.opacity = '0'; setTimeout(function() { ov.remove(); onDone([], true); }, 250); };
-        resultDiv.appendChild(recBtn);
-      } else {
-        var cpuCard = offers[0];
-        resultDiv.innerHTML +=
-          "<div style=\"font-family:'Barlow Condensed';font-size:14px;color:var(--muted);line-height:1.4;text-align:center\">" +
-            oTeam.name + " takes a " + cpuCard.tier + " Torch Card.<br>You receive at the 50." +
-          "</div>";
-        var playBtn = document.createElement('button');
-        playBtn.className = 'btn-blitz';
-        playBtn.style.cssText = 'width:100%;font-size:14px;background:var(--a-gold);border-color:var(--a-gold);color:#000;margin-top:8px;';
-        playBtn.textContent = 'PLAY BALL';
-        playBtn.onclick = function() { SND.snap(); ov.style.opacity = '0'; setTimeout(function() { ov.remove(); onDone([], true); }, 250); };
-        resultDiv.appendChild(playBtn);
-      }
+        setTimeout(function() {
+          ov.style.opacity = '0';
+          setTimeout(function() {
+            ov.remove();
+            onDone({ chose: humanKicks ? 'card' : 'card_cpu_receives', card: card });
+          }, 250);
+        }, 1200);
+      };
+      cardRow.appendChild(wrap);
+    });
+    ov.appendChild(cardRow);
+  }
 
-      ov.appendChild(resultDiv);
-    }, 1800);
+  // Brief kickoff result overlay
+  function showKickoffResult(resultText, onDone) {
+    var kov = document.createElement('div');
+    kov.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.85);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;';
+    kov.innerHTML =
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:24px;color:#EBB010;letter-spacing:3px;\">KICKOFF</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:16px;color:#ccc;margin-top:6px;\">" + resultText + "</div>";
+    kov.onclick = function() { kov.style.opacity = '0'; setTimeout(function() { kov.remove(); if (onDone) onDone(); }, 200); };
+    el.appendChild(kov);
+    requestAnimationFrame(function() { kov.style.opacity = '1'; });
+    setTimeout(function() { if (kov.parentNode) { kov.style.opacity = '0'; setTimeout(function() { kov.remove(); if (onDone) onDone(); }, 200); } }, 2000);
   }
 
   // ── RULES OVERLAY ──
@@ -3040,15 +3140,31 @@ export function buildGameplay() {
   drawBug(); drawField();
   if (gs.twoMinActive) { prev2min = true; el.classList.add('T-urgent'); }
 
-  // First load: coin toss overlay → rules overlay → then enable play
+  // First load: coin toss → kickoff → play
   if (!GS._coinTossDone) {
     GS._coinTossDone = true;
-    // Show empty panel behind overlay
     drawPanel();
-    showCoinToss(function(torchCards, humanReceives) {
-      // v0.21: Coin toss cards no longer awarded (shop-based economy)
-      // Old: torchCards.forEach(c => gs.humanTorchCards.push(c.id));
-      showRules(function() {
+    showCoinToss(function(result) {
+      // result.chose = 'receive' | 'card' | 'card_cpu_receives'
+      // Determine who receives the opening kickoff
+      var humanReceives = result.chose === 'receive' || result.chose === 'card_cpu_receives';
+
+      // Resolve kickoff and set field position
+      var kickResult = gs.constructor.resolveKickoff();
+      var startYard = kickResult === -1 ? 25 : kickResult; // return TD = rare, treat as touchback for simplicity
+      if (humanReceives) {
+        gs.possession = 'CT';
+        gs.ballPosition = startYard; // CT at own yard line
+      } else {
+        gs.possession = 'IR';
+        gs.ballPosition = 100 - startYard; // IR at own yard line (from CT perspective)
+      }
+      gs.down = 1;
+      gs.distance = 10;
+
+      var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
+      showKickoffResult(posLabel, function() {
+        drawBug(); drawField();
         phase = 'play';
         drawPanel();
       });
