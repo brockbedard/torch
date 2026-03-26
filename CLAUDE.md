@@ -12,7 +12,7 @@ TORCH Football is a mobile card game (Balatro meets college football). 4 fiction
 |---|---|---|---|
 | **Local** | `dev` | `localhost:5173` | Auto on file save |
 | **Preview** | `dev` | Auto-generated per `git push origin dev` | Shareable test URL |
-| **Production** | `main` | `torch-two.vercel.app` | Merge dev→main + push |
+| **Production** | `main` | `torch.football` | Merge dev→main + push |
 
 ```bash
 npx vite --host              # Local dev (port 5173, phone accessible via LAN)

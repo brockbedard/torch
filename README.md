@@ -7,7 +7,7 @@
 
 **Balatro meets college football.** Call plays. Read defenses. Spend your score.
 
-[**Play Now**](https://torch-two.vercel.app/) | [Releases](https://github.com/brockbedard/torch/releases)
+[**Play Now**](https://torch.football/) | [Releases](https://github.com/brockbedard/torch/releases)
 
 ---
 
@@ -78,7 +78,7 @@ npx vite --host    # → localhost:5173
 |---|---|---|
 | Local | `dev` | `localhost:5173` |
 | Preview | `dev` | Auto-generated per push |
-| Production | `main` | [torch-two.vercel.app](https://torch-two.vercel.app/) |
+| Production | `main` | [torch.football](https://torch.football/) |
 
 ## Development
 
