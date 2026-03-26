@@ -98,7 +98,7 @@ src/
 |------|--------|-------------|----------|-----------|
 | **Boars** (Ridgemont) | Power Spread | Georgia, Alabama | 55/45 | Cover 3 zone |
 | **Dolphins** (Coral Bay) | Spread Option | Oregon, Rich Rod WVU | 50/50 | Cover 1 + spy |
-| **Spectres** (Hollowridge) | Air Raid | Mike Leach, Lincoln Riley | 30/70 | Cover 0 blitz |
+| **Spectres** (Hollowridge) | Spread RPO | Oregon State, Baylor | 30/70 | Cover 0 blitz |
 | **Serpents** (Blackwater) | Multiple/Pro | Saban, Kirby Smart | 45/55 | Multiple/disguised |
 
 **Counter-play:** Boars > Serpents > Spectres > Dolphins > Boars
