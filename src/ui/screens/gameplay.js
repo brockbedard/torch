@@ -439,6 +439,10 @@ export function buildGameplay() {
     AudioStateManager.setState('two_min_drill');
     twoMinTimer = setInterval(function() {
       if (!gs.twoMinActive || gs.gameOver || phase === 'busy') return;
+      // Only tick when user is on offense (they control the clock)
+      // When user is on defense, opponent controls clock — auto-tick between snaps only
+      var userOnOff = gs.possession === hAbbr;
+      if (!userOnOff && phase !== 'busy') return; // Don't tick on defense during card selection
       gs.clockSeconds = Math.max(0, gs.clockSeconds - 1);
       drawBug();
       // Heartbeat below 15 seconds
@@ -1598,7 +1602,10 @@ export function buildGameplay() {
     panel.innerHTML = '';
     const isOff = gs.possession === hAbbr;
     const sides = gs.getCurrentSides();
-    const players = isOff ? sides.offPlayers.slice(0,4) : sides.defPlayers.slice(0,4);
+    // Filter out OL — only show skill position players (QB, WR, RB, TE on offense; DB, LB, S on defense)
+    var allPlayers = isOff ? sides.offPlayers : sides.defPlayers;
+    var players = allPlayers.filter(function(p) { return p.pos !== 'OL' && p.pos !== 'DL'; }).slice(0, 4);
+    if (players.length === 0) players = allPlayers.slice(0, 4); // fallback
     var plays = isOff ? sides.offHand : sides.defHand;
     // Safety: ensure hand has cards (refill from full pool if empty/short)
     if (!plays || plays.length < 3) {
@@ -1686,11 +1693,31 @@ export function buildGameplay() {
         tray.appendChild(c);
       });
     } else if (phase === 'player') {
+      // Compute synergy for each player with the selected play
+      var bestBonus = 0;
+      var synergies = players.map(function(p) {
+        if (!selPl || !p.badge) return { bonus: 0, label: '' };
+        // Check badge combo: if player badge matches play type, bonus
+        var playType = selPl.playType || '';
+        var badge = p.badge || '';
+        var bonus = 0; var label = '';
+        // Simple synergy: badge matches play archetype
+        if (badge === 'HELMET' && (playType === 'RUN')) { bonus = 3; label = 'RUN BOOST'; }
+        else if (badge === 'ROCKET' && (playType === 'DEEP')) { bonus = 5; label = 'DEEP THREAT'; }
+        else if (badge === 'MAGNET' && (playType === 'SHORT' || playType === 'QUICK')) { bonus = 3; label = 'SURE HANDS'; }
+        else if (badge === 'SHIELD' && !isOff) { bonus = 3; label = 'LOCKDOWN'; }
+        else if (badge === 'LIGHTNING' && (playType === 'SCREEN')) { bonus = 4; label = 'SPEED MATCH'; }
+        else if (p.isStar) { bonus = 2; label = 'STAR'; }
+        if (bonus > bestBonus) bestBonus = bonus;
+        return { bonus: bonus, label: label };
+      });
+
       players.forEach((p, pIdx) => {
         const isSel = selP === p;
         var isHot = (isOff && offStar && p.id === offStar.id && offStarHot) ||
                     (!isOff && defStar && p.id === defStar.id && defStarHot);
-        // Use the actual shared buildMaddenPlayer builder
+        var syn = synergies[pIdx];
+        var isBestPick = syn.bonus > 0 && syn.bonus === bestBonus;
         var playerCard = buildMaddenPlayer({
           name: p.name, pos: p.pos, ovr: p.ovr,
           num: p.num || '', badge: p.badge, isStar: p.isStar,
@@ -1723,6 +1750,23 @@ export function buildGameplay() {
         playerCard.style.width = '100%';
         playerCard.style.height = '100%';
         pFace.appendChild(playerCard);
+
+        // Synergy indicator overlay
+        if (syn.bonus > 0) {
+          var synEl = document.createElement('div');
+          var synColor = isBestPick ? '#EBB010' : '#3df58a';
+          synEl.style.cssText = "position:absolute;bottom:2px;left:0;right:0;text-align:center;font-family:'Teko';font-weight:700;font-size:10px;color:" + synColor + ";letter-spacing:1px;z-index:5;text-shadow:0 0 6px rgba(0,0,0,0.8);";
+          synEl.textContent = '+' + syn.bonus + ' ' + syn.label;
+          pFace.appendChild(synEl);
+          if (isBestPick) c.style.boxShadow = '0 0 8px ' + synColor + '44';
+        } else if (selPl && bestBonus > 0) {
+          // Other players with no synergy — dim slightly
+          var noSynEl = document.createElement('div');
+          noSynEl.style.cssText = "position:absolute;bottom:2px;left:0;right:0;text-align:center;font-family:'Rajdhani';font-weight:700;font-size:7px;color:#555;letter-spacing:1px;z-index:5;";
+          noSynEl.textContent = 'NO BONUS';
+          pFace.appendChild(noSynEl);
+        }
+
         c.appendChild(pFace);
 
         // Slide in then flip
@@ -1747,6 +1791,10 @@ export function buildGameplay() {
       });
     } else if (phase === 'torch') {
       // Show TORCH cards — max 3 cards + skip = 4 slots (same as play/player)
+      // Filter torch cards: offensive cards (amplification/information) on offense, defensive cards (disruption/protection) on defense
+      var offCategories = ['amplification', 'information'];
+      var defCategories = ['disruption', 'protection'];
+      var applicableCategories = isOff ? offCategories : defCategories;
       var preSnapCards = torchInventory.filter(function(c) { return c.type === 'pre-snap'; }).slice(0, 3);
       if (preSnapCards.length === 0) {
         phase = 'ready';
@@ -1754,24 +1802,35 @@ export function buildGameplay() {
         return;
       }
       preSnapCards.forEach(function(tc) {
+        var isApplicable = applicableCategories.indexOf(tc.category) >= 0;
         var c = document.createElement('div');
         c.className = 'T-card';
+        if (!isApplicable) c.style.opacity = '0.35';
         var tcEl = buildTorchCard(tc, null, 150);
         tcEl.style.width = '100%';
         tcEl.style.height = '100%';
         c.appendChild(tcEl);
-        c.onclick = function() {
-          SND.click();
-          selTorch = tc.id;
-          selectedPreSnap = tc;
-          var idx = torchInventory.indexOf(tc);
-          if (idx >= 0) torchInventory.splice(idx, 1);
-          if (GS.season) GS.season.torchCards = torchInventory.slice();
-          phase = 'ready';
-          drawField(); drawPanel();
-        };
-        c.onmousedown = function(e) { startDrag('torch', tc, c, e); };
-        c.ontouchstart = function(e) { startDrag('torch', tc, c, e); };
+        // Show "OFFENSE ONLY" / "DEFENSE ONLY" label if not applicable
+        if (!isApplicable) {
+          var sideLabel = document.createElement('div');
+          sideLabel.style.cssText = "position:absolute;bottom:4px;left:0;right:0;text-align:center;font-family:'Rajdhani';font-weight:700;font-size:8px;color:#ff4444;letter-spacing:1px;z-index:5;";
+          sideLabel.textContent = isOff ? 'DEF ONLY' : 'OFF ONLY';
+          c.appendChild(sideLabel);
+        }
+        if (isApplicable) {
+          c.onclick = function() {
+            SND.click();
+            selTorch = tc.id;
+            selectedPreSnap = tc;
+            var idx = torchInventory.indexOf(tc);
+            if (idx >= 0) torchInventory.splice(idx, 1);
+            if (GS.season) GS.season.torchCards = torchInventory.slice();
+            phase = 'ready';
+            drawField(); drawPanel();
+          };
+          c.onmousedown = function(e) { startDrag('torch', tc, c, e); };
+          c.ontouchstart = function(e) { startDrag('torch', tc, c, e); };
+        }
         tray.appendChild(c);
       });
       // Skip button — always the 4th slot

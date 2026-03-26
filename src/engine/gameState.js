@@ -514,7 +514,14 @@ export class GameState {
     if (!this.twoMinActive) return null;
     this.clockSeconds -= 3;
     this.totalPlays++;
-    if (!this.twoMinActive) this.playsUsed++;
+    this.down++;  // Spike costs a down (like real football)
+    if (this.down > 4) {
+      // Turnover on downs after spike
+      this.flipPossession(this.ballPosition);
+      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: 'SPIKE', defPlay: '-', result: 'Ball spiked on 4th down — turnover.', event: 'turnover_on_downs' });
+      this._checkHalfEnd();
+      return { event: 'turnover_on_downs', description: 'Ball spiked on 4th down — turnover on downs.' };
+    }
     this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: 'SPIKE', defPlay: '-', result: 'Ball spiked. Clock stops.', event: 'spike' });
     this._checkHalfEnd();
     return { event: 'spike', description: 'Ball spiked. Clock stops.' };

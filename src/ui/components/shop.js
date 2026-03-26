@@ -66,61 +66,59 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
   }
   sheet.appendChild(invRow);
 
-  // Card offers
+  // Always show 3 cards
+  if (offers.length < 3) {
+    while (offers.length < 3) offers.push(getRandomCard(weights));
+  }
+
+  // Card offers — horizontal row
   var offersRow = document.createElement('div');
-  offersRow.style.cssText = 'display:flex;gap:8px;justify-content:center;';
+  offersRow.style.cssText = 'display:flex;gap:10px;justify-content:center;padding:0 4px;';
 
   offers.forEach(function(card, offerIdx) {
     var canAfford = points >= card.cost;
     var isFull = inventory.length >= 3;
 
     var wrap = document.createElement('div');
-    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;max-width:110px;overflow:hidden;opacity:0;transform:translateY(20px) scale(0.9);transition:opacity 0.3s,transform 0.3s;';
-    // Staggered deal-in animation
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;max-width:120px;opacity:0;transform:translateY(16px) scale(0.95);transition:opacity 0.3s,transform 0.3s;';
     setTimeout(function() { wrap.style.opacity = '1'; wrap.style.transform = 'translateY(0) scale(1)'; }, 200 + offerIdx * 150);
 
-    // Card visual
-    var cardEl = buildTorchCard(card, 80, 112);
-    if (!canAfford) cardEl.style.opacity = '0.4';
+    // Card visual — compact size
+    var cardEl = buildTorchCard(card, 100, 130);
+    if (!canAfford) cardEl.style.opacity = '0.35';
     wrap.appendChild(cardEl);
 
-    // Cost
+    // Cost badge
     var costEl = document.createElement('div');
-    costEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:11px;color:" + (canAfford ? 'var(--l-green,#00ff44)' : 'var(--p-red,#ff0040)') + ";";
-    costEl.textContent = card.cost + 'P';
+    var costColor = canAfford ? '#00ff44' : '#ff0040';
+    costEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:16px;color:" + costColor + ";letter-spacing:1px;";
+    costEl.textContent = card.cost + ' PTS';
     wrap.appendChild(costEl);
-
-    // Effect text — clamped to 2 lines
-    var effectEl = document.createElement('div');
-    effectEl.style.cssText = "font-family:'Rajdhani';font-size:7px;color:#aaa;text-align:center;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-height:1.8em;";
-    effectEl.textContent = card.effect;
-    wrap.appendChild(effectEl);
 
     // Buy button
     var buyBtn = document.createElement('button');
     buyBtn.className = 'btn-blitz';
-    buyBtn.style.cssText = 'font-size:9px;padding:8px 12px;width:100%;position:relative;z-index:2;' +
-      (canAfford ? 'background:var(--a-gold,#EBB010);color:#000;border-color:var(--torch,#FF4511);' : 'background:#333;color:#666;border-color:#333;cursor:not-allowed;');
-    buyBtn.textContent = isFull && canAfford ? 'SWAP' : canAfford ? 'BUY' : "CAN'T AFFORD";
-    buyBtn.disabled = !canAfford;
-
     if (canAfford) {
+      buyBtn.style.cssText = "font-size:11px;padding:8px 16px;width:100%;background:linear-gradient(180deg,#EBB010,#FF4511);color:#000;border-color:#FF4511;font-family:'Teko';font-weight:700;letter-spacing:2px;";
+      buyBtn.textContent = isFull ? 'SWAP' : 'BUY';
       buyBtn.onclick = function() {
         SND.snap();
         if (isFull) {
-          // Show swap UI — pick which card to drop
           showSwapUI(sheet, inventory, card, points, function(newInv, spent) {
             onBuy(card, newInv, spent);
             closeShop();
           });
         } else {
-          // Direct buy
           var newInv = inventory.slice();
           newInv.push(card);
           onBuy(card, newInv, card.cost);
           closeShop();
         }
       };
+    } else {
+      buyBtn.style.cssText = "font-size:10px;padding:8px 16px;width:100%;background:#1a1a1a;color:#555;border-color:#333;font-family:'Rajdhani';font-weight:700;letter-spacing:1px;cursor:not-allowed;";
+      buyBtn.textContent = 'NEED ' + (card.cost - points) + ' MORE';
+      buyBtn.disabled = true;
     }
     wrap.appendChild(buyBtn);
     offersRow.appendChild(wrap);
@@ -129,8 +127,8 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
 
   // Pass button
   var passBtn = document.createElement('button');
-  passBtn.style.cssText = "width:100%;margin-top:10px;padding:8px;background:transparent;border:1px solid #333;border-radius:4px;color:#666;font-family:'Rajdhani';font-weight:700;font-size:10px;letter-spacing:1px;cursor:pointer;";
-  passBtn.textContent = 'PASS';
+  passBtn.style.cssText = "width:100%;margin-top:14px;padding:10px;background:transparent;border:1px solid #333;border-radius:6px;color:#777;font-family:'Teko';font-weight:700;font-size:14px;letter-spacing:2px;cursor:pointer;";
+  passBtn.textContent = 'NO THANKS';
   passBtn.onclick = function() { SND.click(); closeShop(); };
   sheet.appendChild(passBtn);
 

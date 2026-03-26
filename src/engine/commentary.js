@@ -10,7 +10,8 @@
 var PASS_VERBS = ['fires','threads','delivers','zips','floats','lasers','rifles','slings','lofts','darts','whips','tosses','flicks','guns','uncorks'];
 var RUN_VERBS = ['bursts','cuts','rumbles','plows','darts','weaves','powers','churns','slashes','barrels','grinds','bounces','hits','drives','surges'];
 var CATCH_VERBS = ['hauls in','snags','reels in','pulls down','secures','gathers','grabs','corrals','plucks'];
-var TACKLE_VERBS = ['brings down','wraps up','drags down','meets','stonewalls','drops','levels','cuts down'];
+// Tackle verbs — used as "Name {verb}." (not "Name {verb} him" to avoid "wraps up him")
+var TACKLE_VERBS = ['brings him down','wraps him up','drags him down','meets him at the line','stonewalls him','drops him','levels him','cuts him down'];
 
 // ============================================================
 // MODIFIERS
@@ -62,6 +63,11 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
   var isHumanOnOff = gameState.possession === 'CT';
   var possTeam = isHumanOnOff ? humanTeamName : oppTeamName;
   var defTeam = isHumanOnOff ? oppTeamName : humanTeamName;
+
+  // Derive correct player roles — QB throws, receiver catches, runner runs
+  var qbName = off.pos === 'QB' ? off.name : (off.name || 'the QB');
+  var receiverName = off.pos !== 'QB' ? off.name : (def.name || 'the receiver'); // fallback
+  var rusherName = off.pos !== 'QB' ? off.name : off.name; // QB can rush too
 
   // Determine emotional tier
   var tier = 1;
@@ -127,7 +133,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       line1 = pick([
         'SACK!! ' + def.name + ' BURIES the QB' + (Math.abs(yards) > 0 ? ' for -' + Math.abs(yards) + '!' : '!'),
         def.name + ' GETS THERE!' + (Math.abs(yards) > 0 ? ' Dropped for a ' + Math.abs(yards) + '-yard loss!' : ' NO GAIN!'),
-        'NOWHERE TO THROW! ' + def.name + ' ' + pick(TACKLE_VERBS) + ' him! HUGE play!',
+        'NOWHERE TO THROW! ' + def.name + ' ' + pick(TACKLE_VERBS) + '! HUGE play!',
         'The pocket COLLAPSES! ' + def.name + ' brings the HEAT!',
       ]);
       if (tier >= 3) line2 = 'Drive-killer! Your defense is SWARMING!';
@@ -208,9 +214,9 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
         ]);
       } else {
         line1 = pick([
-          'Incomplete. Overthrown, intended for ' + off.name + '.',
-          'Dropped by ' + off.name + '.',
-          off.name + ' can\'t bring it in.',
+          'Incomplete. Overthrown, intended for ' + receiverName + '.',
+          'Dropped by ' + receiverName + '.',
+          receiverName + ' can\'t bring it in.',
           'Thrown away. Nothing was open.',
         ]);
       }
@@ -219,39 +225,40 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
   }
 
   // ── POSITIVE GAIN ──
+  // Commentary describes the PLAY, not the yards (the floating number shows yards)
   if (yards > 0) {
-    var tackleTag = def ? ' ' + def.name + ' ' + pick(TACKLE_VERBS) + ' him.' : '';
+    var tackler = def ? def.name : '';
+    var tackleTag = tackler ? ' ' + tackler + ' makes the stop.' : '';
     if (isHumanOnOff) {
-      // User gains yards — energetic
       if (isPass) {
         if (tier <= 1) {
-          line1 = off.name + ' ' + pick(CATCH_VERBS) + ' a ' + (yards <= 5 ? 'short' : 'nice') + ' pass for ' + yards + '!' + tackleTag;
+          line1 = receiverName + ' ' + pick(CATCH_VERBS) + ' a ' + (yards <= 5 ? 'short' : 'nice') + ' pass ' + pick(ROUTE_MODS) + '.' + tackleTag;
         } else if (tier === 2) {
-          line1 = off.name + ' ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + ' — ' + yards + ' yards!' + tackleTag;
+          line1 = receiverName + ' ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + '!' + tackleTag;
           if (res.gotFirstDown) line2 = 'FIRST DOWN ' + possTeam + '! Chains move!';
         } else {
-          line1 = off.name + '! ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + ' — ' + yards + ' YARDS!';
+          line1 = receiverName + '! ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + '! WIDE OPEN!';
           if (yards >= 20) line2 = 'BIG chunk play! ' + possTeam + ' is ROLLING!';
           else if (res.gotFirstDown) line2 = 'Moves the chains on a KEY down!';
         }
       } else {
         if (tier <= 1) {
-          line1 = off.name + ' ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + ' for ' + yards + '!' + tackleTag;
+          line1 = rusherName + ' ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + '.' + tackleTag;
         } else if (tier === 2) {
-          line1 = off.name + ' ' + pick(RUN_VERBS) + ' through for ' + yards + '!' + tackleTag;
+          line1 = rusherName + ' ' + pick(RUN_VERBS) + ' through ' + pick(RUN_MODS) + '!' + tackleTag;
           if (res.gotFirstDown) line2 = 'FIRST DOWN! ' + possTeam + ' keeps it moving!';
         } else {
-          line1 = off.name + '! ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + ' — ' + yards + ' YARDS!';
-          if (yards >= 15) line2 = off.name + ' is RUNNING WILD out there!';
+          line1 = rusherName + '! ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + '! HE\'S LOOSE!';
+          if (yards >= 15) line2 = rusherName + ' is RUNNING WILD out there!';
         }
       }
     } else {
-      // Opponent gains against user — flat, factual, no energy
+      // Opponent gains against user — flat, no yards in text
       if (isPass) {
-        line1 = off.name + ' catches it ' + pick(ROUTE_MODS) + '. Gain of ' + yards + '.' + tackleTag;
+        line1 = receiverName + ' catches it ' + pick(ROUTE_MODS) + '.' + tackleTag;
         if (res.gotFirstDown) line2 = 'First down ' + possTeam + '.';
       } else {
-        line1 = off.name + ' ' + pick(['finds a gap','picks up ' + yards,'pushes ahead for ' + yards]) + '.' + tackleTag;
+        line1 = rusherName + ' ' + pick(['finds a gap.','pushes ahead.','hits the hole.']) + tackleTag;
         if (res.gotFirstDown) line2 = 'First down ' + possTeam + '.';
       }
     }
@@ -260,19 +267,17 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
 
   // ── NO GAIN / LOSS ──
   if (!isHumanOnOff) {
-    // User's defense stuffs them — positive!
     line1 = pick([
-      'STUFFED! ' + def.name + ' ' + pick(TACKLE_VERBS) + ' him at the line!',
+      'STUFFED! ' + def.name + ' meets him at the line!',
       'NO GAIN! ' + defTeam + ' defense holds FIRM!',
       'STACKED UP! ' + def.name + ' plugs the gap!',
       'Going NOWHERE! ' + def.name + ' reads it perfectly!',
     ]);
   } else {
-    // User gets stuffed — flat
     line1 = pick([
-      'Stuffed. ' + def.name + ' ' + pick(TACKLE_VERBS) + ' him at the line.',
+      'Stuffed. ' + def.name + ' meets him at the line.',
       'No gain. Defense holds.',
-      off.name + ' is met at the line of scrimmage.',
+      rusherName + ' is met at the line of scrimmage.',
     ]);
   }
   return { line1: line1, line2: line2 };
