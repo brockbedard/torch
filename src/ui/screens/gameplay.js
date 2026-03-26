@@ -22,7 +22,7 @@ import { getConditionEffects } from '../../data/gameConditions.js';
 import { checkPlayCombos } from '../../data/playSequenceCombos.js';
 import { generateCommentary, generateContext } from '../../engine/commentary.js';
 import { initPointsAnim, playPointsSequence, isPointsAnimPlaying } from '../effects/torchPointsAnim.js';
-import { injectDevPanel, getForceResult } from '../components/devPanel.js';
+import { injectDevPanel, getForceResult, getForceConversion } from '../components/devPanel.js';
 
 /* ═══════════════════════════════════════════
    CSS
@@ -402,6 +402,9 @@ export function buildGameplay() {
       irOffRoster: cOffRoster, irDefRoster: cDefRoster,
       initialPossession: GS.humanReceives ? hAbbr : 'IR',
     });
+    // Seed TORCH points from previous game
+    var carry = GS.season && GS.season.carryoverPoints ? GS.season.carryoverPoints : 0;
+    if (carry > 0) GS.engine.ctTorchPts = carry;
   }
   const gs = GS.engine;
 
@@ -448,10 +451,13 @@ export function buildGameplay() {
       drawBug();
       // Heartbeat below 15 seconds
       if (gs.clockSeconds <= 15 && gs.clockSeconds > 0) SND.click();
-      // Time expired
+      // Time expired — end the half (but not during a PAT)
       if (gs.clockSeconds <= 0) {
         stop2MinClock();
-        checkEnd();
+        if (!conversionMode) {
+          gs._checkHalfEnd();
+          checkEnd();
+        }
       }
     }, 1000);
   }
@@ -2053,7 +2059,31 @@ export function buildGameplay() {
     // Freeze the display counter at the pre-snap value until animation plays
     _torchFrozenValue = preTorchPts;
     _torchDisplayFrozen = true;
-    const res = isOff ? gs.executeSnap(selPl, selP, null, null, offCard, defCard) : gs.executeSnap(null, null, selPl, selP, offCard, defCard);
+    // Dev: check for forced result before executing snap
+    var _devForce = getForceResult();
+    var _devForceResult = null;
+    if (_devForce) {
+      _devForceResult = function(result, ydsToEz) {
+        result.isTouchdown = false; result.isInterception = false; result.isFumble = false; result.isFumbleLost = false;
+        result.isSack = false; result.isIncomplete = false; result.isComplete = false;
+        if (_devForce === 'td') {
+          result.isTouchdown = true; result.isComplete = true; result.yards = ydsToEz;
+          result.description = 'DEV: Forced TOUCHDOWN!';
+        } else if (_devForce === 'exploit') {
+          result.isComplete = true; result.yards = Math.max(15, Math.min(30, ydsToEz - 1));
+          result.description = 'DEV: Forced EXPLOIT — big gain!';
+        } else if (_devForce === 'covered') {
+          result.isIncomplete = true; result.yards = 0;
+          result.description = 'DEV: Forced COVERED — no gain.';
+        } else if (_devForce === 'turnover') {
+          result.isInterception = true; result.yards = 0;
+          result.description = 'DEV: Forced TURNOVER!';
+        }
+      };
+    }
+    const res = isOff
+      ? gs.executeSnap(selPl, selP, null, null, offCard, defCard, _devForceResult)
+      : gs.executeSnap(null, null, selPl, selP, offCard, defCard, _devForceResult);
     var postTorchPts = getTorchPoints();
     var torchEarned = postTorchPts - preTorchPts;
     // 12TH MAN doubles TORCH points
@@ -2312,7 +2342,10 @@ export function buildGameplay() {
 
     // User-biased result display
     var resultColor, resultText;
-    if (isUserOff) {
+    if (res._isConversion) {
+      resultColor = r.isComplete ? '#3df58a' : '#e03050';
+      resultText = r.isComplete ? 'GOOD!' : 'NO GOOD';
+    } else if (isUserOff) {
       resultColor = isTD ? '#EBB010' : isGoodForUser ? '#3df58a' : isBadForUser ? '#e03050' : r.yards > 0 ? '#c8a030' : '#aaa';
       resultText = isTD ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTED' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : r.isSafety ? 'SAFETY' : (r.yards >= 0 ? '+' : '') + r.yards + ' YDS';
     } else {
@@ -2615,8 +2648,8 @@ export function buildGameplay() {
           if (isUserOff) SND.chime();
         }
 
-        // New down & distance (skip if first down flash showing)
-        if (!r.isInterception && !r.isFumbleLost && !gotFirstDown) {
+        // New down & distance (skip if first down flash showing or conversion)
+        if (!r.isInterception && !r.isFumbleLost && !gotFirstDown && !res._isConversion) {
           var newS = gs.getSummary();
           var dnLabels = ['','1ST','2ND','3RD','4TH'];
           var dnText = (dnLabels[newS.down] || '') + ' & ' + newS.distance;
@@ -2628,15 +2661,23 @@ export function buildGameplay() {
         }
 
         // Commentary
-        var gameCtx = gs.getSummary();
-        var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
-        var ctx = generateContext(gameCtx, hTeam.name, oTeam.name, res);
-        setNarr(comm.line1, comm.line2 || ctx || '');
+        var commLine1, commLine2;
+        if (res._isConversion) {
+          commLine1 = r.description;
+          commLine2 = '';
+        } else {
+          var gameCtx = gs.getSummary();
+          var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
+          var ctx = generateContext(gameCtx, hTeam.name, oTeam.name, res);
+          commLine1 = comm.line1;
+          commLine2 = comm.line2 || ctx || '';
+        }
+        setNarr(commLine1, commLine2);
 
         var labelEl = document.createElement('div');
         labelEl.className = 'T-clash-label';
         labelEl.style.cssText = "color:#e8e6ff;opacity:0;transition:opacity 0.3s;margin-top:8px;font-family:'Rajdhani';font-size:15px;font-weight:700;line-height:1.3;text-align:center;max-width:280px;";
-        labelEl.textContent = comm.line1;
+        labelEl.textContent = commLine1;
         resultWrap.appendChild(labelEl);
         setTimeout(function() { labelEl.style.opacity = '1'; }, 100);
 
@@ -2682,7 +2723,7 @@ export function buildGameplay() {
         }
 
         var shopTrigger = null;
-        if (!gs.gameOver) {
+        if (!gs.gameOver && !res._isConversion) {
           var isHumanPoss = prevPoss === hAbbr;
           if (res.gameEvent === 'touchdown' && isHumanPoss) shopTrigger = 'touchdown';
           else if ((r.isInterception || r.isFumbleLost) && !isHumanPoss) shopTrigger = 'turnover';
@@ -2782,8 +2823,9 @@ export function buildGameplay() {
   // ── RESULT OVERLAY ──
   function showResult(res, done) {
     const r = res.result;
-    const col = r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
-    const txt = r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE' : r.isIncomplete?'INCOMPLETE' : r.isSafety?'SAFETY' : (r.yards>=0?'+':'')+r.yards+' YDS';
+    const isConv = res._isConversion;
+    const col = isConv ? (r.isComplete?'#3df58a':'#e03050') : r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
+    const txt = isConv ? (r.isComplete?'GOOD!':'NO GOOD') : r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE' : r.isIncomplete?'INCOMPLETE' : r.isSafety?'SAFETY' : (r.yards>=0?'+':'')+r.yards+' YDS';
     const bd = breakdown(res.offPlay, res.defPlay, r, res.featuredOff, res.featuredDef);
     setNarr(r.description, bd);
 
@@ -2999,7 +3041,20 @@ export function buildGameplay() {
     var cm = conversionMode;
     var offPlay = selPl;
     var featuredOff = selP;
+    var scoringTeam = gs.possession; // capture before handleConversion flips it
     var convResult = gs.handleConversion(cm.choice, offPlay, featuredOff);
+    // Dev: force conversion outcome
+    var _devConv = getForceConversion();
+    if (_devConv) {
+      var pts = cm.choice === '2pt' ? 2 : 3;
+      if (_devConv === 'good' && !convResult.success) {
+        convResult.success = true; convResult.points = pts;
+        if (scoringTeam === 'CT') gs.ctScore += pts; else gs.irScore += pts;
+      } else if (_devConv === 'fail' && convResult.success) {
+        convResult.success = false; convResult.points = 0;
+        if (scoringTeam === 'CT') gs.ctScore -= pts; else gs.irScore -= pts;
+      }
+    }
     conversionMode = null;
     selP = null; selPl = null; selTorch = null;
 
@@ -3011,8 +3066,9 @@ export function buildGameplay() {
       featuredDef: { name: 'Defense', pos: 'LB', ovr: 78, badge: '' },
       result: {
         yards: convResult.success ? (cm.choice === '2pt' ? 5 : 10) : 0,
-        isTouchdown: convResult.success,
-        isIncomplete: !convResult.success && offPlay && offPlay.completionRate !== null,
+        isTouchdown: false,
+        isComplete: convResult.success,
+        isIncomplete: !convResult.success,
         isSack: false, isInterception: false, isFumbleLost: false, isSafety: false,
         offComboPts: 0, defComboPts: 0, historyBonus: 0,
         description: convResult.success ? cm.choice.toUpperCase() + ' conversion is GOOD!' : cm.choice.toUpperCase() + ' conversion FAILED'
@@ -3038,11 +3094,19 @@ export function buildGameplay() {
 
     drawField(); drawPanel();
 
-    // Override result text for conversion context
+    // Conversion-specific commentary
+    var convLabel = cm.choice === '2pt' ? '2-point' : '3-point';
+    var offName = fakeRes.featuredOff.name || 'QB';
+    var defName = fakeRes.featuredDef.name || 'Defense';
+    var isRun = offPlay && (offPlay.isRun || offPlay.type === 'run');
     if (convResult.success) {
-      fakeRes.result.description = (cm.choice === '2pt' ? '2-point' : '3-point') + ' conversion is GOOD! +' + convResult.points + '!';
+      fakeRes.result.description = isRun
+        ? offName + ' punches it in! ' + convLabel + ' conversion is GOOD!'
+        : offName + ' fires to the end zone — CAUGHT! ' + convLabel + ' conversion GOOD!';
     } else {
-      fakeRes.result.description = (cm.choice === '2pt' ? '2-point' : '3-point') + ' conversion FAILED.';
+      fakeRes.result.description = isRun
+        ? offName + ' is stopped at the line. ' + convLabel + ' conversion fails.'
+        : defName + ' breaks it up! ' + convLabel + ' conversion NO GOOD.';
     }
     // Mark as conversion so Beat 4 skips the TD celebration + conversion loop
     fakeRes._isConversion = true;
@@ -3428,7 +3492,9 @@ export function buildGameplay() {
     showCoinToss(function(result) {
       // result.chose = 'receive' | 'card' | 'card_cpu_receives'
       // Determine who receives the opening kickoff
-      var humanReceives = result.chose === 'receive' || result.chose === 'card_cpu_receives';
+      // 'receive' = human chose to receive. 'card' = human drew card, kicks off (CPU receives).
+      // 'card_cpu_receives' = CPU won toss and chose to receive, human got card (CPU receives).
+      var humanReceives = result.chose === 'receive';
 
       // Resolve kickoff and set field position
       var kickResult = gs.constructor.resolveKickoff();
@@ -3450,8 +3516,52 @@ export function buildGameplay() {
         drawPanel();
       });
     });
+  } else if (gs.half === 2 && GS._halftimeCardDone === false) {
+    // Halftime card pick: kicking team gets a face-down card
+    GS._halftimeCardDone = true;
+    var humanKicks2nd = !GS.humanReceives;
+    if (humanKicks2nd) {
+      // Human kicks off — show face-down card pick, then kickoff
+      var offers = rollCoinTossCards();
+      var ov = document.createElement('div');
+      ov.style.cssText = 'position:fixed;inset:0;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.92);opacity:0;transition:opacity 0.3s;';
+      el.appendChild(ov);
+      requestAnimationFrame(function() { ov.style.opacity = '1'; });
+      showFaceDownCards(ov, offers, true, function() {
+        resolveHalftimeKickoff();
+      });
+    } else {
+      // CPU kicks off — AI auto-picks a card, then kickoff
+      var offers = rollCoinTossCards();
+      var ov = document.createElement('div');
+      ov.style.cssText = 'position:fixed;inset:0;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.92);opacity:0;transition:opacity 0.3s;';
+      el.appendChild(ov);
+      requestAnimationFrame(function() { ov.style.opacity = '1'; });
+      showAICardPick(ov, offers, function() {
+        resolveHalftimeKickoff();
+      });
+    }
   } else {
     drawPanel();
+  }
+
+  function resolveHalftimeKickoff() {
+    var kickResult = gs.constructor.resolveKickoff();
+    var startYard = kickResult === -1 ? 25 : kickResult;
+    if (GS.humanReceives) {
+      gs.possession = 'CT';
+      gs.ballPosition = startYard;
+    } else {
+      gs.possession = 'IR';
+      gs.ballPosition = 100 - startYard;
+    }
+    gs.down = 1; gs.distance = 10;
+    var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
+    showKickoffResult(posLabel, function() {
+      drawBug(); drawField();
+      phase = 'play';
+      drawPanel();
+    });
   }
 
   // ── DEV PANEL ──
@@ -3476,7 +3586,9 @@ export function buildGameplay() {
     reset4thDown: function() { _fourthDownDecided = false; },
     showCoinToss: function() {
       showCoinToss(function(result) {
-        var humanReceives = result.chose === 'receive' || result.chose === 'card_cpu_receives';
+        // 'receive' = human chose to receive. 'card' = human drew card, kicks off (CPU receives).
+      // 'card_cpu_receives' = CPU won toss and chose to receive, human got card (CPU receives).
+      var humanReceives = result.chose === 'receive';
         var kickResult = gs.constructor.resolveKickoff();
         var startYard = kickResult === -1 ? 25 : kickResult;
         gs.ballPosition = humanReceives ? startYard : 100 - startYard;

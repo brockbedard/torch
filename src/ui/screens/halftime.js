@@ -120,6 +120,14 @@ export function buildHalftime() {
   shopBox.appendChild(offersRow);
   content.appendChild(shopBox);
 
+  // Second half receive info
+  var receiverIsHuman = !GS.humanReceives;
+  var receiverTeam = receiverIsHuman ? team : opp;
+  var receiveInfo = document.createElement('div');
+  receiveInfo.style.cssText = "width:100%;max-width:320px;text-align:center;font-family:'Rajdhani';font-size:11px;color:#888;padding:4px 0;";
+  receiveInfo.innerHTML = "<span style='color:" + receiverTeam.accent + ";font-weight:700;'>" + receiverTeam.name + "</span> receive to start the 2nd half";
+  content.appendChild(receiveInfo);
+
   // Resume button
   var resumeBtn = document.createElement('button');
   resumeBtn.className = 'btn-blitz';
@@ -128,7 +136,8 @@ export function buildHalftime() {
   resumeBtn.onclick = function() {
     SND.snap();
     gs.startSecondHalf();
-    setGs(function(s) { return Object.assign({}, s, { screen: 'gameplay' }); });
+    var humanReceives2nd = !GS.humanReceives;
+    setGs(function(s) { return Object.assign({}, s, { screen: 'gameplay', humanReceives: humanReceives2nd, _halftimeCardDone: false }); });
   };
   content.appendChild(resumeBtn);
 

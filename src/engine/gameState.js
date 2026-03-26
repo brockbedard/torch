@@ -381,7 +381,7 @@ export class GameState {
    * @param {string} [defCard] - Defensive Torch Card ID
    * @returns {object} { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent }
    */
-  executeSnap(offPlay, featuredOff, defPlay, featuredDef, offCard, defCard) {
+  executeSnap(offPlay, featuredOff, defPlay, featuredDef, offCard, defCard, _devForceResult) {
     if (this.gameOver) return null;
 
     const sides = this.getCurrentSides();
@@ -482,6 +482,9 @@ export class GameState {
 
     const result = resolveSnap(offPlay, defPlay, featuredOff, featuredDef,
       sides.offPlayers, sides.defPlayers, context);
+
+    // Dev: force result override (applied before engine processes outcomes)
+    if (_devForceResult) _devForceResult(result, ydsToEz);
 
     // Easy difficulty adjustments now handled in snapResolver.js
 

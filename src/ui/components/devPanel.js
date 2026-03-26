@@ -14,10 +14,25 @@ import { SND } from '../../engine/sound.js';
 var _panel = null;
 var _open = false;
 var _forceResult = null; // null, 'exploit', 'covered', 'turnover', 'td'
+var _forceConversion = null; // null, 'good', 'fail'
 
 export function getForceResult() {
   var r = _forceResult;
   _forceResult = null;
+  if (r && _panel) {
+    var badge = _panel.querySelector('#dev-force-badge');
+    if (badge) badge.remove();
+  }
+  return r;
+}
+
+export function getForceConversion() {
+  var r = _forceConversion;
+  _forceConversion = null;
+  if (r && _panel) {
+    var badge = _panel.querySelector('#dev-force-badge');
+    if (badge) badge.remove();
+  }
   return r;
 }
 
@@ -91,10 +106,14 @@ export function injectDevPanel(el, gs, callbacks) {
   // ── FORCE RESULT ──
   html += section('FORCE NEXT RESULT');
   html += '<div style="display:flex;gap:3px;flex-wrap:wrap;">';
-  html += btn('TD', 'dev-force-td', '#3df58a');
-  html += btn('Exploit', 'dev-force-exploit', '#3df58a');
-  html += btn('Covered', 'dev-force-covered', '#e03050');
-  html += btn('Turnover', 'dev-force-turnover', '#e03050');
+  html += btnInline('TD', 'dev-force-td', '#3df58a');
+  html += btnInline('Exploit', 'dev-force-exploit', '#3df58a');
+  html += btnInline('Covered', 'dev-force-covered', '#e03050');
+  html += btnInline('Turnover', 'dev-force-turnover', '#e03050');
+  html += '</div>';
+  html += '<div style="display:flex;gap:3px;margin-top:3px;">';
+  html += btnInline('Conv GOOD', 'dev-force-conv-good', '#3df58a');
+  html += btnInline('Conv FAIL', 'dev-force-conv-fail', '#e03050');
   html += '</div>';
 
   // ── BIAS TEST ──
@@ -188,10 +207,12 @@ export function injectDevPanel(el, gs, callbacks) {
     }
     if (id === 'dev-booster' && callbacks.openBooster) callbacks.openBooster();
 
-    if (id === 'dev-force-td') _forceResult = 'td';
-    if (id === 'dev-force-exploit') _forceResult = 'exploit';
-    if (id === 'dev-force-covered') _forceResult = 'covered';
-    if (id === 'dev-force-turnover') _forceResult = 'turnover';
+    if (id === 'dev-force-td') { _forceResult = 'td'; showForceArmed('TD'); }
+    if (id === 'dev-force-exploit') { _forceResult = 'exploit'; showForceArmed('EXPLOIT'); }
+    if (id === 'dev-force-covered') { _forceResult = 'covered'; showForceArmed('COVERED'); }
+    if (id === 'dev-force-turnover') { _forceResult = 'turnover'; showForceArmed('TURNOVER'); }
+    if (id === 'dev-force-conv-good') { _forceConversion = 'good'; showForceArmed('CONV GOOD'); }
+    if (id === 'dev-force-conv-fail') { _forceConversion = 'fail'; showForceArmed('CONV FAIL'); }
 
     if (id === 'dev-poss-good' && callbacks.showPossCut) callbacks.showPossCut('interception');
     if (id === 'dev-poss-bad' && callbacks.showPossCut) callbacks.showPossCut('score');
@@ -238,12 +259,26 @@ function giveTorchCards(gs, tier, callbacks) {
   if (callbacks.refresh) callbacks.refresh();
 }
 
+function showForceArmed(label) {
+  if (!_panel) return;
+  var existing = _panel.querySelector('#dev-force-badge');
+  if (existing) existing.remove();
+  var badge = document.createElement('div');
+  badge.id = 'dev-force-badge';
+  badge.style.cssText = 'position:fixed;bottom:8px;right:8px;z-index:9999;background:#e03050;color:#fff;font-family:monospace;font-size:9px;padding:4px 8px;border-radius:4px;pointer-events:none;';
+  badge.textContent = 'ARMED: ' + label;
+  _panel.appendChild(badge);
+}
+
 // ── HTML HELPERS ──
 function section(title) {
   return '<div style="margin-top:10px;padding-top:6px;border-top:1px solid #333;font-size:9px;color:#4DA6FF;letter-spacing:2px;margin-bottom:4px;">' + title + '</div>';
 }
 function btn(label, id, color) {
   return '<button id="' + id + '" style="display:block;width:100%;margin:2px 0;padding:5px 8px;background:transparent;border:1px solid ' + color + '44;color:' + color + ';font-family:monospace;font-size:9px;cursor:pointer;border-radius:3px;text-align:left;" onmouseover="this.style.background=\'' + color + '22\'" onmouseout="this.style.background=\'transparent\'">' + label + '</button>';
+}
+function btnInline(label, id, color) {
+  return '<button id="' + id + '" style="flex:1;margin:2px 0;padding:5px 4px;background:transparent;border:1px solid ' + color + '44;color:' + color + ';font-family:monospace;font-size:9px;cursor:pointer;border-radius:3px;text-align:center;" onmouseover="this.style.background=\'' + color + '22\'" onmouseout="this.style.background=\'transparent\'">' + label + '</button>';
 }
 function sel(id, opts, label) {
   var h = '<select id="' + id + '" style="flex:1;min-width:0;padding:4px;background:#111;border:1px solid #333;color:#ccc;font-family:monospace;font-size:9px;border-radius:3px;">';

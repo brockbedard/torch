@@ -5,8 +5,6 @@
 
 import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam } from '../../state.js';
-import { TEAMS, getSeasonOpponents } from '../../data/teams.js';
-import { showShop } from '../components/shop.js';
 import { renderTeamBadge } from '../../data/teamLogos.js';
 import AudioStateManager from '../../engine/audioManager.js';
 
@@ -33,20 +31,10 @@ export function buildEndGame() {
   var tied = humanScore === cpuScore;
   var humanTorch = gs.ctTorchPts;
 
-  // Season state
-  var season = GS.season || { opponents: [], currentGame: 0, results: [], totalScore: 0, torchCards: [], carryoverPoints: 0 };
-  var gameNum = season.currentGame || 0;
-  var isLastGame = gameNum >= 2;
-  var winBonus = humanWon ? 100 : 0;
-  var gamePoints = humanTorch + winBonus;
-  season.results = season.results || [];
-  if (season.results.length <= gameNum) {
-    season.results.push({ won: humanWon, score: gamePoints });
-  }
-  season.totalScore = season.results.reduce(function(sum, r) { return sum + r.score; }, 0);
-  season.carryoverPoints = humanTorch;
-  var allWon = isLastGame && season.results.every(function(r) { return r.won; });
-  if (allWon) season.totalScore += 200;
+  // Single-game format — TORCH points persist across games
+  var season = GS.season || { torchCards: [], carryoverPoints: 0 };
+  var winBonus = humanWon ? 20 : 0;
+  season.carryoverPoints = humanTorch + winBonus;
 
   // Header
   var hdr = document.createElement('div');
@@ -81,28 +69,6 @@ export function buildEndGame() {
     "<div style=\"font-family:'Rajdhani';font-size:9px;color:#aaa;margin-top:4px;\">Base: " + humanTorch + (winBonus ? ' | Win Bonus: +' + winBonus : '') + "</div>";
   content.appendChild(torchBlock);
 
-  // Season progress
-  var seasonBlock = document.createElement('div');
-  seasonBlock.style.cssText = 'background:var(--bg-surface);border:1px solid #333;border-radius:8px;padding:10px 14px;width:100%;max-width:300px;';
-  seasonBlock.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#EBB010;letter-spacing:2px;margin-bottom:6px;\">GAME " + (gameNum + 1) + " OF 3 COMPLETE</div>";
-  var resultsRow = document.createElement('div');
-  resultsRow.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;';
-  var opponents = season.opponents || getSeasonOpponents(GS.team);
-  for (var g = 0; g < 3; g++) {
-    var oppTeam = TEAMS[opponents[g]];
-    var result = season.results[g];
-    var pip = document.createElement('div');
-    pip.style.cssText = 'flex:1;padding:4px;border-radius:4px;text-align:center;border:1px solid ' +
-      (result ? (result.won ? '#00ff44' : '#ff0040') : '#333') + ';background:' +
-      (result ? (result.won ? 'rgba(0,255,68,0.08)' : 'rgba(255,0,64,0.08)') : 'rgba(0,0,0,0.3)') + ';';
-    pip.innerHTML = "<div style=\"font-family:'Rajdhani';font-size:7px;color:#aaa;\">" + (oppTeam ? oppTeam.name : '?') + "</div>" +
-      "<div style=\"font-family:'Teko';font-size:14px;color:" + (result ? (result.won ? '#00ff44' : '#ff0040') : '#555') + ";\">" + (result ? (result.won ? 'W' : 'L') : '\u2014') + "</div>";
-    resultsRow.appendChild(pip);
-  }
-  seasonBlock.appendChild(resultsRow);
-  seasonBlock.innerHTML += "<div style=\"font-family:'Rajdhani';font-size:9px;color:#aaa;text-align:center;\">SEASON SCORE: " + season.totalScore + (allWon ? ' (+200 SWEEP!)' : '') + "</div>";
-  content.appendChild(seasonBlock);
-
   // Film Room — good AND bad plays
   if (gs.snapLog && gs.snapLog.length > 2) {
     var filmBlock = document.createElement('div');
@@ -135,49 +101,21 @@ export function buildEndGame() {
     content.appendChild(filmBlock);
   }
 
-  // Buttons
-  if (isLastGame) {
-    var returnBtn = document.createElement('button');
-    returnBtn.className = 'btn-blitz';
-    returnBtn.style.cssText = "width:100%;max-width:300px;font-size:14px;background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;letter-spacing:2px;";
-    returnBtn.textContent = 'NEW SEASON';
-    returnBtn.onclick = function() {
-      SND.click();
-      localStorage.setItem('torch_first_season_done', '1');
-      setGs(null);
-    };
-    content.appendChild(returnBtn);
-  } else {
-    var nextOppId = opponents[gameNum + 1];
-    var nextOpp = TEAMS[nextOppId];
-    content.innerHTML += "<div style=\"text-align:center;font-family:'Rajdhani';font-size:10px;color:#aaa;\">NEXT: <span style='color:" + (nextOpp ? nextOpp.accent : '#fff') + ";font-weight:700;'>" + (nextOpp ? nextOpp.name : '?') + "</span></div>";
-
-    var shopBtn = document.createElement('button');
-    shopBtn.className = 'btn-blitz';
-    shopBtn.style.cssText = "width:100%;max-width:300px;font-size:11px;background:var(--bg-surface);border-color:#EBB010;color:#EBB010;";
-    shopBtn.textContent = 'TORCH CARD SHOP (' + humanTorch + ' PTS)';
-    shopBtn.onclick = function() {
-      SND.click();
-      showShop(el, 'betweenGame', humanTorch, season.torchCards || [], function(card, newInv, spent) {
-        season.torchCards = newInv;
-        season.carryoverPoints -= spent;
-      }, function() {});
-    };
-    content.appendChild(shopBtn);
-
-    var nextBtn = document.createElement('button');
-    nextBtn.className = 'btn-blitz';
-    nextBtn.style.cssText = "width:100%;max-width:300px;font-size:14px;background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;letter-spacing:2px;";
-    nextBtn.textContent = 'PLAY AGAIN';
-    nextBtn.onclick = function() {
-      SND.snap();
-      // Single-game format — go back to team select, keep TORCH points
-      setGs(function(s) {
-        return Object.assign({}, s, { screen: 'teamSelect', opponent: null, engine: null, finalEngine: null, season: Object.assign({}, season, { currentGame: 0, results: [] }) });
+  // Play Again — back to team select, keep TORCH points
+  var playBtn = document.createElement('button');
+  playBtn.className = 'btn-blitz';
+  playBtn.style.cssText = "width:100%;max-width:300px;font-size:14px;background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;letter-spacing:2px;";
+  playBtn.textContent = 'PLAY AGAIN';
+  playBtn.onclick = function() {
+    SND.snap();
+    setGs(function(s) {
+      return Object.assign({}, s, {
+        screen: 'teamSelect', opponent: null, engine: null, finalEngine: null,
+        season: { torchCards: season.torchCards || [], carryoverPoints: season.carryoverPoints }
       });
-    };
-    content.appendChild(nextBtn);
-  }
+    });
+  };
+  content.appendChild(playBtn);
 
   el.appendChild(content);
   return el;
