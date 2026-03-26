@@ -87,7 +87,7 @@ import { SERPENTS_OFF_PLAYS, SERPENTS_DEF_PLAYS } from '../data/serpentsPlays.js
 var _plays = {
   sentinels: { off: SENTINELS_OFF_PLAYS, def: SENTINELS_DEF_PLAYS },
   wolves: { off: WOLVES_OFF_PLAYS, def: WOLVES_DEF_PLAYS },
-  spectres: { off: STAGS_OFF_PLAYS, def: STAGS_DEF_PLAYS },
+  stags: { off: STAGS_OFF_PLAYS, def: STAGS_DEF_PLAYS },
   serpents: { off: SERPENTS_OFF_PLAYS, def: SERPENTS_DEF_PLAYS },
 };
 function getOffCards(tid) { return _plays[tid].off.slice(0, 4); }

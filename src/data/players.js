@@ -100,7 +100,7 @@ export const SERPENTS_DEFENSE = [
 var _rosters = {
   sentinels: { offense: SENTINELS_OFFENSE, defense: SENTINELS_DEFENSE },
   wolves:    { offense: WOLVES_OFFENSE, defense: WOLVES_DEFENSE },
-  spectres:     { offense: SPECTRES_OFFENSE, defense: SPECTRES_DEFENSE },
+  stags:     { offense: SPECTRES_OFFENSE, defense: SPECTRES_DEFENSE },
   serpents:  { offense: SERPENTS_OFFENSE, defense: SERPENTS_DEFENSE },
 };
 

@@ -2711,46 +2711,32 @@ export function buildGameplay() {
       ? 'background:radial-gradient(ellipse at 50% 40%,' + newPossTeam.colors.primary + '18 0%,transparent 70%),#0A0804;'
       : 'background:#0A0804;';
 
-    // Build overlay
+    // Build overlay — centered content, dark background
     var ov = document.createElement('div');
-    ov.className = 'T-ov T-ov-poss';
-    ov.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;opacity:0;transition:opacity .3s;pointer-events:auto;cursor:pointer;' + bgGrad;
+    ov.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;opacity:0;transition:opacity .3s;pointer-events:auto;cursor:pointer;' + bgGrad;
 
-    // Team color edge flash for good moments
-    if (isGoodForUser) {
-      var edgeFlash = document.createElement('div');
-      edgeFlash.style.cssText = 'position:absolute;inset:0;pointer-events:none;border:3px solid ' + newPossTeam.accent + '40;opacity:0;animation:T-clash-flash 0.6s ease-out forwards;';
-      ov.appendChild(edgeFlash);
-    }
-
-    // Score bar with badges — user's team on left
+    // Score bar with team badges — both visible, side by side
     var hScore = s.ctScore, oScore = s.irScore;
-    var leftId = GS.team, rightId = GS.opponent;
-    var leftSize = isYourBall ? userBadgeSize : oppBadgeSize;
-    var rightSize = isYourBall ? oppBadgeSize : userBadgeSize;
-    var leftScoreStyle = isYourBall ? userScoreStyle : oppScoreStyle;
-    var rightScoreStyle = isYourBall ? oppScoreStyle : userScoreStyle;
-
     var scoreBar = document.createElement('div');
-    scoreBar.style.cssText = 'display:flex;align-items:center;gap:16px;';
+    scoreBar.style.cssText = 'display:flex;align-items:center;gap:20px;';
     scoreBar.innerHTML =
-      '<div style="text-align:center;opacity:0;animation:pgSlideL 0.3s ease-out 0.1s both;">' +
-        renderTeamBadge(leftId, leftSize) +
-        "<div style=\"font-family:'Rajdhani';font-weight:700;" + leftScoreStyle + "\">" + hScore + '</div>' +
+      '<div style="text-align:center;">' +
+        renderTeamBadge(GS.team, isYourBall ? 80 : 56) +
+        "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:" + (isYourBall ? '28' : '22') + "px;color:" + (isYourBall ? '#fff' : '#666') + ";margin-top:4px;\">" + hScore + '</div>' +
       '</div>' +
-      "<div style=\"font-family:'Teko';font-size:14px;color:#333;letter-spacing:2px;\">VS</div>" +
-      '<div style="text-align:center;opacity:0;animation:pgSlideR 0.3s ease-out 0.1s both;">' +
-        renderTeamBadge(rightId, rightSize) +
-        "<div style=\"font-family:'Rajdhani';font-weight:700;" + rightScoreStyle + "\">" + oScore + '</div>' +
+      "<div style=\"font-family:'Teko';font-size:18px;color:#444;letter-spacing:2px;\">—</div>" +
+      '<div style="text-align:center;">' +
+        renderTeamBadge(GS.opponent, isYourBall ? 56 : 80) +
+        "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:" + (isYourBall ? '22' : '28') + "px;color:" + (isYourBall ? '#666' : '#fff') + ";margin-top:4px;\">" + oScore + '</div>' +
       '</div>';
     ov.appendChild(scoreBar);
 
-    // Divider
+    // Divider line
     var divider = document.createElement('div');
-    divider.style.cssText = 'width:60%;height:1px;margin:8px 0;background:linear-gradient(90deg,transparent,' + (isGoodForUser ? newPossTeam.accent + '66' : '#33333366') + ',transparent);';
+    divider.style.cssText = 'width:50%;height:1px;background:linear-gradient(90deg,transparent,' + (isGoodForUser ? newPossTeam.accent + '88' : '#44444488') + ',transparent);';
     ov.appendChild(divider);
 
-    // Title
+    // Title — big and clear
     var titleEl = document.createElement('div');
     titleEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:" + titleSize + ";color:" + titleColor + ";letter-spacing:4px;text-align:center;";
     if (isGoodForUser) titleEl.style.textShadow = '0 0 20px ' + newPossTeam.accent + '40';
