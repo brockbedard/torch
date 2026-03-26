@@ -3192,6 +3192,23 @@ export function buildGameplay() {
       gs.flipPossession(gs.ballPosition);
       drawBug(); drawField(); drawPanel(); drawDriveSummary();
     },
+    showCoinToss: function() {
+      showCoinToss(function(result) {
+        var humanReceives = result.chose === 'receive' || result.chose === 'card_cpu_receives';
+        var kickResult = gs.constructor.resolveKickoff();
+        var startYard = kickResult === -1 ? 25 : kickResult;
+        gs.ballPosition = humanReceives ? startYard : 100 - startYard;
+        gs.possession = humanReceives ? 'CT' : 'IR';
+        gs.down = 1; gs.distance = 10;
+        drawBug(); drawField(); drawPanel();
+      });
+    },
+    showKickoff: function() {
+      var kickResult = gs.constructor.resolveKickoff();
+      var startYard = kickResult === -1 ? 25 : kickResult;
+      var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
+      showKickoffResult(posLabel, function() { drawBug(); drawField(); drawPanel(); });
+    },
     openBooster: function() {
       triggerShop('halftime', function() { drawBug(); drawField(); drawPanel(); });
     },

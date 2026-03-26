@@ -78,6 +78,11 @@ export function injectDevPanel(el, gs, callbacks) {
   html += btn('Open Store', 'dev-booster', '#FF4511');
   html += btn('Clear Cards', 'dev-clear-cards', '#555');
 
+  // ── GAME FLOW ──
+  html += section('GAME FLOW');
+  html += btn('Replay Coin Toss', 'dev-coin-toss', '#EBB010');
+  html += btn('Force Kickoff', 'dev-kickoff', '#EBB010');
+
   // ── FORCE RESULT ──
   html += section('FORCE NEXT RESULT');
   html += '<div style="display:flex;gap:3px;flex-wrap:wrap;">';
@@ -137,6 +142,9 @@ export function injectDevPanel(el, gs, callbacks) {
         irScore: parseInt(val('dev-oscore')) || 0,
       });
     }
+
+    if (id === 'dev-coin-toss' && callbacks.showCoinToss) callbacks.showCoinToss();
+    if (id === 'dev-kickoff' && callbacks.showKickoff) callbacks.showKickoff();
 
     if (id === 'dev-bronze') giveTorchCards(gs, 'BRONZE', callbacks);
     if (id === 'dev-silver') giveTorchCards(gs, 'SILVER', callbacks);
