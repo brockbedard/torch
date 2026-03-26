@@ -220,3 +220,53 @@ No emoji in UI. No blue outside defense card backs.
 - Stats bottom sheet (swipe-up during gameplay)
 - Real crowd audio loops (infrastructure exists, files not sourced)
 - Multiplayer, dynasty mode, app store release
+
+## DESIGN PRINCIPLES
+
+These principles apply to ALL design and implementation decisions in TORCH. If a proposed solution violates any of these, flag it and suggest an alternative.
+
+### Mobile-First
+- TORCH is a mobile game. Every interaction must work on a 375px portrait touchscreen.
+- No hover-dependent interactions. Touchscreens don't have hover.
+- No desktop-first assumptions. If it doesn't feel good under a thumb, redesign it.
+- Goal is eventual deployment to iOS and Android app stores.
+
+### Real Football Logic
+- Default to "what would real football do?" when making gameplay mechanic decisions.
+- If a mechanic doesn't mirror real football logic, question it.
+- Player learning should come from pattern recognition, not tutorials or exposed math.
+
+### Premium Always
+- Use GSAP for all card and UI animations, not CSS transitions. GSAP is in the stack.
+- Use Pixabay audio samples for card sounds (snap, thud, flick), not jsfxr synthesis.
+- Animation easing should feel physical — overshoot, settle, bounce. Never linear.
+- When choosing between "good enough" and "premium," always choose premium.
+
+### Card Game Identity
+- TORCH is a card game that happens to be about football. Cards are the primary interaction.
+- Cards should feel physical — dealt from a deck, slapped on the table, flicked away on discard.
+- All card animations use GSAP timelines with staggered sequencing.
+- Sound accompanies every card interaction (deal snap, select thud, discard flick).
+
+### Torch Cards Emerge From Mechanics
+- Torch Cards should not be designed in isolation. They emerge from game systems.
+- When building a new system (discards, personnel, special teams), identify where a Torch Card would create a meaningful strategic decision and suggest it.
+- Maintain a running inventory of Torch Card ideas in docs/TORCH-CARD-IDEAS.md.
+
+### Sequential Decision-Making
+- Present design questions one at a time, not as long lists.
+- Answers to earlier questions often inform later ones (dependencies).
+- This applies to both human design sessions and AI-generated specs.
+
+### Information Hierarchy (from player quality research)
+- One dominant visual signal readable in under 1 second (star rating, card border color).
+- 3-5 key attributes visible on the card face (name, stars, trait).
+- Full details behind a tap (progressive disclosure).
+- Never show math, modifiers, or synergy bonuses to the player. They learn by playing.
+- No abbreviations. Plain English traits and descriptions.
+
+### Implementation Checks
+- Before writing animation code, confirm GSAP can handle it natively. Don't fight the tool.
+- Before building a UI interaction, confirm it works with touch events (not mouse events).
+- Before adding a feature, check if it already exists in the codebase (Phase 0 audit pattern).
+- Match existing code conventions for state management, field position tracking, and screen rendering.
