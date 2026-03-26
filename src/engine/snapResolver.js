@@ -155,10 +155,6 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     if (Math.random() < sackRate) {
       result.isSack = true;
       result.yards = -(4 + Math.floor(Math.random() * 7));
-      if (ballPosition + result.yards <= 0) {
-        result.isSafety = true;
-        result.yards = 0;
-      }
       result.description = `SACK! ${featuredOff.name} goes down.`;
       return result;
     }
@@ -254,10 +250,6 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
 
     if (Math.random() < stuffRate) {
       result.yards = -1 + Math.floor(Math.random() * 4);
-      if (ballPosition + result.yards <= 0) {
-        result.isSafety = true;
-        result.yards = 0;
-      }
       if (result.yards <= 0) {
         result.description = `STUFFED! ${featuredOff.name} hit in the backfield.`;
       } else {
@@ -293,11 +285,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
       result.yards = Math.min(result.yards + 2, maxYards);
     }
 
-    // Safety check
-    if (ballPosition + result.yards <= 0) {
-      result.isSafety = true;
-      result.yards = 0;
-    }
+    // No safeties in v1 — ball capped at 1-yard line in gameState.advanceBall()
 
     // Run fumble
     const runFumbleRate = offPlay.fumbleRate + 0.005;

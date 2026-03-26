@@ -117,6 +117,50 @@ export class GameState {
     return this.possession === 'CT' ? 100 - this.ballPosition : this.ballPosition;
   }
 
+  /** Simulate a kickoff and return the receiving team's starting position (own yard line, 0-100 scale) */
+  static resolveKickoff() {
+    var KICKOFF = [
+      { weight: 58, min: 25, max: 25 },  // touchback
+      { weight: 22, min: 20, max: 28 },  // short return
+      { weight: 13, min: 28, max: 35 },  // avg return
+      { weight: 5,  min: 35, max: 45 },  // good return
+      { weight: 1.5, min: 45, max: 50 }, // big return
+      { weight: 0.5, min: -1, max: -1 }, // return TD (handled separately)
+    ];
+    var total = KICKOFF.reduce(function(s, k) { return s + k.weight; }, 0);
+    var r = Math.random() * total;
+    for (var i = 0; i < KICKOFF.length; i++) {
+      r -= KICKOFF[i].weight;
+      if (r <= 0) {
+        var k = KICKOFF[i];
+        if (k.min === -1) return -1; // return TD signal
+        return k.min + Math.floor(Math.random() * (k.max - k.min + 1));
+      }
+    }
+    return 25; // fallback touchback
+  }
+
+  /** Flip possession after a score — uses kickoff distribution for starting position */
+  kickoffFlip() {
+    var ownYardLine = GameState.resolveKickoff();
+    // Convert own yard line to 0-100 coordinate for the RECEIVING team
+    var newPoss = this.possession === 'CT' ? 'IR' : 'CT';
+    var ballPos;
+    if (ownYardLine === -1) {
+      // Kick return TD — award 6 points to receiving team, then do a normal flip
+      if (newPoss === 'CT') this.ctScore += 6;
+      else this.irScore += 6;
+      // Recursively kick again (the team that just scored kicks off)
+      this.possession = newPoss;
+      this.kickoffFlip();
+      return { returnTD: true };
+    }
+    // Own yard line: CT at position=ownYardLine, IR at position=100-ownYardLine
+    ballPos = newPoss === 'CT' ? ownYardLine : 100 - ownYardLine;
+    this.flipPossession(ballPos);
+    return { returnTD: false, startYard: ownYardLine };
+  }
+
   /** Flip possession after score/turnover/failed 4th */
   flipPossession(newBallPos) {
     this.possession = this.possession === 'CT' ? 'IR' : 'CT';
@@ -324,19 +368,7 @@ export class GameState {
     let gameEvent = null;
 
     // === HANDLE RESULT ===
-    if (result.isSafety) {
-      this.stats.safeties++;
-      if (this.possession === 'CT') this.irScore += 2;
-      else this.ctScore += 2;
-      const offPts = calcOffenseTorchPoints(result, false);
-      const defPts = calcDefenseTorchPoints(result, false);
-      this._awardTorchPts(offPts, defPts);
-      gameEvent = 'safety';
-      this.flipPossession(50);
-      this._checkHalfEnd();
-      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent });
-      return { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent };
-    }
+    // Safety removed in v1 — ball capped at 1-yard line instead
 
     if (result.isInterception) {
       const returnYds = calcReturnYards(featuredDef);
@@ -346,7 +378,7 @@ export class GameState {
         if (newPos <= 0) {
           this.irScore += 7; this.stats.irTouchdowns++; this.stats.turnoverTDs++;
           gameEvent = 'turnover_td';
-          this.flipPossession(50);
+          this.kickoffFlip();
         } else {
           this.flipPossession(Math.max(1, Math.min(99, newPos)));
           gameEvent = 'interception';
@@ -357,7 +389,7 @@ export class GameState {
         if (newPos >= 100) {
           this.ctScore += 7; this.stats.ctTouchdowns++; this.stats.turnoverTDs++;
           gameEvent = 'turnover_td';
-          this.flipPossession(50);
+          this.kickoffFlip();
         } else {
           this.flipPossession(Math.max(1, Math.min(99, newPos)));
           gameEvent = 'interception';
@@ -380,7 +412,7 @@ export class GameState {
         if (newPos <= 0) {
           this.irScore += 7; this.stats.irTouchdowns++; this.stats.turnoverTDs++;
           gameEvent = 'turnover_td';
-          this.flipPossession(50);
+          this.kickoffFlip();
         } else {
           this.flipPossession(Math.max(1, Math.min(99, newPos)));
           gameEvent = 'fumble_lost';
@@ -393,7 +425,7 @@ export class GameState {
         if (newPos >= 100) {
           this.ctScore += 7; this.stats.ctTouchdowns++; this.stats.turnoverTDs++;
           gameEvent = 'turnover_td';
-          this.flipPossession(50);
+          this.kickoffFlip();
         } else {
           this.flipPossession(Math.max(1, Math.min(99, newPos)));
           gameEvent = 'fumble_lost';
@@ -552,7 +584,7 @@ export class GameState {
     if (choice === 'xp') {
       if (scoringTeam === 'CT') this.ctScore += 1;
       else this.irScore += 1;
-      this.flipPossession(50);
+      this.kickoffFlip();
       this._checkHalfEnd();
       return { success: true, points: 1 };
     }
@@ -607,7 +639,7 @@ export class GameState {
       }
     }
     if (!onsideRecovery) {
-      this.flipPossession(50);
+      this.kickoffFlip();
     }
     this._checkHalfEnd();
     return { success, points: success ? points : 0, result, onsideRecovery };
@@ -718,7 +750,7 @@ export class GameState {
     this.twoMinActive = false;
     this.clockSeconds = 120;
     this.needsHalftime = false;
-    this.flipPossession(50);
+    this.kickoffFlip();
   }
 
   /** End the game */

@@ -51,7 +51,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
   var hdr = document.createElement('div');
   hdr.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;";
   hdr.innerHTML =
-    "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:var(--a-gold,#EBB010);letter-spacing:3px;\">THE BOOSTER</div>" +
+    "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:var(--a-gold,#EBB010);letter-spacing:3px;\">TORCH STORE</div>" +
     "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:var(--l-green,#00ff44);\">" + points + " PTS</div>";
   sheet.appendChild(hdr);
 

@@ -91,7 +91,7 @@ export function buildHalftime() {
   // Locker Room Shop
   var shopBox = document.createElement('div');
   shopBox.style.cssText = 'width:100%;max-width:320px;background:var(--bg-surface);border:1px solid #333;border-radius:8px;padding:10px 12px;';
-  shopBox.innerHTML = "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid #1E1610;padding-bottom:6px;\"><div style=\"font-family:'Rajdhani';font-weight:700;font-size:11px;color:#FF6B00;letter-spacing:1px;\">LOCKER ROOM SHOP</div><div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:#00ff44;\">" + humanPts + " PTS</div></div>";
+  shopBox.innerHTML = "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid #1E1610;padding-bottom:6px;\"><div style=\"font-family:'Rajdhani';font-weight:700;font-size:11px;color:#FF6B00;letter-spacing:1px;\">TORCH STORE</div><div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:#00ff44;\">" + humanPts + " PTS</div></div>";
 
   var offersRow = document.createElement('div');
   offersRow.style.cssText = 'display:flex;gap:6px;';

@@ -75,7 +75,7 @@ export function injectDevPanel(el, gs, callbacks) {
   html += btn('Give All Bronze', 'dev-bronze', '#CD7F32');
   html += btn('Give All Silver', 'dev-silver', '#C0C0C0');
   html += btn('Give All Gold', 'dev-gold', '#EBB010');
-  html += btn('Open Booster', 'dev-booster', '#FF4511');
+  html += btn('Open Store', 'dev-booster', '#FF4511');
   html += btn('Clear Cards', 'dev-clear-cards', '#555');
 
   // ── FORCE RESULT ──
