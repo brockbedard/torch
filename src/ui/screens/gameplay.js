@@ -875,7 +875,7 @@ export function buildGameplay() {
     var driveColor = possTeamObj.accent || '#FF6B00';
     var html = '<div class="T-drive-hdr">' +
       '<div class="T-drive-hdr-l" style="color:' + driveColor + '">' + possTeamObj.name + ' DRIVE</div>' +
-      '<div class="T-drive-hdr-r" style="font-family:\'Teko\';font-size:16px;font-weight:700"><span>' + totalPlays + '</span> plays \u00b7 <span>' + totalYds + '</span> yds \u00b7 <span>' + driveFirstDowns + '</span> 1st dn</div>' +
+      '<div class="T-drive-hdr-r" style="font-family:\'Teko\';font-size:16px;font-weight:700"><span style="color:' + driveColor + '">' + totalPlays + '</span> plays \u00b7 <span style="color:' + driveColor + '">' + totalYds + '</span> yds \u00b7 <span style="color:' + driveColor + '">' + driveFirstDowns + '</span> 1st dn</div>' +
       '</div>';
 
     // Play-by-play ticker rows (newest first)
@@ -2470,8 +2470,9 @@ export function buildGameplay() {
           var gameCtx = gs.getSummary();
           var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
           setNarr(comm.line1, comm.line2 || '');
+          var tdTeamObj = prevPoss === hAbbr ? hTeam : oTeam;
           var labelEl = document.createElement('div');
-          labelEl.style.cssText = "color:#e8e6ff;opacity:0;transition:opacity 0.4s;margin-top:12px;font-family:'Rajdhani';font-size:16px;font-weight:700;line-height:1.3;text-align:center;max-width:280px;";
+          labelEl.style.cssText = "color:" + tdTeamObj.accent + ";opacity:0;transition:opacity 0.4s;margin-top:12px;font-family:'Rajdhani';font-size:16px;font-weight:700;line-height:1.3;text-align:center;max-width:280px;";
           labelEl.textContent = comm.line1;
           resultWrap.appendChild(labelEl);
           requestAnimationFrame(function() { labelEl.style.opacity = '1'; });
@@ -2895,9 +2896,12 @@ export function buildGameplay() {
     // Show conversion choice in the panel
     panel.className = 'T-panel T-panel-off';
     panel.innerHTML = '';
-    var inst = document.createElement('div'); inst.className = 'T-inst';
-    inst.style.color = '#3df58a';
-    inst.textContent = 'TOUCHDOWN! CHOOSE CONVERSION';
+    var scoringTeamObj = team === hAbbr ? hTeam : oTeam;
+    var inst = document.createElement('div');
+    inst.style.cssText = "text-align:center;padding:8px 0 4px;";
+    inst.innerHTML =
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + scoringTeamObj.accent + ";letter-spacing:4px;text-shadow:0 0 16px " + scoringTeamObj.accent + "40;\">TOUCHDOWN!</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:#888;letter-spacing:2px;margin-top:2px;\">CHOOSE CONVERSION</div>";
     panel.appendChild(inst);
 
     var w = document.createElement('div');
