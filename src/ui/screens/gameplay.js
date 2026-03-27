@@ -23,6 +23,8 @@ import { checkPlayCombos } from '../../data/playSequenceCombos.js';
 import { generateCommentary, generateContext } from '../../engine/commentary.js';
 import { initPointsAnim, playPointsSequence, isPointsAnimPlaying } from '../effects/torchPointsAnim.js';
 import { injectDevPanel, getForceResult, getForceConversion } from '../components/devPanel.js';
+import { renderCardTray } from '../components/cardTray.js';
+import { createHandState, afterSnap as handAfterSnap, canDiscard, discard as handDiscard, resetDriveDiscards, redeal as handRedeal } from '../../engine/handManager.js';
 
 /* ═══════════════════════════════════════════
    CSS
@@ -408,9 +410,27 @@ export function buildGameplay() {
   }
   const gs = GS.engine;
 
+  // Hand management state — initialized per side on first drawPanel
+  var _offHandState = null;
+  var _defHandState = null;
+  function getHandState() {
+    var isOff = gs.possession === hAbbr;
+    if (isOff) {
+      if (!_offHandState) {
+        _offHandState = createHandState(getOffCards(GS.team), getOffenseRoster(GS.team));
+      }
+      return _offHandState;
+    } else {
+      if (!_defHandState) {
+        _defHandState = createHandState(getDefCards(GS.team), getDefenseRoster(GS.team));
+      }
+      return _defHandState;
+    }
+  }
+
   // ui state
   let selP = null, selPl = null, selTorch = null;
-  let phase = 'play'; // play | player | torch | ready | busy
+  let phase = 'play'; // play | torch | ready | busy
   let driveSnaps = [];
   let prev2min = gs.twoMinActive;
   var snapCount = 0; // Track snap number for teach tooltips
@@ -633,7 +653,7 @@ export function buildGameplay() {
         `<div class="T-sb-icon">${irBadge}</div>` +
       `</div>` +
       `<div class="T-sb-sit">` +
-        `<div class="T-sb-sit-down" style="font-family:'Teko';font-size:16px;font-weight:700;color:#FF6B00;letter-spacing:1px">${dn} & ${conversionMode ? 'GOAL' : distLabel(s.distance, s.yardsToEndzone)}</div>` +
+        `<div class="T-sb-sit-down" style="font-family:'Teko';font-size:16px;font-weight:700;color:${possTeam.accent};letter-spacing:1px">${dn} & ${conversionMode ? 'GOAL' : distLabel(s.distance, s.yardsToEndzone)}</div>` +
         `<div class="T-sb-sit-div"></div>` +
         `<div class="T-sb-sit-ball" style="font-family:'Teko';font-size:15px;font-weight:700;color:#e8e6ff;opacity:1;letter-spacing:1px">BALL ON <span style="color:${possTeam.accent}">${ballLabel}</span></div>` +
       `</div>`;
@@ -886,13 +906,14 @@ export function buildGameplay() {
         }
         var dn = ['','1st','2nd','3rd','4th'][e.down] || '';
         // Newest play highlighted with color tint + bigger text
+        var drivePossColor = (gs.possession === 'CT' ? hTeam : oTeam).accent;
         var rowBg = isNewest ? 'background:' + resColor + '0d;' : '';
         var rowStyle = isNewest
-          ? 'opacity:1;border-left:3px solid #FF6B00;padding-left:6px;' + rowBg + 'animation:T-clash-yds 0.3s ease-out;'
+          ? 'opacity:1;border-left:3px solid ' + drivePossColor + ';padding-left:6px;' + rowBg + 'animation:T-clash-yds 0.3s ease-out;'
           : 'opacity:0.5';
         var playFs = isNewest ? 'font-size:13px;font-weight:700;' : '';
         html += '<div class="T-drive-row" style="' + rowStyle + '">' +
-          '<div class="T-drive-row-dd" style="color:#999;font-size:13px;font-weight:700">' + dn + ' & ' + e.dist + '</div>' +
+          '<div class="T-drive-row-dd" style="color:' + drivePossColor + ';font-size:13px;font-weight:700">' + dn + ' & ' + e.dist + '</div>' +
           '<div class="T-drive-row-play" style="' + playFs + '">' + e.playName + '</div>' +
           '<div class="T-drive-row-res" style="color:' + resColor + '">' + resText + '</div>' +
           '</div>';
@@ -1539,6 +1560,8 @@ export function buildGameplay() {
           const dn2 = ['','1ST','2ND','3RD','4TH'][s2.down]||'';
           const dd = document.createElement('div');
           dd.className = 'T-pbp-down';
+          var ddPossTeam = s2.possession === 'CT' ? hTeam : oTeam;
+          dd.style.color = ddPossTeam.accent;
           if (r.isTouchdown) {
             dd.textContent = 'TOUCHDOWN \u2014 CONVERSION ATTEMPT';
           } else if (r.isInterception || r.isFumbleLost) {
@@ -1621,8 +1644,8 @@ export function buildGameplay() {
       var hit = touch.clientX >= r.left && touch.clientX <= r.right && touch.clientY >= r.top && touch.clientY <= r.bottom;
       if (hit && dz.dataset.drop === dragItem.type) {
         SND.cardSnap();
-        if (dragItem.type === 'play') { selPl = dragItem.data; phase = 'player'; }
-        else if (dragItem.type === 'player') { selP = dragItem.data; phase = torchInventory.filter(function(c){return c.type==='pre-snap';}).length > 0 ? 'torch' : 'ready'; }
+        if (dragItem.type === 'play') { selPl = dragItem.data; phase = (selPl && selP) ? 'ready' : 'play'; }
+        else if (dragItem.type === 'player') { selP = dragItem.data; phase = (selPl && selP) ? (torchInventory.filter(function(c){return c.type==='pre-snap';}).length > 0 ? 'torch' : 'ready') : 'play'; }
         else if (dragItem.type === 'torch') {
           selTorch = dragItem.data.id || dragItem.data;
           selectedPreSnap = dragItem.data;
@@ -1747,266 +1770,100 @@ export function buildGameplay() {
       panel.appendChild(fourthBar);
     }
 
-    // Card tray — show one card type at a time based on phase
-    const tray = document.createElement('div'); tray.className = 'T-tray';
+    // ── 8-CARD TRAY (new component) ──
+    var hs = getHandState();
+    var preSnapCards = torchInventory.filter(function(c) { return c.type === 'pre-snap'; }).slice(0, 3);
+    var hS = hAbbr === 'CT' ? gs.ctScore : gs.irScore;
+    var cS = hAbbr === 'CT' ? gs.irScore : gs.ctScore;
 
-    if (phase === 'play') {
-      plays.forEach((play, playIdx) => {
-        const isSel = selPl === play;
-        // Adapt game data to shared buildPlayV1 format
-        var cat = {SHORT:'SHORT',QUICK:'QUICK',DEEP:'DEEP',RUN:'RUN',SCREEN:'SCREEN',OPTION:'OPTION',
-          BLITZ:'BLITZ',ZONE:'ZONE',PRESSURE:'PRESSURE',HYBRID:'HYBRID'}[play.playType||play.cardType] || 'RUN';
-        var isOffPlay = ['SHORT','QUICK','DEEP','RUN','SCREEN','OPTION'].indexOf(cat) >= 0;
-        // Use the shared buildPlayV1 builder with type-colored design
-        var playCard = buildPlayV1({
-          name: play.name,
-          playType: cat,
-          isRun: play.isRun === true || play.type === 'run',
-          desc: play.desc || play.flavor || '',
-          risk: play.risk || getRisk(play.id),
-          cat: cat
-        }, 80, 150);
-        // Wrap in T-card with card back → flip → face-up deal animation
-        const c = document.createElement('div');
-        c.className = 'T-card T-card-deal' + (isSel ? ' T-card-sel T-card-gone' : '');
-        c.style.cssText += 'transform-style:preserve-3d;';
-
-        // Card back (face-down) — simple colored back matching mockup
-        var cardBack = document.createElement('div');
-        cardBack.className = 'T-card-back';
-        var cbColor = isOffPlay ? '#96CC50' : '#6AAAEE';
-        var cbEdge = isOffPlay ? '#4A6A20' : '#385890';
-        var cbLabel = isOffPlay ? 'OFFENSE' : 'DEFENSE';
-        cardBack.style.cssText += 'background:radial-gradient(ellipse at 50% 40%,' + cbColor + ',' + cbEdge + ');border:2px solid ' + (isOffPlay ? '#7ACC00' : '#4DA6FF') + ';';
-        cardBack.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#000;letter-spacing:1px;opacity:0.7;\">" + cbLabel + "</div>";
-        c.appendChild(cardBack);
-
-        // Card face (hidden until flip)
-        var faceWrap = document.createElement('div');
-        faceWrap.className = 'T-card-face';
-        playCard.style.width = '100%';
-        playCard.style.height = '100%';
-        faceWrap.appendChild(playCard);
-        c.appendChild(faceWrap);
-
-        // Slide in, then flip after delay
-        var slideDelay = playIdx * 120; // 120ms stagger (slower)
-        var flipDelay = slideDelay + 400; // flip 400ms after slide lands
-        c.style.animation = 'T-deal-slide 0.5s ease-out ' + slideDelay + 'ms both';
-        setTimeout(function() {
-          // Flip: hide back, show face
-          if (cardBack.parentNode) cardBack.style.display = 'none';
-          faceWrap.style.transform = 'rotateY(0deg)';
-          faceWrap.style.animation = 'T-deal-flip 0.3s ease-in-out both';
-          SND.cardSnap();
-        }, flipDelay);
-
-        c.onclick = () => { if (phase==='busy') return; SND.select(); selPl = play; phase = 'player'; drawField(); drawPanel(); };
-        c.onmousedown = function(e) { startDrag('play', play, c, e); };
-        c.ontouchstart = function(e) { startDrag('play', play, c, e); };
-        tray.appendChild(c);
-      });
-    } else if (phase === 'player') {
-      // Compute synergy for each player with the selected play
-      var bestBonus = 0;
-      var synergies = players.map(function(p) {
-        if (!selPl || !p.badge) return { bonus: 0, label: '' };
-        // Check badge combo: if player badge matches play type, bonus
-        var playType = selPl.playType || '';
-        var badge = p.badge || '';
-        var bonus = 0; var label = '';
-        // Simple synergy: badge matches play archetype
-        if (badge === 'HELMET' && (playType === 'RUN')) { bonus = 3; label = 'RUN BOOST'; }
-        else if (badge === 'ROCKET' && (playType === 'DEEP')) { bonus = 5; label = 'DEEP THREAT'; }
-        else if (badge === 'MAGNET' && (playType === 'SHORT' || playType === 'QUICK')) { bonus = 3; label = 'SURE HANDS'; }
-        else if (badge === 'SHIELD' && !isOff) { bonus = 3; label = 'LOCKDOWN'; }
-        else if (badge === 'LIGHTNING' && (playType === 'SCREEN')) { bonus = 4; label = 'SPEED MATCH'; }
-        else if (p.isStar) { bonus = 2; label = 'STAR'; }
-        if (bonus > bestBonus) bestBonus = bonus;
-        return { bonus: bonus, label: label };
-      });
-
-      players.forEach((p, pIdx) => {
-        const isSel = selP === p;
-        var isHot = (isOff && offStar && p.id === offStar.id && offStarHot) ||
-                    (!isOff && defStar && p.id === defStar.id && defStarHot);
-        var syn = synergies[pIdx];
-        var isBestPick = syn.bonus > 0 && syn.bonus === bestBonus;
-        var playerCard = buildMaddenPlayer({
-          name: p.name, pos: p.pos, ovr: p.ovr,
-          num: p.num || '', badge: p.badge, isStar: p.isStar,
-          ability: p.ability || '',
-          teamColor: hTeam.colors ? hTeam.colors.primary : (hTeam.accent || '#FF4511'),
-          teamId: GS.team
-        }, 80, 150);
-        // Wrap in T-card with card back → flip deal animation
-        const c = document.createElement('div');
-        c.className = 'T-card T-card-deal' + (isSel ? ' T-card-sel T-card-gone' : '') + (p.injured ? ' T-card-hurt' : '');
-        c.style.cssText += 'transform-style:preserve-3d;';
-
-        // Card back — simple colored back
-        var pBack = document.createElement('div');
-        pBack.className = 'T-card-back';
-        var pbColor = isOff ? '#96CC50' : '#6AAAEE';
-        var pbEdge = isOff ? '#4A6A20' : '#385890';
-        var pbLabel = isOff ? 'OFFENSE' : 'DEFENSE';
-        pBack.style.cssText += 'background:radial-gradient(ellipse at 50% 40%,' + pbColor + ',' + pbEdge + ');border:2px solid ' + (isOff ? '#7ACC00' : '#4DA6FF') + ';';
-        pBack.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#000;letter-spacing:1px;opacity:0.7;\">" + pbLabel + "</div>";
-        c.appendChild(pBack);
-
-        // Card face
-        var pFace = document.createElement('div');
-        pFace.className = 'T-card-face';
-        // Star Heat Check: flame border when On Fire
-        if (isHot) {
-          c.style.cssText += 'border:2px solid #FF4511 !important;box-shadow:0 0 12px rgba(255,69,17,0.5),0 0 24px rgba(255,69,17,0.2) !important;';
+    var trayEl = renderCardTray({
+      plays: hs.playHand,
+      players: hs.playerHand,
+      selectedPlay: selPl,
+      selectedPlayer: selP,
+      isOffense: isOff,
+      team: hTeam,
+      teamId: GS.team,
+      canDiscardPlays: canDiscard(hs, 'play'),
+      canDiscardPlayers: canDiscard(hs, 'player'),
+      torchCards: preSnapCards,
+      phase: phase,
+      isConversion: !!conversionMode,
+      is2Min: gs.twoMinActive,
+      clockSeconds: gs.clockSeconds,
+      offStar: offStar,
+      offStarHot: offStarHot,
+      defStar: defStar,
+      defStarHot: defStarHot,
+      onSelectPlay: function(play) {
+        if (phase === 'busy') return;
+        selPl = selPl === play ? null : play; // toggle
+        // If both selected, advance to torch or ready
+        if (selPl && selP) {
+          phase = preSnapCards.length > 0 ? 'torch' : 'ready';
+        } else {
+          phase = 'play';
         }
-        playerCard.style.width = '100%';
-        playerCard.style.height = '100%';
-        pFace.appendChild(playerCard);
-
-        // Synergy indicator overlay
-        if (syn.bonus > 0) {
-          var synEl = document.createElement('div');
-          var synColor = isBestPick ? '#EBB010' : '#3df58a';
-          synEl.style.cssText = "position:absolute;bottom:2px;left:0;right:0;text-align:center;font-family:'Teko';font-weight:700;font-size:10px;color:" + synColor + ";letter-spacing:1px;z-index:5;text-shadow:0 0 6px rgba(0,0,0,0.8);";
-          synEl.textContent = '+' + syn.bonus + ' ' + syn.label;
-          pFace.appendChild(synEl);
-          if (isBestPick) c.style.boxShadow = '0 0 8px ' + synColor + '44';
-        } else if (selPl && bestBonus > 0) {
-          // Other players with no synergy — dim slightly
-          var noSynEl = document.createElement('div');
-          noSynEl.style.cssText = "position:absolute;bottom:2px;left:0;right:0;text-align:center;font-family:'Rajdhani';font-weight:700;font-size:7px;color:#555;letter-spacing:1px;z-index:5;";
-          noSynEl.textContent = 'NO BONUS';
-          pFace.appendChild(noSynEl);
+        drawField(); drawPanel();
+      },
+      onSelectPlayer: function(p) {
+        if (phase === 'busy') return;
+        selP = selP === p ? null : p; // toggle
+        if (selPl && selP) {
+          phase = preSnapCards.length > 0 ? 'torch' : 'ready';
+        } else {
+          phase = 'play';
         }
-
-        c.appendChild(pFace);
-
-        // Slide in then flip
-        var pSlideDelay = pIdx * 120;
-        var pFlipDelay = pSlideDelay + 400;
-        c.style.animation = 'T-deal-slide 0.5s ease-out ' + pSlideDelay + 'ms both';
-        setTimeout(function() {
-          if (pBack.parentNode) pBack.style.display = 'none';
-          pFace.style.transform = 'rotateY(0deg)';
-          pFace.style.animation = 'T-deal-flip 0.3s ease-in-out both';
-          SND.cardSnap();
-        }, pFlipDelay);
-
-        c.onclick = () => {
-          if (p.injured || phase==='busy') return; SND.select(); selP = p;
-          phase = torchInventory.filter(function(c){return c.type==='pre-snap';}).length > 0 ? 'torch' : 'ready';
-          drawField(); drawPanel();
-        };
-        c.onmousedown = function(e) { if (!p.injured) startDrag('player', p, c, e); };
-        c.ontouchstart = function(e) { if (!p.injured) startDrag('player', p, c, e); };
-        tray.appendChild(c);
-      });
-    } else if (phase === 'torch') {
-      // Show TORCH cards — max 3 cards + skip = 4 slots (same as play/player)
-      // Filter torch cards: offensive cards (amplification/information) on offense, defensive cards (disruption/protection) on defense
-      var offCategories = ['amplification', 'information'];
-      var defCategories = ['disruption', 'protection'];
-      var applicableCategories = isOff ? offCategories : defCategories;
-      var preSnapCards = torchInventory.filter(function(c) { return c.type === 'pre-snap'; }).slice(0, 3);
-      if (preSnapCards.length === 0) {
+        drawField(); drawPanel();
+      },
+      onSnap: function() {
+        if (conversionMode) { doConversionSnap(); } else { doSnap(); }
+      },
+      onDiscardPlays: function(marked) {
+        handDiscard(hs, 'play', marked);
+        selPl = null; phase = 'play';
+        drawField(); drawPanel();
+      },
+      onDiscardPlayers: function(marked) {
+        handDiscard(hs, 'player', marked);
+        selP = null; phase = 'play';
+        drawField(); drawPanel();
+      },
+      onTorchCard: function(tc) {
+        selTorch = tc.id;
+        selectedPreSnap = tc;
+        var idx = torchInventory.indexOf(tc);
+        if (idx >= 0) torchInventory.splice(idx, 1);
+        if (GS.season) GS.season.torchCards = torchInventory.slice();
         phase = 'ready';
         drawField(); drawPanel();
-        return;
-      }
-      preSnapCards.forEach(function(tc) {
-        var isApplicable = applicableCategories.indexOf(tc.category) >= 0;
-        var c = document.createElement('div');
-        c.className = 'T-card';
-        if (!isApplicable) c.style.opacity = '0.35';
-        var tcEl = buildTorchCard(tc, null, 150);
-        tcEl.style.width = '100%';
-        tcEl.style.height = '100%';
-        c.appendChild(tcEl);
-        // Show "OFFENSE ONLY" / "DEFENSE ONLY" label if not applicable
-        if (!isApplicable) {
-          var sideLabel = document.createElement('div');
-          sideLabel.style.cssText = "position:absolute;bottom:4px;left:0;right:0;text-align:center;font-family:'Rajdhani';font-weight:700;font-size:8px;color:#ff4444;letter-spacing:1px;z-index:5;";
-          sideLabel.textContent = isOff ? 'DEF ONLY' : 'OFF ONLY';
-          c.appendChild(sideLabel);
-        }
-        if (isApplicable) {
-          c.onclick = function() {
-            SND.click();
-            selTorch = tc.id;
-            selectedPreSnap = tc;
-            var idx = torchInventory.indexOf(tc);
-            if (idx >= 0) torchInventory.splice(idx, 1);
-            if (GS.season) GS.season.torchCards = torchInventory.slice();
-            phase = 'ready';
-            drawField(); drawPanel();
-          };
-          c.onmousedown = function(e) { startDrag('torch', tc, c, e); };
-          c.ontouchstart = function(e) { startDrag('torch', tc, c, e); };
-        }
-        tray.appendChild(c);
-      });
-      // Skip button — always the 4th slot
-      var skipBtn = document.createElement('div');
-      skipBtn.className = 'T-card';
-      skipBtn.style.cssText = 'border:2px dashed #554f8044;display:flex;align-items:center;justify-content:center;cursor:pointer;';
-      skipBtn.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#554f80;text-align:center;letter-spacing:1px;\">SKIP</div>";
-      skipBtn.onclick = function() { SND.click(); selectedPreSnap = null; selTorch = null; phase = 'ready'; drawField(); drawPanel(); };
-      tray.appendChild(skipBtn);
-    }
-    panel.appendChild(tray);
-
-    // ── SPIKE/KNEEL — always visible during 2-min drill on offense, regardless of phase ──
-    if (gs.twoMinActive && isOff && phase !== 'busy') {
-      var clockBtns = document.createElement('div');
-      clockBtns.style.cssText = 'display:flex;gap:6px;padding:4px 8px;flex-shrink:0;';
-      var spk = document.createElement('button'); spk.className = 'T-2btn T-spike'; spk.textContent = 'SPIKE';
-      spk.style.cssText += 'flex:1;';
-      spk.onclick = function() {
+      },
+      onSkipTorch: function() {
+        selectedPreSnap = null; selTorch = null;
+        phase = 'ready';
+        drawField(); drawPanel();
+      },
+      onSpike: function() {
         SND.click();
         var spikeResult = gs.spike();
         stop2MinClock();
-        // Log spike in drive summary
         driveSummaryLog.push({ down: gs.down - 1, dist: gs.distance, playName: 'SPIKE — clock stopped', yards: 0, isUserOff: true });
         selP = null; selPl = null; phase = 'play';
         drawBug(); drawField(); drawDriveSummary();
         setNarr('Ball spiked. Clock stopped.', fmtClock(Math.max(0, gs.clockSeconds)) + ' left');
         if (!checkEnd()) drawPanel();
-      };
-      clockBtns.appendChild(spk);
-      var hS = hAbbr === 'CT' ? gs.ctScore : gs.irScore;
-      var cS = hAbbr === 'CT' ? gs.irScore : gs.ctScore;
-      if (hS > cS) {
-        var kn = document.createElement('button'); kn.className = 'T-2btn T-kneel'; kn.textContent = 'KNEEL';
-        kn.style.cssText += 'flex:1;';
-        kn.onclick = function() {
-          SND.click();
-          gs.kneel();
-          driveSummaryLog.push({ down: gs.down - 1, dist: gs.distance, playName: 'KNEEL — clock running', yards: 0, isUserOff: true });
-          selP = null; selPl = null; phase = 'play';
-          drawBug(); drawField(); drawDriveSummary();
-          setNarr('QB kneels.', fmtClock(Math.max(0, gs.clockSeconds)) + ' left');
-          if (!checkEnd()) drawPanel();
-        };
-        clockBtns.appendChild(kn);
-      }
-      panel.appendChild(clockBtns);
-    }
-
-    // Snap bar — only appears when both cards placed
-    if (phase === 'ready') {
-      var sz = document.createElement('div'); sz.className = 'T-snap';
-
-      // Normal SNAP button (4th down options are above the card tray now)
-      var go = document.createElement('button');
-      go.className = 'btn-blitz';
-      go.style.cssText = 'background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;font-size:16px;animation:T-pulse 1.8s ease-in-out infinite;';
-      go.textContent = conversionMode ? 'ATTEMPT' : 'SNAP';
-      go.onclick = conversionMode ? function() { SND.snap(); doConversionSnap(); } : function() { SND.snap(); doSnap(); };
-      sz.appendChild(go);
-      panel.appendChild(sz);
-    }
+      },
+      onKneel: hS > cS ? function() {
+        SND.click();
+        gs.kneel();
+        driveSummaryLog.push({ down: gs.down - 1, dist: gs.distance, playName: 'KNEEL — clock running', yards: 0, isUserOff: true });
+        selP = null; selPl = null; phase = 'play';
+        drawBug(); drawField(); drawDriveSummary();
+        setNarr('QB kneels.', fmtClock(Math.max(0, gs.clockSeconds)) + ' left');
+        if (!checkEnd()) drawPanel();
+      } : null,
+    });
+    panel.appendChild(trayEl);
   }
 
   // ── SNAP ──
@@ -2653,7 +2510,8 @@ export function buildGameplay() {
           var newS = gs.getSummary();
           var dnLabels = ['','1ST','2ND','3RD','4TH'];
           var dnText = (dnLabels[newS.down] || '') + ' & ' + newS.distance;
-          var dnColor = newS.down >= 3 ? '#e03050' : '#EBB010';
+          var dnPossTeam = newS.possession === 'CT' ? hTeam : oTeam;
+          var dnColor = dnPossTeam.accent;
           var dnEl = document.createElement('div');
           dnEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:" + dnColor + ";letter-spacing:3px;margin-top:6px;opacity:0.9;";
           dnEl.textContent = dnText;
@@ -2768,7 +2626,18 @@ export function buildGameplay() {
     }
   }
 
+  var _lastPossession = gs.possession;
   function nextSnap() {
+    // Replace used cards in hand before resetting selection
+    var hs = getHandState();
+    if (selPl || selP) handAfterSnap(hs, selPl, selP);
+    // On possession change, redeal the hand for the new drive
+    if (gs.possession !== _lastPossession) {
+      _lastPossession = gs.possession;
+      var newHs = getHandState();
+      handRedeal(newHs);
+      resetDriveDiscards(newHs);
+    }
     phase = 'play';
     selP = null; selPl = null; selTorch = null; selectedPreSnap = null;
     _fourthDownDecided = false;
@@ -2942,7 +2811,7 @@ export function buildGameplay() {
     // Next situation
     if (fieldPos) {
       var ctxEl = document.createElement('div');
-      ctxEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:11px;color:#555;letter-spacing:1px;margin-top:6px;";
+      ctxEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:11px;color:" + newPossTeam.accent + ";letter-spacing:1px;margin-top:6px;";
       ctxEl.textContent = nextCtx + ' at ' + fieldPos;
       ov.appendChild(ctxEl);
     }
