@@ -3102,8 +3102,9 @@ export function buildGameplay() {
         // Phase 2: Result + Choice
         ov.innerHTML = '';
         var winner = humanWins ? hTeam.name : oTeam.name;
+        var winnerColor = humanWins ? hTeam.accent : oTeam.accent;
         var resultEl = document.createElement('div');
-        resultEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:3px;text-align:center;";
+        resultEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:" + winnerColor + ";letter-spacing:3px;text-align:center;";
         resultEl.textContent = humanWins ? 'YOU WON THE TOSS!' : winner + ' WINS THE TOSS';
         ov.appendChild(resultEl);
 
@@ -3163,7 +3164,7 @@ export function buildGameplay() {
   function showFaceDownCards(ov, offers, humanKicks, onDone) {
     ov.innerHTML = '';
     var title = document.createElement('div');
-    title.style.cssText = "font-family:'Teko';font-weight:700;font-size:24px;color:#EBB010;letter-spacing:3px;text-align:center;";
+    title.style.cssText = "font-family:'Teko';font-weight:700;font-size:24px;color:" + hTeam.accent + ";letter-spacing:3px;text-align:center;";
     title.textContent = 'TAP A CARD TO REVEAL';
     ov.appendChild(title);
 
