@@ -138,42 +138,54 @@ export function renderCardTray(opts) {
   header.appendChild(discToggle);
   wrap.appendChild(header);
 
-  // ── TORCH PHASE ──
+  // ── TORCH CARDS ROW (shown when in torch phase, above play/player rows) ──
   if (opts.phase === 'torch' && opts.torchCards && opts.torchCards.length > 0) {
     var torchLabel = document.createElement('div');
     torchLabel.className = 'CT-row-label';
     torchLabel.style.color = '#EBB010';
-    torchLabel.textContent = 'TORCH CARD \u2014 PLAY ONE OR SKIP';
+    torchLabel.textContent = 'TORCH CARD \u2014 TAP TO PLAY OR SKIP';
     wrap.appendChild(torchLabel);
     var torchRow = document.createElement('div');
-    torchRow.className = 'CT-torch-row';
+    torchRow.className = 'CT-row';
     var offCats = ['amplification', 'information'];
     var defCats = ['disruption', 'protection'];
     var applicable = opts.isOffense ? offCats : defCats;
     var torchEls = [];
-    opts.torchCards.slice(0, 3).forEach(function(tc) {
-      var isApp = applicable.indexOf(tc.category) >= 0;
-      var c = document.createElement('div');
-      c.className = 'CT-torch-card' + (isApp ? '' : ' CT-card-disabled');
-      var tcEl = buildTorchCard(tc, null, 100);
-      tcEl.style.width = '100%'; tcEl.style.height = '100%';
-      c.appendChild(tcEl);
-      if (isApp) {
-        attachTouchFeedback(c);
-        c.onclick = function() { SND.click(); if (opts.onTorchCard) opts.onTorchCard(tc); };
+    var torchSlots = opts.torchCards.slice(0, 3);
+    for (var ti = 0; ti < 4; ti++) {
+      if (ti < torchSlots.length) {
+        var tc = torchSlots[ti];
+        var isApp = applicable.indexOf(tc.category) >= 0;
+        var c = document.createElement('div');
+        c.className = 'CT-card' + (isApp ? '' : ' CT-card-disabled');
+        var tcEl = buildTorchCard(tc, null, 120);
+        tcEl.style.width = '100%'; tcEl.style.height = '100%';
+        c.appendChild(tcEl);
+        if (isApp) {
+          attachTouchFeedback(c);
+          (function(card) {
+            c.onclick = function() { SND.click(); if (opts.onTorchCard) opts.onTorchCard(card); };
+          })(tc);
+        }
+        torchRow.appendChild(c);
+        torchEls.push(c);
+      } else {
+        // Empty slot or SKIP
+        var empty = document.createElement('div');
+        empty.className = 'CT-card';
+        empty.style.cssText = 'border:2px dashed #554f8022;display:flex;align-items:center;justify-content:center;';
+        if (ti === torchSlots.length) {
+          // First empty slot = SKIP button
+          empty.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:#554f80;letter-spacing:1px;\">SKIP</div>";
+          empty.style.cursor = 'pointer';
+          empty.onclick = function() { SND.click(); if (opts.onSkipTorch) opts.onSkipTorch(); };
+        }
+        torchRow.appendChild(empty);
+        torchEls.push(empty);
       }
-      torchRow.appendChild(c);
-      torchEls.push(c);
-    });
-    var skip = document.createElement('div');
-    skip.className = 'CT-skip-btn';
-    skip.innerHTML = '<div class="CT-skip-label">SKIP</div>';
-    skip.onclick = function() { SND.click(); if (opts.onSkipTorch) opts.onSkipTorch(); };
-    torchRow.appendChild(skip);
-    torchEls.push(skip);
+    }
     wrap.appendChild(torchRow);
     requestAnimationFrame(function() { animateDeal(torchEls, 0); });
-    return wrap;
   }
 
   // ── PLAY ROW ──
