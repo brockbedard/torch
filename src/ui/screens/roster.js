@@ -1,12 +1,12 @@
 /**
  * TORCH — Meet Your Squad (Pre-game Roster Preview)
- * Shows all 7 offensive players with stars, position, name, and trait.
- * Appears between team select and pregame. Defense roster shown later.
+ * Shows all 14 players (7 offense + 7 defense) with stars, position, full name, trait.
+ * Appears between team select and pregame.
  */
 
 import { gsap } from 'gsap';
 import { GS, setGs, getTeam } from '../../state.js';
-import { getOffenseRoster } from '../../data/players.js';
+import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { renderTeamBadge } from '../../data/teamLogos.js';
 import { SND } from '../../engine/sound.js';
 
@@ -16,75 +16,99 @@ function starString(count) {
   return s;
 }
 
+function buildPlayerRow(p, team, isStar) {
+  var row = document.createElement('div');
+  row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid #0E0A04;opacity:0;';
+
+  if (isStar) {
+    row.style.background = 'linear-gradient(90deg,rgba(235,176,16,0.08),transparent)';
+    row.style.borderLeft = '3px solid #EBB010';
+    row.style.paddingLeft = '8px';
+  }
+
+  // Stars
+  var starsEl = document.createElement('div');
+  starsEl.style.cssText = "font-size:11px;color:#EBB010;width:60px;flex-shrink:0;letter-spacing:1px;";
+  starsEl.textContent = starString(p.stars || 3);
+
+  // Position
+  var posEl = document.createElement('div');
+  posEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:10px;color:#888;width:22px;flex-shrink:0;text-align:center;";
+  posEl.textContent = p.pos;
+
+  // Full name
+  var nameEl = document.createElement('div');
+  nameEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:" + (isStar ? '#EBB010' : '#e8e6ff') + ";flex:1;line-height:1.2;";
+  var fullName = (p.firstName ? p.firstName + ' ' : '') + p.name;
+  nameEl.textContent = fullName;
+  if (isStar && p.starTitle) {
+    nameEl.innerHTML = fullName + "<div style=\"font-size:9px;color:#EBB01099;font-style:italic;margin-top:1px;\">" + p.starTitle + "</div>";
+  }
+
+  // Trait
+  var traitEl = document.createElement('div');
+  traitEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:9px;color:" + team.accent + ";letter-spacing:1px;text-align:right;white-space:nowrap;";
+  traitEl.textContent = p.trait || '';
+
+  row.appendChild(starsEl);
+  row.appendChild(posEl);
+  row.appendChild(nameEl);
+  row.appendChild(traitEl);
+  return row;
+}
+
 export function buildRoster() {
   var el = document.createElement('div');
   el.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;background:var(--bg);overflow-y:auto;';
 
   var team = getTeam(GS.team);
-  var roster = getOffenseRoster(GS.team);
+  var offRoster = getOffenseRoster(GS.team);
+  var defRoster = getDefenseRoster(GS.team);
 
-  // Header
+  // Header — big logo
   var hdr = document.createElement('div');
-  hdr.style.cssText = 'padding:20px 16px 12px;text-align:center;flex-shrink:0;';
+  hdr.style.cssText = 'padding:24px 16px 8px;text-align:center;flex-shrink:0;';
   hdr.innerHTML =
-    '<div style="display:flex;justify-content:center;margin-bottom:8px;">' + renderTeamBadge(GS.team, 48) + '</div>' +
-    "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + team.accent + ";letter-spacing:4px;\">" + team.name.toUpperCase() + "</div>" +
-    "<div style=\"font-family:'Rajdhani';font-size:12px;color:#666;letter-spacing:2px;margin-top:2px;\">MEET YOUR SQUAD</div>";
+    '<div style="display:flex;justify-content:center;margin-bottom:10px;">' + renderTeamBadge(GS.team, 80) + '</div>' +
+    "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:" + team.accent + ";letter-spacing:5px;\">" + team.name.toUpperCase() + "</div>" +
+    "<div style=\"font-family:'Rajdhani';font-size:11px;color:#666;letter-spacing:3px;margin-top:2px;\">MEET YOUR SQUAD</div>";
   el.appendChild(hdr);
 
-  // Offense section
-  var section = document.createElement('div');
-  section.style.cssText = 'padding:0 16px;';
-
-  var label = document.createElement('div');
-  label.style.cssText = "font-family:'Teko';font-weight:700;font-size:16px;color:#FF6B00;letter-spacing:3px;margin-bottom:6px;border-bottom:1px solid #1E1610;padding-bottom:4px;";
-  label.textContent = 'OFFENSE';
-  section.appendChild(label);
-
   var rows = [];
-  roster.forEach(function(p) {
-    var row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #0E0A04;opacity:0;';
 
-    // Stars
-    var starsEl = document.createElement('div');
-    starsEl.style.cssText = "font-size:12px;color:#EBB010;width:68px;flex-shrink:0;letter-spacing:1px;";
-    starsEl.textContent = starString(p.stars || 3);
+  // Offense section
+  var offSection = document.createElement('div');
+  offSection.style.cssText = 'padding:0 12px;';
+  var offLabel = document.createElement('div');
+  offLabel.style.cssText = "font-family:'Teko';font-weight:700;font-size:14px;color:#FF6B00;letter-spacing:3px;margin-bottom:4px;border-bottom:1px solid #1E1610;padding-bottom:3px;";
+  offLabel.textContent = 'OFFENSE';
+  offSection.appendChild(offLabel);
 
-    // Position
-    var posEl = document.createElement('div');
-    posEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:11px;color:#888;width:24px;flex-shrink:0;text-align:center;";
-    posEl.textContent = p.pos;
-
-    // Name
-    var nameEl = document.createElement('div');
-    nameEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:#e8e6ff;flex:1;";
-    nameEl.textContent = p.name;
-
-    // Trait
-    var traitEl = document.createElement('div');
-    traitEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:10px;color:" + team.accent + ";letter-spacing:1px;text-align:right;";
-    traitEl.textContent = p.trait || '';
-
-    // Star player badge
-    if (p.isStar) {
-      nameEl.style.color = '#EBB010';
-      row.style.background = 'rgba(235,176,16,0.04)';
-    }
-
-    row.appendChild(starsEl);
-    row.appendChild(posEl);
-    row.appendChild(nameEl);
-    row.appendChild(traitEl);
-    section.appendChild(row);
+  offRoster.forEach(function(p) {
+    var row = buildPlayerRow(p, team, p.isStar);
+    offSection.appendChild(row);
     rows.push(row);
   });
+  el.appendChild(offSection);
 
-  el.appendChild(section);
+  // Defense section
+  var defSection = document.createElement('div');
+  defSection.style.cssText = 'padding:0 12px;margin-top:10px;';
+  var defLabel = document.createElement('div');
+  defLabel.style.cssText = "font-family:'Teko';font-weight:700;font-size:14px;color:#4DA6FF;letter-spacing:3px;margin-bottom:4px;border-bottom:1px solid #1E1610;padding-bottom:3px;";
+  defLabel.textContent = 'DEFENSE';
+  defSection.appendChild(defLabel);
+
+  defRoster.forEach(function(p) {
+    var row = buildPlayerRow(p, team, p.isStar);
+    defSection.appendChild(row);
+    rows.push(row);
+  });
+  el.appendChild(defSection);
 
   // Continue button
   var btnWrap = document.createElement('div');
-  btnWrap.style.cssText = 'padding:20px 16px;flex-shrink:0;';
+  btnWrap.style.cssText = 'padding:16px 16px 24px;flex-shrink:0;';
   var continueBtn = document.createElement('button');
   continueBtn.className = 'btn-blitz';
   continueBtn.style.cssText = "width:100%;font-size:14px;background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;letter-spacing:2px;opacity:0;";
@@ -96,12 +120,12 @@ export function buildRoster() {
   btnWrap.appendChild(continueBtn);
   el.appendChild(btnWrap);
 
-  // GSAP entrance — stagger rows in, then show button
+  // GSAP entrance
   requestAnimationFrame(function() {
     gsap.to(rows, {
-      opacity: 1, duration: 0.3, stagger: 0.06, ease: 'power2.out',
+      opacity: 1, duration: 0.25, stagger: 0.04, ease: 'power2.out',
       onComplete: function() {
-        gsap.to(continueBtn, { opacity: 1, duration: 0.3, delay: 0.2 });
+        gsap.to(continueBtn, { opacity: 1, duration: 0.3, delay: 0.15 });
       }
     });
   });

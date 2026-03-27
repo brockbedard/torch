@@ -57,8 +57,13 @@ export function injectDevPanel(el, gs, callbacks) {
   el.appendChild(toggle);
 
   // Panel
+  // Auto-open on desktop (no touch = browser testing)
+  var isDesktop = !('ontouchstart' in window) && window.innerWidth > 500;
+  if (isDesktop) _open = true;
+
   var panel = document.createElement('div');
-  panel.style.cssText = 'position:fixed;top:0;right:0;width:280px;height:100vh;z-index:9998;background:rgba(0,0,0,0.95);border-left:1px solid #4DA6FF;overflow-y:auto;padding:40px 10px 20px;transform:translateX(100%);transition:transform 0.25s ease;font-family:monospace;font-size:10px;color:#ccc;';
+  panel.style.cssText = 'position:fixed;top:0;right:0;width:280px;height:100vh;z-index:9998;background:rgba(0,0,0,0.95);border-left:1px solid #4DA6FF;overflow-y:auto;padding:40px 10px 20px;transform:' + (_open ? 'translateX(0)' : 'translateX(100%)') + ';transition:transform 0.25s ease;font-family:monospace;font-size:10px;color:#ccc;';
+  if (_open) toggle.style.opacity = '1';
   _panel = panel;
 
   var html = '';

@@ -54,12 +54,13 @@ export function showSTSelect(parent, opts) {
     var row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 8px;border-bottom:1px solid #1a1a1a;cursor:pointer;border-radius:4px;opacity:0;';
 
-    // Position + Name
+    // Position + Full Name + Stars
+    var fullName = (p.firstName ? p.firstName + ' ' : '') + p.name;
     var nameBlock = document.createElement('div');
     nameBlock.style.cssText = "flex:1;min-width:0;";
     nameBlock.innerHTML =
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#666;letter-spacing:1px;\">" + p.pos + "</div>" +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:14px;color:#e8e6ff;\">" + p.name + "</div>";
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#666;letter-spacing:1px;\">" + p.pos + (p.stars ? ' \u2605'.repeat(p.stars) : '') + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:14px;color:#e8e6ff;\">" + fullName + "</div>";
 
     // Primary rating
     var r1 = document.createElement('div');
@@ -116,8 +117,9 @@ export function showSTSelect(parent, opts) {
     opts.deck.burned.forEach(function(entry) {
       var bRow = document.createElement('div');
       bRow.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 8px;opacity:0.35;';
+      var burnedName = (entry.player.firstName ? entry.player.firstName + ' ' : '') + entry.player.name;
       bRow.innerHTML =
-        "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:#555;flex:1;\">" + entry.player.pos + " " + entry.player.name + "</div>" +
+        "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:#555;flex:1;\">" + entry.player.pos + " " + burnedName + "</div>" +
         "<div style=\"font-family:'Rajdhani';font-size:9px;color:#333;\">" + entry.context + "</div>";
       ov.appendChild(bRow);
     });

@@ -1,28 +1,31 @@
 /**
  * TORCH — Card Tray Component
  * 8-card simultaneous layout: 4 play cards (top) + 4 player cards (bottom).
- * All card animations use GSAP (per design principles). No CSS transitions on cards.
+ * All card animations use GSAP. Discard button next to team name.
  */
 
 import { gsap } from 'gsap';
 import { buildPlayV1, buildMaddenPlayer, buildTorchCard } from './cards.js';
 import { SND } from '../../engine/sound.js';
 
-// ── CSS (layout only — no card transitions, GSAP handles movement) ──
 var _cssInjected = false;
 var TRAY_CSS = `
 .CT-wrap{display:flex;flex-direction:column;flex-shrink:0;background:#0E0A04;border-top:2px solid #FF6B0033;position:relative;z-index:1}
-.CT-side{text-align:center;padding:3px 0 1px;font-family:'Teko';font-weight:700;font-size:18px;letter-spacing:3px;flex-shrink:0}
+.CT-header{display:flex;align-items:center;justify-content:center;gap:8px;padding:3px 8px 1px;flex-shrink:0}
+.CT-side{font-family:'Teko';font-weight:700;font-size:18px;letter-spacing:3px}
+.CT-disc-toggle{font-family:'Rajdhani';font-weight:700;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:3px;border:1px solid #EBB01044;background:transparent;color:#EBB010;cursor:pointer}
+.CT-disc-toggle-used{color:#333;border-color:#1a1a1a;cursor:default}
+.CT-disc-toggle-active{background:rgba(235,176,16,0.1);border-color:#EBB010;animation:T-pulse 1.5s infinite}
 .CT-row{display:flex;gap:3px;padding:2px 3px;flex-shrink:0}
 .CT-row-label{font-family:'Rajdhani';font-weight:700;font-size:8px;letter-spacing:1px;padding:0 6px;color:#555;flex-shrink:0}
 .CT-card{flex:1 1 0;min-width:0;height:120px;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;position:relative;cursor:pointer;border:2px solid transparent;will-change:transform}
 .CT-card-disabled{opacity:0.35;pointer-events:none}
-.CT-actions{display:flex;gap:6px;padding:4px 8px;align-items:center;flex-shrink:0}
-.CT-disc-btn{font-family:'Rajdhani';font-weight:700;font-size:10px;letter-spacing:1px;padding:6px 10px;border-radius:4px;border:1px solid #33333388;background:transparent;cursor:pointer;color:#888}
-.CT-disc-btn-active{color:#EBB010;border-color:#EBB01044}
-.CT-disc-btn-used{color:#333;border-color:#1a1a1a;cursor:not-allowed}
+.CT-snap-bar{display:flex;gap:6px;padding:4px 8px;align-items:center;flex-shrink:0}
 .CT-snap-btn{flex:1;font-family:'Teko';font-weight:700;font-size:16px;letter-spacing:3px;padding:10px;border-radius:6px;border:2px solid #FF4511;background:linear-gradient(180deg,#EBB010,#FF4511);color:#000;cursor:pointer}
 .CT-snap-btn:disabled{opacity:0.3;cursor:not-allowed}
+.CT-disc-bar{display:flex;gap:6px;padding:4px 8px;align-items:center;flex-shrink:0}
+.CT-disc-confirm{flex:1;font-family:'Teko';font-weight:700;font-size:14px;letter-spacing:2px;padding:8px;border-radius:6px;border:2px solid #EBB010;background:rgba(235,176,16,0.1);color:#EBB010;cursor:pointer}
+.CT-disc-cancel{font-family:'Rajdhani';font-weight:700;font-size:10px;padding:8px 12px;border-radius:6px;border:1px solid #333;background:transparent;color:#888;cursor:pointer}
 .CT-torch-row{display:flex;gap:3px;padding:2px 3px;flex-shrink:0}
 .CT-torch-card{flex:1 1 0;min-width:0;height:100px;border-radius:6px;overflow:hidden;cursor:pointer;position:relative}
 .CT-skip-btn{flex:1 1 0;min-width:0;height:100px;border-radius:6px;border:2px dashed #554f8044;display:flex;align-items:center;justify-content:center;cursor:pointer}
@@ -37,28 +40,24 @@ function injectCSS() {
   document.head.appendChild(s);
 }
 
-// Track previous hand IDs to detect new cards (deal animation only for new ones)
+// Track previous hand IDs for deal animation targeting
 var _prevPlayIds = [];
 var _prevPlayerIds = [];
+// Track which slot indices were vacated (for positional deal-in)
+var _vacatedPlayIdx = -1;
+var _vacatedPlayerIdx = -1;
 
-function getRisk(id) { return 'med'; }
-
-// ── GSAP ANIMATIONS ──
-
-/** Deal cards in from above with stagger and overshoot */
 function animateDeal(cards, startDelay) {
   if (!cards.length) return;
   gsap.set(cards, { y: -160, rotation: function() { return gsap.utils.random(-8, 8); }, scale: 0.8, opacity: 0 });
   gsap.to(cards, {
     y: 0, rotation: 0, scale: 1, opacity: 1,
-    duration: 0.3, stagger: 0.08,
-    ease: 'back.out(1.7)',
+    duration: 0.3, stagger: 0.08, ease: 'back.out(1.7)',
     delay: startDelay || 0,
     onStart: function() { try { SND.cardSnap(); } catch(e) {} },
   });
 }
 
-/** Select animation — lift with gold glow */
 function animateSelect(card) {
   gsap.to(card, { y: -8, scale: 1.05, duration: 0.15, ease: 'power2.out' });
   card.style.borderColor = '#EBB010';
@@ -66,7 +65,6 @@ function animateSelect(card) {
   card.style.zIndex = '2';
 }
 
-/** Deselect animation — settle back */
 function animateDeselect(card) {
   gsap.to(card, { y: 0, scale: 1, duration: 0.15, ease: 'power2.out' });
   card.style.borderColor = 'transparent';
@@ -74,7 +72,16 @@ function animateDeselect(card) {
   card.style.zIndex = '';
 }
 
-/** Touch hold feedback — subtle lift on press */
+function animateMark(card) {
+  gsap.to(card, { y: 6, rotation: -3, opacity: 0.5, duration: 0.15, ease: 'power2.out' });
+  card.style.borderColor = '#e03050';
+}
+
+function animateUnmark(card) {
+  gsap.to(card, { y: 0, rotation: 0, opacity: 1, duration: 0.15, ease: 'power2.out' });
+  card.style.borderColor = 'transparent';
+}
+
 function attachTouchFeedback(card) {
   var pressed = false;
   card.addEventListener('touchstart', function() {
@@ -82,12 +89,8 @@ function attachTouchFeedback(card) {
     gsap.to(card, { y: -4, scale: 1.02, duration: 0.1, ease: 'power2.out' });
   }, { passive: true });
   card.addEventListener('touchend', function() {
-    if (pressed) {
-      pressed = false;
-      // Don't settle if it's about to get selected (onclick fires after touchend)
-      setTimeout(function() {
-        if (!card._selected) gsap.to(card, { y: 0, scale: 1, duration: 0.1, ease: 'power2.out' });
-      }, 50);
+    if (pressed) { pressed = false;
+      setTimeout(function() { if (!card._selected && !card._marked) gsap.to(card, { y: 0, scale: 1, duration: 0.1, ease: 'power2.out' }); }, 50);
     }
   }, { passive: true });
   card.addEventListener('touchcancel', function() {
@@ -96,44 +99,56 @@ function attachTouchFeedback(card) {
   }, { passive: true });
 }
 
-/**
- * Render the card tray.
- */
 export function renderCardTray(opts) {
   injectCSS();
-
   var wrap = document.createElement('div');
   wrap.className = 'CT-wrap';
 
-  if (opts.phase === 'busy') {
-    wrap.style.display = 'none';
-    return wrap;
-  }
+  if (opts.phase === 'busy') { wrap.style.display = 'none'; return wrap; }
 
-  // Side indicator
-  var sideBar = document.createElement('div');
-  sideBar.className = 'CT-side';
-  sideBar.style.color = opts.team.accent || '#FF6B00';
-  sideBar.style.background = 'linear-gradient(90deg,transparent,rgba(255,107,0,.06),transparent)';
-  sideBar.textContent = opts.team.name + (opts.isOffense ? ' OFFENSE' : ' DEFENSE');
-  wrap.appendChild(sideBar);
+  // ── DISCARD STATE (local to this render) ──
+  var discardMode = false;
+  var markedPlay = null;
+  var markedPlayer = null;
+  var playCardEls = [];
+  var playerCardEls = [];
+  var playCards = []; // parallel array of play objects
+  var playerCards = []; // parallel array of player objects
 
-  // ── TORCH CARD PHASE ──
+  // Can discard at all?
+  var canDiscAny = opts.canDiscardPlays || opts.canDiscardPlayers;
+
+  // ── HEADER: team name + discard button ──
+  var header = document.createElement('div');
+  header.className = 'CT-header';
+  header.style.background = 'linear-gradient(90deg,transparent,rgba(255,107,0,.06),transparent)';
+
+  var sideLabel = document.createElement('div');
+  sideLabel.className = 'CT-side';
+  sideLabel.style.color = opts.team.accent || '#FF6B00';
+  sideLabel.textContent = opts.team.name + (opts.isOffense ? ' OFFENSE' : ' DEFENSE');
+  header.appendChild(sideLabel);
+
+  var discToggle = document.createElement('button');
+  discToggle.className = 'CT-disc-toggle' + (canDiscAny ? '' : ' CT-disc-toggle-used');
+  discToggle.textContent = canDiscAny ? 'DISCARD' : 'NO DISCARDS';
+  discToggle.disabled = !canDiscAny;
+  header.appendChild(discToggle);
+  wrap.appendChild(header);
+
+  // ── TORCH PHASE ──
   if (opts.phase === 'torch' && opts.torchCards && opts.torchCards.length > 0) {
     var torchLabel = document.createElement('div');
     torchLabel.className = 'CT-row-label';
     torchLabel.style.color = '#EBB010';
     torchLabel.textContent = 'TORCH CARD \u2014 PLAY ONE OR SKIP';
     wrap.appendChild(torchLabel);
-
     var torchRow = document.createElement('div');
     torchRow.className = 'CT-torch-row';
-
     var offCats = ['amplification', 'information'];
     var defCats = ['disruption', 'protection'];
     var applicable = opts.isOffense ? offCats : defCats;
     var torchEls = [];
-
     opts.torchCards.slice(0, 3).forEach(function(tc) {
       var isApp = applicable.indexOf(tc.category) >= 0;
       var c = document.createElement('div');
@@ -148,21 +163,18 @@ export function renderCardTray(opts) {
       torchRow.appendChild(c);
       torchEls.push(c);
     });
-
     var skip = document.createElement('div');
     skip.className = 'CT-skip-btn';
     skip.innerHTML = '<div class="CT-skip-label">SKIP</div>';
     skip.onclick = function() { SND.click(); if (opts.onSkipTorch) opts.onSkipTorch(); };
     torchRow.appendChild(skip);
     torchEls.push(skip);
-
     wrap.appendChild(torchRow);
-    // Deal animation for torch cards
     requestAnimationFrame(function() { animateDeal(torchEls, 0); });
     return wrap;
   }
 
-  // ── PLAY CARDS ROW ──
+  // ── PLAY ROW ──
   var playLabel = document.createElement('div');
   playLabel.className = 'CT-row-label';
   playLabel.textContent = 'PLAYS';
@@ -170,39 +182,41 @@ export function renderCardTray(opts) {
 
   var playRow = document.createElement('div');
   playRow.className = 'CT-row';
-  var playCardEls = [];
-  var newPlayEls = [];
   var curPlayIds = (opts.plays || []).map(function(p) { return p.id; });
 
-  (opts.plays || []).forEach(function(play) {
+  (opts.plays || []).forEach(function(play, idx) {
     var isSel = opts.selectedPlay === play;
     var isNew = _prevPlayIds.indexOf(play.id) === -1;
-    var cat = { SHORT: 'SHORT', QUICK: 'QUICK', DEEP: 'DEEP', RUN: 'RUN', SCREEN: 'SCREEN', OPTION: 'OPTION',
-      BLITZ: 'BLITZ', ZONE: 'ZONE', PRESSURE: 'PRESSURE', HYBRID: 'HYBRID' }[play.playType || play.cardType] || 'RUN';
-    var playCard = buildPlayV1({
-      name: play.name, playType: cat,
-      isRun: play.isRun === true || play.type === 'run',
-      desc: play.desc || play.flavor || '',
-      risk: play.risk || getRisk(play.id), cat: cat
-    }, null, 120);
+    var cat = { SHORT:'SHORT',QUICK:'QUICK',DEEP:'DEEP',RUN:'RUN',SCREEN:'SCREEN',OPTION:'OPTION',
+      BLITZ:'BLITZ',ZONE:'ZONE',PRESSURE:'PRESSURE',HYBRID:'HYBRID' }[play.playType||play.cardType] || 'RUN';
+    var playCard = buildPlayV1({ name: play.name, playType: cat, isRun: play.isRun === true || play.type === 'run', desc: play.desc || play.flavor || '', risk: play.risk || 'med', cat: cat }, null, 120);
     playCard.style.width = '100%'; playCard.style.height = '100%';
-
     var c = document.createElement('div');
     c.className = 'CT-card';
     c._selected = isSel;
+    c._marked = false;
+    c._isNew = isNew;
+    c._slotIdx = idx;
     c.appendChild(playCard);
     attachTouchFeedback(c);
     c.onclick = function() {
+      if (discardMode) {
+        // Toggle mark
+        if (c._marked) { c._marked = false; markedPlay = null; animateUnmark(c); }
+        else if (!markedPlay && opts.canDiscardPlays) { c._marked = true; markedPlay = play; animateMark(c); }
+        updateDiscBar();
+        return;
+      }
       SND.select();
       if (opts.onSelectPlay) opts.onSelectPlay(play);
     };
     playRow.appendChild(c);
     playCardEls.push(c);
-    if (isNew) newPlayEls.push(c);
+    playCards.push(play);
   });
   wrap.appendChild(playRow);
 
-  // ── PLAYER CARDS ROW ──
+  // ── PLAYER ROW ──
   var playerLabel = document.createElement('div');
   playerLabel.className = 'CT-row-label';
   playerLabel.textContent = 'PLAYERS';
@@ -210,68 +224,102 @@ export function renderCardTray(opts) {
 
   var playerRow = document.createElement('div');
   playerRow.className = 'CT-row';
-  var playerCardEls = [];
-  var newPlayerEls = [];
   var curPlayerIds = (opts.players || []).map(function(p) { return p.id; });
 
-  (opts.players || []).forEach(function(p) {
+  (opts.players || []).forEach(function(p, idx) {
     var isSel = opts.selectedPlayer === p;
     var isNew = _prevPlayerIds.indexOf(p.id) === -1;
     var isHot = (opts.isOffense && opts.offStar && p.id === opts.offStar.id && opts.offStarHot) ||
                 (!opts.isOffense && opts.defStar && p.id === opts.defStar.id && opts.defStarHot);
-    var playerCard = buildMaddenPlayer({
-      name: p.name, pos: p.pos, ovr: p.ovr,
-      num: p.num || '', badge: p.badge, isStar: p.isStar,
-      ability: p.ability || '',
-      stars: p.stars, trait: p.trait,
-      teamColor: opts.team.colors ? opts.team.colors.primary : (opts.team.accent || '#FF4511'),
-      teamId: opts.teamId
-    }, null, 120);
+    var playerCard = buildMaddenPlayer({ name: p.name, pos: p.pos, ovr: p.ovr, num: p.num || '', badge: p.badge, isStar: p.isStar, ability: p.ability || '', stars: p.stars, trait: p.trait, teamColor: opts.team.colors ? opts.team.colors.primary : (opts.team.accent || '#FF4511'), teamId: opts.teamId }, null, 120);
     playerCard.style.width = '100%'; playerCard.style.height = '100%';
-
     var c = document.createElement('div');
     c.className = 'CT-card';
     c._selected = isSel;
-    if (isHot) {
-      c.style.borderColor = '#FF4511';
-      c.style.boxShadow = '0 0 12px rgba(255,69,17,0.5)';
-    }
+    c._marked = false;
+    c._isNew = isNew;
+    c._slotIdx = idx;
+    if (isHot) { c.style.borderColor = '#FF4511'; c.style.boxShadow = '0 0 12px rgba(255,69,17,0.5)'; }
     c.appendChild(playerCard);
     attachTouchFeedback(c);
     c.onclick = function() {
+      if (discardMode) {
+        if (c._marked) { c._marked = false; markedPlayer = null; animateUnmark(c); }
+        else if (!markedPlayer && opts.canDiscardPlayers) { c._marked = true; markedPlayer = p; animateMark(c); }
+        updateDiscBar();
+        return;
+      }
       if (p.injured) return;
       SND.select();
       if (opts.onSelectPlayer) opts.onSelectPlayer(p);
     };
     playerRow.appendChild(c);
     playerCardEls.push(c);
-    if (isNew) newPlayerEls.push(c);
+    playerCards.push(p);
   });
   wrap.appendChild(playerRow);
 
-  // Apply select state via GSAP (not CSS)
+  // Apply select state + deal new cards
   requestAnimationFrame(function() {
     playCardEls.forEach(function(c) { if (c._selected) animateSelect(c); });
     playerCardEls.forEach(function(c) { if (c._selected) animateSelect(c); });
-    // Deal animation for new cards only
-    if (newPlayEls.length > 0) animateDeal(newPlayEls, 0);
-    if (newPlayerEls.length > 0) animateDeal(newPlayerEls, newPlayEls.length > 0 ? 0.15 : 0);
+    // Deal only new cards — animate into their specific slot position
+    var newPlays = playCardEls.filter(function(c) { return c._isNew; });
+    var newPlayers = playerCardEls.filter(function(c) { return c._isNew; });
+    if (newPlays.length > 0) animateDeal(newPlays, 0);
+    if (newPlayers.length > 0) animateDeal(newPlayers, newPlays.length > 0 ? 0.15 : 0);
   });
-
-  // Update tracked IDs
   _prevPlayIds = curPlayIds;
   _prevPlayerIds = curPlayerIds;
 
-  // ── ACTION BAR ──
-  var actions = document.createElement('div');
-  actions.className = 'CT-actions';
+  // ── DISCARD BAR (hidden, shown when in discard mode) ──
+  var discBar = document.createElement('div');
+  discBar.className = 'CT-disc-bar';
+  discBar.style.display = 'none';
 
-  var discPlayBtn = document.createElement('button');
-  discPlayBtn.className = 'CT-disc-btn' + (opts.canDiscardPlays ? ' CT-disc-btn-active' : ' CT-disc-btn-used');
-  discPlayBtn.textContent = opts.canDiscardPlays ? 'DISCARD PLAYS' : 'USED';
-  discPlayBtn.disabled = !opts.canDiscardPlays;
-  actions.appendChild(discPlayBtn);
+  var discConfirm = document.createElement('button');
+  discConfirm.className = 'CT-disc-confirm';
+  discConfirm.textContent = 'CONFIRM DISCARD';
+  discConfirm.onclick = function() {
+    var removed = [];
+    if (markedPlay && opts.canDiscardPlays && opts.onDiscardPlays) {
+      opts.onDiscardPlays([markedPlay]);
+      removed.push('play');
+    }
+    if (markedPlayer && opts.canDiscardPlayers && opts.onDiscardPlayers) {
+      opts.onDiscardPlayers([markedPlayer]);
+      removed.push('player');
+    }
+    // Exit discard mode (panel will re-render via callbacks)
+  };
+  discBar.appendChild(discConfirm);
 
+  var discCancel = document.createElement('button');
+  discCancel.className = 'CT-disc-cancel';
+  discCancel.textContent = 'CANCEL';
+  discCancel.onclick = function() {
+    discardMode = false;
+    markedPlay = null; markedPlayer = null;
+    playCardEls.forEach(function(c) { if (c._marked) { c._marked = false; animateUnmark(c); } });
+    playerCardEls.forEach(function(c) { if (c._marked) { c._marked = false; animateUnmark(c); } });
+    discBar.style.display = 'none';
+    snapBar.style.display = '';
+    discToggle.className = 'CT-disc-toggle';
+    discToggle.textContent = 'DISCARD';
+  };
+  discBar.appendChild(discCancel);
+  wrap.appendChild(discBar);
+
+  function updateDiscBar() {
+    var count = (markedPlay ? 1 : 0) + (markedPlayer ? 1 : 0);
+    discConfirm.textContent = count > 0 ? 'DISCARD ' + count + ' CARD' + (count > 1 ? 'S' : '') : 'SELECT CARDS TO DISCARD';
+    discConfirm.disabled = count === 0;
+    discConfirm.style.opacity = count > 0 ? '1' : '0.4';
+  }
+
+  // ── SNAP BAR ──
+  var snapBar = document.createElement('div');
+  snapBar.className = 'CT-snap-bar';
   var snapBtn = document.createElement('button');
   snapBtn.className = 'CT-snap-btn';
   snapBtn.textContent = opts.isConversion ? 'ATTEMPT' : 'SNAP';
@@ -279,38 +327,37 @@ export function renderCardTray(opts) {
   snapBtn.disabled = !canSnap;
   snapBtn.style.opacity = canSnap ? '1' : '0.3';
   if (canSnap) snapBtn.style.animation = 'T-pulse 1.8s ease-in-out infinite';
-  snapBtn.onclick = function() {
-    if (!canSnap) return;
-    SND.snap();
-    if (opts.onSnap) opts.onSnap();
+  snapBtn.onclick = function() { if (!canSnap) return; SND.snap(); if (opts.onSnap) opts.onSnap(); };
+  snapBar.appendChild(snapBtn);
+  wrap.appendChild(snapBar);
+
+  // ── DISCARD TOGGLE HANDLER ──
+  discToggle.onclick = function() {
+    if (!canDiscAny) return;
+    discardMode = !discardMode;
+    if (discardMode) {
+      discToggle.className = 'CT-disc-toggle CT-disc-toggle-active';
+      discToggle.textContent = 'MARKING...';
+      snapBar.style.display = 'none';
+      discBar.style.display = '';
+      updateDiscBar();
+    } else {
+      // Cancel
+      discCancel.onclick();
+    }
   };
-  actions.appendChild(snapBtn);
 
-  var discPlayerBtn = document.createElement('button');
-  discPlayerBtn.className = 'CT-disc-btn' + (opts.canDiscardPlayers ? ' CT-disc-btn-active' : ' CT-disc-btn-used');
-  discPlayerBtn.textContent = opts.canDiscardPlayers ? 'DISCARD PLYR' : 'USED';
-  discPlayerBtn.disabled = !opts.canDiscardPlayers;
-  actions.appendChild(discPlayerBtn);
-
-  wrap.appendChild(actions);
-
-  // ── SPIKE/KNEEL (2-min drill) ──
+  // ── SPIKE/KNEEL ──
   if (opts.is2Min && opts.isOffense) {
     var clockBtns = document.createElement('div');
     clockBtns.style.cssText = 'display:flex;gap:6px;padding:4px 8px;flex-shrink:0;';
-
     var spk = document.createElement('button');
-    spk.className = 'T-2btn T-spike';
-    spk.textContent = 'SPIKE';
-    spk.style.flex = '1';
+    spk.className = 'T-2btn T-spike'; spk.textContent = 'SPIKE'; spk.style.flex = '1';
     spk.onclick = function() { if (opts.onSpike) opts.onSpike(); };
     clockBtns.appendChild(spk);
-
     if (opts.onKneel) {
       var kn = document.createElement('button');
-      kn.className = 'T-2btn T-kneel';
-      kn.textContent = 'KNEEL';
-      kn.style.flex = '1';
+      kn.className = 'T-2btn T-kneel'; kn.textContent = 'KNEEL'; kn.style.flex = '1';
       kn.onclick = function() { opts.onKneel(); };
       clockBtns.appendChild(kn);
     }
