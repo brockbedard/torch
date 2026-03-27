@@ -1739,7 +1739,7 @@ export function buildGameplay() {
           primaryLabel: 'PWR',
           team: hTeam,
           onSelect: function(punter) {
-            var puntResult = gs.punt();
+            var puntResult = gs.punt(punter);
             burnPlayer(_humanSTDeck, punter, 'punter', puntResult.gross + '-yard punt');
             driveSummaryLog.push({ down: 4, dist: gs.distance, playName: puntResult.label, yards: 0, isUserOff: true });
             showSpecialTeamsResult(puntResult.label, '#4DA6FF', function() {
@@ -1771,7 +1771,7 @@ export function buildGameplay() {
             secondaryLabel: 'PWR',
             team: hTeam,
             onSelect: function(kicker) {
-              var fgResult = gs.attemptFieldGoal();
+              var fgResult = gs.attemptFieldGoal(kicker);
               var fgContext = (fgResult.made ? 'Made ' : 'Missed ') + fgResult.distance + '-yard FG';
               burnPlayer(_humanSTDeck, kicker, 'kicker', fgContext);
               driveSummaryLog.push({ down: 4, dist: gs.distance, playName: fgResult.label, yards: 0, isUserOff: true });
@@ -2679,7 +2679,9 @@ export function buildGameplay() {
       if (aiDec === 'punt') {
         phase = 'busy';
         showSpecialTeamsResult(oTeam.name + ' ELECTS TO PUNT', '#4DA6FF', function() {
-          var puntResult = gs.punt();
+          var aiPunter = aiPickST(_cpuSTDeck, 'kickPower', gs.difficulty);
+          if (aiPunter) burnPlayer(_cpuSTDeck, aiPunter, 'punter', 'AI punt');
+          var puntResult = gs.punt(aiPunter);
           showSpecialTeamsResult(puntResult.label, '#4DA6FF', function() {
             driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
             showPossCut('punt', function() { if (!checkEnd()) nextSnap(); });
@@ -2691,7 +2693,9 @@ export function buildGameplay() {
         phase = 'busy';
         var fgDist3 = gs.yardsToEndzone() + 17;
         showSpecialTeamsResult(oTeam.name + ' ATTEMPTS A ' + fgDist3 + '-YARD FIELD GOAL', '#EBB010', function() {
-          var fgResult = gs.attemptFieldGoal();
+          var aiKicker = aiPickST(_cpuSTDeck, 'kickAccuracy', gs.difficulty);
+          if (aiKicker) burnPlayer(_cpuSTDeck, aiKicker, 'kicker', 'AI FG');
+          var fgResult = gs.attemptFieldGoal(aiKicker);
           var fgColor = fgResult.made ? '#e03050' : '#00ff44';
           showSpecialTeamsResult(fgResult.made ? 'IT\'S GOOD! +3' : 'NO GOOD!', fgColor, function() {
             driveSnaps = []; drivePlayHistory = []; resetDriveSummary();

@@ -18,6 +18,7 @@ var PLAY_GROUPS = {
   SCREEN: 'SCREEN',
   RUN: 'POWER_RUN',
   OPTION: 'OUTSIDE_RUN',
+  PLAY_ACTION: 'PLAY_ACTION',
 };
 
 // Maps defensive cardType to a coverage group
@@ -31,11 +32,12 @@ var COVERAGE_GROUPS = {
 // ── LAYER 1: TEAM BASELINE ──
 // Position relevance: how much each position matters for a given play group
 var RELEVANCE = {
-  DEEP_PASS:  { QB: 1.0, RB: 0, WR: 1.0, TE: 0.5, OL: 0.3, DL: 0.5, LB: 0.3, CB: 1.0, S: 1.0 },
-  SHORT_PASS: { QB: 0.7, RB: 0.3, WR: 1.0, TE: 1.0, OL: 0.2, DL: 0.3, LB: 0.7, CB: 1.0, S: 0.3 },
-  SCREEN:     { QB: 0.2, RB: 1.0, WR: 0.5, TE: 0.5, OL: 1.0, DL: 0.3, LB: 1.0, CB: 0.5, S: 0.2 },
-  POWER_RUN:  { QB: 0.1, RB: 1.0, WR: 0.1, TE: 0.5, OL: 1.0, DL: 0.8, LB: 1.0, CB: 0.1, S: 0.3 },
-  OUTSIDE_RUN:{ QB: 0.5, RB: 1.0, WR: 0.3, TE: 0.7, OL: 0.5, DL: 0.5, LB: 0.7, CB: 0.3, S: 0.3 },
+  DEEP_PASS:   { QB: 1.0, RB: 0, WR: 1.0, TE: 0.5, OL: 0.3, DL: 0.5, LB: 0.3, CB: 1.0, S: 1.0 },
+  SHORT_PASS:  { QB: 0.7, RB: 0.3, WR: 1.0, TE: 1.0, OL: 0.2, DL: 0.3, LB: 0.7, CB: 1.0, S: 0.3 },
+  SCREEN:      { QB: 0.2, RB: 1.0, WR: 0.5, TE: 0.5, OL: 1.0, DL: 0.3, LB: 1.0, CB: 0.5, S: 0.2 },
+  POWER_RUN:   { QB: 0.1, RB: 1.0, WR: 0.1, TE: 0.5, OL: 1.0, DL: 0.8, LB: 1.0, CB: 0.1, S: 0.3 },
+  OUTSIDE_RUN: { QB: 0.5, RB: 1.0, WR: 0.3, TE: 0.7, OL: 0.5, DL: 0.5, LB: 0.7, CB: 0.3, S: 0.3 },
+  PLAY_ACTION: { QB: 1.0, RB: 0.7, WR: 1.0, TE: 0.5, OL: 0.7, DL: 0.3, LB: 1.0, CB: 0.7, S: 0.5 },
 };
 
 /**
@@ -64,10 +66,10 @@ export function teamBaseline(players, playGroup) {
 // ── LAYER 2: TRAIT SYNERGY ──
 var TRAIT_SYNERGY = {
   // Offensive traits → play group → bonus yards
-  'DEEP BALL':       { DEEP_PASS: 3, SHORT_PASS: 1 },
-  'QUICK RELEASE':   { SHORT_PASS: 3, SCREEN: 2 },
+  'DEEP BALL':       { DEEP_PASS: 3, SHORT_PASS: 1, PLAY_ACTION: 2 },
+  'QUICK RELEASE':   { SHORT_PASS: 3, SCREEN: 2, PLAY_ACTION: 1 },
   'ESCAPE ARTIST':   { OUTSIDE_RUN: 3, DEEP_PASS: 1 },
-  'PLAY ACTION PRO': { DEEP_PASS: 2, SHORT_PASS: 1 },
+  'PLAY ACTION PRO': { PLAY_ACTION: 5, DEEP_PASS: 2, SHORT_PASS: 1 },
 
   'TRUCK STICK':     { POWER_RUN: 4, OUTSIDE_RUN: 1 },
   'ELUSIVE':         { OUTSIDE_RUN: 4, SCREEN: 2 },

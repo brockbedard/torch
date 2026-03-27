@@ -4,6 +4,7 @@
  */
 
 import { isRunType, checkOffensiveBadgeCombo } from './badgeCombos.js';
+import { traitSynergy } from './personnelSystem.js';
 
 /**
  * Weighted random selection from an array using weights.
@@ -105,6 +106,20 @@ export function aiSelectPlay(hand, playType, difficulty, situation) {
  * @param {boolean} isOffense
  * @returns {object} Selected player
  */
+// Play group mapping (same as personnelSystem.js)
+var AI_PLAY_GROUPS = { DEEP: 'DEEP_PASS', SHORT: 'SHORT_PASS', QUICK: 'SHORT_PASS', SCREEN: 'SCREEN', RUN: 'POWER_RUN', OPTION: 'OUTSIDE_RUN', PLAY_ACTION: 'PLAY_ACTION' };
+var AI_COV_GROUPS = { BLITZ: 'BLITZ', PRESSURE: 'MAN', ZONE: 'ZONE', HYBRID: 'ZONE' };
+
+function scorePlayer(p, play, isOffense) {
+  var playGroup = AI_PLAY_GROUPS[play.playType || (play.isRun ? 'RUN' : 'SHORT')] || 'SHORT_PASS';
+  var covGroup = AI_COV_GROUPS[play.cardType] || 'ZONE';
+  // Trait synergy score
+  var syn = traitSynergy(p, playGroup, !isOffense, covGroup);
+  // Star rating bonus (higher stars = better)
+  var starScore = (p.stars || 3) * 0.5;
+  return syn + starScore;
+}
+
 export function aiSelectPlayer(roster, play, difficulty, isOffense) {
   let available = roster.slice(0, 4).filter(p => !p.injured);
   if (available.length === 0) {
@@ -112,28 +127,24 @@ export function aiSelectPlayer(roster, play, difficulty, isOffense) {
   }
   if (available.length === 0) return roster[0]; // fallback
 
+  // Easy: random
   if (difficulty === 'EASY' || difficulty === 'RANDOM') {
     return available[Math.floor(Math.random() * available.length)];
   }
 
-  if (difficulty === 'MEDIUM' && Math.random() < 0.4) {
+  // Score all available players by trait synergy + stars
+  var scored = available.map(function(p) { return { player: p, score: scorePlayer(p, play, isOffense) }; });
+  scored.sort(function(a, b) { return b.score - a.score; });
+
+  // Medium: picks from top 2 (70% of the time), random otherwise
+  if (difficulty === 'MEDIUM') {
+    if (Math.random() < 0.7) {
+      var top2 = scored.slice(0, Math.min(2, scored.length));
+      return top2[Math.floor(Math.random() * top2.length)].player;
+    }
     return available[Math.floor(Math.random() * available.length)];
   }
 
-  if (isOffense) {
-    // Pick best badge match
-    let best = null;
-    let bestBonus = -1;
-    for (const p of available) {
-      const { yardBonus } = checkOffensiveBadgeCombo(p.badge, play, false, false);
-      if (yardBonus > bestBonus) {
-        bestBonus = yardBonus;
-        best = p;
-      }
-    }
-    return best || available[Math.floor(Math.random() * available.length)];
-  }
-
-  // Defense: pick highest OVR
-  return available.reduce((best, p) => p.ovr > best.ovr ? p : best);
+  // Hard: always optimal
+  return scored[0].player;
 }

@@ -122,8 +122,10 @@ export class GameState {
     return this.possession === 'CT' ? 100 - this.ballPosition : this.ballPosition;
   }
 
-  /** Simulate a kickoff and return the receiving team's starting position (own yard line, 0-100 scale) */
-  static resolveKickoff() {
+  /** Simulate a kickoff and return the receiving team's starting position (own yard line, 0-100 scale)
+   *  @param {object} [returner] - Returning player with st.returnAbility (optional)
+   */
+  static resolveKickoff(returner) {
     var KICKOFF = [
       { weight: 58, min: 25, max: 25 },  // touchback
       { weight: 22, min: 20, max: 28 },  // short return
@@ -132,8 +134,12 @@ export class GameState {
       { weight: 1.5, min: 45, max: 50 }, // big return
       { weight: 0.5, min: -1, max: -1 }, // return TD (handled separately)
     ];
+    // ST rating shift: returnAbility shifts percentile (±5% per star from 3)
+    var retShift = returner && returner.st ? (returner.st.returnAbility - 3) * 5 : 0;
     var total = KICKOFF.reduce(function(s, k) { return s + k.weight; }, 0);
     var r = Math.random() * total;
+    // Shift toward better outcomes (higher retShift = lower roll = better result at end of table)
+    r = Math.max(0, Math.min(total - 0.01, r - retShift));
     for (var i = 0; i < KICKOFF.length; i++) {
       r -= KICKOFF[i].weight;
       if (r <= 0) {
@@ -166,8 +172,10 @@ export class GameState {
     return { returnTD: false, startYard: ownYardLine };
   }
 
-  /** Resolve a punt from current field position. Returns { netYards, result, label } */
-  punt() {
+  /** Resolve a punt from current field position. Returns { gross, netYards, result, label }
+   *  @param {object} [punter] - Punting player with st.kickPower (optional)
+   */
+  punt(punter) {
     // Gross distance distribution (~42 yd average)
     var GROSS = [
       { min: 25, max: 34, weight: 10 },
@@ -183,9 +191,12 @@ export class GameState {
       { ret: 35, weight: 5, label: 'Big return' },
     ];
 
-    // Roll gross
+    // Roll gross — kickPower shifts percentile (±5% per star from 3)
+    var powerShift = punter && punter.st ? (punter.st.kickPower - 3) * 5 : 0;
     var total = GROSS.reduce(function(s, g) { return s + g.weight; }, 0);
     var r = Math.random() * total;
+    // Shift toward longer punts (higher power = lower roll = hits bigger distance buckets)
+    r = Math.max(0, Math.min(total - 0.01, r - powerShift));
     var gross = 42;
     for (var i = 0; i < GROSS.length; i++) {
       r -= GROSS[i].weight;
@@ -240,8 +251,10 @@ export class GameState {
     return { gross: gross, netYards: netYards, isTouchback: isTouchback, retLabel: retLabel, label: label, newBallPos: receiverYdsFromOwnEz };
   }
 
-  /** Attempt a field goal. Returns { made, distance, label } */
-  attemptFieldGoal() {
+  /** Attempt a field goal. Returns { made, distance, label }
+   *  @param {object} [kicker] - Kicking player with st.kickAccuracy (optional)
+   */
+  attemptFieldGoal(kicker) {
     var ydsToEz = this.yardsToEndzone();
     var fgDist = ydsToEz + 17; // 10yd endzone + 7yd snap
 
@@ -251,6 +264,9 @@ export class GameState {
     else if (fgDist <= 39) makePercent = 80;
     else if (fgDist <= 49) makePercent = 68;
     else makePercent = 50;
+
+    // ST rating: kickAccuracy shifts make % (±5% per star from 3)
+    if (kicker && kicker.st) makePercent += (kicker.st.kickAccuracy - 3) * 5;
 
     // Difficulty mod for AI kicks
     var diffMod = { EASY: -5, MEDIUM: 0, HARD: 8 }[this.difficulty] || 0;
