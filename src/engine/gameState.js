@@ -594,7 +594,7 @@ export class GameState {
       const defPts = calcDefenseTorchPoints(result, false);
       this._awardTorchPts(offPts, defPts);
       this._checkHalfEnd();
-      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent });
+      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown });
       return { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent };
     }
 
@@ -630,7 +630,7 @@ export class GameState {
       const defPts = calcDefenseTorchPoints(result, false);
       this._awardTorchPts(offPts, defPts);
       this._checkHalfEnd();
-      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent });
+      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown });
       return { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent };
     }
 
@@ -662,7 +662,7 @@ export class GameState {
       this._awardTorchPts(offPts, defPts);
 
       gameEvent = 'touchdown';
-      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent });
+      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown });
       // Possession flip will happen in handleConversion, but we should ensure ball resets to 50 there too.
       // However, if it's a turnover TD, it's already handled.
       // For a regular TD, we don't flip yet because of the conversion attempt.
@@ -720,7 +720,7 @@ export class GameState {
 
     this._checkHalfEnd();
 
-    this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent });
+    this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown });
     return { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent };
   }
 

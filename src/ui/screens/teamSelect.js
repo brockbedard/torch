@@ -12,6 +12,7 @@ import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { buildMaddenPlayer, teamHelmetSvg, renderFlamePips } from '../components/cards.js';
 import { renderTeamBadge } from '../../data/teamLogos.js';
 import { generateConditions, WEATHER, FIELD, CROWD } from '../../data/gameConditions.js';
+import { getTeamRecord } from './endGame.js';
 
 // ============================================================
 // TEAM-SPECIFIC AUDIO STINGS (jsfxr presets)
@@ -129,6 +130,15 @@ export function buildTeamSelect() {
     nameEl.textContent = team.name;
     info.appendChild(nameEl);
 
+    // Win-loss record
+    var rec = getTeamRecord(tid);
+    if (rec.wins + rec.losses + rec.ties > 0) {
+      var recEl = document.createElement('div');
+      recEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:1px;";
+      recEl.textContent = rec.wins + '-' + rec.losses + (rec.ties > 0 ? '-' + rec.ties : '');
+      info.appendChild(recEl);
+    }
+
     // Divider
     var divider = document.createElement('div');
     divider.style.cssText = 'width:36px;height:2px;border-radius:1px;margin:4px 0;background:' + team.accent + ';';
@@ -190,6 +200,14 @@ export function buildTeamSelect() {
     card.dataset.team = tid;
 
     grid.appendChild(card);
+
+    // Pre-highlight last team played (subtle glow, not selected)
+    if (GS && GS._lastTeam === tid) {
+      setTimeout(function() {
+        card.style.boxShadow = '0 0 20px ' + team.accent + '44, 0 4px 16px rgba(0,0,0,0.5)';
+        card.style.borderColor = team.accent + '88';
+      }, 500); // after entrance animation
+    }
   });
   content.appendChild(grid);
 
