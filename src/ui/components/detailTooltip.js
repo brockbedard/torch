@@ -91,9 +91,39 @@ export function hideDetail() {
   el.style.opacity = '0';
   el.style.transform = 'translateY(10px)';
   _activeDetail = null;
+  if (_dismissListener) { document.removeEventListener('click', _dismissListener, true); _dismissListener = null; }
   setTimeout(() => {
     if (el.parentNode) el.remove();
   }, 200);
+}
+
+// Auto-dismiss: any tap/click anywhere closes the tooltip
+var _dismissListener = null;
+function armDismiss() {
+  if (_dismissListener) document.removeEventListener('click', _dismissListener, true);
+  _dismissListener = function() { hideDetail(); };
+  // Delay so the opening tap doesn't immediately dismiss
+  setTimeout(function() { document.addEventListener('click', _dismissListener, true); }, 100);
+}
+
+// Safety: hide any stale tooltips when DOM changes (e.g., tray re-render)
+var _cleanupInterval = null;
+function ensureCleanup() {
+  if (_cleanupInterval) return;
+  _cleanupInterval = setInterval(function() {
+    if (_activeDetail && !document.body.contains(_activeDetail)) {
+      _activeDetail = null;
+    }
+    // Also clean any orphaned tooltip elements
+    var stale = document.querySelectorAll('.torch-detail-view');
+    stale.forEach(function(el) {
+      if (el !== _activeDetail) el.remove();
+    });
+    if (!_activeDetail && stale.length === 0) {
+      clearInterval(_cleanupInterval);
+      _cleanupInterval = null;
+    }
+  }, 2000);
 }
 
 /**
@@ -104,17 +134,23 @@ export function attachDetailListeners(el, data) {
   el.addEventListener('mouseenter', () => showDetail(el, data));
   el.addEventListener('mouseleave', () => hideDetail());
 
-  // Mobile (Long press)
+  // Mobile (Long press → show, tap elsewhere → dismiss)
   el.addEventListener('touchstart', (e) => {
     _lockTimer = setTimeout(() => {
       showDetail(el, data);
-      // Vibrate if supported
+      armDismiss();
+      ensureCleanup();
       if (navigator.vibrate) navigator.vibrate(10);
     }, 500);
   }, {passive: true});
 
   el.addEventListener('touchend', () => {
     clearTimeout(_lockTimer);
-    // On mobile, we might want to keep it open until a tap elsewhere
   }, {passive: true});
+
+  // Safety: if element that triggered tooltip is removed, clean up
+  var observer = new MutationObserver(function() {
+    if (!document.body.contains(el)) { hideDetail(); observer.disconnect(); }
+  });
+  if (el.parentNode) observer.observe(el.parentNode, { childList: true });
 }
