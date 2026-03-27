@@ -89,6 +89,8 @@ export function injectDevPanel(el, gs, callbacks) {
   html += section('HAND MGMT');
   html += btn('Redeal Hand', 'dev-redeal', '#4DA6FF');
   html += btn('Reset Discards', 'dev-reset-disc', '#4DA6FF');
+  html += btn('Show ST Deck Info', 'dev-st-info', '#FF6B00');
+  html += btn('Burn 10 ST Players', 'dev-st-burn10', '#e03050');
 
   // ── TORCH CARDS ──
   html += section('TORCH CARDS');
@@ -218,6 +220,8 @@ export function injectDevPanel(el, gs, callbacks) {
 
     if (id === 'dev-redeal' && callbacks.redealHand) callbacks.redealHand();
     if (id === 'dev-reset-disc' && callbacks.resetDiscards) callbacks.resetDiscards();
+    if (id === 'dev-st-info' && callbacks.showSTInfo) callbacks.showSTInfo();
+    if (id === 'dev-st-burn10' && callbacks.burnSTPlayers) callbacks.burnSTPlayers();
 
     if (id === 'dev-force-td') { _forceResult = 'td'; showForceArmed('TD'); }
     if (id === 'dev-force-exploit') { _forceResult = 'exploit'; showForceArmed('EXPLOIT'); }

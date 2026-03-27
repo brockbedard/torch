@@ -3470,6 +3470,21 @@ export function buildGameplay() {
       resetDriveDiscards(hs);
       drawPanel();
     },
+    showSTInfo: function() {
+      var avail = _humanSTDeck.available.length;
+      var burned = _humanSTDeck.burned.length;
+      var info = 'ST Deck: ' + avail + ' available, ' + burned + ' burned\n';
+      _humanSTDeck.burned.forEach(function(b) { info += '  ' + b.player.pos + ' ' + b.player.name + ' — ' + b.context + '\n'; });
+      alert(info);
+    },
+    burnSTPlayers: function() {
+      var count = Math.min(10, _humanSTDeck.available.length);
+      for (var i = 0; i < count; i++) {
+        var p = _humanSTDeck.available[0];
+        burnPlayer(_humanSTDeck, p, 'test', 'Dev burn');
+      }
+      alert('Burned ' + count + '. ' + _humanSTDeck.available.length + ' remaining.');
+    },
     setTorchInventory: function(inv) { torchInventory = inv; if (GS.season) GS.season.torchCards = inv.slice(); },
     applyState: function(s) {
       if (s.down) gs.down = s.down;
