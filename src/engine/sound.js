@@ -45,4 +45,16 @@ export const SND = {
   chime:      function() { play('pickupCoin'); },
   crowdStart: function() {},
   crowdStop:  function() {},
+
+  // Card interaction sounds (jsfxr placeholders — replace with Pixabay samples later)
+  cardDeal:     function() { play('pickupCoin'); },   // card dealt from deck — short snap
+  cardThud:     function() { play('hitHurt'); },      // card landing on field — satisfying thud
+  cardFlick:    function() { play('click'); },        // card discarded — light swoosh
+  cardLift:     function() { play('click'); },        // card touched/lifted — subtle tap
+  resultGood:   function() { play('powerUp'); },      // good result — impact hit
+  resultBad:    function() { play('explosion'); },    // bad result — muted thud
+  kickThud:     function() { play('hitHurt'); },      // foot hitting ball on FG/punt
+  kickGood:     function() { play('powerUp'); },      // FG made — cheer
+  kickMiss:     function() { play('explosion'); },    // FG missed — groan
+  discardConfirm: function() { play('click'); },      // discard button pressed
 };
