@@ -209,13 +209,27 @@ export function renderCardTray(opts) {
   (opts.plays || []).forEach(function(play, idx) {
     var isSel = opts.selectedPlay === play;
     var isNew = _prevPlayIds.indexOf(play.id) === -1;
+
+    if (isSel) {
+      // Card is on the field — show empty ghost slot
+      var ghost = document.createElement('div');
+      ghost.className = 'CT-card';
+      ghost.style.cssText = 'border:2px dashed #00ff4433;background:rgba(0,255,68,0.03);display:flex;align-items:center;justify-content:center;';
+      ghost.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:#00ff4466;letter-spacing:1px;\">ON FIELD</div>";
+      ghost.onclick = function() { SND.select(); if (opts.onSelectPlay) opts.onSelectPlay(play); };
+      playRow.appendChild(ghost);
+      playCardEls.push(ghost);
+      playCards.push(play);
+      return;
+    }
+
     var cat = { SHORT:'SHORT',QUICK:'QUICK',DEEP:'DEEP',RUN:'RUN',SCREEN:'SCREEN',OPTION:'OPTION',
       BLITZ:'BLITZ',ZONE:'ZONE',PRESSURE:'PRESSURE',HYBRID:'HYBRID' }[play.playType||play.cardType] || 'RUN';
     var playCard = buildPlayV1({ name: play.name, playType: cat, isRun: play.isRun === true || play.type === 'run', desc: play.desc || play.flavor || '', risk: play.risk || 'med', cat: cat }, null, 120);
     playCard.style.width = '100%'; playCard.style.height = '100%';
     var c = document.createElement('div');
     c.className = 'CT-card';
-    c._selected = isSel;
+    c._selected = false;
     c._marked = false;
     c._isNew = isNew;
     c._slotIdx = idx;
@@ -223,7 +237,6 @@ export function renderCardTray(opts) {
     attachTouchFeedback(c);
     c.onclick = function() {
       if (discardMode) {
-        // Toggle mark
         if (c._marked) { c._marked = false; markedPlay = null; animateUnmark(c); }
         else if (!markedPlay && opts.canDiscardPlays) { c._marked = true; markedPlay = play; animateMark(c); }
         updateDiscBar();
@@ -251,13 +264,26 @@ export function renderCardTray(opts) {
   (opts.players || []).forEach(function(p, idx) {
     var isSel = opts.selectedPlayer === p;
     var isNew = _prevPlayerIds.indexOf(p.id) === -1;
+
+    if (isSel) {
+      var ghost = document.createElement('div');
+      ghost.className = 'CT-card';
+      ghost.style.cssText = 'border:2px dashed #00ff4433;background:rgba(0,255,68,0.03);display:flex;align-items:center;justify-content:center;';
+      ghost.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:#00ff4466;letter-spacing:1px;\">ON FIELD</div>";
+      ghost.onclick = function() { SND.select(); if (opts.onSelectPlayer) opts.onSelectPlayer(p); };
+      playerRow.appendChild(ghost);
+      playerCardEls.push(ghost);
+      playerCards.push(p);
+      return;
+    }
+
     var isHot = (opts.isOffense && opts.offStar && p.id === opts.offStar.id && opts.offStarHot) ||
                 (!opts.isOffense && opts.defStar && p.id === opts.defStar.id && opts.defStarHot);
     var playerCard = buildMaddenPlayer({ name: p.name, pos: p.pos, ovr: p.ovr, num: p.num || '', badge: p.badge, isStar: p.isStar, ability: p.ability || '', stars: p.stars, trait: p.trait, teamColor: opts.team.colors ? opts.team.colors.primary : (opts.team.accent || '#FF4511'), teamId: opts.teamId }, null, 120);
     playerCard.style.width = '100%'; playerCard.style.height = '100%';
     var c = document.createElement('div');
     c.className = 'CT-card';
-    c._selected = isSel;
+    c._selected = false;
     c._marked = false;
     c._isNew = isNew;
     c._slotIdx = idx;
@@ -281,11 +307,8 @@ export function renderCardTray(opts) {
   });
   wrap.appendChild(playerRow);
 
-  // Apply select state + deal new cards
+  // Deal new cards into their slots
   requestAnimationFrame(function() {
-    playCardEls.forEach(function(c) { if (c._selected) animateSelect(c); });
-    playerCardEls.forEach(function(c) { if (c._selected) animateSelect(c); });
-    // Deal only new cards — animate into their specific slot position
     var newPlays = playCardEls.filter(function(c) { return c._isNew; });
     var newPlayers = playerCardEls.filter(function(c) { return c._isNew; });
     if (newPlays.length > 0) animateDeal(newPlays, 0);
