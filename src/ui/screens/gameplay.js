@@ -2124,6 +2124,10 @@ export function buildGameplay() {
     });
     if (res.gotFirstDown) driveFirstDowns++;
 
+    // Replace used cards in hand manager
+    var _snapHs = getHandState();
+    handAfterSnap(_snapHs, selPl, selP);
+    // Also cycle in engine hand for backward compat
     var sides = gs.getCurrentSides();
     var teamId = GS.team;
     if (isOff) {
@@ -2615,9 +2619,7 @@ export function buildGameplay() {
 
   var _lastPossession = gs.possession;
   function nextSnap() {
-    // Replace used cards in hand before resetting selection
-    var hs = getHandState();
-    if (selPl || selP) handAfterSnap(hs, selPl, selP);
+    // Card replacement already happened in doSnap post-processing
     // On possession change, redeal the hand for the new drive
     if (gs.possession !== _lastPossession) {
       _lastPossession = gs.possession;
