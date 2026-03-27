@@ -78,7 +78,11 @@ export function afterSnap(hs, playedPlay, playedPlayer) {
     if (idx >= 0) hs.playHand.splice(idx, 1);
     hs.playDiscard.push(playedPlay);
     newPlay = drawFrom(hs.playPile, hs.playDiscard);
-    if (newPlay) hs.playHand.push(newPlay);
+    if (newPlay) {
+      // Insert at same slot position so the new card appears where the old one was
+      var insertIdx = idx >= 0 ? Math.min(idx, hs.playHand.length) : hs.playHand.length;
+      hs.playHand.splice(insertIdx, 0, newPlay);
+    }
   }
 
   if (playedPlayer) {
@@ -86,7 +90,10 @@ export function afterSnap(hs, playedPlay, playedPlayer) {
     if (pidx >= 0) hs.playerHand.splice(pidx, 1);
     hs.playerDiscard.push(playedPlayer);
     newPlayer = drawFrom(hs.playerPile, hs.playerDiscard);
-    if (newPlayer) hs.playerHand.push(newPlayer);
+    if (newPlayer) {
+      var pInsertIdx = pidx >= 0 ? Math.min(pidx, hs.playerHand.length) : hs.playerHand.length;
+      hs.playerHand.splice(pInsertIdx, 0, newPlayer);
+    }
   }
 
   return { newPlay: newPlay, newPlayer: newPlayer };
