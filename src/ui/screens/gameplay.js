@@ -2678,7 +2678,7 @@ export function buildGameplay() {
       var aiDec = gs.ai4thDownDecision();
       if (aiDec === 'punt') {
         phase = 'busy';
-        showSpecialTeamsResult(oTeam.name + ' ELECTS TO PUNT', '#4DA6FF', function() {
+        showSpecialTeamsResult(oTeam.name + ' ELECTS TO PUNT', oTeam.accent, function() {
           var aiPunter = aiPickST(_cpuSTDeck, 'kickPower', gs.difficulty);
           if (aiPunter) burnPlayer(_cpuSTDeck, aiPunter, 'punter', 'AI punt');
           var puntResult = gs.punt(aiPunter);
@@ -2692,7 +2692,7 @@ export function buildGameplay() {
       if (aiDec === 'field_goal') {
         phase = 'busy';
         var fgDist3 = gs.yardsToEndzone() + 17;
-        showSpecialTeamsResult(oTeam.name + ' ATTEMPTS A ' + fgDist3 + '-YARD FIELD GOAL', '#EBB010', function() {
+        showSpecialTeamsResult(oTeam.name + ' ATTEMPTS A ' + fgDist3 + '-YARD FIELD GOAL', oTeam.accent, function() {
           var aiKicker = aiPickST(_cpuSTDeck, 'kickAccuracy', gs.difficulty);
           if (aiKicker) burnPlayer(_cpuSTDeck, aiKicker, 'kicker', 'AI FG');
           var fgResult = gs.attemptFieldGoal(aiKicker);
@@ -2705,13 +2705,12 @@ export function buildGameplay() {
         return;
       }
       if (aiDec === 'go_for_it') {
-        // Brief flash then proceed to normal card selection
-        var goFlash = document.createElement('div');
-        goFlash.style.cssText = "position:fixed;top:30%;left:50%;transform:translateX(-50%);z-index:650;font-family:'Teko';font-weight:700;font-size:24px;color:#e03050;letter-spacing:3px;text-shadow:0 0 16px rgba(224,48,80,0.4);pointer-events:none;opacity:0;transition:opacity 0.3s;";
-        goFlash.textContent = oTeam.name + ' GOES FOR IT!';
-        el.appendChild(goFlash);
-        requestAnimationFrame(function() { goFlash.style.opacity = '1'; });
-        setTimeout(function() { goFlash.style.opacity = '0'; setTimeout(function() { goFlash.remove(); }, 200); }, 1200);
+        // Full-screen announcement overlay (same pattern as ST results)
+        phase = 'busy';
+        showSpecialTeamsResult(oTeam.name + ' GOES FOR IT!', oTeam.accent, function() {
+          phase = 'play';
+          drawBug(); drawField(); drawPanel();
+        });
       }
     }
 
@@ -3335,16 +3334,24 @@ export function buildGameplay() {
     }, 1500);
   }
 
-  // Special teams result overlay (punt, FG, kickoff)
+  // Special teams / AI decision overlay
   function showSpecialTeamsResult(text, color, onDone) {
+    var dismissed = false;
+    function dismiss() {
+      if (dismissed) return;
+      dismissed = true;
+      stOv.style.opacity = '0';
+      setTimeout(function() { stOv.remove(); if (onDone) onDone(); }, 250);
+    }
     var stOv = document.createElement('div');
-    stOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.85);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;';
+    stOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.9);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;padding:20px;';
     stOv.innerHTML =
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + color + ";letter-spacing:3px;text-align:center;max-width:320px;text-shadow:0 0 20px " + color + "40;\">" + text + "</div>";
-    stOv.onclick = function() { stOv.style.opacity = '0'; setTimeout(function() { stOv.remove(); if (onDone) onDone(); }, 200); };
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:" + color + ";letter-spacing:4px;text-align:center;max-width:300px;line-height:1.2;text-shadow:0 0 24px " + color + "60;\">" + text + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-size:10px;color:#555;margin-top:12px;letter-spacing:1px;\">TAP TO CONTINUE</div>";
+    stOv.onclick = dismiss;
     el.appendChild(stOv);
     requestAnimationFrame(function() { stOv.style.opacity = '1'; });
-    setTimeout(function() { if (stOv.parentNode) { stOv.style.opacity = '0'; setTimeout(function() { stOv.remove(); if (onDone) onDone(); }, 200); } }, 2500);
+    setTimeout(function() { if (!dismissed) dismiss(); }, 3500);
   }
 
   // Brief kickoff result overlay
