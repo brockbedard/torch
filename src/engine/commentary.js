@@ -1,7 +1,33 @@
 /**
- * TORCH v0.22 — Commentary Engine
+ * TORCH v0.26 — Commentary Engine
  * Template-based play-by-play with 4-tier emotional intensity,
  * variable length, vivid verbs, and anti-repetition cooldowns.
+ *
+ * PERSONNEL SYSTEM TEMPLATE VARIABLES (available via res.featuredOff / res.featuredDef):
+ *   offPlayerName:  res.featuredOff.name     — e.g. 'Martinez'
+ *   offPlayerTrait: res.featuredOff.trait     — e.g. 'BURNER'
+ *   offPlayerPos:   res.featuredOff.pos       — e.g. 'WR'
+ *   defPlayerName:  res.featuredDef.name      — e.g. 'Jackson'
+ *   defPlayerTrait: res.featuredDef.trait      — e.g. 'SHUTDOWN'
+ *   defPlayerPos:   res.featuredDef.pos        — e.g. 'CB'
+ *
+ * THREE COMMENTARY MODES (Phase B will wire the selection logic):
+ *
+ * Mode 1 — Direct matchup (both positions interact on the play):
+ *   "Martinez blazes past Jackson for 18! The speed was too much."
+ *   "Jackson stays in Martinez's hip pocket. Pass broken up."
+ *
+ * Mode 2 — One player relevant (the other isn't):
+ *   "Davis holds his block but nobody's rushing. Carter finds the TE for 11."
+ *   "Collins gets pressure off the edge but Carter gets the throw off."
+ *
+ * Mode 3 — Neither relevant (both low-relevance positions):
+ *   "Carter drops back, clean pocket, throws deep. Coverage is there."
+ *   "Handoff up the middle. Modest gain of 3."
+ *
+ * Bad pick commentary (teaching through results):
+ *   "Henderson finds a lane for 8. Carter just watched from the pocket."
+ *   "Davis holds his block, but nobody tested him."
  */
 
 // ============================================================
