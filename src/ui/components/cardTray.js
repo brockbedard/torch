@@ -127,8 +127,22 @@ export function renderCardTray(opts) {
   sideLabel.className = 'CT-side';
   sideLabel.style.color = opts.team.accent || '#FF6B00';
   sideLabel.textContent = opts.team.name + (opts.isOffense ? ' OFFENSE' : ' DEFENSE');
+  sideLabel.style.flex = '1';
   header.appendChild(sideLabel);
 
+  // CARDS button (torch card inventory)
+  var cardCount = opts.torchCardCount || 0;
+  if (cardCount > 0) {
+    var cardsBtn = document.createElement('button');
+    cardsBtn.className = 'CT-disc-toggle';
+    cardsBtn.style.color = '#EBB010';
+    cardsBtn.style.borderColor = '#EBB01066';
+    cardsBtn.textContent = 'CARDS (' + cardCount + ')';
+    cardsBtn.onclick = function() { if (opts.onViewCards) opts.onViewCards(); };
+    header.appendChild(cardsBtn);
+  }
+
+  // DISCARD button
   var discToggle = document.createElement('button');
   discToggle.className = 'CT-disc-toggle' + (canDiscAny ? '' : ' CT-disc-toggle-used');
   discToggle.textContent = canDiscAny ? 'DISCARD' : 'NO DISCARDS';
