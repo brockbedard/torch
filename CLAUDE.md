@@ -4,7 +4,7 @@
 TORCH Football is a mobile card game (Balatro meets college football). 4 fictional college teams with distinct offensive schemes. Single-game format — each session is one game, TORCH points persist across games. Card-based play selection, personnel system with stars/traits, special teams burn deck, and TORCH points (score = wallet). Built with Vite + vanilla JS + GSAP, deployed on Vercel.
 
 ## Version
-**v0.27.0 "Personnel System"** — 56 players with stars/traits/ST ratings, 8-card simultaneous hand, hand carry-over + discard, special teams burn deck, GSAP card animations, 24 Torch Cards, pre-game roster preview, Phase B engine integration.
+**v0.28.0 "Audio + Replay Loop"** — Howler.js audio (15 SFX pools, 3-tier crowd ambient), end game replay loop (MVP card, open loop, team-colored PLAY AGAIN), per-team win-loss records, Phase B complete (AI traits/stars, ST ratings affect distributions), codebase cleanup.
 
 ## Environments & Deployment
 
@@ -336,7 +336,6 @@ All card animations use GSAP (not CSS transitions). Installed: `gsap@3.14.2`.
 - User perspective bias is always on — the game takes your side.
 
 ## Not Yet Built
-- ST ratings affecting outcome distributions (Kick Accuracy → FG make %, Kick Power → punt distance, Return Ability → return yardage). Burn deck UI exists but ratings don't shift distributions yet.
 - Option D snap reveal sequence (commit → blackout → result slam → card reveal)
   - Offense: result slams first, then cards flip to show matchup (highlight reel feel)
   - Defense: same rhythm, cold color palette (blue tones vs warm offense tones)
