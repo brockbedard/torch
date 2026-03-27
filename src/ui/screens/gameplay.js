@@ -3104,7 +3104,7 @@ export function buildGameplay() {
         var winnerColor = humanWins ? hTeam.accent : oTeam.accent;
         var resultEl = document.createElement('div');
         resultEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:" + winnerColor + ";letter-spacing:3px;text-align:center;";
-        resultEl.textContent = humanWins ? 'YOU WON THE TOSS!' : winner + ' WINS THE TOSS';
+        resultEl.textContent = humanWins ? 'YOU WON THE TOSS!' : winner + ' WIN THE TOSS';
         ov.appendChild(resultEl);
 
         if (humanWins) {
