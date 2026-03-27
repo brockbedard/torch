@@ -8,6 +8,7 @@
 
 import { resolveSnap } from './snapResolver.js';
 import { calcOffenseTorchPoints, calcDefenseTorchPoints } from './torchPoints.js';
+import { updateHeat } from './personnelSystem.js';
 import { calcReturnYards } from './turnoverReturns.js';
 import { checkInjury, healInjuries } from './injuries.js';
 import { aiSelectPlay, aiSelectPlayer } from './aiOpponent.js';
@@ -67,6 +68,10 @@ export class GameState {
     // TORCH points
     this.ctTorchPts = 0;
     this.irTorchPts = 0;
+
+    // Heat maps (personnel system) — { playerId: heatLevel }
+    this.offHeatMap = {};
+    this.defHeatMap = {};
 
     // Torch Cards (3 slots)
     this.humanTorchCards = [];
@@ -478,6 +483,8 @@ export class GameState {
       coachBadge: this.coachBadge,
       difficulty: this.difficulty,
       offenseIsHuman: sides.offenseIsHuman,
+      offHeatMap: this.offHeatMap,
+      defHeatMap: this.defHeatMap,
     };
 
     const result = resolveSnap(offPlay, defPlay, featuredOff, featuredDef,
@@ -493,6 +500,12 @@ export class GameState {
     this.drivePlays++;
     if (!this.twoMinActive) this.playsUsed++;
     this.drivePlayHistory.push(offPlay.playType);
+
+    // Update heat maps (personnel system)
+    var offIds = sides.offPlayers.map(function(p) { return p.id; });
+    var defIds = sides.defPlayers.map(function(p) { return p.id; });
+    updateHeat(featuredOff.id, offIds, this.offHeatMap);
+    updateHeat(featuredDef.id, defIds, this.defHeatMap);
 
     // Track moments
     if (offCard || defCard) {

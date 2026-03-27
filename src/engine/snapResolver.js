@@ -8,6 +8,7 @@ import { checkOffensiveBadgeCombo, checkDefensiveBadgeCombo, isRunType } from '.
 import { getPlayHistoryBonus } from './playHistory.js';
 import { applyRedZone } from './redZone.js';
 import { applySquadOVR } from './ovrSystem.js';
+import { calculatePersonnelMod } from './personnelSystem.js';
 
 /**
  * Box-Muller transform for gaussian random numbers.
@@ -116,6 +117,20 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   // OVR modifiers
   const ovrMods = applySquadOVR(offPlayers, defPlayers, offPlay, featuredOff, featuredDef);
   mean += ovrMods.meanMod;
+
+  // Personnel system (stars, traits, heat, matchups)
+  const personnelMod = calculatePersonnelMod({
+    featuredOff: featuredOff,
+    featuredDef: featuredDef,
+    offPlayers: offPlayers,
+    defPlayers: defPlayers,
+    offPlayType: offPlay.playType || (isRunPlay ? 'RUN' : 'SHORT'),
+    defCardType: defPlay.cardType || 'ZONE',
+    offHeatMap: context.offHeatMap || null,
+    defHeatMap: context.defHeatMap || null,
+  });
+  mean += personnelMod.totalMod;
+  result.personnelMod = personnelMod;
 
   // Red zone compression
   const rz = applyRedZone(yardsToEndzone, mean, variance, offPlay);
