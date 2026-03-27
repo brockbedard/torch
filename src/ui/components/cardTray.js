@@ -130,18 +130,6 @@ export function renderCardTray(opts) {
   sideLabel.style.flex = '1';
   header.appendChild(sideLabel);
 
-  // CARDS button (torch card inventory)
-  var cardCount = opts.torchCardCount || 0;
-  if (cardCount > 0) {
-    var cardsBtn = document.createElement('button');
-    cardsBtn.className = 'CT-disc-toggle';
-    cardsBtn.style.color = '#EBB010';
-    cardsBtn.style.borderColor = '#EBB01066';
-    cardsBtn.textContent = 'CARDS (' + cardCount + ')';
-    cardsBtn.onclick = function() { if (opts.onViewCards) opts.onViewCards(); };
-    header.appendChild(cardsBtn);
-  }
-
   // DISCARD button
   var discToggle = document.createElement('button');
   discToggle.className = 'CT-disc-toggle' + (canDiscAny ? '' : ' CT-disc-toggle-used');

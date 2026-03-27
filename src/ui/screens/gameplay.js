@@ -683,16 +683,19 @@ export function buildGameplay() {
       return;
     }
     var flameSvg = '<svg class="T-torch-banner-flame" viewBox="0 0 44 44" fill="none"><defs><linearGradient id="tbf" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#EBB010"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#tbf)"/></svg>';
+    var cardCount = torchInventory.length;
+    var cardsBtn = cardCount > 0 ? '<button style="font-family:\'Rajdhani\';font-weight:700;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:3px;border:1px solid #EBB01066;background:transparent;color:#EBB010;cursor:pointer;" id="torch-cards-btn">CARDS (' + cardCount + ')</button>' : '';
     torchBanner.innerHTML = flameSvg +
       '<div class="T-torch-banner-label">TORCH</div>' +
-      '<div class="T-torch-banner-pts">' + displayVal + '</div>';
+      '<div class="T-torch-banner-pts">' + displayVal + '</div>' +
+      cardsBtn;
     torchBannerPtsEl = torchBanner.querySelector('.T-torch-banner-pts');
   }
   drawTorchBanner();
 
-  // Tap torch banner to view inventory
-  torchBanner.style.cursor = 'pointer';
-  torchBanner.onclick = function() {
+  // CARDS button on torch banner opens inventory
+  torchBanner.addEventListener('click', function(e) {
+    if (!e.target.id || e.target.id !== 'torch-cards-btn') return;
     if (torchInventory.length === 0) return;
     var trayOv = document.createElement('div');
     trayOv.style.cssText = 'position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:auto;';
@@ -713,7 +716,7 @@ export function buildGameplay() {
     tray.appendChild(row);
     trayOv.appendChild(tray);
     el.appendChild(trayOv);
-  };
+  });
 
   // Balatro-style TORCH points animation
   var _torchAnimating = false;
@@ -1806,7 +1809,6 @@ export function buildGameplay() {
       canDiscardPlays: canDiscard(hs, 'play'),
       canDiscardPlayers: canDiscard(hs, 'player'),
       torchCards: preSnapCards,
-      torchCardCount: torchInventory.length,
       phase: phase,
       isConversion: !!conversionMode,
       is2Min: gs.twoMinActive,
@@ -1862,28 +1864,6 @@ export function buildGameplay() {
         selectedPreSnap = null; selTorch = null;
         phase = 'ready';
         drawField(); drawPanel();
-      },
-      onViewCards: function() {
-        if (torchInventory.length === 0) return;
-        var trayOv = document.createElement('div');
-        trayOv.style.cssText = 'position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:auto;';
-        var trayBd = document.createElement('div');
-        trayBd.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.5);';
-        trayBd.onclick = function() { trayOv.remove(); };
-        trayOv.appendChild(trayBd);
-        var tray = document.createElement('div');
-        tray.style.cssText = 'position:relative;z-index:1;background:#141008;border-top:2px solid #EBB010;border-radius:12px 12px 0 0;padding:14px 12px 20px;';
-        var hTorch = hAbbr === 'CT' ? gs.getSummary().ctTorchPts : gs.getSummary().irTorchPts;
-        tray.innerHTML = "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;\"><div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;letter-spacing:2px;\">YOUR TORCH CARDS</div><div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:#00ff44;\">" + hTorch + " PTS</div></div>";
-        var row = document.createElement('div');
-        row.style.cssText = 'display:flex;gap:10px;justify-content:center;';
-        torchInventory.forEach(function(tc) {
-          var ce = buildTorchCard(tc, 100, 140);
-          row.appendChild(ce);
-        });
-        tray.appendChild(row);
-        trayOv.appendChild(tray);
-        el.appendChild(trayOv);
       },
       onSpike: function() {
         SND.click();
