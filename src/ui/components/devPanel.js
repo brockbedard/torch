@@ -100,6 +100,7 @@ export function injectDevPanel(el, gs, callbacks) {
 
   // ── GAME FLOW ──
   html += section('GAME FLOW');
+  html += btn('View Roster', 'dev-roster', '#4DA6FF');
   html += btn('Replay Coin Toss', 'dev-coin-toss', '#EBB010');
   html += btn('Force Kickoff', 'dev-kickoff', '#EBB010');
   html += btn('Jump to Halftime', 'dev-halftime', '#FF6B00');
@@ -172,6 +173,9 @@ export function injectDevPanel(el, gs, callbacks) {
       });
     }
 
+    if (id === 'dev-roster') {
+      setGs(function(s) { return Object.assign({}, s, { screen: 'roster' }); });
+    }
     if (id === 'dev-coin-toss' && callbacks.showCoinToss) callbacks.showCoinToss();
     if (id === 'dev-kickoff' && callbacks.showKickoff) callbacks.showKickoff();
     if (id === 'dev-halftime') {

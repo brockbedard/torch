@@ -213,7 +213,7 @@ export function buildTeamSelect() {
 
   setGs(function(s) {
     return Object.assign({}, s || {}, {
-      screen: 'pregame',
+      screen: 'roster',
       team: selectedTeamId,
       difficulty: difficulty,
       opponent: opponentId,
@@ -410,7 +410,7 @@ function startSelectionAnimation(container, teamId, team, isFirst) {
     // Set state and navigate to gameplay
     setGs(function(s) {
       return Object.assign({}, s || {}, {
-        screen: 'pregame',
+        screen: 'roster',
         team: teamId,
         difficulty: difficulty,
         opponent: opponentId,

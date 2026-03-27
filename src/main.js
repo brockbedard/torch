@@ -9,6 +9,7 @@ import { buildHalftime } from './ui/screens/halftime.js';
 import { buildEndGame } from './ui/screens/endGame.js';
 import { buildDailyDrive } from './ui/screens/dailyDrive.js';
 import { buildPregame } from './ui/screens/pregame.js';
+import { buildRoster } from './ui/screens/roster.js';
 
 const root = document.getElementById('root');
 
@@ -35,6 +36,7 @@ function render() {
       case 'teamSelect': content = buildTeamSelect(); break;
       case 'setup': content = buildTeamSelect(); break; // Legacy redirect
       case 'dailyDrive': content = buildDailyDrive(); break;
+      case 'roster': content = buildRoster(); break;
       case 'pregame': content = buildPregame(); break;
       case 'gameplay': content = buildGameplay(); break;
       case 'halftime': content = buildHalftime(); break;
