@@ -1,6 +1,6 @@
 {
   "name": "torch-football",
-  "version": "0.26.1",
+  "version": "0.27.0",
   "description": "TORCH — The Football Card Game",
   "scripts": {
     "dev": "vite",

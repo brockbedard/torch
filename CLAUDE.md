@@ -204,16 +204,85 @@ node --input-type=module -e "import { runGameSim } from './src/tests/gameSimTest
 Fonts: Teko (display), Rajdhani (UI/labels), Barlow Condensed (body).
 No emoji in UI. No blue outside defense card backs.
 
+## Personnel System (v0.26.2)
+
+### Player Data Model
+56 players (4 teams × 14: 7 OFF + 7 DEF). Each has:
+- `firstName` / `name` — full name (e.g. Marcus Henderson)
+- `stars` (1-5) — visible quality indicator (replaces OVR for player-facing display)
+- `trait` — single keyword (TRUCK STICK, BURNER, SHUTDOWN, etc.)
+- `st` — hidden special teams ratings: `{ kickPower, kickAccuracy, returnAbility }` (1-5 each)
+- Backward-compatible: retains `ovr`, `badge`, `isStar`, `num`, `ability`
+
+### Hand Management
+8-card hand: 4 play cards + 4 player cards visible simultaneously.
+- **First snap of drive:** 4 plays from playbook (10), 4 players from roster (7)
+- **After snap:** used play + player replaced at same slot position, other 6 carry over
+- **Draw pile exhaustion:** discard pile reshuffles into draw pile
+- **Discard:** 1 play + 1 player discard per drive (tap DISCARD → mark cards → confirm)
+- **Possession change:** full redeal + discard reset
+- State managed by `src/engine/handManager.js`
+
+### Special Teams Burn Deck
+All 14 players start in the ST deck. When used for FG/punt/kickoff/return, they're burned (removed for rest of game). Still appear in normal offensive/defensive hands.
+- Selection overlay shows ST ratings, explains the role, warns about burning
+- Burned players listed with result context: "Made 42-yard FG", "45-yard punt"
+- AI selection scales with difficulty (Easy: random, Medium: top 3, Hard: optimal)
+- State managed by `src/engine/stDeck.js`, UI by `src/ui/components/stSelect.js`
+
+### Pre-game Roster Preview
+"MEET YOUR SQUAD" screen between team select and pregame. Shows all 14 players (7 OFF + 7 DEF) with stars, position, full name, trait. Star players highlighted with gold border + star title.
+
+### GSAP Animations
+All card animations use GSAP (not CSS transitions). Installed: `gsap@3.14.2`.
+- **Deal:** cards enter from above with stagger (0.08s) + overshoot (back.out 1.7)
+- **Select:** lift (-8px) + scale (1.05) + gold border glow
+- **Touch feedback:** subtle lift on touchstart, settle on touchend
+- **Discard marking:** tilt + dim via GSAP
+
+### Card Sounds (jsfxr placeholders)
+`cardDeal`, `cardThud`, `cardFlick`, `cardLift`, `resultGood`, `resultBad`, `kickThud`, `kickGood`, `kickMiss`, `discardConfirm` — all mapped to jsfxr presets. Replace with Pixabay samples later.
+
+## Torch Cards (24 total)
+
+| Tier | Card | Type | Cost | Effect |
+|------|------|------|------|--------|
+| Gold | SCOUT TEAM | pre-snap | 180 | See opponent's play before picking yours |
+| Gold | SURE HANDS | reactive | 200 | Cancel a turnover, drive continues |
+| Gold | BLOCKED KICK | reactive | 50 | Chance to block opponent's FG or punt |
+| Gold | HOUSE CALL | pre-snap | 50 | Returner guaranteed 50+ yard return |
+| Silver | HARD COUNT | pre-snap | 90 | Force opponent to random play |
+| Silver | DEEP SHOT | pre-snap | 100 | 2x yards on pass |
+| Silver | TRUCK STICK | pre-snap | 100 | 2x yards on run, no fumble |
+| Silver | CHALLENGE FLAG | reactive | 120 | Reroll snap, 50% better outcome |
+| Silver | PRIME TIME | pre-snap | 75 | Featured player OVR = 99 |
+| Silver | SCOUT REPORT | pre-snap | 30 | See all 7 players instead of 4 |
+| Silver | PRE-SNAP READ | pre-snap | 25 | Reveal opponent's featured player |
+| Silver | ICE THE KICKER | pre-snap | 20 | Reduce kicker accuracy by 1 star |
+| Silver | CANNON LEG | pre-snap | 25 | Extend FG range by 10 yards |
+| Silver | IRON MAN | pre-snap | 20 | Restore a burned ST player |
+| Silver | RINGER | pre-snap | 30 | Best player kicks regardless of deck |
+| Bronze | PLAY ACTION | pre-snap | 35 | +5 yards vs run defense |
+| Bronze | SCRAMBLE DRILL | pre-snap | 40 | Convert negative to 0 yards |
+| Bronze | 12TH MAN | pre-snap | 50 | +4 yards + 2x TORCH points |
+| Bronze | ICE | pre-snap | 50 | Zero opponent OVR + combos |
+| Bronze | PERSONNEL REPORT | pre-snap | 30 | Reveal opponent's player |
+| Bronze | FRESH LEGS | pre-snap | 10 | Extra discard this drive |
+| Bronze | GAME PLAN | pre-snap | 10 | Reset player heat to zero |
+| Bronze | COFFIN CORNER | pre-snap | 15 | Punt guaranteed inside the 10 |
+| Bronze | FAIR CATCH GHOST | pre-snap | 10 | Force opponent fair catch |
+
 ## Locked Design Decisions
 - 4 teams, no draft. Predetermined squads and playbooks.
 - Score = wallet. Buying TORCH cards spends your score.
-- 3-game seasons with card/point persistence.
+- Single-game format. TORCH points persist across games.
 - Progressive disclosure — learn by playing.
 - TORCH points never decrease from plays (only from shop spending).
-- 4 cards in hand (plays and players). 3 TORCH card max.
+- 8 cards in hand (4 plays + 4 players). 3 TORCH card max.
 - User perspective bias is always on — the game takes your side.
 
 ## Not Yet Built
+- Phase B: Wire personnel (stars/traits/heat) into snap resolver
 - Wire Canvas field renderer into gameplay.js (replace DOM field strip)
 - Card activation animations (bronze/silver/gold escalation)
 - Daily Drive shareable result grid (Wordle-style)

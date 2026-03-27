@@ -5,6 +5,7 @@ import { buildHomeCard } from '../components/cards.js';
 import AudioStateManager from '../../engine/audioManager.js';
 
 var DEV_LOG = [
+  "v0.27.0 \u2014 Personnel System: 56 players with stars, traits, ST ratings. 8-card hand (4 plays + 4 players visible simultaneously). Hand carry-over + discard system. Special teams burn deck with kicker/punter selection. GSAP card animations (deal, select, touch). Meet Your Squad roster preview. 24 Torch Cards (12 new). Full names on all players. Down/distance in team color everywhere.",
   "v0.26.1 \u2014 Game Flow: End game single-game format with TORCH point carryover. Conversion display (GOOD!/NO GOOD, play commentary). Halftime 2nd-half card pick + kickoff. 2-min clock expiry ends half. Dev panel: force result + force conversion buttons. No shop on conversions. PAT doesn't say TOUCHDOWN.",
   "v0.26.0 \u2014 Playtest: Tier 1-3 fixes. Rebrands: Dolphins (pink) + Spectres (ice blue). TD drama + confetti. First down slide-in. Torch card activation moment. 2-min warning slam. Card clash uses team colors. Possession screen with badges. Drive log compression. Store skip if broke. Single-game format. Weather variation. Torch inventory tray. Player synergy indicators. Commentary attribution fix. Spike costs a down.",
   "v0.25.2 \u2014 Economy rebalance (pts down, card costs up). AI Wolves archetype weighting. Red zone onboarding tutorial. Detail tooltips on torch cards. Conversion plays through full 3-beat flow. Removed API commentary (saves 4s/snap). Git workflow: dev/main branches + Vercel preview deploys.",
