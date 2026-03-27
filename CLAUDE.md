@@ -1,10 +1,10 @@
 # TORCH Football — CLAUDE.md
 
 ## What This Is
-TORCH Football is a mobile card game (Balatro meets college football). 4 fictional college teams with distinct offensive schemes battle through 3-game seasons. Card-based play selection, badge combos, star player Heat Check, and TORCH points (score = wallet). Built with Vite + vanilla JS, deployed on Vercel.
+TORCH Football is a mobile card game (Balatro meets college football). 4 fictional college teams with distinct offensive schemes. Single-game format — each session is one game, TORCH points persist across games. Card-based play selection, personnel system with stars/traits, special teams burn deck, and TORCH points (score = wallet). Built with Vite + vanilla JS + GSAP, deployed on Vercel.
 
 ## Version
-**v0.25.2 "Torch Cards"** — 12 TORCH cards with economy rebalance, The Booster shop, AI card behavior, user perspective bias, broadcast UI, red zone onboarding, warm gold rebrand, automated testing.
+**v0.27.0 "Personnel System"** — 56 players with stars/traits/ST ratings, 8-card simultaneous hand, hand carry-over + discard, special teams burn deck, GSAP card animations, 24 Torch Cards, pre-game roster preview, Phase B engine integration.
 
 ## Environments & Deployment
 
@@ -44,29 +44,36 @@ src/
 ├── state.js                   # Global state, version, hand management, team draw weights
 ├── style.css                  # CSS custom properties / design system
 ├── data/
-│   ├── teams.js               # 4 teams: Boars (sentinels), Dolphins (wolves), Spectres, Serpents
-│   ├── players.js             # 52 players (4 teams x 7 OFF + 6 DEF) with ability text
+│   ├── teams.js               # 4 teams: Boars (sentinels), Dolphins (wolves), Spectres (stags), Serpents
+│   ├── players.js             # 56 players (4 teams × 14: 7 OFF + 7 DEF) with stars, traits, ST ratings
 │   ├── *Plays.js              # 10 OFF + 10 DEF plays per team (80 total)
-│   ├── torchCards.js           # 12 TORCH cards (2 Gold, 5 Silver, 5 Bronze)
+│   ├── torchCards.js           # 24 TORCH cards (4 Gold, 10 Silver, 10 Bronze)
 │   ├── torchCardIcons.js       # 20 game-icons.net SVG paths + renderTorchCardIcon()
 │   ├── badges.js              # Badge enum + inline SVG icons
 │   ├── teamLogos.js           # Team mascot SVGs (boar/dolphin/spectre/serpent)
 │   └── gameConditions.js      # Weather/field/crowd (45 combos)
 ├── engine/
 │   ├── gameState.js           # GameState class — full game simulation
-│   ├── snapResolver.js        # Play resolution with TORCH card effects
+│   ├── snapResolver.js        # Play resolution with personnel system + TORCH card effects
+│   ├── personnelSystem.js     # 4-layer personnel modifier (baseline, synergy, heat, matchup)
+│   ├── handManager.js         # 8-card hand: deal, carry-over, discard, reshuffle
+│   ├── stDeck.js              # Special teams burn deck (14 players, burn on use)
 │   ├── aiOpponent.js          # AI play/player selection + archetype weighting
 │   ├── torchPoints.js         # TORCH point calculations (points only go UP)
 │   ├── commentary.js          # Template-based user-biased commentary (4 tiers)
 │   ├── ovrSystem.js           # OVR modifier calculations
 │   ├── badgeCombos.js         # Badge combo checks
-│   └── [8 more engine files]
+│   ├── sound.js               # jsfxr sound system + card sound placeholders
+│   └── [5 more engine files]
 ├── ui/
 │   ├── components/
 │   │   ├── cards.js           # Shared card builders (play, player, torch cards with real SVG icons)
-│   │   ├── shop.js            # The Booster — TORCH card shop bottom sheet
+│   │   ├── cardTray.js        # 8-card tray: play + player rows, discard, GSAP animations
+│   │   ├── shop.js            # Torch Store — TORCH card shop bottom sheet
+│   │   ├── stSelect.js        # Special teams player selection overlay
 │   │   ├── devPanel.js        # In-game dev tools (?dev)
 │   │   ├── detailTooltip.js   # Hover/long-press info tooltips
+│   │   ├── personnelTooltip.js # First-game onboarding tooltips (4 max)
 │   │   └── tooltip.js         # First-time teach tooltips
 │   ├── effects/
 │   │   └── torchPointsAnim.js # Sequential points fly-in animation
@@ -78,18 +85,21 @@ src/
 │   └── screens/
 │       ├── home.js            # Home screen (TORCH FOOTBALL, LET'S GO!)
 │       ├── teamSelect.js      # Team select (centered badges, KICK OFF!)
+│       ├── roster.js          # Meet Your Squad (14 players, pre-game preview)
 │       ├── pregame.js         # Game Day (3s hold, broadcast matchup)
-│       ├── gameplay.js        # Main game (~3000 lines — user-biased everything)
-│       ├── halftime.js        # Halftime report + The Booster
-│       ├── endGame.js         # End game (TORCH breakdown, Film Room)
+│       ├── gameplay.js        # Main game (~4000 lines — user-biased everything)
+│       ├── halftime.js        # Halftime report + Torch Store + 2nd half card pick
+│       ├── endGame.js         # End game (TORCH breakdown, Film Room, Play Again)
 │       └── [3 more screens]
 ├── tests/
-│   ├── smokeTest.js           # 639 engine assertions (snaps, cards, conversions, state)
+│   ├── smokeTest.js           # 699 engine assertions (snaps, cards, conversions, state)
 │   ├── balanceTest.js         # 1200-drive balance test
 │   └── gameSimTest.js         # 100-game simulation (scoring, economy, card usage)
-└── docs/research/
-    ├── TORCH-7v7-FOOTBALL-RESEARCH.md    # Football source of truth
-    └── TORCH-TEAM-SCHEME-IDENTITY.md     # Team scheme identity
+└── docs/
+    ├── research/
+    │   ├── TORCH-7v7-FOOTBALL-RESEARCH.md    # Football source of truth
+    │   └── TORCH-TEAM-SCHEME-IDENTITY.md     # Team scheme identity
+    └── PERSONNEL-AUDIT.md     # Phase A codebase audit
 ```
 
 ## The 4 Teams
@@ -112,26 +122,19 @@ src/
 | What beats them | Spread + quick pass | Contain QB + zone | Run the ball | Execute fundamentals |
 
 ## TORCH Cards (Score = Wallet)
-12 cards across 3 tiers. Max 3 in hand. Single-use. Icons from game-icons.net (CC BY 3.0).
+24 cards across 3 tiers. Max 3 in hand. Single-use. Icons from game-icons.net (CC BY 3.0).
+See full card table in the "Torch Cards (24 total)" section below.
 
-| Tier | Card | Type | Cost | Effect |
-|------|------|------|------|--------|
-| Gold | SCOUT TEAM | pre-snap | 180 | See opponent's play before picking yours |
-| Gold | SURE HANDS | reactive | 200 | Cancel a turnover, drive continues |
-| Silver | HARD COUNT | pre-snap | 90 | Force opponent to random play |
-| Silver | DEEP SHOT | pre-snap | 100 | 2x yards on pass |
-| Silver | TRUCK STICK | pre-snap | 100 | 2x yards on run, no fumble |
-| Silver | CHALLENGE FLAG | reactive | 120 | Reroll snap, 50% better outcome |
-| Silver | PRIME TIME | pre-snap | 75 | Featured player OVR = 99 |
-| Bronze | PLAY ACTION | pre-snap | 35 | +5 yards vs run defense |
-| Bronze | SCRAMBLE DRILL | pre-snap | 40 | Convert negative to 0 yards |
-| Bronze | 12TH MAN | pre-snap | 50 | +4 yards + 2x TORCH points |
-| Bronze | ICE | pre-snap | 50 | Zero opponent OVR + combos |
-| Bronze | PERSONNEL REPORT | pre-snap | 30 | Reveal opponent's player |
+**Economy:** TD = 15 pts, Big play = 10, First down = 2, Sack/INT = 8-12. Win bonus = 20 pts. Cards are expensive relative to earnings — buying is a real decision.
 
-**Economy (v0.25.2):** TD = 15 pts, Big play = 10, First down = 2, Sack/INT = 8-12. Win bonus = 20 pts. Cards are expensive relative to earnings — buying is a real decision.
+**Torch Store:** Opens on 5 player-positive triggers:
+1. After player scores a touchdown (post-PAT, before kickoff)
+2. After player forces a turnover (INT or fumble recovery)
+3. After player stops opponent on 4th down (turnover on downs)
+4. After a star player activates (Heat Check)
+5. At halftime
 
-**The Booster:** Appears at halftime, after TDs, turnovers, 4th down stops. 3 cards offered (60% bronze, 30% silver, 10% gold).
+Does NOT open when the AI scores, forces turnovers, or on conversions. 3 cards offered (60% bronze, 30% silver, 10% gold).
 
 **AI behavior:** Easy = 0 cards/never buys. Medium = starts 1 Bronze, buys cheapest. Hard = starts 1 Silver, buys 2 best value.
 
@@ -153,18 +156,15 @@ The game is always on the user's side. This is enforced across 6 layers:
 ## Key Systems
 
 ### Hand Management
-10-card playbook per side. Draw 4 at game start. Play 1 → draw 1 from remaining 6 (weighted by team scheme). Always 4 in hand. Player cards also 4 per hand.
+See Personnel System section below for current hand management rules (8-card hand with carry-over).
 
 **Draw weighting** (`TEAM_DRAW_WEIGHTS` in state.js): Boars see run cards 4x more. Spectres see quick/deep pass cards 3-4x more. Serpents balanced (all 2x).
 
-### Season Cycle
-3 games per season. Order: neutral → prey → predator. Cards + unspent points carry. +20/win.
-
 ### Onboarding
-First-time players start at 1st & Goal from the 9 with a SURE HANDS gold card. 3-step tooltip sequence: welcome → mechanics → torch cards. Phase-based teach tooltips on first snap.
+First-time players start at 1st & Goal from the 9 with a SURE HANDS gold card. 3-step tooltip sequence: welcome → mechanics → torch cards. Phase-based teach tooltips on first snap. Personnel tooltips (4 max) suggest player cards after play selection.
 
 ### Conversions
-2pt and 3pt conversions play through the full 3-beat snap flow with commentary. XP is automatic. `_isConversion` flag prevents TD celebration loop.
+2pt and 3pt conversions play through the full 3-beat snap flow with commentary. XP is automatic. `_isConversion` flag prevents TD celebration loop. Result shows "GOOD!" or "NO GOOD" (not "TOUCHDOWN"). No down & distance overlay. No shop trigger after conversion.
 
 ### Difficulty
 | Aspect | Easy | Medium | Hard |
@@ -176,16 +176,61 @@ First-time players start at 1st & Goal from the 9 with a SURE HANDS gold card. 3
 | INT cancel | 40% | None | None |
 | AI TORCH cards | 0 | 1 Bronze | 1 Silver |
 
+## Game Flow
+
+### Game Structure
+- 2 halves, 20 plays per half (40 total outside 2-minute drills)
+- Possessions alternate naturally: score → kickoff, turnover → opponent ball, failed 4th down → opponent ball
+- No overtime. Ties are valid outcomes.
+
+### 4th Down Rule
+You MUST go for it on 4th down unless you have crossed the 50 yard line into opponent territory. Only past the 50 do PUNT and FIELD GOAL options appear. This applies to both the player and the AI.
+
+### Kickoff Distribution (college football data)
+After every score (TD+PAT or FG), the opponent receives a kickoff:
+| Result | Weight | Starting Position |
+|--------|--------|------------------|
+| Touchback | 58% | Own 25 |
+| Short return | 22% | Own 20-28 |
+| Average return | 13% | Own 28-35 |
+| Good return | 5% | Own 35-45 |
+| Big return | 1.5% | Own 45-50 |
+| Return TD | 0.5% | Automatic touchdown |
+
+### Punt Distribution (college football data)
+Gross distance: 25-34 yds (10%), 35-39 (20%), 40-44 (35%), 45-49 (25%), 50-58 (10%).
+Return: fair catch 40%, short 5-12 yds (35%), decent 13-25 (20%), big 26-45 (5%).
+Touchback if landing inside 10: 60% touchback to 25, 40% downed at spot.
+
+### Field Goal
+Auto-resolves from college make rates: 88% (20-29 yds), 80% (30-39), 68% (40-49), 50% (50 yds max).
+Missed FG: opponent gets ball at LOS or the 20, whichever is farther from end zone.
+
+### Scoring
+- TD (6 pts) + choose: XP (free +1), 2-pt conversion from the 5, 3-pt conversion from the 10
+- FG (3 pts)
+- Conversion turnovers are dead plays (conversion failed, no defensive score)
+- PAT/conversion snaps do not count toward the 20-play limit
+
+### Coin Toss
+Winner chooses: free Torch Card (3 face-down, flip one to reveal — pool: 55% Bronze, 35% Silver, 10% Gold) OR receive the kickoff. Loser gets whatever winner didn't pick. At halftime, coin toss loser gets the same choice.
+
+### 2-Minute Drill
+Triggers after 20 plays used in a half. 2:00 clock. Time drain: run/completion 25-30s, sack 20s, incomplete 5s (stops), spike 3s (stops), kneel 30s (only when leading). Timeouts only exist as Torch Cards. PAT still happens after time-expiring TD.
+
+### Safety Handling
+Safeties are NOT implemented. Negative yardage is capped at the 1-yard line.
+
 ## Dev Tools
 Enable: `localStorage.setItem('torch_dev', '1')` or visit any URL with `?dev`.
-- `?dev` — In-game dev panel: jump to gameplay, force results, give torch cards, apply state, bias test
-- `/smoke` — **RUN AFTER EVERY PRODUCTION DEPLOY.** Engine (639 assertions) + balance (1200 drives) + build check.
+- `?dev` — In-game dev panel (auto-opens on desktop): jump to gameplay, force results, force conversions, give torch cards, apply state, redeal hand, reset discards, ST deck info, view roster
+- `/smoke` — **RUN AFTER EVERY PRODUCTION DEPLOY.** Engine (699 assertions) + balance (1200 drives) + build check.
 - `/balance` — Balance test only with target range interpretation
 - Detail tooltips on torch cards (hover desktop / long-press mobile)
 
 ### Automated Tests
 ```bash
-# Engine smoke test (639 assertions, ~2s)
+# Engine smoke test (699 assertions, ~2s)
 node --input-type=module -e "import { runSmokeTest } from './src/tests/smokeTest.js'; runSmokeTest();"
 # Balance test (1200 drives, ~5s)
 node --input-type=module -e "import { runBalanceTest } from './src/tests/balanceTest.js'; runBalanceTest(100);"
@@ -204,7 +249,7 @@ node --input-type=module -e "import { runGameSim } from './src/tests/gameSimTest
 Fonts: Teko (display), Rajdhani (UI/labels), Barlow Condensed (body).
 No emoji in UI. No blue outside defense card backs.
 
-## Personnel System (v0.26.2)
+## Personnel System (v0.27.0)
 
 ### Player Data Model
 56 players (4 teams × 14: 7 OFF + 7 DEF). Each has:
@@ -230,13 +275,22 @@ All 14 players start in the ST deck. When used for FG/punt/kickoff/return, they'
 - AI selection scales with difficulty (Easy: random, Medium: top 3, Hard: optimal)
 - State managed by `src/engine/stDeck.js`, UI by `src/ui/components/stSelect.js`
 
+### Snap Resolver Personnel Integration (Phase B)
+4 layers inserted after OVR, before red zone compression (±6 yard soft cap):
+1. **Team baseline:** weighted average star rating by position relevance (±0.5/star from 3-star baseline)
+2. **Trait synergy:** featured player's trait vs play type (e.g. BURNER + DEEP_PASS = +4)
+3. **Heat penalty:** repeated featuring of same player (-1 to -3 yards at heat 3-5+)
+4. **Direct matchup:** when both featured positions interact (star diff × 0.4 + trait-vs-trait table)
+
+Heat maps persist across the entire game (do not reset per drive or half). Updated after each snap.
+
 ### Pre-game Roster Preview
 "MEET YOUR SQUAD" screen between team select and pregame. Shows all 14 players (7 OFF + 7 DEF) with stars, position, full name, trait. Star players highlighted with gold border + star title.
 
 ### GSAP Animations
 All card animations use GSAP (not CSS transitions). Installed: `gsap@3.14.2`.
 - **Deal:** cards enter from above with stagger (0.08s) + overshoot (back.out 1.7)
-- **Select:** lift (-8px) + scale (1.05) + gold border glow
+- **Select:** card leaves tray (ghost slot "ON FIELD"), appears on field
 - **Touch feedback:** subtle lift on touchstart, settle on touchend
 - **Discard marking:** tilt + dim via GSAP
 
@@ -282,7 +336,12 @@ All card animations use GSAP (not CSS transitions). Installed: `gsap@3.14.2`.
 - User perspective bias is always on — the game takes your side.
 
 ## Not Yet Built
-- Phase B: Wire personnel (stars/traits/heat) into snap resolver
+- ST ratings affecting outcome distributions (Kick Accuracy → FG make %, Kick Power → punt distance, Return Ability → return yardage). Burn deck UI exists but ratings don't shift distributions yet.
+- Option D snap reveal sequence (commit → blackout → result slam → card reveal)
+  - Offense: result slams first, then cards flip to show matchup (highlight reel feel)
+  - Defense: same rhythm, cold color palette (blue tones vs warm offense tones)
+  - GSAP timeline: commit (0.2s) → blackout (0.2-0.6s) → result slam (0.4s) → card reveal (0.8s) → settle (0.5s)
+  - Tier-scaled: routine plays ~1.8s total, big plays ~4-5s with extended blackout and screen shake
 - Wire Canvas field renderer into gameplay.js (replace DOM field strip)
 - Card activation animations (bronze/silver/gold escalation)
 - Daily Drive shareable result grid (Wordle-style)
