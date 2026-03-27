@@ -1739,8 +1739,8 @@ export function buildGameplay() {
           primaryLabel: 'PWR',
           team: hTeam,
           onSelect: function(punter) {
-            burnPlayer(_humanSTDeck, punter, 'punter', 'Punt ' + (gs.half === 1 ? 'Q1' : 'Q2'));
             var puntResult = gs.punt();
+            burnPlayer(_humanSTDeck, punter, 'punter', puntResult.gross + '-yard punt');
             driveSummaryLog.push({ down: 4, dist: gs.distance, playName: puntResult.label, yards: 0, isUserOff: true });
             showSpecialTeamsResult(puntResult.label, '#4DA6FF', function() {
               driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
@@ -1771,8 +1771,9 @@ export function buildGameplay() {
             secondaryLabel: 'PWR',
             team: hTeam,
             onSelect: function(kicker) {
-              burnPlayer(_humanSTDeck, kicker, 'kicker', 'FG ' + (gs.half === 1 ? 'Q1' : 'Q2'));
               var fgResult = gs.attemptFieldGoal();
+              var fgContext = (fgResult.made ? 'Made ' : 'Missed ') + fgResult.distance + '-yard FG';
+              burnPlayer(_humanSTDeck, kicker, 'kicker', fgContext);
               driveSummaryLog.push({ down: 4, dist: gs.distance, playName: fgResult.label, yards: 0, isUserOff: true });
               var fgColor = fgResult.made ? '#00ff44' : '#e03050';
               showSpecialTeamsResult(fgResult.label, fgColor, function() {
