@@ -1,3 +1,4 @@
+import { inject } from '@vercel/analytics';
 import { GS, setRender } from './state.js';
 import { SND } from './engine/sound.js';
 import { buildHome } from './ui/screens/home.js';
@@ -62,6 +63,9 @@ if (localStorage.getItem('torch_dev') === '1' || window.location.search.includes
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize Vercel Web Analytics
+  inject();
+  
   render();
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(err => {
