@@ -28,8 +28,8 @@ var TRAY_CSS = `
 .CT-disc-cancel{font-family:'Rajdhani';font-weight:700;font-size:10px;padding:8px 12px;border-radius:6px;border:1px solid #333;background:transparent;color:#888;cursor:pointer}
 .CT-torch-row{display:flex;gap:3px;padding:2px 3px;flex-shrink:0}
 .CT-torch-card{flex:1 1 0;min-width:0;height:100px;border-radius:6px;overflow:hidden;cursor:pointer;position:relative}
-.CT-skip-btn{flex:1 1 0;min-width:0;height:100px;border-radius:6px;border:2px dashed #554f8044;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.CT-skip-label{font-family:'Rajdhani';font-weight:700;font-size:9px;color:#554f80;letter-spacing:1px}
+.CT-skip-btn{flex:1 1 0;min-width:0;height:120px;border-radius:6px;border:2px solid #EBB01066;background:rgba(235,176,16,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.CT-skip-label{font-family:'Teko';font-weight:700;font-size:14px;color:#EBB010;letter-spacing:2px}
 `;
 
 function injectCSS() {
