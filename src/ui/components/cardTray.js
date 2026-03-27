@@ -171,10 +171,8 @@ export function renderCardTray(opts) {
           // Greyed out with explanation
           var sideOnly = opts.isOffense ? 'DEFENSE ONLY' : 'OFFENSE ONLY';
           var lockLabel = document.createElement('div');
-          lockLabel.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);border-radius:6px;z-index:3;";
-          lockLabel.innerHTML =
-            "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:#e03050;letter-spacing:1px;\">" + sideOnly + "</div>" +
-            "<div style=\"font-family:'Rajdhani';font-size:8px;color:#666;margin-top:2px;\">Can't use on " + (opts.isOffense ? 'offense' : 'defense') + "</div>";
+          lockLabel.style.cssText = "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);border-radius:6px;z-index:3;";
+          lockLabel.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#e03050;letter-spacing:2px;text-align:center;\">" + sideOnly + "</div>";
           c.appendChild(lockLabel);
         }
         torchRow.appendChild(c);
