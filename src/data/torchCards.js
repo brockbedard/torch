@@ -1,14 +1,16 @@
 /**
- * TORCH — Card Catalog v1
- * 12 cards: 2 Gold (40-50pts), 5 Silver (20-30pts), 5 Bronze (10-15pts).
+ * TORCH — Card Catalog v2
+ * 24 cards: 4 Gold, 10 Silver, 10 Bronze.
  * Score = wallet. Buying cards spends your TORCH points.
- * Cards persist across 3-game season. Single-use — consumed when played.
+ * Single-use — consumed when played.
  *
  * Categories (determine icon fill color):
  *   information (gold #EBB010) — reveal opponent's cards
  *   amplification (green #00FF44) — boost your play
  *   disruption (red #FF4511) — mess with opponent
  *   protection (blue #4488FF) — cancel bad outcomes
+ *   hand (green #00FF44) — hand management
+ *   special_teams (orange #FF6B00) — special teams effects
  */
 
 export const TORCH_CARDS = [
@@ -77,6 +79,70 @@ export const TORCH_CARDS = [
     tier: 'BRONZE', cost: 30, type: 'pre-snap', category: 'information',
     effect: 'Reveal opponent\'s featured player before you pick yours',
   },
+
+  // ═══ NEW — HAND MANAGEMENT ═══
+  {
+    id: 'fresh_legs', name: 'FRESH LEGS', iconKey: 'tempoKing',
+    tier: 'BRONZE', cost: 10, type: 'pre-snap', category: 'amplification',
+    effect: 'Gain an extra discard this drive',
+  },
+  {
+    id: 'scout_report', name: 'SCOUT REPORT', iconKey: 'filmRoom',
+    tier: 'SILVER', cost: 30, type: 'pre-snap', category: 'information',
+    effect: 'See all 7 players instead of 4 this snap',
+  },
+  {
+    id: 'pre_snap_read', name: 'PRE-SNAP READ', iconKey: 'scout',
+    tier: 'SILVER', cost: 25, type: 'pre-snap', category: 'information',
+    effect: 'Reveals the opponent\'s featured player before you pick yours',
+  },
+  {
+    id: 'game_plan', name: 'GAME PLAN', iconKey: 'tendencyBreak',
+    tier: 'BRONZE', cost: 10, type: 'pre-snap', category: 'disruption',
+    effect: 'Reset one player\'s heat to zero. Defense forgets about him.',
+  },
+
+  // ═══ NEW — SPECIAL TEAMS ═══
+  {
+    id: 'blocked_kick', name: 'BLOCKED KICK', iconKey: 'ironWall',
+    tier: 'GOLD', cost: 50, type: 'reactive', category: 'disruption',
+    effect: 'Chance to block the opponent\'s field goal or punt',
+  },
+  {
+    id: 'ice_the_kicker', name: 'ICE THE KICKER', iconKey: 'noFlyZone',
+    tier: 'SILVER', cost: 20, type: 'pre-snap', category: 'disruption',
+    effect: 'Reduce the opponent\'s kicker accuracy by 1 star',
+  },
+  {
+    id: 'coffin_corner', name: 'COFFIN CORNER', iconKey: 'dominance',
+    tier: 'BRONZE', cost: 15, type: 'pre-snap', category: 'amplification',
+    effect: 'Your punt is guaranteed to land inside the 10',
+  },
+  {
+    id: 'cannon_leg', name: 'CANNON LEG', iconKey: 'daBomb',
+    tier: 'SILVER', cost: 25, type: 'pre-snap', category: 'amplification',
+    effect: 'Extend your FG range by 10 yards this attempt',
+  },
+  {
+    id: 'house_call', name: 'HOUSE CALL', iconKey: 'onFire',
+    tier: 'GOLD', cost: 50, type: 'pre-snap', category: 'amplification',
+    effect: 'Your returner breaks free — guaranteed 50+ yard return',
+  },
+  {
+    id: 'fair_catch_ghost', name: 'FAIR CATCH GHOST', iconKey: 'mismatch',
+    tier: 'BRONZE', cost: 10, type: 'pre-snap', category: 'disruption',
+    effect: 'Force the opponent to fair catch. No return yards.',
+  },
+  {
+    id: 'iron_man', name: 'IRON MAN', iconKey: 'helmet',
+    tier: 'SILVER', cost: 20, type: 'pre-snap', category: 'amplification',
+    effect: 'Return a burned player to your special teams deck',
+  },
+  {
+    id: 'ringer', name: 'RINGER', iconKey: 'player',
+    tier: 'SILVER', cost: 30, type: 'pre-snap', category: 'amplification',
+    effect: 'Your highest-star player kicks this FG regardless of your deck',
+  },
 ];
 
 // ── LOOKUPS ──
@@ -134,6 +200,8 @@ export var CATEGORY_COLORS = {
   amplification: '#00FF44',
   disruption: '#FF4511',
   protection: '#4488FF',
+  hand: '#00FF44',
+  special_teams: '#FF6B00',
 };
 
 // Tier → border color
