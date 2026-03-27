@@ -112,23 +112,32 @@ export function discard(hs, type, markedCards) {
   var disc = type === 'play' ? hs.playDiscard : hs.playerDiscard;
 
   var removed = [];
+  var removedIndices = [];
   var drawn = [];
 
-  // Remove marked cards from hand → discard pile
+  // Find indices first (before any splicing shifts them)
   for (var i = 0; i < markedCards.length; i++) {
     var idx = hand.indexOf(markedCards[i]);
     if (idx >= 0) {
-      hand.splice(idx, 1);
-      disc.push(markedCards[i]);
       removed.push(markedCards[i]);
+      removedIndices.push(idx);
     }
   }
 
-  // Draw replacements
-  for (var j = 0; j < removed.length; j++) {
+  // Remove from highest index to lowest so earlier indices stay valid
+  var sortedIndices = removedIndices.slice().sort(function(a, b) { return b - a; });
+  for (var s = 0; s < sortedIndices.length; s++) {
+    hand.splice(sortedIndices[s], 1);
+    disc.push(removed[removedIndices.indexOf(sortedIndices[s])]);
+  }
+
+  // Insert replacements at the original positions (lowest first)
+  var insertIndices = removedIndices.slice().sort(function(a, b) { return a - b; });
+  for (var j = 0; j < insertIndices.length; j++) {
     var card = drawFrom(pile, disc);
     if (card) {
-      hand.push(card);
+      var insertAt = Math.min(insertIndices[j], hand.length);
+      hand.splice(insertAt, 0, card);
       drawn.push(card);
     }
   }
