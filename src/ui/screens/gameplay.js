@@ -1689,19 +1689,6 @@ export function buildGameplay() {
     // 2min check
     if (gs.twoMinActive && !prev2min) { prev2min = true; el.classList.add('T-urgent'); show2MinWarn(); start2MinClock(); }
 
-    // Side indicator + instruction
-    if (phase === 'play' || phase === 'player' || phase === 'torch') {
-      var sideBar = document.createElement('div');
-      var sideColor = hTeam.accent || '#FF6B00';
-      sideBar.style.cssText = "text-align:center;padding:3px 0 1px;font-family:'Teko';font-weight:700;font-size:18px;letter-spacing:3px;flex-shrink:0;color:" + sideColor + ";background:linear-gradient(90deg,transparent,rgba(255,107,0,.06),transparent);";
-      sideBar.textContent = hTeam.name + (isOff ? ' OFFENSE' : ' DEFENSE');
-      panel.appendChild(sideBar);
-    }
-    const inst = document.createElement('div'); inst.className = 'T-inst';
-    if (phase === 'torch') { inst.textContent = 'TORCH CARD \u2014 Play one or skip'; inst.style.color = '#EBB010'; }
-    else inst.textContent = '';
-    panel.appendChild(inst);
-
     // 4th down decision bar — appears ABOVE cards so player sees it first
     var is4thPastMid = gs.down === 4 && isOff && gs.canSpecialTeams() && !conversionMode && !_fourthDownDecided;
     if (is4thPastMid && phase === 'play') {
@@ -3436,6 +3423,17 @@ export function buildGameplay() {
   // ── DEV PANEL ──
   injectDevPanel(el, gs, {
     refresh: function() { drawBug(); drawField(); drawPanel(); drawDriveSummary(); },
+    redealHand: function() {
+      var hs = getHandState();
+      handRedeal(hs);
+      selP = null; selPl = null; phase = 'play';
+      drawBug(); drawField(); drawPanel();
+    },
+    resetDiscards: function() {
+      var hs = getHandState();
+      resetDriveDiscards(hs);
+      drawPanel();
+    },
     setTorchInventory: function(inv) { torchInventory = inv; if (GS.season) GS.season.torchCards = inv.slice(); },
     applyState: function(s) {
       if (s.down) gs.down = s.down;

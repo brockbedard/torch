@@ -85,6 +85,11 @@ export function injectDevPanel(el, gs, callbacks) {
   html += '</div>';
   html += btn('Apply State', 'dev-apply', '#EBB010');
 
+  // ── HAND MANAGEMENT ──
+  html += section('HAND MGMT');
+  html += btn('Redeal Hand', 'dev-redeal', '#4DA6FF');
+  html += btn('Reset Discards', 'dev-reset-disc', '#4DA6FF');
+
   // ── TORCH CARDS ──
   html += section('TORCH CARDS');
   html += btn('Give All Bronze', 'dev-bronze', '#CD7F32');
@@ -206,6 +211,9 @@ export function injectDevPanel(el, gs, callbacks) {
       if (callbacks.refresh) callbacks.refresh();
     }
     if (id === 'dev-booster' && callbacks.openBooster) callbacks.openBooster();
+
+    if (id === 'dev-redeal' && callbacks.redealHand) callbacks.redealHand();
+    if (id === 'dev-reset-disc' && callbacks.resetDiscards) callbacks.resetDiscards();
 
     if (id === 'dev-force-td') { _forceResult = 'td'; showForceArmed('TD'); }
     if (id === 'dev-force-exploit') { _forceResult = 'exploit'; showForceArmed('EXPLOIT'); }
