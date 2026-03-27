@@ -1733,6 +1733,7 @@ export function buildGameplay() {
         showSTSelect(el, {
           title: 'PUNT',
           subtitle: '4TH & ' + gs.distance,
+          stType: 'punt',
           deck: _humanSTDeck,
           primaryRating: 'kickPower',
           primaryLabel: 'PWR',
@@ -1762,6 +1763,7 @@ export function buildGameplay() {
           showSTSelect(el, {
             title: 'FIELD GOAL ATTEMPT',
             subtitle: fgDist + '-YARD KICK',
+            stType: 'fg',
             deck: _humanSTDeck,
             primaryRating: 'kickAccuracy',
             secondaryRating: 'kickPower',
