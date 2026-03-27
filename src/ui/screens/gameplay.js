@@ -25,6 +25,9 @@ import { initPointsAnim, playPointsSequence, isPointsAnimPlaying } from '../effe
 import { injectDevPanel, getForceResult, getForceConversion } from '../components/devPanel.js';
 import { renderCardTray } from '../components/cardTray.js';
 import { createHandState, afterSnap as handAfterSnap, canDiscard, discard as handDiscard, resetDriveDiscards, redeal as handRedeal } from '../../engine/handManager.js';
+import { createSTDeck, burnPlayer, aiPickST, autoFill } from '../../engine/stDeck.js';
+import { getFullRoster } from '../../data/players.js';
+import { showSTSelect } from '../components/stSelect.js';
 
 /* ═══════════════════════════════════════════
    CSS
@@ -409,6 +412,12 @@ export function buildGameplay() {
     if (carry > 0) GS.engine.ctTorchPts = carry;
   }
   const gs = GS.engine;
+
+  // Special teams burn decks
+  var _humanFullRoster = getFullRoster(GS.team);
+  var _cpuFullRoster = getFullRoster(GS.opponent || 'wolves');
+  var _humanSTDeck = createSTDeck(_humanFullRoster);
+  var _cpuSTDeck = createSTDeck(_cpuFullRoster);
 
   // Hand management state — initialized per side on first drawPanel
   var _offHandState = null;
@@ -1720,11 +1729,22 @@ export function buildGameplay() {
       puntBtn.onclick = function() {
         SND.snap();
         phase = 'busy';
-        var puntResult = gs.punt();
-        driveSummaryLog.push({ down: 4, dist: gs.distance, playName: puntResult.label, yards: 0, isUserOff: true });
-        showSpecialTeamsResult(puntResult.label, '#4DA6FF', function() {
-          driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
-          showPossCut('punt', function() { if (!checkEnd()) nextSnap(); });
+        showSTSelect(el, {
+          title: 'PUNT',
+          subtitle: '4TH & ' + gs.distance,
+          deck: _humanSTDeck,
+          primaryRating: 'kickPower',
+          primaryLabel: 'PWR',
+          team: hTeam,
+          onSelect: function(punter) {
+            burnPlayer(_humanSTDeck, punter, 'punter', 'Punt ' + (gs.half === 1 ? 'Q1' : 'Q2'));
+            var puntResult = gs.punt();
+            driveSummaryLog.push({ down: 4, dist: gs.distance, playName: puntResult.label, yards: 0, isUserOff: true });
+            showSpecialTeamsResult(puntResult.label, '#4DA6FF', function() {
+              driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
+              showPossCut('punt', function() { if (!checkEnd()) nextSnap(); });
+            });
+          }
         });
       };
 
@@ -1737,12 +1757,26 @@ export function buildGameplay() {
         fgBtn.onclick = function() {
           SND.snap();
           phase = 'busy';
-          var fgResult = gs.attemptFieldGoal();
-          driveSummaryLog.push({ down: 4, dist: gs.distance, playName: fgResult.label, yards: 0, isUserOff: true });
-          var fgColor = fgResult.made ? '#00ff44' : '#e03050';
-          showSpecialTeamsResult(fgResult.label, fgColor, function() {
-            driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
-            showPossCut(fgResult.made ? 'score' : 'missed_fg', function() { if (!checkEnd()) nextSnap(); });
+          // Show ST kicker selection
+          showSTSelect(el, {
+            title: 'FIELD GOAL ATTEMPT',
+            subtitle: fgDist + '-YARD KICK',
+            deck: _humanSTDeck,
+            primaryRating: 'kickAccuracy',
+            secondaryRating: 'kickPower',
+            primaryLabel: 'ACC',
+            secondaryLabel: 'PWR',
+            team: hTeam,
+            onSelect: function(kicker) {
+              burnPlayer(_humanSTDeck, kicker, 'kicker', 'FG ' + (gs.half === 1 ? 'Q1' : 'Q2'));
+              var fgResult = gs.attemptFieldGoal();
+              driveSummaryLog.push({ down: 4, dist: gs.distance, playName: fgResult.label, yards: 0, isUserOff: true });
+              var fgColor = fgResult.made ? '#00ff44' : '#e03050';
+              showSpecialTeamsResult(fgResult.label, fgColor, function() {
+                driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
+                showPossCut(fgResult.made ? 'score' : 'missed_fg', function() { if (!checkEnd()) nextSnap(); });
+              });
+            }
           });
         };
       } else {
