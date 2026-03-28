@@ -163,7 +163,7 @@ var AudioManager = {
 
   setState: function(state) {
     if (!_initialized) return;
-    var map = { menu: 0, pre_game: 0.2, normal_play: 0.4, big_moment: 0.7, two_min_drill: 0.7, touchdown: 0.8, turnover: 0.3, halftime: 0.2, game_over: 0, paused: 0.1 };
+    var map = { menu: 0, pre_game: 0.2, normal_play: 0.4, big_moment: 0.7, two_min_drill: 0.85, touchdown: 0.8, turnover: 0.3, halftime: 0.2, game_over: 0, paused: 0.1 };
     var i = map[state];
     if (i !== undefined) {
       if (i === 0) this.stopCrowd(state === 'game_over' ? 2 : 0.3);

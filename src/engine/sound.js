@@ -22,6 +22,7 @@ export const SND = {
   clash:      safe(function() { AudioManager.playExact('resultSlam'); }),
   hit:        safe(function() { AudioManager.playExact('resultSlam', { volume: 0.6 }); }),
   sack:       safe(function() { AudioManager.playExact('resultSlam', { volume: 0.7 }); }),
+  incomp:     safe(function() { AudioManager.play('cardPlace', { pitch: 0.72, volume: 0.35, pitchRange: 0.04 }); }),
   bigPlay:    safe(function() { AudioManager.crowdSpike('cheer'); }),
   whistle:    safe(function() { AudioManager.play('whistle'); }),
 
@@ -49,6 +50,18 @@ export const SND = {
   kickGood:   safe(function() { AudioManager.crowdSpike('cheer'); }),
   kickMiss:   safe(function() { AudioManager.crowdSpike('groan'); }),
   discardConfirm: safe(function() { AudioManager.play('cardDiscard'); }),
+
+  // End game fanfare
+  victory: safe(function() {
+    // Triumphant: play td sound at higher pitch + chime after delay
+    AudioManager.play('resultSlam', { volume: 0.5, pitch: 1.3 });
+    setTimeout(function() { AudioManager.play('scoreTick', { volume: 0.6, pitch: 1.2 }); }, 200);
+    setTimeout(function() { AudioManager.play('scoreTick', { volume: 0.4, pitch: 1.5 }); }, 400);
+  }),
+  defeat: safe(function() {
+    // Somber: low thud
+    AudioManager.play('cardPlace', { volume: 0.4, pitch: 0.5 });
+  }),
 
   // Crowd (delegated to AudioManager)
   crowdStart: safe(function() { AudioManager.startCrowd(); }),
