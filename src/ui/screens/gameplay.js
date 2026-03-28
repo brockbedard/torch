@@ -682,7 +682,6 @@ export function buildGameplay() {
         `<div class="T-sb-sit-down" style="font-family:'Teko';font-size:16px;font-weight:700;color:${possTeam.accent};letter-spacing:1px">${dn} & ${conversionMode ? 'GOAL' : distLabel(s.distance, s.yardsToEndzone)}</div>` +
         `<div class="T-sb-sit-div"></div>` +
         `<div class="T-sb-sit-ball" style="font-family:'Teko';font-size:15px;font-weight:700;color:#e8e6ff;opacity:1;letter-spacing:1px">BALL ON <span style="color:${possTeam.accent}">${ballLabel}</span></div>` +
-        (weatherId !== 'clear' ? `<div class="T-sb-sit-div"></div><div class="T-weather-badge" style="color:${_weatherColors[weatherId] || '#aaa'};border:1px solid ${_weatherColors[weatherId] || '#aaa'}33;background:${_weatherColors[weatherId] || '#aaa'}11;">${_weatherIcons[weatherId] || ''} ${(WEATHER[weatherId] || {}).name || ''}</div>` : '') +
       `</div>`;
     drawTorchBanner();
   }
