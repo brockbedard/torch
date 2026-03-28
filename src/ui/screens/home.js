@@ -1,5 +1,5 @@
 import { SND } from '../../engine/sound.js';
-import { render, setGs, getOffCards, getDefCards, VERSION, VERSION_NAME } from '../../state.js';
+import { render, setGs, getOffCards, getDefCards, VERSION, VERSION_NAME, loadGameState, clearGameSave, GAME_SPEED, setGameSpeed } from '../../state.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { buildHomeCard } from '../components/cards.js';
 import AudioStateManager from '../../engine/audioManager.js';
@@ -179,11 +179,46 @@ export function buildHome(){
 
   // === TAGLINE ===
   var tagline=document.createElement('div');
-  // tagline removed — cleaner look
+  tagline.style.cssText="font-family:'Rajdhani',sans-serif;font-size:12px;color:#888;letter-spacing:2px;text-align:center;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.8s both;flex-shrink:0;";
+  tagline.textContent='Score points. Buy cards. Win the game.';
+  el.append(tagline);
 
   // === CTA BUTTON ===
   var playWrap=document.createElement('div');
   playWrap.style.cssText='width:100%;z-index:2;position:relative;display:flex;flex-direction:column;gap:10px;opacity:0;animation:homeRevealBtn 0.4s ease-out 1.0s both;flex-shrink:0;';
+
+  // RESUME GAME — show if a mid-game save exists
+  var _save=loadGameState();
+  if(_save && _save.screen==='gameplay' && _save.engineSnapshot && !_save.engineSnapshot.gameOver){
+    var resumeBtn=document.createElement('button');
+    resumeBtn.className='btn-blitz';
+    resumeBtn.style.cssText='border-color:#EBB010;color:#EBB010;background:transparent;font-size:18px;padding:16px 24px;letter-spacing:4px;text-align:center;display:block;width:100%;';
+    resumeBtn.textContent='RESUME GAME';
+    resumeBtn.onclick=function(){
+      clearGameSave();
+      SND.click();
+      AudioStateManager.init();
+      setGs(function(s){
+        return Object.assign({},s||{},{
+          screen:'gameplay',
+          team:_save.team,
+          opponent:_save.opponent,
+          difficulty:_save.difficulty,
+          season:_save.season,
+          _lastTeam:_save.team,
+          isFirstSeason:_save.isFirstSeason,
+          humanReceives:_save.humanReceives,
+          gameConditions:_save.gameConditions,
+          _coinTossDone:true,
+          _halftimeCardDone:true,
+          _engineSnapshot:_save.engineSnapshot,
+          engine:null,
+        });
+      });
+    };
+    playWrap.appendChild(resumeBtn);
+  }
+
   var playBtn=document.createElement('button');
   playBtn.className='btn-blitz';
   playBtn.style.cssText='border-color:#FF4511;color:#000;background:linear-gradient(180deg,#EBB010 0%,#FF4511 100%);font-size:24px;padding:20px 24px;animation:ctaGlow 3s ease-in-out 0.3s infinite;letter-spacing:5px;text-align:center;display:block;width:100%;';
@@ -195,13 +230,43 @@ export function buildHome(){
     setGs(function(s){ return Object.assign({}, s || {}, {screen:'teamSelect', team:null, isFirstSeason: !firstDone}); });
   };
 
+  var dailyBtn=document.createElement('button');
+  dailyBtn.className='btn-blitz';
+  dailyBtn.style.cssText='border-color:#EBB010;color:#EBB010;background:transparent;font-size:14px;padding:13px 24px;letter-spacing:4px;text-align:center;display:block;width:100%;';
+  dailyBtn.textContent='DAILY DRIVE';
+  dailyBtn.onclick=function(){
+    SND.click();
+    AudioStateManager.init();
+    setGs(function(s){ return Object.assign({}, s || {}, {screen:'dailyDrive'}); });
+  };
+
+  var speedRow=document.createElement('div');
+  speedRow.style.cssText='display:flex;gap:6px;justify-content:center;padding:4px 20px;';
+  ['normal','fast','turbo'].forEach(function(speed){
+    var btn=document.createElement('button');
+    var isSel=GAME_SPEED.current===speed;
+    btn.style.cssText='font-family:\'Rajdhani\';font-weight:700;font-size:9px;letter-spacing:1px;padding:4px 12px;border-radius:4px;cursor:pointer;border:1px solid '+(isSel?'#EBB010':'#333')+';background:'+(isSel?'#EBB010':'transparent')+';color:'+(isSel?'#000':'#555')+';';
+    btn.textContent=speed.toUpperCase();
+    btn.onclick=function(){
+      setGameSpeed(speed);
+      speedRow.querySelectorAll('button').forEach(function(b,i){
+        var s=['normal','fast','turbo'][i];
+        var sel=s===speed;
+        b.style.borderColor=sel?'#EBB010':'#333';
+        b.style.background=sel?'#EBB010':'transparent';
+        b.style.color=sel?'#000':'#555';
+      });
+    };
+    speedRow.appendChild(btn);
+  });
+
   var devBtn=document.createElement('button');
   devBtn.className='btn-blitz';
   devBtn.style.cssText='display:none;border-color:var(--muted);color:var(--muted);background:transparent;box-shadow:none;font-size:8px;padding:10px;margin-top:20px;';
   devBtn.textContent='DEV: RESET DAILY LOCK';
   devBtn.onclick=function(){localStorage.clear(); render();};
 
-  playWrap.append(playBtn,devBtn);
+  playWrap.append(playBtn,dailyBtn,speedRow,devBtn);
   el.appendChild(playWrap);
 
   // DEV-ONLY: Quick Play — skip all drafts, straight to gameplay
@@ -244,6 +309,12 @@ export function buildHome(){
   buildLabel.style.cssText='position:absolute;bottom:12px;width:100%;text-align:center;font-family:"Courier New",monospace;font-size:8px;color:#ffffff22;letter-spacing:1px;z-index:2;opacity:0;animation:fi 0.3s ease-out 1.5s both;';
   buildLabel.textContent='v' + VERSION + ' \u00b7 ' + VERSION_NAME;
   el.appendChild(buildLabel);
+
+  var settingsBtn=document.createElement('div');
+  settingsBtn.style.cssText="position:absolute;top:12px;right:12px;font-family:'Rajdhani';font-weight:700;font-size:10px;color:#555;cursor:pointer;padding:8px;letter-spacing:1px;z-index:10;";
+  settingsBtn.textContent='SETTINGS';
+  settingsBtn.onclick=function(){ setGs(function(s){ return Object.assign({},s||{},{screen:'settings'}); }); };
+  el.appendChild(settingsBtn);
 
   return el;
 }

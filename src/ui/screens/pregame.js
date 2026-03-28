@@ -7,10 +7,12 @@
 
 import { SND } from '../../engine/sound.js';
 import { GS, setGs } from '../../state.js';
-import { TEAMS } from '../../data/teams.js';
+import { TEAMS, COUNTER_PLAY } from '../../data/teams.js';
 import { renderTeamBadge } from '../../data/teamLogos.js';
 import { renderFlamePips } from '../components/cards.js';
 import AudioStateManager from '../../engine/audioManager.js';
+import { getH2H, getStreak } from '../../engine/streaks.js';
+import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 
 // Weather → temperature mapping
 var WEATHER_TEMP = { clear: '72°', rain: '58°', windy: '64°', snow: '28°' };
@@ -29,7 +31,7 @@ export function buildPregame() {
 
   var conditions = GS.gameConditions || { weather: 'clear', field: 'turf', crowd: 'home' };
   var gamesPlayed = parseInt(localStorage.getItem('torch_games_played') || '0');
-  var isFast = gamesPlayed >= 5;
+  var isFast = gamesPlayed >= 2;
 
   // Determine home/away: crowd field tells us
   var isHome = conditions.crowd === 'home';
@@ -41,10 +43,10 @@ export function buildPregame() {
   // Flame SVG path
   var FLAME = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
 
-  // ── Timing (fast mode halves everything) ──
+  // ── Timing (fast mode: ~1.5s total vs ~5.5s first-game) ──
   var t = isFast
-    ? { hdr:0.05, away:0.15, vs:0.3, home:0.2, wx:0.4, dur:0.2, vsDur:0.25, auto:4000 }
-    : { hdr:0.1,  away:0.3,  vs:0.7, home:0.5, wx:1.0, dur:0.5, vsDur:0.4,  auto:5500 };
+    ? { hdr:0.0,  away:0.05, vs:0.15, home:0.1, wx:0.25, dur:0.15, vsDur:0.15, auto:1800 }
+    : { hdr:0.1,  away:0.3,  vs:0.7,  home:0.5, wx:1.0,  dur:0.5,  vsDur:0.4,  auto:5500 };
 
   // ── STYLES ──
   var sty = document.createElement('style');
@@ -121,6 +123,112 @@ export function buildPregame() {
     '</div>' +
     '<div style="flex:1;height:2px;border-radius:1px;background:linear-gradient(270deg,transparent 10%,#FF4511 50%,#EBB010);"></div>';
   matchup.appendChild(vsZone);
+
+  // ── C2) RIVALRY CONTEXT ──
+  var cp = COUNTER_PLAY[GS.team] || {};
+  var matchupColor, matchupLabel, matchupType;
+  if (cp.strong === GS.opponent) {
+    matchupColor = '#00ff44'; matchupLabel = 'Favorable matchup'; matchupType = 'FAVORABLE';
+  } else if (cp.weak === GS.opponent) {
+    matchupColor = '#ff0040'; matchupLabel = 'Tough matchup'; matchupType = 'TOUGH';
+  } else {
+    matchupColor = '#EBB010'; matchupLabel = 'Even matchup'; matchupType = 'EVEN';
+  }
+
+  var h2h = getH2H(GS.team, GS.opponent);
+  var rivalWrap = document.createElement('div');
+  rivalWrap.style.cssText =
+    'flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0 2px;z-index:1;' +
+    'opacity:0;animation:pgFadeUp ' + t.dur + 's ease-out ' + t.vs + 's both;';
+
+  if (h2h.wins + h2h.losses > 0) {
+    var h2hEl = document.createElement('div');
+    h2hEl.style.cssText = "font-family:'Rajdhani';font-size:12px;font-weight:600;color:#555;letter-spacing:2px;";
+    h2hEl.textContent = 'HEAD-TO-HEAD  ' + h2h.wins + '-' + h2h.losses;
+    rivalWrap.appendChild(h2hEl);
+  }
+
+  var matchupEl = document.createElement('div');
+  matchupEl.style.cssText = "font-family:'Rajdhani';font-size:11px;font-weight:700;color:" + matchupColor + ";letter-spacing:2px;opacity:0.85;";
+  matchupEl.textContent = matchupLabel.toUpperCase();
+  rivalWrap.appendChild(matchupEl);
+
+  var streak = getStreak(GS.team);
+  if (streak.currentWin >= 2) {
+    var streakEl = document.createElement('div');
+    streakEl.style.cssText = "font-family:'Rajdhani';font-size:11px;font-weight:700;color:#EBB010;letter-spacing:2px;margin-top:2px;";
+    streakEl.textContent = streak.currentWin + '-GAME WIN STREAK';
+    rivalWrap.appendChild(streakEl);
+  }
+
+  matchup.appendChild(rivalWrap);
+
+  // ── C3) SCOUTING REPORT ──
+  var oppOffRoster = getOffenseRoster(GS.opponent);
+  var oppDefRoster = getDefenseRoster(GS.opponent);
+  var oppStarOff = oppOffRoster.find(function(p) { return p.isStar; });
+  var oppStarDef = oppDefRoster.find(function(p) { return p.isStar; });
+
+  var scoutDelay = isFast ? t.wx - 0.05 : t.wx - 0.2;
+
+  var scoutCard = document.createElement('div');
+  scoutCard.style.cssText =
+    'flex-shrink:0;z-index:1;width:90%;max-width:320px;margin:0 auto 4px;padding:8px 12px;' +
+    'background:rgba(255,255,255,0.02);border:1px solid #1a1a1a;border-radius:8px;' +
+    'opacity:0;animation:pgFadeUp ' + t.dur + 's ease-out ' + scoutDelay + 's both;';
+
+  // Header row
+  var scoutHeader = document.createElement('div');
+  scoutHeader.style.cssText = "display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;";
+  scoutHeader.innerHTML =
+    "<span style=\"font-family:'Rajdhani';font-size:10px;font-weight:700;color:#444;letter-spacing:3px;\">SCOUTING REPORT</span>" +
+    "<span style=\"font-family:'Rajdhani';font-size:10px;font-weight:700;color:" + matchupColor + ";letter-spacing:2px;\">" + matchupType + "</span>";
+  scoutCard.appendChild(scoutHeader);
+
+  // Divider
+  var scoutDiv = document.createElement('div');
+  scoutDiv.style.cssText = 'height:1px;background:#1a1a1a;margin-bottom:6px;';
+  scoutCard.appendChild(scoutDiv);
+
+  // Scheme rows
+  var schemeLines = [
+    { label: 'OFFENSE', value: opp.offScheme },
+    { label: 'DEFENSE', value: opp.defScheme },
+  ];
+  schemeLines.forEach(function(line) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px;';
+    row.innerHTML =
+      "<span style=\"font-family:'Rajdhani';font-size:11px;font-weight:600;color:#444;letter-spacing:2px;\">" + line.label + "</span>" +
+      "<span style=\"font-family:'Teko';font-size:13px;color:" + opp.accent + ";letter-spacing:1px;\">" + line.value + "</span>";
+    scoutCard.appendChild(row);
+  });
+
+  // Vibe row
+  var vibeRow = document.createElement('div');
+  vibeRow.style.cssText = 'margin-bottom:5px;';
+  vibeRow.innerHTML =
+    "<span style=\"font-family:'Rajdhani';font-size:10px;font-weight:600;color:#555;font-style:italic;\">" + opp.vibe + "</span>";
+  scoutCard.appendChild(vibeRow);
+
+  // Star players
+  if (oppStarOff || oppStarDef) {
+    var starDiv = document.createElement('div');
+    starDiv.style.cssText = 'height:1px;background:#1a1a1a;margin-bottom:5px;';
+    scoutCard.appendChild(starDiv);
+
+    [oppStarOff, oppStarDef].forEach(function(p) {
+      if (!p) return;
+      var starRow = document.createElement('div');
+      starRow.style.cssText = 'display:flex;align-items:baseline;gap:4px;margin-bottom:2px;';
+      starRow.innerHTML =
+        "<span style=\"font-family:'Rajdhani';font-size:10px;font-weight:700;color:#EBB010;letter-spacing:2px;opacity:0.5;\">WATCH</span>" +
+        "<span style=\"font-family:'Teko';font-size:13px;color:#EBB010;letter-spacing:1px;\">" + p.firstName + ' ' + p.name + " <span style=\"font-size:11px;color:#888;\">(" + p.pos + ")</span> — " + p.trait + "</span>";
+      scoutCard.appendChild(starRow);
+    });
+  }
+
+  matchup.appendChild(scoutCard);
 
   // ── D) HOME TEAM PANEL ──
   var homePanel = document.createElement('div');
