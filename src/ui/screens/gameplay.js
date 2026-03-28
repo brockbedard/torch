@@ -794,14 +794,14 @@ export function buildGameplay() {
     h += `<div style="position:absolute;top:4px;left:${lp}%;transform:translateX(-50%);z-index:12;font-family:'Teko';font-weight:700;font-size:11px;color:${pc};letter-spacing:1px;text-shadow:0 0 6px rgba(0,0,0,0.9),0 1px 3px rgba(0,0,0,0.9);white-space:nowrap;pointer-events:none;">${fieldLabel}</div>`;
 
     // Drop zones — empty outlines for unfilled, actual card for filled
-    const playLbl = phase === 'play' ? 'DRAG<br><br>PLAY<br><br>HERE' : 'PLAY';
+    const playLbl = phase === 'play' ? 'TAP<br><br>PLAY<br><br>CARD' : 'PLAY';
     if (selPl) {
       h += '<div class="T-placed T-placed-play" id="T-placed-play-slot"></div>';
     } else {
       h += '<div class="T-drop T-drop-play' + (phase==='play'?' T-drop-active':'') + '" data-drop="play"><span class="T-drop-lbl">' + playLbl + '</span></div>';
     }
 
-    const playerLbl = phase === 'player' ? 'DRAG<br><br>PLAYER<br><br>HERE' : 'PLAYER';
+    const playerLbl = phase === 'player' ? 'TAP<br><br>PLAYER<br><br>CARD' : 'PLAYER';
     if (selP) {
       h += '<div class="T-placed T-placed-player" id="T-placed-player-slot"></div>';
     } else {
@@ -812,7 +812,7 @@ export function buildGameplay() {
       h += '<div class="T-placed T-placed-torch" id="T-placed-torch-slot"></div>';
     } else {
       const hasTorchCards = torchInventory.length > 0;
-      const torchLbl = hasTorchCards ? (phase === 'torch' ? 'DRAG<br><br>TORCH<br><br>HERE' : 'TORCH') : 'NO<br><br>TORCH<br><br>CARD';
+      const torchLbl = hasTorchCards ? (phase === 'torch' ? 'TAP<br><br>TORCH<br><br>CARD' : 'TORCH') : 'NO<br><br>TORCH<br><br>CARD';
       h += '<div class="T-drop T-drop-torch' + (phase==='torch'?' T-drop-active':'') + '" data-drop="torch"><span class="T-drop-lbl">' + torchLbl + '</span></div>';
     }
 
