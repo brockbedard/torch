@@ -431,7 +431,7 @@ export function buildGameplay() {
   let prev2min = gs.twoMinActive;
   var _lastPlayFlashed = false; // true after LAST PLAY flash fires, reset each half
   var snapCount = 0; // Track snap number for teach tooltips
-  var _tutorialStep = GS.isFirstSeason ? 1 : 0; // 0=done, 1=pick play, 2=pick player, 3=snap
+  var _tutorialStep = (FEATURES.tutorialSystem && GS.isFirstSeason) ? 1 : 0; // 0=done, 1=pick play, 2=pick player, 3=snap
   var twoMinTimer = null; // Real-time clock interval for 2-minute drill
   var _fourthDownDecided = false; // true after player clicks GO FOR IT (hides the bar)
   var _driveHeat = 0; // 0-120 momentum bar
@@ -1257,7 +1257,7 @@ export function buildGameplay() {
     _weatherNodes = [];
     if (_weatherAudioCtx) { try { _weatherAudioCtx.close(); } catch(e) {} _weatherAudioCtx = null; }
   }
-  startWeatherAudio(weatherId);
+  if (FEATURES.weatherAudio) startWeatherAudio(weatherId);
   el.appendChild(stripWrap);
   function drawField() {
     const s = gs.getSummary();
@@ -2090,7 +2090,7 @@ export function buildGameplay() {
       trayPlayers = fullRoster.filter(function(p) { return !p.injured; });
     }
 
-    var hint = getSituationalHint(gs);
+    var hint = FEATURES.smartHighlights ? getSituationalHint(gs) : null;
     if (hint && phase === 'play' && !selPl) {
       var hintEl = document.createElement('div');
       hintEl.style.cssText = "text-align:center;padding:3px 8px;font-family:'Rajdhani';font-weight:700;font-size:10px;color:" + hint.color + ";letter-spacing:1px;opacity:0.5;";
@@ -2394,12 +2394,14 @@ export function buildGameplay() {
 
     // Torch card combo check
     if (selTorchId) {
-      var combo = checkCardCombo(_driveCardsUsed, selTorchId);
-      _driveCardsUsed.push(selTorchId);
-      if (combo) {
-        // Store combo for post-snap bonus application
-        _activeDriveCombo = combo;
+      if (FEATURES.cardCombos) {
+        var combo = checkCardCombo(_driveCardsUsed, selTorchId);
+        if (combo) {
+          // Store combo for post-snap bonus application
+          _activeDriveCombo = combo;
+        }
       }
+      _driveCardsUsed.push(selTorchId);
     }
 
     var preTorchPts = getTorchPoints();
@@ -2706,7 +2708,7 @@ export function buildGameplay() {
     if (s.half === 2 && Math.abs(s.ctScore - s.irScore) <= 7 && tier < 3) tier = Math.min(3, tier + 1);
 
     // Drive heat momentum bar
-    updateDriveHeat(r, res.gameEvent);
+    if (FEATURES.driveHeat) updateDriveHeat(r, res.gameEvent);
     drawDriveHeat();
 
     // Canvas field play animation
