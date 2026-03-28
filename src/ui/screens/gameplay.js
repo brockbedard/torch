@@ -3219,7 +3219,7 @@ export function buildGameplay() {
           // CPU won — AI chooses (weighted by difficulty)
           var aiTakesCard = Math.random() < ({ EASY: 0.6, MEDIUM: 0.5, HARD: 0.4 }[gs.difficulty] || 0.5);
           var aiMsg = document.createElement('div');
-          aiMsg.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:#888;text-align:center;margin-top:8px;letter-spacing:1px;";
+          aiMsg.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:" + oTeam.accent + ";text-align:center;margin-top:8px;letter-spacing:1px;";
           aiMsg.textContent = aiTakesCard
             ? oTeam.name + ' DRAWS A FREE TORCH CARD'
             : oTeam.name + ' CHOOSES TO RECEIVE';
