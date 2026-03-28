@@ -18,7 +18,7 @@ import { showShop, renderInventory } from '../components/shop.js';
 // tooltip system removed — will be rebuilt in v2
 import AudioStateManager from '../../engine/audioManager.js';
 import { renderTeamBadge } from '../../data/teamLogos.js';
-import { getConditionEffects } from '../../data/gameConditions.js';
+import { getConditionEffects, WEATHER } from '../../data/gameConditions.js';
 import { checkPlayCombos } from '../../data/playSequenceCombos.js';
 import { generateCommentary, generateContext } from '../../engine/commentary.js';
 import { initPointsAnim, playPointsSequence, isPointsAnimPlaying } from '../effects/torchPointsAnim.js';
@@ -28,6 +28,10 @@ import { createHandState, afterSnap as handAfterSnap, canDiscard, discard as han
 import { createSTDeck, burnPlayer, aiPickST, autoFill } from '../../engine/stDeck.js';
 import { getFullRoster } from '../../data/players.js';
 import { showSTSelect } from '../components/stSelect.js';
+
+// Weather display config
+var _weatherColors = { snow: '#85C1E9', rain: '#4DA6FF', wind: '#aaa', heat: '#e03050', clear: '#EBB010' };
+var _weatherIcons = { snow: '\u2744', rain: '\uD83C\uDF27', wind: '\uD83C\uDF2C', heat: '\uD83D\uDD25', clear: '\u2600' };
 
 /* ═══════════════════════════════════════════
    CSS
@@ -324,6 +328,18 @@ const PLAY_DESC = {
   ir_cover6:'Split field cov',ir_blitz_call:'Rare IR blitz',
 };
 
+// Natural language yard display
+function yardText(yards) {
+  if (yards > 0) return 'Gain of ' + yards;
+  if (yards < 0) return 'Loss of ' + Math.abs(yards);
+  return 'No gain';
+}
+function yardTextShort(yards) {
+  if (yards > 0) return '+' + yards;
+  if (yards < 0) return '-' + Math.abs(yards);
+  return '0';
+}
+
 function playerImg(p, team, isOff) {
   var pre = team.abbr.toLowerCase();
   var s = isOff ? 'off' : 'def';
@@ -499,6 +515,7 @@ export function buildGameplay() {
   var isFirstSeason = GS.isFirstSeason;
 
   // Game Day Conditions (v0.21)
+  var weatherId = (GS.gameConditions && GS.gameConditions.weather) || 'clear';
   var condEffects = getConditionEffects(GS.gameConditions || { weather: 'clear', field: 'turf', crowd: 'home' });
 
   // Play Sequence Combos — track play history per drive
@@ -665,6 +682,7 @@ export function buildGameplay() {
         `<div class="T-sb-sit-down" style="font-family:'Teko';font-size:16px;font-weight:700;color:${possTeam.accent};letter-spacing:1px">${dn} & ${conversionMode ? 'GOAL' : distLabel(s.distance, s.yardsToEndzone)}</div>` +
         `<div class="T-sb-sit-div"></div>` +
         `<div class="T-sb-sit-ball" style="font-family:'Teko';font-size:15px;font-weight:700;color:#e8e6ff;opacity:1;letter-spacing:1px">BALL ON <span style="color:${possTeam.accent}">${ballLabel}</span></div>` +
+        (weatherId !== 'clear' ? `<div class="T-sb-sit-div"></div><div class="T-weather-badge" style="color:${_weatherColors[weatherId] || '#aaa'};border:1px solid ${_weatherColors[weatherId] || '#aaa'}33;background:${_weatherColors[weatherId] || '#aaa'}11;">${_weatherIcons[weatherId] || ''} ${(WEATHER[weatherId] || {}).name || ''}</div>` : '') +
       `</div>`;
     drawTorchBanner();
   }
@@ -790,14 +808,14 @@ export function buildGameplay() {
     h += `<div class="T-ltg" style="left:${tp}%;border-color:#c8a030"></div>`;
 
     // Drop zones — empty outlines for unfilled, actual card for filled
-    const playLbl = phase === 'play' ? 'DRAG<br><br>PLAY<br><br>HERE' : 'PLAY';
+    const playLbl = phase === 'play' ? 'TAP<br><br>PLAY<br><br>CARD' : 'PLAY';
     if (selPl) {
       h += '<div class="T-placed T-placed-play" id="T-placed-play-slot"></div>';
     } else {
       h += '<div class="T-drop T-drop-play' + (phase==='play'?' T-drop-active':'') + '" data-drop="play"><span class="T-drop-lbl">' + playLbl + '</span></div>';
     }
 
-    const playerLbl = phase === 'player' ? 'DRAG<br><br>PLAYER<br><br>HERE' : 'PLAYER';
+    const playerLbl = phase === 'player' ? 'TAP<br><br>PLAYER<br><br>CARD' : 'PLAYER';
     if (selP) {
       h += '<div class="T-placed T-placed-player" id="T-placed-player-slot"></div>';
     } else {
@@ -808,7 +826,7 @@ export function buildGameplay() {
       h += '<div class="T-placed T-placed-torch" id="T-placed-torch-slot"></div>';
     } else {
       const hasTorchCards = torchInventory.length > 0;
-      const torchLbl = hasTorchCards ? (phase === 'torch' ? 'DRAG<br><br>TORCH<br><br>HERE' : 'TORCH') : 'NO<br><br>TORCH<br><br>CARD';
+      const torchLbl = hasTorchCards ? (phase === 'torch' ? 'TAP<br><br>TORCH<br><br>CARD' : 'TORCH') : 'NO<br><br>TORCH<br><br>CARD';
       h += '<div class="T-drop T-drop-torch' + (phase==='torch'?' T-drop-active':'') + '" data-drop="torch"><span class="T-drop-lbl">' + torchLbl + '</span></div>';
     }
 
@@ -3025,6 +3043,7 @@ export function buildGameplay() {
 
   // ── 2-MIN WARNING (dramatic overlay) ──
   function show2MinWarn() {
+    SND.whistle();
     shakeScreen();
     flashField('rgba(224,48,80,.3)');
 
@@ -3069,8 +3088,13 @@ export function buildGameplay() {
     requestAnimationFrame(function() { ov.style.opacity = '1'; });
 
     // Phase 1: Tap to flip — 3D coin with team logos on each side
+    var tossTitle = document.createElement('div');
+    tossTitle.style.cssText = "font-family:'Teko';font-weight:700;font-size:32px;color:#EBB010;letter-spacing:5px;margin-bottom:16px;";
+    tossTitle.textContent = 'COIN TOSS';
+    ov.appendChild(tossTitle);
+
     var coin = document.createElement('div');
-    coin.style.cssText = 'width:100px;height:100px;perspective:400px;cursor:pointer;';
+    coin.style.cssText = 'width:110px;height:110px;perspective:400px;cursor:pointer;';
     var coinInner = document.createElement('div');
     coinInner.style.cssText = 'width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 1.5s cubic-bezier(0.22,1,0.36,1);';
     // Front: user's team
@@ -3096,15 +3120,16 @@ export function buildGameplay() {
       var rotations = humanWins ? 1800 : 1980; // 1800 = 5 full turns (front), 1980 = 5.5 turns (back)
       coinInner.style.transform = 'rotateY(' + rotations + 'deg)';
       label.textContent = '';
-      SND.snap();
+      SND.flip();
 
       setTimeout(function() {
         // Phase 2: Result + Choice
         ov.innerHTML = '';
         var winner = humanWins ? hTeam.name : oTeam.name;
         var resultEl = document.createElement('div');
-        resultEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:3px;text-align:center;";
-        resultEl.textContent = humanWins ? 'YOU WON THE TOSS!' : winner + ' WINS THE TOSS';
+        var winnerColor = humanWins ? hTeam.accent : oTeam.accent;
+        resultEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:" + winnerColor + ";letter-spacing:3px;text-align:center;";
+        resultEl.textContent = humanWins ? 'YOU WON THE TOSS!' : winner + ' WIN THE TOSS';
         ov.appendChild(resultEl);
 
         if (humanWins) {
@@ -3115,7 +3140,7 @@ export function buildGameplay() {
           var cardBtn = document.createElement('button');
           cardBtn.className = 'btn-blitz';
           cardBtn.style.cssText = "width:100%;font-size:13px;padding:14px;background:#141008;color:#EBB010;border-color:#EBB010;text-align:left;";
-          cardBtn.innerHTML = "<div style=\"font-family:'Teko';font-size:18px;letter-spacing:2px;\">DRAW A TORCH CARD</div><div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:2px;\">Pick 1 of 3 mystery cards \u2014 but you kick off to them</div>";
+          cardBtn.innerHTML = "<div style=\"font-family:'Teko';font-size:18px;letter-spacing:2px;\">DRAW A FREE TORCH CARD</div><div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:2px;\">Pick 1 of 3 mystery cards \u2014 but you kick off to them</div>";
           cardBtn.onclick = function() { showFaceDownCards(ov, offers, true, onDone); };
 
           var recBtn = document.createElement('button');
@@ -3137,7 +3162,7 @@ export function buildGameplay() {
           var aiMsg = document.createElement('div');
           aiMsg.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:#888;text-align:center;margin-top:8px;letter-spacing:1px;";
           aiMsg.textContent = aiTakesCard
-            ? oTeam.name + ' CHOOSES TO DRAW A TORCH CARD'
+            ? oTeam.name + ' CHOOSES TO DRAW A FREE TORCH CARD'
             : oTeam.name + ' CHOOSES TO RECEIVE';
           ov.appendChild(aiMsg);
 
@@ -3146,7 +3171,7 @@ export function buildGameplay() {
               // AI receives, human gets a card
               var youGet = document.createElement('div');
               youGet.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;text-align:center;margin-top:8px;";
-              youGet.textContent = 'YOU DRAW A TORCH CARD';
+              youGet.textContent = 'YOU DRAW A FREE TORCH CARD';
               ov.appendChild(youGet);
               setTimeout(function() { showFaceDownCards(ov, offers, false, onDone); }, 800);
             } else {
@@ -3163,7 +3188,7 @@ export function buildGameplay() {
   function showFaceDownCards(ov, offers, humanKicks, onDone) {
     ov.innerHTML = '';
     var title = document.createElement('div');
-    title.style.cssText = "font-family:'Teko';font-weight:700;font-size:24px;color:#EBB010;letter-spacing:3px;text-align:center;";
+    title.style.cssText = "font-family:'Teko';font-weight:700;font-size:24px;color:" + hTeam.accent + ";letter-spacing:3px;text-align:center;";
     title.textContent = 'TAP A CARD TO REVEAL';
     ov.appendChild(title);
 
@@ -3380,8 +3405,17 @@ export function buildGameplay() {
 
   // ── TRANSITIONS ──
   function checkEnd() {
-    if (gs.gameOver) { setTimeout(() => setGs(s => ({...s, screen:'end_game', finalEngine:gs, humanAbbr:hAbbr})), 1200); return true; }
-    if (gs.needsHalftime) { setTimeout(() => setGs(s => ({...s, screen:'halftime'})), 1200); return true; }
+    if (gs.gameOver) {
+      SND.whistle();
+      AudioStateManager.stopCrowd(2);
+      setTimeout(() => setGs(s => ({...s, screen:'end_game', finalEngine:gs, humanAbbr:hAbbr})), 1200);
+      return true;
+    }
+    if (gs.needsHalftime) {
+      SND.whistle();
+      setTimeout(() => setGs(s => ({...s, screen:'halftime'})), 1200);
+      return true;
+    }
     return false;
   }
 
