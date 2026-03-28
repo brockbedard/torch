@@ -608,8 +608,10 @@ export class GameState {
     var defIds = sides.defPlayers.map(function(p) { return p.id; });
     updateHeat(featuredOff.id, offIds, this.offHeatMap);
     updateHeat(featuredDef.id, defIds, this.defHeatMap);
-    updateMomentum(featuredOff.id, featuredOff, offPlay.playType, this.offMomentumMap);
-    updateMomentum(featuredDef.id, featuredDef, defPlay.cardType, this.defMomentumMap);
+    if (this.momentumEnabled !== false) {
+      updateMomentum(featuredOff.id, featuredOff, offPlay.playType, this.offMomentumMap);
+      updateMomentum(featuredDef.id, featuredDef, defPlay.cardType, this.defMomentumMap);
+    }
 
     // Track moments
     if (offCard || defCard) {
