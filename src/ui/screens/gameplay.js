@@ -109,7 +109,7 @@ const CSS = `
 .T-placed-player{left:35%;width:30%}
 .T-placed-torch{right:3%;width:28%}
 /* empty drop outlines — centered vertically */
-.T-drop{position:absolute;top:50%;transform:translateY(-50%);height:150px;border:2px dashed rgba(255,255,255,0.2);border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:7;transition:all .3s ease;opacity:0.8;background:rgba(0,0,0,0.2)}
+.T-drop{position:absolute;top:50%;transform:translateY(-50%);height:150px;border:2px dashed rgba(255,255,255,0.4);border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:7;transition:all .3s ease;opacity:1;background:rgba(0,0,0,0.3)}
 .T-drop-play{left:3%;width:30%}
 .T-drop-player{left:35%;width:30%}
 .T-drop-torch{right:3%;width:28%}
