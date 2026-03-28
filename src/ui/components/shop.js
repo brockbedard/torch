@@ -35,6 +35,9 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
     offers.push(getRandomCard(weights));
   }
 
+  // Track seen card types for NEW badge
+  var seenCards = JSON.parse(localStorage.getItem('torch_seen_cards') || '[]');
+
   // Build bottom sheet overlay
   var overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:auto;';
@@ -94,6 +97,15 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
 
     // Card visual — compact size (readable even if can't afford)
     var cardEl = buildTorchCard(card, 100, 130);
+    // NEW badge for first-time card types
+    var isNew = seenCards.indexOf(card.id) === -1;
+    if (isNew) {
+      cardEl.style.position = 'relative';
+      var newBadge = document.createElement('div');
+      newBadge.style.cssText = "position:absolute;top:-4px;right:-4px;z-index:5;padding:1px 4px;border-radius:3px;background:#FF4511;font-family:'Rajdhani';font-weight:700;font-size:7px;color:#fff;letter-spacing:0.5px;";
+      newBadge.textContent = 'NEW';
+      cardEl.appendChild(newBadge);
+    }
     wrap.appendChild(cardEl);
 
     // Cost badge
@@ -135,6 +147,11 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
           // Track card purchases for COLLECTOR achievement
           var cardsBought = parseInt(localStorage.getItem('torch_cards_bought') || '0');
           localStorage.setItem('torch_cards_bought', String(cardsBought + 1));
+          // Mark card type as seen (clears NEW badge on future visits)
+          if (seenCards.indexOf(card.id) === -1) {
+            seenCards.push(card.id);
+            localStorage.setItem('torch_seen_cards', JSON.stringify(seenCards));
+          }
           // Points spent animation
           var ptsEl = sheet.querySelector('#shop-pts');
           if (ptsEl) {
@@ -151,6 +168,11 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
           if (isFull) {
             showSwapUI(sheet, inventory, card, points, function(newInv, spent) {
               onBuy(card, newInv, spent);
+              closeShop();
+            }, function() {
+              // Swap cancelled — refund points display and close shop
+              var ptsEl2 = sheet.querySelector('#shop-pts');
+              if (ptsEl2) ptsEl2.textContent = points + ' PTS';
               closeShop();
             });
           } else {
@@ -191,8 +213,8 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
 
   sheet.appendChild(offersRow);
 
-  // Highlight first card on first visit
-  if (!_firstShopDone) {
+  // Highlight first card on first visit (check original value before localStorage was set)
+  if (_firstShopDone === null) {
     var firstCard = offersRow.querySelector('.torch-card-inner');
     if (firstCard) {
       firstCard.style.boxShadow = '0 0 12px rgba(235,176,16,0.4)';
@@ -235,7 +257,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
 // ============================================================
 // SWAP UI (when inventory is full)
 // ============================================================
-function showSwapUI(sheet, inventory, newCard, points, onSwap) {
+function showSwapUI(sheet, inventory, newCard, points, onSwap, onCancel) {
   // Replace sheet content with swap picker
   sheet.innerHTML = '';
 
@@ -280,8 +302,9 @@ function showSwapUI(sheet, inventory, newCard, points, onSwap) {
   cancelBtn.style.cssText = "width:100%;margin-top:10px;padding:8px 16px;min-height:44px;background:transparent;border:1px solid #333;border-radius:4px;color:#666;font-family:'Rajdhani';font-weight:700;font-size:11px;cursor:pointer;";
   cancelBtn.textContent = 'CANCEL';
   cancelBtn.onclick = function() {
-    // Close the whole shop (parent will handle)
-    if (sheet.parentNode && sheet.parentNode.parentNode) sheet.parentNode.parentNode.remove();
+    // Close the whole shop without purchasing
+    if (onCancel) { onCancel(); }
+    else if (sheet.parentNode && sheet.parentNode.parentNode) { sheet.parentNode.parentNode.remove(); }
   };
   sheet.appendChild(cancelBtn);
 }
