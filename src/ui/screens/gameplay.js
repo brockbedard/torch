@@ -18,20 +18,16 @@ import { showShop, renderInventory } from '../components/shop.js';
 // tooltip system removed — will be rebuilt in v2
 import AudioStateManager from '../../engine/audioManager.js';
 import { renderTeamBadge } from '../../data/teamLogos.js';
-import { getConditionEffects, WEATHER } from '../../data/gameConditions.js';
+import { getConditionEffects } from '../../data/gameConditions.js';
 import { checkPlayCombos } from '../../data/playSequenceCombos.js';
 import { generateCommentary, generateContext } from '../../engine/commentary.js';
 import { initPointsAnim, playPointsSequence, isPointsAnimPlaying } from '../effects/torchPointsAnim.js';
 import { injectDevPanel, getForceResult, getForceConversion } from '../components/devPanel.js';
-import { renderCardTray, resetCardTrayState } from '../components/cardTray.js';
+import { renderCardTray } from '../components/cardTray.js';
 import { createHandState, afterSnap as handAfterSnap, canDiscard, discard as handDiscard, resetDriveDiscards, redeal as handRedeal } from '../../engine/handManager.js';
 import { createSTDeck, burnPlayer, aiPickST, autoFill } from '../../engine/stDeck.js';
 import { getFullRoster } from '../../data/players.js';
 import { showSTSelect } from '../components/stSelect.js';
-
-// Weather display config
-var _weatherColors = { snow: '#85C1E9', rain: '#4DA6FF', wind: '#aaa', heat: '#e03050', clear: '#EBB010' };
-var _weatherIcons = { snow: '\u2744', rain: '\uD83C\uDF27', wind: '\uD83C\uDF2C', heat: '\uD83D\uDD25', clear: '\u2600' };
 
 /* ═══════════════════════════════════════════
    CSS
@@ -39,13 +35,6 @@ var _weatherIcons = { snow: '\u2744', rain: '\uD83C\uDF27', wind: '\uD83C\uDF2C'
 const CSS = `
 /* root */
 .T{height:100vh;display:flex;flex-direction:column;background:#0A0804;overflow:hidden;position:relative;font-family:'Barlow Condensed',sans-serif}
-
-/* weather particles */
-.T-weather-layer{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden}
-@keyframes T-snow-fall{0%{transform:translateY(-10px) translateX(0);opacity:0.8}50%{transform:translateY(50%) translateX(15px)}100%{transform:translateY(110%) translateX(-10px);opacity:0.3}}
-@keyframes T-rain-fall{0%{transform:translateY(-10px);opacity:0.6}100%{transform:translateY(110%);opacity:0.2}}
-@keyframes T-heat-shimmer{0%,100%{opacity:0.03}50%{opacity:0.08}}
-.T-weather-badge{font-family:'Rajdhani';font-weight:700;font-size:9px;letter-spacing:1px;padding:2px 6px;border-radius:3px;flex-shrink:0}
 
 /* scoreboard */
 .T-sb{background:#0E0A04;border-bottom:1px solid #1E1610;flex-shrink:0;z-index:60;overflow:hidden}
@@ -120,7 +109,7 @@ const CSS = `
 .T-placed-player{left:35%;width:30%}
 .T-placed-torch{right:3%;width:28%}
 /* empty drop outlines — centered vertically */
-.T-drop{position:absolute;top:50%;transform:translateY(-50%);height:150px;border:2px dashed rgba(255,255,255,0.4);border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:7;transition:all .3s ease;opacity:1;background:rgba(0,0,0,0.3)}
+.T-drop{position:absolute;top:50%;transform:translateY(-50%);height:150px;border:2px dashed rgba(255,255,255,0.2);border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:7;transition:all .3s ease;opacity:0.8;background:rgba(0,0,0,0.2)}
 .T-drop-play{left:3%;width:30%}
 .T-drop-player{left:35%;width:30%}
 .T-drop-torch{right:3%;width:28%}
@@ -191,7 +180,7 @@ const CSS = `
 .T-rain{position:absolute;font-size:16px;z-index:99;pointer-events:none;animation:T-rain-fall 2s ease-in forwards}
 @keyframes T-crack-in{0%{opacity:0;transform:scale(2)}100%{opacity:1;transform:scale(1)}}
 .T-crack{position:absolute;inset:0;z-index:100;pointer-events:none;display:flex;align-items:center;justify-content:center}
-.T-crack-text{font-family:'Teko';font-weight:700;font-size:24px;letter-spacing:4px;animation:T-crack-in .3s ease-out;text-shadow:0 0 20px currentColor,0 2px 8px rgba(0,0,0,0.9),0 0 40px rgba(0,0,0,0.7)}
+.T-crack-text{font-family:'Rajdhani';font-size:18px;letter-spacing:2px;animation:T-crack-in .3s ease-out;text-shadow:0 0 20px currentColor}
 @keyframes T-impact{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(3)}}
 .T-impact{position:absolute;top:50%;left:50%;width:40px;height:40px;border-radius:50%;z-index:99;pointer-events:none;transform:translate(-50%,-50%);animation:T-impact .4s ease-out forwards}
 @keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
@@ -334,18 +323,6 @@ const PLAY_DESC = {
   ir_mod:'Two-high vanilla',ir_press_man:'Jam at the line',ir_line_stunt:'Pressure no blitz',
   ir_cover6:'Split field cov',ir_blitz_call:'Rare IR blitz',
 };
-
-// Natural language yard display
-function yardText(yards) {
-  if (yards > 0) return 'Gain of ' + yards;
-  if (yards < 0) return 'Loss of ' + Math.abs(yards);
-  return 'No gain';
-}
-function yardTextShort(yards) {
-  if (yards > 0) return '+' + yards;
-  if (yards < 0) return '-' + Math.abs(yards);
-  return '0';
-}
 
 function playerImg(p, team, isOff) {
   var pre = team.abbr.toLowerCase();
@@ -524,9 +501,6 @@ export function buildGameplay() {
   // Game Day Conditions (v0.21)
   var condEffects = getConditionEffects(GS.gameConditions || { weather: 'clear', field: 'turf', crowd: 'home' });
 
-  // Weather
-  var weatherId = (GS.gameConditions && GS.gameConditions.weather) || 'clear';
-
   // Play Sequence Combos — track play history per drive
   var drivePlayHistory = []; // {cat, playId} entries for current drive
 
@@ -691,7 +665,6 @@ export function buildGameplay() {
         `<div class="T-sb-sit-down" style="font-family:'Teko';font-size:16px;font-weight:700;color:${possTeam.accent};letter-spacing:1px">${dn} & ${conversionMode ? 'GOAL' : distLabel(s.distance, s.yardsToEndzone)}</div>` +
         `<div class="T-sb-sit-div"></div>` +
         `<div class="T-sb-sit-ball" style="font-family:'Teko';font-size:15px;font-weight:700;color:#e8e6ff;opacity:1;letter-spacing:1px">BALL ON <span style="color:${possTeam.accent}">${ballLabel}</span></div>` +
-        (weatherId !== 'clear' ? `<div class="T-sb-sit-div"></div><div class="T-weather-badge" style="color:${_weatherColors[weatherId] || '#aaa'};border:1px solid ${_weatherColors[weatherId] || '#aaa'}33;background:${_weatherColors[weatherId] || '#aaa'}11;">${_weatherIcons[weatherId] || ''} ${(WEATHER[weatherId] || {}).name || ''}</div>` : '') +
       `</div>`;
     drawTorchBanner();
   }
@@ -780,29 +753,6 @@ export function buildGameplay() {
 
   // ── FIELD STRIP ──
   const strip = document.createElement('div'); strip.className = 'T-strip'; el.appendChild(strip);
-
-  // Weather particle HTML (injected into field strip on every drawField)
-  var _weatherHTML = '';
-  if (weatherId !== 'clear') {
-    strip.style.position = 'relative';
-    var particles = '';
-    if (weatherId === 'snow') {
-      for (var wi = 0; wi < 25; wi++) {
-        particles += '<div style="position:absolute;width:' + (3 + Math.random() * 4) + 'px;height:' + (3 + Math.random() * 4) + 'px;background:#fff;border-radius:50%;opacity:0.6;left:' + (Math.random() * 100) + '%;animation:T-snow-fall ' + (2 + Math.random() * 3) + 's linear ' + (Math.random() * 3) + 's infinite;"></div>';
-      }
-    } else if (weatherId === 'rain') {
-      for (var ri = 0; ri < 30; ri++) {
-        particles += '<div style="position:absolute;width:1px;height:' + (8 + Math.random() * 12) + 'px;background:rgba(100,160,255,0.4);left:' + (Math.random() * 100) + '%;animation:T-rain-fall ' + (0.4 + Math.random() * 0.3) + 's linear ' + (Math.random() * 1) + 's infinite;"></div>';
-      }
-    } else if (weatherId === 'heat') {
-      particles = '<div style="position:absolute;inset:0;background:linear-gradient(0deg,rgba(255,100,0,0.06),transparent 40%);animation:T-heat-shimmer 3s ease-in-out infinite;"></div>';
-    } else if (weatherId === 'wind') {
-      for (var wdi = 0; wdi < 8; wdi++) {
-        particles += '<div style="position:absolute;width:' + (20 + Math.random() * 30) + 'px;height:1px;background:rgba(255,255,255,0.1);top:' + (Math.random() * 100) + '%;left:' + (Math.random() * 100) + '%;animation:T-rain-fall ' + (0.8 + Math.random() * 0.5) + 's linear ' + (Math.random() * 2) + 's infinite;transform:rotate(-15deg);"></div>';
-      }
-    }
-    _weatherHTML = '<div class="T-weather-layer">' + particles + '</div>';
-  }
   function drawField() {
     const s = gs.getSummary();
     const isOff = gs.possession === hAbbr;
@@ -838,17 +788,16 @@ export function buildGameplay() {
     // LOS and LTG
     h += `<div class="T-los" style="left:${lp}%;background:${pc};box-shadow:0 0 10px ${pc}"></div>`;
     h += `<div class="T-ltg" style="left:${tp}%;border-color:#c8a030"></div>`;
-    // Field position — shown in scoreboard situation bar, not floating on field
 
     // Drop zones — empty outlines for unfilled, actual card for filled
-    const playLbl = phase === 'play' ? 'TAP<br><br>PLAY<br><br>CARD' : 'PLAY';
+    const playLbl = phase === 'play' ? 'DRAG<br><br>PLAY<br><br>HERE' : 'PLAY';
     if (selPl) {
       h += '<div class="T-placed T-placed-play" id="T-placed-play-slot"></div>';
     } else {
       h += '<div class="T-drop T-drop-play' + (phase==='play'?' T-drop-active':'') + '" data-drop="play"><span class="T-drop-lbl">' + playLbl + '</span></div>';
     }
 
-    const playerLbl = phase === 'player' ? 'TAP<br><br>PLAYER<br><br>CARD' : 'PLAYER';
+    const playerLbl = phase === 'player' ? 'DRAG<br><br>PLAYER<br><br>HERE' : 'PLAYER';
     if (selP) {
       h += '<div class="T-placed T-placed-player" id="T-placed-player-slot"></div>';
     } else {
@@ -859,42 +808,29 @@ export function buildGameplay() {
       h += '<div class="T-placed T-placed-torch" id="T-placed-torch-slot"></div>';
     } else {
       const hasTorchCards = torchInventory.length > 0;
-      const torchLbl = hasTorchCards ? (phase === 'torch' ? 'TAP<br><br>TORCH<br><br>CARD' : 'TORCH') : 'NO<br><br>TORCH<br><br>CARD';
+      const torchLbl = hasTorchCards ? (phase === 'torch' ? 'DRAG<br><br>TORCH<br><br>HERE' : 'TORCH') : 'NO<br><br>TORCH<br><br>CARD';
       h += '<div class="T-drop T-drop-torch' + (phase==='torch'?' T-drop-active':'') + '" data-drop="torch"><span class="T-drop-lbl">' + torchLbl + '</span></div>';
     }
 
-    strip.innerHTML = h + _weatherHTML;
+    strip.innerHTML = h;
 
-    // Append actual shared-builder DOM cards into placed slots with lock-in animation
+    // Append actual shared-builder DOM cards into placed slots
     if (selPl) {
       var playSlot = strip.querySelector('#T-placed-play-slot');
       if (playSlot) {
-        var playType = selPl.playType || selPl.cardType || 'RUN';
-        var ptColors = { DEEP:'#4488ff', SHORT:'#44dd66', QUICK:'#ddbb44', RUN:'#c4733b', SCREEN:'#ffaa22', BLITZ:'#dd4444', ZONE:'#4499dd', PRESSURE:'#cc7744', HYBRID:'#9955cc' };
-        var ptColor = ptColors[playType] || '#aaa';
-        playSlot.innerHTML =
-          "<div style='height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:4px;'>" +
-          "<div style=\"font-family:'Teko';font-weight:700;font-size:12px;color:" + ptColor + ";letter-spacing:1px;\">" + playType + "</div>" +
-          "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:11px;color:#fff;line-height:1.1;text-align:center;\">" + selPl.name + "</div>" +
-          "</div>";
-        gsap.from(playSlot, { y: 60, scale: 0.7, opacity: 0, duration: 0.4, ease: 'power2.out' });
-        gsap.fromTo(playSlot, { scale: 1 }, { scale: 1.08, duration: 0.1, delay: 0.4, yoyo: true, repeat: 1, ease: 'power1.out' });
-        setTimeout(function() { SND.cardThud(); }, 350);
+        var playEl = mkPlayCardEl(selPl);
+        playEl.style.width = '100%';
+        playEl.style.height = '100%';
+        playSlot.appendChild(playEl);
       }
     }
     if (selP) {
       var playerSlot = strip.querySelector('#T-placed-player-slot');
       if (playerSlot) {
-        var posColor = { QB:'#EBB010', WR:'#00ff44', RB:'#FF6B00', TE:'#22aa44', OL:'#888', DL:'#cc4444', LB:'#ff4444', CB:'#4488ff', S:'#44ddff' }[selP.pos] || '#aaa';
-        playerSlot.innerHTML =
-          "<div style='height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:4px;'>" +
-          "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:" + posColor + ";letter-spacing:1px;\">" + selP.pos + "</div>" +
-          "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:#fff;line-height:1.1;text-align:center;\">" + selP.name + "</div>" +
-          (selP.trait ? "<div style=\"font-family:'Rajdhani';font-size:8px;color:" + hTeam.accent + ";letter-spacing:0.5px;margin-top:2px;\">" + selP.trait + "</div>" : '') +
-          "</div>";
-        gsap.from(playerSlot, { y: 60, scale: 0.7, opacity: 0, duration: 0.4, ease: 'power2.out' });
-        gsap.fromTo(playerSlot, { scale: 1 }, { scale: 1.08, duration: 0.1, delay: 0.4, yoyo: true, repeat: 1, ease: 'power1.out' });
-        setTimeout(function() { SND.cardThud(); }, 350);
+        var playerEl = mkPlayerCardEl(selP, hTeam);
+        playerEl.style.width = '100%';
+        playerEl.style.height = '100%';
+        playerSlot.appendChild(playerEl);
       }
     }
     if (selTorch) {
@@ -954,7 +890,7 @@ export function buildGameplay() {
         var compParts = [];
         for (var _ci = 0; _ci < compressed; _ci++) {
           var ce = driveSummaryLog[_ci];
-          var cy = ce.isTD ? 'TD' : ce.isSack ? 'SK' : ce.isInt ? 'INT' : ce.isFumble ? 'FUM' : ce.isInc ? 'INC' : yardTextShort(ce.yards);
+          var cy = ce.isTD ? 'TD' : ce.isSack ? 'SK' : ce.isInt ? 'INT' : ce.isFumble ? 'FUM' : ce.isInc ? 'INC' : (ce.yards >= 0 ? '+' : '') + ce.yards;
           compParts.push(cy);
         }
         html += '<div style="font-family:\'Rajdhani\';font-size:10px;color:#555;padding:2px 0;border-bottom:1px solid #1a1a1a;">' + compParts.join(' | ') + '</div>';
@@ -967,7 +903,7 @@ export function buildGameplay() {
         var resColor, resText;
         if (e.isUserOff || e.isUserOff === undefined) {
           resColor = e.isTD ? '#EBB010' : e.yards > 0 ? '#00ff44' : e.yards < 0 || e.isSack ? '#ff0040' : '#fff';
-          resText = e.isTD ? 'TD' : e.isSack ? 'SACK' : e.isInt ? 'INT' : e.isFumble ? 'FUM' : (e.isInc || e.yards === 0) ? 'NO GAIN' : (e.yards > 0 ? e.yards + ' YDS' : 'LOSS ' + Math.abs(e.yards));
+          resText = e.isTD ? 'TD' : e.isSack ? 'SACK' : e.isInt ? 'INT' : e.isFumble ? 'FUM' : (e.isInc || e.yards === 0) ? 'NO GAIN' : (e.yards >= 0 ? '+' : '') + e.yards;
         } else {
           if (e.isTD) { resColor = '#ff0040'; resText = 'TD'; }
           else if (e.isSack) { resColor = '#00ff44'; resText = 'SACK'; }
@@ -1189,13 +1125,11 @@ export function buildGameplay() {
     }, 650);
   }
 
-  /** Screen shake — frames controls duration, intensity controls px amplitude */
-  function shakeScreen(frames, intensity) {
-    frames = frames || 4;
+  /** Screen shake */
+  function shakeScreen(frames = 4) {
     el.classList.add('T-shaking');
     el.style.animationDuration = (frames * 0.1) + 's';
-    if (intensity) el.style.setProperty('--shake-px', intensity + 'px');
-    setTimeout(function() { el.classList.remove('T-shaking'); el.style.removeProperty('--shake-px'); }, frames * 100);
+    setTimeout(function() { el.classList.remove('T-shaking'); }, frames * 100);
   }
 
   /** Color flash overlay on the field */
@@ -1280,39 +1214,23 @@ export function buildGameplay() {
 
       if (r.isTouchdown) {
         SND.td();
-        shakeScreen(8, 5); // heavier shake for TDs
+        shakeScreen(6);
         var tColor = isDef ? '#e03050' : '#3df58a';
-        var scoringTeamObj = isOff ? hTeam : oTeam;
-        // Full-screen team color flash
-        var tdFlash = document.createElement('div');
-        tdFlash.style.cssText = 'position:fixed;inset:0;z-index:95;background:' + scoringTeamObj.accent + ';pointer-events:none;';
-        el.appendChild(tdFlash);
-        gsap.fromTo(tdFlash, { opacity: 0.3 }, { opacity: 0, duration: 0.5, onComplete: function() { tdFlash.remove(); } });
         flashField(tColor + '88', 800);
         setTimeout(function() { flashField(tColor + '88', 800); }, 400);
-        rainFootballs(tier === 5 ? 30 : 20);
+        rainFootballs(tier === 5 ? 24 : 16);
         slamText('TOUCHDOWN', tColor, tDuration - 400);
-        // Max crowd reaction
-        if (!isDef) AudioStateManager.crowdSpike('cheer', 0.5);
-        else AudioStateManager.crowdSpike('groan', 0.3);
       } else if (r.isInterception) {
-        var intGood = isDef; // user on defense = good (forced INT)
         SND.turnover();
-        shakeScreen(intGood ? 8 : 5);
-        flashField(intGood ? 'rgba(0,255,68,0.5)' : 'rgba(224,48,80,0.6)', 1000);
-        impactBurst(intGood ? 'rgba(0,255,68,0.8)' : 'rgba(224,48,80,0.8)');
-        slamText(intGood ? 'PICKED OFF!' : 'INTERCEPTED', intGood ? '#00ff44' : '#e03050', tDuration - 400);
-        if (intGood) AudioStateManager.crowdSpike('cheer', 0.5);
-        else AudioStateManager.crowdSpike('groan', 0.3);
+        shakeScreen(6);
+        flashField('rgba(224,48,80,0.6)', 800);
+        impactBurst('rgba(224,48,80,0.8)');
+        slamText('INTERCEPTED', '#e03050', tDuration - 400);
       } else if (r.isFumbleLost) {
-        var fumGood = isDef;
         SND.turnover();
-        shakeScreen(fumGood ? 7 : 4);
-        flashField(fumGood ? 'rgba(0,255,68,0.5)' : 'rgba(224,96,32,0.6)', 1000);
-        if (fumGood) impactBurst('rgba(0,255,68,0.6)');
-        slamText(fumGood ? 'FUMBLE RECOVERY!' : 'FUMBLE LOST', fumGood ? '#00ff44' : '#e06020', tDuration - 400);
-        if (fumGood) AudioStateManager.crowdSpike('cheer', 0.5);
-        else AudioStateManager.crowdSpike('groan', 0.3);
+        shakeScreen(5);
+        flashField('rgba(224,96,32,0.6)', 800);
+        slamText('FUMBLE', '#e06020', tDuration - 400);
       } else if (r.isSack) {
         SND.sack();
         shakeScreen(8);
@@ -1526,7 +1444,7 @@ export function buildGameplay() {
       if (!isUserDef) {
         // User on offense
         resColor = r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
-        yardLabel = r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE LOST' : r.isIncomplete?'INCOMPLETE' : yardText(r.yards).toUpperCase();
+        yardLabel = r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE LOST' : r.isIncomplete?'INCOMPLETE' : (r.yards>=0?'+':'')+r.yards+' YDS';
       } else {
         // User on defense — stops are green, opponent gains are red
         if (r.isTouchdown) { resColor = '#e03050'; yardLabel = 'TOUCHDOWN'; }
@@ -1778,11 +1696,8 @@ export function buildGameplay() {
     if (phase === 'busy') { panel.className = 'T-panel T-panel-hidden'; return; }
     panel.className = 'T-panel ' + (isOff ? 'T-panel-off' : 'T-panel-def');
 
-    // 2min check + close game crowd frenzy
+    // 2min check
     if (gs.twoMinActive && !prev2min) { prev2min = true; el.classList.add('T-urgent'); show2MinWarn(); start2MinClock(); }
-    if (gs.twoMinActive && Math.abs(gs.ctScore - gs.irScore) <= 7) {
-      AudioStateManager.setCrowdIntensity(0.85, 0.5);
-    }
 
     // 4th down decision bar — appears ABOVE cards so player sees it first
     var is4thPastMid = gs.down === 4 && isOff && gs.canSpecialTeams() && !conversionMode && !_fourthDownDecided;
@@ -1796,11 +1711,11 @@ export function buildGameplay() {
       ctxLabel.style.cssText = "font-family:'Teko';font-weight:700;font-size:14px;color:#e03050;letter-spacing:2px;width:100%;text-align:center;margin-bottom:4px;";
       ctxLabel.textContent = '4TH & ' + gs.distance + ' AT OPP ' + ydsToEz;
       fourthBar.insertBefore(ctxLabel, fourthBar.firstChild);
-      fourthBar.style.cssText = "display:flex;flex-direction:column;gap:6px;padding:8px 12px;flex-shrink:0;background:rgba(224,48,80,0.06);border-bottom:2px solid #e0305044;";
+      fourthBar.style.flexWrap = 'wrap';
 
       var goForIt = document.createElement('button');
       goForIt.className = 'btn-blitz';
-      goForIt.style.cssText = "width:100%;font-size:14px;padding:12px;background:" + hTeam.accent + ";color:#fff;border-color:" + hTeam.accent + ";font-family:'Teko';font-weight:700;letter-spacing:3px;";
+      goForIt.style.cssText = 'flex:1;font-size:12px;padding:10px 6px;background:#141008;color:#00ff44;border-color:#00ff44;';
       goForIt.textContent = 'GO FOR IT';
       goForIt.onclick = function() {
         SND.click();
@@ -1808,12 +1723,9 @@ export function buildGameplay() {
         drawPanel();
       };
 
-      var stRow = document.createElement('div');
-      stRow.style.cssText = 'display:flex;gap:6px;';
-
       var puntBtn = document.createElement('button');
       puntBtn.className = 'btn-blitz';
-      puntBtn.style.cssText = "flex:1;font-size:13px;padding:10px;background:#141008;color:#4DA6FF;border-color:#4DA6FF;font-family:'Teko';font-weight:700;letter-spacing:2px;";
+      puntBtn.style.cssText = 'flex:1;font-size:12px;padding:10px 6px;background:#141008;color:#4DA6FF;border-color:#4DA6FF;';
       puntBtn.textContent = 'PUNT';
       puntBtn.onclick = function() {
         SND.snap();
@@ -1827,7 +1739,6 @@ export function buildGameplay() {
           primaryLabel: 'PWR',
           team: hTeam,
           onSelect: function(punter) {
-            SND.kickThud();
             var puntResult = gs.punt(punter);
             burnPlayer(_humanSTDeck, punter, 'punter', puntResult.gross + '-yard punt');
             driveSummaryLog.push({ down: 4, dist: gs.distance, playName: puntResult.label, yards: 0, isUserOff: true });
@@ -1843,7 +1754,7 @@ export function buildGameplay() {
       fgBtn.className = 'btn-blitz';
       if (gs.canAttemptFG()) {
         var fgDist = ydsToEz + 17;
-        fgBtn.style.cssText = "flex:1;font-size:13px;padding:10px;background:#141008;color:#EBB010;border-color:#EBB010;font-family:'Teko';font-weight:700;letter-spacing:2px;";
+        fgBtn.style.cssText = 'flex:1;font-size:12px;padding:10px 6px;background:#141008;color:#EBB010;border-color:#EBB010;';
         fgBtn.textContent = 'FG (' + fgDist + 'yd)';
         fgBtn.onclick = function() {
           SND.snap();
@@ -1860,13 +1771,11 @@ export function buildGameplay() {
             secondaryLabel: 'PWR',
             team: hTeam,
             onSelect: function(kicker) {
-              SND.kickThud();
               var fgResult = gs.attemptFieldGoal(kicker);
               var fgContext = (fgResult.made ? 'Made ' : 'Missed ') + fgResult.distance + '-yard FG';
               burnPlayer(_humanSTDeck, kicker, 'kicker', fgContext);
               driveSummaryLog.push({ down: 4, dist: gs.distance, playName: fgResult.label, yards: 0, isUserOff: true });
               var fgColor = fgResult.made ? '#00ff44' : '#e03050';
-              if (fgResult.made) SND.kickGood(); else SND.kickMiss();
               showSpecialTeamsResult(fgResult.label, fgColor, function() {
                 driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
                 showPossCut(fgResult.made ? 'score' : 'missed_fg', function() { if (!checkEnd()) nextSnap(); });
@@ -1875,15 +1784,14 @@ export function buildGameplay() {
           });
         };
       } else {
-        fgBtn.style.cssText = "flex:1;font-size:11px;padding:10px;background:#0a0a0a;color:#444;border-color:#333;cursor:not-allowed;font-family:'Teko';letter-spacing:1px;";
+        fgBtn.style.cssText = 'flex:1;font-size:10px;padding:10px 6px;background:#0a0a0a;color:#444;border-color:#333;cursor:not-allowed;';
         fgBtn.textContent = 'OUT OF RANGE';
         fgBtn.disabled = true;
       }
 
       fourthBar.appendChild(goForIt);
-      stRow.appendChild(puntBtn);
-      stRow.appendChild(fgBtn);
-      fourthBar.appendChild(stRow);
+      fourthBar.appendChild(puntBtn);
+      fourthBar.appendChild(fgBtn);
       panel.appendChild(fourthBar);
     }
 
@@ -1999,52 +1907,18 @@ export function buildGameplay() {
     var defCard = isOff ? null : selTorch;
     var playedPlay = selPl;
 
-    // Torch card activation fanfare
+    // Torch card activation moment
     if (selectedPreSnap && selectedPreSnap.name) {
       var tcCard = selectedPreSnap;
       var tcTierCol = tcCard.tier === 'GOLD' ? '#EBB010' : tcCard.tier === 'SILVER' ? '#C0C0C0' : '#CD7F32';
       var tcOv = document.createElement('div');
-      tcOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);pointer-events:none;opacity:0;';
-      // Card visual
-      var tcVisual = buildTorchCard(tcCard, 120, 168);
-      tcVisual.style.cssText += 'box-shadow:0 0 40px ' + tcTierCol + '66;';
-      tcOv.appendChild(tcVisual);
-      // Name + effect text
-      var tcInfo = document.createElement('div');
-      tcInfo.style.cssText = 'text-align:center;margin-top:12px;opacity:0;';
-      tcInfo.innerHTML =
-        "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:" + tcTierCol + ";letter-spacing:3px;text-shadow:0 0 16px " + tcTierCol + "60;\">" + tcCard.name + "</div>" +
-        "<div style=\"font-family:'Rajdhani';font-size:11px;color:#ccc;margin-top:4px;max-width:260px;\">" + tcCard.effect + "</div>";
-      tcOv.appendChild(tcInfo);
-      // Tier flash
-      var tcFlash = document.createElement('div');
-      tcFlash.style.cssText = 'position:absolute;inset:0;background:' + tcTierCol + ';opacity:0;pointer-events:none;';
-      tcOv.appendChild(tcFlash);
+      tcOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,' + (tcCard.tier === 'GOLD' ? '0.6' : '0.3') + ');opacity:0;transition:opacity 0.15s;pointer-events:none;';
+      tcOv.innerHTML =
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:24px;color:" + tcTierCol + ";letter-spacing:3px;text-shadow:0 0 16px " + tcTierCol + "60;\">" + tcCard.name + "</div>" +
+        "<div style=\"font-family:'Rajdhani';font-size:12px;color:#ccc;margin-top:4px;max-width:280px;text-align:center;\">" + tcCard.effect + "</div>";
       el.appendChild(tcOv);
-      // GSAP fanfare
-      var tcTl = gsap.timeline();
-      tcTl.to(tcOv, { opacity: 1, duration: 0.15 });
-      tcTl.from(tcVisual, { scale: 0.5, rotation: -5, duration: 0.3, ease: 'back.out(1.7)' }, '<');
-      tcTl.to(tcFlash, { opacity: 0.15, duration: 0.1 }, '-=0.1');
-      tcTl.to(tcFlash, { opacity: 0, duration: 0.2 });
-      // Sound
-      tcTl.call(function() {
-        if (tcCard.tier === 'GOLD') SND.flip();
-        else if (tcCard.tier === 'SILVER') SND.cardSnap();
-        else SND.click();
-      }, [], '-=0.3');
-      // Show info
-      tcTl.to(tcInfo, { opacity: 1, duration: 0.2 }, '-=0.1');
-      // Hold
-      tcTl.to({}, { duration: tcCard.tier === 'GOLD' ? 0.8 : 0.5 });
-      // Dismiss
-      tcTl.to(tcOv, { opacity: 0, duration: 0.2, onComplete: function() { if (tcOv.parentNode) tcOv.remove(); } });
-      // Hard safety: always remove after max duration
-      var tcMaxDur = (tcCard.tier === 'GOLD' ? 2.5 : 2) * 1000;
-      setTimeout(function() { if (tcOv.parentNode) { tcOv.style.pointerEvents = 'none'; tcOv.remove(); } }, tcMaxDur);
-      // Tap to skip
-      tcOv.style.pointerEvents = 'auto';
-      tcOv.onclick = function() { tcOv.style.pointerEvents = 'none'; tcTl.progress(1); };
+      requestAnimationFrame(function() { tcOv.style.opacity = '1'; });
+      setTimeout(function() { tcOv.style.opacity = '0'; setTimeout(function() { tcOv.remove(); }, 200); }, tcCard.tier === 'GOLD' ? 1200 : tcCard.tier === 'SILVER' ? 800 : 500);
     }
 
     // Pre-snap TORCH card effects
@@ -2359,18 +2233,18 @@ export function buildGameplay() {
       resultText = r.isComplete ? 'GOOD!' : 'NO GOOD';
     } else if (isUserOff) {
       resultColor = isTD ? '#EBB010' : isGoodForUser ? '#3df58a' : isBadForUser ? '#e03050' : r.yards > 0 ? '#c8a030' : '#aaa';
-      resultText = isTD ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTED' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : r.isSafety ? 'SAFETY' : yardText(r.yards).toUpperCase();
+      resultText = isTD ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTED' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : r.isSafety ? 'SAFETY' : (r.yards >= 0 ? '+' : '') + r.yards + ' YDS';
     } else {
       // User on defense — show opponent gains as bad, stops as good
       if (isTD) { resultColor = '#e03050'; resultText = 'TOUCHDOWN'; }
-      else if (r.isSack) { resultColor = '#3df58a'; resultText = Math.abs(r.yards) > 0 ? 'SACKED! Loss of ' + Math.abs(r.yards) : 'SACKED!'; }
+      else if (r.isSack) { resultColor = '#3df58a'; resultText = Math.abs(r.yards) > 0 ? 'SACKED! -' + Math.abs(r.yards) + ' YDS' : 'SACKED!'; }
       else if (r.isInterception) { resultColor = '#3df58a'; resultText = 'PICKED OFF!'; }
       else if (r.isFumbleLost) { resultColor = '#3df58a'; resultText = 'FUMBLE!'; }
       else if (r.isIncomplete) { resultColor = '#3df58a'; resultText = 'INCOMPLETE'; }
       else if (r.isSafety) { resultColor = '#3df58a'; resultText = 'SAFETY!'; }
-      else if (r.yards <= 0) { resultColor = '#3df58a'; resultText = r.yards < 0 ? 'STUFFED! Loss of ' + Math.abs(r.yards) : 'STUFFED! NO GAIN'; }
-      else if (r.yards <= 3) { resultColor = '#c8a030'; resultText = 'Gain of ' + r.yards; }
-      else { resultColor = '#e03050'; resultText = 'Gain of ' + r.yards; }
+      else if (r.yards <= 0) { resultColor = '#3df58a'; resultText = r.yards < 0 ? 'STUFFED! ' + r.yards + ' YDS' : 'NO GAIN'; }
+      else if (r.yards <= 3) { resultColor = '#c8a030'; resultText = 'GAINED ' + r.yards + ' YDS'; }
+      else { resultColor = '#e03050'; resultText = 'GAINED ' + r.yards + ' YDS'; }
     }
     var flashColor = isGoodForUser ? '#3df58a' : isBadForUser ? '#e03050' : 'transparent';
 
@@ -2616,8 +2490,8 @@ export function buildGameplay() {
         resultWrap.className = 'T-clash-result';
         resultWrap.style.cssText = 'position:absolute;top:22%;left:50%;transform:translateX(-50%);width:90%;text-align:center;';
         resultWrap.style.opacity = '0';
-        resultWrap.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:" + oTeam.accent + ";letter-spacing:2px;opacity:0.7;\">TOUCHDOWN</div>" +
-          "<div style=\"font-family:'Rajdhani';font-size:12px;color:" + oTeam.accent + ";opacity:0.5;margin-top:4px;\">" + oTeam.name + " scores.</div>";
+        resultWrap.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:#666;letter-spacing:2px;\">TOUCHDOWN</div>" +
+          "<div style=\"font-family:'Rajdhani';font-size:12px;color:#444;margin-top:4px;\">" + oTeam.name + " scores.</div>";
         overlay.appendChild(resultWrap);
         requestAnimationFrame(function() { resultWrap.style.opacity = '1'; resultWrap.style.transition = 'opacity 0.25s'; });
 
@@ -2804,12 +2678,11 @@ export function buildGameplay() {
       var aiDec = gs.ai4thDownDecision();
       if (aiDec === 'punt') {
         phase = 'busy';
-        showSpecialTeamsResult(oTeam.name + ' ELECTS TO PUNT', oTeam.accent, function() {
+        showSpecialTeamsResult(oTeam.name + ' ELECTS TO PUNT', '#4DA6FF', function() {
           var aiPunter = aiPickST(_cpuSTDeck, 'kickPower', gs.difficulty);
           if (aiPunter) burnPlayer(_cpuSTDeck, aiPunter, 'punter', 'AI punt');
-          SND.kickThud();
           var puntResult = gs.punt(aiPunter);
-          showSpecialTeamsResult(puntResult.label, oTeam.accent, function() {
+          showSpecialTeamsResult(puntResult.label, '#4DA6FF', function() {
             driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
             showPossCut('punt', function() { if (!checkEnd()) nextSnap(); });
           });
@@ -2819,10 +2692,9 @@ export function buildGameplay() {
       if (aiDec === 'field_goal') {
         phase = 'busy';
         var fgDist3 = gs.yardsToEndzone() + 17;
-        showSpecialTeamsResult(oTeam.name + ' ATTEMPTS A ' + fgDist3 + '-YARD FIELD GOAL', oTeam.accent, function() {
+        showSpecialTeamsResult(oTeam.name + ' ATTEMPTS A ' + fgDist3 + '-YARD FIELD GOAL', '#EBB010', function() {
           var aiKicker = aiPickST(_cpuSTDeck, 'kickAccuracy', gs.difficulty);
           if (aiKicker) burnPlayer(_cpuSTDeck, aiKicker, 'kicker', 'AI FG');
-          SND.kickThud();
           var fgResult = gs.attemptFieldGoal(aiKicker);
           var fgColor = fgResult.made ? '#e03050' : '#00ff44';
           showSpecialTeamsResult(fgResult.made ? 'IT\'S GOOD! +3' : 'NO GOOD!', fgColor, function() {
@@ -2833,13 +2705,13 @@ export function buildGameplay() {
         return;
       }
       if (aiDec === 'go_for_it') {
-        // Full-screen announcement overlay (same pattern as ST results)
-        phase = 'busy';
-        showSpecialTeamsResult(oTeam.name + ' GOES FOR IT!', oTeam.accent, function() {
-          phase = 'play';
-          drawBug(); drawField(); drawPanel();
-        });
-        return;
+        // Brief flash then proceed to normal card selection
+        var goFlash = document.createElement('div');
+        goFlash.style.cssText = "position:fixed;top:30%;left:50%;transform:translateX(-50%);z-index:650;font-family:'Teko';font-weight:700;font-size:24px;color:#e03050;letter-spacing:3px;text-shadow:0 0 16px rgba(224,48,80,0.4);pointer-events:none;opacity:0;transition:opacity 0.3s;";
+        goFlash.textContent = oTeam.name + ' GOES FOR IT!';
+        el.appendChild(goFlash);
+        requestAnimationFrame(function() { goFlash.style.opacity = '1'; });
+        setTimeout(function() { goFlash.style.opacity = '0'; setTimeout(function() { goFlash.remove(); }, 200); }, 1200);
       }
     }
 
@@ -2854,7 +2726,7 @@ export function buildGameplay() {
     const r = res.result;
     const isConv = res._isConversion;
     const col = isConv ? (r.isComplete?'#3df58a':'#e03050') : r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
-    const txt = isConv ? (r.isComplete?'GOOD!':'NO GOOD') : r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE' : r.isIncomplete?'INCOMPLETE' : r.isSafety?'SAFETY' : yardText(r.yards).toUpperCase();
+    const txt = isConv ? (r.isComplete?'GOOD!':'NO GOOD') : r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE' : r.isIncomplete?'INCOMPLETE' : r.isSafety?'SAFETY' : (r.yards>=0?'+':'')+r.yards+' YDS';
     const bd = breakdown(res.offPlay, res.defPlay, r, res.featuredOff, res.featuredDef);
     setNarr(r.description, bd);
 
@@ -3153,7 +3025,6 @@ export function buildGameplay() {
 
   // ── 2-MIN WARNING (dramatic overlay) ──
   function show2MinWarn() {
-    SND.whistle();
     shakeScreen();
     flashField('rgba(224,48,80,.3)');
 
@@ -3198,29 +3069,23 @@ export function buildGameplay() {
     requestAnimationFrame(function() { ov.style.opacity = '1'; });
 
     // Phase 1: Tap to flip — 3D coin with team logos on each side
-    // Title
-    var tossTitle = document.createElement('div');
-    tossTitle.style.cssText = "font-family:'Teko';font-weight:700;font-size:32px;color:#EBB010;letter-spacing:5px;margin-bottom:16px;";
-    tossTitle.textContent = 'COIN TOSS';
-    ov.appendChild(tossTitle);
-
     var coin = document.createElement('div');
-    coin.style.cssText = 'width:110px;height:110px;perspective:400px;cursor:pointer;';
+    coin.style.cssText = 'width:100px;height:100px;perspective:400px;cursor:pointer;';
     var coinInner = document.createElement('div');
     coinInner.style.cssText = 'width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 1.5s cubic-bezier(0.22,1,0.36,1);';
     // Front: user's team
     var coinFront = document.createElement('div');
-    coinFront.style.cssText = 'position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,#EBB010,#B8860B);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;box-shadow:0 0 30px rgba(235,176,16,0.4);border:3px solid #EBB01088;';
+    coinFront.style.cssText = 'position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,#EBB010,#B8860B);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;box-shadow:0 0 30px rgba(235,176,16,0.4);';
     coinFront.innerHTML = renderTeamBadge(GS.team, 70);
     // Back: opponent's team
     var coinBack = document.createElement('div');
-    coinBack.style.cssText = 'position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,#B8860B,#EBB010);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 30px rgba(235,176,16,0.4);border:3px solid #EBB01088;';
+    coinBack.style.cssText = 'position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,#B8860B,#EBB010);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 30px rgba(235,176,16,0.4);';
     coinBack.innerHTML = renderTeamBadge(GS.opponent, 70);
     coinInner.appendChild(coinFront);
     coinInner.appendChild(coinBack);
     coin.appendChild(coinInner);
     var label = document.createElement('div');
-    label.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;margin-top:12px;";
+    label.style.cssText = "font-family:'Teko';font-weight:700;font-size:22px;color:#EBB010;letter-spacing:3px;margin-top:8px;";
     label.textContent = 'TAP TO FLIP';
     ov.appendChild(coin);
     ov.appendChild(label);
@@ -3231,16 +3096,15 @@ export function buildGameplay() {
       var rotations = humanWins ? 1800 : 1980; // 1800 = 5 full turns (front), 1980 = 5.5 turns (back)
       coinInner.style.transform = 'rotateY(' + rotations + 'deg)';
       label.textContent = '';
-      SND.flip(); // dramatic card flip pitched down for coin weight
+      SND.snap();
 
       setTimeout(function() {
         // Phase 2: Result + Choice
         ov.innerHTML = '';
         var winner = humanWins ? hTeam.name : oTeam.name;
-        var winnerColor = humanWins ? hTeam.accent : oTeam.accent;
         var resultEl = document.createElement('div');
-        resultEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:" + winnerColor + ";letter-spacing:3px;text-align:center;";
-        resultEl.textContent = humanWins ? 'YOU WON THE TOSS!' : winner + ' WIN THE TOSS';
+        resultEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:3px;text-align:center;";
+        resultEl.textContent = humanWins ? 'YOU WON THE TOSS!' : winner + ' WINS THE TOSS';
         ov.appendChild(resultEl);
 
         if (humanWins) {
@@ -3251,7 +3115,7 @@ export function buildGameplay() {
           var cardBtn = document.createElement('button');
           cardBtn.className = 'btn-blitz';
           cardBtn.style.cssText = "width:100%;font-size:13px;padding:14px;background:#141008;color:#EBB010;border-color:#EBB010;text-align:left;";
-          cardBtn.innerHTML = "<div style=\"font-family:'Teko';font-size:18px;letter-spacing:2px;\">DRAW A FREE TORCH CARD</div><div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:2px;\">Pick 1 of 3 mystery cards \u2014 but you kick off to them</div>";
+          cardBtn.innerHTML = "<div style=\"font-family:'Teko';font-size:18px;letter-spacing:2px;\">DRAW A TORCH CARD</div><div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:2px;\">Pick 1 of 3 mystery cards \u2014 but you kick off to them</div>";
           cardBtn.onclick = function() { showFaceDownCards(ov, offers, true, onDone); };
 
           var recBtn = document.createElement('button');
@@ -3271,9 +3135,9 @@ export function buildGameplay() {
           // CPU won — AI chooses (weighted by difficulty)
           var aiTakesCard = Math.random() < ({ EASY: 0.6, MEDIUM: 0.5, HARD: 0.4 }[gs.difficulty] || 0.5);
           var aiMsg = document.createElement('div');
-          aiMsg.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:" + oTeam.accent + ";text-align:center;margin-top:8px;letter-spacing:1px;";
+          aiMsg.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:#888;text-align:center;margin-top:8px;letter-spacing:1px;";
           aiMsg.textContent = aiTakesCard
-            ? oTeam.name + ' DRAWS A FREE TORCH CARD'
+            ? oTeam.name + ' CHOOSES TO DRAW A TORCH CARD'
             : oTeam.name + ' CHOOSES TO RECEIVE';
           ov.appendChild(aiMsg);
 
@@ -3282,7 +3146,7 @@ export function buildGameplay() {
               // AI receives, human gets a card
               var youGet = document.createElement('div');
               youGet.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;text-align:center;margin-top:8px;";
-              youGet.textContent = 'YOU DRAW A FREE TORCH CARD';
+              youGet.textContent = 'YOU DRAW A TORCH CARD';
               ov.appendChild(youGet);
               setTimeout(function() { showFaceDownCards(ov, offers, false, onDone); }, 800);
             } else {
@@ -3299,7 +3163,7 @@ export function buildGameplay() {
   function showFaceDownCards(ov, offers, humanKicks, onDone) {
     ov.innerHTML = '';
     var title = document.createElement('div');
-    title.style.cssText = "font-family:'Teko';font-weight:700;font-size:24px;color:" + hTeam.accent + ";letter-spacing:3px;text-align:center;";
+    title.style.cssText = "font-family:'Teko';font-weight:700;font-size:24px;color:#EBB010;letter-spacing:3px;text-align:center;";
     title.textContent = 'TAP A CARD TO REVEAL';
     ov.appendChild(title);
 
@@ -3470,114 +3334,29 @@ export function buildGameplay() {
     }, 1500);
   }
 
-  // Special teams / AI decision overlay
+  // Special teams result overlay (punt, FG, kickoff)
   function showSpecialTeamsResult(text, color, onDone) {
-    // Clean up any stale overlays
-    el.querySelectorAll('.T-st-ov').forEach(function(old) { old.remove(); });
-    var dismissed = false;
-    function dismiss() {
-      if (dismissed) return;
-      dismissed = true;
-      stOv.style.pointerEvents = 'none';
-      stOv.style.opacity = '0';
-      setTimeout(function() { if (stOv.parentNode) stOv.remove(); if (onDone) onDone(); }, 250);
-    }
     var stOv = document.createElement('div');
-    stOv.className = 'T-st-ov';
-    stOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.9);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;padding:20px;';
+    stOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.85);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;';
     stOv.innerHTML =
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:" + color + ";letter-spacing:4px;text-align:center;max-width:300px;line-height:1.2;text-shadow:0 0 24px " + color + "60;\">" + text + "</div>" +
-      "<div style=\"font-family:'Rajdhani';font-size:10px;color:#555;margin-top:12px;letter-spacing:1px;\">TAP TO CONTINUE</div>";
-    stOv.onclick = dismiss;
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + color + ";letter-spacing:3px;text-align:center;max-width:320px;text-shadow:0 0 20px " + color + "40;\">" + text + "</div>";
+    stOv.onclick = function() { stOv.style.opacity = '0'; setTimeout(function() { stOv.remove(); if (onDone) onDone(); }, 200); };
     el.appendChild(stOv);
     requestAnimationFrame(function() { stOv.style.opacity = '1'; });
-    setTimeout(function() { if (!dismissed) dismiss(); }, 3500);
+    setTimeout(function() { if (stOv.parentNode) { stOv.style.opacity = '0'; setTimeout(function() { stOv.remove(); if (onDone) onDone(); }, 200); } }, 2500);
   }
 
-  // Kickoff/punt return result overlay — matches post-clash quality
+  // Brief kickoff result overlay
   function showKickoffResult(resultText, onDone) {
-    SND.kickThud();
-    var receivingTeam = gs.possession === 'CT' ? hTeam : oTeam;
-    var isTouchback = resultText.indexOf('Touchback') >= 0 || resultText.indexOf('touchback') >= 0;
-    var isBigReturn = !isTouchback && gs.ballPosition && ((gs.possession === 'CT' && gs.ballPosition >= 40) || (gs.possession === 'IR' && gs.ballPosition <= 60));
-    var resultColor = isBigReturn ? '#00ff44' : receivingTeam.accent;
-    if (isBigReturn) AudioStateManager.crowdSpike('cheer', 0.5);
-
-    // Parse result into headline + detail
-    var headline, detail;
-    if (isTouchback) {
-      headline = 'TOUCHBACK';
-      detail = receivingTeam.name + ' ball on the 25';
-    } else {
-      headline = resultText;
-      detail = receivingTeam.name + ' ball';
-    }
-
-    // Clean up any stale overlays from previous kickoffs
-    el.querySelectorAll('.T-kickoff-ov').forEach(function(old) { old.remove(); });
-
-    var dismissed = false;
-    function dismiss() {
-      if (dismissed) return;
-      dismissed = true;
-      kov.style.opacity = '0';
-      kov.style.pointerEvents = 'none'; // immediately stop blocking taps
-      setTimeout(function() { if (kov.parentNode) kov.remove(); if (onDone) onDone(); }, 250);
-    }
     var kov = document.createElement('div');
-    kov.className = 'T-kickoff-ov';
-    kov.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:auto;cursor:pointer;';
-
-    // Dark backdrop
-    var dim = document.createElement('div');
-    dim.className = 'T-clash-dim';
-    kov.appendChild(dim);
-
-    // Content
-    var wrap = document.createElement('div');
-    wrap.style.cssText = 'position:relative;z-index:2;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;';
-
-    // Small label
-    var labelEl = document.createElement('div');
-    labelEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:11px;color:#666;letter-spacing:3px;";
-    labelEl.textContent = 'KICKOFF';
-    wrap.appendChild(labelEl);
-
-    // Big result
-    var bigText = document.createElement('div');
-    bigText.style.cssText = "font-family:'Teko';font-weight:700;font-size:36px;color:" + resultColor + ";letter-spacing:4px;text-shadow:0 0 24px " + resultColor + "50;line-height:1;";
-    bigText.textContent = headline;
-    wrap.appendChild(bigText);
-
-    // Team + detail
-    var detailEl = document.createElement('div');
-    detailEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:13px;color:" + receivingTeam.accent + ";letter-spacing:1px;opacity:0.7;margin-top:2px;";
-    detailEl.textContent = detail;
-    wrap.appendChild(detailEl);
-
-    // Divider
-    var divider = document.createElement('div');
-    divider.style.cssText = 'width:60px;height:2px;background:' + resultColor + '33;margin-top:8px;border-radius:1px;';
-    wrap.appendChild(divider);
-
-    // Tap prompt
-    var tapEl = document.createElement('div');
-    tapEl.style.cssText = "font-family:'Rajdhani';font-size:10px;color:#444;letter-spacing:1px;margin-top:8px;";
-    tapEl.textContent = 'TAP TO CONTINUE';
-    wrap.appendChild(tapEl);
-
-    kov.appendChild(wrap);
-    kov.onclick = dismiss;
+    kov.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.85);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;';
+    kov.innerHTML =
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:24px;color:#EBB010;letter-spacing:3px;\">KICKOFF</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:16px;color:#ccc;margin-top:6px;\">" + resultText + "</div>";
+    kov.onclick = function() { kov.style.opacity = '0'; setTimeout(function() { kov.remove(); if (onDone) onDone(); }, 200); };
     el.appendChild(kov);
-
-    // GSAP entrance — match clash quality
-    gsap.to(kov, { opacity: 1, duration: 0.25 });
-    gsap.from(bigText, { scale: 1.5, opacity: 0, duration: 0.3, delay: 0.1, ease: 'back.out(1.5)' });
-    gsap.from(detailEl, { opacity: 0, y: 8, duration: 0.2, delay: 0.3 });
-    gsap.from(divider, { scaleX: 0, duration: 0.2, delay: 0.4 });
-    gsap.from(tapEl, { opacity: 0, duration: 0.2, delay: 0.5 });
-
-    setTimeout(function() { if (!dismissed) dismiss(); }, 2500);
+    requestAnimationFrame(function() { kov.style.opacity = '1'; });
+    setTimeout(function() { if (kov.parentNode) { kov.style.opacity = '0'; setTimeout(function() { kov.remove(); if (onDone) onDone(); }, 200); } }, 2000);
   }
 
   // ── RULES OVERLAY ──
@@ -3601,17 +3380,8 @@ export function buildGameplay() {
 
   // ── TRANSITIONS ──
   function checkEnd() {
-    if (gs.gameOver) {
-      SND.whistle();
-      AudioStateManager.stopCrowd(2);
-      setTimeout(() => setGs(s => ({...s, screen:'end_game', finalEngine:gs, humanAbbr:hAbbr})), 1200);
-      return true;
-    }
-    if (gs.needsHalftime) {
-      SND.whistle();
-      setTimeout(() => setGs(s => ({...s, screen:'halftime'})), 1200);
-      return true;
-    }
+    if (gs.gameOver) { setTimeout(() => setGs(s => ({...s, screen:'end_game', finalEngine:gs, humanAbbr:hAbbr})), 1200); return true; }
+    if (gs.needsHalftime) { setTimeout(() => setGs(s => ({...s, screen:'halftime'})), 1200); return true; }
     return false;
   }
 
@@ -3622,7 +3392,7 @@ export function buildGameplay() {
   // First load: coin toss → kickoff → play
   if (!GS._coinTossDone) {
     GS._coinTossDone = true;
-    // Don't drawPanel yet — coin toss overlay covers it. Panel draws after kickoff.
+    drawPanel();
     showCoinToss(function(result) {
       // result.chose = 'receive' | 'card' | 'card_cpu_receives'
       // Determine who receives the opening kickoff
@@ -3645,7 +3415,6 @@ export function buildGameplay() {
 
       var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
       showKickoffResult(posLabel, function() {
-        resetCardTrayState(); // Fresh deal — no carry-over from pre-coin-toss
         drawBug(); drawField();
         phase = 'play';
         drawPanel();
