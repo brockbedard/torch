@@ -21,7 +21,7 @@ var TRAY_CSS = `
 .CT-row{display:flex;gap:3px;padding:2px 3px;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .CT-row::-webkit-scrollbar{display:none}
 .CT-row-label{font-family:'Rajdhani';font-weight:700;font-size:9px;letter-spacing:1px;padding:0 6px;color:#555;flex-shrink:0}
-.CT-card{flex:1 1 72px;min-width:72px;height:120px;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;position:relative;cursor:pointer;border:2px solid transparent;will-change:transform}
+.CT-card{flex:1 1 80px;min-width:80px;height:120px;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;position:relative;cursor:pointer;border:2px solid transparent;will-change:transform}
 .CT-card-disabled{opacity:0.35;pointer-events:none}
 .CT-snap-bar{display:flex;gap:6px;padding:4px 8px;align-items:center;flex-shrink:0}
 .CT-snap-btn{flex:1;font-family:'Teko';font-weight:700;font-size:16px;letter-spacing:3px;padding:10px;border-radius:6px;border:2px solid #FF4511;background:linear-gradient(180deg,#EBB010,#FF4511);color:#000;cursor:pointer}

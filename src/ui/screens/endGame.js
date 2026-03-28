@@ -458,7 +458,7 @@ export function buildEndGame() {
 
   // ── MIDDLE ZONE: MVP + Points + Open Loop ──
   var midZone = document.createElement('div');
-  midZone.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;padding:0 16px;gap:10px;overflow-y:auto;';
+  midZone.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;padding:0 16px;gap:16px;overflow-y:auto;';
 
   // MVP card
   var mvpWrap = document.createElement('div');
@@ -538,7 +538,7 @@ export function buildEndGame() {
 
   // ── BOTTOM ZONE: PLAY AGAIN + Film Room ──
   var botZone = document.createElement('div');
-  botZone.style.cssText = 'padding:12px 16px 24px;flex-shrink:0;text-align:center;';
+  botZone.style.cssText = 'padding:12px 16px 24px;flex-shrink:0;text-align:center;margin-top:12px;';
 
   var playBtn = document.createElement('button');
   playBtn.style.cssText = "width:100%;padding:18px;border-radius:8px;border:none;font-family:'Teko';font-weight:700;font-size:22px;letter-spacing:4px;color:#fff;cursor:pointer;background:" + team.accent + ";opacity:0;";
@@ -586,6 +586,36 @@ export function buildEndGame() {
   botZone.appendChild(filmLink);
 
   el.appendChild(botZone);
+
+  // ── RATING PROMPT ──
+  var gamesPlayed = parseInt(localStorage.getItem('torch_games_played') || '0');
+  var ratedAlready = localStorage.getItem('torch_rated');
+  if (humanWon && gamesPlayed >= 3 && !ratedAlready) {
+    setTimeout(function() {
+      var rateOv = document.createElement('div');
+      rateOv.style.cssText = 'position:fixed;inset:0;z-index:800;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);';
+      rateOv.innerHTML =
+        "<div style=\"background:#141008;border:1px solid #EBB01044;border-radius:12px;padding:20px;max-width:280px;text-align:center;\">" +
+          "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:2px;\">ENJOYING TORCH?</div>" +
+          "<div style=\"font-family:'Rajdhani';font-size:12px;color:#ccc;margin:8px 0 16px;line-height:1.3;\">Your rating helps other football fans discover the game.</div>" +
+          "<div style='display:flex;gap:8px;justify-content:center;'>" +
+            "<button id='rate-yes' style=\"flex:1;padding:10px;border-radius:6px;border:1px solid #EBB010;background:#EBB010;color:#000;font-family:'Teko';font-weight:700;font-size:14px;letter-spacing:1px;cursor:pointer;\">RATE NOW</button>" +
+            "<button id='rate-later' style=\"flex:1;padding:10px;border-radius:6px;border:1px solid #333;background:transparent;color:#666;font-family:'Teko';font-weight:700;font-size:14px;letter-spacing:1px;cursor:pointer;\">LATER</button>" +
+          "</div>" +
+        "</div>";
+      el.appendChild(rateOv);
+      rateOv.querySelector('#rate-yes').onclick = function() {
+        localStorage.setItem('torch_rated', '1');
+        // In a native app, this would call SKStoreReviewController or Play Store intent
+        // For web: open the app store page (placeholder)
+        rateOv.remove();
+      };
+      rateOv.querySelector('#rate-later').onclick = function() {
+        localStorage.setItem('torch_rated', '1'); // Don't ask again
+        rateOv.remove();
+      };
+    }, 2000);
+  }
 
   // ── GSAP ANIMATION SEQUENCE ──
   var tl = gsap.timeline();
