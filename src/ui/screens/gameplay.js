@@ -415,7 +415,7 @@ export function buildGameplay() {
     var hOR = resolveRoster(GS.offRoster, hOffRoster);
     var hDR = resolveRoster(GS.defRoster, hDefRoster);
     GS.engine = new GameState({
-      humanTeam: hAbbr, difficulty: GS.difficulty||'EASY', coachBadge: GS.coachBadge||'SCHEMER',
+      humanTeam: hAbbr, difficulty: GS.difficulty||'MEDIUM', coachBadge: GS.coachBadge||'SCHEMER',
       // Human = CT slot, Opponent = IR slot
       ctOffHand: hOffPlays.slice(0,4), ctDefHand: hDefPlays.slice(0,4),
       irOffHand: cOffPlays.slice(0,4), irDefHand: cDefPlays.slice(0,4),
@@ -494,8 +494,11 @@ export function buildGameplay() {
       if (!userOnOff && phase !== 'busy') return; // Don't tick on defense during card selection
       gs.clockSeconds = Math.max(0, gs.clockSeconds - 1);
       drawBug();
-      // Heartbeat below 15 seconds
-      if (gs.clockSeconds <= 15 && gs.clockSeconds > 0) SND.click();
+      // Heartbeat below 15 seconds + haptic pulse
+      if (gs.clockSeconds <= 15 && gs.clockSeconds > 0) {
+        SND.click();
+        try { if (navigator.vibrate) navigator.vibrate(gs.clockSeconds <= 5 ? [50, 50, 50] : [40]); } catch(e) {}
+      }
       // Time expired — end the half (but not during a PAT)
       if (gs.clockSeconds <= 0) {
         stop2MinClock();
@@ -704,7 +707,7 @@ export function buildGameplay() {
     var cardsBtn = cardCount > 0 ? '<button style="font-family:\'Rajdhani\';font-weight:700;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:3px;border:1px solid #EBB01066;background:transparent;color:#EBB010;cursor:pointer;" id="torch-cards-btn">CARDS (' + cardCount + ')</button>' : '';
     torchBanner.innerHTML = flameSvg +
       '<div class="T-torch-banner-label">TORCH</div>' +
-      '<div class="T-torch-banner-pts">' + displayVal + '</div>' +
+      '<div class="T-torch-banner-pts" style="text-shadow:0 0 12px ' + hTeam.accent + ';">' + displayVal + '</div>' +
       cardsBtn;
     torchBannerPtsEl = torchBanner.querySelector('.T-torch-banner-pts');
   }
@@ -1925,12 +1928,14 @@ export function buildGameplay() {
         drawField(); drawPanel();
       },
       onSpike: function() {
-        SND.click();
+        SND.whistle();
         var spikeResult = gs.spike();
         stop2MinClock();
         driveSummaryLog.push({ down: gs.down - 1, dist: gs.distance, playName: 'SPIKE — clock stopped', yards: 0, isUserOff: true });
         selP = null; selPl = null; phase = 'play';
         drawBug(); drawField(); drawDriveSummary();
+        // Brief splash like any other play
+        slamText('SPIKE', '#EBB010', 800);
         setNarr('Ball spiked. Clock stopped.', fmtClock(Math.max(0, gs.clockSeconds)) + ' left');
         if (!checkEnd()) drawPanel();
       },

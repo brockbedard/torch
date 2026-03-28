@@ -48,12 +48,13 @@ export function resetCardTrayState() { _prevPlayIds = []; _prevPlayerIds = []; }
 var _vacatedPlayIdx = -1;
 var _vacatedPlayerIdx = -1;
 
-function animateDeal(cards, startDelay) {
+function animateDeal(cards, startDelay, slow) {
   if (!cards.length) return;
+  var stag = slow ? 0.15 : 0.08;
   gsap.set(cards, { y: -160, rotation: function() { return gsap.utils.random(-8, 8); }, scale: 0.8, opacity: 0 });
   gsap.to(cards, {
     y: 0, rotation: 0, scale: 1, opacity: 1,
-    duration: 0.3, stagger: 0.08, ease: 'back.out(1.7)',
+    duration: slow ? 0.4 : 0.3, stagger: stag, ease: 'back.out(1.7)',
     delay: startDelay || 0,
     onStart: function() { try { SND.cardSnap(); } catch(e) {} },
   });
@@ -313,8 +314,9 @@ export function renderCardTray(opts) {
   requestAnimationFrame(function() {
     var newPlays = playCardEls.filter(function(c) { return c._isNew; });
     var newPlayers = playerCardEls.filter(function(c) { return c._isNew; });
-    if (newPlays.length > 0) animateDeal(newPlays, 0);
-    if (newPlayers.length > 0) animateDeal(newPlayers, newPlays.length > 0 ? 0.15 : 0);
+    var isFullDeal = newPlays.length >= 4 && newPlayers.length >= 4;
+    if (newPlays.length > 0) animateDeal(newPlays, 0, isFullDeal);
+    if (newPlayers.length > 0) animateDeal(newPlayers, newPlays.length > 0 ? (isFullDeal ? 0.4 : 0.15) : 0, isFullDeal);
   });
   _prevPlayIds = curPlayIds;
   _prevPlayerIds = curPlayerIds;
