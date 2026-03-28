@@ -3193,7 +3193,7 @@ export function buildGameplay() {
 
     // Matchup
     var tossMatchup = document.createElement('div');
-    tossMatchup.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:12px;color:#888;letter-spacing:1px;margin-bottom:16px;";
+    tossMatchup.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#888;letter-spacing:2px;margin-bottom:16px;";
     tossMatchup.innerHTML = '<span style="color:' + hTeam.accent + '">' + hTeam.name + '</span> vs <span style="color:' + oTeam.accent + '">' + oTeam.name + '</span>';
     ov.appendChild(tossMatchup);
 
