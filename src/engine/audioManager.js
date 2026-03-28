@@ -12,6 +12,7 @@ var _sfx = {};
 var _crowd = {};
 var _crowdIntensity = 0.3;
 var _lastPlayed = {};
+var _crowdStopTimer = null;
 
 function loadPool(name, sources, opts) {
   _sfx[name] = sources.map(function(src) {
@@ -100,6 +101,8 @@ var AudioManager = {
 
   startCrowd: function() {
     if (!_initialized) return;
+    // Cancel any pending stop timer
+    if (_crowdStopTimer) { clearTimeout(_crowdStopTimer); _crowdStopTimer = null; }
     // Guard: don't restart if already playing
     if (_crowd.low && _crowd.low.playing()) return;
     _crowd.low.play(); _crowd.mid.play(); _crowd.high.play();
@@ -111,8 +114,11 @@ var AudioManager = {
     if (_crowd.low) _crowd.low.fade(_crowd.low.volume(), 0, fd);
     if (_crowd.mid) _crowd.mid.fade(_crowd.mid.volume(), 0, fd);
     if (_crowd.high) _crowd.high.fade(_crowd.high.volume(), 0, fd);
+    // Cancel any prior stop timer
+    if (_crowdStopTimer) clearTimeout(_crowdStopTimer);
     // Stop after fade completes to free resources
-    setTimeout(function() {
+    _crowdStopTimer = setTimeout(function() {
+      _crowdStopTimer = null;
       if (_crowd.low) _crowd.low.stop();
       if (_crowd.mid) _crowd.mid.stop();
       if (_crowd.high) _crowd.high.stop();

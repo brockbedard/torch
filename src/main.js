@@ -14,7 +14,7 @@ import { buildRoster } from './ui/screens/roster.js';
 const root = document.getElementById('root');
 
 function render() {
-  SND.crowdStop();
+  // Crowd audio managed by AudioStateManager.setState() per screen — don't kill it here
   root.innerHTML = '';
   // Clean up gameplay mode when leaving
   root.classList.remove('gp-2min');
