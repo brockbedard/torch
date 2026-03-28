@@ -77,24 +77,28 @@ var AudioManager = {
 
   play: function(name, opts) {
     if (!_initialized) return;
-    var h = pickVariant(name);
-    if (!h) return;
-    var pr = (opts && opts.pitchRange !== undefined) ? opts.pitchRange : 0.08;
-    var rate = ((opts && opts.pitch) || 1.0) + (Math.random() * pr * 2 - pr);
-    var vr = (opts && opts.volRange !== undefined) ? opts.volRange : 0.1;
-    var vol = ((opts && opts.volume) || 0.7) + (Math.random() * vr * 2 - vr);
-    var id = h.play();
-    h.rate(Math.max(0.5, Math.min(2, rate)), id);
-    h.volume(Math.max(0, Math.min(1, vol)), id);
+    try {
+      var h = pickVariant(name);
+      if (!h) return;
+      var pr = (opts && opts.pitchRange !== undefined) ? opts.pitchRange : 0.08;
+      var rate = ((opts && opts.pitch) || 1.0) + (Math.random() * pr * 2 - pr);
+      var vr = (opts && opts.volRange !== undefined) ? opts.volRange : 0.1;
+      var vol = ((opts && opts.volume) || 0.7) + (Math.random() * vr * 2 - vr);
+      var id = h.play();
+      h.rate(Math.max(0.5, Math.min(2, rate)), id);
+      h.volume(Math.max(0, Math.min(1, vol)), id);
+    } catch(e) {}
   },
 
   playExact: function(name, opts) {
     if (!_initialized) return;
-    var h = pickVariant(name);
-    if (!h) return;
-    var id = h.play();
-    h.rate((opts && opts.pitch) || 1.0, id);
-    h.volume((opts && opts.volume) || 0.8, id);
+    try {
+      var h = pickVariant(name);
+      if (!h) return;
+      var id = h.play();
+      h.rate((opts && opts.pitch) || 1.0, id);
+      h.volume((opts && opts.volume) || 0.8, id);
+    } catch(e) {}
   },
 
   // ── CROWD AMBIENT ──

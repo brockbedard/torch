@@ -86,16 +86,16 @@ function attachTouchFeedback(card) {
   var pressed = false;
   card.addEventListener('touchstart', function() {
     pressed = true;
-    gsap.to(card, { y: -4, scale: 1.02, duration: 0.1, ease: 'power2.out' });
+    try { gsap.to(card, { y: -4, scale: 1.02, duration: 0.1, ease: 'power2.out' }); } catch(e) {}
   }, { passive: true });
   card.addEventListener('touchend', function() {
     if (pressed) { pressed = false;
-      setTimeout(function() { if (!card._selected && !card._marked) gsap.to(card, { y: 0, scale: 1, duration: 0.1, ease: 'power2.out' }); }, 50);
+      setTimeout(function() { try { if (!card._selected && !card._marked) gsap.to(card, { y: 0, scale: 1, duration: 0.1, ease: 'power2.out' }); } catch(e) {} }, 50);
     }
   }, { passive: true });
   card.addEventListener('touchcancel', function() {
     pressed = false;
-    gsap.to(card, { y: 0, scale: 1, duration: 0.1, ease: 'power2.out' });
+    try { gsap.to(card, { y: 0, scale: 1, duration: 0.1, ease: 'power2.out' }); } catch(e) {}
   }, { passive: true });
 }
 
