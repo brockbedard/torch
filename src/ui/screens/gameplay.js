@@ -3438,17 +3438,31 @@ export function buildGameplay() {
     setTimeout(function() { if (!dismissed) dismiss(); }, 3500);
   }
 
-  // Brief kickoff result overlay
+  // Kickoff/punt return result overlay
   function showKickoffResult(resultText, onDone) {
+    SND.kickThud();
+    var receivingTeam = gs.possession === 'CT' ? hTeam : oTeam;
+    var isBigReturn = gs.ballPosition && ((gs.possession === 'CT' && gs.ballPosition >= 40) || (gs.possession === 'IR' && gs.ballPosition <= 60));
+    var resultColor = isBigReturn ? '#00ff44' : receivingTeam.accent;
+    if (isBigReturn) AudioStateManager.crowdSpike('cheer', 0.5);
+
+    var dismissed = false;
+    function dismiss() {
+      if (dismissed) return;
+      dismissed = true;
+      kov.style.opacity = '0';
+      setTimeout(function() { kov.remove(); if (onDone) onDone(); }, 200);
+    }
     var kov = document.createElement('div');
-    kov.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.85);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;';
+    kov.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.9);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;padding:20px;';
     kov.innerHTML =
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:24px;color:#EBB010;letter-spacing:3px;\">KICKOFF</div>" +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:16px;color:#ccc;margin-top:6px;\">" + resultText + "</div>";
-    kov.onclick = function() { kov.style.opacity = '0'; setTimeout(function() { kov.remove(); if (onDone) onDone(); }, 200); };
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:11px;color:#888;letter-spacing:2px;\">KICKOFF RETURN</div>" +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + resultColor + ";letter-spacing:3px;margin-top:4px;text-shadow:0 0 16px " + resultColor + "40;\">" + resultText + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-size:10px;color:#555;margin-top:10px;letter-spacing:1px;\">TAP TO CONTINUE</div>";
+    kov.onclick = dismiss;
     el.appendChild(kov);
     requestAnimationFrame(function() { kov.style.opacity = '1'; });
-    setTimeout(function() { if (kov.parentNode) { kov.style.opacity = '0'; setTimeout(function() { kov.remove(); if (onDone) onDone(); }, 200); } }, 2000);
+    setTimeout(function() { if (!dismissed) dismiss(); }, 2500);
   }
 
   // ── RULES OVERLAY ──

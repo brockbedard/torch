@@ -140,8 +140,8 @@ export function renderCardTray(opts) {
   header.appendChild(discToggle);
   wrap.appendChild(header);
 
-  // ── TORCH CARDS ROW (shown when in torch phase, above play/player rows) ──
-  var hasTorchRow = opts.phase === 'torch' && opts.torchCards && opts.torchCards.length > 0;
+  // ── TORCH CARDS ROW (shown whenever player has torch cards) ──
+  var hasTorchRow = opts.torchCards && opts.torchCards.length > 0;
   if (hasTorchRow) wrap.classList.add('CT-compact');
   if (hasTorchRow) {
     var torchLabel = document.createElement('div');
