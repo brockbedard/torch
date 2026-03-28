@@ -3465,14 +3465,18 @@ export function buildGameplay() {
 
   // Special teams / AI decision overlay
   function showSpecialTeamsResult(text, color, onDone) {
+    // Clean up any stale overlays
+    el.querySelectorAll('.T-st-ov').forEach(function(old) { old.remove(); });
     var dismissed = false;
     function dismiss() {
       if (dismissed) return;
       dismissed = true;
+      stOv.style.pointerEvents = 'none';
       stOv.style.opacity = '0';
-      setTimeout(function() { stOv.remove(); if (onDone) onDone(); }, 250);
+      setTimeout(function() { if (stOv.parentNode) stOv.remove(); if (onDone) onDone(); }, 250);
     }
     var stOv = document.createElement('div');
+    stOv.className = 'T-st-ov';
     stOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.9);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;padding:20px;';
     stOv.innerHTML =
       "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:" + color + ";letter-spacing:4px;text-align:center;max-width:300px;line-height:1.2;text-shadow:0 0 24px " + color + "60;\">" + text + "</div>" +
@@ -3502,15 +3506,20 @@ export function buildGameplay() {
       detail = receivingTeam.name + ' ball';
     }
 
+    // Clean up any stale overlays from previous kickoffs
+    el.querySelectorAll('.T-kickoff-ov').forEach(function(old) { old.remove(); });
+
     var dismissed = false;
     function dismiss() {
       if (dismissed) return;
       dismissed = true;
-      gsap.to(kov, { opacity: 0, duration: 0.2, onComplete: function() { kov.remove(); if (onDone) onDone(); } });
+      kov.style.opacity = '0';
+      kov.style.pointerEvents = 'none'; // immediately stop blocking taps
+      setTimeout(function() { if (kov.parentNode) kov.remove(); if (onDone) onDone(); }, 250);
     }
     var kov = document.createElement('div');
-    kov.className = 'T-clash-overlay';
-    kov.style.cssText += 'z-index:650;opacity:0;cursor:pointer;';
+    kov.className = 'T-kickoff-ov';
+    kov.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:auto;cursor:pointer;';
 
     // Dark backdrop
     var dim = document.createElement('div');
