@@ -130,11 +130,14 @@ function ensureCleanup() {
  * Attach Balatro-style listeners to a card element.
  */
 export function attachDetailListeners(el, data) {
-  // Desktop
-  el.addEventListener('mouseenter', () => showDetail(el, data));
-  el.addEventListener('mouseleave', () => hideDetail());
+  // Desktop only (no touch) — hover shows tooltip
+  var isTouch = 'ontouchstart' in window;
+  if (!isTouch) {
+    el.addEventListener('mouseenter', () => showDetail(el, data));
+    el.addEventListener('mouseleave', () => hideDetail());
+  }
 
-  // Mobile (Long press → show, tap elsewhere → dismiss)
+  // Mobile: long-press only (500ms hold). Quick tap does NOT trigger tooltip.
   el.addEventListener('touchstart', (e) => {
     _lockTimer = setTimeout(() => {
       showDetail(el, data);
