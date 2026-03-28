@@ -5,7 +5,7 @@
  */
 
 import { SND } from '../../engine/sound.js';
-import { GS, setGs, getTeam, getOtherTeam, fmtClock, getOffCards, getDefCards, getDrawWeight, getSpeedMultiplier } from '../../state.js';
+import { GS, setGs, getTeam, getOtherTeam, fmtClock, getOffCards, getDefCards, getDrawWeight, getSpeedMultiplier, FEATURES } from '../../state.js';
 import { GameState } from '../../engine/gameState.js';
 import { getOffenseRoster, getDefenseRoster, getFullRoster } from '../../data/players.js';
 // playSvg removed — play cards no longer use SVG diagrams
@@ -82,8 +82,8 @@ const CSS = `
 .T-sb-sit-torch{font-family:'Rajdhani';font-size:12px;color:#c8a030;letter-spacing:.5px;transition:transform .08s,text-shadow .08s;flex-shrink:0}
 
 /* TORCH points banner */
-.T-torch-banner{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;background:linear-gradient(90deg,rgba(235,176,16,0.12) 0%,rgba(255,69,17,0.12) 100%);border-top:2px solid #EBB010;border-bottom:2px solid #EBB010;flex-shrink:0}
-.T-torch-banner-flame{width:20px;height:20px;animation:T-flame-pulse 1.5s ease-in-out infinite}
+.T-torch-banner{display:flex;align-items:center;justify-content:center;gap:4px;padding:8px 16px;background:linear-gradient(90deg,rgba(235,176,16,0.12) 0%,rgba(255,69,17,0.12) 100%);border-top:2px solid #EBB010;border-bottom:2px solid #EBB010;flex-shrink:0}
+.T-torch-banner-flame{width:14px;height:14px;animation:none}
 @keyframes T-flame-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.85}}
 .T-torch-banner-label{font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:3px;line-height:1}
 .T-torch-banner-pts{font-family:'Teko';font-weight:700;font-size:32px;color:#fff;text-shadow:0 0 12px #EBB010;line-height:1;transition:transform .3s}
@@ -587,7 +587,7 @@ export function buildGameplay() {
     var opts = {};
     if (humanReceives) {
       var hcIdx = torchInventory.findIndex(function(c) { return c.id === 'house_call'; });
-      if (hcIdx >= 0) { opts.houseCall = true; torchInventory.splice(hcIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+      if (hcIdx >= 0) { opts.houseCall = true; torchInventory.splice(hcIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); torchCardToast('HOUSE CALL', 'Guaranteed 50+ yard return'); }
     }
     return gs.constructor.resolveKickoff(null, opts);
   }
@@ -691,6 +691,19 @@ export function buildGameplay() {
     updateTicker();
   }
 
+  // Brief toast for auto-consumed torch cards (ST cards, kickoff cards)
+  function torchCardToast(cardName, effectText) {
+    var toast = document.createElement('div');
+    toast.style.cssText = "position:fixed;top:10%;left:50%;transform:translateX(-50%);z-index:660;padding:8px 16px;border-radius:6px;background:rgba(14,10,4,0.92);border:1px solid #EBB01066;text-align:center;pointer-events:none;opacity:0;";
+    toast.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:16px;color:#EBB010;letter-spacing:2px;\">" + cardName + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-size:10px;color:#aaa;margin-top:2px;\">" + effectText + "</div>";
+    el.appendChild(toast);
+    try {
+      gsap.to(toast, { opacity: 1, duration: 0.15 });
+      gsap.to(toast, { opacity: 0, duration: 0.3, delay: 1.2, onComplete: function() { if (toast.parentNode) toast.remove(); } });
+    } catch(e) { toast.style.opacity = '1'; setTimeout(function() { if (toast.parentNode) toast.remove(); }, 1500); }
+  }
+
   function updateTicker() {
     if (_tickerMessages.length === 0) return;
     var recent = _tickerMessages.slice(-5);
@@ -742,6 +755,8 @@ export function buildGameplay() {
   var _prevDist = 0;
   var _prevBallPos = -1;
   var _wasInRedZone = false;
+  var _prevHScore = -1;
+  var _prevCScore = -1;
   function initBug() {
     const ct = hTeam, ir = oTeam;
 
@@ -821,7 +836,7 @@ export function buildGameplay() {
 
     // Mini field position bar
     var fieldBar = document.createElement('div');
-    fieldBar.style.cssText = 'position:relative;height:6px;background:#1a1a1a;border-radius:3px;margin:2px 8px 0;overflow:hidden;';
+    fieldBar.style.cssText = 'position:relative;height:6px;background:#1a1a1a;border-radius:3px;margin:2px 8px 0;overflow:hidden;display:none;';
 
     // Left endzone (user)
     var ezLeft = document.createElement('div');
@@ -852,7 +867,7 @@ export function buildGameplay() {
 
     // Win probability
     var wpRow = document.createElement('div');
-    wpRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:0 8px;height:14px;';
+    wpRow.style.cssText = 'display:none;justify-content:space-between;align-items:center;padding:0 8px;height:14px;';
     var wpLabel = document.createElement('div');
     wpLabel.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:9px;color:#555;letter-spacing:1px;";
     wpLabel.textContent = 'WIN PROB';
@@ -864,7 +879,7 @@ export function buildGameplay() {
 
     // Play clock bar (shows plays remaining in half)
     var playClockBar = document.createElement('div');
-    playClockBar.style.cssText = 'position:relative;height:3px;background:#0a0a0a;margin:1px 8px 0;border-radius:2px;overflow:hidden;';
+    playClockBar.style.cssText = 'position:relative;height:1px;background:#0a0a0a;margin:1px 8px 0;border-radius:2px;overflow:hidden;';
     var playClockFill = document.createElement('div');
     playClockFill.style.cssText = 'height:100%;border-radius:2px;transition:width 0.4s ease-out;background:#EBB010;';
     playClockBar.appendChild(playClockFill);
@@ -899,6 +914,18 @@ export function buildGameplay() {
     // Scores
     _bugEls.ctScoreEl.textContent = s.ctScore;
     _bugEls.irScoreEl.textContent = s.irScore;
+
+    // Score flash on change
+    var hScore = s.ctScore;
+    var cScore = s.irScore;
+    if (hScore !== _prevHScore && _prevHScore >= 0) {
+      try { gsap.fromTo(_bugEls.ctScoreEl, { scale: 1.3, color: '#00ff44' }, { scale: 1, color: '#fff', duration: 0.4, ease: 'back.out(1.5)' }); } catch(e) {}
+    }
+    if (cScore !== _prevCScore && _prevCScore >= 0) {
+      try { gsap.fromTo(_bugEls.irScoreEl, { scale: 1.3, color: '#ff0040' }, { scale: 1, color: '#fff', duration: 0.4, ease: 'back.out(1.5)' }); } catch(e) {}
+    }
+    _prevHScore = hScore;
+    _prevCScore = cScore;
 
     // Score glow classes
     _bugEls.ctScoreEl.className = 'T-sb-pts' + (ctHasBall ? ' T-sb-pts-glow' : '');
@@ -1007,6 +1034,14 @@ export function buildGameplay() {
       _bugEls.ballDot.style.left = ballPct + '%';
       _bugEls.ballDot.style.background = possColor;
       _bugEls.ballDot.style.boxShadow = '0 0 6px ' + possColor;
+
+      // Direction arrow on ball dot
+      var arrowChar = s.possession === 'CT' ? '\u25B6' : '\u25C0';
+      _bugEls.ballDot.textContent = arrowChar;
+      _bugEls.ballDot.style.fontSize = '6px';
+      _bugEls.ballDot.style.lineHeight = '8px';
+      _bugEls.ballDot.style.textAlign = 'center';
+      _bugEls.ballDot.style.color = '#000';
 
       // First down marker
       var fdPos = s.possession === 'CT' ? s.ballPosition + s.distance : s.ballPosition - s.distance;
@@ -1265,6 +1300,9 @@ export function buildGameplay() {
     } else {
       stripWrap.style.boxShadow = '';
     }
+
+    // Subtle possession tint on field strip border
+    stripWrap.style.borderBottom = '2px solid ' + (isOff ? hTeam.accent + '44' : oTeam.accent + '44');
     if (isInRedZone && !_wasInRedZone) {
       _wasInRedZone = true;
       var rzFlash = document.createElement('div');
@@ -1948,9 +1986,9 @@ export function buildGameplay() {
             // Check for ST torch cards: COFFIN CORNER, FAIR CATCH GHOST
             var puntOpts = {};
             var ccIdx = torchInventory.findIndex(function(c) { return c.id === 'coffin_corner'; });
-            if (ccIdx >= 0) { puntOpts.coffinCorner = true; torchInventory.splice(ccIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+            if (ccIdx >= 0) { puntOpts.coffinCorner = true; torchInventory.splice(ccIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); torchCardToast('COFFIN CORNER', 'Punt guaranteed inside the 10'); }
             var fcIdx = torchInventory.findIndex(function(c) { return c.id === 'fair_catch_ghost'; });
-            if (fcIdx >= 0) { puntOpts.fairCatchGhost = true; torchInventory.splice(fcIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+            if (fcIdx >= 0) { puntOpts.fairCatchGhost = true; torchInventory.splice(fcIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); torchCardToast('FAIR CATCH GHOST', 'Forced fair catch'); }
             var puntResult = gs.punt(punter, puntOpts);
             burnPlayer(_humanSTDeck, punter, 'punter', puntResult.gross + '-yard punt');
             driveSummaryLog.push({ down: 4, dist: gs.distance, playName: puntResult.label, yards: 0, isUserOff: true });
@@ -2011,7 +2049,7 @@ export function buildGameplay() {
               SND.kickThud();
               // CANNON LEG: consume card if in inventory
               var clIdx = torchInventory.findIndex(function(c) { return c.id === 'cannon_leg'; });
-              if (clIdx >= 0) { torchInventory.splice(clIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+              if (clIdx >= 0) { torchInventory.splice(clIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); torchCardToast('CANNON LEG', 'FG range extended +10 yards'); }
               var fgResult = gs.attemptFieldGoal(kicker);
               if (fgResult.made) SND.kickGood(); else SND.kickMiss();
               var fgContext = (fgResult.made ? 'Made ' : 'Missed ') + fgResult.distance + '-yard FG';
@@ -2141,7 +2179,7 @@ export function buildGameplay() {
             : aiSelectPlayer(oppSides.offPlayers, oppPlay, gs.difficulty, true, gs.offHeatMap);
           if (oppFeatured) {
             var revealOv = document.createElement('div');
-            revealOv.style.cssText = "position:fixed;inset:0;z-index:660;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);pointer-events:none;opacity:0;";
+            revealOv.style.cssText = "position:fixed;inset:0;z-index:660;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);pointer-events:auto;opacity:0;";
             var starStr = '';
             for (var si = 0; si < (oppFeatured.stars || 3); si++) starStr += '\u2605';
             revealOv.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#EBB010;letter-spacing:3px;margin-bottom:6px;\">OPPONENT'S FEATURED PLAYER</div>" +
@@ -2699,9 +2737,9 @@ export function buildGameplay() {
     // Tier-based timing
     var anticipationMs = tier === 1 ? 0 : tier === 2 ? 300 : 800;
     var hitstopMs = tier === 1 ? 33 : tier === 2 ? 67 : 133;
-    var shakeAmt = tier === 1 ? 2 : tier === 2 ? 3 : 8;
+    var shakeAmt = tier === 1 ? 1 : tier === 2 ? 2 : 5;
     var dimLevel = tier === 1 ? 0.2 : tier === 2 ? 0.4 : 0.7;
-    var particleCount = tier === 1 ? 8 : tier === 2 ? 30 : 80;
+    var particleCount = tier === 1 ? 0 : tier === 2 ? 15 : 35;
     var cardScale = tier === 1 ? 1.0 : tier === 2 ? 1.1 : 1.25;
     var aftermathDur = isTD ? 5000 : tier === 3 ? 3500 : tier === 2 ? 2500 : 1800;
     var _speedMult = getSpeedMultiplier();
@@ -2887,7 +2925,7 @@ export function buildGameplay() {
         } catch(e) {}
 
         // Matchup line: "WR Martinez vs CB Jackson"
-        if (tier >= 2) {
+        if (tier >= 3) {
           var matchupEl = document.createElement('div');
           matchupEl.style.cssText = "position:absolute;top:38%;left:50%;transform:translateX(-50%);z-index:6;font-family:'Rajdhani';font-weight:700;font-size:11px;color:#888;letter-spacing:2px;white-space:nowrap;opacity:0;";
           matchupEl.textContent = _offFeatPos + ' ' + _offFeatName.split(' ').pop() + ' vs ' + _defFeatPos + ' ' + _defFeatName.split(' ').pop();
@@ -3246,6 +3284,14 @@ export function buildGameplay() {
         }
       }
 
+      // ── GAME OVER WATERMARK ──
+      if (gs.gameOver && !res._isConversion) {
+        var goEl = document.createElement('div');
+        goEl.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-15deg);z-index:3;font-family:'Teko';font-weight:700;font-size:64px;color:rgba(255,255,255,0.04);letter-spacing:8px;pointer-events:none;white-space:nowrap;";
+        goEl.textContent = 'GAME OVER';
+        overlay.appendChild(goEl);
+      }
+
       // ── FIRST DOWN CELEBRATION OVERLAY ──
       if (res.gotFirstDown && !isTD && !r.isInterception && !r.isFumbleLost && isUserOff) {
         var fdEl = document.createElement('div');
@@ -3366,51 +3412,99 @@ export function buildGameplay() {
         }
 
         // ── REACTIVE TORCH CARD CHECK ──
-        // After seeing result, offer reactive cards if applicable
-        var _reactiveUsed = false;
+        // After seeing result, OFFER reactive cards with player choice (not auto-fire)
         var isHumanOff = prevPoss === hAbbr;
 
-        // SURE HANDS: cancel turnover when user is on offense
-        if (!_reactiveUsed && isHumanOff && (r.isInterception || r.isFumbleLost) && !res._isConversion) {
-          var shIdx = torchInventory.findIndex(function(c) { return c.id === 'sure_hands'; });
-          if (shIdx >= 0) {
-            _reactiveUsed = true;
-            // Auto-activate: cancel the turnover
-            torchInventory.splice(shIdx, 1);
-            if (GS.season) GS.season.torchCards = torchInventory.slice();
-            // Undo turnover in game state — restore possession and ball position
-            r.isInterception = false; r.isFumble = false; r.isFumbleLost = false;
-            r.yards = Math.max(0, r.yards);
-            r.description = 'SURE HANDS! Turnover cancelled — drive continues!';
-            // Restore possession if it was flipped
-            if (gs.possession !== prevPoss) {
-              gs.flipPossession(res._preSnap ? res._preSnap.ballPosition : gs.ballPosition);
-            }
-            res.gameEvent = null; // Clear turnover event
-            // Flash the card activation
-            setNarr('SURE HANDS!', 'Turnover cancelled — your drive continues.');
+        // Check if any reactive cards can trigger
+        var reactiveCard = null;
+        var reactiveIdx = -1;
+        if (isHumanOff && !res._isConversion) {
+          // SURE HANDS: on turnover
+          if ((r.isInterception || r.isFumbleLost)) {
+            reactiveIdx = torchInventory.findIndex(function(c) { return c.id === 'sure_hands'; });
+            if (reactiveIdx >= 0) reactiveCard = { id: 'sure_hands', idx: reactiveIdx, label: 'SURE HANDS', desc: 'Cancel the turnover? Your drive continues.', cost: 'FREE (already purchased)', color: '#EBB010' };
+          }
+          // CHALLENGE FLAG: on negative yards (sack, loss)
+          if (!reactiveCard && r.yards < 0 && !r.isTouchdown) {
+            reactiveIdx = torchInventory.findIndex(function(c) { return c.id === 'challenge_flag'; });
+            if (reactiveIdx >= 0) reactiveCard = { id: 'challenge_flag', idx: reactiveIdx, label: 'CHALLENGE FLAG', desc: 'Challenge the play? 50% chance of a better outcome.', cost: 'FREE (already purchased)', color: '#C0C0C0' };
           }
         }
 
-        // CHALLENGE FLAG: reroll on bad result when user is on offense
-        if (!_reactiveUsed && isHumanOff && !res._isConversion && r.yards < 0 && !r.isTouchdown) {
-          var cfIdx = torchInventory.findIndex(function(c) { return c.id === 'challenge_flag'; });
-          if (cfIdx >= 0) {
-            _reactiveUsed = true;
-            torchInventory.splice(cfIdx, 1);
-            if (GS.season) GS.season.torchCards = torchInventory.slice();
-            // Card effect already fires in snapResolver when passed as offCard
-            // But reactive flow means it wasn't passed — so apply here
-            if (Math.random() < 0.5) {
-              r.yards = Math.max(0, Math.abs(r.yards)); // flip negative to positive
-              r.isSack = false;
-              r.description = 'CHALLENGE FLAG! Play overturned — gain of ' + r.yards + '!';
-              setNarr('CHALLENGE FLAG!', 'Overturned! Gain of ' + r.yards + ' yards.');
-            } else {
-              r.description = 'CHALLENGE FLAG! Review stands. Original call confirmed.';
-              setNarr('CHALLENGE FLAG!', 'Review stands. Original call confirmed.');
+        // Show reactive card decision prompt
+        if (reactiveCard) {
+          var _reactiveOv = document.createElement('div');
+          _reactiveOv.style.cssText = 'position:fixed;inset:0;z-index:750;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);';
+          var _reactiveCard = document.createElement('div');
+          _reactiveCard.style.cssText = "background:#141008;border:2px solid " + reactiveCard.color + ";border-radius:12px;padding:20px;max-width:300px;text-align:center;box-shadow:0 0 30px " + reactiveCard.color + "44;";
+          _reactiveCard.innerHTML =
+            "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:" + reactiveCard.color + ";letter-spacing:3px;\">" + reactiveCard.label + "</div>" +
+            "<div style=\"font-family:'Rajdhani';font-size:12px;color:#ccc;margin:8px 0 16px;line-height:1.4;\">" + reactiveCard.desc + "</div>" +
+            "<div style='display:flex;gap:10px;justify-content:center;'>" +
+              "<button id='reactive-yes' style=\"flex:1;padding:12px;border-radius:6px;border:2px solid " + reactiveCard.color + ";background:" + reactiveCard.color + ";color:#000;font-family:'Teko';font-weight:700;font-size:16px;letter-spacing:2px;cursor:pointer;\">USE IT</button>" +
+              "<button id='reactive-no' style=\"flex:1;padding:12px;border-radius:6px;border:1px solid #333;background:transparent;color:#666;font-family:'Teko';font-weight:700;font-size:16px;letter-spacing:2px;cursor:pointer;\">SAVE IT</button>" +
+            "</div>";
+          _reactiveOv.appendChild(_reactiveCard);
+          el.appendChild(_reactiveOv);
+          try { SND.cardSnap(); } catch(e) {}
+
+          var _reactiveResolved = false;
+          function resolveReactive(useIt) {
+            if (_reactiveResolved) return;
+            _reactiveResolved = true;
+            _reactiveOv.remove();
+
+            if (useIt) {
+              // Consume the card
+              torchInventory.splice(reactiveCard.idx, 1);
+              if (GS.season) GS.season.torchCards = torchInventory.slice();
+
+              if (reactiveCard.id === 'sure_hands') {
+                // Cancel the turnover
+                r.isInterception = false; r.isFumble = false; r.isFumbleLost = false;
+                r.yards = Math.max(0, r.yards);
+                r.description = 'SURE HANDS! Turnover cancelled — drive continues!';
+                if (gs.possession !== prevPoss) {
+                  gs.flipPossession(res._preSnap ? res._preSnap.ballPosition : gs.ballPosition);
+                }
+                res.gameEvent = null;
+                setNarr('SURE HANDS!', 'Turnover cancelled — your drive continues.');
+              } else if (reactiveCard.id === 'challenge_flag') {
+                // 50% reroll
+                if (Math.random() < 0.5) {
+                  r.yards = Math.max(0, Math.abs(r.yards));
+                  r.isSack = false;
+                  r.description = 'CHALLENGE FLAG! Play overturned — gain of ' + r.yards + '!';
+                  setNarr('CHALLENGE FLAG!', 'Overturned! Gain of ' + r.yards + ' yards.');
+                } else {
+                  r.description = 'CHALLENGE FLAG! Review stands. Original call confirmed.';
+                  setNarr('CHALLENGE FLAG!', 'Review stands. Original call confirmed.');
+                }
+              }
             }
+            // Continue to shop/next play flow
+            continueAfterReactive();
           }
+
+          _reactiveOv.querySelector('#reactive-yes').onclick = function() { resolveReactive(true); };
+          _reactiveOv.querySelector('#reactive-no').onclick = function() { resolveReactive(false); };
+          // Safety timeout (8s)
+          setTimeout(function() { if (!_reactiveResolved) resolveReactive(false); }, 8000);
+
+          // Wrap the rest of the post-play flow in a continuation
+          function continueAfterReactive() {
+            var shopTrigger = null;
+            if (!gs.gameOver && !res._isConversion) {
+              var isHumanPoss = prevPoss === hAbbr;
+              if (res.gameEvent === 'touchdown' && isHumanPoss) shopTrigger = 'touchdown';
+              else if ((r.isInterception || r.isFumbleLost) && !isHumanPoss) shopTrigger = 'turnover';
+              else if (res.gameEvent === 'turnover_on_downs' && !isHumanPoss) shopTrigger = 'fourthDownStop';
+              else if ((!wasOffHot && offStarHot) || (!wasDefHot && defStarHot)) shopTrigger = 'starActivation';
+            }
+            if (shopTrigger) { triggerShop(shopTrigger, afterShop); }
+            else { afterShop(); }
+          }
+          return; // Exit — continuation handles the rest
         }
 
         var shopTrigger = null;
@@ -3509,7 +3603,7 @@ export function buildGameplay() {
         // BLOCKED KICK: auto-consume from inventory if available
         var _bkPuntIdx = torchInventory.findIndex(function(c) { return c.id === 'blocked_kick'; });
         var _bkPuntOpts = {};
-        if (_bkPuntIdx >= 0) { _bkPuntOpts.blockedKick = true; torchInventory.splice(_bkPuntIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+        if (_bkPuntIdx >= 0) { _bkPuntOpts.blockedKick = true; torchInventory.splice(_bkPuntIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); torchCardToast('BLOCKED KICK', 'Chance to block the punt'); }
         showSpecialTeamsResult(oTeam.name + ' ELECTS TO PUNT', '#4DA6FF', function() {
           var aiPunter = aiPickST(_cpuSTDeck, 'kickPower', gs.difficulty);
           if (aiPunter) burnPlayer(_cpuSTDeck, aiPunter, 'punter', 'AI punt');
@@ -3526,11 +3620,11 @@ export function buildGameplay() {
         phase = 'busy';
         var fgDist3 = gs.yardsToEndzone() + 17;
         // ICE THE KICKER + BLOCKED KICK: auto-consume from inventory
-        var _iceIdx = torchInventory.findIndex(function(c) { return c.id === 'ice_the_kicker'; });
-        var _bkFgIdx = torchInventory.findIndex(function(c) { return c.id === 'blocked_kick'; });
         var _aiFgOpts = {};
-        if (_iceIdx >= 0) { _aiFgOpts.iceTheKicker = true; torchInventory.splice(_iceIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
-        if (_bkFgIdx >= 0) { _aiFgOpts.blockedKick = true; torchInventory.splice(_bkFgIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+        var _iceIdx = torchInventory.findIndex(function(c) { return c.id === 'ice_the_kicker'; });
+        if (_iceIdx >= 0) { _aiFgOpts.iceTheKicker = true; torchInventory.splice(_iceIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); torchCardToast('ICE THE KICKER', 'Kicker accuracy reduced'); }
+        var _bkFgIdx = torchInventory.findIndex(function(c) { return c.id === 'blocked_kick'; });
+        if (_bkFgIdx >= 0) { _aiFgOpts.blockedKick = true; torchInventory.splice(_bkFgIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); torchCardToast('BLOCKED KICK', 'Chance to block the kick'); }
         var _iceLabel = _aiFgOpts.iceTheKicker ? 'ICE THE KICKER! ' : '';
         showSpecialTeamsResult(_iceLabel + oTeam.name + ' ATTEMPTS A ' + fgDist3 + '-YARD FIELD GOAL', '#EBB010', function() {
           var aiKicker = aiPickST(_cpuSTDeck, 'kickAccuracy', gs.difficulty);
