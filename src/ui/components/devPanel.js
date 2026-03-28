@@ -99,10 +99,34 @@ export function injectDevPanel(el, gs, callbacks) {
 
   // ── TORCH CARDS ──
   html += section('TORCH CARDS');
-  html += btn('Give All Bronze', 'dev-bronze', '#CD7F32');
-  html += btn('Give All Silver', 'dev-silver', '#C0C0C0');
-  html += btn('Give All Gold', 'dev-gold', '#EBB010');
-  html += btn('Open Store', 'dev-booster', '#FF4511');
+  html += '<div style="display:flex;gap:3px;">';
+  html += btnInline('BRONZE', 'dev-bronze', '#CD7F32');
+  html += btnInline('SILVER', 'dev-silver', '#C0C0C0');
+  html += btnInline('GOLD', 'dev-gold', '#EBB010');
+  html += '</div>';
+  html += '<div style="margin-top:3px;font-size:8px;color:#666;letter-spacing:1px;margin-bottom:2px;">GIVE SPECIFIC</div>';
+  html += '<div style="display:flex;gap:3px;flex-wrap:wrap;">';
+  html += btnInline('SURE HANDS', 'dev-card-sure_hands', '#4488FF');
+  html += btnInline('CHALLENGE', 'dev-card-challenge_flag', '#4488FF');
+  html += btnInline('BLK KICK', 'dev-card-blocked_kick', '#FF4511');
+  html += '</div>';
+  html += '<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:2px;">';
+  html += btnInline('TIMEOUT', 'dev-card-timeout', '#C0C0C0');
+  html += btnInline('IRON MAN', 'dev-card-iron_man', '#C0C0C0');
+  html += btnInline('HSE CALL', 'dev-card-house_call', '#EBB010');
+  html += '</div>';
+  html += '<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:2px;">';
+  html += btnInline('COFFIN', 'dev-card-coffin_corner', '#CD7F32');
+  html += btnInline('CANNON', 'dev-card-cannon_leg', '#C0C0C0');
+  html += btnInline('SCOUT RPT', 'dev-card-scout_report', '#C0C0C0');
+  html += '</div>';
+  html += '<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:2px;">';
+  html += btnInline('FRESH LEGS', 'dev-card-fresh_legs', '#CD7F32');
+  html += '</div>';
+  html += '<div style="display:flex;gap:3px;margin-top:3px;">';
+  html += btnInline('Open Store', 'dev-booster', '#FF4511');
+  html += btnInline('+500 PTS', 'dev-torch-pts', '#EBB010');
+  html += '</div>';
   html += btn('Clear Cards', 'dev-clear-cards', '#555');
 
   // ── GAME FLOW ──
@@ -134,6 +158,30 @@ export function injectDevPanel(el, gs, callbacks) {
   html += btn('Poss Change (good)', 'dev-poss-good', '#3df58a');
   html += btn('Poss Change (bad)', 'dev-poss-bad', '#e03050');
   html += btn('Flip Possession', 'dev-flip', '#EBB010');
+
+  // ── SEASON & FLOW ──
+  html += section('SEASON & FLOW');
+  html += btn('Jump to Season Recap', 'dev-season-recap', '#4DA6FF');
+  html += btn('Set Game 2/3 (currentGame+1)', 'dev-set-game', '#EBB010');
+  html += btn('Trigger Daily Drive', 'dev-daily-drive', '#3df58a');
+
+  // ── MOMENTUM & HEAT ──
+  html += section('MOMENTUM & HEAT');
+  html += btn('Max Momentum (P1 off)', 'dev-max-momentum', '#3df58a');
+  html += btn('Max Heat (P1 off)', 'dev-max-heat', '#e03050');
+  html += btn('Reset All Heat', 'dev-reset-heat', '#555');
+
+  // ── SCORE SHORTCUTS ──
+  html += section('SCORE SHORTCUTS');
+  html += btn('Force 2-Min Drill', 'dev-force-2min', '#e03050');
+  html += btn('Set Score 21-14 (leading)', 'dev-score-2114', '#3df58a');
+  html += btn('Set Score 7-21 (trailing)', 'dev-score-0721', '#FF6B00');
+  html += btn('Force Game Over', 'dev-force-gameover', '#e03050');
+
+  // ── ACHIEVEMENTS ──
+  html += section('ACHIEVEMENTS');
+  html += btn('Clear Achievements', 'dev-clear-achievements', '#555');
+  html += btn('Clear All Progress (torch_*)', 'dev-clear-all', '#e03050');
 
   // ── UTILS ──
   html += section('UTILS');
@@ -222,6 +270,14 @@ export function injectDevPanel(el, gs, callbacks) {
       if (callbacks.refresh) callbacks.refresh();
     }
     if (id === 'dev-booster' && callbacks.openBooster) callbacks.openBooster();
+    if (id === 'dev-torch-pts') {
+      gs.ctTorchPts = (gs.ctTorchPts || 0) + 500;
+      if (callbacks.refresh) callbacks.refresh();
+    }
+    if (id && id.startsWith('dev-card-')) {
+      var cardId = id.replace('dev-card-', '');
+      giveSpecificCard(gs, cardId, callbacks);
+    }
 
     if (id === 'dev-redeal' && callbacks.redealHand) callbacks.redealHand();
     if (id === 'dev-reset-disc' && callbacks.resetDiscards) callbacks.resetDiscards();
@@ -242,6 +298,108 @@ export function injectDevPanel(el, gs, callbacks) {
     if (id === 'dev-reset') {
       localStorage.removeItem('torch_dev');
       setGs(null);
+    }
+
+    // ── SEASON & FLOW ──
+    if (id === 'dev-season-recap') {
+      setGs(function(s) {
+        return Object.assign({}, s, {
+          screen: 'seasonRecap',
+          season: Object.assign({}, (s && s.season) || {}, {
+            results: [
+              { won: true, score: 28, oppScore: 14 },
+              { won: true, score: 21, oppScore: 17 },
+              { won: false, score: 10, oppScore: 24 },
+            ],
+            currentGame: 3,
+            carryoverPoints: s && s.season && s.season.carryoverPoints ? s.season.carryoverPoints : 0,
+          }),
+        });
+      });
+    }
+    if (id === 'dev-set-game') {
+      if (callbacks.advanceSeason) {
+        callbacks.advanceSeason();
+      } else {
+        setGs(function(s) {
+          var cur = (s && s.season && s.season.currentGame) || 0;
+          var next = Math.min(cur + 1, 2);
+          return Object.assign({}, s, {
+            season: Object.assign({}, (s && s.season) || {}, { currentGame: next }),
+          });
+        });
+      }
+    }
+    if (id === 'dev-daily-drive') {
+      setGs(function(s) { return Object.assign({}, s, { screen: 'dailyDrive' }); });
+    }
+
+    // ── MOMENTUM & HEAT ──
+    if (id === 'dev-max-momentum') {
+      if (callbacks.maxMomentumP1) {
+        callbacks.maxMomentumP1();
+      } else {
+        var offKeys = Object.keys(gs.offMomentumMap || {});
+        var firstOffId = offKeys.length ? offKeys[0] : null;
+        if (!firstOffId && gs.ctOffRoster && gs.ctOffRoster[0]) firstOffId = gs.ctOffRoster[0];
+        if (firstOffId) { gs.offMomentumMap = gs.offMomentumMap || {}; gs.offMomentumMap[firstOffId] = 5; }
+        if (callbacks.refresh) callbacks.refresh();
+      }
+    }
+    if (id === 'dev-max-heat') {
+      if (callbacks.maxHeatP1) {
+        callbacks.maxHeatP1();
+      } else {
+        var offHeatKeys = Object.keys(gs.offHeatMap || {});
+        var firstHeatId = offHeatKeys.length ? offHeatKeys[0] : null;
+        if (!firstHeatId && gs.ctOffRoster && gs.ctOffRoster[0]) firstHeatId = gs.ctOffRoster[0];
+        if (firstHeatId) { gs.offHeatMap = gs.offHeatMap || {}; gs.offHeatMap[firstHeatId] = 5; }
+        if (callbacks.refresh) callbacks.refresh();
+      }
+    }
+    if (id === 'dev-reset-heat') {
+      if (callbacks.resetAllHeat) {
+        callbacks.resetAllHeat();
+      } else {
+        gs.offHeatMap = {};
+        gs.defHeatMap = {};
+        if (callbacks.refresh) callbacks.refresh();
+      }
+    }
+
+    // ── SCORE SHORTCUTS ──
+    if (id === 'dev-force-2min') {
+      gs.twoMinActive = true;
+      gs.clockSeconds = 60;
+      gs.playsUsed = 19;
+      if (callbacks.refresh) callbacks.refresh();
+    }
+    if (id === 'dev-score-2114') {
+      if (callbacks.applyState) callbacks.applyState({ ctScore: 21, irScore: 14 });
+      else { gs.ctScore = 21; gs.irScore = 14; if (callbacks.refresh) callbacks.refresh(); }
+    }
+    if (id === 'dev-score-0721') {
+      if (callbacks.applyState) callbacks.applyState({ ctScore: 7, irScore: 21 });
+      else { gs.ctScore = 7; gs.irScore = 21; if (callbacks.refresh) callbacks.refresh(); }
+    }
+    if (id === 'dev-force-gameover') {
+      gs.gameOver = true;
+      if (callbacks.refresh) callbacks.refresh();
+    }
+
+    // ── ACHIEVEMENTS ──
+    if (id === 'dev-clear-achievements') {
+      localStorage.removeItem('torch_achievements');
+      alert('torch_achievements cleared.');
+    }
+    if (id === 'dev-clear-all') {
+      var toClear = [];
+      for (var k = 0; k < localStorage.length; k++) {
+        var key = localStorage.key(k);
+        if (key && key.startsWith('torch_')) toClear.push(key);
+      }
+      toClear.forEach(function(k) { localStorage.removeItem(k); });
+      alert('Cleared ' + toClear.length + ' torch_* keys.');
     }
 
     updateStateReadout(gs);
@@ -271,6 +429,19 @@ function giveTorchCards(gs, tier, callbacks) {
     if (gs.humanTorchCards.length < 5) gs.humanTorchCards.push(c.id);
   });
   // Sync to gameplay UI's torchInventory
+  if (callbacks.setTorchInventory) {
+    var inv = gs.humanTorchCards.map(function(id) {
+      return TORCH_CARDS.find(function(tc) { return tc.id === id; });
+    }).filter(Boolean);
+    callbacks.setTorchInventory(inv);
+  }
+  if (callbacks.refresh) callbacks.refresh();
+}
+
+function giveSpecificCard(gs, cardId, callbacks) {
+  var card = TORCH_CARDS.find(function(c) { return c.id === cardId; });
+  if (!card) return;
+  if (gs.humanTorchCards.length < 5) gs.humanTorchCards.push(card.id);
   if (callbacks.setTorchInventory) {
     var inv = gs.humanTorchCards.map(function(id) {
       return TORCH_CARDS.find(function(tc) { return tc.id === id; });

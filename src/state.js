@@ -24,6 +24,40 @@ export function getSpeedMultiplier() {
 // Load saved preference (guard for Node/test environments)
 try { var _savedSpeed = localStorage.getItem('torch_speed'); if (_savedSpeed) GAME_SPEED.current = _savedSpeed; } catch(e) {}
 
+// Feature flags — toggle individual features for testing
+export var FEATURES = {
+  momentumSystem: true,
+  cardCombos: true,
+  driveHeat: true,
+  narrativeCommentary: true,
+  halftimeAdjustment: true,
+  achievements: true,
+  streaks: true,
+  seasonMode: true,
+  dailyDrive: true,
+  audible: true,
+  winProbability: true,
+  playByPlayTicker: true,
+  weatherAudio: true,
+  smartHighlights: true,
+  tutorialSystem: true,
+};
+
+// Load overrides from localStorage
+try {
+  var _flagOverrides = JSON.parse(localStorage.getItem('torch_features') || '{}');
+  for (var k in _flagOverrides) { if (k in FEATURES) FEATURES[k] = _flagOverrides[k]; }
+} catch(e) {}
+
+export function setFeatureFlag(key, value) {
+  FEATURES[key] = value;
+  try {
+    var overrides = JSON.parse(localStorage.getItem('torch_features') || '{}');
+    overrides[key] = value;
+    localStorage.setItem('torch_features', JSON.stringify(overrides));
+  } catch(e) {}
+}
+
 export var GS = null;
 
 export function setGs(fn) {
