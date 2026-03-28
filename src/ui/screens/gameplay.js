@@ -800,10 +800,7 @@ export function buildGameplay() {
     // LOS and LTG
     h += `<div class="T-los" style="left:${lp}%;background:${pc};box-shadow:0 0 10px ${pc}"></div>`;
     h += `<div class="T-ltg" style="left:${tp}%;border-color:#c8a030"></div>`;
-    // Field position label — always visible
-    var ydsToEzLabel = s.yardsToEndzone;
-    var fieldLabel = ydsToEzLabel <= 20 ? 'RED ZONE' : ydsToEzLabel <= 50 ? 'OPP ' + ydsToEzLabel : 'OWN ' + (100 - ydsToEzLabel);
-    h += `<div style="position:absolute;top:4px;left:${lp}%;transform:translateX(-50%);z-index:12;font-family:'Teko';font-weight:700;font-size:11px;color:${pc};letter-spacing:1px;text-shadow:0 0 6px rgba(0,0,0,0.9),0 1px 3px rgba(0,0,0,0.9);white-space:nowrap;pointer-events:none;">${fieldLabel}</div>`;
+    // Field position — shown in scoreboard situation bar, not floating on field
 
     // Drop zones — empty outlines for unfilled, actual card for filled
     const playLbl = phase === 'play' ? 'TAP<br><br>PLAY<br><br>CARD' : 'PLAY';
@@ -3456,9 +3453,9 @@ export function buildGameplay() {
     var kov = document.createElement('div');
     kov.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.9);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;padding:20px;';
     kov.innerHTML =
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:11px;color:#888;letter-spacing:2px;\">KICKOFF RETURN</div>" +
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + resultColor + ";letter-spacing:3px;margin-top:4px;text-shadow:0 0 16px " + resultColor + "40;\">" + resultText + "</div>" +
-      "<div style=\"font-family:'Rajdhani';font-size:10px;color:#555;margin-top:10px;letter-spacing:1px;\">TAP TO CONTINUE</div>";
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:11px;color:#888;letter-spacing:2px;text-align:center;\">KICKOFF RETURN</div>" +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + resultColor + ";letter-spacing:3px;margin-top:4px;text-shadow:0 0 16px " + resultColor + "40;text-align:center;\">" + resultText + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-size:10px;color:#555;margin-top:10px;letter-spacing:1px;text-align:center;\">TAP TO CONTINUE</div>";
     kov.onclick = dismiss;
     el.appendChild(kov);
     requestAnimationFrame(function() { kov.style.opacity = '1'; });
