@@ -502,8 +502,8 @@ export function buildGameplay() {
       // Time expired — end the half (but not during a PAT)
       if (gs.clockSeconds <= 0) {
         stop2MinClock();
+        gs._checkHalfEnd(); // Always check — PAT happens via handleConversion which checks after
         if (!conversionMode) {
-          gs._checkHalfEnd();
           checkEnd();
         }
       }
@@ -1954,6 +1954,7 @@ export function buildGameplay() {
 
   // ── SNAP ──
   function doSnap() {
+    if (phase === 'busy') return; // Prevent re-entrant snaps
     phase = 'busy';
     // Restart real-time clock if it was stopped (spike/incomplete/out of bounds)
     if (gs.twoMinActive && !twoMinTimer) start2MinClock();

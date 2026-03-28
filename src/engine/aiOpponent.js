@@ -125,7 +125,7 @@ export function aiSelectPlayer(roster, play, difficulty, isOffense) {
   if (available.length === 0) {
     available = roster.filter(p => !p.injured);
   }
-  if (available.length === 0) return roster[0]; // fallback
+  if (available.length === 0) return roster.find(p => !p.injured) || roster[0]; // prefer non-injured
 
   // Easy: random
   if (difficulty === 'EASY' || difficulty === 'RANDOM') {

@@ -95,10 +95,12 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
   var possTeam = isHumanOnOff ? humanTeamName : oppTeamName;
   var defTeam = isHumanOnOff ? oppTeamName : humanTeamName;
 
-  // Derive correct player roles — QB throws, receiver catches, runner runs
+  // Derive correct player roles — null-safe
+  if (!off) off = { name: 'the QB', pos: 'QB' };
+  if (!def) def = { name: 'the defense', pos: 'LB' };
   var qbName = off.pos === 'QB' ? off.name : (off.name || 'the QB');
-  var receiverName = off.pos !== 'QB' ? off.name : (def.name || 'the receiver'); // fallback
-  var rusherName = off.pos !== 'QB' ? off.name : off.name; // QB can rush too
+  var receiverName = off.pos !== 'QB' ? off.name : (def.name || 'the receiver');
+  var rusherName = off.name || 'the runner';
 
   // Determine emotional tier
   var tier = 1;

@@ -69,7 +69,11 @@ export function getAvailableSorted(deck, ratingKey) {
  * @returns {object|null} Selected player
  */
 export function aiPickST(deck, ratingKey, difficulty) {
-  if (deck.available.length === 0) return null;
+  if (deck.available.length === 0) {
+    // All burned — random from burned list (player still exists, just reused)
+    if (deck.burned.length > 0) return deck.burned[Math.floor(Math.random() * deck.burned.length)].player;
+    return null;
+  }
   var sorted = getAvailableSorted(deck, ratingKey);
 
   if (difficulty === 'EASY') {

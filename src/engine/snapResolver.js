@@ -14,6 +14,7 @@ import { calculatePersonnelMod } from './personnelSystem.js';
  * Box-Muller transform for gaussian random numbers.
  */
 function gaussRandom(mean, stddev) {
+  if (!stddev || stddev <= 0) return mean;
   let u = 0, v = 0;
   while (u === 0) u = Math.random();
   while (v === 0) v = Math.random();
