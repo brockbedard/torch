@@ -371,6 +371,7 @@ export function buildGameplay() {
       initialPossession: GS.humanReceives ? hAbbr : 'IR',
       ctTeamId: GS.team, irTeamId: oppId,
     });
+    GS.engine.momentumEnabled = FEATURES.momentumSystem;
     // Seed TORCH points from previous game
     var carry = GS.season && GS.season.carryoverPoints ? GS.season.carryoverPoints : 0;
     if (carry > 0) GS.engine.ctTorchPts = carry;
@@ -4536,6 +4537,29 @@ export function buildGameplay() {
     },
     openBooster: function() {
       triggerShop('halftime', function() { drawBug(); drawField(); drawPanel(); });
+    },
+    advanceSeason: function() {
+      setGs(function(s) {
+        var cur = (s && s.season && s.season.currentGame != null) ? s.season.currentGame : 0;
+        return Object.assign({}, s, {
+          season: Object.assign({}, (s && s.season) || {}, { currentGame: Math.min(cur + 1, 2) }),
+        });
+      });
+    },
+    maxMomentumP1: function() {
+      var firstId = gs.ctOffRoster && gs.ctOffRoster[0] ? (gs.ctOffRoster[0].id || gs.ctOffRoster[0]) : null;
+      if (firstId) { gs.offMomentumMap = gs.offMomentumMap || {}; gs.offMomentumMap[firstId] = 5; }
+      drawBug(); drawField(); drawPanel();
+    },
+    maxHeatP1: function() {
+      var firstId = gs.ctOffRoster && gs.ctOffRoster[0] ? (gs.ctOffRoster[0].id || gs.ctOffRoster[0]) : null;
+      if (firstId) { gs.offHeatMap = gs.offHeatMap || {}; gs.offHeatMap[firstId] = 5; }
+      drawBug(); drawField(); drawPanel();
+    },
+    resetAllHeat: function() {
+      gs.offHeatMap = {};
+      gs.defHeatMap = {};
+      drawBug(); drawField(); drawPanel();
     },
   });
 

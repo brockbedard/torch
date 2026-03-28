@@ -4,7 +4,7 @@
  * Activated via ?dev or localStorage.torch_dev = '1'. Never appears in production.
  */
 
-import { GS, setGs, getTeam, getOtherTeam, getOffCards, getDefCards } from '../../state.js';
+import { GS, setGs, getTeam, getOtherTeam, getOffCards, getDefCards, FEATURES, setFeatureFlag } from '../../state.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { TEAMS, getSeasonOpponents } from '../../data/teams.js';
 import { generateConditions } from '../../data/gameConditions.js';
@@ -341,7 +341,7 @@ export function injectDevPanel(el, gs, callbacks) {
       } else {
         var offKeys = Object.keys(gs.offMomentumMap || {});
         var firstOffId = offKeys.length ? offKeys[0] : null;
-        if (!firstOffId && gs.ctOffRoster && gs.ctOffRoster[0]) firstOffId = gs.ctOffRoster[0];
+        if (!firstOffId && gs.ctOffRoster && gs.ctOffRoster[0]) firstOffId = gs.ctOffRoster[0].id || gs.ctOffRoster[0];
         if (firstOffId) { gs.offMomentumMap = gs.offMomentumMap || {}; gs.offMomentumMap[firstOffId] = 5; }
         if (callbacks.refresh) callbacks.refresh();
       }
@@ -352,7 +352,7 @@ export function injectDevPanel(el, gs, callbacks) {
       } else {
         var offHeatKeys = Object.keys(gs.offHeatMap || {});
         var firstHeatId = offHeatKeys.length ? offHeatKeys[0] : null;
-        if (!firstHeatId && gs.ctOffRoster && gs.ctOffRoster[0]) firstHeatId = gs.ctOffRoster[0];
+        if (!firstHeatId && gs.ctOffRoster && gs.ctOffRoster[0]) firstHeatId = gs.ctOffRoster[0].id || gs.ctOffRoster[0];
         if (firstHeatId) { gs.offHeatMap = gs.offHeatMap || {}; gs.offHeatMap[firstHeatId] = 5; }
         if (callbacks.refresh) callbacks.refresh();
       }
