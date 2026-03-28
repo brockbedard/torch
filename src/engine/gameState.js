@@ -85,11 +85,13 @@ export class GameState {
     this.cpuTorchCards = [];
     // AI starting cards scale with difficulty
     if (this.difficulty === 'MEDIUM') {
-      var bronzePool = TORCH_CARDS.filter(function(c) { return c.tier === 'BRONZE'; });
-      if (bronzePool.length > 0) this.cpuTorchCards.push(bronzePool[Math.floor(Math.random() * bronzePool.length)].id);
+      // Medium: start with a useful Bronze (situational value, not just cheapest)
+      var medBronzes = ['play_action', 'scramble_drill', 'twelfth_man', 'ice'];
+      this.cpuTorchCards.push(medBronzes[Math.floor(Math.random() * medBronzes.length)]);
     } else if (this.difficulty === 'HARD') {
-      var silverPool = TORCH_CARDS.filter(function(c) { return c.tier === 'SILVER'; });
-      if (silverPool.length > 0) this.cpuTorchCards.push(silverPool[Math.floor(Math.random() * silverPool.length)].id);
+      // Hard: start with a high-impact Silver card
+      var goodSilvers = ['deep_shot', 'truck_stick', 'prime_time', 'hard_count'];
+      this.cpuTorchCards.push(goodSilvers[Math.floor(Math.random() * goodSilvers.length)]);
     }
 
     // Stats
@@ -374,7 +376,7 @@ export class GameState {
     return this.yardsToEndzone() <= 50;
   }
 
-  /** Check if field goal is in range (max 50-yard FG, or 60 with CANNON LEG) */
+  /** Check if field goal is in range (max 50-yard FG default, or 60 with CANNON LEG) */
   canAttemptFG(cannonLeg) {
     var maxRange = cannonLeg ? 60 : 50;
     return this.canSpecialTeams() && (this.yardsToEndzone() + 17) <= maxRange;
@@ -392,17 +394,17 @@ export class GameState {
     if (!this.canSpecialTeams()) return 'go_for_it';
 
     // Always go for it: short yardage, desperate, or inside the 5
-    if (dist <= 2) return 'go_for_it';
+    if (dist <= 3) return 'go_for_it';
     if (desperate) return 'go_for_it';
     if (ydsToEz <= 5) return 'go_for_it';
 
-    // FG range decisions
-    if (this.canAttemptFG() && dist >= 6) {
-      if (Math.random() * 100 < 85 + aggMod) return 'field_goal';
+    // FG range decisions — kick any 4th & 4+ inside FG range
+    if (this.canAttemptFG() && dist >= 4) {
+      if (Math.random() * 100 < 80 + aggMod) return 'field_goal';
     }
 
-    // Medium distance (3-5 yards)
-    if (dist >= 3 && dist <= 5) {
+    // Medium distance (4-5 yards outside FG range)
+    if (dist >= 4 && dist <= 5) {
       if (Math.random() * 100 < 65 + aggMod) return 'go_for_it';
       return 'punt';
     }
@@ -964,6 +966,18 @@ export class GameState {
       // Human sees the shop UI — no auto-buy
       return purchased;
     }
+
+    // AI impact priority lists (cards that have real snap-level effects)
+    const HIGH_IMPACT = ['deep_shot', 'truck_stick', 'prime_time', 'hard_count', 'challenge_flag', 'sure_hands', 'scout_team'];
+    const MED_IMPACT  = ['play_action', 'scramble_drill', 'twelfth_man', 'ice', 'twelfth_man'];
+
+    // Score card impact for prioritized buying
+    const impactScore = (id) => {
+      if (HIGH_IMPACT.includes(id)) return 3;
+      if (MED_IMPACT.includes(id)) return 2;
+      return 1;
+    };
+
     // AI buying logic based on difficulty
     const affordable = offers.filter(id => {
       const card = TORCH_CARDS.find(c => c.id === id);
@@ -972,15 +986,17 @@ export class GameState {
     if (this.difficulty === 'EASY') {
       // Easy AI never buys
     } else if (this.difficulty === 'MEDIUM') {
-      // Medium: buy 1 cheapest
+      // Medium: buy 1 card, prefer situational value over cheapest
       if (affordable.length > 0) {
-        purchased.push(affordable.reduce((a, b) => {
-          return TORCH_CARDS.find(c => c.id === a).cost < TORCH_CARDS.find(c => c.id === b).cost ? a : b;
-        }));
+        const best = affordable.reduce((a, b) => impactScore(a) >= impactScore(b) ? a : b);
+        purchased.push(best);
       }
     } else {
-      // Hard: buy up to 2, best value (most expensive affordable)
+      // Hard: buy up to 2, prioritize high-impact cards first
       var sorted = affordable.slice().sort((a, b) => {
+        var diff = impactScore(b) - impactScore(a);
+        if (diff !== 0) return diff;
+        // Tie-break: higher cost = more powerful
         return TORCH_CARDS.find(c => c.id === b).cost - TORCH_CARDS.find(c => c.id === a).cost;
       });
       for (var bi = 0; bi < Math.min(2, sorted.length); bi++) {

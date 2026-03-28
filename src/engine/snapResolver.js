@@ -82,8 +82,8 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   const covVar = cov.var || 0;
   const covInt = cov.int || 0;
 
-  // ── BASE MEAN (35% bump — increased from 25% to reduce ties) ──
-  let mean = offPlay.mean * 1.35 + covMean;
+  // ── BASE MEAN (55% bump — increased to reduce shutouts and low scoring) ──
+  let mean = offPlay.mean * 1.55 + covMean;
   let variance = Math.max(1, offPlay.variance * 0.90 + covVar);
 
   // Defensive card effects
@@ -150,10 +150,10 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   variance += trailingVarBoost;
 
   // ── DIFFICULTY YARD BONUS ──
-  // Easy: +1.5 (was +3), with rubber-band: +0 if ahead by 21+
+  // Easy: +1.0 (was +1.5), with rubber-band: +0 if ahead by 21+
   // Medium: +1 human offense, -0.5 AI offense — nudge toward 40-55% win rate
   if (difficulty === 'EASY' && offenseIsHuman) {
-    mean += (scoreDiff <= -21) ? 0 : 1.5;
+    mean += (scoreDiff <= -21) ? 0 : 1.0;
   } else if (difficulty === 'MEDIUM' && offenseIsHuman) {
     mean += 1;
   } else if (difficulty === 'MEDIUM' && !offenseIsHuman) {
@@ -161,7 +161,6 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   } else if (difficulty === 'HARD' && offenseIsHuman) {
     mean -= 1;
   }
-
   // Halftime adjustment (2nd half only, human offense only)
   var adj = context.halftimeAdjustment;
   if (adj && offenseIsHuman) {
@@ -184,6 +183,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     if (coachBadge === 'IRON_CURTAIN') sackRate += 0.03;
     if (difficulty === 'EASY' && offenseIsHuman) sackRate *= 0.4;
 
+    sackRate *= 0.85; // Global sack reduction to increase scoring
     sackRate = Math.max(0, Math.min(0.30, sackRate));
 
     if (Math.random() < sackRate) {
@@ -206,9 +206,9 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     if (yardsToEndzone <= 10) compRate -= 0.05;
     // Rain completionMod applied post-resolution in gameplay.js
     if (momentum > 75) compRate -= 0.05;
-    if (difficulty === 'EASY' && offenseIsHuman) compRate += 0.15;
+    if (difficulty === 'EASY' && offenseIsHuman) compRate += 0.10; // was 0.15
 
-    compRate = Math.max(0.15, Math.min(0.95, compRate));
+    compRate = Math.max(0.40, Math.min(0.95, compRate)); // Floor: even worst matchups complete 40%
 
     if (Math.random() > compRate) {
       result.isIncomplete = true;
@@ -221,9 +221,9 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     result.isComplete = true;
     let rawYards = gaussRandom(mean, variance * 0.5);
 
-    // Big play chance (4% on completions — was 7%)
-    if (Math.random() < 0.04) {
-      var bigMult = 1.4 + Math.random() * 0.6;
+    // Big play chance (3.5% on completions)
+    if (Math.random() < 0.035) {
+      var bigMult = 1.4 + Math.random() * 0.5;
       rawYards = mean * bigMult;
       result.description = `EXPLOSIVE! ${featuredOff.name} breaks free for extra yards!`;
     }
@@ -277,7 +277,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   // === RUN PLAY RESOLUTION (skip completion check entirely) ===
   else {
     // ── STUFF CHECK ──
-    let stuffRate = 0.18;
+    let stuffRate = 0.14; // Reduced from 0.18 to improve drive success rate
 
     if (defPlay.runDefMod < -2) stuffRate += 0.10;
     else if (defPlay.runDefMod < 0) stuffRate += 0.05;
@@ -286,7 +286,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     else if (covMean <= -1) stuffRate += 0.04;
     if (yardsToEndzone <= 10) stuffRate += 0.08;
     else if (yardsToEndzone <= 20) stuffRate += 0.04;
-    if (difficulty === 'EASY' && offenseIsHuman) stuffRate *= 0.5;
+    if (difficulty === 'EASY' && offenseIsHuman) stuffRate *= 0.60;
 
     stuffRate = Math.max(0.05, Math.min(0.50, stuffRate));
 
@@ -311,9 +311,9 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     // ── ROLL YARDS (no completion check — runs always "connect") ──
     let rawYards = gaussRandom(mean, variance * 0.5);
 
-    // Big play chance on runs (3% — was 7%)
-    if (Math.random() < 0.03) {
-      var runBigMult = 1.3 + Math.random() * 0.5;
+    // Big play chance on runs (2.5%)
+    if (Math.random() < 0.025) {
+      var runBigMult = 1.3 + Math.random() * 0.4;
       rawYards = mean * runBigMult;
       result.description = `${featuredOff.name} breaks a tackle and keeps going!`;
     }
@@ -350,19 +350,19 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   // ── EASY DIFFICULTY POST-RESOLUTION ──
   if (difficulty === 'EASY') {
     if (offenseIsHuman) {
-      if (result.isSack && Math.random() < 0.30) {
+      if (result.isSack && Math.random() < 0.20) { // was 0.30
         result.isSack = false;
         result.yards = Math.floor(Math.random() * 3);
         result.description = `${featuredOff.name} escapes pressure for ${result.yards} yards.`;
       }
-      if (result.isInterception && Math.random() < 0.40) {
+      if (result.isInterception && Math.random() < 0.25) { // was 0.40
         result.isInterception = false;
         result.isIncomplete = true;
         result.yards = 0;
         result.description = `Pass broken up — close call!`;
       }
-    } else if (!offenseIsHuman && !result.isSack && !result.isIncomplete) {
-      result.yards = Math.max(result.yards - 2, -5);
+    } else if (!offenseIsHuman && result.yards > 0) {
+      result.yards = Math.max(1, Math.floor(result.yards * 0.85)); // Easy: AI 15% yard reduction
     }
   }
 
