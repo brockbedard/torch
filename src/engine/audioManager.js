@@ -104,10 +104,17 @@ var AudioManager = {
     this.setCrowdIntensity(0.3);
   },
 
-  stopCrowd: function() {
-    if (_crowd.low) _crowd.low.stop();
-    if (_crowd.mid) _crowd.mid.stop();
-    if (_crowd.high) _crowd.high.stop();
+  stopCrowd: function(fadeDuration) {
+    var fd = (fadeDuration || 0.3) * 1000;
+    if (_crowd.low) _crowd.low.fade(_crowd.low.volume(), 0, fd);
+    if (_crowd.mid) _crowd.mid.fade(_crowd.mid.volume(), 0, fd);
+    if (_crowd.high) _crowd.high.fade(_crowd.high.volume(), 0, fd);
+    // Stop after fade completes to free resources
+    setTimeout(function() {
+      if (_crowd.low) _crowd.low.stop();
+      if (_crowd.mid) _crowd.mid.stop();
+      if (_crowd.high) _crowd.high.stop();
+    }, fd + 50);
   },
 
   setCrowdIntensity: function(intensity, fadeDuration) {
