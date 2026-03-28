@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0A0804"/>
+  <text x="256" y="200" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="120" fill="#FF4511">TORCH</text>
+  <text x="256" y="320" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="60" fill="#EBB010">FOOTBALL</text>
+  <path d="M256 380 L236 420 L256 410 L276 420 Z" fill="#FF4511"/>
+</svg>

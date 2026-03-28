@@ -171,8 +171,8 @@ First-time players start at 1st & Goal from the 9 with a SURE HANDS gold card. 3
 |--------|------|--------|------|
 | Play selection | Random | Situational | 50% optimal + 25% sit + 25% random |
 | OVR modifier | -3 | Normal | +2 |
-| Mean yard bonus | +1.5 (0 if ahead 21+) | 0 | -1 |
-| Sack cancel | 50% | None | None |
+| Mean yard bonus | +1.5 (0 if ahead 21+) | +1 human / -0.5 AI | -1 |
+| Sack cancel | 30% | None | None |
 | INT cancel | 40% | None | None |
 | AI TORCH cards | 0 | 1 Bronze | 1 Silver |
 
@@ -303,15 +303,15 @@ All card animations use GSAP (not CSS transitions). Installed: `gsap@3.14.2`.
 |------|------|------|------|--------|
 | Gold | SCOUT TEAM | pre-snap | 180 | See opponent's play before picking yours |
 | Gold | SURE HANDS | reactive | 200 | Cancel a turnover, drive continues |
-| Gold | BLOCKED KICK | reactive | 50 | Chance to block opponent's FG or punt |
-| Gold | HOUSE CALL | pre-snap | 50 | Returner guaranteed 50+ yard return |
+| Gold | BLOCKED KICK | reactive | 150 | Chance to block opponent's FG or punt |
+| Gold | HOUSE CALL | pre-snap | 175 | Returner guaranteed 50+ yard return |
 | Silver | HARD COUNT | pre-snap | 90 | Force opponent to random play |
 | Silver | DEEP SHOT | pre-snap | 100 | 2x yards on pass |
 | Silver | TRUCK STICK | pre-snap | 100 | 2x yards on run, no fumble |
 | Silver | CHALLENGE FLAG | reactive | 120 | Reroll snap, 50% better outcome |
 | Silver | PRIME TIME | pre-snap | 75 | Featured player OVR = 99 |
 | Silver | SCOUT REPORT | pre-snap | 30 | See all 7 players instead of 4 |
-| Silver | PRE-SNAP READ | pre-snap | 25 | Reveal opponent's featured player |
+| Silver | PRE-SNAP READ | pre-snap | 35 | Reveals if opponent is in zone, man, or blitz |
 | Silver | ICE THE KICKER | pre-snap | 20 | Reduce kicker accuracy by 1 star |
 | Silver | CANNON LEG | pre-snap | 25 | Extend FG range by 10 yards |
 | Silver | IRON MAN | pre-snap | 20 | Restore a burned ST player |
