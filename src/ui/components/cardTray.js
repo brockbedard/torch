@@ -60,20 +60,6 @@ function animateDeal(cards, startDelay, slow) {
   });
 }
 
-function animateSelect(card) {
-  gsap.to(card, { y: -8, scale: 1.05, duration: 0.15, ease: 'power2.out' });
-  card.style.borderColor = '#EBB010';
-  card.style.boxShadow = '0 4px 16px rgba(235,176,16,0.4)';
-  card.style.zIndex = '2';
-}
-
-function animateDeselect(card) {
-  gsap.to(card, { y: 0, scale: 1, duration: 0.15, ease: 'power2.out' });
-  card.style.borderColor = 'transparent';
-  card.style.boxShadow = 'none';
-  card.style.zIndex = '';
-}
-
 function animateMark(card) {
   gsap.to(card, { y: 6, rotation: -3, opacity: 0.5, duration: 0.15, ease: 'power2.out' });
   card.style.borderColor = '#e03050';

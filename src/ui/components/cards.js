@@ -5,7 +5,6 @@
  * team helmets, flame pip ratings.
  */
 
-import { BADGE_ICON_PATHS } from '../../data/badgeIcons.js';
 import { TEAMS } from '../../data/teams.js';
 import { renderTorchCardIcon, TORCH_CARD_ICONS } from '../../data/torchCardIcons.js';
 import { CATEGORY_COLORS, TIER_COLORS } from '../../data/torchCards.js';
