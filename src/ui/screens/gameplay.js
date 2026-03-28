@@ -1751,6 +1751,8 @@ export function buildGameplay() {
 
   // ── RENDER PANEL ──
   function drawPanel() {
+    // Safety: remove any stuck overlays that might block interaction
+    el.querySelectorAll('.T-st-ov, .T-kickoff-ov').forEach(function(o) { o.remove(); });
     panel.innerHTML = '';
     const isOff = gs.possession === hAbbr;
     const sides = gs.getCurrentSides();
@@ -2029,10 +2031,13 @@ export function buildGameplay() {
       // Hold
       tcTl.to({}, { duration: tcCard.tier === 'GOLD' ? 0.8 : 0.5 });
       // Dismiss
-      tcTl.to(tcOv, { opacity: 0, duration: 0.2, onComplete: function() { tcOv.remove(); } });
+      tcTl.to(tcOv, { opacity: 0, duration: 0.2, onComplete: function() { if (tcOv.parentNode) tcOv.remove(); } });
+      // Hard safety: always remove after max duration
+      var tcMaxDur = (tcCard.tier === 'GOLD' ? 2.5 : 2) * 1000;
+      setTimeout(function() { if (tcOv.parentNode) { tcOv.style.pointerEvents = 'none'; tcOv.remove(); } }, tcMaxDur);
       // Tap to skip
       tcOv.style.pointerEvents = 'auto';
-      tcOv.onclick = function() { tcTl.progress(1); };
+      tcOv.onclick = function() { tcOv.style.pointerEvents = 'none'; tcTl.progress(1); };
     }
 
     // Pre-snap TORCH card effects
