@@ -183,6 +183,15 @@ export function injectDevPanel(el, gs, callbacks) {
   html += btn('Clear Achievements', 'dev-clear-achievements', '#555');
   html += btn('Clear All Progress (torch_*)', 'dev-clear-all', '#e03050');
 
+  // ── FEATURE FLAGS ──
+  html += section('FEATURE FLAGS');
+  var _flagKeys = Object.keys(FEATURES);
+  _flagKeys.forEach(function(key) {
+    var on = FEATURES[key];
+    var color = on ? '#3df58a' : '#555';
+    html += '<button data-flag="' + key + '" style="display:block;width:100%;margin:2px 0;padding:5px 8px;background:transparent;border:1px solid ' + color + '44;color:' + color + ';font-family:monospace;font-size:9px;cursor:pointer;border-radius:3px;text-align:left;">' + key + ': ' + (on ? 'ON' : 'OFF') + '</button>';
+  });
+
   // ── UTILS ──
   html += section('UTILS');
   html += btn('Reset Game', 'dev-reset', '#e03050');
@@ -193,6 +202,18 @@ export function injectDevPanel(el, gs, callbacks) {
 
   // ── EVENT HANDLERS ──
   panel.addEventListener('click', function(e) {
+    // Feature flag toggles
+    var flagKey = e.target.dataset.flag;
+    if (flagKey && flagKey in FEATURES) {
+      var newVal = !FEATURES[flagKey];
+      setFeatureFlag(flagKey, newVal);
+      e.target.textContent = flagKey + ': ' + (newVal ? 'ON' : 'OFF');
+      var newColor = newVal ? '#3df58a' : '#555';
+      e.target.style.color = newColor;
+      e.target.style.borderColor = newColor + '44';
+      return;
+    }
+
     var id = e.target.id || e.target.dataset.id;
     if (!id || !gs) return;
 
