@@ -3187,15 +3187,9 @@ export function buildGameplay() {
     // Phase 1: Tap to flip — 3D coin with team logos on each side
     // Title
     var tossTitle = document.createElement('div');
-    tossTitle.style.cssText = "font-family:'Teko';font-weight:700;font-size:32px;color:#EBB010;letter-spacing:5px;margin-bottom:4px;";
+    tossTitle.style.cssText = "font-family:'Teko';font-weight:700;font-size:32px;color:#EBB010;letter-spacing:5px;margin-bottom:16px;";
     tossTitle.textContent = 'COIN TOSS';
     ov.appendChild(tossTitle);
-
-    // Matchup
-    var tossMatchup = document.createElement('div');
-    tossMatchup.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#888;letter-spacing:2px;margin-bottom:16px;";
-    tossMatchup.innerHTML = '<span style="color:' + hTeam.accent + '">' + hTeam.name + '</span> vs <span style="color:' + oTeam.accent + '">' + oTeam.name + '</span>';
-    ov.appendChild(tossMatchup);
 
     var coin = document.createElement('div');
     coin.style.cssText = 'width:110px;height:110px;perspective:400px;cursor:pointer;';
