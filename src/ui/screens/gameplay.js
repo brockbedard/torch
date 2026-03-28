@@ -850,7 +850,7 @@ export function buildGameplay() {
 
     strip.innerHTML = h;
 
-    // Append actual shared-builder DOM cards into placed slots
+    // Append actual shared-builder DOM cards into placed slots with lock-in animation
     if (selPl) {
       var playSlot = strip.querySelector('#T-placed-play-slot');
       if (playSlot) {
@@ -858,6 +858,10 @@ export function buildGameplay() {
         playEl.style.width = '100%';
         playEl.style.height = '100%';
         playSlot.appendChild(playEl);
+        try {
+          gsap.from(playSlot, { y: 40, scale: 0.8, opacity: 0, duration: 0.35, ease: 'power2.out' });
+          setTimeout(function() { SND.cardThud(); }, 300);
+        } catch(e) {}
       }
     }
     if (selP) {
@@ -867,6 +871,10 @@ export function buildGameplay() {
         playerEl.style.width = '100%';
         playerEl.style.height = '100%';
         playerSlot.appendChild(playerEl);
+        try {
+          gsap.from(playerSlot, { y: 40, scale: 0.8, opacity: 0, duration: 0.35, ease: 'power2.out' });
+          setTimeout(function() { SND.cardThud(); }, 300);
+        } catch(e) {}
       }
     }
     if (selTorch) {
@@ -1955,18 +1963,27 @@ export function buildGameplay() {
     var defCard = isOff ? null : selTorch;
     var playedPlay = selPl;
 
-    // Torch card activation moment
+    // Torch card activation fanfare — pointer-events:none (never blocks taps)
     if (selectedPreSnap && selectedPreSnap.name) {
       var tcCard = selectedPreSnap;
       var tcTierCol = tcCard.tier === 'GOLD' ? '#EBB010' : tcCard.tier === 'SILVER' ? '#C0C0C0' : '#CD7F32';
       var tcOv = document.createElement('div');
-      tcOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,' + (tcCard.tier === 'GOLD' ? '0.6' : '0.3') + ');opacity:0;transition:opacity 0.15s;pointer-events:none;';
-      tcOv.innerHTML =
-        "<div style=\"font-family:'Teko';font-weight:700;font-size:24px;color:" + tcTierCol + ";letter-spacing:3px;text-shadow:0 0 16px " + tcTierCol + "60;\">" + tcCard.name + "</div>" +
-        "<div style=\"font-family:'Rajdhani';font-size:12px;color:#ccc;margin-top:4px;max-width:280px;text-align:center;\">" + tcCard.effect + "</div>";
+      tcOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);pointer-events:none;opacity:0;';
+      var tcVisual = buildTorchCard(tcCard, 100, 140);
+      tcVisual.style.boxShadow = '0 0 30px ' + tcTierCol + '66';
+      tcOv.appendChild(tcVisual);
+      tcOv.innerHTML += "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:" + tcTierCol + ";letter-spacing:3px;margin-top:10px;text-shadow:0 0 12px " + tcTierCol + "60;\">" + tcCard.name + "</div>" +
+        "<div style=\"font-family:'Rajdhani';font-size:11px;color:#ccc;margin-top:4px;max-width:260px;text-align:center;\">" + tcCard.effect + "</div>";
       el.appendChild(tcOv);
-      requestAnimationFrame(function() { tcOv.style.opacity = '1'; });
-      setTimeout(function() { tcOv.style.opacity = '0'; setTimeout(function() { tcOv.remove(); }, 200); }, tcCard.tier === 'GOLD' ? 1200 : tcCard.tier === 'SILVER' ? 800 : 500);
+      try {
+        gsap.to(tcOv, { opacity: 1, duration: 0.15 });
+        gsap.from(tcVisual, { scale: 0.5, rotation: -5, duration: 0.3, ease: 'back.out(1.7)' });
+        if (tcCard.tier === 'GOLD') SND.flip(); else SND.cardSnap();
+      } catch(e) {}
+      var tcDur = tcCard.tier === 'GOLD' ? 1500 : 1000;
+      setTimeout(function() { try { gsap.to(tcOv, { opacity: 0, duration: 0.2, onComplete: function() { if (tcOv.parentNode) tcOv.remove(); } }); } catch(e) { if (tcOv.parentNode) tcOv.remove(); } }, tcDur);
+      // Hard safety
+      setTimeout(function() { if (tcOv.parentNode) tcOv.remove(); }, tcDur + 500);
     }
 
     // Pre-snap TORCH card effects
