@@ -788,6 +788,10 @@ export function buildGameplay() {
     // LOS and LTG
     h += `<div class="T-los" style="left:${lp}%;background:${pc};box-shadow:0 0 10px ${pc}"></div>`;
     h += `<div class="T-ltg" style="left:${tp}%;border-color:#c8a030"></div>`;
+    // Field position label — always visible
+    var ydsToEzLabel = s.yardsToEndzone;
+    var fieldLabel = ydsToEzLabel <= 20 ? 'RED ZONE' : ydsToEzLabel <= 50 ? 'OPP ' + ydsToEzLabel : 'OWN ' + (100 - ydsToEzLabel);
+    h += `<div style="position:absolute;top:4px;left:${lp}%;transform:translateX(-50%);z-index:12;font-family:'Teko';font-weight:700;font-size:11px;color:${pc};letter-spacing:1px;text-shadow:0 0 6px rgba(0,0,0,0.9),0 1px 3px rgba(0,0,0,0.9);white-space:nowrap;pointer-events:none;">${fieldLabel}</div>`;
 
     // Drop zones — empty outlines for unfilled, actual card for filled
     const playLbl = phase === 'play' ? 'DRAG<br><br>PLAY<br><br>HERE' : 'PLAY';
