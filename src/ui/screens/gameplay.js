@@ -3131,7 +3131,7 @@ export function buildGameplay() {
           var cardBtn = document.createElement('button');
           cardBtn.className = 'btn-blitz';
           cardBtn.style.cssText = "width:100%;font-size:13px;padding:14px;background:#141008;color:#EBB010;border-color:#EBB010;text-align:left;";
-          cardBtn.innerHTML = "<div style=\"font-family:'Teko';font-size:18px;letter-spacing:2px;\">DRAW A TORCH CARD</div><div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:2px;\">Pick 1 of 3 mystery cards \u2014 but you kick off to them</div>";
+          cardBtn.innerHTML = "<div style=\"font-family:'Teko';font-size:18px;letter-spacing:2px;\">DRAW A FREE TORCH CARD</div><div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:2px;\">Pick 1 of 3 mystery cards \u2014 but you kick off to them</div>";
           cardBtn.onclick = function() { showFaceDownCards(ov, offers, true, onDone); };
 
           var recBtn = document.createElement('button');
@@ -3153,7 +3153,7 @@ export function buildGameplay() {
           var aiMsg = document.createElement('div');
           aiMsg.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:#888;text-align:center;margin-top:8px;letter-spacing:1px;";
           aiMsg.textContent = aiTakesCard
-            ? oTeam.name + ' CHOOSES TO DRAW A TORCH CARD'
+            ? oTeam.name + ' DRAWS A FREE TORCH CARD'
             : oTeam.name + ' CHOOSES TO RECEIVE';
           ov.appendChild(aiMsg);
 
@@ -3162,7 +3162,7 @@ export function buildGameplay() {
               // AI receives, human gets a card
               var youGet = document.createElement('div');
               youGet.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;text-align:center;margin-top:8px;";
-              youGet.textContent = 'YOU DRAW A TORCH CARD';
+              youGet.textContent = 'YOU DRAW A FREE TORCH CARD';
               ov.appendChild(youGet);
               setTimeout(function() { showFaceDownCards(ov, offers, false, onDone); }, 800);
             } else {
