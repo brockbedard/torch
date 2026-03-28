@@ -13,6 +13,7 @@ import { buildMaddenPlayer, teamHelmetSvg, renderFlamePips } from '../components
 import { renderTeamBadge } from '../../data/teamLogos.js';
 import { generateConditions, WEATHER, FIELD, CROWD } from '../../data/gameConditions.js';
 import { getTeamRecord } from './endGame.js';
+import { getStreak } from '../../engine/streaks.js';
 
 // ============================================================
 // TEAM-SPECIFIC AUDIO STINGS (jsfxr presets)
@@ -83,8 +84,12 @@ export function buildTeamSelect() {
   // Title + subtitle instruction
   var instrWrap = document.createElement('div');
   instrWrap.style.cssText = 'flex-shrink:0;text-align:center;padding:6px 20px 2px;';
+  // Show season progress if mid-season
+  var _existingSeason = GS && GS.season && GS.season.opponents && GS.season.opponents.length > 0;
+  var _seasonGame = _existingSeason ? (GS.season.currentGame || 0) + 1 : 1;
+  var _seasonLabel = _seasonGame <= 3 ? 'CONFERENCE SEASON \u2014 GAME ' + _seasonGame + ' OF 3' : 'CHOOSE YOUR TEAM';
   instrWrap.innerHTML =
-    "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:var(--a-gold);letter-spacing:3px;\">CHOOSE YOUR TEAM</div>";
+    "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:var(--a-gold);letter-spacing:3px;\">" + (_existingSeason ? _seasonLabel : 'CHOOSE YOUR TEAM') + "</div>";
   content.appendChild(instrWrap);
 
   // ── 2x2 TEAM GRID — fills available space ──
@@ -130,12 +135,18 @@ export function buildTeamSelect() {
     nameEl.textContent = team.name;
     info.appendChild(nameEl);
 
-    // Win-loss record
+    // Win-loss record + titles
     var rec = getTeamRecord(tid);
-    if (rec.wins + rec.losses + rec.ties > 0) {
+    var titles = JSON.parse(localStorage.getItem('torch_titles') || '{}');
+    var teamTitles = titles[tid] || 0;
+    var teamStreak = getStreak(tid);
+    if (rec.wins + rec.losses + rec.ties > 0 || teamTitles > 0) {
       var recEl = document.createElement('div');
       recEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:1px;";
-      recEl.textContent = rec.wins + '-' + rec.losses + (rec.ties > 0 ? '-' + rec.ties : '');
+      var recText = rec.wins + '-' + rec.losses + (rec.ties > 0 ? '-' + rec.ties : '');
+      if (teamTitles > 0) recText += ' \u00b7 ' + teamTitles + '\u00d7 CHAMP';
+      if (teamStreak.currentWin >= 2) recText += ' | ' + teamStreak.currentWin + ' streak';
+      recEl.textContent = recText;
       info.appendChild(recEl);
     }
 
@@ -193,6 +204,28 @@ export function buildTeamSelect() {
           c.style.zIndex = '1';
         }
       });
+      // Show player preview in selected card
+      var existingPreview = info.querySelector('[data-player-preview]');
+      if (!existingPreview) {
+        var roster = getOffenseRoster(tid).concat(getDefenseRoster(tid));
+        var topPlayers = roster.filter(function(p) { return p.isStar; }).concat(
+          roster.filter(function(p) { return !p.isStar && p.stars >= 4; })
+        ).slice(0, 3);
+
+        var previewEl = document.createElement('div');
+        previewEl.dataset.playerPreview = '1';
+        previewEl.style.cssText = 'display:flex;gap:4px;justify-content:center;margin-top:6px;';
+        topPlayers.forEach(function(p) {
+          var pip = document.createElement('div');
+          pip.style.cssText = "font-family:'Rajdhani';font-size:8px;color:#ccc;text-align:center;line-height:1.2;";
+          pip.innerHTML = '<div style="font-weight:700;color:#EBB010;">' + p.pos + '</div>' +
+            '<div>' + (p.firstName || p.name.split(' ')[0]) + '</div>' +
+            '<div style="color:#EBB010;font-size:7px;">' + '\u2605'.repeat(p.stars) + '</div>';
+          previewEl.appendChild(pip);
+        });
+        info.appendChild(previewEl);
+      }
+
       // Show KICK OFF button
       kickOffBtn.style.opacity = '1';
       kickOffBtn.style.pointerEvents = 'auto';
@@ -223,8 +256,10 @@ export function buildTeamSelect() {
   SND.click();
 
   // Skip animation — go straight to pregame
-  var opponents = getSeasonOpponents(selectedTeamId);
-  var opponentId = opponents[0];
+  var existingSeason = GS && GS.season && GS.season.opponents && GS.season.opponents.length > 0;
+  var opponents = existingSeason ? GS.season.opponents : getSeasonOpponents(selectedTeamId);
+  var currentGame = existingSeason ? (GS.season.currentGame || 0) : 0;
+  var opponentId = opponents[Math.min(currentGame, opponents.length - 1)];
   var humanReceives = Math.random() < 0.5;
   var difficulty = GS && GS.difficulty ? GS.difficulty : 'EASY';
   var gamesPlayed = parseInt(localStorage.getItem('torch_games_played') || '0');
@@ -232,7 +267,7 @@ export function buildTeamSelect() {
 
   setGs(function(s) {
     return Object.assign({}, s || {}, {
-      screen: 'roster',
+      screen: 'pregame',
       team: selectedTeamId,
       difficulty: difficulty,
       opponent: opponentId,
@@ -429,7 +464,7 @@ function startSelectionAnimation(container, teamId, team, isFirst) {
     // Set state and navigate to gameplay
     setGs(function(s) {
       return Object.assign({}, s || {}, {
-        screen: 'roster',
+        screen: 'pregame',
         team: teamId,
         difficulty: difficulty,
         opponent: opponentId,
