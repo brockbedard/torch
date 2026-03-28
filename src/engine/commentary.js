@@ -53,6 +53,11 @@ var FIELD_MODS = function(yds) {
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function coinFlip() { return Math.random() < 0.5; }
+// Sanitize commentary: fix double periods, stray periods before lowercase, double spaces
+function sanitize(s) {
+  if (!s) return s;
+  return s.replace(/\.\./g, '.').replace(/\. ([a-z])/g, ' $1').replace(/  +/g, ' ').trim();
+}
 
 // ============================================================
 // COOLDOWN TRACKER
@@ -149,7 +154,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       line2 = null; // No celebration for the opponent
     }
     trackTemplate(tdKey);
-    return { line1: line1, line2: line2 };
+    return { line1: sanitize(line1), line2: sanitize(line2) };
   }
 
   // ── SACK ──
@@ -170,7 +175,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
         def.name + ' brings the pressure.' + (Math.abs(yards) > 0 ? ' Down for -' + Math.abs(yards) + '.' : ' No gain.'),
       ]);
     }
-    return { line1: line1, line2: line2 };
+    return { line1: sanitize(line1), line2: sanitize(line2) };
   }
 
   // ── INTERCEPTION ──
@@ -193,7 +198,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       ]);
       line2 = defTeam + ' takes over.';
     }
-    return { line1: line1, line2: line2 };
+    return { line1: sanitize(line1), line2: sanitize(line2) };
   }
 
   // ── FUMBLE ──
@@ -214,7 +219,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       ]);
       line2 = null;
     }
-    return { line1: line1, line2: line2 };
+    return { line1: sanitize(line1), line2: sanitize(line2) };
   }
 
   // ── INCOMPLETE ──
@@ -247,7 +252,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
         ]);
       }
     }
-    return { line1: line1, line2: line2 };
+    return { line1: sanitize(line1), line2: sanitize(line2) };
   }
 
   // ── POSITIVE GAIN ──
@@ -288,7 +293,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
         if (res.gotFirstDown) line2 = 'First down ' + possTeam + '.';
       }
     }
-    return { line1: line1, line2: line2 };
+    return { line1: sanitize(line1), line2: sanitize(line2) };
   }
 
   // ── NO GAIN / LOSS ──
@@ -306,7 +311,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       rusherName + ' is met at the line of scrimmage.',
     ]);
   }
-  return { line1: line1, line2: line2 };
+  return { line1: sanitize(line1), line2: sanitize(line2) };
 }
 
 // ============================================================
