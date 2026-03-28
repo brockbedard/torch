@@ -1727,11 +1727,11 @@ export function buildGameplay() {
       ctxLabel.style.cssText = "font-family:'Teko';font-weight:700;font-size:14px;color:#e03050;letter-spacing:2px;width:100%;text-align:center;margin-bottom:4px;";
       ctxLabel.textContent = '4TH & ' + gs.distance + ' AT OPP ' + ydsToEz;
       fourthBar.insertBefore(ctxLabel, fourthBar.firstChild);
-      fourthBar.style.flexWrap = 'wrap';
+      fourthBar.style.cssText = "display:flex;flex-direction:column;gap:6px;padding:8px 12px;flex-shrink:0;background:rgba(224,48,80,0.06);border-bottom:2px solid #e0305044;";
 
       var goForIt = document.createElement('button');
       goForIt.className = 'btn-blitz';
-      goForIt.style.cssText = 'flex:1;font-size:12px;padding:10px 6px;background:#141008;color:#00ff44;border-color:#00ff44;';
+      goForIt.style.cssText = "width:100%;font-size:14px;padding:12px;background:" + hTeam.accent + ";color:#fff;border-color:" + hTeam.accent + ";font-family:'Teko';font-weight:700;letter-spacing:3px;";
       goForIt.textContent = 'GO FOR IT';
       goForIt.onclick = function() {
         SND.click();
@@ -1739,9 +1739,12 @@ export function buildGameplay() {
         drawPanel();
       };
 
+      var stRow = document.createElement('div');
+      stRow.style.cssText = 'display:flex;gap:6px;';
+
       var puntBtn = document.createElement('button');
       puntBtn.className = 'btn-blitz';
-      puntBtn.style.cssText = 'flex:1;font-size:12px;padding:10px 6px;background:#141008;color:#4DA6FF;border-color:#4DA6FF;';
+      puntBtn.style.cssText = "flex:1;font-size:13px;padding:10px;background:#141008;color:#4DA6FF;border-color:#4DA6FF;font-family:'Teko';font-weight:700;letter-spacing:2px;";
       puntBtn.textContent = 'PUNT';
       puntBtn.onclick = function() {
         SND.snap();
@@ -1770,7 +1773,7 @@ export function buildGameplay() {
       fgBtn.className = 'btn-blitz';
       if (gs.canAttemptFG()) {
         var fgDist = ydsToEz + 17;
-        fgBtn.style.cssText = 'flex:1;font-size:12px;padding:10px 6px;background:#141008;color:#EBB010;border-color:#EBB010;';
+        fgBtn.style.cssText = "flex:1;font-size:13px;padding:10px;background:#141008;color:#EBB010;border-color:#EBB010;font-family:'Teko';font-weight:700;letter-spacing:2px;";
         fgBtn.textContent = 'FG (' + fgDist + 'yd)';
         fgBtn.onclick = function() {
           SND.snap();
@@ -1800,14 +1803,15 @@ export function buildGameplay() {
           });
         };
       } else {
-        fgBtn.style.cssText = 'flex:1;font-size:10px;padding:10px 6px;background:#0a0a0a;color:#444;border-color:#333;cursor:not-allowed;';
+        fgBtn.style.cssText = "flex:1;font-size:11px;padding:10px;background:#0a0a0a;color:#444;border-color:#333;cursor:not-allowed;font-family:'Teko';letter-spacing:1px;";
         fgBtn.textContent = 'OUT OF RANGE';
         fgBtn.disabled = true;
       }
 
       fourthBar.appendChild(goForIt);
-      fourthBar.appendChild(puntBtn);
-      fourthBar.appendChild(fgBtn);
+      stRow.appendChild(puntBtn);
+      stRow.appendChild(fgBtn);
+      fourthBar.appendChild(stRow);
       panel.appendChild(fourthBar);
     }
 
