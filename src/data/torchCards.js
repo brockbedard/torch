@@ -34,7 +34,7 @@ export const TORCH_CARDS = [
   },
   {
     id: 'deep_shot', name: 'DEEP SHOT', iconKey: 'player',
-    tier: 'SILVER', cost: 100, type: 'pre-snap', category: 'amplification',
+    tier: 'SILVER', cost: 120, type: 'pre-snap', category: 'amplification',
     effect: 'Next pass play gets 2x yards',
   },
   {
@@ -44,7 +44,7 @@ export const TORCH_CARDS = [
   },
   {
     id: 'challenge_flag', name: 'CHALLENGE FLAG', iconKey: 'tendencyBreak',
-    tier: 'SILVER', cost: 120, type: 'reactive', category: 'protection',
+    tier: 'SILVER', cost: 100, type: 'reactive', category: 'protection',
     effect: 'After seeing result, reroll. 50% chance of better outcome.',
   },
   {
@@ -66,7 +66,7 @@ export const TORCH_CARDS = [
   },
   {
     id: 'twelfth_man', name: '12TH MAN', iconKey: 'dominance',
-    tier: 'BRONZE', cost: 50, type: 'pre-snap', category: 'amplification',
+    tier: 'BRONZE', cost: 60, type: 'pre-snap', category: 'amplification',
     effect: '+4 yards and double TORCH points this snap',
   },
   {
@@ -80,69 +80,63 @@ export const TORCH_CARDS = [
     effect: 'Reveal opponent\'s featured player before you pick yours',
   },
 
+  {
+    id: 'timeout', name: 'TIMEOUT', iconKey: 'noFlyZone',
+    tier: 'BRONZE', cost: 40, type: 'pre-snap', category: 'disruption',
+    effect: 'Stop the clock. Adds 30 seconds to the 2-minute drill.',
+  },
+
   // ═══ NEW — HAND MANAGEMENT ═══
   {
     id: 'fresh_legs', name: 'FRESH LEGS', iconKey: 'tempoKing',
-    tier: 'BRONZE', cost: 10, type: 'pre-snap', category: 'amplification',
-    effect: 'Gain an extra discard this drive', implemented: false,
-  },
+    tier: 'BRONZE', cost: 15, type: 'pre-snap', category: 'amplification',
+    effect: 'Gain an extra discard this drive',  },
   {
     id: 'scout_report', name: 'SCOUT REPORT', iconKey: 'filmRoom',
-    tier: 'SILVER', cost: 30, type: 'pre-snap', category: 'information',
-    effect: 'See all 7 players instead of 4 this snap', implemented: false,
-  },
+    tier: 'SILVER', cost: 40, type: 'pre-snap', category: 'information',
+    effect: 'See all 7 players instead of 4 this snap',  },
   {
     id: 'pre_snap_read', name: 'PRE-SNAP READ', iconKey: 'scout',
-    tier: 'SILVER', cost: 25, type: 'pre-snap', category: 'information',
-    effect: 'Reveals the opponent\'s featured player before you pick yours', implemented: false,
-  },
+    tier: 'SILVER', cost: 35, type: 'pre-snap', category: 'information',
+    effect: 'Reveals if opponent is in zone, man, or blitz before you pick your play',  },
   {
     id: 'game_plan', name: 'GAME PLAN', iconKey: 'tendencyBreak',
-    tier: 'BRONZE', cost: 10, type: 'pre-snap', category: 'disruption',
-    effect: 'Reset one player\'s heat to zero. Defense forgets about him.', implemented: false,
-  },
+    tier: 'BRONZE', cost: 15, type: 'pre-snap', category: 'disruption',
+    effect: 'Reset one player\'s heat to zero. Defense forgets about him.',  },
 
   // ═══ NEW — SPECIAL TEAMS ═══
   {
     id: 'blocked_kick', name: 'BLOCKED KICK', iconKey: 'ironWall',
-    tier: 'GOLD', cost: 50, type: 'reactive', category: 'disruption',
-    effect: 'Chance to block the opponent\'s field goal or punt', implemented: false,
-  },
+    tier: 'GOLD', cost: 150, type: 'reactive', category: 'disruption',
+    effect: 'Chance to block the opponent\'s field goal or punt',  },
   {
     id: 'ice_the_kicker', name: 'ICE THE KICKER', iconKey: 'noFlyZone',
     tier: 'SILVER', cost: 20, type: 'pre-snap', category: 'disruption',
-    effect: 'Reduce the opponent\'s kicker accuracy by 1 star', implemented: false,
-  },
+    effect: 'Reduce the opponent\'s kicker accuracy by 1 star',  },
   {
     id: 'coffin_corner', name: 'COFFIN CORNER', iconKey: 'dominance',
     tier: 'BRONZE', cost: 15, type: 'pre-snap', category: 'amplification',
-    effect: 'Your punt is guaranteed to land inside the 10', implemented: false,
-  },
+    effect: 'Your punt is guaranteed to land inside the 10',  },
   {
     id: 'cannon_leg', name: 'CANNON LEG', iconKey: 'daBomb',
     tier: 'SILVER', cost: 25, type: 'pre-snap', category: 'amplification',
-    effect: 'Extend your FG range by 10 yards this attempt', implemented: false,
-  },
+    effect: 'Extend your FG range by 10 yards this attempt',  },
   {
     id: 'house_call', name: 'HOUSE CALL', iconKey: 'onFire',
-    tier: 'GOLD', cost: 50, type: 'pre-snap', category: 'amplification',
-    effect: 'Your returner breaks free — guaranteed 50+ yard return', implemented: false,
-  },
+    tier: 'GOLD', cost: 175, type: 'pre-snap', category: 'amplification',
+    effect: 'Your returner breaks free — guaranteed 50+ yard return',  },
   {
     id: 'fair_catch_ghost', name: 'FAIR CATCH GHOST', iconKey: 'mismatch',
-    tier: 'BRONZE', cost: 10, type: 'pre-snap', category: 'disruption',
-    effect: 'Force the opponent to fair catch. No return yards.', implemented: false,
-  },
+    tier: 'BRONZE', cost: 15, type: 'pre-snap', category: 'disruption',
+    effect: 'Force the opponent to fair catch. No return yards.',  },
   {
     id: 'iron_man', name: 'IRON MAN', iconKey: 'helmet',
     tier: 'SILVER', cost: 20, type: 'pre-snap', category: 'amplification',
-    effect: 'Return a burned player to your special teams deck', implemented: false,
-  },
+    effect: 'Return a burned player to your special teams deck',  },
   {
     id: 'ringer', name: 'RINGER', iconKey: 'player',
     tier: 'SILVER', cost: 30, type: 'pre-snap', category: 'amplification',
-    effect: 'Your highest-star player kicks this FG regardless of your deck', implemented: false,
-  },
+    effect: 'Your highest-star player kicks this FG regardless of your deck',  },
 ];
 
 // ── LOOKUPS ──

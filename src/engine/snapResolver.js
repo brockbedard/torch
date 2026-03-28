@@ -9,6 +9,7 @@ import { getPlayHistoryBonus } from './playHistory.js';
 import { applyRedZone } from './redZone.js';
 import { applySquadOVR } from './ovrSystem.js';
 import { calculatePersonnelMod } from './personnelSystem.js';
+import { getMomentumBonus } from './momentumSystem.js';
 
 /**
  * Box-Muller transform for gaussian random numbers.
@@ -68,7 +69,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
 
   // Reveal Card Sim-Benefits
   let revealBonus = 0;
-  if (context.offCard && ['SCOUT_TEAM', 'FILM_LEAK', 'SIDELINE_PHONE', 'PERSONNEL_REPORT'].includes(context.offCard)) {
+  if (context.offCard && ['SCOUT_TEAM', 'FILM_LEAK', 'SIDELINE_PHONE', 'PERSONNEL_REPORT', 'scout_team', 'personnel_report', 'pre_snap_read', 'scout_report'].includes(context.offCard)) {
     revealBonus = 1;
   }
 
@@ -83,7 +84,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
 
   // ── BASE MEAN (35% bump — increased from 25% to reduce ties) ──
   let mean = offPlay.mean * 1.35 + covMean;
-  let variance = Math.max(1, offPlay.variance * 1.15 + covVar);
+  let variance = Math.max(1, offPlay.variance * 0.90 + covVar);
 
   // Defensive card effects
   if (isRunPlay) {
@@ -133,6 +134,11 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   mean += personnelMod.totalMod;
   result.personnelMod = personnelMod;
 
+  // Momentum chains bonus
+  var offMomentum = (context.offMomentumMap && featuredOff.id) ? (context.offMomentumMap[featuredOff.id] || 0) : 0;
+  var momentumBonus = getMomentumBonus(offMomentum);
+  mean += momentumBonus;
+
   // Red zone compression
   const rz = applyRedZone(yardsToEndzone, mean, variance, offPlay);
   mean = rz.mean;
@@ -145,10 +151,22 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
 
   // ── DIFFICULTY YARD BONUS ──
   // Easy: +1.5 (was +3), with rubber-band: +0 if ahead by 21+
+  // Medium: +1 human offense, -0.5 AI offense — nudge toward 40-55% win rate
   if (difficulty === 'EASY' && offenseIsHuman) {
     mean += (scoreDiff <= -21) ? 0 : 1.5;
+  } else if (difficulty === 'MEDIUM' && offenseIsHuman) {
+    mean += 1;
+  } else if (difficulty === 'MEDIUM' && !offenseIsHuman) {
+    mean -= 0.5;
   } else if (difficulty === 'HARD' && offenseIsHuman) {
     mean -= 1;
+  }
+
+  // Halftime adjustment (2nd half only, human offense only)
+  var adj = context.halftimeAdjustment;
+  if (adj && offenseIsHuman) {
+    if (adj === 'aggressive') mean += 2;
+    else if (adj === 'conservative') mean -= 1;
   }
 
   // Weather modifiers applied post-resolution in gameplay.js via getConditionEffects()
@@ -203,12 +221,15 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     result.isComplete = true;
     let rawYards = gaussRandom(mean, variance * 0.5);
 
-    // Big play chance (7% on completions — was 15%)
-    if (Math.random() < 0.07) {
-      var bigMult = 1.4 + Math.random() * 0.8;
+    // Big play chance (4% on completions — was 7%)
+    if (Math.random() < 0.04) {
+      var bigMult = 1.4 + Math.random() * 0.6;
       rawYards = mean * bigMult;
       result.description = `EXPLOSIVE! ${featuredOff.name} breaks free for extra yards!`;
     }
+
+    // Soft cap: diminishing returns above 20 yards
+    if (rawYards > 20) rawYards = 20 + (rawYards - 20) * 0.5;
 
     // Covered floor
     if (covMean <= -2 && rawYards < 2) rawYards = 1 + Math.random() * 3;
@@ -225,6 +246,9 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     if (defPlay.id === 'ir_robber' && (offPlay.id === 'mesh' || offPlay.id === 'slant' || offPlay.id === 'shallow_cross')) intRate += 0.04;
     if (defPlay.id === 'ir_mod' && (offPlay.id === 'four_verts' || offPlay.id === 'go_route')) intRate += 0.03;
     if (featuredDef.badge === 'EYE' && (offPlay.id === 'pa_flat' || offPlay.id === 'pa_post' || offPlay.playType === 'OPTION')) intRate += 0.02;
+    // Halftime adjustment: aggressive +5% INT risk, conservative -50%
+    if (adj === 'aggressive' && offenseIsHuman) intRate += 0.05;
+    else if (adj === 'conservative' && offenseIsHuman) intRate *= 0.5;
     intRate = Math.max(0, Math.min(0.20, intRate));
 
     if (Math.random() < intRate) {
@@ -238,6 +262,8 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     // Fumble after catch
     let fumbleRate = offPlay.fumbleRate;
     fumbleRate += (context.fumbleRateMod || 0);  // Snow/rain fumble mod from conditions
+    if (adj === 'aggressive' && offenseIsHuman) fumbleRate += 0.03;
+    else if (adj === 'conservative' && offenseIsHuman) fumbleRate *= 0.5;
     if (Math.random() < fumbleRate) {
       result.isFumble = true;
       result.isFumbleLost = Math.random() < 0.5;
@@ -285,12 +311,15 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     // ── ROLL YARDS (no completion check — runs always "connect") ──
     let rawYards = gaussRandom(mean, variance * 0.5);
 
-    // Big play chance on runs (7% — was 15%)
-    if (Math.random() < 0.07) {
-      var runBigMult = 1.4 + Math.random() * 0.8;
+    // Big play chance on runs (3% — was 7%)
+    if (Math.random() < 0.03) {
+      var runBigMult = 1.3 + Math.random() * 0.5;
       rawYards = mean * runBigMult;
       result.description = `${featuredOff.name} breaks a tackle and keeps going!`;
     }
+
+    // Soft cap: diminishing returns above 20 yards
+    if (rawYards > 20) rawYards = 20 + (rawYards - 20) * 0.5;
 
     // Covered floor for runs
     if (covMean <= -2 && rawYards < 2) rawYards = 1 + Math.random() * 2;
@@ -304,7 +333,9 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     // No safeties in v1 — ball capped at 1-yard line in gameState.advanceBall()
 
     // Run fumble
-    const runFumbleRate = offPlay.fumbleRate + 0.005;
+    var runFumbleRate = offPlay.fumbleRate + 0.005;
+    if (adj === 'aggressive' && offenseIsHuman) runFumbleRate += 0.03;
+    else if (adj === 'conservative' && offenseIsHuman) runFumbleRate *= 0.5;
     if (Math.random() < runFumbleRate) {
       result.isFumble = true;
       result.isFumbleLost = Math.random() < 0.5;
@@ -319,7 +350,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   // ── EASY DIFFICULTY POST-RESOLUTION ──
   if (difficulty === 'EASY') {
     if (offenseIsHuman) {
-      if (result.isSack && Math.random() < 0.50) {
+      if (result.isSack && Math.random() < 0.30) {
         result.isSack = false;
         result.yards = Math.floor(Math.random() * 3);
         result.description = `${featuredOff.name} escapes pressure for ${result.yards} yards.`;

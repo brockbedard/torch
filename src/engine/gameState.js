@@ -9,6 +9,7 @@
 import { resolveSnap } from './snapResolver.js';
 import { calcOffenseTorchPoints, calcDefenseTorchPoints } from './torchPoints.js';
 import { updateHeat } from './personnelSystem.js';
+import { updateMomentum, decayMomentum } from './momentumSystem.js';
 import { calcReturnYards } from './turnoverReturns.js';
 import { checkInjury, healInjuries } from './injuries.js';
 import { aiSelectPlay, aiSelectPlayer } from './aiOpponent.js';
@@ -18,12 +19,16 @@ import { TORCH_CARDS } from '../data/torchCards.js';
 export class GameState {
   constructor({ humanTeam = 'CT', difficulty = 'MEDIUM', ctOffHand, ctDefHand, irOffHand, irDefHand,
                 ctOffRoster, ctDefRoster, irOffRoster, irDefRoster, coachBadge = 'SCHEMER',
-                initialBallPos, initialDown, initialDistance, initialPossession }) {
+                initialBallPos, initialDown, initialDistance, initialPossession,
+                ctTeamId = null, irTeamId = null }) {
     // Teams
     this.humanTeam = humanTeam;
     this.cpuTeam = humanTeam === 'CT' ? 'IR' : 'CT';
+    this.ctTeamId = ctTeamId;
+    this.irTeamId = irTeamId;
     this.difficulty = difficulty;
     this.coachBadge = coachBadge; // SCHEMER, IRON_CURTAIN, SPEED_DEMON
+    this.halftimeAdjustment = 'balanced'; // aggressive, balanced, conservative
 
     // Environmental
     const weathers = ['CLEAR', 'CLEAR', 'RAIN', 'WINDY', 'SNOW'];
@@ -72,6 +77,8 @@ export class GameState {
     // Heat maps (personnel system) — { playerId: heatLevel }
     this.offHeatMap = {};
     this.defHeatMap = {};
+    this.offMomentumMap = {};
+    this.defMomentumMap = {};
 
     // Torch Cards (3 slots)
     this.humanTorchCards = [];
@@ -125,7 +132,13 @@ export class GameState {
   /** Simulate a kickoff and return the receiving team's starting position (own yard line, 0-100 scale)
    *  @param {object} [returner] - Returning player with st.returnAbility (optional)
    */
-  static resolveKickoff(returner) {
+  static resolveKickoff(returner, opts) {
+    opts = opts || {};
+    // HOUSE CALL: guaranteed 50+ yard return (50-70 starting position, or return TD)
+    if (opts.houseCall) {
+      if (Math.random() < 0.3) return -1; // 30% return TD
+      return 50 + Math.floor(Math.random() * 21); // own 50-70
+    }
     var KICKOFF = [
       { weight: 58, min: 25, max: 25 },  // touchback
       { weight: 22, min: 20, max: 28 },  // short return
@@ -152,8 +165,8 @@ export class GameState {
   }
 
   /** Flip possession after a score — uses kickoff distribution for starting position */
-  kickoffFlip() {
-    var ownYardLine = GameState.resolveKickoff();
+  kickoffFlip(opts) {
+    var ownYardLine = GameState.resolveKickoff(null, opts);
     // Convert own yard line to 0-100 coordinate for the RECEIVING team
     var newPoss = this.possession === 'CT' ? 'IR' : 'CT';
     var ballPos;
@@ -161,9 +174,11 @@ export class GameState {
       // Kick return TD — award 6 points to receiving team, then do a normal flip
       if (newPoss === 'CT') this.ctScore += 6;
       else this.irScore += 6;
-      // Recursively kick again (the team that just scored kicks off)
-      this.possession = newPoss;
-      this.kickoffFlip();
+      // Flip possession so the team that just scored (current this.possession) kicks off again.
+      // Do NOT set this.possession before calling kickoffFlip — flipPossession inside will handle it.
+      // Pass opts so HOUSE CALL etc. are not lost on the follow-up kick.
+      this.possession = newPoss; // receiving team now "possesses" so kickoffFlip re-flips to kicking team's opponent
+      this.kickoffFlip(opts);
       return { returnTD: true };
     }
     // Own yard line: CT at position=ownYardLine, IR at position=100-ownYardLine
@@ -175,7 +190,8 @@ export class GameState {
   /** Resolve a punt from current field position. Returns { gross, netYards, result, label }
    *  @param {object} [punter] - Punting player with st.kickPower (optional)
    */
-  punt(punter) {
+  punt(punter, opts) {
+    opts = opts || {};
     // Gross distance distribution (~42 yd average)
     var GROSS = [
       { min: 25, max: 34, weight: 10 },
@@ -191,6 +207,22 @@ export class GameState {
       { ret: 35, weight: 5, label: 'Big return' },
     ];
 
+    // BLOCKED KICK: 35% chance to block the punt
+    if (opts.blockedKick) {
+      var blockRoll = Math.random();
+      if (blockRoll < 0.35) {
+        // Blocked! Punting team keeps possession at LOS (turnover on downs equivalent)
+        this.totalPlays++;
+        if (!this.twoMinActive) this.playsUsed++;
+        var blockedLabel = 'BLOCKED PUNT! Recovered at the line of scrimmage!';
+        // Opponent gets ball at current spot
+        var newPoss = this.possession === 'CT' ? 'IR' : 'CT';
+        this.flipPossession(this.ballPosition);
+        this._checkHalfEnd();
+        return { gross: 0, netYards: 0, isTouchback: false, retLabel: 'Blocked', label: blockedLabel, newBallPos: this.yardsToEndzone(), blocked: true };
+      }
+    }
+
     // Roll gross — kickPower shifts percentile (±5% per star from 3)
     var powerShift = punter && punter.st ? (punter.st.kickPower - 3) * 5 : 0;
     var total = GROSS.reduce(function(s, g) { return s + g.weight; }, 0);
@@ -203,23 +235,38 @@ export class GameState {
       if (r <= 0) { gross = GROSS[i].min + Math.floor(Math.random() * (GROSS[i].max - GROSS[i].min + 1)); break; }
     }
 
+    // COFFIN CORNER: guarantee punt lands inside the 10
+    if (opts.coffinCorner) {
+      var ydsToEz = this.yardsToEndzone();
+      // Force gross to land between opponent 1-9 yard line
+      gross = Math.max(ydsToEz - 9, Math.min(ydsToEz - 1, gross));
+      if (gross < 20) gross = ydsToEz - 5; // safety: at least a reasonable punt
+    }
+
     // Landing spot (in 0-100 coordinates)
     var landingYdsToEz = Math.max(0, this.yardsToEndzone() - gross);
     // Touchback check if landing inside opponent's 10
     var isTouchback = false;
-    if (landingYdsToEz < 10 && Math.random() < 0.6) {
+    if (opts.coffinCorner) {
+      // Coffin corner: never touchback, always downed at the spot
+      isTouchback = false;
+    } else if (landingYdsToEz < 10 && Math.random() < 0.6) {
       isTouchback = true;
     }
 
     // Return yards
     var retYards = 0;
     var retLabel = 'Fair catch';
-    if (!isTouchback) {
+    if (opts.fairCatchGhost || opts.coffinCorner) {
+      // FAIR CATCH GHOST / COFFIN CORNER: force fair catch, no return
+      retYards = 0;
+      retLabel = 'Fair catch';
+    } else if (!isTouchback) {
       var rt = Math.random() * 100;
       for (var j = 0; j < RETURN.length; j++) {
         rt -= RETURN[j].weight;
         if (rt <= 0) {
-          retYards = RETURN[j].ret + Math.floor(Math.random() * 5 - 2);
+          retYards = Math.max(0, RETURN[j].ret + Math.floor(Math.random() * 5 - 2));
           retLabel = RETURN[j].label;
           break;
         }
@@ -241,7 +288,10 @@ export class GameState {
     var newBallPos = newPoss === 'CT' ? receiverYdsFromOwnEz : 100 - receiverYdsFromOwnEz;
 
     var netYards = gross - retYards;
-    var label = isTouchback ? 'Punt — ' + gross + ' yards — Touchback' : 'Punt — ' + gross + ' yards — ' + retLabel + ' to the ' + receiverYdsFromOwnEz;
+    var puntPrefix = opts.coffinCorner ? 'COFFIN CORNER! ' : opts.fairCatchGhost ? 'FAIR CATCH GHOST! ' : '';
+    var label = isTouchback
+      ? puntPrefix + 'Punt — ' + gross + ' yards — Touchback'
+      : puntPrefix + 'Punt — ' + gross + ' yards — ' + retLabel + ' to the ' + receiverYdsFromOwnEz;
 
     this.totalPlays++;
     if (!this.twoMinActive) this.playsUsed++;
@@ -253,10 +303,25 @@ export class GameState {
 
   /** Attempt a field goal. Returns { made, distance, label }
    *  @param {object} [kicker] - Kicking player with st.kickAccuracy (optional)
+   *  @param {object} [opts] - { iceTheKicker, cannonLeg, blockedKick }
    */
-  attemptFieldGoal(kicker) {
+  attemptFieldGoal(kicker, opts) {
+    opts = opts || {};
     var ydsToEz = this.yardsToEndzone();
     var fgDist = ydsToEz + 17; // 10yd endzone + 7yd snap
+
+    // BLOCKED KICK: 35% chance to block the FG
+    if (opts.blockedKick) {
+      var blockRoll = Math.random();
+      if (blockRoll < 0.35) {
+        this.totalPlays++;
+        if (!this.twoMinActive) this.playsUsed++;
+        var newPoss = this.possession === 'CT' ? 'IR' : 'CT';
+        this.flipPossession(this.ballPosition);
+        this._checkHalfEnd();
+        return { made: false, distance: fgDist, label: 'BLOCKED! ' + fgDist + '-yard field goal is BLOCKED!', blocked: true };
+      }
+    }
 
     // Make rates by distance
     var makePercent;
@@ -266,7 +331,10 @@ export class GameState {
     else makePercent = 50;
 
     // ST rating: kickAccuracy shifts make % (±5% per star from 3)
-    if (kicker && kicker.st) makePercent += (kicker.st.kickAccuracy - 3) * 5;
+    var accStars = kicker && kicker.st ? kicker.st.kickAccuracy : 3;
+    // ICE THE KICKER: reduce accuracy by 1 star
+    if (opts.iceTheKicker) accStars = Math.max(1, accStars - 1);
+    makePercent += (accStars - 3) * 5;
 
     // Difficulty mod for AI kicks
     var diffMod = { EASY: -5, MEDIUM: 0, HARD: 8 }[this.difficulty] || 0;
@@ -278,21 +346,23 @@ export class GameState {
     this.totalPlays++;
     if (!this.twoMinActive) this.playsUsed++;
 
+    var prefix = opts.iceTheKicker ? 'ICE THE KICKER! ' : '';
     if (made) {
       // Award 3 points
       if (this.possession === 'CT') this.ctScore += 3;
       else this.irScore += 3;
-      var label = fgDist + '-yard field goal is GOOD! +3';
+      var label = prefix + fgDist + '-yard field goal is GOOD! +3';
       this.kickoffFlip();
       this._checkHalfEnd();
       return { made: true, distance: fgDist, label: label };
     } else {
-      // Missed: opponent gets ball at LOS or the 20, whichever is farther from their endzone
-      var losYds = 100 - ydsToEz; // LOS in terms of opponent's yards from own EZ
-      var spotYds = Math.max(20, losYds);
-      var newPoss = this.possession === 'CT' ? 'IR' : 'CT';
-      var newBallPos = newPoss === 'CT' ? spotYds : 100 - spotYds;
-      var label2 = fgDist + '-yard field goal NO GOOD!';
+      // Missed: opponent gets ball at LOS or their own 20, whichever is farther from their endzone.
+      // ydsToEz is the kicking team's distance to score. The LOS from the receiving team's own EZ
+      // equals ydsToEz (they now have to travel that far to score). Min 20 from their own EZ.
+      var spotYds = Math.max(20, ydsToEz);
+      var newPoss2 = this.possession === 'CT' ? 'IR' : 'CT';
+      var newBallPos = newPoss2 === 'CT' ? spotYds : 100 - spotYds;
+      var label2 = prefix + fgDist + '-yard field goal NO GOOD!';
       this.flipPossession(newBallPos);
       this._checkHalfEnd();
       return { made: false, distance: fgDist, label: label2 };
@@ -304,9 +374,10 @@ export class GameState {
     return this.yardsToEndzone() <= 50;
   }
 
-  /** Check if field goal is in range (max 50-yard FG) */
-  canAttemptFG() {
-    return this.canSpecialTeams() && (this.yardsToEndzone() + 17) <= 50;
+  /** Check if field goal is in range (max 50-yard FG, or 60 with CANNON LEG) */
+  canAttemptFG(cannonLeg) {
+    var maxRange = cannonLeg ? 60 : 50;
+    return this.canSpecialTeams() && (this.yardsToEndzone() + 17) <= maxRange;
   }
 
   /** AI 4th down decision */
@@ -356,6 +427,8 @@ export class GameState {
     this.inRedZone = false;
     if (this.possession === 'CT') this.stats.ctDrives++;
     else this.stats.irDrives++;
+    decayMomentum(this.offMomentumMap);
+    decayMomentum(this.defMomentumMap);
   }
 
   /** Advance the ball */
@@ -410,6 +483,7 @@ export class GameState {
       down: this.down, distance: this.distance,
       ballPos: this.ballPosition, playHistory: this.drivePlayHistory,
       scoreDiff: this.getScoreDiff(),
+      teamId: sides.offenseIsHuman ? null : (this.possession === 'CT' ? this.ctTeamId : this.irTeamId),
     };
 
     const offInv = sides.offenseIsHuman ? this.humanTorchCards : this.cpuTorchCards;
@@ -431,6 +505,10 @@ export class GameState {
           offCard = offInv.shift();
         }
       }
+    } else if (offCard) {
+      // Human provided a card — consume it from their inventory
+      var offCardIdx = offInv.indexOf(offCard);
+      if (offCardIdx >= 0) offInv.splice(offCardIdx, 1);
     }
     if (defCard === undefined || defCard === null) {
       if (this.difficulty === 'EASY') {
@@ -445,6 +523,10 @@ export class GameState {
           defCard = defInv.shift();
         }
       }
+    } else if (defCard) {
+      // Human provided a defensive card — consume it from their inventory
+      var defCardIdx = defInv.indexOf(defCard);
+      if (defCardIdx >= 0) defInv.splice(defCardIdx, 1);
     }
 
     // AI selects defense if not provided
@@ -501,6 +583,8 @@ export class GameState {
       offenseIsHuman: sides.offenseIsHuman,
       offHeatMap: this.offHeatMap,
       defHeatMap: this.defHeatMap,
+      offMomentumMap: this.offMomentumMap,
+      halftimeAdjustment: this.halftimeAdjustment,
     };
 
     const result = resolveSnap(offPlay, defPlay, featuredOff, featuredDef,
@@ -522,6 +606,8 @@ export class GameState {
     var defIds = sides.defPlayers.map(function(p) { return p.id; });
     updateHeat(featuredOff.id, offIds, this.offHeatMap);
     updateHeat(featuredDef.id, defIds, this.defHeatMap);
+    updateMomentum(featuredOff.id, featuredOff, offPlay.playType, this.offMomentumMap);
+    updateMomentum(featuredDef.id, featuredDef, defPlay.cardType, this.defMomentumMap);
 
     // Track moments
     if (offCard || defCard) {
@@ -594,7 +680,7 @@ export class GameState {
       const defPts = calcDefenseTorchPoints(result, false);
       this._awardTorchPts(offPts, defPts);
       this._checkHalfEnd();
-      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown });
+      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown, offCard: offCard || null });
       return { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent };
     }
 
@@ -630,7 +716,7 @@ export class GameState {
       const defPts = calcDefenseTorchPoints(result, false);
       this._awardTorchPts(offPts, defPts);
       this._checkHalfEnd();
-      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown });
+      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown, offCard: offCard || null });
       return { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent };
     }
 
@@ -662,7 +748,7 @@ export class GameState {
       this._awardTorchPts(offPts, defPts);
 
       gameEvent = 'touchdown';
-      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown });
+      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown, offCard: offCard || null });
       // Possession flip will happen in handleConversion, but we should ensure ball resets to 50 there too.
       // However, if it's a turnover TD, it's already handled.
       // For a regular TD, we don't flip yet because of the conversion attempt.
@@ -720,7 +806,7 @@ export class GameState {
 
     this._checkHalfEnd();
 
-    this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown });
+    this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown, offCard: offCard || null });
     return { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent };
   }
 
@@ -759,7 +845,7 @@ export class GameState {
     if (!this.twoMinActive) return null;
     this.clockSeconds -= 30;
     this.totalPlays++;
-    if (!this.twoMinActive) this.playsUsed++;
+    // Note: kneel is only callable during twoMinActive so playsUsed is intentionally not incremented.
     healInjuries([this.ctOffRoster, this.ctDefRoster, this.irOffRoster, this.irDefRoster]);
     this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: 'KNEEL', defPlay: '-', result: 'Quarterback kneels. Clock running.', event: 'kneel' });
     this._checkHalfEnd();
@@ -787,7 +873,7 @@ export class GameState {
     // 2pt or 3pt: resolve a snap from the appropriate yard line
     const fromYardLine = choice === '2pt' ? 5 : 10;
     const sides = this.getCurrentSides();
-    const situation = { down: 1, distance: fromYardLine, ballPos: this.ballPosition, playHistory: [], scoreDiff: 0 };
+    const situation = { down: 1, distance: fromYardLine, ballPos: this.ballPosition, playHistory: [], scoreDiff: 0, teamId: null };
 
     if (!offPlay) offPlay = aiSelectPlay(sides.offHand, 'offense', this.difficulty, situation);
     if (!featuredOff) featuredOff = aiSelectPlayer(sides.offPlayers, offPlay, this.difficulty, true);
@@ -819,7 +905,7 @@ export class GameState {
 
     // ONSIDE KICK: 35% chance to recover at midfield instead of flipping possession
     var onsideRecovery = false;
-    var scoringInv = scoringTeam === 'CT' ? this.humanTorchCards : this.cpuTorchCards;
+    var scoringInv = scoringTeam === this.humanTeam ? this.humanTorchCards : this.cpuTorchCards;
     var onsideIdx = scoringInv.indexOf('onside_kick');
     if (onsideIdx >= 0) {
       scoringInv.splice(onsideIdx, 1);  // consume the card
