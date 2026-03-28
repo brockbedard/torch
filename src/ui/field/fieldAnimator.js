@@ -187,6 +187,7 @@ export function createFieldAnimator(width, height) {
   var trail = createSpeedTrail();
 
   var _lastState = null;
+  var _lastYardsGained = 8;
   var _rafId = null;
   var _animStartTime = 0;
   var _animSequence = null;
@@ -198,6 +199,8 @@ export function createFieldAnimator(width, height) {
   var _camTarget = 0; // target pixel shift (smoothed toward by _camYShift)
   var _flashEffect = null; // { startTime, duration, rgb, type }
   var _ballFlight = null;
+  var _ballFlightProgress = 0; // 0→1 through the flight arc
+  var _ballFlightElapsed = 0;  // ms since ball was thrown
 
   var VISIBLE_YARDS = 25;
   var YPX = height / VISIBLE_YARDS;
@@ -261,8 +264,12 @@ export function createFieldAnimator(width, height) {
         if (animElapsed >= bf.startTime && animElapsed <= bf.endTime) {
           var bt = (animElapsed - bf.startTime) / (bf.endTime - bf.startTime);
           _ballFlight = quadBezier(bf.p0, bf.p1, bf.p2, easeOutCubic(bt));
+          _ballFlightProgress = bt;
+          _ballFlightElapsed = animElapsed - bf.startTime;
         } else if (animElapsed > bf.endTime) {
           _ballFlight = null;
+          _ballFlightProgress = 0;
+          _ballFlightElapsed = 0;
         }
       }
 
@@ -425,19 +432,51 @@ export function createFieldAnimator(width, height) {
     // Ball flight dot
     if (_ballFlight) {
       var bfx = _ballFlight.x, bfy = _ballFlight.y - _camYShift;
-      ctx.fillStyle = 'rgba(255,220,140,0.9)';
-      ctx.beginPath();
-      ctx.arc(bfx, bfy, 5, 0, Math.PI * 2);
-      ctx.fill();
-      // Glow
+      var progress = _ballFlightProgress;
+      var elapsed = _ballFlightElapsed;
+
+      // Speed trail (drawn first, behind ball)
+      trail.push(bfx, bfy);
+      trail.draw(ctx, [255, 220, 140]);
+
+      // Glow (additive, behind ball)
       ctx.globalCompositeOperation = 'lighter';
       ctx.fillStyle = 'rgba(255,200,100,0.3)';
       ctx.beginPath();
       ctx.arc(bfx, bfy, 12, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalCompositeOperation = 'source-over';
-      trail.push(bfx, bfy);
-      trail.draw(ctx, [255, 220, 140]);
+
+      // Shadow under ball (shows altitude — fades as ball descends)
+      var shadowAlpha = 0.15 * (1 - progress);
+      ctx.fillStyle = 'rgba(0,0,0,' + shadowAlpha + ')';
+      ctx.beginPath();
+      ctx.ellipse(bfx, bfy + 8, 5, 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Rotation: spiral spin + optional tumble on incomplete
+      var ballRotation = (elapsed / 80) % (Math.PI * 2);
+      if (_animSequence && _animSequence.type === 'incomplete' && progress > 0.7) {
+        var wobble = Math.sin(elapsed * 0.02) * 15 * (progress - 0.7) / 0.3;
+        ballRotation += wobble;
+      }
+
+      // Football shape (small rotating ellipse with lace)
+      ctx.save();
+      ctx.translate(bfx, bfy);
+      ctx.rotate(ballRotation);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 6, 3.5, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,220,140,0.9)';
+      ctx.fill();
+      // Lace line
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(-3, 0);
+      ctx.lineTo(3, 0);
+      ctx.stroke();
+      ctx.restore();
     }
 
     // Particles
@@ -452,28 +491,50 @@ export function createFieldAnimator(width, height) {
 
   function fireEvent(ev) {
     var ex = ev.x, ey = ev.y - _camYShift; // camera-adjusted position
+
+    // Team color lookup
+    var TEAM_COLORS = { sentinels: [196,162,101], wolves: [232,84,143], stags: [93,173,226], serpents: [57,255,20] };
+    var offTeamRGB = null;
+    var defTeamRGB = null;
+    if (_lastState && _lastState.offTeam) {
+      offTeamRGB = TEAM_COLORS[_lastState.offTeam] || [242,140,40];
+      defTeamRGB = TEAM_COLORS[_lastState.defTeam] || [59,165,93];
+    }
+    offTeamRGB = offTeamRGB || [242,140,40];
+    defTeamRGB = defTeamRGB || [59,165,93];
+
+    // Yard scale for particle count and shake
+    var absYards = Math.abs(_lastYardsGained || 8);
+    var yardScale = Math.max(0.5, Math.min(2.0, absYards / 10));
+
     switch (ev.type) {
       case 'throw':
-        particles.spawn(ex, ey, 6, OFF_COLORS, { speed: 60, decay: 4 });
+        particles.spawn(ex, ey, 6, [offTeamRGB, [255,255,220]], { speed: 60, decay: 4 });
         break;
-      case 'catch':
-        particles.spawn(ex, ey, 10, OFF_COLORS, { speed: 80 });
-        _flashEffect = { startTime: performance.now(), duration: 200, x: ex, y: ey, type: 'white', rgb: [242,140,40] };
-        shake.add(0.15, 5);
+      case 'catch': {
+        var catchCount = Math.round(10 * yardScale);
+        particles.spawn(ex, ey, catchCount, [offTeamRGB, [255,255,220]], { speed: 80 });
+        _flashEffect = { startTime: performance.now(), duration: 200, x: ex, y: ey, type: 'white', rgb: offTeamRGB };
+        var catchTrauma = absYards < 8 ? 0.08 : absYards < 15 ? 0.15 : 0.25;
+        shake.add(catchTrauma, absYards < 8 ? 5 : 3.5);
         break;
-      case 'tackle':
-        particles.spawn(ex, ey, 20, OFF_COLORS.concat(DEF_COLORS), { speed: 130 });
+      }
+      case 'tackle': {
+        var tackleCount = Math.round(20 * yardScale);
+        particles.spawn(ex, ey, tackleCount, [offTeamRGB, [255,255,220]], { speed: 130 });
         _flashEffect = { startTime: performance.now(), duration: 200, x: ex, y: ey, type: 'white', rgb: [255,200,100] };
-        shake.add(0.35, 3.5);
+        var tackleTrauma = absYards < 8 ? 0.2 : absYards < 15 ? 0.35 : 0.45;
+        shake.add(tackleTrauma, 3.5);
         trail.clear();
         break;
+      }
       case 'sack':
-        particles.spawn(ex, ey, 24, SACK_COLORS, { speed: 150 });
+        particles.spawn(ex, ey, 24, [[255,60,30], offTeamRGB, [255,200,100]], { speed: 150 });
         _flashEffect = { startTime: performance.now(), duration: 150, type: 'red' };
         shake.add(0.6, 3);
         break;
       case 'interception':
-        particles.spawn(ex, ey, 18, INT_COLORS, { speed: 100 });
+        particles.spawn(ex, ey, 18, [defTeamRGB, [255,255,220]], { speed: 100 });
         _flashEffect = { startTime: performance.now(), duration: 400, type: 'red' };
         shake.add(0.5, 2.5);
         trail.clear();
@@ -482,16 +543,19 @@ export function createFieldAnimator(width, height) {
         particles.spawn(ex, ey, 5, [[100,100,100]], { speed: 30, decay: 5 });
         break;
       case 'handoff':
-        particles.spawn(ex, ey, 6, OFF_COLORS, { speed: 40, decay: 5 });
+        particles.spawn(ex, ey, 6, [offTeamRGB, [255,255,220]], { speed: 40, decay: 5 });
         break;
-      case 'touchdown':
-        particles.spawn(ex, ey, 40, TD_COLORS, { speed: 200, gravity: 150, decay: 0.8 });
+      case 'touchdown': {
+        var tdCount = Math.round(40 * yardScale);
+        particles.spawn(ex, ey, tdCount, [offTeamRGB, [255,220,50], [255,255,220]], { speed: 200, gravity: 150, decay: 0.8 });
         _flashEffect = { startTime: performance.now(), duration: 300, x: ex, y: ey, type: 'white', rgb: [255,220,50] };
         shake.add(0.7, 2);
+        var tdColors = [offTeamRGB, [255,220,50], [255,255,220]];
         setTimeout(function() {
-          particles.spawn(ex, ey - 10, 25, TD_COLORS, { speed: 160, gravity: 120, decay: 1.0 });
+          particles.spawn(ex, ey - 10, 25, tdColors, { speed: 160, gravity: 120, decay: 1.0 });
         }, 200);
         break;
+      }
     }
   }
 
@@ -504,6 +568,7 @@ export function createFieldAnimator(width, height) {
 
   function playSequence(type, yardsGained, state) {
     _lastState = state;
+    _lastYardsGained = yardsGained;
     var center = Math.max(VISIBLE_YARDS/2, Math.min(120-VISIBLE_YARDS/2, state.ballYard));
     var topYard = center - VISIBLE_YARDS / 2;
     var form = renderer.FORMATIONS[state.formation] || renderer.FORMATIONS['shotgun_deuce'];
@@ -517,6 +582,8 @@ export function createFieldAnimator(width, height) {
     _lastTickTime = performance.now();
     trail.clear();
     _ballFlight = null;
+    _ballFlightProgress = 0;
+    _ballFlightElapsed = 0;
 
     // Save the initial viewport for camera offset math
     _animTopYard = topYard;

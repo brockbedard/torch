@@ -457,12 +457,32 @@ export function buildPlayAnimation(resultType, yardsGained, formation, playType,
   // ── TIMING (modified by team style) ──
   var isTD = resultType === 'touchdown';
   var isRun = resultType === 'run' || (playType === 'RUN' && resultType !== 'sack' && resultType !== 'interception' && resultType !== 'incomplete');
-  // Base timing scaled ~3x for realistic pace (3-5s per play)
-  var tMod = style.throwTMod;  // Spectres: 0.75 (quick release), Wolves: 0.85 (tempo)
-  var throwT = Math.round((isRun ? 500 : 1200) * tMod);
-  var catchT = Math.round((isRun ? 1200 : 2100) * tMod);
-  var tackleT = isTD ? 3200 : (isRun ? 2800 : Math.round(3500 * tMod));
-  var dur = isTD || resultType === 'interception' ? 4500 : isRun ? 3800 : resultType === 'sack' ? 3000 : Math.round(4000 * tMod);
+  // Scale timing by play depth
+  var absYards = Math.abs(yardsGained);
+  var depthFactor = Math.max(0.6, Math.min(1.4, absYards / 12)); // 0.6x for short, 1.4x for deep
+
+  // Apply team animation modifier
+  var teamMod = (offTeam && TEAM_ANIM_STYLE[offTeam]) || { throwTMod: 1.0 };
+  var timeMod = (teamMod.throwTMod || 1.0) * depthFactor;
+
+  // Base timings scaled by depth
+  var throwT = Math.round(500 * timeMod);   // 300ms (short) to 700ms (deep)
+  var catchT = Math.round(1200 * timeMod);  // 720ms (short) to 1680ms (deep)
+  var tackleT = Math.round(2800 * timeMod); // 1680ms (short) to 3920ms (deep)
+  var dur = Math.round(3500 * timeMod);     // 2100ms (short) to 4900ms (deep)
+
+  if (isRun) {
+    throwT = Math.round(150 * depthFactor);  // Handoff is quick
+    catchT = throwT + 100;                    // Immediate
+    tackleT = Math.round(2000 * depthFactor); // Shorter than pass
+    dur = Math.round(2800 * depthFactor);     // Total run duration
+  }
+  if (resultType === 'sack') {
+    throwT = 400;     // QB holds ball
+    catchT = 400;     // No catch
+    tackleT = 800;    // Quick sack
+    dur = 1200;       // Short, brutal
+  }
 
   // Catch/settle positions (downfield = +Y in portrait)
   var catchY = (losYard + yardsGained * 0.6 - topYard) * ypx;
@@ -487,7 +507,10 @@ export function buildPlayAnimation(resultType, yardsGained, formation, playType,
     var qs = starts[roles.qbIdx];
     if (resultType === 'sack') {
       var sackY = (losYard - Math.abs(yardsGained) - topYard) * ypx;
-      dotKF[roles.qbIdx] = [kf(0,qs.x,qs.y), kf(200,qs.x,qs.y-16), kf(500,qs.x+10,qs.y-22), kf(800,qs.x+8,sackY), kf(dur,qs.x+8,sackY)];
+      var scrambleDir = Math.random() > 0.5 ? 1 : -1;
+      var scrambleX = qs.x + scrambleDir * 15;
+      var scrambleY = qs.y - 8;
+      dotKF[roles.qbIdx] = [kf(0,qs.x,qs.y), kf(200,qs.x,qs.y-16), kf(500,qs.x+10,qs.y-22), kf(650,scrambleX,scrambleY), kf(800,qs.x+8,sackY), kf(dur,qs.x+8,sackY)];
       seq.events.push({ time: 800, type: 'sack', x: qs.x+8, y: sackY });
     } else if (isRun && isRunConcept && conceptKey !== 'qb_draw') {
       var carrierIdx = roles.rbIdx >= 0 ? roles.rbIdx : roles.qbIdx;
@@ -608,8 +631,11 @@ export function buildPlayAnimation(resultType, yardsGained, formation, playType,
             p1: { x: (qbPos3.x + lastKF.x) / 2, y: (qbPos3.y - 12 + catchY) / 2 - 15 },
             p2: { x: lastKF.x, y: catchY } };
           seq.events.push({ time: catchT, type: 'catch', x: lastKF.x, y: catchY });
-          seq.events.push({ time: tackleT, type: isTD ? 'touchdown' : 'tackle',
-            x: dotKF[pidx][dotKF[pidx].length - 2].x, y: settleY });
+          if (isTD) {
+            seq.events.push({ time: tackleT + 200, type: 'touchdown', x: dotKF[pidx][dotKF[pidx].length - 2].x, y: settleY });
+          } else {
+            seq.events.push({ time: tackleT, type: 'tackle', x: dotKF[pidx][dotKF[pidx].length - 2].x, y: settleY });
+          }
         }
       }
     }
@@ -678,7 +704,10 @@ export function buildPlayAnimation(resultType, yardsGained, formation, playType,
 
     if (resultType === 'interception' && cbi === 0) {
       var intPt = seq.events.find(function(e) { return e.type === 'interception'; });
-      dotKF[ci] = [kf(0,cbs.x,cbs.y), kf(300,cbs.x,cbs.y+8), kf(600,intPt?intPt.x-5:cbs.x,intPt?(intPt.y-5):cbs.y), kf(catchT,intPt?intPt.x:cbs.x,intPt?intPt.y:cbs.y), kf(900,intPt?intPt.x:cbs.x,intPt?intPt.y:cbs.y), kf(1400,intPt?intPt.x-10:cbs.x,(intPt?intPt.y:cbs.y)-25), kf(dur,(intPt?intPt.x-10:cbs.x),(intPt?intPt.y:cbs.y)-25)];
+      var intReturnYards = Math.min(15, Math.max(3, Math.abs(yardsGained) * 0.3));
+      var intReturnY = (intPt ? intPt.y : cbs.y) - (intReturnYards * ypx);
+      var intReturnX = intPt ? intPt.x - 10 : cbs.x;
+      dotKF[ci] = [kf(0,cbs.x,cbs.y), kf(300,cbs.x,cbs.y+8), kf(600,intPt?intPt.x-5:cbs.x,intPt?(intPt.y-5):cbs.y), kf(catchT,intPt?intPt.x:cbs.x,intPt?intPt.y:cbs.y), kf(catchT+200,intPt?intPt.x:cbs.x,intPt?intPt.y:cbs.y), kf(dur,intReturnX,intReturnY)];
     } else if (defMode === 'blitz') {
       var qbTgt = roles.qbIdx >= 0 ? starts[roles.qbIdx] : cbs;
       dotKF[ci] = DEF_MODES.blitz(coveredKF, separation, 100, qbTgt.x, qbTgt.y - 12);
