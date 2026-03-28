@@ -19,8 +19,6 @@ var TRAY_CSS = `
 .CT-row{display:flex;gap:3px;padding:2px 3px;flex-shrink:0}
 .CT-row-label{font-family:'Rajdhani';font-weight:700;font-size:8px;letter-spacing:1px;padding:0 6px;color:#555;flex-shrink:0}
 .CT-card{flex:1 1 0;min-width:0;height:120px;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;position:relative;cursor:pointer;border:2px solid transparent;will-change:transform}
-.CT-compact .CT-card{height:85px}
-.CT-compact .CT-skip-btn{height:85px}
 .CT-card-disabled{opacity:0.35;pointer-events:none}
 .CT-snap-bar{display:flex;gap:6px;padding:4px 8px;align-items:center;flex-shrink:0}
 .CT-snap-btn{flex:1;font-family:'Teko';font-weight:700;font-size:16px;letter-spacing:3px;padding:10px;border-radius:6px;border:2px solid #FF4511;background:linear-gradient(180deg,#EBB010,#FF4511);color:#000;cursor:pointer}
@@ -142,7 +140,6 @@ export function renderCardTray(opts) {
 
   // ── TORCH CARDS ROW (shown whenever player has torch cards) ──
   var hasTorchRow = opts.torchCards && opts.torchCards.length > 0;
-  if (hasTorchRow) wrap.classList.add('CT-compact');
   if (hasTorchRow) {
     var torchLabel = document.createElement('div');
     torchLabel.className = 'CT-row-label';
