@@ -334,12 +334,12 @@ export function buildPlayV1(p, w, h) {
     '<div style="height:3px;flex-shrink:0;'+stripeStyle+'"></div>' +
     // 2. Header: Play name + type pill on same row
     '<div style="display:flex;align-items:baseline;gap:4px;padding:5px 5px 2px;">' +
-      "<div style=\"flex:1;min-width:0;font-family:'Teko';font-weight:700;font-size:"+nameFs+"px;color:#fff;letter-spacing:0.5px;line-height:1.1;\">"+p.name+'</div>' +
+      "<div style=\"flex:1;min-width:0;font-family:'Teko';font-weight:700;font-size:"+nameFs+"px;color:#fff;letter-spacing:0.5px;line-height:1.1;word-wrap:break-word;overflow-wrap:break-word;\">"+p.name+'</div>' +
       '<div style="flex-shrink:0;padding:1px 3px;border-radius:2px;background:'+tc.accent+'22;border:1px solid '+tc.accent+'44;">' +
         "<div style=\"font-family:'Teko';font-weight:700;font-size:8px;color:"+tc.accent+";letter-spacing:1px;line-height:1;\">"+typeKey+'</div></div>' +
     '</div>' +
-    // 3. Description
-    "<div style=\"padding:0 5px;font-family:'Rajdhani';font-size:8.5px;color:rgba(255,255,255,0.45);line-height:1.25;flex:1;overflow:hidden;\">"+(p.desc || '')+'</div>' +
+    // 3. Description — line-clamped to prevent cutoff
+    "<div style=\"padding:0 5px;font-family:'Rajdhani';font-size:8.5px;color:rgba(255,255,255,0.45);line-height:1.25;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;\">"+(p.desc || '')+'</div>' +
     // 4. Footer bar: RISK + pips
     '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 5px;background:rgba(0,0,0,0.3);border-top:1px solid '+tc.accent+'22;flex-shrink:0;">' +
       "<div style=\"font-family:'Teko';font-size:8px;color:#555;letter-spacing:1px;\">RISK</div>" +
