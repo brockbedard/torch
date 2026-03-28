@@ -6,6 +6,14 @@
 import { isRunType, checkOffensiveBadgeCombo } from './badgeCombos.js';
 import { traitSynergy, heatPenalty } from './personnelSystem.js';
 
+// Team archetype play-type multipliers — applied to all difficulty levels
+var TEAM_AI_BIAS = {
+  sentinels: { RUN: 2.5, SHORT: 1.5, DEEP: 0.8, QUICK: 0.8, SCREEN: 0.5 },  // Power run
+  wolves:    { RUN: 2.0, SHORT: 1.5, DEEP: 0.8, QUICK: 1.5, SCREEN: 1.8 },  // Spread option
+  stags:     { RUN: 0.5, SHORT: 1.5, DEEP: 2.0, QUICK: 2.5, SCREEN: 1.5 },  // Air raid / spread RPO
+  serpents:  { RUN: 1.5, SHORT: 1.5, DEEP: 1.5, QUICK: 1.5, SCREEN: 1.0 },  // Multiple / balanced
+};
+
 /**
  * Weighted random selection from an array using weights.
  * @param {any[]} items
@@ -50,14 +58,12 @@ export function aiSelectPlay(hand, playType, difficulty, situation) {
     if (filtered.length === 0) filtered = available;
 
     if (difficulty === 'EASY') {
-      // v0.23: Not purely random anymore. Weight slightly towards team archetype
-      // so 'Wolves' (run heavy) actually run the ball even on Easy.
+      // Weight by team archetype so each team feels distinct even on Easy
       const weights = filtered.map(p => {
         let w = 1.0;
-        // If team is Coral Bay (Wolves), favor OPTION and RUN
-        if (situation.teamId === 'wolves') {
-          if (p.cat === 'OPTION' || p.playType === 'RUN') w *= 2.0;
-          if (p.playType === 'DEEP') w *= 0.5;
+        if (situation.teamId) {
+          var bias = TEAM_AI_BIAS[situation.teamId];
+          if (bias && bias[p.playType]) w *= bias[p.playType];
         }
         return w;
       });
@@ -74,6 +80,11 @@ export function aiSelectPlay(hand, playType, difficulty, situation) {
         if (recentRuns >= 2) w *= 2.5;
       }
       if (p.playType === 'SCREEN' && down >= 3 && distance >= 8) w *= 0.5;
+      // Team identity bias
+      if (situation.teamId) {
+        var bias = TEAM_AI_BIAS[situation.teamId];
+        if (bias && bias[p.playType]) w *= bias[p.playType];
+      }
       return w;
     });
 
