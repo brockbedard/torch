@@ -43,6 +43,7 @@ function injectCSS() {
 // Track previous hand IDs for deal animation targeting
 var _prevPlayIds = [];
 var _prevPlayerIds = [];
+export function resetCardTrayState() { _prevPlayIds = []; _prevPlayerIds = []; }
 // Track which slot indices were vacated (for positional deal-in)
 var _vacatedPlayIdx = -1;
 var _vacatedPlayerIdx = -1;

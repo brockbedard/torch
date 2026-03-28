@@ -23,7 +23,7 @@ import { checkPlayCombos } from '../../data/playSequenceCombos.js';
 import { generateCommentary, generateContext } from '../../engine/commentary.js';
 import { initPointsAnim, playPointsSequence, isPointsAnimPlaying } from '../effects/torchPointsAnim.js';
 import { injectDevPanel, getForceResult, getForceConversion } from '../components/devPanel.js';
-import { renderCardTray } from '../components/cardTray.js';
+import { renderCardTray, resetCardTrayState } from '../components/cardTray.js';
 import { createHandState, afterSnap as handAfterSnap, canDiscard, discard as handDiscard, resetDriveDiscards, redeal as handRedeal } from '../../engine/handManager.js';
 import { createSTDeck, burnPlayer, aiPickST, autoFill } from '../../engine/stDeck.js';
 import { getFullRoster } from '../../data/players.js';
@@ -3622,7 +3622,7 @@ export function buildGameplay() {
   // First load: coin toss → kickoff → play
   if (!GS._coinTossDone) {
     GS._coinTossDone = true;
-    drawPanel();
+    // Don't drawPanel yet — coin toss overlay covers it. Panel draws after kickoff.
     showCoinToss(function(result) {
       // result.chose = 'receive' | 'card' | 'card_cpu_receives'
       // Determine who receives the opening kickoff
@@ -3645,6 +3645,7 @@ export function buildGameplay() {
 
       var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
       showKickoffResult(posLabel, function() {
+        resetCardTrayState(); // Fresh deal — no carry-over from pre-coin-toss
         drawBug(); drawField();
         phase = 'play';
         drawPanel();
