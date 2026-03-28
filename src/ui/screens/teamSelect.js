@@ -227,7 +227,8 @@ export function buildTeamSelect() {
   var opponentId = opponents[0];
   var humanReceives = Math.random() < 0.5;
   var difficulty = GS && GS.difficulty ? GS.difficulty : 'EASY';
-  var conditions = generateConditions(isFirst && (!GS.season || !GS.season.currentGame));
+  var gamesPlayed = parseInt(localStorage.getItem('torch_games_played') || '0');
+  var conditions = generateConditions(gamesPlayed === 0);
 
   setGs(function(s) {
     return Object.assign({}, s || {}, {
@@ -306,7 +307,7 @@ function startSelectionAnimation(container, teamId, team, isFirst) {
 
   // Generate Game Day Conditions
   var gameNum = (GS.season && GS.season.currentGame) || 0;
-  var conditions = generateConditions(isFirst && gameNum === 0);
+  var conditions = generateConditions(parseInt(localStorage.getItem('torch_games_played') || '0') === 0);
   var weather = WEATHER[conditions.weather];
   var field = FIELD[conditions.field];
   var crowd = CROWD[conditions.crowd];

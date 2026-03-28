@@ -524,6 +524,9 @@ export function buildGameplay() {
   // Game Day Conditions (v0.21)
   var condEffects = getConditionEffects(GS.gameConditions || { weather: 'clear', field: 'turf', crowd: 'home' });
 
+  // Weather
+  var weatherId = (GS.gameConditions && GS.gameConditions.weather) || 'clear';
+
   // Play Sequence Combos — track play history per drive
   var drivePlayHistory = []; // {cat, playId} entries for current drive
 
@@ -779,7 +782,6 @@ export function buildGameplay() {
   const strip = document.createElement('div'); strip.className = 'T-strip'; el.appendChild(strip);
 
   // Weather particle HTML (injected into field strip on every drawField)
-  var weatherId = (GS.gameConditions && GS.gameConditions.weather) || 'clear';
   var _weatherHTML = '';
   if (weatherId !== 'clear') {
     strip.style.position = 'relative';
