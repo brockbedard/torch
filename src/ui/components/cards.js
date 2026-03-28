@@ -296,7 +296,7 @@ var TYPE_COLORS = {
 };
 
 // Risk pip colors
-var RISK_PIP_COLORS = ['#3df58a', '#EBB010', '#e03050']; // 1=green, 2=orange, 3=red
+var RISK_PIP_COLORS = ['#00ff44', '#EBB010', '#ff0040']; // 1=green, 2=orange, 3=red
 
 export function buildPlayV1(p, w, h) {
   var card = document.createElement('div');
