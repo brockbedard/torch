@@ -38,7 +38,7 @@ export const SND = {
   points:     function() { AudioManager.play('scoreTick'); },
   chime:      function() { AudioManager.play('scoreTick', { pitch: 1.15 }); },
   error:      function() { AudioManager.play('menuTap', { pitch: 0.7 }); },
-  flip:       function() { AudioManager.play('cardFlip'); },
+  flip:       function() { AudioManager.playExact('cardFlipDramatic', { pitch: 0.8 }); },
   draft:      function() { AudioManager.play('cardDeal'); },
 
   // Special teams

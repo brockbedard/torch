@@ -1147,11 +1147,13 @@ export function buildGameplay() {
     }, 650);
   }
 
-  /** Screen shake */
-  function shakeScreen(frames = 4) {
+  /** Screen shake — frames controls duration, intensity controls px amplitude */
+  function shakeScreen(frames, intensity) {
+    frames = frames || 4;
     el.classList.add('T-shaking');
     el.style.animationDuration = (frames * 0.1) + 's';
-    setTimeout(function() { el.classList.remove('T-shaking'); }, frames * 100);
+    if (intensity) el.style.setProperty('--shake-px', intensity + 'px');
+    setTimeout(function() { el.classList.remove('T-shaking'); el.style.removeProperty('--shake-px'); }, frames * 100);
   }
 
   /** Color flash overlay on the field */
@@ -1236,12 +1238,21 @@ export function buildGameplay() {
 
       if (r.isTouchdown) {
         SND.td();
-        shakeScreen(6);
+        shakeScreen(8, 5); // heavier shake for TDs
         var tColor = isDef ? '#e03050' : '#3df58a';
+        var scoringTeamObj = isOff ? hTeam : oTeam;
+        // Full-screen team color flash
+        var tdFlash = document.createElement('div');
+        tdFlash.style.cssText = 'position:fixed;inset:0;z-index:95;background:' + scoringTeamObj.accent + ';pointer-events:none;';
+        el.appendChild(tdFlash);
+        gsap.fromTo(tdFlash, { opacity: 0.3 }, { opacity: 0, duration: 0.5, onComplete: function() { tdFlash.remove(); } });
         flashField(tColor + '88', 800);
         setTimeout(function() { flashField(tColor + '88', 800); }, 400);
-        rainFootballs(tier === 5 ? 24 : 16);
+        rainFootballs(tier === 5 ? 30 : 20);
         slamText('TOUCHDOWN', tColor, tDuration - 400);
+        // Max crowd reaction
+        if (!isDef) AudioStateManager.crowdSpike('cheer', 0.5);
+        else AudioStateManager.crowdSpike('groan', 0.3);
       } else if (r.isInterception) {
         var intGood = isDef; // user on defense = good (forced INT)
         SND.turnover();
@@ -1813,6 +1824,7 @@ export function buildGameplay() {
               burnPlayer(_humanSTDeck, kicker, 'kicker', fgContext);
               driveSummaryLog.push({ down: 4, dist: gs.distance, playName: fgResult.label, yards: 0, isUserOff: true });
               var fgColor = fgResult.made ? '#00ff44' : '#e03050';
+              if (fgResult.made) SND.kickGood(); else SND.kickMiss();
               showSpecialTeamsResult(fgResult.label, fgColor, function() {
                 driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
                 showPossCut(fgResult.made ? 'score' : 'missed_fg', function() { if (!checkEnd()) nextSnap(); });
@@ -3095,6 +3107,7 @@ export function buildGameplay() {
 
   // ── 2-MIN WARNING (dramatic overlay) ──
   function show2MinWarn() {
+    SND.whistle();
     shakeScreen();
     flashField('rgba(224,48,80,.3)');
 
@@ -3166,7 +3179,7 @@ export function buildGameplay() {
       var rotations = humanWins ? 1800 : 1980; // 1800 = 5 full turns (front), 1980 = 5.5 turns (back)
       coinInner.style.transform = 'rotateY(' + rotations + 'deg)';
       label.textContent = '';
-      SND.snap();
+      SND.flip(); // dramatic card flip pitched down for coin weight
 
       setTimeout(function() {
         // Phase 2: Result + Choice
@@ -3459,8 +3472,17 @@ export function buildGameplay() {
 
   // ── TRANSITIONS ──
   function checkEnd() {
-    if (gs.gameOver) { setTimeout(() => setGs(s => ({...s, screen:'end_game', finalEngine:gs, humanAbbr:hAbbr})), 1200); return true; }
-    if (gs.needsHalftime) { setTimeout(() => setGs(s => ({...s, screen:'halftime'})), 1200); return true; }
+    if (gs.gameOver) {
+      SND.whistle();
+      AudioStateManager.stopCrowd(2);
+      setTimeout(() => setGs(s => ({...s, screen:'end_game', finalEngine:gs, humanAbbr:hAbbr})), 1200);
+      return true;
+    }
+    if (gs.needsHalftime) {
+      SND.whistle();
+      setTimeout(() => setGs(s => ({...s, screen:'halftime'})), 1200);
+      return true;
+    }
     return false;
   }
 
