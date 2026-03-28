@@ -830,7 +830,7 @@ export function buildGameplay() {
 
     strip.innerHTML = h;
 
-    // Append actual shared-builder DOM cards into placed slots
+    // Append actual shared-builder DOM cards into placed slots with lock-in animation
     if (selPl) {
       var playSlot = strip.querySelector('#T-placed-play-slot');
       if (playSlot) {
@@ -838,6 +838,9 @@ export function buildGameplay() {
         playEl.style.width = '100%';
         playEl.style.height = '100%';
         playSlot.appendChild(playEl);
+        gsap.from(playSlot, { y: 60, scale: 0.7, opacity: 0, duration: 0.4, ease: 'power2.out' });
+        gsap.fromTo(playSlot, { scale: 1 }, { scale: 1.08, duration: 0.1, delay: 0.4, yoyo: true, repeat: 1, ease: 'power1.out' });
+        setTimeout(function() { SND.cardThud(); }, 350);
       }
     }
     if (selP) {
@@ -847,6 +850,9 @@ export function buildGameplay() {
         playerEl.style.width = '100%';
         playerEl.style.height = '100%';
         playerSlot.appendChild(playerEl);
+        gsap.from(playerSlot, { y: 60, scale: 0.7, opacity: 0, duration: 0.4, ease: 'power2.out' });
+        gsap.fromTo(playerSlot, { scale: 1 }, { scale: 1.08, duration: 0.1, delay: 0.4, yoyo: true, repeat: 1, ease: 'power1.out' });
+        setTimeout(function() { SND.cardThud(); }, 350);
       }
     }
     if (selTorch) {
