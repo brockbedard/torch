@@ -925,7 +925,7 @@ export function buildGameplay() {
         var resColor, resText;
         if (e.isUserOff || e.isUserOff === undefined) {
           resColor = e.isTD ? '#EBB010' : e.yards > 0 ? '#00ff44' : e.yards < 0 || e.isSack ? '#ff0040' : '#fff';
-          resText = e.isTD ? 'TD' : e.isSack ? 'SACK' : e.isInt ? 'INT' : e.isFumble ? 'FUM' : (e.isInc || e.yards === 0) ? 'NO GAIN' : yardTextShort(e.yards);
+          resText = e.isTD ? 'TD' : e.isSack ? 'SACK' : e.isInt ? 'INT' : e.isFumble ? 'FUM' : (e.isInc || e.yards === 0) ? 'NO GAIN' : (e.yards > 0 ? e.yards + ' YDS' : 'LOSS ' + Math.abs(e.yards));
         } else {
           if (e.isTD) { resColor = '#ff0040'; resText = 'TD'; }
           else if (e.isSack) { resColor = '#00ff44'; resText = 'SACK'; }

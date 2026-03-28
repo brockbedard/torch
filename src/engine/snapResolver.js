@@ -268,7 +268,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
       if (result.yards <= 0) {
         result.description = `STUFFED! ${featuredOff.name} hit in the backfield.`;
       } else {
-        result.description = `${featuredOff.name} squeezed through traffic.`;
+        result.description = `${featuredOff.name} squeezed through traffic for ${result.yards} yards.`;
       }
 
       if (Math.random() < offPlay.fumbleRate * 1.5) {
@@ -321,7 +321,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
       if (result.isSack && Math.random() < 0.50) {
         result.isSack = false;
         result.yards = Math.floor(Math.random() * 3);
-        result.description = `${featuredOff.name} escapes pressure and picks up yardage.`;
+        result.description = `${featuredOff.name} escapes pressure for ${result.yards} yards.`;
       }
       if (result.isInterception && Math.random() < 0.40) {
         result.isInterception = false;
@@ -362,9 +362,9 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     if (Math.random() < 0.5 && rerollBetter) {
       // Use the better reroll
       Object.assign(result, reroll);
-      result.description = "CHALLENGE FLAG! Play overturned — " + result.yards + " yards!";
+      result.description = "CHALLENGE FLAG! Play overturned for " + result.yards + " yards!";
     } else {
-      result.description = "CHALLENGE FLAG! Review stands. " + (origTurnover ? "Turnover confirmed." : origYards + " yards.");
+      result.description = "CHALLENGE FLAG! Review stands. " + (origTurnover ? "Turnover confirmed." : "Result holds at " + origYards + " yards.");
     }
     result.torchCardUsed = 'challenge_flag';
   }
@@ -374,7 +374,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   // DEEP SHOT (Silver, pre-snap): 2x yards on pass plays
   if (oCard === 'deep_shot' && isPass && !result.isSack && !result.isInterception && !result.isFumbleLost && !result.isIncomplete) {
     result.yards = Math.round(result.yards * 2);
-    result.description = "DEEP SHOT! " + featuredOff.name + " goes long — " + result.yards + " yards!";
+    result.description = "DEEP SHOT! " + featuredOff.name + " goes long for " + result.yards + " yards!";
     result.torchCardUsed = 'deep_shot';
   }
 
@@ -383,7 +383,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     result.yards = Math.round(Math.max(result.yards, 1) * 2);
     result.isFumble = false;
     result.isFumbleLost = false;
-    result.description = "TRUCK STICK! " + featuredOff.name + " trucks a defender — " + result.yards + " yards!";
+    result.description = "TRUCK STICK! " + featuredOff.name + " trucks a defender for " + result.yards + " yards!";
     result.torchCardUsed = 'truck_stick';
   }
 
@@ -401,7 +401,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     var isRunDef = defPlay && (defPlay.cardType === 'BLITZ' || defPlay.cardType === 'PRESSURE' || (defPlay.runDefMod && defPlay.runDefMod < -1));
     if (isRunDef) {
       result.yards += 5;
-      result.description = "PLAY ACTION! Defense bit on the run fake — +" + 5 + " yards!";
+      result.description = "PLAY ACTION! Defense bit on the run fake. 5 bonus yards!";
     } else {
       result.description = result.description || "Play action — defense wasn't fooled.";
     }
@@ -420,7 +420,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   if (oCard === 'twelfth_man') {
     result.yards += 4;
     result.torchMultiplier = 2;
-    result.description = "12TH MAN! The crowd fuels a " + result.yards + "-yard gain!";
+    result.description = "12TH MAN! The crowd fuels " + result.yards + " yards!";
     result.torchCardUsed = 'twelfth_man';
   }
 
@@ -439,17 +439,17 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     result.yards = yardsToEndzone;
     result.description = `TOUCHDOWN! ${featuredOff.name} finds the end zone!`;
   } else if (!result.description) {
-    // Descriptions describe the play, NOT the yards (yards shown in result overlay)
+    // Descriptions use plain English with yard numbers (no +/- symbols)
     if (result.yards >= 15) {
-      result.description = `${featuredOff.name} breaks free! Wide open field!`;
+      result.description = `${featuredOff.name} breaks free for ${result.yards} yards!`;
     } else if (result.yards >= 8) {
-      result.description = `${featuredOff.name} finds a seam and picks up good yardage.`;
+      result.description = `${featuredOff.name} picks up ${result.yards} yards.`;
     } else if (result.yards >= 1) {
-      result.description = `${featuredOff.name} pushes forward for a short gain.`;
+      result.description = `${featuredOff.name} gains ${result.yards} yards.`;
     } else if (result.yards === 0) {
       result.description = `Stuffed! ${featuredOff.name} goes nowhere.`;
     } else {
-      result.description = `${featuredOff.name} tackled in the backfield!`;
+      result.description = `${featuredOff.name} tackled for a loss of ${Math.abs(result.yards)}.`;
     }
   }
 
