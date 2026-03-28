@@ -138,8 +138,8 @@ export function renderCardTray(opts) {
   header.appendChild(discToggle);
   wrap.appendChild(header);
 
-  // ── TORCH CARDS ROW (shown whenever player has torch cards) ──
-  var hasTorchRow = opts.torchCards && opts.torchCards.length > 0;
+  // ── TORCH CARDS ROW (shown only when both play + player selected and torch cards available) ──
+  var hasTorchRow = (opts.phase === 'torch' || opts.phase === 'ready') && opts.torchCards && opts.torchCards.length > 0;
   if (hasTorchRow) {
     var torchLabel = document.createElement('div');
     torchLabel.className = 'CT-row-label';
