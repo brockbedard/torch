@@ -276,8 +276,8 @@ export function buildEndGame() {
   var loopEl = null;
   if (openLoop) {
     loopEl = document.createElement('div');
-    loopEl.style.cssText = "background:rgba(235,176,16,0.06);border:1px solid #EBB01033;border-radius:6px;padding:8px 14px;text-align:center;opacity:0;max-width:280px;width:100%;";
-    loopEl.innerHTML = "<span style=\"font-size:14px;\">" + openLoop.icon + "</span> <span style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:" + (openLoop.canBuy ? '#00ff44' : '#EBB010') + ";letter-spacing:1px;\">" + openLoop.text + "</span>";
+    loopEl.style.cssText = "background:rgba(235,176,16,0.06);border:1px solid #EBB01033;border-radius:6px;padding:6px 12px;text-align:center;opacity:0;max-width:300px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
+    loopEl.innerHTML = "<span style=\"font-size:12px;\">" + openLoop.icon + "</span> <span style=\"font-family:'Rajdhani';font-weight:700;font-size:11px;color:" + (openLoop.canBuy ? '#00ff44' : '#EBB010') + ";letter-spacing:0.5px;\">" + openLoop.text + "</span>";
     midZone.appendChild(loopEl);
   }
 
