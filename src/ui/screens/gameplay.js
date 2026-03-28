@@ -113,7 +113,7 @@ const CSS = `
 .T-placed-player{left:35%;width:30%}
 .T-placed-torch{right:3%;width:28%}
 /* empty drop outlines — centered vertically */
-.T-drop{position:absolute;top:50%;transform:translateY(-50%);height:150px;border:2px dashed rgba(255,255,255,0.2);border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:7;transition:all .3s ease;opacity:0.8;background:rgba(0,0,0,0.2)}
+.T-drop{position:absolute;top:50%;transform:translateY(-50%);height:150px;border:2px dashed rgba(255,255,255,0.4);border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:7;transition:all .3s ease;opacity:1;background:rgba(0,0,0,0.3)}
 .T-drop-play{left:3%;width:30%}
 .T-drop-player{left:35%;width:30%}
 .T-drop-torch{right:3%;width:28%}
@@ -184,7 +184,7 @@ const CSS = `
 .T-rain{position:absolute;font-size:16px;z-index:99;pointer-events:none;animation:T-rain-fall 2s ease-in forwards}
 @keyframes T-crack-in{0%{opacity:0;transform:scale(2)}100%{opacity:1;transform:scale(1)}}
 .T-crack{position:absolute;inset:0;z-index:100;pointer-events:none;display:flex;align-items:center;justify-content:center}
-.T-crack-text{font-family:'Rajdhani';font-size:18px;letter-spacing:2px;animation:T-crack-in .3s ease-out;text-shadow:0 0 20px currentColor}
+.T-crack-text{font-family:'Teko';font-weight:700;font-size:24px;letter-spacing:4px;animation:T-crack-in .3s ease-out;text-shadow:0 0 20px currentColor,0 2px 8px rgba(0,0,0,0.9),0 0 40px rgba(0,0,0,0.7)}
 @keyframes T-impact{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(3)}}
 .T-impact{position:absolute;top:50%;left:50%;width:40px;height:40px;border-radius:50%;z-index:99;pointer-events:none;transform:translate(-50%,-50%);animation:T-impact .4s ease-out forwards}
 @keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
@@ -2507,8 +2507,8 @@ export function buildGameplay() {
         resultWrap.className = 'T-clash-result';
         resultWrap.style.cssText = 'position:absolute;top:22%;left:50%;transform:translateX(-50%);width:90%;text-align:center;';
         resultWrap.style.opacity = '0';
-        resultWrap.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:#666;letter-spacing:2px;\">TOUCHDOWN</div>" +
-          "<div style=\"font-family:'Rajdhani';font-size:12px;color:#444;margin-top:4px;\">" + oTeam.name + " scores.</div>";
+        resultWrap.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:" + oTeam.accent + ";letter-spacing:2px;opacity:0.7;\">TOUCHDOWN</div>" +
+          "<div style=\"font-family:'Rajdhani';font-size:12px;color:" + oTeam.accent + ";opacity:0.5;margin-top:4px;\">" + oTeam.name + " scores.</div>";
         overlay.appendChild(resultWrap);
         requestAnimationFrame(function() { resultWrap.style.opacity = '1'; resultWrap.style.transition = 'opacity 0.25s'; });
 
@@ -3159,9 +3159,9 @@ export function buildGameplay() {
           // CPU won — AI chooses (weighted by difficulty)
           var aiTakesCard = Math.random() < ({ EASY: 0.6, MEDIUM: 0.5, HARD: 0.4 }[gs.difficulty] || 0.5);
           var aiMsg = document.createElement('div');
-          aiMsg.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:#888;text-align:center;margin-top:8px;letter-spacing:1px;";
+          aiMsg.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:" + oTeam.accent + ";text-align:center;margin-top:8px;letter-spacing:1px;";
           aiMsg.textContent = aiTakesCard
-            ? oTeam.name + ' CHOOSES TO DRAW A FREE TORCH CARD'
+            ? oTeam.name + ' DRAWS A FREE TORCH CARD'
             : oTeam.name + ' CHOOSES TO RECEIVE';
           ov.appendChild(aiMsg);
 
