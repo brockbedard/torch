@@ -266,7 +266,7 @@ function updateStateReadout(gs) {
 }
 
 function giveTorchCards(gs, tier, callbacks) {
-  var cards = TORCH_CARDS.filter(function(c) { return c.tier === tier; });
+  var cards = TORCH_CARDS.filter(function(c) { return c.tier === tier && c.implemented !== false; });
   cards.forEach(function(c) {
     if (gs.humanTorchCards.length < 5) gs.humanTorchCards.push(c.id);
   });
