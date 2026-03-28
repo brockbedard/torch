@@ -7,18 +7,21 @@
 import { gsap } from 'gsap';
 import { buildPlayV1, buildMaddenPlayer, buildTorchCard } from './cards.js';
 import { SND } from '../../engine/sound.js';
+import { Haptic } from '../../engine/haptics.js';
 
 var _cssInjected = false;
 var TRAY_CSS = `
-.CT-wrap{display:flex;flex-direction:column;flex-shrink:0;background:#0E0A04;border-top:2px solid #FF6B0033;position:relative;z-index:1}
+.CT-wrap{display:flex;flex-direction:column;flex-shrink:0;background:#0E0A04;border-top:2px solid #FF6B0033;position:relative;z-index:1;padding-bottom:env(safe-area-inset-bottom,0px)}
 .CT-header{display:flex;align-items:center;justify-content:center;gap:8px;padding:3px 8px 1px;flex-shrink:0}
 .CT-side{font-family:'Teko';font-weight:700;font-size:18px;letter-spacing:3px}
-.CT-disc-toggle{font-family:'Rajdhani';font-weight:700;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:3px;border:1px solid #EBB01044;background:transparent;color:#EBB010;cursor:pointer}
+.CT-disc-toggle{font-family:'Rajdhani';font-weight:700;font-size:11px;letter-spacing:1px;padding:6px 12px;border-radius:3px;border:1px solid #EBB01044;background:transparent;color:#EBB010;cursor:pointer}
 .CT-disc-toggle-used{color:#333;border-color:#1a1a1a;cursor:default}
 .CT-disc-toggle-active{background:rgba(235,176,16,0.1);border-color:#EBB010;animation:T-pulse 1.5s infinite}
-.CT-row{display:flex;gap:3px;padding:2px 3px;flex-shrink:0}
-.CT-row-label{font-family:'Rajdhani';font-weight:700;font-size:8px;letter-spacing:1px;padding:0 6px;color:#555;flex-shrink:0}
-.CT-card{flex:1 1 0;min-width:0;height:120px;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;position:relative;cursor:pointer;border:2px solid transparent;will-change:transform}
+@keyframes T-snap-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.CT-row{display:flex;gap:3px;padding:2px 3px;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.CT-row::-webkit-scrollbar{display:none}
+.CT-row-label{font-family:'Rajdhani';font-weight:700;font-size:9px;letter-spacing:1px;padding:0 6px;color:#555;flex-shrink:0}
+.CT-card{flex:1 1 72px;min-width:72px;height:120px;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;position:relative;cursor:pointer;border:2px solid transparent;will-change:transform}
 .CT-card-disabled{opacity:0.35;pointer-events:none}
 .CT-snap-bar{display:flex;gap:6px;padding:4px 8px;align-items:center;flex-shrink:0}
 .CT-snap-btn{flex:1;font-family:'Teko';font-weight:700;font-size:16px;letter-spacing:3px;padding:10px;border-radius:6px;border:2px solid #FF4511;background:linear-gradient(180deg,#EBB010,#FF4511);color:#000;cursor:pointer}
@@ -50,7 +53,7 @@ var _vacatedPlayerIdx = -1;
 
 function animateDeal(cards, startDelay, slow) {
   if (!cards.length) return;
-  var stag = slow ? 0.15 : 0.08;
+  var stag = slow ? 0.08 : 0.04;
   gsap.set(cards, { y: -160, rotation: function() { return gsap.utils.random(-8, 8); }, scale: 0.8, opacity: 0 });
   gsap.to(cards, {
     y: 0, rotation: 0, scale: 1, opacity: 1,
@@ -61,29 +64,37 @@ function animateDeal(cards, startDelay, slow) {
 }
 
 function animateMark(card) {
-  gsap.to(card, { y: 6, rotation: -3, opacity: 0.5, duration: 0.15, ease: 'power2.out' });
+  gsap.to(card, { y: 6, rotation: -3, opacity: 0.55, duration: 0.15, ease: 'power2.out' });
   card.style.borderColor = '#e03050';
+  var lbl = document.createElement('div');
+  lbl.className = 'CT-discard-lbl';
+  lbl.style.cssText = "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(224,48,80,0.55);border-radius:4px;z-index:10;pointer-events:none;";
+  lbl.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#fff;letter-spacing:2px;text-shadow:0 1px 4px rgba(0,0,0,0.8);\">DISCARD</div>";
+  card.appendChild(lbl);
 }
 
 function animateUnmark(card) {
   gsap.to(card, { y: 0, rotation: 0, opacity: 1, duration: 0.15, ease: 'power2.out' });
   card.style.borderColor = 'transparent';
+  var lbl = card.querySelector('.CT-discard-lbl');
+  if (lbl) lbl.remove();
 }
 
 function attachTouchFeedback(card) {
   var pressed = false;
   card.addEventListener('touchstart', function() {
     pressed = true;
-    try { gsap.to(card, { y: -4, scale: 1.02, duration: 0.1, ease: 'power2.out' }); } catch(e) {}
+    Haptic.cardTap();
+    try { gsap.to(card, { y: -10, scale: 1.04, duration: 0.1, ease: 'power2.out', boxShadow: '0 6px 16px rgba(0,0,0,0.4)' }); } catch(e) {}
   }, { passive: true });
   card.addEventListener('touchend', function() {
     if (pressed) { pressed = false;
-      setTimeout(function() { try { if (!card._selected && !card._marked) gsap.to(card, { y: 0, scale: 1, duration: 0.1, ease: 'power2.out' }); } catch(e) {} }, 50);
+      setTimeout(function() { try { if (!card._selected && !card._marked) gsap.to(card, { y: 0, scale: 1, duration: 0.15, ease: 'back.out(2)', boxShadow: '0 0px 0px rgba(0,0,0,0)' }); } catch(e) {} }, 50);
     }
   }, { passive: true });
   card.addEventListener('touchcancel', function() {
     pressed = false;
-    try { gsap.to(card, { y: 0, scale: 1, duration: 0.1, ease: 'power2.out' }); } catch(e) {}
+    try { gsap.to(card, { y: 0, scale: 1, duration: 0.15, ease: 'back.out(2)', boxShadow: '0 0px 0px rgba(0,0,0,0)' }); } catch(e) {}
   }, { passive: true });
 }
 
@@ -126,8 +137,36 @@ export function renderCardTray(opts) {
   header.appendChild(discToggle);
   wrap.appendChild(header);
 
+  // First-time discard discovery (game 2+, shown once)
+  var _discardTipShown = localStorage.getItem('torch_discard_tip');
+  var gamesPlayed = parseInt(localStorage.getItem('torch_games_played') || '0');
+  if (!_discardTipShown && gamesPlayed >= 1 && opts.canDiscardPlays) {
+    localStorage.setItem('torch_discard_tip', '1');
+
+    var discTip = document.createElement('div');
+    discTip.style.cssText = "position:absolute;top:-28px;left:50%;transform:translateX(-50%);z-index:10;padding:4px 8px;background:rgba(235,176,16,0.15);border:1px solid #EBB01044;border-radius:4px;white-space:nowrap;pointer-events:none;";
+    discTip.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#EBB010;letter-spacing:0.5px;\">NEW! Swap out bad cards</div>";
+
+    // Position relative to the discard button
+    discToggle.style.position = 'relative';
+    discToggle.appendChild(discTip);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(function() {
+      try { gsap.to(discTip, { opacity: 0, duration: 0.3, onComplete: function() { discTip.remove(); } }); }
+      catch(e) { discTip.remove(); }
+    }, 5000);
+  }
+
   // ── TORCH CARDS ROW (shown only when both play + player selected and torch cards available) ──
-  var hasTorchRow = (opts.phase === 'torch' || opts.phase === 'ready') && opts.torchCards && opts.torchCards.length > 0;
+  var torchPhase = opts.phase === 'torch' || opts.phase === 'ready';
+  var hasTorchRow = torchPhase && opts.torchCards && opts.torchCards.length > 0;
+  if (torchPhase && (!opts.torchCards || opts.torchCards.length === 0)) {
+    var emptyTorchRow = document.createElement('div');
+    emptyTorchRow.style.cssText = "display:flex;align-items:center;justify-content:center;padding:8px;gap:6px;";
+    emptyTorchRow.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:#443;letter-spacing:1px;\">NO TORCH CARDS \u2014 VISIT TORCH STORE TO BUILD YOUR DECK</div>";
+    wrap.appendChild(emptyTorchRow);
+  }
   if (hasTorchRow) {
     var torchLabel = document.createElement('div');
     torchLabel.className = 'CT-row-label';
@@ -223,6 +262,33 @@ export function renderCardTray(opts) {
     c._isNew = isNew;
     c._slotIdx = idx;
     c.appendChild(playCard);
+
+    // Smart highlight — subtle glow on situationally strong plays
+    var isStrong = false;
+    if (opts.isOffense && opts.down && opts.distance) {
+      var pt = play.playType || '';
+      if (opts.distance <= 3 && (pt === 'RUN' || pt === 'OPTION' || play.isRun)) isStrong = true;
+      if (opts.distance >= 8 && (pt === 'DEEP' || pt === 'SCREEN')) isStrong = true;
+      if (opts.yardsToEndzone <= 10 && (pt === 'QUICK' || pt === 'SHORT')) isStrong = true;
+      if (opts.yardsToEndzone <= 5 && (pt === 'RUN' || play.isRun)) isStrong = true;
+    }
+    if (isStrong && !opts.selectedPlay) {
+      c.style.boxShadow = '0 0 10px rgba(235,176,16,0.35), 0 0 3px rgba(235,176,16,0.2)';
+      c.style.borderColor = '#EBB01066';
+      // Add subtle "STRONG" label
+      var strongLabel = document.createElement('div');
+      strongLabel.style.cssText = 'position:absolute;top:-1px;right:2px;z-index:5;font-family:Rajdhani;font-weight:700;font-size:7px;color:#EBB010;letter-spacing:0.5px;opacity:0.7;';
+      strongLabel.textContent = 'STRONG';
+      c.style.position = 'relative';
+      c.appendChild(strongLabel);
+    }
+
+    // Tutorial highlight for play cards
+    if (opts.tutorialStep === 1) {
+      c.style.boxShadow = '0 0 12px rgba(235,176,16,0.6), inset 0 0 8px rgba(235,176,16,0.15)';
+      c.style.animation = 'T-snap-pulse 1.2s ease-in-out infinite';
+    }
+
     attachTouchFeedback(c);
     c.onclick = function() {
       if (discardMode) {
@@ -231,7 +297,7 @@ export function renderCardTray(opts) {
         updateDiscBar();
         return;
       }
-      SND.select();
+      SND.select(); Haptic.cardSelect();
       if (opts.onSelectPlay) opts.onSelectPlay(play);
     };
     playRow.appendChild(c);
@@ -277,7 +343,42 @@ export function renderCardTray(opts) {
     c._isNew = isNew;
     c._slotIdx = idx;
     if (isHot) { c.style.borderColor = '#FF4511'; c.style.boxShadow = '0 0 12px rgba(255,69,17,0.5)'; }
+    // Tutorial step 1: dim player cards so only play cards glow
+    if (opts.tutorialStep === 1) {
+      c.style.opacity = '0.3';
+      c.style.pointerEvents = 'none';
+    }
     c.appendChild(playerCard);
+    var momentum = (opts.momentumMap && p.id) ? (opts.momentumMap[p.id] || 0) : 0;
+    if (momentum >= 3) {
+      var pipWrap = document.createElement('div');
+      pipWrap.style.cssText = 'position:absolute;top:2px;right:2px;display:flex;gap:1px;z-index:4;';
+      for (var mi = 0; mi < momentum; mi++) {
+        var pip = document.createElement('div');
+        pip.style.cssText = 'width:4px;height:4px;border-radius:50%;background:' + (mi >= 4 ? '#e03050' : mi >= 3 ? '#EBB010' : '#555') + ';';
+        pipWrap.appendChild(pip);
+      }
+      c.style.position = 'relative';
+      c.appendChild(pipWrap);
+    }
+    // Heat/fatigue indicator
+    var heat = (opts.heatMap && p.id) ? (opts.heatMap[p.id] || 0) : 0;
+    if (heat >= 3 && opts.snapCount > 3) {
+      var dimAmount = Math.min(0.4, (heat - 2) * 0.1);
+      c.style.filter = 'brightness(' + (1 - dimAmount) + ')';
+      var heatBadge = document.createElement('div');
+      heatBadge.style.cssText = 'position:absolute;bottom:2px;left:2px;z-index:4;padding:1px 3px;border-radius:2px;' +
+        'background:' + (heat >= 5 ? 'rgba(255,0,64,0.7)' : 'rgba(255,140,0,0.5)') + ';' +
+        "font-family:'Rajdhani';font-weight:700;font-size:8px;color:#fff;letter-spacing:0.5px;";
+      heatBadge.textContent = heat >= 5 ? 'TIRED' : 'WARM';
+      c.style.position = 'relative';
+      c.appendChild(heatBadge);
+    }
+    // Tutorial highlight for player cards
+    if (opts.tutorialStep === 2) {
+      c.style.boxShadow = '0 0 12px rgba(235,176,16,0.6), inset 0 0 8px rgba(235,176,16,0.15)';
+      c.style.animation = 'T-snap-pulse 1.2s ease-in-out infinite';
+    }
     attachTouchFeedback(c);
     c.onclick = function() {
       if (discardMode) {
@@ -287,7 +388,7 @@ export function renderCardTray(opts) {
         return;
       }
       if (p.injured) return;
-      SND.select();
+      SND.select(); Haptic.cardSelect();
       if (opts.onSelectPlayer) opts.onSelectPlayer(p);
     };
     playerRow.appendChild(c);
@@ -325,6 +426,7 @@ export function renderCardTray(opts) {
       opts.onDiscardPlayers([markedPlayer]);
       removed.push('player');
     }
+    if (removed.length > 0) Haptic.cardDiscard();
     // Exit discard mode (panel will re-render via callbacks)
   };
   discBar.appendChild(discConfirm);
@@ -361,7 +463,7 @@ export function renderCardTray(opts) {
   var canSnap = opts.selectedPlay && opts.selectedPlayer;
   snapBtn.disabled = !canSnap;
   snapBtn.style.opacity = canSnap ? '1' : '0.3';
-  if (canSnap) snapBtn.style.animation = 'T-pulse 1.8s ease-in-out infinite';
+  if (canSnap) snapBtn.style.animation = 'T-snap-pulse 1.2s ease-in-out infinite';
   snapBtn.onclick = function() { if (!canSnap) return; SND.snap(); if (opts.onSnap) opts.onSnap(); };
   snapBar.appendChild(snapBtn);
   wrap.appendChild(snapBar);

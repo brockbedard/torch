@@ -7,6 +7,7 @@
 
 import { gsap } from 'gsap';
 import { SND } from '../../engine/sound.js';
+import { Haptic } from '../../engine/haptics.js';
 import { TORCH_CARDS, getRandomCard, SHOP_WEIGHTS } from '../../data/torchCards.js';
 import { buildTorchCard } from './cards.js';
 
@@ -108,6 +109,13 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
     if (canAfford) {
       buyBtn.style.cssText = "font-size:11px;padding:8px 16px;width:100%;background:linear-gradient(180deg,#EBB010,#FF4511);color:#000;border-color:#FF4511;font-family:'Teko';font-weight:700;letter-spacing:2px;";
       buyBtn.textContent = isFull ? 'SWAP' : 'BUY';
+      buyBtn.addEventListener('touchstart', function() {
+        Haptic.cardTap();
+        gsap.to(buyBtn, { scale: 0.94, duration: 0.08, ease: 'power2.out' });
+      }, { passive: true });
+      buyBtn.addEventListener('touchend', function() {
+        gsap.to(buyBtn, { scale: 1, duration: 0.15, ease: 'back.out(2)' });
+      }, { passive: true });
       buyBtn.onclick = function() {
         SND.click();
         // Confirmation step — replace button with confirm/cancel
@@ -123,7 +131,10 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
         confirmBtn.style.cssText = "font-size:10px;padding:6px 12px;width:100%;background:linear-gradient(180deg,#00ff44,#00aa22);color:#000;border-color:#00ff44;font-family:'Teko';font-weight:700;letter-spacing:2px;";
         confirmBtn.textContent = 'CONFIRM';
         confirmBtn.onclick = function() {
-          SND.snap();
+          SND.snap(); Haptic.shopBuy();
+          // Track card purchases for COLLECTOR achievement
+          var cardsBought = parseInt(localStorage.getItem('torch_cards_bought') || '0');
+          localStorage.setItem('torch_cards_bought', String(cardsBought + 1));
           // Points spent animation
           var ptsEl = sheet.querySelector('#shop-pts');
           if (ptsEl) {
@@ -151,7 +162,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
         };
         confirmWrap.appendChild(confirmBtn);
         var cancelBtn = document.createElement('button');
-        cancelBtn.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:9px;padding:4px;color:#666;background:transparent;border:none;cursor:pointer;";
+        cancelBtn.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:11px;padding:8px 16px;min-height:44px;color:#666;background:transparent;border:none;cursor:pointer;";
         cancelBtn.textContent = 'CANCEL';
         cancelBtn.onclick = function() { confirmWrap.remove(); buyBtn.style.display = ''; };
         confirmWrap.appendChild(cancelBtn);
@@ -165,12 +176,40 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
     wrap.appendChild(buyBtn);
     offersRow.appendChild(wrap);
   });
+  // First-time shop tutorial banner
+  var _firstShopDone = localStorage.getItem('torch_first_shop_done');
+  if (!_firstShopDone) {
+    localStorage.setItem('torch_first_shop_done', '1');
+
+    var shopTip = document.createElement('div');
+    shopTip.style.cssText = "padding:8px 12px;margin-bottom:8px;background:rgba(235,176,16,0.08);border:1px solid #EBB01033;border-radius:6px;text-align:center;";
+    shopTip.innerHTML =
+      "<div style=\"font-family:'Rajdhani';font-size:10px;color:#ccc;line-height:1.3;\">Cards are single-use power-ups. Buy one now or save your points for later.</div>" +
+      "<div style=\"font-family:'Rajdhani';font-size:9px;color:#888;margin-top:4px;\">Tap BUY to purchase.</div>";
+    sheet.appendChild(shopTip);
+  }
+
   sheet.appendChild(offersRow);
+
+  // Highlight first card on first visit
+  if (!_firstShopDone) {
+    var firstCard = offersRow.querySelector('.torch-card-inner');
+    if (firstCard) {
+      firstCard.style.boxShadow = '0 0 12px rgba(235,176,16,0.4)';
+    }
+  }
 
   // Pass button
   var passBtn = document.createElement('button');
   passBtn.style.cssText = "width:100%;margin-top:14px;padding:10px;background:transparent;border:1px solid #333;border-radius:6px;color:#777;font-family:'Teko';font-weight:700;font-size:14px;letter-spacing:2px;cursor:pointer;";
   passBtn.textContent = 'NO THANKS';
+  passBtn.addEventListener('touchstart', function() {
+    Haptic.cardTap();
+    gsap.to(passBtn, { scale: 0.96, duration: 0.08, ease: 'power2.out' });
+  }, { passive: true });
+  passBtn.addEventListener('touchend', function() {
+    gsap.to(passBtn, { scale: 1, duration: 0.15, ease: 'back.out(2)' });
+  }, { passive: true });
   passBtn.onclick = function() { SND.click(); closeShop(); };
   sheet.appendChild(passBtn);
 
@@ -211,7 +250,7 @@ function showSwapUI(sheet, inventory, newCard, points, onSwap) {
   inventory.forEach(function(card, idx) {
     var wrap = document.createElement('div');
     wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;';
-    var cardEl = buildTorchCard(card, 70, 98);
+    var cardEl = buildTorchCard(card, 88, 120);
     wrap.appendChild(cardEl);
 
     var dropBtn = document.createElement('div');
@@ -219,6 +258,13 @@ function showSwapUI(sheet, inventory, newCard, points, onSwap) {
     dropBtn.textContent = 'DROP';
     wrap.appendChild(dropBtn);
 
+    wrap.addEventListener('touchstart', function() {
+      Haptic.cardTap();
+      gsap.to(wrap, { scale: 0.93, duration: 0.08, ease: 'power2.out' });
+    }, { passive: true });
+    wrap.addEventListener('touchend', function() {
+      gsap.to(wrap, { scale: 1, duration: 0.15, ease: 'back.out(2)' });
+    }, { passive: true });
     wrap.onclick = function() {
       SND.click();
       var newInv = inventory.slice();
@@ -231,7 +277,7 @@ function showSwapUI(sheet, inventory, newCard, points, onSwap) {
   sheet.appendChild(row);
 
   var cancelBtn = document.createElement('button');
-  cancelBtn.style.cssText = "width:100%;margin-top:10px;padding:8px;background:transparent;border:1px solid #333;border-radius:4px;color:#666;font-family:'Rajdhani';font-weight:700;font-size:10px;cursor:pointer;";
+  cancelBtn.style.cssText = "width:100%;margin-top:10px;padding:8px 16px;min-height:44px;background:transparent;border:1px solid #333;border-radius:4px;color:#666;font-family:'Rajdhani';font-weight:700;font-size:11px;cursor:pointer;";
   cancelBtn.textContent = 'CANCEL';
   cancelBtn.onclick = function() {
     // Close the whole shop (parent will handle)
