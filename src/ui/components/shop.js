@@ -5,6 +5,7 @@
  * 3-slot inventory limit with swap mechanic.
  */
 
+import { gsap } from 'gsap';
 import { SND } from '../../engine/sound.js';
 import { TORCH_CARDS, getRandomCard, SHOP_WEIGHTS } from '../../data/torchCards.js';
 import { buildTorchCard } from './cards.js';
@@ -52,7 +53,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
   hdr.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;";
   hdr.innerHTML =
     "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:var(--a-gold,#EBB010);letter-spacing:3px;\">TORCH STORE</div>" +
-    "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:var(--l-green,#00ff44);\">" + points + " PTS</div>";
+    "<div id='shop-pts' style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:var(--l-green,#00ff44);\">" + points + " PTS</div>";
   sheet.appendChild(hdr);
 
   // Inventory indicator (3 slots)
@@ -123,6 +124,19 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
         confirmBtn.textContent = 'CONFIRM';
         confirmBtn.onclick = function() {
           SND.snap();
+          // Points spent animation
+          var ptsEl = sheet.querySelector('#shop-pts');
+          if (ptsEl) {
+            var flyOut = document.createElement('div');
+            flyOut.style.cssText = "position:absolute;right:12px;top:14px;font-family:'Teko';font-weight:700;font-size:16px;color:#e03050;pointer-events:none;";
+            flyOut.textContent = '-' + card.cost;
+            sheet.appendChild(flyOut);
+            gsap.to(flyOut, { y: -30, opacity: 0, duration: 0.6, ease: 'power2.out', onComplete: function() { flyOut.remove(); } });
+            gsap.to(ptsEl, { color: '#e03050', duration: 0.1 });
+            gsap.to(ptsEl, { color: '#00ff44', duration: 0.3, delay: 0.3 });
+            ptsEl.textContent = (points - card.cost) + ' PTS';
+            SND.points();
+          }
           if (isFull) {
             showSwapUI(sheet, inventory, card, points, function(newInv, spent) {
               onBuy(card, newInv, spent);
