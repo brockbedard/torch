@@ -769,7 +769,26 @@ export function buildGameplay() {
   }
 
   // ── FIELD STRIP ──
-  const strip = document.createElement('div'); strip.className = 'T-strip'; el.appendChild(strip);
+  var stripWrap = document.createElement('div');
+  stripWrap.style.cssText = 'position:relative;flex-shrink:0;';
+  const strip = document.createElement('div'); strip.className = 'T-strip';
+  stripWrap.appendChild(strip);
+  // Weather particles — sibling of strip, not child (never destroyed by strip.innerHTML)
+  if (weatherId !== 'clear') {
+    var wxLayer = document.createElement('div');
+    wxLayer.style.cssText = 'position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden;';
+    if (weatherId === 'snow') {
+      for (var wi = 0; wi < 20; wi++) wxLayer.innerHTML += '<div style="position:absolute;width:' + (3 + Math.random() * 3) + 'px;height:' + (3 + Math.random() * 3) + 'px;background:#fff;border-radius:50%;opacity:0.5;left:' + (Math.random() * 100) + '%;animation:T-snow-fall ' + (2.5 + Math.random() * 2.5) + 's linear ' + (Math.random() * 3) + 's infinite;"></div>';
+    } else if (weatherId === 'rain') {
+      for (var ri = 0; ri < 25; ri++) wxLayer.innerHTML += '<div style="position:absolute;width:1px;height:' + (8 + Math.random() * 10) + 'px;background:rgba(100,160,255,0.35);left:' + (Math.random() * 100) + '%;animation:T-rain-fall ' + (0.4 + Math.random() * 0.3) + 's linear ' + (Math.random() * 1) + 's infinite;"></div>';
+    } else if (weatherId === 'heat') {
+      wxLayer.innerHTML = '<div style="position:absolute;inset:0;background:linear-gradient(0deg,rgba(255,100,0,0.05),transparent 40%);animation:T-heat-shimmer 3s ease-in-out infinite;"></div>';
+    } else if (weatherId === 'wind') {
+      for (var wdi = 0; wdi < 6; wdi++) wxLayer.innerHTML += '<div style="position:absolute;width:' + (20 + Math.random() * 25) + 'px;height:1px;background:rgba(255,255,255,0.08);top:' + (Math.random() * 100) + '%;left:' + (Math.random() * 100) + '%;animation:T-rain-fall ' + (0.8 + Math.random() * 0.5) + 's linear ' + (Math.random() * 2) + 's infinite;transform:rotate(-15deg);"></div>';
+    }
+    stripWrap.appendChild(wxLayer);
+  }
+  el.appendChild(stripWrap);
   function drawField() {
     const s = gs.getSummary();
     const isOff = gs.possession === hAbbr;
@@ -1238,16 +1257,19 @@ export function buildGameplay() {
         rainFootballs(tier === 5 ? 24 : 16);
         slamText('TOUCHDOWN', tColor, tDuration - 400);
       } else if (r.isInterception) {
+        var intGood = isDef;
         SND.turnover();
-        shakeScreen(6);
-        flashField('rgba(224,48,80,0.6)', 800);
-        impactBurst('rgba(224,48,80,0.8)');
-        slamText('INTERCEPTED', '#e03050', tDuration - 400);
+        shakeScreen(intGood ? 8 : 5);
+        flashField(intGood ? 'rgba(0,255,68,0.5)' : 'rgba(224,48,80,0.6)', 800);
+        impactBurst(intGood ? 'rgba(0,255,68,0.6)' : 'rgba(224,48,80,0.8)');
+        slamText(intGood ? 'PICKED OFF!' : 'INTERCEPTED', intGood ? '#00ff44' : '#e03050', tDuration - 400);
       } else if (r.isFumbleLost) {
+        var fumGood = isDef;
         SND.turnover();
-        shakeScreen(5);
-        flashField('rgba(224,96,32,0.6)', 800);
-        slamText('FUMBLE', '#e06020', tDuration - 400);
+        shakeScreen(fumGood ? 7 : 4);
+        flashField(fumGood ? 'rgba(0,255,68,0.5)' : 'rgba(224,96,32,0.6)', 800);
+        if (fumGood) impactBurst('rgba(0,255,68,0.6)');
+        slamText(fumGood ? 'FUMBLE RECOVERY!' : 'FUMBLE LOST', fumGood ? '#00ff44' : '#e06020', tDuration - 400);
       } else if (r.isSack) {
         SND.sack();
         shakeScreen(8);
@@ -1713,8 +1735,11 @@ export function buildGameplay() {
     if (phase === 'busy') { panel.className = 'T-panel T-panel-hidden'; return; }
     panel.className = 'T-panel ' + (isOff ? 'T-panel-off' : 'T-panel-def');
 
-    // 2min check
+    // 2min check + close game crowd
     if (gs.twoMinActive && !prev2min) { prev2min = true; el.classList.add('T-urgent'); show2MinWarn(); start2MinClock(); }
+    if (gs.twoMinActive && Math.abs(gs.ctScore - gs.irScore) <= 7) {
+      try { AudioStateManager.setCrowdIntensity(0.85, 0.5); } catch(e) {}
+    }
 
     // 4th down decision bar — appears ABOVE cards so player sees it first
     var is4thPastMid = gs.down === 4 && isOff && gs.canSpecialTeams() && !conversionMode && !_fourthDownDecided;
