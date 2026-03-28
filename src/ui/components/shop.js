@@ -108,18 +108,40 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
       buyBtn.style.cssText = "font-size:11px;padding:8px 16px;width:100%;background:linear-gradient(180deg,#EBB010,#FF4511);color:#000;border-color:#FF4511;font-family:'Teko';font-weight:700;letter-spacing:2px;";
       buyBtn.textContent = isFull ? 'SWAP' : 'BUY';
       buyBtn.onclick = function() {
-        SND.snap();
-        if (isFull) {
-          showSwapUI(sheet, inventory, card, points, function(newInv, spent) {
-            onBuy(card, newInv, spent);
+        SND.click();
+        // Confirmation step — replace button with confirm/cancel
+        buyBtn.style.display = 'none';
+        var confirmWrap = document.createElement('div');
+        confirmWrap.style.cssText = 'display:flex;flex-direction:column;gap:4px;width:100%;';
+        var confirmLabel = document.createElement('div');
+        confirmLabel.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:9px;color:#EBB010;text-align:center;letter-spacing:1px;";
+        confirmLabel.textContent = 'BUY FOR ' + card.cost + ' PTS?';
+        confirmWrap.appendChild(confirmLabel);
+        var confirmBtn = document.createElement('button');
+        confirmBtn.className = 'btn-blitz';
+        confirmBtn.style.cssText = "font-size:10px;padding:6px 12px;width:100%;background:linear-gradient(180deg,#00ff44,#00aa22);color:#000;border-color:#00ff44;font-family:'Teko';font-weight:700;letter-spacing:2px;";
+        confirmBtn.textContent = 'CONFIRM';
+        confirmBtn.onclick = function() {
+          SND.snap();
+          if (isFull) {
+            showSwapUI(sheet, inventory, card, points, function(newInv, spent) {
+              onBuy(card, newInv, spent);
+              closeShop();
+            });
+          } else {
+            var newInv = inventory.slice();
+            newInv.push(card);
+            onBuy(card, newInv, card.cost);
             closeShop();
-          });
-        } else {
-          var newInv = inventory.slice();
-          newInv.push(card);
-          onBuy(card, newInv, card.cost);
-          closeShop();
-        }
+          }
+        };
+        confirmWrap.appendChild(confirmBtn);
+        var cancelBtn = document.createElement('button');
+        cancelBtn.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:9px;padding:4px;color:#666;background:transparent;border:none;cursor:pointer;";
+        cancelBtn.textContent = 'CANCEL';
+        cancelBtn.onclick = function() { confirmWrap.remove(); buyBtn.style.display = ''; };
+        confirmWrap.appendChild(cancelBtn);
+        wrap.appendChild(confirmWrap);
       };
     } else {
       buyBtn.style.cssText = "font-size:10px;padding:8px 16px;width:100%;min-width:90px;background:#1a1a1a;color:#555;border-color:#333;font-family:'Rajdhani';font-weight:700;letter-spacing:1px;cursor:not-allowed;";
