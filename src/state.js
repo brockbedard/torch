@@ -14,11 +14,77 @@ import { getOffenseRoster, getDefenseRoster } from './data/players.js';
 export var VERSION = '0.28.0';
 export var VERSION_NAME = 'Audio + Replay Loop';
 
+export var GAME_SPEED = { current: 'normal' }; // 'normal', 'fast', 'turbo'
+export function setGameSpeed(speed) { GAME_SPEED.current = speed; localStorage.setItem('torch_speed', speed); }
+export function getSpeedMultiplier() {
+  if (GAME_SPEED.current === 'fast') return 0.6;
+  if (GAME_SPEED.current === 'turbo') return 0.3;
+  return 1.0;
+}
+// Load saved preference (guard for Node/test environments)
+try { var _savedSpeed = localStorage.getItem('torch_speed'); if (_savedSpeed) GAME_SPEED.current = _savedSpeed; } catch(e) {}
+
 export var GS = null;
 
 export function setGs(fn) {
   GS = typeof fn === 'function' ? fn(GS) : fn;
   render();
+  // Auto-save whenever we're in gameplay with an active engine
+  if (GS && GS.screen === 'gameplay' && GS.engine) {
+    saveGameState();
+  }
+}
+
+export function saveGameState() {
+  if (!GS || !GS.engine) return;
+  var save = {
+    screen: GS.screen,
+    team: GS.team,
+    opponent: GS.opponent,
+    difficulty: GS.difficulty,
+    isFirstSeason: GS.isFirstSeason,
+    isDailyDrive: GS.isDailyDrive,
+    humanReceives: GS.humanReceives,
+    gameConditions: GS.gameConditions,
+    season: GS.season,
+    engineSnapshot: {
+      ctScore: GS.engine.ctScore,
+      irScore: GS.engine.irScore,
+      possession: GS.engine.possession,
+      ballPosition: GS.engine.ballPosition,
+      down: GS.engine.down,
+      distance: GS.engine.distance,
+      half: GS.engine.half,
+      playsUsed: GS.engine.playsUsed,
+      totalPlays: GS.engine.totalPlays,
+      twoMinActive: GS.engine.twoMinActive,
+      clockSeconds: GS.engine.clockSeconds,
+      gameOver: GS.engine.gameOver,
+      ctTorchPts: GS.engine.ctTorchPts,
+      irTorchPts: GS.engine.irTorchPts,
+      humanTorchCards: GS.engine.humanTorchCards,
+      cpuTorchCards: GS.engine.cpuTorchCards,
+      weather: GS.engine.weather,
+      momentum: GS.engine.momentum,
+      offHeatMap: GS.engine.offHeatMap,
+      defHeatMap: GS.engine.defHeatMap,
+    }
+  };
+  try {
+    localStorage.setItem('torch_save', JSON.stringify(save));
+  } catch(e) {}
+}
+
+export function loadGameState() {
+  try {
+    var raw = localStorage.getItem('torch_save');
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+export function clearGameSave() {
+  localStorage.removeItem('torch_save');
 }
 
 export var render = function() {};

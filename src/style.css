@@ -17,6 +17,7 @@ body { color: white; font-family: 'Barlow Condensed', sans-serif; display: flex;
   width: 100%; max-width: 430px; height: 100vh; background: var(--bg); position: relative; 
   overflow-y: auto; overflow-x: hidden; box-shadow: 0 0 100px rgba(255, 69, 17, 0.15);
   padding-top: var(--safe-top); padding-bottom: var(--safe-bottom);
+  padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right);
   user-select: none; -webkit-user-select: none;
   -webkit-overflow-scrolling: touch;
 }

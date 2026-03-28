@@ -10,12 +10,15 @@ import { buildEndGame } from './ui/screens/endGame.js';
 import { buildDailyDrive } from './ui/screens/dailyDrive.js';
 import { buildPregame } from './ui/screens/pregame.js';
 import { buildRoster } from './ui/screens/roster.js';
+import { buildSeasonRecap } from './ui/screens/seasonRecap.js';
+import { buildSettings } from './ui/screens/settings.js';
 
 const root = document.getElementById('root');
 
+var _transitioning = false;
+
 function render() {
   // Crowd audio managed by AudioStateManager.setState() per screen — don't kill it here
-  root.innerHTML = '';
   // Clean up gameplay mode when leaving
   root.classList.remove('gp-2min');
   try { screen.orientation.unlock(); } catch (e) {}
@@ -41,12 +44,45 @@ function render() {
       case 'gameplay': content = buildGameplay(); break;
       case 'halftime': content = buildHalftime(); break;
       case 'end_game': content = buildEndGame(); break;
+      case 'seasonRecap': content = buildSeasonRecap(); break;
+      case 'settings': content = buildSettings(); break;
       default: content = buildHome();
     }
   }
 
-  if (content) root.appendChild(content);
-  root.scrollTop = 0;
+  if (!content) return;
+
+  // First render or mid-transition: swap immediately
+  if (root.children.length === 0 || _transitioning) {
+    if (root.children[0] && root.children[0]._cleanup) try { root.children[0]._cleanup(); } catch(e) {}
+    root.innerHTML = '';
+    root.appendChild(content);
+    content.style.opacity = '1';
+    root.scrollTop = 0;
+    return;
+  }
+
+  // Crossfade transition
+  _transitioning = true;
+  var oldContent = root.children[0];
+  if (oldContent) {
+    oldContent.style.transition = 'opacity 0.15s';
+    oldContent.style.opacity = '0';
+  }
+
+  setTimeout(function() {
+    if (root.children[0] && root.children[0]._cleanup) try { root.children[0]._cleanup(); } catch(e) {}
+    root.innerHTML = '';
+    content.style.opacity = '0';
+    content.style.transition = 'opacity 0.2s';
+    root.appendChild(content);
+    root.scrollTop = 0;
+    // Force reflow then fade in
+    requestAnimationFrame(function() {
+      content.style.opacity = '1';
+      _transitioning = false;
+    });
+  }, 150); // Match the fade-out duration
 }
 
 // Register render function with state manager
