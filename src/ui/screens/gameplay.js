@@ -3483,30 +3483,84 @@ export function buildGameplay() {
     setTimeout(function() { if (!dismissed) dismiss(); }, 3500);
   }
 
-  // Kickoff/punt return result overlay
+  // Kickoff/punt return result overlay — matches post-clash quality
   function showKickoffResult(resultText, onDone) {
     SND.kickThud();
     var receivingTeam = gs.possession === 'CT' ? hTeam : oTeam;
-    var isBigReturn = gs.ballPosition && ((gs.possession === 'CT' && gs.ballPosition >= 40) || (gs.possession === 'IR' && gs.ballPosition <= 60));
+    var isTouchback = resultText.indexOf('Touchback') >= 0 || resultText.indexOf('touchback') >= 0;
+    var isBigReturn = !isTouchback && gs.ballPosition && ((gs.possession === 'CT' && gs.ballPosition >= 40) || (gs.possession === 'IR' && gs.ballPosition <= 60));
     var resultColor = isBigReturn ? '#00ff44' : receivingTeam.accent;
     if (isBigReturn) AudioStateManager.crowdSpike('cheer', 0.5);
+
+    // Parse result into headline + detail
+    var headline, detail;
+    if (isTouchback) {
+      headline = 'TOUCHBACK';
+      detail = receivingTeam.name + ' ball on the 25';
+    } else {
+      headline = resultText;
+      detail = receivingTeam.name + ' ball';
+    }
 
     var dismissed = false;
     function dismiss() {
       if (dismissed) return;
       dismissed = true;
-      kov.style.opacity = '0';
-      setTimeout(function() { kov.remove(); if (onDone) onDone(); }, 200);
+      gsap.to(kov, { opacity: 0, duration: 0.2, onComplete: function() { kov.remove(); if (onDone) onDone(); } });
     }
     var kov = document.createElement('div');
-    kov.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.9);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;padding:20px;';
-    kov.innerHTML =
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:11px;color:#888;letter-spacing:2px;text-align:center;\">KICKOFF RETURN</div>" +
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + resultColor + ";letter-spacing:3px;margin-top:4px;text-shadow:0 0 16px " + resultColor + "40;text-align:center;\">" + resultText + "</div>" +
-      "<div style=\"font-family:'Rajdhani';font-size:10px;color:#555;margin-top:10px;letter-spacing:1px;text-align:center;\">TAP TO CONTINUE</div>";
+    kov.className = 'T-clash-overlay';
+    kov.style.cssText += 'z-index:650;opacity:0;cursor:pointer;';
+
+    // Dark backdrop
+    var dim = document.createElement('div');
+    dim.className = 'T-clash-dim';
+    kov.appendChild(dim);
+
+    // Content
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;z-index:2;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;';
+
+    // Small label
+    var labelEl = document.createElement('div');
+    labelEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:11px;color:#666;letter-spacing:3px;";
+    labelEl.textContent = 'KICKOFF';
+    wrap.appendChild(labelEl);
+
+    // Big result
+    var bigText = document.createElement('div');
+    bigText.style.cssText = "font-family:'Teko';font-weight:700;font-size:36px;color:" + resultColor + ";letter-spacing:4px;text-shadow:0 0 24px " + resultColor + "50;line-height:1;";
+    bigText.textContent = headline;
+    wrap.appendChild(bigText);
+
+    // Team + detail
+    var detailEl = document.createElement('div');
+    detailEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:13px;color:" + receivingTeam.accent + ";letter-spacing:1px;opacity:0.7;margin-top:2px;";
+    detailEl.textContent = detail;
+    wrap.appendChild(detailEl);
+
+    // Divider
+    var divider = document.createElement('div');
+    divider.style.cssText = 'width:60px;height:2px;background:' + resultColor + '33;margin-top:8px;border-radius:1px;';
+    wrap.appendChild(divider);
+
+    // Tap prompt
+    var tapEl = document.createElement('div');
+    tapEl.style.cssText = "font-family:'Rajdhani';font-size:10px;color:#444;letter-spacing:1px;margin-top:8px;";
+    tapEl.textContent = 'TAP TO CONTINUE';
+    wrap.appendChild(tapEl);
+
+    kov.appendChild(wrap);
     kov.onclick = dismiss;
     el.appendChild(kov);
-    requestAnimationFrame(function() { kov.style.opacity = '1'; });
+
+    // GSAP entrance — match clash quality
+    gsap.to(kov, { opacity: 1, duration: 0.25 });
+    gsap.from(bigText, { scale: 1.5, opacity: 0, duration: 0.3, delay: 0.1, ease: 'back.out(1.5)' });
+    gsap.from(detailEl, { opacity: 0, y: 8, duration: 0.2, delay: 0.3 });
+    gsap.from(divider, { scaleX: 0, duration: 0.2, delay: 0.4 });
+    gsap.from(tapEl, { opacity: 0, duration: 0.2, delay: 0.5 });
+
     setTimeout(function() { if (!dismissed) dismiss(); }, 2500);
   }
 
