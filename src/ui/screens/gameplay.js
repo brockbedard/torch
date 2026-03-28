@@ -907,7 +907,7 @@ export function buildGameplay() {
         var compParts = [];
         for (var _ci = 0; _ci < compressed; _ci++) {
           var ce = driveSummaryLog[_ci];
-          var cy = ce.isTD ? 'TD' : ce.isSack ? 'SK' : ce.isInt ? 'INT' : ce.isFumble ? 'FUM' : ce.isInc ? 'INC' : (ce.yards >= 0 ? '+' : '') + ce.yards;
+          var cy = ce.isTD ? 'TD' : ce.isSack ? 'SK' : ce.isInt ? 'INT' : ce.isFumble ? 'FUM' : ce.isInc ? 'INC' : yardTextShort(ce.yards);
           compParts.push(cy);
         }
         html += '<div style="font-family:\'Rajdhani\';font-size:10px;color:#555;padding:2px 0;border-bottom:1px solid #1a1a1a;">' + compParts.join(' | ') + '</div>';
@@ -920,7 +920,7 @@ export function buildGameplay() {
         var resColor, resText;
         if (e.isUserOff || e.isUserOff === undefined) {
           resColor = e.isTD ? '#EBB010' : e.yards > 0 ? '#00ff44' : e.yards < 0 || e.isSack ? '#ff0040' : '#fff';
-          resText = e.isTD ? 'TD' : e.isSack ? 'SACK' : e.isInt ? 'INT' : e.isFumble ? 'FUM' : (e.isInc || e.yards === 0) ? 'NO GAIN' : (e.yards >= 0 ? '+' : '') + e.yards;
+          resText = e.isTD ? 'TD' : e.isSack ? 'SACK' : e.isInt ? 'INT' : e.isFumble ? 'FUM' : (e.isInc || e.yards === 0) ? 'NO GAIN' : (e.yards > 0 ? e.yards + ' YDS' : 'LOSS ' + Math.abs(e.yards));
         } else {
           if (e.isTD) { resColor = '#ff0040'; resText = 'TD'; }
           else if (e.isSack) { resColor = '#00ff44'; resText = 'SACK'; }
@@ -1461,7 +1461,7 @@ export function buildGameplay() {
       if (!isUserDef) {
         // User on offense
         resColor = r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
-        yardLabel = r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE LOST' : r.isIncomplete?'INCOMPLETE' : (r.yards>=0?'+':'')+r.yards+' YDS';
+        yardLabel = r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE LOST' : r.isIncomplete?'INCOMPLETE' : yardText(r.yards).toUpperCase();
       } else {
         // User on defense — stops are green, opponent gains are red
         if (r.isTouchdown) { resColor = '#e03050'; yardLabel = 'TOUCHDOWN'; }
@@ -2250,18 +2250,18 @@ export function buildGameplay() {
       resultText = r.isComplete ? 'GOOD!' : 'NO GOOD';
     } else if (isUserOff) {
       resultColor = isTD ? '#EBB010' : isGoodForUser ? '#3df58a' : isBadForUser ? '#e03050' : r.yards > 0 ? '#c8a030' : '#aaa';
-      resultText = isTD ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTED' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : r.isSafety ? 'SAFETY' : (r.yards >= 0 ? '+' : '') + r.yards + ' YDS';
+      resultText = isTD ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTED' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : r.isSafety ? 'SAFETY' : yardText(r.yards).toUpperCase();
     } else {
       // User on defense — show opponent gains as bad, stops as good
       if (isTD) { resultColor = '#e03050'; resultText = 'TOUCHDOWN'; }
-      else if (r.isSack) { resultColor = '#3df58a'; resultText = Math.abs(r.yards) > 0 ? 'SACKED! -' + Math.abs(r.yards) + ' YDS' : 'SACKED!'; }
+      else if (r.isSack) { resultColor = '#3df58a'; resultText = Math.abs(r.yards) > 0 ? 'SACKED! Loss of ' + Math.abs(r.yards) : 'SACKED!'; }
       else if (r.isInterception) { resultColor = '#3df58a'; resultText = 'PICKED OFF!'; }
       else if (r.isFumbleLost) { resultColor = '#3df58a'; resultText = 'FUMBLE!'; }
       else if (r.isIncomplete) { resultColor = '#3df58a'; resultText = 'INCOMPLETE'; }
       else if (r.isSafety) { resultColor = '#3df58a'; resultText = 'SAFETY!'; }
-      else if (r.yards <= 0) { resultColor = '#3df58a'; resultText = r.yards < 0 ? 'STUFFED! ' + r.yards + ' YDS' : 'NO GAIN'; }
-      else if (r.yards <= 3) { resultColor = '#c8a030'; resultText = 'GAINED ' + r.yards + ' YDS'; }
-      else { resultColor = '#e03050'; resultText = 'GAINED ' + r.yards + ' YDS'; }
+      else if (r.yards <= 0) { resultColor = '#3df58a'; resultText = r.yards < 0 ? 'STUFFED! Loss of ' + Math.abs(r.yards) : 'STUFFED! NO GAIN'; }
+      else if (r.yards <= 3) { resultColor = '#c8a030'; resultText = 'Gain of ' + r.yards; }
+      else { resultColor = '#e03050'; resultText = 'Gain of ' + r.yards; }
     }
     var flashColor = isGoodForUser ? '#3df58a' : isBadForUser ? '#e03050' : 'transparent';
 
@@ -2743,7 +2743,7 @@ export function buildGameplay() {
     const r = res.result;
     const isConv = res._isConversion;
     const col = isConv ? (r.isComplete?'#3df58a':'#e03050') : r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
-    const txt = isConv ? (r.isComplete?'GOOD!':'NO GOOD') : r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE' : r.isIncomplete?'INCOMPLETE' : r.isSafety?'SAFETY' : (r.yards>=0?'+':'')+r.yards+' YDS';
+    const txt = isConv ? (r.isComplete?'GOOD!':'NO GOOD') : r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE' : r.isIncomplete?'INCOMPLETE' : r.isSafety?'SAFETY' : yardText(r.yards).toUpperCase();
     const bd = breakdown(res.offPlay, res.defPlay, r, res.featuredOff, res.featuredDef);
     setNarr(r.description, bd);
 
