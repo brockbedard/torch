@@ -1932,18 +1932,49 @@ export function buildGameplay() {
     var defCard = isOff ? null : selTorch;
     var playedPlay = selPl;
 
-    // Torch card activation moment
+    // Torch card activation fanfare
     if (selectedPreSnap && selectedPreSnap.name) {
       var tcCard = selectedPreSnap;
       var tcTierCol = tcCard.tier === 'GOLD' ? '#EBB010' : tcCard.tier === 'SILVER' ? '#C0C0C0' : '#CD7F32';
       var tcOv = document.createElement('div');
-      tcOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,' + (tcCard.tier === 'GOLD' ? '0.6' : '0.3') + ');opacity:0;transition:opacity 0.15s;pointer-events:none;';
-      tcOv.innerHTML =
-        "<div style=\"font-family:'Teko';font-weight:700;font-size:24px;color:" + tcTierCol + ";letter-spacing:3px;text-shadow:0 0 16px " + tcTierCol + "60;\">" + tcCard.name + "</div>" +
-        "<div style=\"font-family:'Rajdhani';font-size:12px;color:#ccc;margin-top:4px;max-width:280px;text-align:center;\">" + tcCard.effect + "</div>";
+      tcOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);pointer-events:none;opacity:0;';
+      // Card visual
+      var tcVisual = buildTorchCard(tcCard, 120, 168);
+      tcVisual.style.cssText += 'box-shadow:0 0 40px ' + tcTierCol + '66;';
+      tcOv.appendChild(tcVisual);
+      // Name + effect text
+      var tcInfo = document.createElement('div');
+      tcInfo.style.cssText = 'text-align:center;margin-top:12px;opacity:0;';
+      tcInfo.innerHTML =
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:" + tcTierCol + ";letter-spacing:3px;text-shadow:0 0 16px " + tcTierCol + "60;\">" + tcCard.name + "</div>" +
+        "<div style=\"font-family:'Rajdhani';font-size:11px;color:#ccc;margin-top:4px;max-width:260px;\">" + tcCard.effect + "</div>";
+      tcOv.appendChild(tcInfo);
+      // Tier flash
+      var tcFlash = document.createElement('div');
+      tcFlash.style.cssText = 'position:absolute;inset:0;background:' + tcTierCol + ';opacity:0;pointer-events:none;';
+      tcOv.appendChild(tcFlash);
       el.appendChild(tcOv);
-      requestAnimationFrame(function() { tcOv.style.opacity = '1'; });
-      setTimeout(function() { tcOv.style.opacity = '0'; setTimeout(function() { tcOv.remove(); }, 200); }, tcCard.tier === 'GOLD' ? 1200 : tcCard.tier === 'SILVER' ? 800 : 500);
+      // GSAP fanfare
+      var tcTl = gsap.timeline();
+      tcTl.to(tcOv, { opacity: 1, duration: 0.15 });
+      tcTl.from(tcVisual, { scale: 0.5, rotation: -5, duration: 0.3, ease: 'back.out(1.7)' }, '<');
+      tcTl.to(tcFlash, { opacity: 0.15, duration: 0.1 }, '-=0.1');
+      tcTl.to(tcFlash, { opacity: 0, duration: 0.2 });
+      // Sound
+      tcTl.call(function() {
+        if (tcCard.tier === 'GOLD') SND.flip();
+        else if (tcCard.tier === 'SILVER') SND.cardSnap();
+        else SND.click();
+      }, [], '-=0.3');
+      // Show info
+      tcTl.to(tcInfo, { opacity: 1, duration: 0.2 }, '-=0.1');
+      // Hold
+      tcTl.to({}, { duration: tcCard.tier === 'GOLD' ? 0.8 : 0.5 });
+      // Dismiss
+      tcTl.to(tcOv, { opacity: 0, duration: 0.2, onComplete: function() { tcOv.remove(); } });
+      // Tap to skip
+      tcOv.style.pointerEvents = 'auto';
+      tcOv.onclick = function() { tcTl.progress(1); };
     }
 
     // Pre-snap TORCH card effects
