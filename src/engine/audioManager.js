@@ -55,11 +55,11 @@ var AudioManager = {
     loadPool('cardFlip', ['/audio/sfx/card_flip_01.wav','/audio/sfx/card_flip_02.wav','/audio/sfx/card_flip_03.wav']);
     loadPool('cardFlipDramatic', ['/audio/sfx/card_flip_dramatic_01.wav','/audio/sfx/card_flip_dramatic_02.wav']);
     loadPool('cardDiscard', ['/audio/sfx/card_discard_01.wav','/audio/sfx/card_discard_02.wav']);
-    loadPool('resultSlam', ['/audio/sfx/result_slam_01.wav']);
+    loadPool('resultSlam', ['/audio/sfx/result_slam_01.wav'], { volume: 0.85 });
     loadPool('tdCelebration', ['/audio/sfx/td_celebration_01.mp3'], { volume: 0.9 });
-    loadPool('gameOverWin', ['/audio/sfx/game_over_win_01.wav']);
-    loadPool('gameOverLoss', ['/audio/sfx/game_over_loss_01.wav']);
-    loadPool('scoreTick', ['/audio/sfx/score_tick_01.wav','/audio/sfx/score_tick_02.wav','/audio/sfx/score_tick_03.wav']);
+    loadPool('gameOverWin', ['/audio/sfx/game_over_win_01.wav'], { volume: 0.9 });
+    loadPool('gameOverLoss', ['/audio/sfx/game_over_loss_01.wav'], { volume: 0.9 });
+    loadPool('scoreTick', ['/audio/sfx/score_tick_01.wav','/audio/sfx/score_tick_02.wav','/audio/sfx/score_tick_03.wav'], { volume: 0.55 });
     loadPool('menuTap', ['/audio/sfx/menu_tap_01.wav','/audio/sfx/menu_tap_02.wav','/audio/sfx/menu_tap_03.wav'], { volume: 0.5 });
     loadPool('crowdCheer', ['/audio/sfx/crowd_cheer_01.wav'], { volume: 0.8 });
     loadPool('crowdGroan', ['/audio/sfx/crowd_groan_01.wav'], { volume: 0.6 });
@@ -100,6 +100,8 @@ var AudioManager = {
 
   startCrowd: function() {
     if (!_initialized) return;
+    // Guard: don't restart if already playing
+    if (_crowd.low && _crowd.low.playing()) return;
     _crowd.low.play(); _crowd.mid.play(); _crowd.high.play();
     this.setCrowdIntensity(0.3);
   },
@@ -154,7 +156,7 @@ var AudioManager = {
     var map = { menu: 0, pre_game: 0.2, normal_play: 0.4, big_moment: 0.7, two_min_drill: 0.7, touchdown: 0.8, turnover: 0.3, halftime: 0.2, game_over: 0, paused: 0.1 };
     var i = map[state];
     if (i !== undefined) {
-      if (i === 0) this.stopCrowd();
+      if (i === 0) this.stopCrowd(state === 'game_over' ? 2 : 0.3);
       else {
         if (!_crowd.low || !_crowd.low.playing()) this.startCrowd();
         this.setCrowdIntensity(i);
