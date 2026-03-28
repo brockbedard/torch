@@ -2571,8 +2571,8 @@ export function buildGameplay() {
         resultWrap.className = 'T-clash-result';
         resultWrap.style.cssText = 'position:absolute;top:22%;left:50%;transform:translateX(-50%);width:90%;text-align:center;';
         resultWrap.style.opacity = '0';
-        resultWrap.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:#666;letter-spacing:2px;\">TOUCHDOWN</div>" +
-          "<div style=\"font-family:'Rajdhani';font-size:12px;color:#444;margin-top:4px;\">" + oTeam.name + " scores.</div>";
+        resultWrap.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:" + oTeam.accent + ";letter-spacing:2px;opacity:0.7;\">TOUCHDOWN</div>" +
+          "<div style=\"font-family:'Rajdhani';font-size:12px;color:" + oTeam.accent + ";opacity:0.5;margin-top:4px;\">" + oTeam.name + " scores.</div>";
         overlay.appendChild(resultWrap);
         requestAnimationFrame(function() { resultWrap.style.opacity = '1'; resultWrap.style.transition = 'opacity 0.25s'; });
 
