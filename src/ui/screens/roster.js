@@ -8,6 +8,7 @@ import { gsap } from 'gsap';
 import { GS, setGs, getTeam } from '../../state.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { renderTeamBadge } from '../../data/teamLogos.js';
+import { renderFlamePips } from '../components/cards.js';
 import { SND } from '../../engine/sound.js';
 
 function starString(count) {
@@ -26,10 +27,10 @@ function buildPlayerRow(p, team, isStar) {
     row.style.paddingLeft = '8px';
   }
 
-  // Stars
+  // Stars (flame pips)
   var starsEl = document.createElement('div');
-  starsEl.style.cssText = "font-size:11px;color:#EBB010;width:60px;flex-shrink:0;letter-spacing:1px;";
-  starsEl.textContent = starString(p.stars || 3);
+  starsEl.style.cssText = "display:flex;align-items:center;width:60px;flex-shrink:0;";
+  starsEl.innerHTML = renderFlamePips(p.stars || 3, 5, '#EBB010', 11);
 
   // Position
   var posEl = document.createElement('div');
