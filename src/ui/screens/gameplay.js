@@ -180,7 +180,7 @@ const CSS = `
 .T-rain{position:absolute;font-size:16px;z-index:99;pointer-events:none;animation:T-rain-fall 2s ease-in forwards}
 @keyframes T-crack-in{0%{opacity:0;transform:scale(2)}100%{opacity:1;transform:scale(1)}}
 .T-crack{position:absolute;inset:0;z-index:100;pointer-events:none;display:flex;align-items:center;justify-content:center}
-.T-crack-text{font-family:'Rajdhani';font-size:18px;letter-spacing:2px;animation:T-crack-in .3s ease-out;text-shadow:0 0 20px currentColor}
+.T-crack-text{font-family:'Teko';font-weight:700;font-size:24px;letter-spacing:4px;animation:T-crack-in .3s ease-out;text-shadow:0 0 20px currentColor,0 2px 8px rgba(0,0,0,0.9),0 0 40px rgba(0,0,0,0.7)}
 @keyframes T-impact{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(3)}}
 .T-impact{position:absolute;top:50%;left:50%;width:40px;height:40px;border-radius:50%;z-index:99;pointer-events:none;transform:translate(-50%,-50%);animation:T-impact .4s ease-out forwards}
 @keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
