@@ -938,14 +938,15 @@ export class GameState {
     }
   }
 
-  /** Transition to the second half */
+  /** Transition to the second half — kickoff handled by gameplay.js halftime flow */
   startSecondHalf() {
     this.half = 2;
     this.playsUsed = 0;
     this.twoMinActive = false;
     this.clockSeconds = 120;
     this.needsHalftime = false;
-    this.kickoffFlip();
+    // Note: kickoff is resolved separately in resolveHalftimeKickoff()
+    // Do NOT call kickoffFlip() here — it would set position before the display
   }
 
   /** End the game */
