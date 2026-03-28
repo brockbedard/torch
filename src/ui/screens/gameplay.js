@@ -1712,8 +1712,11 @@ export function buildGameplay() {
     if (phase === 'busy') { panel.className = 'T-panel T-panel-hidden'; return; }
     panel.className = 'T-panel ' + (isOff ? 'T-panel-off' : 'T-panel-def');
 
-    // 2min check
+    // 2min check + close game crowd frenzy
     if (gs.twoMinActive && !prev2min) { prev2min = true; el.classList.add('T-urgent'); show2MinWarn(); start2MinClock(); }
+    if (gs.twoMinActive && Math.abs(gs.ctScore - gs.irScore) <= 7) {
+      AudioStateManager.setCrowdIntensity(0.85, 0.5);
+    }
 
     // 4th down decision bar — appears ABOVE cards so player sees it first
     var is4thPastMid = gs.down === 4 && isOff && gs.canSpecialTeams() && !conversionMode && !_fourthDownDecided;
@@ -1758,6 +1761,7 @@ export function buildGameplay() {
           primaryLabel: 'PWR',
           team: hTeam,
           onSelect: function(punter) {
+            SND.kickThud();
             var puntResult = gs.punt(punter);
             burnPlayer(_humanSTDeck, punter, 'punter', puntResult.gross + '-yard punt');
             driveSummaryLog.push({ down: 4, dist: gs.distance, playName: puntResult.label, yards: 0, isUserOff: true });
@@ -1790,6 +1794,7 @@ export function buildGameplay() {
             secondaryLabel: 'PWR',
             team: hTeam,
             onSelect: function(kicker) {
+              SND.kickThud();
               var fgResult = gs.attemptFieldGoal(kicker);
               var fgContext = (fgResult.made ? 'Made ' : 'Missed ') + fgResult.distance + '-yard FG';
               burnPlayer(_humanSTDeck, kicker, 'kicker', fgContext);
@@ -2701,8 +2706,9 @@ export function buildGameplay() {
         showSpecialTeamsResult(oTeam.name + ' ELECTS TO PUNT', oTeam.accent, function() {
           var aiPunter = aiPickST(_cpuSTDeck, 'kickPower', gs.difficulty);
           if (aiPunter) burnPlayer(_cpuSTDeck, aiPunter, 'punter', 'AI punt');
+          SND.kickThud();
           var puntResult = gs.punt(aiPunter);
-          showSpecialTeamsResult(puntResult.label, '#4DA6FF', function() {
+          showSpecialTeamsResult(puntResult.label, oTeam.accent, function() {
             driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
             showPossCut('punt', function() { if (!checkEnd()) nextSnap(); });
           });
@@ -2715,6 +2721,7 @@ export function buildGameplay() {
         showSpecialTeamsResult(oTeam.name + ' ATTEMPTS A ' + fgDist3 + '-YARD FIELD GOAL', oTeam.accent, function() {
           var aiKicker = aiPickST(_cpuSTDeck, 'kickAccuracy', gs.difficulty);
           if (aiKicker) burnPlayer(_cpuSTDeck, aiKicker, 'kicker', 'AI FG');
+          SND.kickThud();
           var fgResult = gs.attemptFieldGoal(aiKicker);
           var fgColor = fgResult.made ? '#e03050' : '#00ff44';
           showSpecialTeamsResult(fgResult.made ? 'IT\'S GOOD! +3' : 'NO GOOD!', fgColor, function() {
