@@ -778,36 +778,28 @@ export function buildGameplay() {
   // ── FIELD STRIP ──
   const strip = document.createElement('div'); strip.className = 'T-strip'; el.appendChild(strip);
 
-  // Weather particle overlay on field
+  // Weather particle HTML (injected into field strip on every drawField)
   var weatherId = (GS.gameConditions && GS.gameConditions.weather) || 'clear';
+  var _weatherHTML = '';
   if (weatherId !== 'clear') {
-    var weatherLayer = document.createElement('div');
-    weatherLayer.className = 'T-weather-layer';
+    strip.style.position = 'relative';
+    var particles = '';
     if (weatherId === 'snow') {
       for (var wi = 0; wi < 25; wi++) {
-        var flake = document.createElement('div');
-        flake.style.cssText = 'position:absolute;width:' + (3 + Math.random() * 4) + 'px;height:' + (3 + Math.random() * 4) + 'px;background:#fff;border-radius:50%;opacity:0.6;left:' + (Math.random() * 100) + '%;animation:T-snow-fall ' + (2 + Math.random() * 3) + 's linear ' + (Math.random() * 3) + 's infinite;';
-        weatherLayer.appendChild(flake);
+        particles += '<div style="position:absolute;width:' + (3 + Math.random() * 4) + 'px;height:' + (3 + Math.random() * 4) + 'px;background:#fff;border-radius:50%;opacity:0.6;left:' + (Math.random() * 100) + '%;animation:T-snow-fall ' + (2 + Math.random() * 3) + 's linear ' + (Math.random() * 3) + 's infinite;"></div>';
       }
     } else if (weatherId === 'rain') {
       for (var ri = 0; ri < 30; ri++) {
-        var drop = document.createElement('div');
-        drop.style.cssText = 'position:absolute;width:1px;height:' + (8 + Math.random() * 12) + 'px;background:rgba(100,160,255,0.4);left:' + (Math.random() * 100) + '%;animation:T-rain-fall ' + (0.4 + Math.random() * 0.3) + 's linear ' + (Math.random() * 1) + 's infinite;';
-        weatherLayer.appendChild(drop);
+        particles += '<div style="position:absolute;width:1px;height:' + (8 + Math.random() * 12) + 'px;background:rgba(100,160,255,0.4);left:' + (Math.random() * 100) + '%;animation:T-rain-fall ' + (0.4 + Math.random() * 0.3) + 's linear ' + (Math.random() * 1) + 's infinite;"></div>';
       }
     } else if (weatherId === 'heat') {
-      var shimmer = document.createElement('div');
-      shimmer.style.cssText = 'position:absolute;inset:0;background:linear-gradient(0deg,rgba(255,100,0,0.06),transparent 40%);animation:T-heat-shimmer 3s ease-in-out infinite;';
-      weatherLayer.appendChild(shimmer);
+      particles = '<div style="position:absolute;inset:0;background:linear-gradient(0deg,rgba(255,100,0,0.06),transparent 40%);animation:T-heat-shimmer 3s ease-in-out infinite;"></div>';
     } else if (weatherId === 'wind') {
       for (var wdi = 0; wdi < 8; wdi++) {
-        var streak = document.createElement('div');
-        streak.style.cssText = 'position:absolute;width:' + (20 + Math.random() * 30) + 'px;height:1px;background:rgba(255,255,255,0.1);top:' + (Math.random() * 100) + '%;left:' + (Math.random() * 100) + '%;animation:T-rain-fall ' + (0.8 + Math.random() * 0.5) + 's linear ' + (Math.random() * 2) + 's infinite;transform:rotate(-15deg);';
-        weatherLayer.appendChild(streak);
+        particles += '<div style="position:absolute;width:' + (20 + Math.random() * 30) + 'px;height:1px;background:rgba(255,255,255,0.1);top:' + (Math.random() * 100) + '%;left:' + (Math.random() * 100) + '%;animation:T-rain-fall ' + (0.8 + Math.random() * 0.5) + 's linear ' + (Math.random() * 2) + 's infinite;transform:rotate(-15deg);"></div>';
       }
     }
-    strip.style.position = 'relative';
-    strip.appendChild(weatherLayer);
+    _weatherHTML = '<div class="T-weather-layer">' + particles + '</div>';
   }
   function drawField() {
     const s = gs.getSummary();
@@ -869,7 +861,7 @@ export function buildGameplay() {
       h += '<div class="T-drop T-drop-torch' + (phase==='torch'?' T-drop-active':'') + '" data-drop="torch"><span class="T-drop-lbl">' + torchLbl + '</span></div>';
     }
 
-    strip.innerHTML = h;
+    strip.innerHTML = h + _weatherHTML;
 
     // Append actual shared-builder DOM cards into placed slots with lock-in animation
     if (selPl) {
