@@ -1237,16 +1237,23 @@ export function buildGameplay() {
         rainFootballs(tier === 5 ? 24 : 16);
         slamText('TOUCHDOWN', tColor, tDuration - 400);
       } else if (r.isInterception) {
+        var intGood = isDef; // user on defense = good (forced INT)
         SND.turnover();
-        shakeScreen(6);
-        flashField('rgba(224,48,80,0.6)', 800);
-        impactBurst('rgba(224,48,80,0.8)');
-        slamText('INTERCEPTED', '#e03050', tDuration - 400);
+        shakeScreen(intGood ? 8 : 5);
+        flashField(intGood ? 'rgba(0,255,68,0.5)' : 'rgba(224,48,80,0.6)', 1000);
+        impactBurst(intGood ? 'rgba(0,255,68,0.8)' : 'rgba(224,48,80,0.8)');
+        slamText(intGood ? 'PICKED OFF!' : 'INTERCEPTED', intGood ? '#00ff44' : '#e03050', tDuration - 400);
+        if (intGood) AudioStateManager.crowdSpike('cheer', 0.5);
+        else AudioStateManager.crowdSpike('groan', 0.3);
       } else if (r.isFumbleLost) {
+        var fumGood = isDef;
         SND.turnover();
-        shakeScreen(5);
-        flashField('rgba(224,96,32,0.6)', 800);
-        slamText('FUMBLE', '#e06020', tDuration - 400);
+        shakeScreen(fumGood ? 7 : 4);
+        flashField(fumGood ? 'rgba(0,255,68,0.5)' : 'rgba(224,96,32,0.6)', 1000);
+        if (fumGood) impactBurst('rgba(0,255,68,0.6)');
+        slamText(fumGood ? 'FUMBLE RECOVERY!' : 'FUMBLE LOST', fumGood ? '#00ff44' : '#e06020', tDuration - 400);
+        if (fumGood) AudioStateManager.crowdSpike('cheer', 0.5);
+        else AudioStateManager.crowdSpike('groan', 0.3);
       } else if (r.isSack) {
         SND.sack();
         shakeScreen(8);
