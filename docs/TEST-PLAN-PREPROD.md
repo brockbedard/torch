@@ -112,9 +112,14 @@
 
 ## LATEST FIXES (post initial test plan)
 
-### No Duplicate Yard Display
-- [ ] After a play: result overlay shows "GAIN OF 7", commentary says "Henderson finds a seam and picks up good yardage" — NOT "Henderson gains 7 yards"
-- [ ] Exception: torch card effects can mention yards ("DEEP SHOT! 22 yards!")
+### Yard Display — Plain English, No +/- Symbols
+- [ ] Result splash (big overlay): "GAIN OF 7" or "LOSS OF 3" or "NO GAIN" — plain English, no +/-
+- [ ] Description below splash: "Henderson picks up 7 yards." — plain English WITH the number
+- [ ] Drive log (expanded rows): "7 YDS" or "LOSS 3" — no + or - prefix
+- [ ] Drive log (compressed old plays): "+7" / "-3" shorthand OK (space-constrained)
+- [ ] Torch card effects: "DEEP SHOT! Goes long for 22 yards!" — plain English with number
+- [ ] NO "+7 YDS" or "-3 YDS" format anywhere on the clash page
+- [ ] Yards always visible with actual numbers — never hidden or vague
 
 ### Sound Seamlessness
 - [ ] Crowd loops play continuously from game start to end — no gaps or restarts
