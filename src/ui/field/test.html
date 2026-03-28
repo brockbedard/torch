@@ -23,7 +23,7 @@
   .section{margin-top:8px;width:100%}
   .section-label{font-size:10px;color:#FF6B00;letter-spacing:2px;margin-bottom:3px}
   .controls{display:flex;gap:3px;flex-wrap:wrap}
-  button{background:#1a1a1a;border:1px solid #333;color:#aaa;font-family:'Teko';font-size:11px;padding:3px 7px;cursor:pointer;border-radius:3px;letter-spacing:1px}
+  button{background:#1a1a1a;border:1px solid #333;color:#aaa;font-family:'Teko';font-size:11px;padding:3px 7px;cursor:pointer;border-radius:3px;letter-spacing:1px;min-height:32px}
   button:hover{background:#222;color:#fff}
   button.active{background:#FF4511;color:#000;border-color:#FF4511}
   .play-btn{border-color:#00ff4444}
@@ -39,6 +39,18 @@
   .drive-log .positive{color:#00ff44}
   .drive-log .negative{color:#ff4444}
   .drive-log .special{color:#EBB010}
+
+  /* Dev controls panel */
+  .dev-panel{width:100%;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:6px;margin-top:8px;overflow:hidden}
+  .dev-panel-header{font-size:10px;color:#FF6B00;letter-spacing:2px;padding:4px 8px;background:#111;border-bottom:1px solid #1a1a1a}
+  .dev-row{border-bottom:1px solid #111}
+  .dev-row:last-child{border-bottom:none}
+  .dev-row label{font-size:10px;color:#888;display:block;padding:4px 8px 0;}
+  .dev-row-inner{padding:2px 8px 4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  input[type=range]{flex:1;accent-color:#EBB010}
+  input[type=number]{background:#1a1a1a;color:#fff;border:1px solid #333;padding:2px 4px;font-family:'Teko';font-size:12px;border-radius:3px;width:60px}
+
+  #eventLog{max-height:80px;overflow-y:auto;font-size:9px;color:#666;padding:4px 8px;background:#0a0a0a;border-top:1px solid #1a1a1a;font-family:'Rajdhani'}
 </style>
 </head>
 <body>
@@ -83,6 +95,47 @@
   <div class="controls" id="formations"></div>
 </div>
 
+<!-- Dev controls panel -->
+<div class="dev-panel">
+  <div class="dev-panel-header">DEV CONTROLS</div>
+
+  <!-- 1. Ball position slider -->
+  <div class="dev-row">
+    <label>BALL POSITION</label>
+    <div class="dev-row-inner">
+      <input type="range" id="yardSlider" min="10" max="110" value="25">
+      <span id="yardLabel" style="font-size:10px;color:#EBB010;white-space:nowrap;">OWN 25</span>
+    </div>
+  </div>
+
+  <!-- 2. Custom yards + play -->
+  <div class="dev-row">
+    <label>CUSTOM YARDS</label>
+    <div class="dev-row-inner">
+      <input type="number" id="customYards" value="8" min="-15" max="50">
+      <button id="playCustom" style="background:#1a3a1a;border-color:#00ff4444;color:#00ff44;">PLAY</button>
+      <button id="playCustomRun" style="background:#1a2a1a;border-color:#00cc3344;color:#00cc33;">RUN</button>
+    </div>
+  </div>
+
+  <!-- 3. Defense scheme -->
+  <div class="dev-row">
+    <label>DEF SCHEME</label>
+    <div class="dev-row-inner" id="defSchemes"></div>
+  </div>
+
+  <!-- 4. Replay + 5. Speed -->
+  <div class="dev-row">
+    <div class="dev-row-inner" style="justify-content:space-between;">
+      <button id="replay" style="background:#1a1a2a;border-color:#4488FF44;color:#4488FF;">REPLAY LAST</button>
+      <div id="speedSelect" style="display:flex;gap:4px;"></div>
+    </div>
+  </div>
+
+  <!-- 6. Event log -->
+  <div id="eventLog"></div>
+</div>
+
 <div class="drive-log" id="log"></div>
 
 <script type="module">
@@ -99,6 +152,14 @@ let defScore = 0;
 let snaps = 0;
 let currentPlayType = 'SHORT';
 let currentFormation = 'shotgun_deuce';
+let defScheme = 'ZONE';
+
+// Replay state
+let _lastType = null;
+let _lastYards = 0;
+
+// Speed state (wired visually, no fieldAnimator param yet)
+let _speed = 1;
 
 const TEAM_COLORS = {
   sentinels: { name: 'BOARS', color: '#C4A265' },
@@ -109,12 +170,26 @@ const TEAM_COLORS = {
 
 const DOWN_LABELS = ['', '1ST', '2ND', '3RD', '4TH'];
 
+function ballLabel(yard) {
+  var ydsToEz = 110 - yard;
+  return ydsToEz <= 50 ? 'OPP ' + ydsToEz : 'OWN ' + (yard - 10);
+}
+
+function logEvent(msg) {
+  var el = document.getElementById('eventLog');
+  var ts = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  var line = document.createElement('div');
+  line.textContent = ts + '  ' + msg;
+  el.insertBefore(line, el.firstChild);
+  // Keep to 30 lines
+  while (el.children.length > 30) el.removeChild(el.lastChild);
+}
+
 document.fonts.ready.then(() => {
   const field = createFieldAnimator(375, 360);
   document.getElementById('wrap').appendChild(field.canvas);
 
   function getFormation(playType, team) {
-    // Use weighted pool for variety, fall back to fixed map
     var picked = field.pickFormation(team, playType);
     if (picked) return picked;
     var teamOverrides = field.TEAM_FORMATION_MAP[team] || {};
@@ -128,7 +203,7 @@ document.fonts.ready.then(() => {
       firstDownYard: Math.min(ballYard + distance, 110),
       formation: currentFormation,
       playType: currentPlayType,
-      defScheme: 'ZONE',
+      defScheme: defScheme,
       offTeam: offTeam,
       defTeam: defTeam
     };
@@ -143,10 +218,12 @@ document.fonts.ready.then(() => {
     document.getElementById('offScore').textContent = offScore;
     document.getElementById('defScore').textContent = defScore;
     var ydsToEz = 110 - ballYard;
-    var ballLabel = ydsToEz <= 50 ? 'OPP ' + ydsToEz : 'OWN ' + (ballYard - 10);
     document.getElementById('downDist').textContent = DOWN_LABELS[down] + ' & ' + (distance <= ydsToEz ? distance : 'GOAL');
-    document.getElementById('ballPos').textContent = 'BALL ON ' + ballLabel;
+    document.getElementById('ballPos').textContent = 'BALL ON ' + ballLabel(ballYard);
     document.getElementById('halfInfo').textContent = '1ST HALF · ' + snaps + '/20';
+    // Sync slider
+    document.getElementById('yardSlider').value = ballYard;
+    document.getElementById('yardLabel').textContent = ballLabel(ballYard);
   }
 
   function draw() {
@@ -165,11 +242,22 @@ document.fonts.ready.then(() => {
     var oldBall = ballYard;
     snaps++;
 
+    // Store for replay
+    _lastType = type;
+    _lastYards = yards;
+
+    var t0 = Date.now();
+
     // Play the animation
     field.playSequence(type, yards, getState());
 
+    var timeout = (type === 'touchdown' || type === 'interception') ? 5000 : 4500;
+
     // Update game state after animation
     setTimeout(function() {
+      var duration = ((Date.now() - t0) / 1000).toFixed(1);
+      logEvent('PLAY ' + type.toUpperCase() + ' ' + (yards >= 0 ? '+' : '') + yards + ' yds  (' + duration + 's)');
+
       if (type === 'touchdown') {
         offScore += 7;
         logPlay(TEAM_COLORS[offTeam].name + ' TOUCHDOWN!', yards, 'special');
@@ -199,21 +287,21 @@ document.fonts.ready.then(() => {
       // Turnover on downs
       if (down > 4) {
         logPlay('TURNOVER ON DOWNS', 0, 'negative');
-        var temp = offTeam; offTeam = defTeam; defTeam = temp;
+        var temp2 = offTeam; offTeam = defTeam; defTeam = temp2;
         down = 1; distance = 10;
       }
 
       // Update formation for current play type
       currentFormation = getFormation(currentPlayType, offTeam);
 
-      // Brief pause before scrolling to new position (let camera settle)
+      // Brief pause before scrolling to new position
       setTimeout(function() {
         field.scrollTo(oldBall, ballYard, 800);
         setTimeout(function() {
           draw();
         }, 850);
       }, 400);
-    }, type === 'touchdown' || type === 'interception' ? 5000 : 4500);
+    }, timeout);
   }
 
   // Team buttons
@@ -224,7 +312,6 @@ document.fonts.ready.then(() => {
     btn.style.color = TEAM_COLORS[t].color;
     btn.onclick = function() {
       offTeam = t;
-      // Pick a different defense
       var others = ['sentinels','wolves','stags','serpents'].filter(function(x) { return x !== t; });
       defTeam = others[Math.floor(Math.random() * others.length)];
       currentFormation = getFormation(currentPlayType, offTeam);
@@ -281,8 +368,71 @@ document.fonts.ready.then(() => {
     fDiv.appendChild(btn);
   });
 
+  // --- DEV CONTROLS ---
+
+  // 1. Yard position slider
+  var slider = document.getElementById('yardSlider');
+  slider.oninput = function() {
+    ballYard = parseInt(slider.value);
+    document.getElementById('yardLabel').textContent = ballLabel(ballYard);
+    draw();
+  };
+
+  // 2. Custom yards play
+  document.getElementById('playCustom').onclick = function() {
+    var yds = parseInt(document.getElementById('customYards').value) || 0;
+    resolvePlay('complete', yds);
+  };
+  document.getElementById('playCustomRun').onclick = function() {
+    var yds = parseInt(document.getElementById('customYards').value) || 0;
+    resolvePlay('run', yds);
+  };
+
+  // 3. Defense scheme selector
+  var defDiv = document.getElementById('defSchemes');
+  ['ZONE','MAN','BLITZ'].forEach(function(s) {
+    var btn = document.createElement('button');
+    btn.textContent = s;
+    btn.className = s === defScheme ? 'active' : '';
+    btn.onclick = function() {
+      defScheme = s;
+      defDiv.querySelectorAll('button').forEach(function(b) { b.className = ''; });
+      btn.className = 'active';
+      logEvent('DEF SCHEME → ' + s);
+      draw();
+    };
+    defDiv.appendChild(btn);
+  });
+
+  // 4. Replay button
+  document.getElementById('replay').onclick = function() {
+    if (_lastType === null) {
+      logEvent('NO PLAY TO REPLAY');
+      return;
+    }
+    logEvent('REPLAY ' + _lastType.toUpperCase() + ' ' + (_lastYards >= 0 ? '+' : '') + _lastYards + ' yds');
+    field.playSequence(_lastType, _lastYards, getState());
+  };
+
+  // 5. Speed selector (visual only — no fieldAnimator param yet)
+  var speedDiv = document.getElementById('speedSelect');
+  [0.5, 1, 2].forEach(function(s) {
+    var btn = document.createElement('button');
+    btn.textContent = s + 'x';
+    btn.style.minWidth = '36px';
+    btn.className = s === _speed ? 'active' : '';
+    btn.onclick = function() {
+      _speed = s;
+      speedDiv.querySelectorAll('button').forEach(function(b) { b.className = ''; });
+      btn.className = 'active';
+      logEvent('SPEED → ' + s + 'x  (visual only, wiring TBD)');
+    };
+    speedDiv.appendChild(btn);
+  });
+
   // Init
   currentFormation = getFormation(currentPlayType, offTeam);
+  logEvent('FIELD TEST READY');
   draw();
 });
 </script>
