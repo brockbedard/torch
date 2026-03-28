@@ -107,3 +107,34 @@
 - [ ] Get to 4th down → FG with kicker selection + burn
 - [ ] Play to halftime → stats + store + card pick → 2nd half
 - [ ] Play to end → end game screen → PLAY AGAIN → verify TORCH points carry
+
+---
+
+## LATEST FIXES (post initial test plan)
+
+### No Duplicate Yard Display
+- [ ] After a play: result overlay shows "GAIN OF 7", commentary says "Henderson finds a seam and picks up good yardage" — NOT "Henderson gains 7 yards"
+- [ ] Exception: torch card effects can mention yards ("DEEP SHOT! 22 yards!")
+
+### Sound Seamlessness
+- [ ] Crowd loops play continuously from game start to end — no gaps or restarts
+- [ ] Crowd fades to 0.2 at halftime (doesn't stop), fades back up on 2nd half start
+- [ ] Crowd fades out over 2 SECONDS at game end (not abrupt)
+- [ ] Result slam is the loudest SFX. Menu taps are quiet. Score ticks moderate.
+- [ ] No audio clipping or stacking issues
+
+### AI Coin Toss Text
+- [ ] "Serpents DRAWS A FREE TORCH CARD" in Serpents team color (not gray)
+
+### Remaining Not Yet Built
+- T2-4: Change of possession screen redesign (still basic overlay)
+- T2-5: Post-play flow (field first, then cards) — fundamental flow change
+- T2-12: Full card reveal in clash sequence
+- T3-1: Better coin toss sound (ElevenLabs)
+- T3-5: Haptic heartbeat in 2-min drill
+- T3-6: Slower initial card deal
+- T3-7: Spike as play splash
+- T3-8: End game visual polish
+- T3-9: Torch points glow in team color
+- T3-11: Difficulty balance (Medium as default?)
+- T3-13: Coin toss balance review
