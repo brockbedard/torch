@@ -3185,23 +3185,35 @@ export function buildGameplay() {
     requestAnimationFrame(function() { ov.style.opacity = '1'; });
 
     // Phase 1: Tap to flip — 3D coin with team logos on each side
+    // Title
+    var tossTitle = document.createElement('div');
+    tossTitle.style.cssText = "font-family:'Teko';font-weight:700;font-size:32px;color:#EBB010;letter-spacing:5px;margin-bottom:4px;";
+    tossTitle.textContent = 'COIN TOSS';
+    ov.appendChild(tossTitle);
+
+    // Matchup
+    var tossMatchup = document.createElement('div');
+    tossMatchup.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:12px;color:#888;letter-spacing:1px;margin-bottom:16px;";
+    tossMatchup.innerHTML = '<span style="color:' + hTeam.accent + '">' + hTeam.name + '</span> vs <span style="color:' + oTeam.accent + '">' + oTeam.name + '</span>';
+    ov.appendChild(tossMatchup);
+
     var coin = document.createElement('div');
-    coin.style.cssText = 'width:100px;height:100px;perspective:400px;cursor:pointer;';
+    coin.style.cssText = 'width:110px;height:110px;perspective:400px;cursor:pointer;';
     var coinInner = document.createElement('div');
     coinInner.style.cssText = 'width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 1.5s cubic-bezier(0.22,1,0.36,1);';
     // Front: user's team
     var coinFront = document.createElement('div');
-    coinFront.style.cssText = 'position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,#EBB010,#B8860B);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;box-shadow:0 0 30px rgba(235,176,16,0.4);';
+    coinFront.style.cssText = 'position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,#EBB010,#B8860B);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;box-shadow:0 0 30px rgba(235,176,16,0.4);border:3px solid #EBB01088;';
     coinFront.innerHTML = renderTeamBadge(GS.team, 70);
     // Back: opponent's team
     var coinBack = document.createElement('div');
-    coinBack.style.cssText = 'position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,#B8860B,#EBB010);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 30px rgba(235,176,16,0.4);';
+    coinBack.style.cssText = 'position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,#B8860B,#EBB010);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 30px rgba(235,176,16,0.4);border:3px solid #EBB01088;';
     coinBack.innerHTML = renderTeamBadge(GS.opponent, 70);
     coinInner.appendChild(coinFront);
     coinInner.appendChild(coinBack);
     coin.appendChild(coinInner);
     var label = document.createElement('div');
-    label.style.cssText = "font-family:'Teko';font-weight:700;font-size:22px;color:#EBB010;letter-spacing:3px;margin-top:8px;";
+    label.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;margin-top:12px;";
     label.textContent = 'TAP TO FLIP';
     ov.appendChild(coin);
     ov.appendChild(label);
