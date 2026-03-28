@@ -18,7 +18,7 @@ import { showShop, renderInventory } from '../components/shop.js';
 // tooltip system removed — will be rebuilt in v2
 import AudioStateManager from '../../engine/audioManager.js';
 import { renderTeamBadge } from '../../data/teamLogos.js';
-import { getConditionEffects } from '../../data/gameConditions.js';
+import { getConditionEffects, WEATHER } from '../../data/gameConditions.js';
 import { checkPlayCombos } from '../../data/playSequenceCombos.js';
 import { generateCommentary, generateContext } from '../../engine/commentary.js';
 import { initPointsAnim, playPointsSequence, isPointsAnimPlaying } from '../effects/torchPointsAnim.js';
@@ -29,12 +29,23 @@ import { createSTDeck, burnPlayer, aiPickST, autoFill } from '../../engine/stDec
 import { getFullRoster } from '../../data/players.js';
 import { showSTSelect } from '../components/stSelect.js';
 
+// Weather display config
+var _weatherColors = { snow: '#85C1E9', rain: '#4DA6FF', wind: '#aaa', heat: '#e03050', clear: '#EBB010' };
+var _weatherIcons = { snow: '\u2744', rain: '\uD83C\uDF27', wind: '\uD83C\uDF2C', heat: '\uD83D\uDD25', clear: '\u2600' };
+
 /* ═══════════════════════════════════════════
    CSS
    ═══════════════════════════════════════════ */
 const CSS = `
 /* root */
 .T{height:100vh;display:flex;flex-direction:column;background:#0A0804;overflow:hidden;position:relative;font-family:'Barlow Condensed',sans-serif}
+
+/* weather particles */
+.T-weather-layer{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden}
+@keyframes T-snow-fall{0%{transform:translateY(-10px) translateX(0);opacity:0.8}50%{transform:translateY(50%) translateX(15px)}100%{transform:translateY(110%) translateX(-10px);opacity:0.3}}
+@keyframes T-rain-fall{0%{transform:translateY(-10px);opacity:0.6}100%{transform:translateY(110%);opacity:0.2}}
+@keyframes T-heat-shimmer{0%,100%{opacity:0.03}50%{opacity:0.08}}
+.T-weather-badge{font-family:'Rajdhani';font-weight:700;font-size:9px;letter-spacing:1px;padding:2px 6px;border-radius:3px;flex-shrink:0}
 
 /* scoreboard */
 .T-sb{background:#0E0A04;border-bottom:1px solid #1E1610;flex-shrink:0;z-index:60;overflow:hidden}
@@ -677,6 +688,7 @@ export function buildGameplay() {
         `<div class="T-sb-sit-down" style="font-family:'Teko';font-size:16px;font-weight:700;color:${possTeam.accent};letter-spacing:1px">${dn} & ${conversionMode ? 'GOAL' : distLabel(s.distance, s.yardsToEndzone)}</div>` +
         `<div class="T-sb-sit-div"></div>` +
         `<div class="T-sb-sit-ball" style="font-family:'Teko';font-size:15px;font-weight:700;color:#e8e6ff;opacity:1;letter-spacing:1px">BALL ON <span style="color:${possTeam.accent}">${ballLabel}</span></div>` +
+        (weatherId !== 'clear' ? `<div class="T-sb-sit-div"></div><div class="T-weather-badge" style="color:${_weatherColors[weatherId] || '#aaa'};border:1px solid ${_weatherColors[weatherId] || '#aaa'}33;background:${_weatherColors[weatherId] || '#aaa'}11;">${_weatherIcons[weatherId] || ''} ${(WEATHER[weatherId] || {}).name || ''}</div>` : '') +
       `</div>`;
     drawTorchBanner();
   }
@@ -765,6 +777,38 @@ export function buildGameplay() {
 
   // ── FIELD STRIP ──
   const strip = document.createElement('div'); strip.className = 'T-strip'; el.appendChild(strip);
+
+  // Weather particle overlay on field
+  var weatherId = (GS.gameConditions && GS.gameConditions.weather) || 'clear';
+  if (weatherId !== 'clear') {
+    var weatherLayer = document.createElement('div');
+    weatherLayer.className = 'T-weather-layer';
+    if (weatherId === 'snow') {
+      for (var wi = 0; wi < 25; wi++) {
+        var flake = document.createElement('div');
+        flake.style.cssText = 'position:absolute;width:' + (3 + Math.random() * 4) + 'px;height:' + (3 + Math.random() * 4) + 'px;background:#fff;border-radius:50%;opacity:0.6;left:' + (Math.random() * 100) + '%;animation:T-snow-fall ' + (2 + Math.random() * 3) + 's linear ' + (Math.random() * 3) + 's infinite;';
+        weatherLayer.appendChild(flake);
+      }
+    } else if (weatherId === 'rain') {
+      for (var ri = 0; ri < 30; ri++) {
+        var drop = document.createElement('div');
+        drop.style.cssText = 'position:absolute;width:1px;height:' + (8 + Math.random() * 12) + 'px;background:rgba(100,160,255,0.4);left:' + (Math.random() * 100) + '%;animation:T-rain-fall ' + (0.4 + Math.random() * 0.3) + 's linear ' + (Math.random() * 1) + 's infinite;';
+        weatherLayer.appendChild(drop);
+      }
+    } else if (weatherId === 'heat') {
+      var shimmer = document.createElement('div');
+      shimmer.style.cssText = 'position:absolute;inset:0;background:linear-gradient(0deg,rgba(255,100,0,0.06),transparent 40%);animation:T-heat-shimmer 3s ease-in-out infinite;';
+      weatherLayer.appendChild(shimmer);
+    } else if (weatherId === 'wind') {
+      for (var wdi = 0; wdi < 8; wdi++) {
+        var streak = document.createElement('div');
+        streak.style.cssText = 'position:absolute;width:' + (20 + Math.random() * 30) + 'px;height:1px;background:rgba(255,255,255,0.1);top:' + (Math.random() * 100) + '%;left:' + (Math.random() * 100) + '%;animation:T-rain-fall ' + (0.8 + Math.random() * 0.5) + 's linear ' + (Math.random() * 2) + 's infinite;transform:rotate(-15deg);';
+        weatherLayer.appendChild(streak);
+      }
+    }
+    strip.style.position = 'relative';
+    strip.appendChild(weatherLayer);
+  }
   function drawField() {
     const s = gs.getSummary();
     const isOff = gs.possession === hAbbr;
