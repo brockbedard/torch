@@ -2639,6 +2639,20 @@ export function buildGameplay() {
         resultWrap.appendChild(labelEl);
         setTimeout(function() { labelEl.style.opacity = '1'; }, 100);
 
+        // Matchup reveal — show both featured players
+        if (res.featuredOff && res.featuredDef && !res._isConversion) {
+          var matchEl = document.createElement('div');
+          matchEl.style.cssText = "display:flex;justify-content:center;gap:16px;margin-top:10px;opacity:0;transition:opacity 0.3s;";
+          var offColor = isUserOff ? hTeam.accent : oTeam.accent;
+          var defColor = isUserOff ? oTeam.accent : hTeam.accent;
+          matchEl.innerHTML =
+            "<div style='text-align:center;'><div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:" + offColor + ";letter-spacing:1px;\">" + res.featuredOff.pos + "</div><div style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:#fff;\">" + res.featuredOff.name + "</div></div>" +
+            "<div style=\"font-family:'Teko';font-size:14px;color:#555;align-self:center;\">vs</div>" +
+            "<div style='text-align:center;'><div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:" + defColor + ";letter-spacing:1px;\">" + res.featuredDef.pos + "</div><div style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:#fff;\">" + res.featuredDef.name + "</div></div>";
+          resultWrap.appendChild(matchEl);
+          setTimeout(function() { matchEl.style.opacity = '1'; }, 200);
+        }
+
       }, 800);
 
       // ── BEAT 3: REWARD (2-3.5s) — TORCH points + combos ──
@@ -2697,7 +2711,30 @@ export function buildGameplay() {
           }
           if (posChanged(res.gameEvent, prevPoss)) {
             showPossCut(res.gameEvent, function() { showDrive(driveSnaps, prevPoss, function() { driveSnaps=[]; drivePlayHistory=[]; resetDriveSummary(); if(!checkEnd()) nextSnap(); }); });
-          } else { if(!checkEnd()) nextSnap(); }
+          } else {
+            if (!checkEnd()) {
+              // Brief field-view pause — player sees field + result before cards deal
+              drawBug(); drawField(); drawDriveSummary();
+              panel.style.display = 'none';
+              var tapNext = document.createElement('div');
+              tapNext.style.cssText = "position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:5;font-family:'Rajdhani';font-weight:700;font-size:10px;color:#555;letter-spacing:1px;pointer-events:none;";
+              tapNext.textContent = 'TAP FOR NEXT PLAY';
+              strip.appendChild(tapNext);
+              var tapDismissed = false;
+              function tapForNext() {
+                if (tapDismissed) return;
+                tapDismissed = true;
+                el.removeEventListener('click', tapForNext);
+                el.removeEventListener('touchstart', tapForNext);
+                if (tapNext.parentNode) tapNext.remove();
+                nextSnap();
+              }
+              el.addEventListener('click', tapForNext, { once: true });
+              el.addEventListener('touchstart', tapForNext, { once: true, passive: true });
+              // Auto-advance after 4 seconds
+              setTimeout(function() { if (!tapDismissed) tapForNext(); }, 4000);
+            }
+          }
         }
         if (shopTrigger) {
           triggerShop(shopTrigger, afterShop);
@@ -2911,13 +2948,33 @@ export function buildGameplay() {
     subEl.textContent = subtitle;
     ov.appendChild(subEl);
 
-    // Next situation
+    // Next situation + mini field position bar
     if (fieldPos) {
+      var ctxWrap = document.createElement('div');
+      ctxWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:8px;width:80%;max-width:280px;';
+
+      // Mini field bar
+      var fieldBar = document.createElement('div');
+      fieldBar.style.cssText = 'width:100%;height:6px;background:#1a1a1a;border-radius:3px;position:relative;overflow:hidden;';
+      var ballPct = s.possession === 'CT' ? s.ballPosition : 100 - s.ballPosition;
+      var ballDot = document.createElement('div');
+      ballDot.style.cssText = 'position:absolute;top:0;bottom:0;left:' + ballPct + '%;width:8px;transform:translateX(-50%);background:' + newPossTeam.accent + ';border-radius:3px;box-shadow:0 0 6px ' + newPossTeam.accent + ';';
+      fieldBar.appendChild(ballDot);
+      ctxWrap.appendChild(fieldBar);
+
       var ctxEl = document.createElement('div');
-      ctxEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:11px;color:" + newPossTeam.accent + ";letter-spacing:1px;margin-top:6px;";
-      ctxEl.textContent = nextCtx + ' at ' + fieldPos;
-      ov.appendChild(ctxEl);
+      ctxEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:11px;color:" + newPossTeam.accent + ";letter-spacing:1px;";
+      ctxEl.textContent = nextCtx + ' \u2022 ' + fieldPos;
+      ctxWrap.appendChild(ctxEl);
+
+      ov.appendChild(ctxWrap);
     }
+
+    // Tap prompt
+    var tapEl = document.createElement('div');
+    tapEl.style.cssText = "font-family:'Rajdhani';font-size:9px;color:#444;letter-spacing:1px;margin-top:8px;";
+    tapEl.textContent = 'TAP TO CONTINUE';
+    ov.appendChild(tapEl);
 
     // Sound
     if (isGoodForUser) { try { SND.chime(); } catch(e) {} }
