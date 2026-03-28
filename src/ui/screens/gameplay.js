@@ -1760,8 +1760,6 @@ export function buildGameplay() {
 
   // ── RENDER PANEL ──
   function drawPanel() {
-    // Safety: remove any stuck overlays that might block interaction
-    el.querySelectorAll('.T-st-ov, .T-kickoff-ov').forEach(function(o) { o.remove(); });
     panel.innerHTML = '';
     const isOff = gs.possession === hAbbr;
     const sides = gs.getCurrentSides();
@@ -2841,6 +2839,7 @@ export function buildGameplay() {
           phase = 'play';
           drawBug(); drawField(); drawPanel();
         });
+        return;
       }
     }
 
