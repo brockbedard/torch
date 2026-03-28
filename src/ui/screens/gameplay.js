@@ -867,10 +867,14 @@ export function buildGameplay() {
     if (selPl) {
       var playSlot = strip.querySelector('#T-placed-play-slot');
       if (playSlot) {
-        var playEl = mkPlayCardEl(selPl);
-        playEl.style.width = '100%';
-        playEl.style.height = '100%';
-        playSlot.appendChild(playEl);
+        var playType = selPl.playType || selPl.cardType || 'RUN';
+        var ptColors = { DEEP:'#4488ff', SHORT:'#44dd66', QUICK:'#ddbb44', RUN:'#c4733b', SCREEN:'#ffaa22', BLITZ:'#dd4444', ZONE:'#4499dd', PRESSURE:'#cc7744', HYBRID:'#9955cc' };
+        var ptColor = ptColors[playType] || '#aaa';
+        playSlot.innerHTML =
+          "<div style='height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:4px;'>" +
+          "<div style=\"font-family:'Teko';font-weight:700;font-size:12px;color:" + ptColor + ";letter-spacing:1px;\">" + playType + "</div>" +
+          "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:11px;color:#fff;line-height:1.1;text-align:center;\">" + selPl.name + "</div>" +
+          "</div>";
         gsap.from(playSlot, { y: 60, scale: 0.7, opacity: 0, duration: 0.4, ease: 'power2.out' });
         gsap.fromTo(playSlot, { scale: 1 }, { scale: 1.08, duration: 0.1, delay: 0.4, yoyo: true, repeat: 1, ease: 'power1.out' });
         setTimeout(function() { SND.cardThud(); }, 350);
@@ -879,10 +883,13 @@ export function buildGameplay() {
     if (selP) {
       var playerSlot = strip.querySelector('#T-placed-player-slot');
       if (playerSlot) {
-        var playerEl = mkPlayerCardEl(selP, hTeam);
-        playerEl.style.width = '100%';
-        playerEl.style.height = '100%';
-        playerSlot.appendChild(playerEl);
+        var posColor = { QB:'#EBB010', WR:'#00ff44', RB:'#FF6B00', TE:'#22aa44', OL:'#888', DL:'#cc4444', LB:'#ff4444', CB:'#4488ff', S:'#44ddff' }[selP.pos] || '#aaa';
+        playerSlot.innerHTML =
+          "<div style='height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:4px;'>" +
+          "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:" + posColor + ";letter-spacing:1px;\">" + selP.pos + "</div>" +
+          "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:#fff;line-height:1.1;text-align:center;\">" + selP.name + "</div>" +
+          (selP.trait ? "<div style=\"font-family:'Rajdhani';font-size:8px;color:" + hTeam.accent + ";letter-spacing:0.5px;margin-top:2px;\">" + selP.trait + "</div>" : '') +
+          "</div>";
         gsap.from(playerSlot, { y: 60, scale: 0.7, opacity: 0, duration: 0.4, ease: 'power2.out' });
         gsap.fromTo(playerSlot, { scale: 1 }, { scale: 1.08, duration: 0.1, delay: 0.4, yoyo: true, repeat: 1, ease: 'power1.out' });
         setTimeout(function() { SND.cardThud(); }, 350);
