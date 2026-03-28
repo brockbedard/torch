@@ -462,10 +462,10 @@ export class GameState {
       offPlay = aiSelectPlay(sides.offHand, 'offense', this.difficulty, { ...situation, oppPlay });
     }
     if (featuredOff === undefined || featuredOff === null) {
-      featuredOff = aiSelectPlayer(sides.offPlayers, offPlay, this.difficulty, true);
+      featuredOff = aiSelectPlayer(sides.offPlayers, offPlay, this.difficulty, true, this.offHeatMap);
     }
     if (featuredDef === undefined || featuredDef === null) {
-      featuredDef = aiSelectPlayer(sides.defPlayers, defPlay, this.difficulty, false);
+      featuredDef = aiSelectPlayer(sides.defPlayers, defPlay, this.difficulty, false, this.defHeatMap);
     }
 
     // Track red zone entry

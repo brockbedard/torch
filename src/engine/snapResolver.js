@@ -81,8 +81,8 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   const covVar = cov.var || 0;
   const covInt = cov.int || 0;
 
-  // ── BASE MEAN (25% bump from v0.22) ──
-  let mean = offPlay.mean * 1.25 + covMean;
+  // ── BASE MEAN (35% bump — increased from 25% to reduce ties) ──
+  let mean = offPlay.mean * 1.35 + covMean;
   let variance = Math.max(1, offPlay.variance * 1.15 + covVar);
 
   // Defensive card effects

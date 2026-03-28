@@ -4,7 +4,7 @@
  */
 
 import { isRunType, checkOffensiveBadgeCombo } from './badgeCombos.js';
-import { traitSynergy } from './personnelSystem.js';
+import { traitSynergy, heatPenalty } from './personnelSystem.js';
 
 /**
  * Weighted random selection from an array using weights.
@@ -120,7 +120,7 @@ function scorePlayer(p, play, isOffense) {
   return syn + starScore;
 }
 
-export function aiSelectPlayer(roster, play, difficulty, isOffense) {
+export function aiSelectPlayer(roster, play, difficulty, isOffense, heatMap) {
   let available = roster.slice(0, 4).filter(p => !p.injured);
   if (available.length === 0) {
     available = roster.filter(p => !p.injured);
@@ -132,8 +132,15 @@ export function aiSelectPlayer(roster, play, difficulty, isOffense) {
     return available[Math.floor(Math.random() * available.length)];
   }
 
-  // Score all available players by trait synergy + stars
-  var scored = available.map(function(p) { return { player: p, score: scorePlayer(p, play, isOffense) }; });
+  // Score all available players by trait synergy + stars - heat penalty
+  var scored = available.map(function(p) {
+    var score = scorePlayer(p, play, isOffense);
+    // On Hard, factor in heat to encourage rotation
+    if (difficulty === 'HARD' && heatMap && p.id) {
+      score += heatPenalty(heatMap[p.id] || 0); // -1 to -3 for hot players
+    }
+    return { player: p, score: score };
+  });
   scored.sort(function(a, b) { return b.score - a.score; });
 
   // Medium: picks from top 2 (70% of the time), random otherwise
@@ -145,6 +152,6 @@ export function aiSelectPlayer(roster, play, difficulty, isOffense) {
     return available[Math.floor(Math.random() * available.length)];
   }
 
-  // Hard: always optimal
+  // Hard: optimal with heat awareness (naturally rotates players)
   return scored[0].player;
 }
