@@ -5,43 +5,58 @@
  */
 
 import { SND } from '../../engine/sound.js';
-import { GS, setGs, getTeam, getOtherTeam, fmtClock, getOffCards, getDefCards, getDrawWeight } from '../../state.js';
-import { BADGE_LABELS } from '../../data/badges.js';
+import { GS, setGs, getTeam, getOtherTeam, fmtClock, getOffCards, getDefCards, getDrawWeight, getSpeedMultiplier } from '../../state.js';
 import { GameState } from '../../engine/gameState.js';
-import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
-import { checkOffensiveBadgeCombo, checkDefensiveBadgeCombo } from '../../engine/badgeCombos.js';
-import { getPlayHistoryBonus } from '../../engine/playHistory.js';
+import { getOffenseRoster, getDefenseRoster, getFullRoster } from '../../data/players.js';
 // playSvg removed — play cards no longer use SVG diagrams
 import { TORCH_CARDS } from '../../data/torchCards.js';
-import { buildMaddenPlayer, buildPlayV1, buildTorchCard, injectCardStyles } from '../components/cards.js';
-import { showShop, renderInventory } from '../components/shop.js';
+import { buildMaddenPlayer, buildPlayV1, buildTorchCard } from '../components/cards.js';
+import { showShop } from '../components/shop.js';
 // tooltip system removed — will be rebuilt in v2
 import AudioStateManager from '../../engine/audioManager.js';
 import { renderTeamBadge } from '../../data/teamLogos.js';
-import { getConditionEffects, WEATHER } from '../../data/gameConditions.js';
+import { getConditionEffects } from '../../data/gameConditions.js';
 import { checkPlayCombos } from '../../data/playSequenceCombos.js';
-import { generateCommentary, generateContext } from '../../engine/commentary.js';
-import { initPointsAnim, playPointsSequence, isPointsAnimPlaying } from '../effects/torchPointsAnim.js';
+import { generateCommentary, generateContext, resetNarrative } from '../../engine/commentary.js';
+import { initPointsAnim, playPointsSequence } from '../effects/torchPointsAnim.js';
 import { injectDevPanel, getForceResult, getForceConversion } from '../components/devPanel.js';
 import { renderCardTray } from '../components/cardTray.js';
 import { createHandState, afterSnap as handAfterSnap, canDiscard, discard as handDiscard, resetDriveDiscards, redeal as handRedeal } from '../../engine/handManager.js';
-import { createSTDeck, burnPlayer, aiPickST, autoFill } from '../../engine/stDeck.js';
-import { getFullRoster } from '../../data/players.js';
+import { createSTDeck, burnPlayer, restorePlayer, aiPickST } from '../../engine/stDeck.js';
+import { aiSelectPlay, aiSelectPlayer } from '../../engine/aiOpponent.js';
 import { showSTSelect } from '../components/stSelect.js';
+import { createFieldAnimator } from '../field/fieldAnimator.js';
+import { checkCardCombo } from '../../engine/cardCombos.js';
 
-// Weather display config
-var _weatherColors = { snow: '#85C1E9', rain: '#4DA6FF', wind: '#aaa', heat: '#e03050', clear: '#EBB010' };
-var _weatherIcons = { snow: '\u2744', rain: '\uD83C\uDF27', wind: '\uD83C\uDF2C', heat: '\uD83D\uDD25', clear: '\u2600' };
+// Team-specific TD celebration config
+var TEAM_CELEBRATION = {
+  sentinels: {
+    colors: ['#C4A265', '#8B0000', '#fff', '#EBB010'],
+    phrases: ['BOARS FOOTBALL!', "THAT'S RIDGEMONT!", 'POWER!']
+  },
+  wolves: {
+    colors: ['#FF7EB3', '#E8548F', '#fff', '#8B2252'],
+    phrases: ['RIDE THE CURRENT!', 'DOLPHINS STRIKE!', 'SPEED KILLS!']
+  },
+  stags: {
+    colors: ['#85C1E9', '#5DADE2', '#fff', '#1B4F72'],
+    phrases: ['FROM THE SHADOWS!', 'SPECTRES ATTACK!', 'ELECTRIC!']
+  },
+  serpents: {
+    colors: ['#39FF14', '#2E0854', '#fff', '#00cc10'],
+    phrases: ['DEATH BY A THOUSAND CUTS!', 'SERPENTS VENOM!', 'CALCULATED!']
+  },
+};
 
 /* ═══════════════════════════════════════════
    CSS
    ═══════════════════════════════════════════ */
 const CSS = `
 /* root */
-.T{height:100vh;display:flex;flex-direction:column;background:#0A0804;overflow:hidden;position:relative;font-family:'Barlow Condensed',sans-serif}
+.T{height:100%;display:flex;flex-direction:column;background:#0A0804;overflow:hidden;position:relative;font-family:'Barlow Condensed',sans-serif}
 
 /* scoreboard */
-.T-sb{background:#0E0A04;border-bottom:1px solid #1E1610;flex-shrink:0;z-index:60;overflow:hidden}
+.T-sb{background:#0E0A04;border-bottom:1px solid #1E1610;flex-shrink:0;z-index:60;overflow:hidden;padding-top:env(safe-area-inset-top,0px)}
 /* score row: 5 columns — icon | team+score | center | team+score | icon */
 .T-sb-row{display:grid;grid-template-columns:44px 1fr minmax(70px,auto) 1fr 44px;align-items:center;justify-items:center;padding:6px 10px;gap:4px}
 .T-sb-icon{line-height:1;text-align:center;display:flex;align-items:center;justify-content:center}
@@ -90,23 +105,21 @@ const CSS = `
 .T-drive-idle{font-family:'Rajdhani';font-size:11px;color:#444;letter-spacing:.5px;margin-top:8px}
 
 /* field strip — Tecmo Bowl inspired */
-.T-strip{height:160px;flex-shrink:0;position:relative;background:#1a6a1a;overflow:hidden;border-bottom:1px solid #1E1610}
-.T-field-turf{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.04) 50%,transparent 50%,transparent 100%);background-size:100% 12px}
-.T-yard{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.4)}
-.T-yard-5{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.15)}
-.T-yard-num{position:absolute;font-family:'Rajdhani';font-size:10px;color:rgba(255,255,255,.45);transform:translateX(-50%);letter-spacing:1px;font-weight:bold}
-.T-yard-num-top{top:4px}
-.T-yard-num-bot{bottom:4px}
-.T-los{position:absolute;top:0;bottom:0;width:3px;z-index:5;transition:left .4s ease-out}
-.T-ltg{position:absolute;top:0;bottom:0;width:2px;opacity:.6;z-index:4;transition:left .4s ease-out;border-left:2px dashed}
-.T-ez{position:absolute;top:0;bottom:0;width:7%;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.T-ez-l{left:0;border-right:3px solid rgba(255,255,255,.3)}
-.T-ez-r{right:0;border-left:3px solid rgba(255,255,255,.3)}
-.T-ez-text{font-family:'Rajdhani';font-size:14px;color:rgba(255,255,255,0.6);writing-mode:vertical-lr;letter-spacing:4px}
-.T-ez-l .T-ez-text{transform:rotate(180deg)}
-.T-ez-r .T-ez-text{transform:rotate(0deg)}
-.T-midfield-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:72px;opacity:.5;z-index:1;filter:saturate(1.5) drop-shadow(0 0 8px rgba(255,255,255,.15))}
-.T-hash{position:absolute;left:7%;right:7%;height:1px;background:rgba(255,255,255,.06)}
+.T-strip{height:160px;flex-shrink:0;position:relative;background:transparent;overflow:hidden;border-bottom:1px solid #1E1610}
+.T-field-turf{display:none}
+.T-yard{display:none}
+.T-yard-5{display:none}
+.T-yard-num{display:none}
+.T-yard-num-top{display:none}
+.T-yard-num-bot{display:none}
+.T-los{display:none}
+.T-ltg{display:none}
+.T-ez{display:none}
+.T-ez-l{display:none}
+.T-ez-r{display:none}
+.T-ez-text{display:none}
+.T-midfield-logo{display:none}
+.T-hash{display:none}
 /* placed cards on field — centered vertically */
 .T-placed{position:absolute;top:50%;transform:translateY(-50%);height:150px;z-index:8;border-radius:6px;overflow:hidden;background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);border:2px solid #00ff44;box-shadow:0 0 12px rgba(0,255,68,.2),0 3px 10px rgba(0,0,0,0.5);display:flex;flex-direction:column}
 .T-placed-play{left:3%;width:30%}
@@ -175,7 +188,7 @@ const CSS = `
 
 /* celebrations */
 @keyframes T-shake{0%,100%{transform:translateX(0)}10%{transform:translateX(-6px)}20%{transform:translateX(6px)}30%{transform:translateX(-4px)}40%{transform:translateX(4px)}50%{transform:translateX(-2px)}60%{transform:translateX(2px)}}
-@keyframes T-td-confetti{0%{transform:translateY(0) rotate(0);opacity:0.9}20%{opacity:1}100%{transform:translateY(105vh) rotate(720deg);opacity:0}}
+@keyframes T-td-confetti{0%{transform:translateY(0) rotate(0) translateX(0);opacity:0.9}20%{opacity:1}100%{transform:translateY(105vh) rotate(var(--rot, 720deg)) translateX(var(--drift, 0px));opacity:0}}
 .T-shaking{animation:T-shake .5s ease-out}
 @keyframes T-flash-green{0%{opacity:.6}100%{opacity:0}}
 @keyframes T-flash-red{0%{opacity:.6}100%{opacity:0}}
@@ -251,6 +264,11 @@ const CSS = `
 .T-card-deal .T-card-back{position:absolute;inset:0;z-index:2;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px}
 .T-card-deal .T-card-face{width:100%;height:100%}
 @keyframes T-clash-glow{0%,100%{box-shadow:0 0 8px currentColor}50%{box-shadow:0 0 20px currentColor}}
+@keyframes T-micro-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-2px)} 50%{transform:translateX(2px)} 75%{transform:translateX(-1px)} }
+.T-2min-active { animation: T-2min-pulse 2s ease-in-out infinite; }
+@keyframes T-2min-pulse { 0%,100% { box-shadow: inset 0 0 0 0 transparent; } 50% { box-shadow: inset 0 0 30px rgba(255,0,64,0.08); } }
+@keyframes T-clock-critical { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+@keyframes T-snap-pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 .T-clash-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:auto}
 .T-clash-dim{position:absolute;inset:0;background:rgba(6,4,2,0.85);transition:opacity 0.3s}
 .T-clash-cards{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:12px;perspective:800px}
@@ -266,68 +284,6 @@ const CSS = `
 /* ═══════════════════════════════════════════
    HELPERS
    ═══════════════════════════════════════════ */
-function mqColor(q) { return q === 'green' ? '#3df58a' : q === 'red' ? '#e03050' : '#c8a030'; }
-function typeColor(t) {
-  return { SHORT:'#3df58a',QUICK:'#EBB010',DEEP:'#e03050',RUN:'#e07020',SCREEN:'#e060a0',
-    OPTION:'#e07020',BLITZ:'#e03050',ZONE:'#3df58a',PRESSURE:'#EBB010',HYBRID:'#FF6B00' }[t] || '#aaa';
-}
-
-function matchupQ(player, play, history, isOff) {
-  if (!player || !play) return null;
-  if (isOff) {
-    const c = checkOffensiveBadgeCombo(player.badge, play, false, false);
-    const h = getPlayHistoryBonus(history, play);
-    if (c.yardBonus > 0) return 'green';
-    if (h < -2) return 'red';
-    return h < 0 ? 'yellow' : 'yellow';
-  }
-  const c = checkDefensiveBadgeCombo(player.badge, play, { playType:'RUN', id:'power' });
-  return c.yardMod < 0 ? 'green' : 'yellow';
-}
-
-function breakdown(op, dp, r, fo, fd) {
-  const cov = (dp.baseCoverage || '').replace(/_/g,' ').toUpperCase();
-  const L = [];
-  if (r.isSack) L.push(dp.sackRateBonus >= .06 ? dp.name+' brought the heat.' : 'Protection collapsed vs '+cov+'.');
-  else if (r.isInterception) L.push(cov+' read the route. Picked.');
-  else if (r.isIncomplete) L.push(dp.passCompMod < -.03 ? dp.name+' jammed the timing.' : 'Tight window. Couldn\'t connect.');
-  else if (r.isTouchdown) L.push('Exploited '+cov+'. End zone.');
-  else if (r.yards >= 10) { const cv = op.coverageMods?.[dp.baseCoverage]; L.push(cv && cv.mean >= 2 ? op.name+' eats '+cov+'.' : fo.name+' made it happen.'); }
-  else if (r.yards <= 0) L.push(dp.name+' walled it off.');
-  if (r.offComboPts > 0) L.push(BADGE_LABELS[fo.badge]+' combo! +'+r.offComboYards+' yds.');
-  if (r.defComboPts > 0) L.push('Def combo: '+BADGE_LABELS[fd.badge]+'.');
-  if (r.historyBonus > 0) L.push('Play mix bonus +'+r.historyBonus+'.');
-  if (r.historyBonus < -2) L.push('Predictable. Penalty.');
-  return L.length ? L.join(' ') : op.name+' vs '+dp.name+'.';
-}
-
-const TAGS = {
-  touchdown:['SIX POINTS.','FIND THE HOUSE.','TOUCHDOWN.'],
-  turnover_td:['PICK SIX.','SCOOP AND SCORE.','HOUSE CALL.'],
-  interception:['PICKED OFF.','TURNOVER.','BALL DON\'T LIE.'],
-  fumble_lost:['STRIPPED.','LOOSE BALL.','TURNOVER.'],
-  turnover_on_downs:['STOPPED.','FOURTH DOWN FAILURE.','CHANGE OF POSSESSION.'],
-  safety:['SAFETY.','CAUGHT IN THE END ZONE.'],
-  score:['NEW DRIVE.','BALL AT THE 50.'],
-};
-function tag(ev) { const p = TAGS[ev] || TAGS.score; return p[Math.floor(Math.random()*p.length)]; }
-
-const PLAY_DESC = {
-  mesh:'Man killer',four_verts:'Stretch deep',shallow_cross:'Quick reliable',y_corner:'Beats Cover 2',
-  stick:'Safe short',slant:'Timing route',go_route:'One-on-one deep',bubble_screen:'Fast lateral',
-  draw:'Fake pass, run',qb_sneak:'Short yardage push',triple_option:'Give keep pitch',
-  midline:'FB dive inside',rocket_toss:'Speed to edge',trap:'Pulling guard',qb_keeper:'QB turns corner',
-  power:'Downhill physical',zone_read:'Read the end',pa_post:'Fake run, deep',pa_flat:'Fake dive, dump',
-  ir_qb_sneak:'Short yardage push',
-  ct_corner_blitz:'All-out pressure',ct_safety_blitz:'Extra sack heat',ct_agap_mug:'A-gap mind games',
-  ct_fire_zone:'Send 5, drop 3',ct_db_blitz:'Max pressure',ct_press_man:'Jam at the line',
-  ct_edge_crash:'Speed rush edges',ct_zone_blitz_drop:'Show blitz, drop',ct_overload_blitz:'Numbers to one side',
-  ct_prevent:'Nothing over top',ir_robber:'Jump the route',ir_bracket:'Double best WR',
-  ir_qb_spy:'Shadow the QB',ir_gap_integrity:'Every gap covered',ir_cover2_buc:'Tampa 2 seam',
-  ir_mod:'Two-high vanilla',ir_press_man:'Jam at the line',ir_line_stunt:'Pressure no blitz',
-  ir_cover6:'Split field cov',ir_blitz_call:'Rare IR blitz',
-};
-
 // Natural language yard display
 function yardText(yards) {
   if (yards > 0) return 'Gain of ' + yards;
@@ -339,15 +295,6 @@ function yardTextShort(yards) {
   if (yards < 0) return '-' + Math.abs(yards);
   return '0';
 }
-
-function playerImg(p, team, isOff) {
-  var pre = team.abbr.toLowerCase();
-  var s = isOff ? 'off' : 'def';
-  var last = p.name.split(' ').pop().toLowerCase();
-  return '/img/players/' + pre + '-' + s + '-' + p.pos.toLowerCase() + '-' + last + '.png';
-}
-
-function tierColor(ovr) { return ovr >= 85 ? '#c8a030' : ovr >= 75 ? '#aaa' : '#CD7F32'; }
 
 /* Build a placed player card for the field strip — uses shared buildMaddenPlayer */
 function mkPlayerCardEl(p, team) {
@@ -422,10 +369,34 @@ export function buildGameplay() {
       ctOffRoster: hOR, ctDefRoster: hDR,
       irOffRoster: cOffRoster, irDefRoster: cDefRoster,
       initialPossession: GS.humanReceives ? hAbbr : 'IR',
+      ctTeamId: GS.team, irTeamId: oppId,
     });
     // Seed TORCH points from previous game
     var carry = GS.season && GS.season.carryoverPoints ? GS.season.carryoverPoints : 0;
     if (carry > 0) GS.engine.ctTorchPts = carry;
+    // Restore mid-game snapshot if resuming
+    var snap = GS._engineSnapshot;
+    if (snap) {
+      GS.engine.ctScore = snap.ctScore || 0;
+      GS.engine.irScore = snap.irScore || 0;
+      GS.engine.possession = snap.possession || GS.engine.possession;
+      GS.engine.ballPosition = snap.ballPosition !== undefined ? snap.ballPosition : GS.engine.ballPosition;
+      GS.engine.down = snap.down || 1;
+      GS.engine.distance = snap.distance || 10;
+      GS.engine.half = snap.half || 1;
+      GS.engine.playsUsed = snap.playsUsed || 0;
+      GS.engine.totalPlays = snap.totalPlays || 0;
+      GS.engine.twoMinActive = snap.twoMinActive || false;
+      GS.engine.clockSeconds = snap.clockSeconds !== undefined ? snap.clockSeconds : 120;
+      GS.engine.ctTorchPts = snap.ctTorchPts || 0;
+      GS.engine.irTorchPts = snap.irTorchPts || 0;
+      GS.engine.offHeatMap = snap.offHeatMap || {};
+      GS.engine.defHeatMap = snap.defHeatMap || {};
+      GS.engine.momentum = snap.momentum !== undefined ? snap.momentum : 50;
+      GS._engineSnapshot = null; // Clear after applying
+    }
+    // Reset narrative tracking for this new game
+    resetNarrative();
   }
   const gs = GS.engine;
 
@@ -458,9 +429,14 @@ export function buildGameplay() {
   let phase = 'play'; // play | torch | ready | busy
   let driveSnaps = [];
   let prev2min = gs.twoMinActive;
+  var _lastPlayFlashed = false; // true after LAST PLAY flash fires, reset each half
   var snapCount = 0; // Track snap number for teach tooltips
+  var _tutorialStep = GS.isFirstSeason ? 1 : 0; // 0=done, 1=pick play, 2=pick player, 3=snap
   var twoMinTimer = null; // Real-time clock interval for 2-minute drill
   var _fourthDownDecided = false; // true after player clicks GO FOR IT (hides the bar)
+  var _driveHeat = 0; // 0-120 momentum bar
+  var _driveCardsUsed = []; // torch card IDs used this drive
+  var _activeDriveCombo = null; // combo triggered this snap, applied post-executeSnap
 
   // ── LAYER 6: Ambient mood — subtle brightness/vignette based on user momentum ──
   var _moodHistory = []; // last 4 plays: +1 good, -1 bad, 0 neutral
@@ -480,6 +456,55 @@ export function buildGameplay() {
       el.appendChild(_moodVignette);
     }
     _moodVignette.style.opacity = vignette.toFixed(3);
+  }
+
+  function updateDriveHeat(r, gameEvent) {
+    if (gameEvent === 'interception' || gameEvent === 'fumble' || gameEvent === 'turnover_on_downs') {
+      _driveHeat = 0; return;
+    }
+    if (r.isInterception || r.isFumbleLost) { _driveHeat = 0; return; }
+    var delta = 0;
+    if (r.isTouchdown) { _driveHeat = 100; return; }
+    if (r.yards >= 15) delta = 20;
+    else if (r.yards >= 8) delta = 12;
+    else if (r.yards >= 4) delta = 8;
+    else if (r.yards >= 1) delta = 4;
+    else if (r.yards === 0) delta = -5;
+    else delta = -10;
+    if (r.isIncomplete) delta = -8;
+    if (r.isSack) delta = -12;
+    delta += 3;
+    _driveHeat = Math.max(0, Math.min(120, _driveHeat + delta));
+  }
+
+  var _driveHeatFill = null; // cached fill element — avoid repeated getElementById calls
+  function drawDriveHeat() {
+    if (!_driveHeatFill) {
+      var bar = document.getElementById('T-drive-heat');
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'T-drive-heat';
+        bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;height:3px;z-index:2;pointer-events:none;background:transparent;';
+        bar.innerHTML = '<div id="T-drive-heat-fill" style="height:100%;width:0%;transition:width 0.5s ease-out,background 0.3s;border-radius:0 2px 2px 0;"></div>';
+        document.body.appendChild(bar);
+      }
+      _driveHeatFill = document.getElementById('T-drive-heat-fill');
+    }
+    var fill = _driveHeatFill;
+    if (!fill) return;
+    var pct = (_driveHeat / 120) * 100;
+    fill.style.width = pct + '%';
+    var color;
+    if (_driveHeat < 25) color = '#4488ff';
+    else if (_driveHeat < 50) color = '#c8a030';
+    else if (_driveHeat < 80) color = '#ff8811';
+    else color = '#e03050';
+    fill.style.background = color;
+    if (_driveHeat >= 90) {
+      fill.style.boxShadow = '0 0 8px ' + color + ', 0 -2px 12px ' + color + '80';
+    } else {
+      fill.style.boxShadow = 'none';
+    }
   }
 
   // Start/stop the real-time 2-minute clock
@@ -515,7 +540,6 @@ export function buildGameplay() {
 
   // Progressive disclosure
   var isFirstGame = false; // tutorial system disabled — will be rebuilt
-  var isFirstSeason = GS.isFirstSeason;
 
   // Game Day Conditions (v0.21)
   var weatherId = (GS.gameConditions && GS.gameConditions.weather) || 'clear';
@@ -557,6 +581,16 @@ export function buildGameplay() {
   // TORCH card inventory (v0.21 — 3 slots, persisted in season)
   var torchInventory = (GS.season && GS.season.torchCards) ? GS.season.torchCards.slice() : [];
   var selectedPreSnap = null; // card object selected for current snap
+
+  // Helper: resolve kickoff with HOUSE_CALL auto-consumption
+  function _resolveKickoff(humanReceives) {
+    var opts = {};
+    if (humanReceives) {
+      var hcIdx = torchInventory.findIndex(function(c) { return c.id === 'house_call'; });
+      if (hcIdx >= 0) { opts.houseCall = true; torchInventory.splice(hcIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+    }
+    return gs.constructor.resolveKickoff(null, opts);
+  }
 
   // Star Heat Check (v0.21)
   var offRoster = getOffenseRoster(GS.team);
@@ -624,10 +658,235 @@ export function buildGameplay() {
 
 
   // ── SCOREBOARD ──
-  const bug = document.createElement('div'); bug.className = 'T-sb'; el.appendChild(bug);
+  const bug = document.createElement('div'); bug.className = 'T-sb'; bug.style.cursor = 'pointer'; el.appendChild(bug);
+  // Tap scorebug to show stats sheet
+  bug.addEventListener('click', function() {
+    if (phase === 'busy') return;
+    import('../components/statsSheet.js').then(function(mod) {
+      mod.showStatsSheet(el, {
+        humanTeam: hTeam, oppTeam: oTeam,
+        humanScore: hAbbr === 'CT' ? gs.ctScore : gs.irScore,
+        oppScore: hAbbr === 'CT' ? gs.irScore : gs.ctScore,
+        half: gs.half, playsUsed: gs.playsUsed,
+        offPassAtt: hOffPassAtt || 0, offPassComp: hOffPassComp || 0, offPassYds: hOffPassYds || 0,
+        offRushAtt: hOffRushAtt || 0, offRushYds: hOffRushYds || 0, offTDs: 0,
+        defSacks: 0, defInts: 0, defPBUs: 0,
+        torchPts: hAbbr === 'CT' ? gs.getSummary().ctTorchPts : gs.getSummary().irTorchPts,
+      });
+    });
+  });
+  // ── PLAY-BY-PLAY TICKER ──
+  var ticker = document.createElement('div');
+  ticker.style.cssText = "position:relative;height:18px;overflow:hidden;background:rgba(0,0,0,0.6);border-bottom:1px solid #1a1a1a;flex-shrink:0;";
+  var tickerInner = document.createElement('div');
+  tickerInner.style.cssText = "position:absolute;white-space:nowrap;font-family:'Rajdhani';font-weight:700;font-size:10px;color:#888;letter-spacing:0.5px;line-height:18px;padding-left:100%;";
+  ticker.appendChild(tickerInner);
+  el.appendChild(ticker);
+
+  var _tickerMessages = [];
+  var _tickerAnim = null;
+
+  function pushTicker(text, color) {
+    _tickerMessages.push({ text: text, color: color || '#888' });
+    updateTicker();
+  }
+
+  function updateTicker() {
+    if (_tickerMessages.length === 0) return;
+    var recent = _tickerMessages.slice(-5);
+    var html = recent.map(function(m) {
+      return '<span style="color:' + m.color + ';">' + m.text + '</span>';
+    }).join(' <span style="color:#333;">|</span> ');
+    tickerInner.innerHTML = html;
+
+    if (_tickerAnim) { try { _tickerAnim.kill(); } catch(e) {} }
+    var width = tickerInner.scrollWidth + ticker.offsetWidth;
+    tickerInner.style.paddingLeft = ticker.offsetWidth + 'px';
+    try {
+      _tickerAnim = gsap.fromTo(tickerInner,
+        { x: 0 },
+        { x: -width, duration: Math.max(8, width / 40), ease: 'none', repeat: -1 }
+      );
+    } catch(e) {}
+  }
+
+  // Win probability model
+  function calcWinProbability(gs) {
+    var s = gs.getSummary();
+    var scoreDiff = s.ctScore - s.irScore; // positive = human leads
+    var timeLeft = s.twoMinActive ? s.clockSeconds / 120 : (40 - s.playsUsed) / 40; // 0-1
+    var fieldPos = s.possession === 'CT' ? s.ballPosition / 100 : (100 - s.ballPosition) / 100; // 0-1 towards scoring
+
+    // Base probability from score
+    var base = 50 + scoreDiff * 3; // each point = 3% swing
+
+    // Field position bonus (only matters if you have the ball)
+    var isUserPoss = s.possession === 'CT';
+    if (isUserPoss) base += fieldPos * 8; // deep in opponent territory = +8%
+    else base -= fieldPos * 5; // opponent deep in your territory = -5%
+
+    // Time factor: leads become more certain as time runs out
+    var timeCertainty = 1 + (1 - timeLeft) * 0.5; // 1.0 early, 1.5 late
+    base = 50 + (base - 50) * timeCertainty;
+
+    // Down and distance (3rd/4th and long = worse for offense)
+    if (isUserPoss && s.down >= 3 && s.distance >= 8) base -= 3;
+    if (!isUserPoss && s.down >= 3 && s.distance >= 8) base += 3;
+
+    return Math.max(1, Math.min(99, Math.round(base)));
+  }
+
+  // Scorebug cached elements — built once by initBug(), updated by drawBug()
+  var _bugEls = {};
+  var _prevDown = 0;
+  var _prevDist = 0;
+  var _prevBallPos = -1;
+  var _wasInRedZone = false;
+  function initBug() {
+    const ct = hTeam, ir = oTeam;
+
+    // ── Row ──
+    const row = document.createElement('div'); row.className = 'T-sb-row';
+
+    // CT icon (static — badge never changes mid-game)
+    const ctIcon = document.createElement('div'); ctIcon.className = 'T-sb-icon';
+    ctIcon.innerHTML = renderTeamBadge(GS.team, 44);
+    row.appendChild(ctIcon);
+
+    // CT side
+    const ctSide = document.createElement('div'); ctSide.className = 'T-sb-side';
+    const ctNameEl = document.createElement('div'); ctNameEl.className = 'T-sb-name';
+    ctNameEl.style.color = ct.accent;
+    ctNameEl.style.fontSize = (ct.name.length > 8 ? 14 : ct.name.length > 5 ? 17 : 20) + 'px';
+    ctNameEl.textContent = ct.name;
+    const ctScoreRow = document.createElement('div'); ctScoreRow.className = 'T-sb-score-row';
+    const ctArrowEl = document.createElement('span'); ctArrowEl.className = 'T-sb-pos-arrow T-sb-pos-arrow-l'; ctArrowEl.textContent = '\u25B6';
+    const ctScoreEl = document.createElement('span'); ctScoreEl.className = 'T-sb-pts';
+    ctScoreRow.appendChild(ctArrowEl);
+    ctScoreRow.appendChild(ctScoreEl);
+    ctSide.appendChild(ctNameEl);
+    ctSide.appendChild(ctScoreRow);
+    row.appendChild(ctSide);
+
+    // Center
+    const center = document.createElement('div'); center.className = 'T-sb-center';
+    const halfEl = document.createElement('div'); halfEl.className = 'T-sb-half';
+    const snapEl = document.createElement('div'); snapEl.className = 'T-sb-snap';
+    const clockEl = document.createElement('div'); clockEl.className = 'T-sb-countdown';
+    center.appendChild(halfEl);
+    center.appendChild(snapEl);
+    center.appendChild(clockEl);
+    row.appendChild(center);
+
+    // IR side
+    const irSide = document.createElement('div'); irSide.className = 'T-sb-side';
+    const irNameEl = document.createElement('div'); irNameEl.className = 'T-sb-name';
+    irNameEl.style.color = ir.accent;
+    irNameEl.style.fontSize = (ir.name.length > 8 ? 14 : ir.name.length > 5 ? 17 : 20) + 'px';
+    irNameEl.textContent = ir.name;
+    const irScoreRow = document.createElement('div'); irScoreRow.className = 'T-sb-score-row';
+    const irArrowEl = document.createElement('span'); irArrowEl.className = 'T-sb-pos-arrow T-sb-pos-arrow-r'; irArrowEl.textContent = '\u25C0';
+    const irScoreEl = document.createElement('span'); irScoreEl.className = 'T-sb-pts';
+    irScoreRow.appendChild(irArrowEl);
+    irScoreRow.appendChild(irScoreEl);
+    irSide.appendChild(irNameEl);
+    irSide.appendChild(irScoreRow);
+    row.appendChild(irSide);
+
+    // IR icon (static)
+    const irIcon = document.createElement('div'); irIcon.className = 'T-sb-icon';
+    irIcon.innerHTML = renderTeamBadge(GS.opponent, 44);
+    row.appendChild(irIcon);
+
+    bug.appendChild(row);
+
+    // ── Situation bar ──
+    const sit = document.createElement('div'); sit.className = 'T-sb-sit';
+    const downEl = document.createElement('div'); downEl.className = 'T-sb-sit-down';
+    downEl.style.fontFamily = "'Teko'"; downEl.style.fontSize = '16px';
+    downEl.style.fontWeight = '700'; downEl.style.letterSpacing = '1px';
+    const sitDiv = document.createElement('div'); sitDiv.className = 'T-sb-sit-div';
+    const ballEl = document.createElement('div'); ballEl.className = 'T-sb-sit-ball';
+    ballEl.style.fontFamily = "'Teko'"; ballEl.style.fontSize = '15px';
+    ballEl.style.fontWeight = '700'; ballEl.style.color = '#e8e6ff';
+    ballEl.style.opacity = '1'; ballEl.style.letterSpacing = '1px';
+    const ballOnText = document.createTextNode('BALL ON ');
+    const ballPosEl = document.createElement('span');
+    ballEl.appendChild(ballOnText);
+    ballEl.appendChild(ballPosEl);
+    sit.appendChild(downEl);
+    sit.appendChild(sitDiv);
+    sit.appendChild(ballEl);
+    bug.appendChild(sit);
+
+    // Mini field position bar
+    var fieldBar = document.createElement('div');
+    fieldBar.style.cssText = 'position:relative;height:6px;background:#1a1a1a;border-radius:3px;margin:2px 8px 0;overflow:hidden;';
+
+    // Left endzone (user)
+    var ezLeft = document.createElement('div');
+    ezLeft.style.cssText = 'position:absolute;left:0;top:0;bottom:0;width:7%;background:' + hTeam.accent + '30;border-radius:3px 0 0 3px;';
+    fieldBar.appendChild(ezLeft);
+
+    // Right endzone (opponent)
+    var ezRight = document.createElement('div');
+    ezRight.style.cssText = 'position:absolute;right:0;top:0;bottom:0;width:7%;background:' + oTeam.accent + '30;border-radius:0 3px 3px 0;';
+    fieldBar.appendChild(ezRight);
+
+    // 50-yard line marker
+    var midLine = document.createElement('div');
+    midLine.style.cssText = 'position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,0.15);';
+    fieldBar.appendChild(midLine);
+
+    // Ball position dot
+    var ballDot = document.createElement('div');
+    ballDot.style.cssText = 'position:absolute;top:50%;width:8px;height:8px;border-radius:50%;transform:translate(-50%,-50%);transition:left 0.4s ease-out;z-index:1;';
+    fieldBar.appendChild(ballDot);
+
+    // First down marker
+    var fdMarker = document.createElement('div');
+    fdMarker.style.cssText = 'position:absolute;top:0;bottom:0;width:2px;background:#EBB01080;transform:translateX(-50%);transition:left 0.4s ease-out;';
+    fieldBar.appendChild(fdMarker);
+
+    bug.appendChild(fieldBar);
+
+    // Win probability
+    var wpRow = document.createElement('div');
+    wpRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:0 8px;height:14px;';
+    var wpLabel = document.createElement('div');
+    wpLabel.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:9px;color:#555;letter-spacing:1px;";
+    wpLabel.textContent = 'WIN PROB';
+    var wpValue = document.createElement('div');
+    wpValue.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:11px;letter-spacing:0.5px;transition:color 0.3s;";
+    wpRow.appendChild(wpLabel);
+    wpRow.appendChild(wpValue);
+    bug.appendChild(wpRow);
+
+    // Play clock bar (shows plays remaining in half)
+    var playClockBar = document.createElement('div');
+    playClockBar.style.cssText = 'position:relative;height:3px;background:#0a0a0a;margin:1px 8px 0;border-radius:2px;overflow:hidden;';
+    var playClockFill = document.createElement('div');
+    playClockFill.style.cssText = 'height:100%;border-radius:2px;transition:width 0.4s ease-out;background:#EBB010;';
+    playClockBar.appendChild(playClockFill);
+    bug.appendChild(playClockBar);
+
+    // Cache every mutable element reference
+    _bugEls = {
+      ctSide, ctNameEl, ctArrowEl, ctScoreEl,
+      irSide, irNameEl, irArrowEl, irScoreEl,
+      halfEl, snapEl, clockEl,
+      downEl, ballPosEl,
+      ballDot, fdMarker,
+      wpValue,
+      playClockFill,
+    };
+  }
+
   function drawBug() {
+    if (!_bugEls.ctScoreEl) initBug();
     const s = gs.getSummary();
     const ct = hTeam, ir = oTeam;
+
     var dn;
     if (conversionMode) {
       dn = conversionMode.choice === '2pt' ? '2PT CNV' : '3PT CNV';
@@ -636,56 +895,148 @@ export function buildGameplay() {
     }
     const ctHasBall = s.possession === 'CT';
     const possTeam = ctHasBall ? ct : ir;
-    const defTeam = ctHasBall ? ir : ct;
 
-    // Ball label
-    const ydsToEz = s.yardsToEndzone;
-    const ballLabel = ydsToEz === 50 ? '50' : ydsToEz < 50 ? 'OPP ' + ydsToEz : 'OWN ' + (100-ydsToEz);
+    // Scores
+    _bugEls.ctScoreEl.textContent = s.ctScore;
+    _bugEls.irScoreEl.textContent = s.irScore;
 
-    // TORCH points for human
-    const hTorch = hAbbr === 'CT' ? s.ctTorchPts : s.irTorchPts;
+    // Score glow classes
+    _bugEls.ctScoreEl.className = 'T-sb-pts' + (ctHasBall ? ' T-sb-pts-glow' : '');
+    _bugEls.irScoreEl.className = 'T-sb-pts' + (!ctHasBall ? ' T-sb-pts-glow' : '');
 
-    // Center: half label + snap counter + clock
+    // Side glow
+    _bugEls.ctSide.className = 'T-sb-side' + (ctHasBall ? ' T-sb-side-glow' : '');
+    _bugEls.irSide.className = 'T-sb-side' + (!ctHasBall ? ' T-sb-side-glow' : '');
+
+    // Team name text-shadow (glow follows possession)
+    _bugEls.ctNameEl.style.textShadow = ctHasBall ? '0 0 12px ' + ct.accent : '';
+    _bugEls.irNameEl.style.textShadow = !ctHasBall ? '0 0 12px ' + ir.accent : '';
+
+    // Possession arrows — hide the inactive one
+    _bugEls.ctArrowEl.style.display = ctHasBall ? '' : 'none';
+    _bugEls.irArrowEl.style.display = !ctHasBall ? '' : 'none';
+
+    // Half label + snap counter + clock
     const halfName = s.twoMinActive ? '2-MINUTE DRILL' : (s.half === 1 ? 'FIRST HALF' : 'SECOND HALF');
-    const halfColor = s.twoMinActive ? 'color:#e03050' : '';
-    const clockText = fmtClock(Math.max(0, s.clockSeconds));
-    const clockClass = s.twoMinActive ? 'T-sb-countdown T-sb-countdown-live' : 'T-sb-countdown';
-    let centerHTML =
-      `<div class="T-sb-half" style="${halfColor}">${halfName}</div>` +
-      (s.twoMinActive ? '' : `<div class="T-sb-snap">${s.playsUsed}/20</div>`) +
-      `<div class="${clockClass}">${clockText}</div>`;
+    _bugEls.halfEl.textContent = halfName;
+    _bugEls.halfEl.style.color = s.twoMinActive ? '#e03050' : '';
+    _bugEls.snapEl.textContent = s.playsUsed + '/20';
+    _bugEls.snapEl.style.display = s.twoMinActive ? 'none' : '';
+    _bugEls.clockEl.textContent = fmtClock(Math.max(0, s.clockSeconds));
+    _bugEls.clockEl.className = s.twoMinActive ? 'T-sb-countdown T-sb-countdown-live' : 'T-sb-countdown';
+    if (s.twoMinActive) {
+      var clockColor = s.clockSeconds > 60 ? '#fff' : s.clockSeconds > 30 ? '#EBB010' : '#ff0040';
+      _bugEls.clockEl.style.color = clockColor;
+      if (s.clockSeconds <= 10 && s.clockSeconds > 0) {
+        _bugEls.clockEl.style.animation = 'T-clock-critical 0.5s ease-in-out infinite';
+      } else if (s.clockSeconds <= 30) {
+        _bugEls.clockEl.style.animation = 'T-clock-critical 1s ease-in-out infinite';
+      } else {
+        _bugEls.clockEl.style.animation = '';
+      }
+    } else {
+      _bugEls.clockEl.style.color = '';
+      _bugEls.clockEl.style.animation = '';
+    }
 
-    // Possession arrow
-    const ctArrow = ctHasBall ? '<span class="T-sb-pos-arrow T-sb-pos-arrow-l">\u25B6</span>' : '';
-    const irArrow = !ctHasBall ? '<span class="T-sb-pos-arrow T-sb-pos-arrow-r">\u25C0</span>' : '';
+    // Down & distance
+    const distStr = conversionMode ? 'GOAL' : distLabel(s.distance, s.yardsToEndzone);
+    var newDown = s.down;
+    var newDist = s.distance;
+    var downChanged = newDown !== _prevDown || newDist !== _prevDist;
+    var playsLabel = (conversionMode || s.twoMinActive) ? '' : ' \u00b7 P' + (s.playsUsed + 1);
+    _bugEls.downEl.textContent = dn + ' & ' + distStr + playsLabel;
+    _bugEls.downEl.style.color = possTeam.accent;
+    if (downChanged && _prevDown > 0) {
+      if (newDown === 1 && _prevDown > 1) {
+        // Fresh set of downs — bigger animation + gold flash
+        try {
+          gsap.killTweensOf(_bugEls.downEl);
+          gsap.fromTo(_bugEls.downEl,
+            { x: 20, opacity: 0, scale: 1.25 },
+            { x: 0, opacity: 1, scale: 1, duration: 0.35, ease: 'back.out(2)' }
+          );
+          _bugEls.downEl.style.color = '#EBB010';
+          setTimeout(function() { _bugEls.downEl.style.color = possTeam.accent; }, 600);
+        } catch(e) {}
+      } else {
+        // Normal down change — slide in from right with scale pop
+        try {
+          gsap.killTweensOf(_bugEls.downEl);
+          gsap.fromTo(_bugEls.downEl,
+            { x: 15, opacity: 0, scale: 1.15 },
+            { x: 0, opacity: 1, scale: 1, duration: 0.25, ease: 'back.out(1.5)' }
+          );
+        } catch(e) {}
+      }
+    }
+    _prevDown = newDown;
+    _prevDist = newDist;
 
-    // TORCH points
-    const hTorchHTML = `<span class="T-sb-sit-torch">T ${hTorch}</span>`;
-    const isHumanCT = hAbbr === 'CT';
+    // Ball position
+    const ydsToEz = s.yardsToEndzone;
+    const ballPos = ydsToEz === 50 ? '50' : ydsToEz < 50 ? 'OPP ' + ydsToEz : 'OWN ' + (100 - ydsToEz);
+    var ballPosChanged = ballPos !== _prevBallPos;
+    _bugEls.ballPosEl.textContent = ballPos;
+    _bugEls.ballPosEl.style.color = possTeam.accent;
+    if (ballPosChanged && _prevBallPos >= 0) {
+      try {
+        gsap.killTweensOf(_bugEls.ballPosEl);
+        gsap.fromTo(_bugEls.ballPosEl,
+          { y: 5, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.2, ease: 'power2.out' }
+        );
+      } catch(e) {}
+    }
+    _prevBallPos = ballPos;
 
-    // Team badges (44px)
-    var ctBadge = renderTeamBadge(GS.team, 44);
-    var irBadge = renderTeamBadge(GS.opponent, 44);
+    // Red zone label
+    if (_bugEls.ballPosEl && gs.possession === hAbbr && s.yardsToEndzone <= 20) {
+      _bugEls.ballPosEl.style.color = '#ff0040';
+      _bugEls.ballPosEl.style.textShadow = '0 0 8px rgba(255,0,64,0.4)';
+    } else if (_bugEls.ballPosEl) {
+      _bugEls.ballPosEl.style.color = possTeam.accent;
+      _bugEls.ballPosEl.style.textShadow = '';
+    }
 
-    bug.innerHTML =
-      `<div class="T-sb-row">` +
-        `<div class="T-sb-icon">${ctBadge}</div>` +
-        `<div class="T-sb-side${ctHasBall ? ' T-sb-side-glow' : ''}">` +
-          `<div class="T-sb-name" style="color:${ct.accent};font-size:${ct.name.length > 8 ? 14 : ct.name.length > 5 ? 17 : 20}px${ctHasBall ? ';text-shadow:0 0 12px '+ct.accent : ''}">${ct.name}</div>` +
-          `<div class="T-sb-score-row">${ctArrow}<span class="T-sb-pts${ctHasBall ? ' T-sb-pts-glow' : ''}">${s.ctScore}</span></div>` +
-        `</div>` +
-        `<div class="T-sb-center">${centerHTML}</div>` +
-        `<div class="T-sb-side${!ctHasBall ? ' T-sb-side-glow' : ''}">` +
-          `<div class="T-sb-name" style="color:${ir.accent};font-size:${ir.name.length > 8 ? 14 : ir.name.length > 5 ? 17 : 20}px${!ctHasBall ? ';text-shadow:0 0 12px '+ir.accent : ''}">${ir.name}</div>` +
-          `<div class="T-sb-score-row">${irArrow}<span class="T-sb-pts${!ctHasBall ? ' T-sb-pts-glow' : ''}">${s.irScore}</span></div>` +
-        `</div>` +
-        `<div class="T-sb-icon">${irBadge}</div>` +
-      `</div>` +
-      `<div class="T-sb-sit">` +
-        `<div class="T-sb-sit-down" style="font-family:'Teko';font-size:16px;font-weight:700;color:${possTeam.accent};letter-spacing:1px">${dn} & ${conversionMode ? 'GOAL' : distLabel(s.distance, s.yardsToEndzone)}</div>` +
-        `<div class="T-sb-sit-div"></div>` +
-        `<div class="T-sb-sit-ball" style="font-family:'Teko';font-size:15px;font-weight:700;color:#e8e6ff;opacity:1;letter-spacing:1px">BALL ON <span style="color:${possTeam.accent}">${ballLabel}</span></div>` +
-      `</div>`;
+    // Update mini field bar
+    if (_bugEls.ballDot) {
+      // ballPosition is 0-100 where 0 = CT endzone, 100 = IR endzone
+      var ballPct = 7 + s.ballPosition * 0.86; // Same mapping as field strip
+      var possColor = s.possession === 'CT' ? hTeam.accent : oTeam.accent;
+      _bugEls.ballDot.style.left = ballPct + '%';
+      _bugEls.ballDot.style.background = possColor;
+      _bugEls.ballDot.style.boxShadow = '0 0 6px ' + possColor;
+
+      // First down marker
+      var fdPos = s.possession === 'CT' ? s.ballPosition + s.distance : s.ballPosition - s.distance;
+      var fdPct = 7 + Math.max(0, Math.min(100, fdPos)) * 0.86;
+      _bugEls.fdMarker.style.left = fdPct + '%';
+    }
+
+    // Win probability update
+    if (_bugEls.wpValue) {
+      var wp = calcWinProbability(gs);
+      _bugEls.wpValue.textContent = wp + '%';
+      _bugEls.wpValue.style.color = wp >= 65 ? '#00ff44' : wp >= 45 ? '#EBB010' : '#ff0040';
+    }
+
+    // Play clock bar update
+    if (_bugEls.playClockFill) {
+      if (s.twoMinActive) {
+        // 2-minute drill: show time remaining as percentage
+        var timePct = Math.max(0, Math.min(100, (s.clockSeconds / 120) * 100));
+        _bugEls.playClockFill.style.width = timePct + '%';
+        _bugEls.playClockFill.style.background = s.clockSeconds <= 30 ? '#ff0040' : s.clockSeconds <= 60 ? '#EBB010' : '#00ff44';
+      } else {
+        // Regular play: show plays remaining (20 per half)
+        var playsLeft = Math.max(0, 20 - s.playsUsed);
+        var playPct = (playsLeft / 20) * 100;
+        _bugEls.playClockFill.style.width = playPct + '%';
+        _bugEls.playClockFill.style.background = playsLeft <= 5 ? '#ff0040' : playsLeft <= 10 ? '#EBB010' : '#555';
+      }
+    }
+
     drawTorchBanner();
   }
 
@@ -771,11 +1122,25 @@ export function buildGameplay() {
     requestAnimationFrame(tick);
   }
 
-  // ── FIELD STRIP ──
+  // ── FIELD STRIP (Canvas + Card Overlay) ──
   var stripWrap = document.createElement('div');
   stripWrap.style.cssText = 'position:relative;flex-shrink:0;';
   const strip = document.createElement('div'); strip.className = 'T-strip';
   stripWrap.appendChild(strip);
+
+  // Canvas field renderer — layered behind card drop zones
+  var _fieldAnimator = null;
+  var _fieldCanvas = null;
+  function initFieldCanvas() {
+    if (_fieldAnimator) return;
+    var w = strip.offsetWidth || 375;
+    var h = strip.offsetHeight || 160;
+    if (w < 50 || h < 50) return; // Not mounted yet
+    _fieldAnimator = createFieldAnimator(w, h);
+    _fieldCanvas = _fieldAnimator.canvas;
+    _fieldCanvas.style.cssText = 'position:absolute;inset:0;z-index:0;width:100%;height:100%;border-radius:inherit;';
+    strip.insertBefore(_fieldCanvas, strip.firstChild);
+  }
   // Weather particles — sibling of strip, not child (never destroyed by strip.innerHTML)
   if (weatherId !== 'clear') {
     var wxLayer = document.createElement('div');
@@ -791,6 +1156,73 @@ export function buildGameplay() {
     }
     stripWrap.appendChild(wxLayer);
   }
+  // Weather ambient audio (Web Audio API — no files needed)
+  var _weatherAudioCtx = null;
+  var _weatherNodes = [];
+  function startWeatherAudio(wId) {
+    if (wId === 'clear' || wId === 'heat') return;
+    try {
+      _weatherAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      var gain = _weatherAudioCtx.createGain();
+      gain.gain.value = 0.03;
+      gain.connect(_weatherAudioCtx.destination);
+      if (wId === 'rain') {
+        var bufferSize = 2 * _weatherAudioCtx.sampleRate;
+        var buffer = _weatherAudioCtx.createBuffer(1, bufferSize, _weatherAudioCtx.sampleRate);
+        var data = buffer.getChannelData(0);
+        for (var i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        var noise = _weatherAudioCtx.createBufferSource();
+        noise.buffer = buffer;
+        noise.loop = true;
+        var filter = _weatherAudioCtx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 4000;
+        noise.connect(filter);
+        filter.connect(gain);
+        noise.start();
+        _weatherNodes.push(noise);
+        gain.gain.value = 0.015;
+      } else if (wId === 'wind') {
+        var osc = _weatherAudioCtx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 120;
+        var lfo = _weatherAudioCtx.createOscillator();
+        lfo.type = 'sine';
+        lfo.frequency.value = 0.3;
+        var lfoGain = _weatherAudioCtx.createGain();
+        lfoGain.gain.value = 40;
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+        osc.connect(gain);
+        osc.start();
+        lfo.start();
+        _weatherNodes.push(osc, lfo);
+        gain.gain.value = 0.02;
+      } else if (wId === 'snow') {
+        var bufSize = 2 * _weatherAudioCtx.sampleRate;
+        var buf = _weatherAudioCtx.createBuffer(1, bufSize, _weatherAudioCtx.sampleRate);
+        var d = buf.getChannelData(0);
+        for (var j = 0; j < bufSize; j++) d[j] = Math.random() * 2 - 1;
+        var src = _weatherAudioCtx.createBufferSource();
+        src.buffer = buf;
+        src.loop = true;
+        var lpf = _weatherAudioCtx.createBiquadFilter();
+        lpf.type = 'lowpass';
+        lpf.frequency.value = 800;
+        src.connect(lpf);
+        lpf.connect(gain);
+        src.start();
+        _weatherNodes.push(src);
+        gain.gain.value = 0.01;
+      }
+    } catch(e) { /* Web Audio not supported — silent fallback */ }
+  }
+  function stopWeatherAudio() {
+    _weatherNodes.forEach(function(n) { try { n.stop(); } catch(e) {} });
+    _weatherNodes = [];
+    if (_weatherAudioCtx) { try { _weatherAudioCtx.close(); } catch(e) {} _weatherAudioCtx = null; }
+  }
+  startWeatherAudio(weatherId);
   el.appendChild(stripWrap);
   function drawField() {
     const s = gs.getSummary();
@@ -801,6 +1233,52 @@ export function buildGameplay() {
     const td = s.possession==='CT' ? s.ballPosition+s.distance : s.ballPosition-s.distance;
     const tp = 7 + Math.max(0,Math.min(100,td)) * .86;
     const pc = s.possession==='CT' ? ct.accent : ir.accent;
+
+    // Canvas field render (behind DOM overlay)
+    initFieldCanvas();
+    if (_fieldAnimator) {
+      var ballYard = s.ballPosition * 1.1 + 5; // 0-100 → ~5-115 yard range
+      var firstDownYard = ballYard + (isOff ? s.distance : -s.distance);
+      var offTeamId = isOff ? GS.team : (GS.opponent || 'wolves');
+      var defTeamId = isOff ? (GS.opponent || 'wolves') : GS.team;
+      var formation = 'shotgun_deuce';
+      if (selPl && _fieldAnimator.PLAY_FORMATION_MAP) {
+        formation = _fieldAnimator.pickFormation
+          ? _fieldAnimator.pickFormation(selPl.playType || 'SHORT', offTeamId)
+          : (_fieldAnimator.PLAY_FORMATION_MAP[selPl.playType] || 'shotgun_deuce');
+      }
+      _fieldAnimator.render({
+        ballYard: Math.max(5, Math.min(115, ballYard)),
+        losYard: Math.max(5, Math.min(115, ballYard)),
+        firstDownYard: Math.max(0, Math.min(120, firstDownYard)),
+        formation: formation,
+        offTeam: offTeamId,
+        defTeam: defTeamId,
+      });
+    }
+
+    // Red zone intensity glow
+    var ydsToEz = gs.yardsToEndzone();
+    var isInRedZone = gs.possession === hAbbr && ydsToEz <= 20;
+    if (isInRedZone) {
+      stripWrap.style.boxShadow = 'inset 0 0 20px rgba(255,0,64,0.1), inset 0 0 40px rgba(255,0,64,0.05)';
+    } else {
+      stripWrap.style.boxShadow = '';
+    }
+    if (isInRedZone && !_wasInRedZone) {
+      _wasInRedZone = true;
+      var rzFlash = document.createElement('div');
+      rzFlash.style.cssText = "position:fixed;top:35%;left:50%;transform:translateX(-50%);z-index:650;font-family:'Teko';font-weight:700;font-size:28px;color:#ff0040;letter-spacing:4px;text-shadow:0 0 20px rgba(255,0,64,0.6);pointer-events:none;opacity:0;";
+      rzFlash.textContent = 'RED ZONE';
+      el.appendChild(rzFlash);
+      try {
+        gsap.to(rzFlash, { opacity: 1, duration: 0.3, ease: 'back.out(1.5)' });
+        gsap.to(rzFlash, { opacity: 0, y: -20, duration: 0.4, delay: 1.2, onComplete: function() { rzFlash.remove(); } });
+      } catch(e) { setTimeout(function() { rzFlash.remove(); }, 2000); }
+    } else if (!isInRedZone) {
+      _wasInRedZone = false;
+    }
+
     // Turf texture
     let h = '<div class="T-field-turf"></div>';
     // Both endzones customized for home team
@@ -1129,7 +1607,7 @@ export function buildGameplay() {
     fly.textContent = 'T ' + (isNeg ? '' : '+') + pts;
     fly.style.left = srcRect.left + 'px';
     fly.style.top = srcRect.top + 'px';
-    if (isNeg) fly.style.color = '#e03050';
+    if (isNeg) fly.style.color = '#ff0040';
     document.body.appendChild(fly);
 
     // Animate to target position
@@ -1159,7 +1637,7 @@ export function buildGameplay() {
           SND.points();
         }
         torchTarget.innerHTML = 'T ' + current;
-        var pulseColor = isNeg ? '#e03050' : '#c8a030';
+        var pulseColor = isNeg ? '#ff0040' : '#c8a030';
         torchTarget.style.transform = 'scale(1.15)';
         torchTarget.style.textShadow = '0 0 8px ' + pulseColor;
         torchTarget.style.color = pulseColor;
@@ -1262,7 +1740,7 @@ export function buildGameplay() {
       if (r.isTouchdown) {
         SND.td();
         shakeScreen(6);
-        var tColor = isDef ? '#e03050' : '#3df58a';
+        var tColor = isDef ? '#ff0040' : '#00ff44';
         flashField(tColor + '88', 800);
         setTimeout(function() { flashField(tColor + '88', 800); }, 400);
         rainFootballs(tier === 5 ? 24 : 16);
@@ -1273,7 +1751,7 @@ export function buildGameplay() {
         shakeScreen(intGood ? 8 : 5);
         flashField(intGood ? 'rgba(0,255,68,0.5)' : 'rgba(224,48,80,0.6)', 800);
         impactBurst(intGood ? 'rgba(0,255,68,0.6)' : 'rgba(224,48,80,0.8)');
-        slamText(intGood ? 'PICKED OFF!' : 'INTERCEPTED', intGood ? '#00ff44' : '#e03050', tDuration - 400);
+        slamText(intGood ? 'PICKED OFF!' : 'INTERCEPTED', intGood ? '#00ff44' : '#ff0040', tDuration - 400);
       } else if (r.isFumbleLost) {
         var fumGood = isDef;
         SND.turnover();
@@ -1286,375 +1764,13 @@ export function buildGameplay() {
         shakeScreen(8);
         flashField('rgba(224,48,80,0.5)', 600);
         impactBurst('rgba(255,255,255,0.6)');
-        slamText('SACKED', '#e03050', tDuration - 400);
+        slamText('SACKED', '#ff0040', tDuration - 400);
       } else { 
         SND.turnover();
         shakeScreen(6);
         flashField('rgba(48,192,224,0.6)', 800);
         slamText('DENIED', '#FF6B00', tDuration - 400);
       }
-    }
-  }
-
-  function runPlayByPlay(res, onDone) {
-    const r = res.result;
-    const off = res.featuredOff;
-    const def = res.featuredDef;
-    const op = res.offPlay;
-    const dp = res.defPlay;
-    const isPass = op.completionRate !== null;
-
-    // All 4 starters on each side — featured players always mentioned but don't always take the action
-    const sides = gs.getCurrentSides();
-    const oStarters = sides.offPlayers.slice(0, 4);
-    const dStarters = sides.defPlayers.slice(0, 4);
-    const qb = oStarters.find(function(p) { return p.pos === 'QB'; }) || oStarters[0];
-    // Other offensive skill players (not QB, not featured)
-    const otherOff = oStarters.filter(function(p) { return p !== qb && p !== off; });
-    const randOff = otherOff.length > 0 ? otherOff[Math.floor(Math.random() * otherOff.length)] : off;
-    // Other defenders (not featured)
-    const otherDef = dStarters.filter(function(p) { return p !== def; });
-    const randDef = otherDef.length > 0 ? otherDef[Math.floor(Math.random() * otherDef.length)] : def;
-    // The receiver/runner might be featured or might be another starter
-    const receiver = (off.pos === 'QB') ? randOff : off;
-    const runner = (off.pos === 'QB') ? randOff : off;
-    // The tackler might be featured defender or another defensive starter
-    const tackler = Math.random() < 0.6 ? def : randDef;
-
-    showClashOnField(res);
-    renderPBPLines(buildTemplateLines(), res, onDone);
-
-    function buildTemplateLines() {
-    // Use pre-snap state for situation lines, post-snap for result/context
-    const pre = res._preSnap || gs.getSummary();
-    const s = gs.getSummary(); // post-snap for context lines
-    const possTeamName = pre.possession === 'CT' ? hTeam.name : oTeam.name;
-    const defTeamName = pre.possession === 'CT' ? oTeam.name : hTeam.name;
-    // Context line — only on significant football moments, not every play
-    function contextLine() {
-      // Always on scores
-      if (r.isTouchdown) {
-        var newScore = s.possession === 'CT' ? (s.ctScore) + ' to ' + s.irScore : s.ctScore + ' to ' + (s.irScore);
-        return possTeamName + ' scores! It\'s ' + newScore;
-      }
-      // Always on turnovers
-      if (r.isInterception) return 'Turnover! ' + defTeamName + ' takes over';
-      if (r.isFumbleLost) return 'Turnover! ' + defTeamName + ' recovers';
-      // Facing 4th down — only when the engine has actually moved to 4th down
-      if (s.down === 4) return 'Fourth down — they have to go for it';
-      // Otherwise only occasionally — significant game situations
-      if (s.playsUsed === 20) return 'That\'s play 20 — two-minute warning is next';
-      if (s.yardsToEndzone <= 5 && r.yards >= 1) return 'Knocking on the door — inside the five';
-      return '';
-    }
-    // Synonym rotation — pick randomly from arrays for variety
-    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-    var distStr2 = pre.yardsToEndzone <= pre.distance ? 'goal' : pre.distance;
-    var downStr2 = ['','First','Second','Third','Fourth'][pre.down] + ' and ' + distStr2;
-
-    const lines = [];
-    if (isPass) {
-      // Line 1: vary the opener (4 structures from research)
-      var openers = [
-        op.name + ' is the call — ' + qb.name + ' in the shotgun, ' + off.name + ' split wide',
-        downStr2 + ', ' + qb.name + ' under center with ' + off.name + ' key to the play',
-        qb.name + ' lines up in the shotgun, ' + op.name + ' dialed up, ' + off.name + ' in the formation',
-        possTeamName + ' comes to the line — ' + op.name + ' from the gun, ' + off.name + ' flanked out wide',
-      ];
-      lines.push(pick(openers));
-      // Line 2: defense (vary structure)
-      var defSetups = [
-        def.name + ' showing ' + dp.name + ' — reading the backfield from ' + def.pos,
-        dp.name + ' defense, ' + def.name + ' at ' + def.pos + ', eyes locked on ' + qb.name,
-        defTeamName + ' in ' + dp.name + ', ' + def.name + ' creeping up to the line',
-        def.name + ' in coverage, ' + dp.name + ' look — daring them to throw',
-      ];
-      lines.push(pick(defSetups));
-      // Line 3: snap (vary the drop back)
-      var drops = [
-        qb.name + ' takes the snap, drops back, looking...',
-        'Snap to ' + qb.name + ', he retreats into the pocket, surveys the field...',
-        qb.name + ' catches the snap and settles into the pocket...',
-        'Ball is snapped — ' + qb.name + ' with a quick three-step drop...',
-      ];
-      lines.push(pick(drops));
-      if (r.isSack) {
-        lines.push(pick(['PRESSURE off the edge!','The rush is coming!','Here comes the blitz!']) + ' ' + off.name + ' can\'t pick it up!');
-        lines.push(tackler.name + pick([' is coming FREE!',' gets through untouched!',' beats the blocker!']));
-        lines.push(pick(['SACKED!','BROUGHT DOWN!','BURIED!']) + ' ' + tackler.name + ' ' + pick(['levels','buries','drops','plants']) + ' ' + qb.name + '!');
-        lines.push(pick(['That '+dp.name+' blitz was perfectly designed','The protection completely collapsed',''+qb.name+' held it too long and paid the price']));
-      } else if (r.isIncomplete) {
-        lines.push(qb.name + pick([' fires toward ',' throws for ',' targets ']) + receiver.name + pick([' on the sideline',' over the middle',' in the flat']));
-        lines.push(pick(['Broken up!','Batted away!','No catch!']) + ' ' + tackler.name + pick([' was stride for stride',' smothered the route',' got a hand in there']));
-      } else if (r.isInterception) {
-        lines.push(qb.name + pick([' loads up, throws...',' lets it fly...',' fires downfield...']));
-        lines.push(pick(['OH!','NO!','WAIT!']) + ' ' + def.name + pick([' jumps the route!',' reads it all the way!',' undercuts the receiver!']));
-        lines.push('PICKED OFF! ' + def.name + pick([' saw it from the snap!',' was sitting on that the entire time!',' takes it away!']));
-        lines.push(pick(['What a terrible decision by '+qb.name,'That ball was telegraphed',''+def.name+' baited him into that throw']));
-        lines.push(pick(['Huge momentum shift right there','That turnover could change everything',''+defTeamName+' gets the ball back']));
-      } else if (r.isTouchdown) {
-        lines.push(qb.name + pick([' sees ',' spots ',' finds ']) + receiver.name + pick([' breaking free...',' wide open...',' streaking downfield...']));
-        lines.push(pick(['He lets it fly!','Throws!','Launches it!']));
-        if (s.yardsToEndzone > 20) lines.push(receiver.name + ' at the thirty, the twenty, the TEN...');
-        lines.push(receiver.name + pick([' CATCHES IT!',' HAULS IT IN!',' BRINGS IT DOWN!']) + ' TOUCHDOWN!');
-        lines.push(tackler.name + pick([' was a step too late',' couldn\'t close in time',' got turned around']) + pick([' — what a throw!',' — perfect ball!','!']));
-        lines.push(possTeamName + pick([' finds the end zone!',' puts six on the board!',' scores!']));
-      } else if (r.yards >= 15) {
-        lines.push(qb.name + pick([' steps up and launches it!',' fires deep!',' airs it out!']));
-        lines.push(receiver.name + pick([' goes up and GETS IT!',' hauls it in!',' HIGH-POINTS it!']));
-        lines.push(r.yards + pick([' yards! What a play!',' yards on the bomb!',' yards! '+tackler.name+' got burned!']));
-      } else if (r.yards >= 8) {
-        lines.push(qb.name + pick([' finds ',' hits ',' delivers to ']) + receiver.name + pick([' over the middle',' on the crossing route',' in the seam']) + ', fires!');
-        lines.push(pick(['Complete for '+r.yards+'!','Caught! '+r.yards+' yard pickup!','Good throw, '+r.yards+' yards!']) + ' ' + tackler.name + pick([' makes the stop',' brings him down',' cleans it up']));
-      } else if (r.yards >= 1) {
-        lines.push(qb.name + pick([' dumps it off',' checks down',' flips it']) + ' to ' + receiver.name + pick([' in the flat',' underneath',' for a short gain']));
-        lines.push(pick(['Gain of '+r.yards+'.',''+r.yards+' yards, nothing more.','Caught for '+r.yards+'.']) + ' ' + tackler.name + pick([' wraps him up',' makes the tackle',' is right there']));
-      } else {
-        lines.push(qb.name + pick([' looks for '+receiver.name+' — nothing there',' can\'t find anyone open',' is under pressure, throws it away']));
-        lines.push(def.name + pick([' had it blanketed',' took everything away',' locked it down']) + '. ' + pick(['Throwaway','Incomplete','No gain on the play']));
-      }
-    } else {
-      var isOption = op.playType === 'OPTION';
-      var isSneakPlay = op.id === 'qb_sneak' || op.id === 'ir_qb_sneak';
-      var ballCarrier = isSneakPlay ? qb : runner;
-      // Line 1: varied run opener
-      lines.push(pick([
-        op.name + ' — ' + qb.name + ' under center, ' + ballCarrier.name + ' in the backfield',
-        downStr2 + ', ' + possTeamName + ' in heavy personnel, ' + ballCarrier.name + ' the featured back',
-        qb.name + ' lines up under center, ' + op.name + ' called for ' + ballCarrier.name,
-        possTeamName + ' comes out in ' + op.name + ' — ' + off.name + ' key to the blocking',
-      ]));
-      // Line 2: defense
-      lines.push(pick([
-        dp.name + ' — ' + def.name + ' reading the backfield from ' + def.pos,
-        def.name + ' at ' + def.pos + ', ' + dp.name + ' — watching the mesh point',
-        defTeamName + ' in ' + dp.name + ', ' + def.name + ' stacking the box',
-        def.name + ' shows ' + dp.name + ' — keying on the run',
-      ]));
-      // Line 3: handoff
-      if (isOption) {
-        lines.push(qb.name + pick([' takes the snap, reads the end...',' gets the snap, eyes the DE...']) + pick([' gives it to ',' feeds ']) + runner.name + '!');
-      } else if (isSneakPlay) {
-        lines.push(qb.name + pick([' takes the snap and pushes forward...',' sneaks it behind the center...',' dives ahead...']));
-      } else {
-        lines.push(pick([qb.name+' hands it off to '+ballCarrier.name+'...', 'Straight handoff to '+ballCarrier.name+'...', qb.name+' gives it to '+ballCarrier.name+' up the gut...']));
-      }
-      if (r.isFumbleLost) {
-        lines.push(ballCarrier.name + pick([' takes the hit...',' absorbs contact...',' lowers his shoulder...']));
-        lines.push(pick(['THE BALL IS OUT!','HE LOST IT!','IT\'S ON THE GROUND!']));
-        lines.push(def.name + pick([' pounces on it!',' comes up with it!',' recovers!']) + ' FUMBLE!');
-        lines.push(pick(['Devastating turnover','What a play by the defense',''+ballCarrier.name+' just couldn\'t hold on']));
-      } else if (r.isTouchdown) {
-        lines.push(ballCarrier.name + pick([' hits the hole!',' breaks through!',' finds a crease!']));
-        if (s.yardsToEndzone > 10) {
-          lines.push(pick(['Daylight!','He\'s got room!','Into the second level!']) + ' To the twenty, the ten...');
-          lines.push(pick(['NOBODY\'S CATCHING HIM!','HE\'S GONE!','SEE YOU LATER!']));
-        } else {
-          lines.push(pick(['Breaks a tackle!','Sheds the defender!','Powers through!']));
-        }
-        lines.push('TOUCHDOWN! ' + ballCarrier.name + '!');
-        lines.push(possTeamName + pick([' finds the end zone!',' punches it in!',' scores!']));
-      } else if (r.yards >= 15) {
-        lines.push(ballCarrier.name + pick([' bounces it outside!',' bursts through!',' hits the afterburners!']));
-        lines.push(pick(['He\'s in the open field!','Room to run!','Daylight ahead!']));
-        lines.push(r.yards + ' yards! ' + tackler.name + pick([' finally drags him down!',' brings him down!',' makes the tackle!']));
-      } else if (r.yards >= 8) {
-        lines.push(ballCarrier.name + pick([' finds a crease',' hits the hole hard',' sheds a tackler']));
-        lines.push(pick(['Good run, '+r.yards+'.','Solid carry for '+r.yards+'.',''+r.yards+' yard pickup.']) + ' ' + tackler.name + pick([' brings him down',' makes the stop',' wraps him up']));
-      } else if (r.yards >= 1) {
-        lines.push(ballCarrier.name + pick([' pushes ahead',' falls forward',' grinds out a few']));
-        lines.push(pick(['Gain of '+r.yards+'.',''+r.yards+' yards.','Short gain.']) + ' ' + tackler.name + pick([' cleans it up',' makes the tackle',' is right there']));
-      } else {
-        lines.push(def.name + pick([' shoots the gap!',' reads it perfectly!',' is all over it!']));
-        lines.push(pick(['STUFFED!','STOPPED!','NO GAIN!']) + ' ' + tackler.name + pick([' had it read',' blew it up',' met him at the line']));
-      }
-    }
-
-    var ctx = contextLine();
-    if (ctx) lines.push(ctx);
-    return lines;
-    } // end buildTemplateLines
-
-    function renderPBPLines(lines, res, onDone) {
-      const r = res.result;
-      const pre = res._preSnap || gs.getSummary();
-      const s2 = gs.getSummary();
-      const isUserDef = (pre.possession !== hAbbr);
-      const isGoAhead = (s2.ctScore > s2.irScore && pre.ctScore <= pre.irScore) || (s2.irScore > s2.ctScore && pre.irScore <= pre.ctScore);
-      const isClutch = pre.twoMinActive || isGoAhead || (s2.ctScore === s2.irScore);
-
-      let tier = 1;
-      if ((r.isTouchdown || r.isInterception || r.isFumbleLost) && isClutch) tier = 5;
-      else if (r.isTouchdown || r.isInterception || r.isFumbleLost || (s2.down === 4 && r.yards < s2.distance) || (r.isSack && s2.down >= 3)) tier = 4;
-      else if (r.yards >= 13 || (r.isSack && r.yards <= -5)) tier = 3;
-      else if (res.gotFirstDown || (r.yards >= 7 && r.yards <= 12)) tier = 2;
-
-      // User-biased colors: green = good for user, red = bad for user
-      var resColor, yardLabel;
-      if (!isUserDef) {
-        // User on offense
-        resColor = r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
-        yardLabel = r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE LOST' : r.isIncomplete?'INCOMPLETE' : yardText(r.yards).toUpperCase();
-      } else {
-        // User on defense — stops are green, opponent gains are red
-        if (r.isTouchdown) { resColor = '#e03050'; yardLabel = 'TOUCHDOWN'; }
-        else if (r.isSack) { resColor = '#3df58a'; yardLabel = Math.abs(r.yards) > 0 ? 'SACKED! -' + Math.abs(r.yards) : 'SACKED! NO GAIN'; }
-        else if (r.isInterception) { resColor = '#3df58a'; yardLabel = 'PICKED OFF!'; }
-        else if (r.isFumbleLost) { resColor = '#3df58a'; yardLabel = 'FUMBLE!'; }
-        else if (r.isIncomplete) { resColor = '#3df58a'; yardLabel = 'INCOMPLETE'; }
-        else if (r.yards <= 0) { resColor = '#3df58a'; yardLabel = r.yards < 0 ? 'STUFFED! ' + r.yards + ' YDS' : 'STUFFED! NO GAIN'; }
-        else if (r.yards <= 3) { resColor = '#c8a030'; yardLabel = 'GAINED ' + r.yards + ' YDS'; }
-        else { resColor = '#e03050'; yardLabel = 'GAINED ' + r.yards + ' YDS'; }
-      }
-      // TORCH points for the USER's team only
-      const userOnOff = (gs.possession === hAbbr) ? true : false; // was user on offense for this snap?
-      // Note: possession may have flipped on turnovers, so check what it was BEFORE the snap
-      // TORCH points (already computed in doSnap as res._torchSources / res._torchEarned)
-      var torchEarned = res._torchEarned || 0;
-
-      narr.innerHTML = '';
-      const pbp = document.createElement('div'); pbp.className = 'T-pbp';
-      narr.appendChild(pbp);
-      let idx = 0;
-      const cursor = document.createElement('span'); cursor.className = 'T-pbp-cursor';
-
-      function showNext() {
-        if (idx < lines.length) {
-          if (cursor.parentNode) cursor.remove();
-          pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { 
-            el.classList.remove('T-pbp-live');
-            el.style.opacity = '0.4';
-          });
-          const thinkLine = document.createElement('div');
-          thinkLine.className = 'T-pbp-line T-pbp-live';
-          thinkLine.textContent = lines[idx];
-          thinkLine.style.opacity = '1';
-          thinkLine.style.color = '#e8e6ff';
-          
-          if (idx >= 2 && idx < lines.length - 1) {
-            if (r.isSack || r.isInterception || r.isFumbleLost) thinkLine.style.color = '#F03030';
-            else if (r.yards >= 8 || r.isTouchdown) thinkLine.style.color = '#EBB010';
-          }
-          if (idx === lines.length - 1 && lines.length > 3) {
-            if (r.isTouchdown || r.isInterception || r.isFumbleLost) thinkLine.style.color = r.isTouchdown ? '#4DA6FF' : '#F03030';
-          }
-          
-          thinkLine.appendChild(cursor);
-          pbp.appendChild(thinkLine);
-          narr.scrollTop = narr.scrollHeight;
-          
-          var delay = 700;
-          if (idx === lines.length - 1) delay = 2500;
-          else if (idx >= 2 && idx < lines.length - 2) delay = 1100;
-          else if (idx === lines.length - 2) delay = 1800;
-
-          idx++;
-          setTimeout(showNext, delay);
-        } else {
-          if (cursor.parentNode) cursor.remove();
-          pbp.querySelectorAll('.T-pbp-live').forEach(function(el) { 
-            el.classList.remove('T-pbp-live');
-            el.style.opacity = '0.4';
-          });
-          
-          triggerCelebration(tier, r, isUserDef);
-          // Result: yards + torch (torch flies to scoreboard)
-          const rl = document.createElement('div');
-          rl.className = 'T-pbp-result';
-          let parts = '<span style="color:' + resColor + '">' + yardLabel + '</span>';
-          if (torchEarned !== 0) {
-            var tColor = torchEarned > 0 ? '#c8a030' : '#e03050';
-            var tSign = torchEarned > 0 ? '+' : '';
-            parts += '<span class="T-torch-src" style="color:' + tColor + ';margin-left:10px">T ' + tSign + torchEarned + '</span>';
-          }
-          rl.innerHTML = parts;
-          pbp.appendChild(rl);
-          // Big torch popup + fly to scoreboard
-          if (torchEarned !== 0) {
-            // Big overlay popup
-            var bigPop = document.createElement('div');
-            bigPop.className = 'T-torch-big';
-            bigPop.style.color = torchEarned > 0 ? '#c8a030' : '#e03050';
-            bigPop.textContent = 'T ' + (torchEarned > 0 ? '+' : '') + torchEarned;
-            document.body.appendChild(bigPop);
-            setTimeout(function() { bigPop.remove(); }, 1500);
-            // Fly to scoreboard
-            setTimeout(function() { animateTorchFly(rl.querySelector('.T-torch-src'), torchEarned); }, 400);
-          }
-          // TORCH points explanation (user's team only)
-          if (torchEarned !== 0) {
-            var reasons = [];
-            if (userOnOff) {
-              // User on offense
-              if (r.isTouchdown) reasons.push('Touchdown +50');
-              else if (r.isSack) reasons.push('Sacked -10');
-              else if (r.isInterception || r.isFumbleLost) reasons.push('Turnover -25');
-              else if (r.isIncomplete) reasons.push('Incompletion -5');
-              else if (r.yards >= 8) reasons.push('Big gain +30');
-              else if (r.yards >= 4) reasons.push('Solid gain +10');
-              else if (r.yards <= 0) reasons.push('No gain -10');
-              if (r.offComboPts > 0) reasons.push('Badge combo +' + Math.floor(r.offComboPts));
-              if (res.gotFirstDown) reasons.push('First down +10');
-            } else {
-              // User on defense
-              if (r.isSack) reasons.push('Sack +25');
-              else if (r.isInterception || r.isFumbleLost) reasons.push('Forced turnover +40');
-              else if (r.yards <= 0) reasons.push('Stop for no gain +20');
-              else if (r.yards <= 3) reasons.push('Short gain +10');
-              else if (r.yards >= 15) reasons.push('Explosive allowed -15');
-              else if (r.yards >= 8) reasons.push('Big gain allowed -5');
-              if (r.isTouchdown) reasons.push('TD allowed -30');
-              if (r.isSafety) reasons.push('Safety +30');
-              if (r.defComboPts > 0) reasons.push('Badge combo +' + Math.floor(r.defComboPts));
-              if (res.gotFirstDown) reasons.push('First down allowed -10');
-            }
-            if (r.historyBonus > 0) reasons.push('Play mix bonus');
-            if (r.historyBonus < -2) reasons.push('Predictable calls');
-            var torchExpl = document.createElement('div');
-            torchExpl.style.cssText = "font-family:'Rajdhani';font-size:9px;color:#8a86b0;margin-top:4px;line-height:1.4";
-            torchExpl.textContent = reasons.join(' \u00b7 ');
-            pbp.appendChild(torchExpl);
-          }
-          // Down & distance
-          const s2 = gs.getSummary();
-          const dn2 = ['','1ST','2ND','3RD','4TH'][s2.down]||'';
-          const dd = document.createElement('div');
-          dd.className = 'T-pbp-down';
-          var ddPossTeam = s2.possession === 'CT' ? hTeam : oTeam;
-          dd.style.color = ddPossTeam.accent;
-          if (r.isTouchdown) {
-            dd.textContent = 'TOUCHDOWN \u2014 CONVERSION ATTEMPT';
-          } else if (r.isInterception || r.isFumbleLost) {
-            dd.textContent = 'TURNOVER \u2014 BALL ON ' + ballSideLabel();
-          } else {
-            dd.textContent = dn2 + ' & ' + distLabel(s2.distance, s2.yardsToEndzone) + ' \u2014 BALL ON ' + ballSideLabel();
-          }
-          pbp.appendChild(dd);
-          // NEXT PLAY button (btn-blitz style)
-          var nextBtn = document.createElement('button');
-          nextBtn.className = 'btn-blitz';
-          nextBtn.style.cssText = 'background:var(--cyan);border-color:var(--cyan);color:#000;font-size:14px;margin-top:10px;box-shadow:6px 6px 0 #006a77, 10px 10px 0 #000;';
-          nextBtn.textContent = 'NEXT PLAY \u2192';
-          nextBtn.onclick = function() {
-            SND.click();
-            nextBtn.remove();
-            narr.innerHTML = '<div class="T-pbp-idle">Awaiting snap<span class="T-pbp-cursor"></span></div>';
-            var clashEl = strip.querySelector('.T-clash');
-            if (clashEl) clashEl.remove();
-            onDone();
-          };
-          pbp.appendChild(nextBtn);
-          // Extra padding so button isn't clipped by box-shadow
-          var spacer = document.createElement('div');
-          spacer.style.height = '20px';
-          pbp.appendChild(spacer);
-          // Scroll after paint to ensure button is visible
-          requestAnimationFrame(function() {
-            narr.scrollTop = narr.scrollHeight;
-          });
-        }
-      }
-      showNext();
     }
   }
 
@@ -1726,6 +1842,26 @@ export function buildGameplay() {
   document.addEventListener('touchmove', moveDrag, { passive: false });
   document.addEventListener('touchend', endDrag);
 
+  // ── SITUATIONAL HINT ──
+  function getSituationalHint(gs) {
+    var s = gs.getSummary();
+    var isOff = gs.possession === hAbbr;
+    if (!isOff) {
+      if (s.yardsToEndzone <= 10) return { text: 'Red zone defense', color: '#ff0040' };
+      if (s.down >= 3 && s.distance >= 8) return { text: 'Passing situation — bring pressure', color: '#4DA6FF' };
+      if (s.down >= 3 && s.distance <= 3) return { text: 'Short yardage — stack the box', color: '#EBB010' };
+      return null;
+    }
+    if (s.yardsToEndzone <= 5) return { text: 'Goal line — power runs or quick passes', color: '#00ff44' };
+    if (s.yardsToEndzone <= 20) return { text: 'Red zone — high-percentage plays', color: '#EBB010' };
+    if (s.down === 1) return null;
+    if (s.down === 2 && s.distance <= 4) return { text: 'Short yardage — runs are strong', color: '#00ff44' };
+    if (s.down === 3 && s.distance <= 3) return { text: '3rd & short — run or quick pass', color: '#EBB010' };
+    if (s.down === 3 && s.distance >= 8) return { text: '3rd & long — need a big play', color: '#ff0040' };
+    if (s.down === 4) return { text: '4th down — high stakes', color: '#ff0040' };
+    return null;
+  }
+
   // ── RENDER PANEL ──
   function drawPanel() {
     panel.innerHTML = '';
@@ -1747,9 +1883,22 @@ export function buildGameplay() {
     panel.className = 'T-panel ' + (isOff ? 'T-panel-off' : 'T-panel-def');
 
     // 2min check + close game crowd
-    if (gs.twoMinActive && !prev2min) { prev2min = true; el.classList.add('T-urgent'); show2MinWarn(); start2MinClock(); }
+    if (gs.twoMinActive && !prev2min) { prev2min = true; _lastPlayFlashed = true; el.classList.add('T-urgent'); el.classList.add('T-2min-active'); show2MinWarn(); start2MinClock(); }
     if (gs.twoMinActive && Math.abs(gs.ctScore - gs.irScore) <= 7) {
       try { AudioStateManager.setCrowdIntensity(0.85, 0.5); } catch(e) {}
+    }
+
+    // LAST PLAY flash — fires once when playsUsed hits 19 (last regular play before 2-min drill)
+    if (gs.playsUsed === 19 && !gs.twoMinActive && !_lastPlayFlashed && phase === 'play') {
+      _lastPlayFlashed = true;
+      var lpFlash = document.createElement('div');
+      lpFlash.style.cssText = "position:fixed;top:30%;left:50%;transform:translateX(-50%);z-index:650;font-family:'Teko';font-weight:700;font-size:24px;color:#ff0040;letter-spacing:4px;text-shadow:0 0 16px rgba(255,0,64,0.5);pointer-events:none;opacity:0;";
+      lpFlash.textContent = 'LAST PLAY';
+      el.appendChild(lpFlash);
+      try {
+        gsap.to(lpFlash, { opacity: 1, duration: 0.3, ease: 'back.out(1.5)' });
+        gsap.to(lpFlash, { opacity: 0, y: -15, duration: 0.4, delay: 1.2, onComplete: function() { lpFlash.remove(); } });
+      } catch(e) { setTimeout(function() { lpFlash.remove(); }, 2000); }
     }
 
     // 4th down decision bar — appears ABOVE cards so player sees it first
@@ -1793,11 +1942,19 @@ export function buildGameplay() {
           primaryRating: 'kickPower',
           primaryLabel: 'PWR',
           team: hTeam,
+          onCancel: function() { phase = 'play'; drawPanel(); },
           onSelect: function(punter) {
             SND.kickThud();
-            var puntResult = gs.punt(punter);
+            // Check for ST torch cards: COFFIN CORNER, FAIR CATCH GHOST
+            var puntOpts = {};
+            var ccIdx = torchInventory.findIndex(function(c) { return c.id === 'coffin_corner'; });
+            if (ccIdx >= 0) { puntOpts.coffinCorner = true; torchInventory.splice(ccIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+            var fcIdx = torchInventory.findIndex(function(c) { return c.id === 'fair_catch_ghost'; });
+            if (fcIdx >= 0) { puntOpts.fairCatchGhost = true; torchInventory.splice(fcIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+            var puntResult = gs.punt(punter, puntOpts);
             burnPlayer(_humanSTDeck, punter, 'punter', puntResult.gross + '-yard punt');
             driveSummaryLog.push({ down: 4, dist: gs.distance, playName: puntResult.label, yards: 0, isUserOff: true });
+            pushTicker('PUNT — ' + puntResult.label, '#4DA6FF');
             showSpecialTeamsResult(puntResult.label, '#4DA6FF', function() {
               driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
               showPossCut('punt', function() { if (!checkEnd()) nextSnap(); });
@@ -1808,13 +1965,36 @@ export function buildGameplay() {
 
       var fgBtn = document.createElement('button');
       fgBtn.className = 'btn-blitz';
-      if (gs.canAttemptFG()) {
+      var _hasCannonLeg = torchInventory.some(function(c) { return c.id === 'cannon_leg'; });
+      var _hasRinger = torchInventory.some(function(c) { return c.id === 'ringer'; });
+      if (gs.canAttemptFG(_hasCannonLeg)) {
         var fgDist = ydsToEz + 17;
         fgBtn.style.cssText = "flex:1;font-size:13px;padding:10px;background:#141008;color:#EBB010;border-color:#EBB010;font-family:'Teko';font-weight:700;letter-spacing:2px;";
-        fgBtn.textContent = 'FG (' + fgDist + 'yd)';
+        fgBtn.textContent = 'FG (' + fgDist + 'yd)' + (_hasCannonLeg ? ' +10' : '');
         fgBtn.onclick = function() {
           SND.snap();
           phase = 'busy';
+          // RINGER: use highest-star player regardless of deck
+          if (_hasRinger) {
+            var ringerIdx = torchInventory.findIndex(function(c) { return c.id === 'ringer'; });
+            if (ringerIdx >= 0) { torchInventory.splice(ringerIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+            var allPlayers = (isOff ? getOffenseRoster(GS.team) : getDefenseRoster(GS.team)).concat(isOff ? getDefenseRoster(GS.team) : getOffenseRoster(GS.team));
+            var bestKicker = allPlayers.slice().sort(function(a, b) { return ((b.st && b.st.kickAccuracy) || 0) - ((a.st && a.st.kickAccuracy) || 0); })[0];
+            if (bestKicker) {
+              SND.kickThud();
+              var fgResult = gs.attemptFieldGoal(bestKicker);
+              if (fgResult.made) SND.kickGood(); else SND.kickMiss();
+              burnPlayer(_humanSTDeck, bestKicker, 'kicker', 'RINGER ' + (fgResult.made ? 'Made ' : 'Missed ') + fgResult.distance + '-yard FG');
+              driveSummaryLog.push({ down: 4, dist: gs.distance, playName: fgResult.label, yards: 0, isUserOff: true });
+              var fgColor = fgResult.made ? '#00ff44' : '#ff0040';
+              pushTicker('RINGER! FG ' + fgResult.distance + ' yds — ' + (fgResult.made ? 'GOOD' : 'NO GOOD'), fgColor);
+              showSpecialTeamsResult('RINGER! ' + fgResult.label, fgColor, function() {
+                driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
+                showPossCut(fgResult.made ? 'score' : 'missed_fg', function() { if (!checkEnd()) nextSnap(); });
+              });
+              return;
+            }
+          }
           // Show ST kicker selection
           showSTSelect(el, {
             title: 'FIELD GOAL ATTEMPT',
@@ -1826,14 +2006,19 @@ export function buildGameplay() {
             primaryLabel: 'ACC',
             secondaryLabel: 'PWR',
             team: hTeam,
+            onCancel: function() { phase = 'play'; drawPanel(); },
             onSelect: function(kicker) {
               SND.kickThud();
+              // CANNON LEG: consume card if in inventory
+              var clIdx = torchInventory.findIndex(function(c) { return c.id === 'cannon_leg'; });
+              if (clIdx >= 0) { torchInventory.splice(clIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
               var fgResult = gs.attemptFieldGoal(kicker);
               if (fgResult.made) SND.kickGood(); else SND.kickMiss();
               var fgContext = (fgResult.made ? 'Made ' : 'Missed ') + fgResult.distance + '-yard FG';
               burnPlayer(_humanSTDeck, kicker, 'kicker', fgContext);
               driveSummaryLog.push({ down: 4, dist: gs.distance, playName: fgResult.label, yards: 0, isUserOff: true });
-              var fgColor = fgResult.made ? '#00ff44' : '#e03050';
+              var fgColor = fgResult.made ? '#00ff44' : '#ff0040';
+              pushTicker('FG ' + fgResult.distance + ' yds — ' + (fgResult.made ? 'GOOD' : 'NO GOOD'), fgColor);
               showSpecialTeamsResult(fgResult.label, fgColor, function() {
                 driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
                 showPossCut(fgResult.made ? 'score' : 'missed_fg', function() { if (!checkEnd()) nextSnap(); });
@@ -1860,9 +2045,24 @@ export function buildGameplay() {
     var hS = hAbbr === 'CT' ? gs.ctScore : gs.irScore;
     var cS = hAbbr === 'CT' ? gs.irScore : gs.ctScore;
 
+    // SCOUT REPORT: show all 7 players instead of just 4
+    var trayPlayers = hs.playerHand;
+    if (selTorch === 'scout_report') {
+      var fullRoster = isOff ? getOffenseRoster(GS.team) : getDefenseRoster(GS.team);
+      trayPlayers = fullRoster.filter(function(p) { return !p.injured; });
+    }
+
+    var hint = getSituationalHint(gs);
+    if (hint && phase === 'play' && !selPl) {
+      var hintEl = document.createElement('div');
+      hintEl.style.cssText = "text-align:center;padding:3px 8px;font-family:'Rajdhani';font-weight:700;font-size:10px;color:" + hint.color + ";letter-spacing:1px;opacity:0.5;";
+      hintEl.textContent = hint.text;
+      panel.appendChild(hintEl);
+    }
+
     var trayEl = renderCardTray({
       plays: hs.playHand,
-      players: hs.playerHand,
+      players: trayPlayers,
       selectedPlay: selPl,
       selectedPlayer: selP,
       isOffense: isOff,
@@ -1879,9 +2079,17 @@ export function buildGameplay() {
       offStarHot: offStarHot,
       defStar: defStar,
       defStarHot: defStarHot,
+      momentumMap: isOff ? gs.offMomentumMap : gs.defMomentumMap,
+      heatMap: isOff ? gs.offHeatMap : gs.defHeatMap,
+      snapCount: snapCount,
+      tutorialStep: _tutorialStep,
+      down: gs.down,
+      distance: gs.distance,
+      yardsToEndzone: gs.yardsToEndzone(),
       onSelectPlay: function(play) {
         if (phase === 'busy') return;
         selPl = selPl === play ? null : play; // toggle
+        if (_tutorialStep === 1) _tutorialStep = 2;
         // If both selected, advance to torch or ready
         if (selPl && selP) {
           phase = preSnapCards.length > 0 ? 'torch' : 'ready';
@@ -1893,6 +2101,7 @@ export function buildGameplay() {
       onSelectPlayer: function(p) {
         if (phase === 'busy') return;
         selP = selP === p ? null : p; // toggle
+        if (_tutorialStep === 2) _tutorialStep = 3;
         if (selPl && selP) {
           phase = preSnapCards.length > 0 ? 'torch' : 'ready';
         } else {
@@ -1920,6 +2129,32 @@ export function buildGameplay() {
         if (idx >= 0) torchInventory.splice(idx, 1);
         if (GS.season) GS.season.torchCards = torchInventory.slice();
         phase = 'ready';
+
+        // PERSONNEL_REPORT / PRE_SNAP_READ: reveal opponent's featured player
+        if (tc.id === 'personnel_report' || tc.id === 'pre_snap_read') {
+          var oppSides = gs.getCurrentSides();
+          var oppPlay = isOff
+            ? aiSelectPlay(oppSides.defHand, 'defense', gs.difficulty, { down: gs.down, distance: gs.distance, ballPos: gs.ballPosition })
+            : aiSelectPlay(oppSides.offHand, 'offense', gs.difficulty, { down: gs.down, distance: gs.distance, ballPos: gs.ballPosition, teamId: oppId });
+          var oppFeatured = isOff
+            ? aiSelectPlayer(oppSides.defPlayers, oppPlay, gs.difficulty, false, gs.defHeatMap)
+            : aiSelectPlayer(oppSides.offPlayers, oppPlay, gs.difficulty, true, gs.offHeatMap);
+          if (oppFeatured) {
+            var revealOv = document.createElement('div');
+            revealOv.style.cssText = "position:fixed;inset:0;z-index:660;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);pointer-events:none;opacity:0;";
+            var starStr = '';
+            for (var si = 0; si < (oppFeatured.stars || 3); si++) starStr += '\u2605';
+            revealOv.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#EBB010;letter-spacing:3px;margin-bottom:6px;\">OPPONENT'S FEATURED PLAYER</div>" +
+              "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:#fff;letter-spacing:2px;\">" + (oppFeatured.name || 'Unknown') + "</div>" +
+              "<div style=\"font-family:'Rajdhani';font-size:14px;color:#aaa;margin-top:4px;\">" + (oppFeatured.pos || '') + ' ' + starStr + "</div>" +
+              "<div style=\"font-family:'Rajdhani';font-size:12px;color:#888;margin-top:2px;\">" + (oppFeatured.trait || '') + "</div>";
+            el.appendChild(revealOv);
+            try { gsap.to(revealOv, { opacity: 1, duration: 0.2 }); } catch(e) { revealOv.style.opacity = '1'; }
+            setTimeout(function() { try { gsap.to(revealOv, { opacity: 0, duration: 0.3, onComplete: function() { if (revealOv.parentNode) revealOv.remove(); } }); } catch(e) { if (revealOv.parentNode) revealOv.remove(); } }, 2000);
+            setTimeout(function() { if (revealOv.parentNode) revealOv.remove(); }, 2500);
+          }
+        }
+
         drawField(); drawPanel();
       },
       onSkipTorch: function() {
@@ -1950,11 +2185,54 @@ export function buildGameplay() {
       } : null,
     });
     panel.appendChild(trayEl);
+
+    // ── AUDIBLE BUTTON (ready phase only) ──
+    if (phase === 'ready' && selPl && !conversionMode) {
+      panel.style.position = 'relative';
+      var audibleBtn = document.createElement('button');
+      audibleBtn.style.cssText = "position:absolute;top:4px;right:8px;z-index:10;font-family:'Teko';font-weight:700;font-size:11px;color:#EBB010;letter-spacing:2px;padding:4px 10px;border:1px solid #EBB01044;border-radius:4px;background:rgba(235,176,16,0.06);cursor:pointer;";
+      audibleBtn.textContent = 'AUDIBLE';
+      audibleBtn.onclick = function() {
+        SND.snap();
+        selPl = null;
+        selTorch = null;
+        selectedPreSnap = null;
+        phase = 'play';
+        drawField();
+        drawPanel();
+      };
+      panel.appendChild(audibleBtn);
+    }
+
+    // ── DEF TENDENCY HINT (ready phase, offense only) ──
+    if (phase === 'ready' && isOff && !conversionMode) {
+      var oppSides = gs.getCurrentSides();
+      var defHand = oppSides.defHand;
+      var defTypes = {};
+      defHand.forEach(function(d) { var t = d.cardType || 'ZONE'; defTypes[t] = (defTypes[t] || 0) + 1; });
+      var topDef = Object.keys(defTypes).sort(function(a, b) { return defTypes[b] - defTypes[a]; })[0] || 'ZONE';
+      var defHintEl = document.createElement('div');
+      defHintEl.style.cssText = "text-align:center;padding:2px;font-family:'Rajdhani';font-weight:700;font-size:9px;color:#555;letter-spacing:1px;";
+      defHintEl.textContent = 'DEF TENDENCY: ' + topDef;
+      panel.insertBefore(defHintEl, panel.firstChild);
+    }
+
+    if (_tutorialStep > 0 && snapCount === 0) {
+      var tutEl = document.createElement('div');
+      tutEl.style.cssText = "text-align:center;padding:6px;pointer-events:none;";
+      var tutText = _tutorialStep === 1 ? 'PICK YOUR PLAY' : _tutorialStep === 2 ? 'PICK YOUR PLAYER' : 'TAP SNAP!';
+      var tutSub = _tutorialStep === 1 ? 'Each card is a different offensive or defensive call' : _tutorialStep === 2 ? 'Higher stars = bigger impact on the play' : 'Run the play';
+      var tutColor = _tutorialStep === 3 ? '#00ff44' : '#EBB010';
+      tutEl.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:16px;color:" + tutColor + ";letter-spacing:2px;animation:T-snap-pulse 1.2s ease-in-out infinite;\">" + tutText + "</div>" +
+        "<div style=\"font-family:'Rajdhani';font-size:10px;color:#666;\">" + tutSub + "</div>";
+      panel.insertBefore(tutEl, panel.firstChild);
+    }
   }
 
   // ── SNAP ──
   function doSnap() {
     if (phase === 'busy') return; // Prevent re-entrant snaps
+    _tutorialStep = 0;
     phase = 'busy';
     // Restart real-time clock if it was stopped (spike/incomplete/out of bounds)
     if (gs.twoMinActive && !twoMinTimer) start2MinClock();
@@ -1969,26 +2247,53 @@ export function buildGameplay() {
     var defCard = isOff ? null : selTorch;
     var playedPlay = selPl;
 
-    // Torch card activation fanfare — pointer-events:none (never blocks taps)
+    // Torch card activation fanfare — tier-scaled (Bronze→Silver→Gold escalation)
     if (selectedPreSnap && selectedPreSnap.name) {
       var tcCard = selectedPreSnap;
-      var tcTierCol = tcCard.tier === 'GOLD' ? '#EBB010' : tcCard.tier === 'SILVER' ? '#C0C0C0' : '#CD7F32';
+      var tcTier = tcCard.tier;
+      var tcTierCol = tcTier === 'GOLD' ? '#EBB010' : tcTier === 'SILVER' ? '#C0C0C0' : '#CD7F32';
+      var tcGlowSize = tcTier === 'GOLD' ? 60 : tcTier === 'SILVER' ? 40 : 20;
+      var tcCardSize = tcTier === 'GOLD' ? [120, 168] : tcTier === 'SILVER' ? [110, 154] : [100, 140];
       var tcOv = document.createElement('div');
-      tcOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);pointer-events:none;opacity:0;';
-      var tcVisual = buildTorchCard(tcCard, 100, 140);
-      tcVisual.style.boxShadow = '0 0 30px ' + tcTierCol + '66';
+      tcOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;opacity:0;';
+      // Tier-scaled backdrop darkness
+      var tcBg = document.createElement('div');
+      tcBg.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,' + (tcTier === 'GOLD' ? '0.8' : tcTier === 'SILVER' ? '0.7' : '0.5') + ');';
+      tcOv.appendChild(tcBg);
+      var tcVisual = buildTorchCard(tcCard, tcCardSize[0], tcCardSize[1]);
+      tcVisual.style.cssText += ';position:relative;z-index:1;box-shadow:0 0 ' + tcGlowSize + 'px ' + tcTierCol + '66;';
       tcOv.appendChild(tcVisual);
-      tcOv.innerHTML += "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:" + tcTierCol + ";letter-spacing:3px;margin-top:10px;text-shadow:0 0 12px " + tcTierCol + "60;\">" + tcCard.name + "</div>" +
-        "<div style=\"font-family:'Rajdhani';font-size:11px;color:#ccc;margin-top:4px;max-width:260px;text-align:center;\">" + tcCard.effect + "</div>";
+      // Name + effect below card
+      var tcInfo = document.createElement('div');
+      tcInfo.style.cssText = 'position:relative;z-index:1;text-align:center;';
+      tcInfo.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:" + (tcTier === 'GOLD' ? '26' : '20') + "px;color:" + tcTierCol + ";letter-spacing:3px;margin-top:10px;text-shadow:0 0 " + (tcGlowSize / 2) + "px " + tcTierCol + "60;\">" + tcCard.name + "</div>" +
+        "<div style=\"font-family:'Rajdhani';font-size:11px;color:#ccc;margin-top:4px;max-width:260px;\">" + tcCard.effect + "</div>";
+      tcOv.appendChild(tcInfo);
       el.appendChild(tcOv);
       try {
-        gsap.to(tcOv, { opacity: 1, duration: 0.15 });
-        gsap.from(tcVisual, { scale: 0.5, rotation: -5, duration: 0.3, ease: 'back.out(1.7)' });
-        if (tcCard.tier === 'GOLD') SND.flip(); else SND.cardSnap();
+        // Tier-scaled animation
+        if (tcTier === 'GOLD') {
+          gsap.to(tcOv, { opacity: 1, duration: 0.2 });
+          gsap.from(tcVisual, { scale: 0.3, rotation: -10, duration: 0.5, ease: 'back.out(2.5)' });
+          gsap.from(tcVisual, { y: -30, duration: 0.5, ease: 'back.out(2.5)' });
+          // Gold shimmer pulse
+          gsap.to(tcVisual, { boxShadow: '0 0 80px ' + tcTierCol + 'aa, 0 0 120px ' + tcTierCol + '44', duration: 0.3, delay: 0.4, yoyo: true, repeat: 1 });
+          SND.flip();
+          if (navigator.vibrate) try { navigator.vibrate([30, 50, 80]); } catch(e) {}
+        } else if (tcTier === 'SILVER') {
+          gsap.to(tcOv, { opacity: 1, duration: 0.15 });
+          gsap.from(tcVisual, { scale: 0.4, rotation: -6, duration: 0.4, ease: 'back.out(2)' });
+          gsap.to(tcVisual, { boxShadow: '0 0 50px ' + tcTierCol + '88', duration: 0.2, delay: 0.3, yoyo: true, repeat: 1 });
+          SND.cardSnap();
+          if (navigator.vibrate) try { navigator.vibrate([20, 30]); } catch(e) {}
+        } else {
+          gsap.to(tcOv, { opacity: 1, duration: 0.12 });
+          gsap.from(tcVisual, { scale: 0.5, rotation: -3, duration: 0.3, ease: 'back.out(1.7)' });
+          SND.cardSnap();
+        }
       } catch(e) {}
-      var tcDur = tcCard.tier === 'GOLD' ? 1500 : 1000;
-      setTimeout(function() { try { gsap.to(tcOv, { opacity: 0, duration: 0.2, onComplete: function() { if (tcOv.parentNode) tcOv.remove(); } }); } catch(e) { if (tcOv.parentNode) tcOv.remove(); } }, tcDur);
-      // Hard safety
+      var tcDur = tcTier === 'GOLD' ? 1800 : tcTier === 'SILVER' ? 1200 : 800;
+      setTimeout(function() { try { gsap.to(tcOv, { opacity: 0, duration: 0.25, onComplete: function() { if (tcOv.parentNode) tcOv.remove(); } }); } catch(e) { if (tcOv.parentNode) tcOv.remove(); } }, tcDur);
       setTimeout(function() { if (tcOv.parentNode) tcOv.remove(); }, tcDur + 500);
     }
 
@@ -2005,6 +2310,57 @@ export function buildGameplay() {
           var avail = pool.filter(function(c) { return defHand.indexOf(c) === -1; });
           if (avail.length > 0) defHand[ri] = avail[Math.floor(Math.random() * avail.length)];
         }
+      }
+    }
+
+    // FRESH LEGS: grant an extra discard this drive
+    var selTorchId = offCard || defCard;
+    if (selTorchId === 'fresh_legs') {
+      var hs = getHandState();
+      if (hs) {
+        hs.playDiscardsUsed = Math.max(0, hs.playDiscardsUsed - 1);
+        hs.playerDiscardsUsed = Math.max(0, hs.playerDiscardsUsed - 1);
+      }
+    }
+
+    // GAME PLAN: reset featured player's heat to zero
+    if (selTorchId === 'game_plan' && selP) {
+      var heatMap = isOff ? gs.offHeatMap : gs.defHeatMap;
+      if (heatMap && selP.id) heatMap[selP.id] = 0;
+    }
+
+    // TIMEOUT: add 30 seconds to 2-minute drill clock
+    if (selTorchId === 'timeout') {
+      if (gs.twoMinActive) {
+        gs.clockSeconds = Math.min(120, (gs.clockSeconds || 0) + 30);
+      } else {
+        // 2-min drill not active — refund the card, it does nothing here
+        var tcRefund = TORCH_CARDS.find(function(c) { return c.id === 'timeout'; });
+        if (tcRefund) { torchInventory.push(tcRefund); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+        selTorch = null; selectedPreSnap = null;
+      }
+    }
+
+    // IRON MAN: restore the most recently burned player to ST deck
+    if (selTorchId === 'iron_man') {
+      if (_humanSTDeck.burned.length > 0) {
+        var lastBurned = _humanSTDeck.burned[_humanSTDeck.burned.length - 1].player;
+        restorePlayer(_humanSTDeck, lastBurned);
+      } else {
+        // No burned players — refund the card, it does nothing here
+        var tcIronMan = TORCH_CARDS.find(function(c) { return c.id === 'iron_man'; });
+        if (tcIronMan) { torchInventory.push(tcIronMan); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+        selTorch = null; selectedPreSnap = null;
+      }
+    }
+
+    // Torch card combo check
+    if (selTorchId) {
+      var combo = checkCardCombo(_driveCardsUsed, selTorchId);
+      _driveCardsUsed.push(selTorchId);
+      if (combo) {
+        // Store combo for post-snap bonus application
+        _activeDriveCombo = combo;
       }
     }
 
@@ -2037,6 +2393,27 @@ export function buildGameplay() {
     const res = isOff
       ? gs.executeSnap(selPl, selP, null, null, offCard, defCard, _devForceResult)
       : gs.executeSnap(null, null, selPl, selP, offCard, defCard, _devForceResult);
+
+    // Apply combo bonus
+    if (_activeDriveCombo && res && res.result) {
+      res.result.yards += _activeDriveCombo.bonus.yards || 0;
+      if (_activeDriveCombo.bonus.torchMultiplier) {
+        res.result.torchMultiplier = (res.result.torchMultiplier || 1) * _activeDriveCombo.bonus.torchMultiplier;
+      }
+      // Show combo notification (pointer-events:none overlay)
+      var comboOv = document.createElement('div');
+      comboOv.style.cssText = "position:fixed;top:8%;left:50%;transform:translateX(-50%);z-index:660;font-family:'Teko';font-weight:700;font-size:18px;color:#00ff44;letter-spacing:3px;text-shadow:0 0 16px rgba(0,255,68,0.6);pointer-events:none;opacity:0;white-space:nowrap;";
+      comboOv.textContent = _activeDriveCombo.name + '!';
+      el.appendChild(comboOv);
+      try {
+        gsap.to(comboOv, { opacity: 1, y: -5, duration: 0.3, ease: 'back.out(1.5)' });
+        gsap.to(comboOv, { opacity: 0, y: -20, duration: 0.4, delay: 1.5 });
+        SND.bigPlay();
+      } catch(e) {}
+      setTimeout(function() { if (comboOv.parentNode) comboOv.remove(); }, 2500);
+      _activeDriveCombo = null;
+    }
+
     var postTorchPts = getTorchPoints();
     var torchEarned = postTorchPts - preTorchPts;
     // 12TH MAN doubles TORCH points
@@ -2231,6 +2608,8 @@ export function buildGameplay() {
       isInc: r.isIncomplete, isInt: r.isInterception, isFumble: r.isFumbleLost,
       isUserOff: isOff
     });
+    var _tickerColor = r.isTouchdown ? '#EBB010' : (r.isInterception || r.isFumbleLost) ? '#ff0040' : r.yards >= 10 ? '#00ff44' : '#888';
+    pushTicker(espnDesc || ('Play: ' + r.yards + ' yards'), _tickerColor);
     if (res.gotFirstDown) driveFirstDowns++;
 
     // Replace used cards in hand manager
@@ -2288,36 +2667,69 @@ export function buildGameplay() {
     else if (r.isSack || isExplosive || s.down >= 3 || s.yardsToEndzone <= 20) tier = 2;
     if (s.half === 2 && Math.abs(s.ctScore - s.irScore) <= 7 && tier < 3) tier = Math.min(3, tier + 1);
 
+    // Drive heat momentum bar
+    updateDriveHeat(r, res.gameEvent);
+    drawDriveHeat();
+
+    // Canvas field play animation
+    if (_fieldAnimator) {
+      var _s = gs.getSummary();
+      var _ballYard = _s.ballPosition * 1.1 + 5;
+      var _offTeamId = isUserOff ? GS.team : (GS.opponent || 'wolves');
+      var _defTeamId = isUserOff ? (GS.opponent || 'wolves') : GS.team;
+      var _formation = 'shotgun_deuce';
+      if (res.offPlay && _fieldAnimator.pickFormation) {
+        _formation = _fieldAnimator.pickFormation(res.offPlay.playType || 'SHORT', _offTeamId);
+      }
+      var _animType = isTD ? 'touchdown' : r.isSack ? 'sack' : r.isInterception ? 'interception' : r.isIncomplete ? 'incomplete' : (res.offPlay && res.offPlay.isRun) ? 'run' : 'complete';
+      try {
+        _fieldAnimator.playSequence(_animType, r.yards, {
+          ballYard: Math.max(5, Math.min(115, _ballYard)),
+          losYard: Math.max(5, Math.min(115, _ballYard)),
+          firstDownYard: Math.max(0, Math.min(120, _ballYard + _s.distance)),
+          formation: _formation,
+          playType: res.offPlay ? res.offPlay.playType : 'SHORT',
+          defScheme: res.defPlay ? res.defPlay.cardType : 'ZONE',
+          offTeam: _offTeamId,
+          defTeam: _defTeamId,
+        });
+      } catch(e) { /* Field animation is non-critical */ }
+    }
+
     // Tier-based timing
     var anticipationMs = tier === 1 ? 0 : tier === 2 ? 300 : 800;
     var hitstopMs = tier === 1 ? 33 : tier === 2 ? 67 : 133;
-    var shakeAmt = tier === 1 ? 0 : tier === 2 ? 3 : 8;
+    var shakeAmt = tier === 1 ? 2 : tier === 2 ? 3 : 8;
     var dimLevel = tier === 1 ? 0.2 : tier === 2 ? 0.4 : 0.7;
     var particleCount = tier === 1 ? 8 : tier === 2 ? 30 : 80;
     var cardScale = tier === 1 ? 1.0 : tier === 2 ? 1.1 : 1.25;
     var aftermathDur = isTD ? 5000 : tier === 3 ? 3500 : tier === 2 ? 2500 : 1800;
+    var _speedMult = getSpeedMultiplier();
+    anticipationMs = Math.round(anticipationMs * _speedMult);
+    hitstopMs = Math.round(hitstopMs * _speedMult);
+    aftermathDur = Math.round(aftermathDur * _speedMult);
 
     // User-biased result display
     var resultColor, resultText;
     if (res._isConversion) {
-      resultColor = r.isComplete ? '#3df58a' : '#e03050';
+      resultColor = r.isComplete ? '#00ff44' : '#ff0040';
       resultText = r.isComplete ? 'GOOD!' : 'NO GOOD';
     } else if (isUserOff) {
-      resultColor = isTD ? '#EBB010' : isGoodForUser ? '#3df58a' : isBadForUser ? '#e03050' : r.yards > 0 ? '#c8a030' : '#aaa';
+      resultColor = isTD ? '#EBB010' : isGoodForUser ? '#00ff44' : isBadForUser ? '#ff0040' : r.yards > 0 ? '#c8a030' : '#aaa';
       resultText = isTD ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTED' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : r.isSafety ? 'SAFETY' : yardText(r.yards).toUpperCase();
     } else {
       // User on defense — show opponent gains as bad, stops as good
-      if (isTD) { resultColor = '#e03050'; resultText = 'TOUCHDOWN'; }
-      else if (r.isSack) { resultColor = '#3df58a'; resultText = Math.abs(r.yards) > 0 ? 'SACKED! Loss of ' + Math.abs(r.yards) : 'SACKED!'; }
-      else if (r.isInterception) { resultColor = '#3df58a'; resultText = 'PICKED OFF!'; }
-      else if (r.isFumbleLost) { resultColor = '#3df58a'; resultText = 'FUMBLE!'; }
-      else if (r.isIncomplete) { resultColor = '#3df58a'; resultText = 'INCOMPLETE'; }
-      else if (r.isSafety) { resultColor = '#3df58a'; resultText = 'SAFETY!'; }
-      else if (r.yards <= 0) { resultColor = '#3df58a'; resultText = r.yards < 0 ? 'STUFFED! Loss of ' + Math.abs(r.yards) : 'STUFFED! NO GAIN'; }
+      if (isTD) { resultColor = '#ff0040'; resultText = 'TOUCHDOWN'; }
+      else if (r.isSack) { resultColor = '#00ff44'; resultText = Math.abs(r.yards) > 0 ? 'SACKED! Loss of ' + Math.abs(r.yards) : 'SACKED!'; }
+      else if (r.isInterception) { resultColor = '#00ff44'; resultText = 'PICKED OFF!'; }
+      else if (r.isFumbleLost) { resultColor = '#00ff44'; resultText = 'FUMBLE!'; }
+      else if (r.isIncomplete) { resultColor = '#00ff44'; resultText = 'INCOMPLETE'; }
+      else if (r.isSafety) { resultColor = '#00ff44'; resultText = 'SAFETY!'; }
+      else if (r.yards <= 0) { resultColor = '#00ff44'; resultText = r.yards < 0 ? 'STUFFED! Loss of ' + Math.abs(r.yards) : 'STUFFED! NO GAIN'; }
       else if (r.yards <= 3) { resultColor = '#c8a030'; resultText = 'Gain of ' + r.yards; }
-      else { resultColor = '#e03050'; resultText = 'Gain of ' + r.yards; }
+      else { resultColor = '#ff0040'; resultText = 'Gain of ' + r.yards; }
     }
-    var flashColor = isGoodForUser ? '#3df58a' : isBadForUser ? '#e03050' : 'transparent';
+    var flashColor = isGoodForUser ? '#00ff44' : isBadForUser ? '#ff0040' : 'transparent';
 
     // Layer 6: update ambient mood
     updateMood(isGoodForUser, isBadForUser);
@@ -2327,6 +2739,7 @@ export function buildGameplay() {
 
     // Allow tap-to-skip
     var skipped = false;
+    var _settled = false; // guard: doSettle fires at most once
     function onSkip() { skipped = true; }
 
     // ── OVERLAY CONTAINER ──
@@ -2338,47 +2751,31 @@ export function buildGameplay() {
     dim.style.opacity = '1';
     overlay.appendChild(dim);
     document.body.appendChild(overlay);
+
+    // ── PHASE 1: COMMIT (0.2s) — screen dims, snap sound ──
     SND.cardSnap();
 
-    // ── PHASE 2: BUILD (anticipation) — cards slide in face-down ──
-    var cardsEl = document.createElement('div');
-    cardsEl.className = 'T-clash-cards';
-    var slideMs = Math.max(300, anticipationMs);
+    // ── PHASE 2: BLACKOUT (tier-scaled tension) — field animates underneath ──
+    var blackoutMs = Math.round((tier === 1 ? 200 : tier === 2 ? 400 : 700) * _speedMult);
+    var blackout = document.createElement('div');
+    blackout.style.cssText = 'position:absolute;inset:0;background:#000;z-index:1;opacity:0;transition:opacity ' + (blackoutMs * 0.4) + 'ms;';
+    overlay.appendChild(blackout);
+    requestAnimationFrame(function() { blackout.style.opacity = tier === 1 ? '0.6' : tier === 2 ? '0.8' : '0.95'; });
 
-    // Offense card — user's team color if user is on offense, opponent's if not
-    var offTeamColor = (prevPoss === hAbbr) ? hTeam.accent : oTeam.accent;
-    var defTeamColor = (prevPoss === hAbbr) ? oTeam.accent : hTeam.accent;
-    var offCard = document.createElement('div');
-    offCard.className = 'T-clash-card-wrap T-clash-card-off';
-    offCard.style.cssText = 'animation:T-clash-slideL ' + slideMs + 'ms cubic-bezier(0.22,1.3,0.36,1) both;transform:scale(' + cardScale + ');border-color:' + offTeamColor + '66;background:' + offTeamColor + '18;';
-    offCard.innerHTML =
-      "<div style=\"font-family:'Teko';font-size:18px;color:#fff;line-height:1;letter-spacing:1px\">" + res.offPlay.name + '</div>' +
-      "<div style=\"font-family:'Rajdhani';font-size:10px;color:" + offTeamColor + ";margin-top:3px\">" + res.featuredOff.name + ' \u00b7 ' + res.featuredOff.pos + '</div>';
-
-    // Defense card
-    var defCard = document.createElement('div');
-    defCard.className = 'T-clash-card-wrap T-clash-card-def';
-    defCard.style.cssText = 'animation:T-clash-slideR ' + slideMs + 'ms cubic-bezier(0.22,1.3,0.36,1) both;transform:scale(' + cardScale + ');border-color:' + defTeamColor + '66;background:' + defTeamColor + '18;';
-    defCard.innerHTML =
-      "<div style=\"font-family:'Teko';font-size:18px;color:#fff;line-height:1;letter-spacing:1px\">" + res.defPlay.name + '</div>' +
-      "<div style=\"font-family:'Rajdhani';font-size:10px;color:" + defTeamColor + ";margin-top:3px\">" + res.featuredDef.name + ' \u00b7 ' + res.featuredDef.pos + '</div>';
-
-    cardsEl.appendChild(offCard);
-    cardsEl.appendChild(defCard);
-    overlay.appendChild(cardsEl);
-
-    // ── PHASE 3: PEAK — hitstop + impact ──
-    var peakTime = anticipationMs + slideMs;
     setTimeout(function() {
       if (skipped) { doSettle(); return; }
 
+      // ── PHASE 3: RESULT SLAM — result text slams in, screen shake, particles ──
+      blackout.style.opacity = '0.4'; // lighten to reveal field
+
       // Screen shake
       if (shakeAmt > 0) {
-        el.style.animation = 'T-clash-shake ' + (tier === 3 ? '0.4s' : '0.2s') + ' ease-out';
-        setTimeout(function() { el.style.animation = ''; }, tier === 3 ? 450 : 250);
+        var shakeAnim = tier === 1 ? 'T-micro-shake 0.15s ease-out' : 'T-clash-shake ' + (tier === 3 ? '0.4s' : '0.2s') + ' ease-out';
+        el.style.animation = shakeAnim;
+        setTimeout(function() { el.style.animation = ''; }, tier === 1 ? 180 : tier === 3 ? 450 : 250);
       }
 
-      // White flash at collision
+      // Flash
       if (flashColor !== 'transparent') {
         var flash = document.createElement('div');
         flash.className = 'T-clash-flash';
@@ -2387,7 +2784,7 @@ export function buildGameplay() {
         setTimeout(function() { flash.remove(); }, 300);
       }
 
-      // Particle burst
+      // Particles
       for (var i = 0; i < particleCount; i++) {
         var spark = document.createElement('div');
         var angle = (i / particleCount) * 360 + Math.random() * 30;
@@ -2398,28 +2795,118 @@ export function buildGameplay() {
       }
 
       // Haptic
-      if (navigator.vibrate) try { navigator.vibrate(tier === 3 ? 100 : tier === 2 ? 50 : 20); } catch(e) {}
+      if (navigator.vibrate) try { navigator.vibrate(tier === 3 ? 100 : tier === 2 ? 50 : 12); } catch(e) {}
 
-      // Sound + audio state — biased to user perspective
+      // Sack brutality — extra shake + red vignette when user QB gets sacked
+      if (r.isSack && isUserOff) {
+        // Harder shake (override tier)
+        try {
+          el.style.animation = 'T-clash-shake 0.5s ease-out';
+          setTimeout(function() { el.style.animation = ''; }, 550);
+        } catch(e) {}
+        // Red vignette flash
+        var sackVig = document.createElement('div');
+        sackVig.style.cssText = 'position:absolute;inset:0;z-index:4;pointer-events:none;background:radial-gradient(ellipse at center,transparent 30%,rgba(255,0,64,0.25) 100%);opacity:0;';
+        overlay.appendChild(sackVig);
+        try {
+          gsap.to(sackVig, { opacity: 1, duration: 0.15 });
+          gsap.to(sackVig, { opacity: 0, duration: 0.6, delay: 0.3, onComplete: function() { sackVig.remove(); } });
+        } catch(e) {}
+        // Heavy haptic
+        if (navigator.vibrate) try { navigator.vibrate([60, 30, 80]); } catch(e) {}
+      }
+      // Sack celebration when user is on defense
+      if (r.isSack && !isUserOff) {
+        var sackCeleb = document.createElement('div');
+        sackCeleb.style.cssText = "position:absolute;top:18%;left:50%;transform:translateX(-50%);z-index:15;font-family:'Teko';font-weight:700;font-size:22px;color:#00ff44;letter-spacing:3px;text-shadow:0 0 16px rgba(0,255,68,0.5);opacity:0;pointer-events:none;";
+        sackCeleb.textContent = 'SACKED!';
+        overlay.appendChild(sackCeleb);
+        try {
+          gsap.to(sackCeleb, { opacity: 1, y: -5, duration: 0.3, ease: 'back.out(1.5)' });
+          gsap.to(sackCeleb, { opacity: 0, y: -15, duration: 0.4, delay: 1.0 });
+        } catch(e) {}
+      }
+
+      // Sound
       if (isTD && isUserOff) { SND.td(); AudioStateManager.setState('touchdown'); }
       else if (isTD && !isUserOff) { SND.turnover(); AudioStateManager.setState('turnover'); }
       else if (isGoodForUser && tier >= 2) { SND.bigPlay(); AudioStateManager.setState('big_moment'); }
       else if (isBadForUser) { SND.turnover(); AudioStateManager.setState('turnover'); }
-      else { SND.snap(); }
+      else if (r.isIncomplete) { SND.incomp(); }
+      else { tier === 1 && r.yards > 0 ? SND.hit() : SND.snap(); }
 
-      // Hitstop freeze then settle
+      // ── PHASE 4: CARD REVEAL (0.8s) — cards flip in to show matchup ──
+      var cardRevealDelay = tier === 1 ? 100 : tier === 2 ? 300 : 500;
       setTimeout(function() {
         if (skipped) { doSettle(); return; }
-        // User's card glows on good result, dims on bad — always user-biased
-        var userCard = isUserOff ? offCard : defCard;
-        var oppCard = isUserOff ? defCard : offCard;
+
+        var cardsEl = document.createElement('div');
+        cardsEl.className = 'T-clash-cards';
+        var slideMs = tier === 1 ? 250 : tier === 2 ? 350 : 500;
+
+        var offTeamColor = (prevPoss === hAbbr) ? hTeam.accent : oTeam.accent;
+        var defTeamColor = (prevPoss === hAbbr) ? oTeam.accent : hTeam.accent;
+
+        var offCardEl = document.createElement('div');
+        offCardEl.className = 'T-clash-card-wrap T-clash-card-off';
+        offCardEl.style.cssText = 'animation:T-clash-slideL ' + slideMs + 'ms cubic-bezier(0.22,1.3,0.36,1) both;transform:scale(' + cardScale + ');border-color:' + offTeamColor + '66;background:' + offTeamColor + '18;';
+        var _offPlayName = (res.offPlay && res.offPlay.name) || '—';
+        var _offFeatName = (res.featuredOff && res.featuredOff.name) || '—';
+        var _offFeatPos  = (res.featuredOff && res.featuredOff.pos)  || '';
+        offCardEl.innerHTML =
+          "<div style=\"font-family:'Teko';font-size:18px;color:#fff;line-height:1;letter-spacing:1px\">" + _offPlayName + '</div>' +
+          "<div style=\"font-family:'Rajdhani';font-size:10px;color:" + offTeamColor + ";margin-top:3px\">" + _offFeatName + ' \u00b7 ' + _offFeatPos + '</div>';
+
+        var defCardEl = document.createElement('div');
+        defCardEl.className = 'T-clash-card-wrap T-clash-card-def';
+        defCardEl.style.cssText = 'animation:T-clash-slideR ' + slideMs + 'ms cubic-bezier(0.22,1.3,0.36,1) both;transform:scale(' + cardScale + ');border-color:' + defTeamColor + '66;background:' + defTeamColor + '18;';
+        var _defPlayName = (res.defPlay && res.defPlay.name) || '—';
+        var _defFeatName = (res.featuredDef && res.featuredDef.name) || '—';
+        var _defFeatPos  = (res.featuredDef && res.featuredDef.pos)  || '';
+        defCardEl.innerHTML =
+          "<div style=\"font-family:'Teko';font-size:18px;color:#fff;line-height:1;letter-spacing:1px\">" + _defPlayName + '</div>' +
+          "<div style=\"font-family:'Rajdhani';font-size:10px;color:" + defTeamColor + ";margin-top:3px\">" + _defFeatName + ' \u00b7 ' + _defFeatPos + '</div>';
+
+        cardsEl.appendChild(offCardEl);
+        cardsEl.appendChild(defCardEl);
+        overlay.appendChild(cardsEl);
+
+        // Play type indicator (between the two cards)
+        var playTypeEl = document.createElement('div');
+        var isRunPlay = res.offPlay && (res.offPlay.isRun || res.offPlay.playType === 'RUN' || res.offPlay.playType === 'OPTION');
+        var playIcon = isRunPlay ? '\u2192' : '\u2191'; // \u2192 for run, \u2191 for pass
+        var playTypeLabel = res.offPlay ? (res.offPlay.playType || 'PLAY') : 'PLAY';
+        playTypeEl.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:6;text-align:center;opacity:0;pointer-events:none;";
+        playTypeEl.innerHTML =
+          "<div style=\"font-size:20px;color:#EBB010;\">" + playIcon + "</div>" +
+          "<div style=\"font-family:'Teko';font-weight:700;font-size:10px;color:#888;letter-spacing:2px;\">" + playTypeLabel + "</div>";
+        overlay.appendChild(playTypeEl);
+        try {
+          gsap.to(playTypeEl, { opacity: 0.6, duration: 0.2, delay: 0.1 });
+          gsap.to(playTypeEl, { opacity: 0, duration: 0.3, delay: 0.8 });
+        } catch(e) {}
+
+        // Matchup line: "WR Martinez vs CB Jackson"
+        if (tier >= 2) {
+          var matchupEl = document.createElement('div');
+          matchupEl.style.cssText = "position:absolute;top:38%;left:50%;transform:translateX(-50%);z-index:6;font-family:'Rajdhani';font-weight:700;font-size:11px;color:#888;letter-spacing:2px;white-space:nowrap;opacity:0;";
+          matchupEl.textContent = _offFeatPos + ' ' + _offFeatName.split(' ').pop() + ' vs ' + _defFeatPos + ' ' + _defFeatName.split(' ').pop();
+          overlay.appendChild(matchupEl);
+          try { gsap.to(matchupEl, { opacity: 1, duration: 0.3, delay: 0.2 }); } catch(e) { matchupEl.style.opacity = '1'; }
+        }
+
+        // User card glow after brief settle
+        setTimeout(function() {
+          if (skipped) { doSettle(); return; }
+          var userCard = isUserOff ? offCardEl : defCardEl;
+          var oppCard = isUserOff ? defCardEl : offCardEl;
         if (isGoodForUser) {
-          userCard.style.boxShadow = '0 0 16px #3df58a';
+          userCard.style.boxShadow = '0 0 16px #00ff44';
           userCard.style.animation = 'T-clash-glow 1s ease-in-out infinite';
           oppCard.style.opacity = '0.5';
           oppCard.style.transform = 'scale(0.9)';
         } else if (isBadForUser) {
-          oppCard.style.boxShadow = '0 0 16px #e03050';
+          oppCard.style.boxShadow = '0 0 16px #ff0040';
           oppCard.style.animation = 'T-clash-glow 1s ease-in-out infinite';
           userCard.style.opacity = '0.5';
           userCard.style.transform = 'scale(0.9)';
@@ -2427,11 +2914,13 @@ export function buildGameplay() {
         // Cards settle with overshoot
         cardsEl.style.animation = 'T-clash-settle 0.4s cubic-bezier(0.34,1.56,0.64,1) both';
         doSettle();
-      }, hitstopMs);
-    }, peakTime);
+        }, hitstopMs); // settle delay after card reveal
+      }, cardRevealDelay); // card reveal after result slam
+    }, blackoutMs); // result slam after blackout
 
     // ── POST-PLAY 4-BEAT DISPLAY (Phase 6) ──
     function doSettle() {
+      if (_settled) return; _settled = true;
       overlay.onclick = null;
 
       // ── LAYER 4: Visual weight — size based on user sentiment, not raw yards ──
@@ -2466,7 +2955,22 @@ export function buildGameplay() {
 
       // ── LAYER 5: Timing — good lingers, bad moves on fast ──
       var holdMultiplier = isGoodForUser ? 1.5 : isBadForUser ? 0.9 : 1.0;
-      var totalDur = Math.round((level === 3 ? 5000 : level === 2 ? 3500 : 2200) * holdMultiplier);
+      var totalDur = Math.round((level === 3 ? 5000 : level === 2 ? 3500 : 2200) * holdMultiplier * getSpeedMultiplier());
+
+      // Detect game-winning/go-ahead score
+      var preSnapScore = res._preSnap;
+      var wasTrailing = false;
+      var wasLead = false;
+      if (preSnapScore && isUserOff) {
+        var userScorePre = preSnapScore.ctScore;
+        var oppScorePre = preSnapScore.irScore;
+        wasTrailing = userScorePre <= oppScorePre;
+        var userScoreNow = gs.ctScore;
+        var oppScoreNow = gs.irScore;
+        wasLead = userScoreNow > oppScoreNow;
+      }
+      var isGoAhead = wasTrailing && wasLead;
+      var isClutch = isGoAhead && (gs.half === 2 || gs.twoMinActive);
 
       // ── TD CELEBRATION — separate flow for touchdowns ──
       if (isTD && isUserOff && !res._isConversion) {
@@ -2526,21 +3030,75 @@ export function buildGameplay() {
         }, 500);
 
         // Confetti — 50 particles in team colors
+        var celeb = TEAM_CELEBRATION[GS.team] || TEAM_CELEBRATION.sentinels;
         setTimeout(function() {
+          if (!overlay.parentNode) return; // screen exited
           for (var ci = 0; ci < 50; ci++) {
             var conf = document.createElement('div');
             var confX = 5 + Math.random() * 90;
-            var confSize = 3 + Math.random() * 5;
-            var confDur = 1500 + Math.random() * 2000;
+            var confSize = 2 + Math.random() * 6;
+            var confDur = 2000 + Math.random() * 2000;
             var confDelay = Math.random() * 600;
-            var confColor = Math.random() > 0.4 ? teamAccent : (Math.random() > 0.5 ? '#EBB010' : '#fff');
-            conf.style.cssText = 'position:absolute;top:-10px;left:' + confX + '%;width:' + confSize + 'px;height:' + confSize + 'px;background:' + confColor + ';border-radius:1px;opacity:0.9;z-index:11;animation:T-td-confetti ' + confDur + 'ms ease-in ' + confDelay + 'ms both;';
+            var confDrift = (Math.random() - 0.5) * 80;
+            var confRot = 360 + Math.random() * 1080;
+            var confColor = celeb.colors[ci % celeb.colors.length];
+            conf.style.cssText = 'position:absolute;top:-10px;left:' + confX + '%;width:' + confSize + 'px;height:' + confSize + 'px;background:' + confColor + ';border-radius:1px;opacity:0.9;z-index:11;--drift:' + confDrift + 'px;--rot:' + confRot + 'deg;animation:T-td-confetti ' + confDur + 'ms ease-in ' + confDelay + 'ms both;';
             overlay.appendChild(conf);
+            conf.addEventListener('animationend', function() { if (conf.parentNode) conf.remove(); }, { once: true });
           }
         }, 300);
 
+        // Team phrase
+        setTimeout(function() {
+          if (!overlay.parentNode) return; // screen exited
+          var phraseEl = document.createElement('div');
+          phraseEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:" + teamAccent + ";letter-spacing:2px;opacity:0;text-shadow:0 0 12px " + teamAccent + "40;";
+          phraseEl.textContent = celeb.phrases[Math.floor(Math.random() * celeb.phrases.length)];
+          resultWrap.appendChild(phraseEl);
+          try { gsap.to(phraseEl, { opacity: 1, duration: 0.3 }); } catch(e) { phraseEl.style.opacity = '1'; }
+        }, 1000);
+
+        // ── CLUTCH CELEBRATION — go-ahead score in 2nd half or 2-minute drill ──
+        if (isClutch) {
+          // Extended hold time
+          totalDur = 6000; // was 4500
+
+          // "GO-AHEAD SCORE" banner
+          setTimeout(function() {
+            var clutchEl = document.createElement('div');
+            clutchEl.style.cssText = "position:absolute;top:12%;left:50%;transform:translateX(-50%);z-index:13;font-family:'Teko';font-weight:700;font-size:20px;letter-spacing:4px;opacity:0;white-space:nowrap;pointer-events:none;" +
+              "color:#00ff44;text-shadow:0 0 20px rgba(0,255,68,0.6);";
+            clutchEl.textContent = gs.twoMinActive ? 'CLUTCH DRIVE!' : 'GO-AHEAD SCORE!';
+            overlay.appendChild(clutchEl);
+            try {
+              gsap.to(clutchEl, { opacity: 1, y: -5, duration: 0.4, ease: 'back.out(1.5)' });
+              gsap.to(clutchEl, { opacity: 0, duration: 0.3, delay: 2.5 });
+            } catch(e) { clutchEl.style.opacity = '1'; }
+          }, 1000);
+
+          // Extra confetti burst (30 more green particles)
+          setTimeout(function() {
+            for (var ci2 = 0; ci2 < 30; ci2++) {
+              (function() {
+                var conf2 = document.createElement('div');
+                var cx2 = 10 + Math.random() * 80;
+                var cs2 = 3 + Math.random() * 5;
+                conf2.style.cssText = 'position:absolute;top:-10px;left:' + cx2 + '%;width:' + cs2 + 'px;height:' + cs2 + 'px;background:#00ff44;border-radius:1px;z-index:11;pointer-events:none;--drift:' + ((Math.random()-0.5)*60) + 'px;--rot:' + (360+Math.random()*1080) + 'deg;';
+                overlay.appendChild(conf2);
+                try {
+                  gsap.to(conf2, { y: window.innerHeight + 20, rotation: 720, duration: 2 + Math.random() * 2, ease: 'power1.in', delay: Math.random() * 0.5, onComplete: function() { if (conf2.parentNode) conf2.remove(); } });
+                } catch(e) {}
+              })();
+            }
+          }, 1200);
+
+          // Triple haptic
+          if (navigator.vibrate) try { navigator.vibrate([40, 60, 80, 60, 120]); } catch(e) {}
+        }
+
         // Commentary at 800ms
         setTimeout(function() {
+          if (!overlay.parentNode) return; // screen exited
           var gameCtx = gs.getSummary();
           var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
           setNarr(comm.line1, comm.line2 || '');
@@ -2552,19 +3110,65 @@ export function buildGameplay() {
           requestAnimationFrame(function() { labelEl.style.opacity = '1'; });
         }, 800);
 
+        // ── SCORING CASCADE — Balatro-style point stack ──
+        var cascadeWrap = document.createElement('div');
+        cascadeWrap.style.cssText = 'position:absolute;bottom:25%;left:50%;transform:translateX(-50%);z-index:11;text-align:center;pointer-events:none;';
+        overlay.appendChild(cascadeWrap);
+
+        var cascadeItems = [
+          { label: 'TOUCHDOWN', pts: 6, delay: 900 },
+        ];
+        var bonusPts = Math.max(0, (res._torchEarned || 0) - 6);
+        if (bonusPts > 0) {
+          cascadeItems.push({ label: 'BONUS', pts: bonusPts, delay: 1300 });
+        }
+
+        cascadeItems.forEach(function(item) {
+          setTimeout(function() {
+            var line = document.createElement('div');
+            line.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;opacity:0;transform:translateY(10px);display:block;line-height:1.4;";
+            line.textContent = item.label + '  +' + item.pts;
+            cascadeWrap.appendChild(line);
+            try {
+              gsap.to(line, { opacity: 1, y: 0, duration: 0.25, ease: 'back.out(1.5)' });
+              SND.chime();
+            } catch(e) { line.style.opacity = '1'; line.style.transform = 'translateY(0)'; }
+          }, item.delay);
+        });
+
+        // First-ever TD explainer (one-time, teaches economy)
+        var _firstTdExplained = localStorage.getItem('torch_first_td_done');
+        if (!_firstTdExplained) {
+          localStorage.setItem('torch_first_td_done', '1');
+          setTimeout(function() {
+            if (!overlay.parentNode) return;
+            var explainer = document.createElement('div');
+            explainer.style.cssText = "position:absolute;bottom:12%;left:50%;transform:translateX(-50%);z-index:14;text-align:center;max-width:300px;padding:12px 16px;background:rgba(0,0,0,0.85);border:1px solid #EBB01044;border-radius:8px;opacity:0;pointer-events:none;";
+            explainer.innerHTML =
+              "<div style=\"font-family:'Teko';font-weight:700;font-size:16px;color:#EBB010;letter-spacing:2px;\">YOUR SCORE IS YOUR WALLET</div>" +
+              "<div style=\"font-family:'Rajdhani';font-size:11px;color:#ccc;margin-top:4px;line-height:1.3;\">TORCH points are earned every play. Spend them on powerful single-use cards in the TORCH Store.</div>" +
+              "<div style=\"font-family:'Rajdhani';font-size:9px;color:#888;margin-top:6px;\">The store opens after big plays</div>";
+            overlay.appendChild(explainer);
+            try {
+              gsap.to(explainer, { opacity: 1, duration: 0.3 });
+              gsap.to(explainer, { opacity: 0, duration: 0.3, delay: 3.5, onComplete: function() { explainer.remove(); } });
+            } catch(e) { explainer.style.opacity = '1'; setTimeout(function() { explainer.remove(); }, 4000); }
+          }, 3000);
+        }
+
         drawBug(); drawField();
 
       } else if (isTD && (!isUserOff || res._isConversion)) {
         // OPPONENT SCORES or CONVERSION — muted, move on fast
         totalDur = 1800;
-        var resultWrap = document.createElement('div');
-        resultWrap.className = 'T-clash-result';
-        resultWrap.style.cssText = 'position:absolute;top:22%;left:50%;transform:translateX(-50%);width:90%;text-align:center;';
-        resultWrap.style.opacity = '0';
-        resultWrap.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:" + oTeam.accent + ";letter-spacing:2px;opacity:0.7;\">TOUCHDOWN</div>" +
+        var oppTdWrap = document.createElement('div');
+        oppTdWrap.className = 'T-clash-result';
+        oppTdWrap.style.cssText = 'position:absolute;top:22%;left:50%;transform:translateX(-50%);width:90%;text-align:center;';
+        oppTdWrap.style.opacity = '0';
+        oppTdWrap.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:" + oTeam.accent + ";letter-spacing:2px;opacity:0.7;\">TOUCHDOWN</div>" +
           "<div style=\"font-family:'Rajdhani';font-size:12px;color:" + oTeam.accent + ";opacity:0.5;margin-top:4px;\">" + oTeam.name + " scores.</div>";
-        overlay.appendChild(resultWrap);
-        requestAnimationFrame(function() { resultWrap.style.opacity = '1'; resultWrap.style.transition = 'opacity 0.25s'; });
+        overlay.appendChild(oppTdWrap);
+        requestAnimationFrame(function() { oppTdWrap.style.opacity = '1'; oppTdWrap.style.transition = 'opacity 0.25s'; });
 
         setTimeout(function() {
           var gameCtx = gs.getSummary();
@@ -2576,35 +3180,90 @@ export function buildGameplay() {
 
       } else {
         // ── NON-TD: Normal result display ──
-        var resultWrap = document.createElement('div');
-        resultWrap.className = 'T-clash-result';
-        if (resultPos) resultWrap.style.cssText = resultPos;
-        resultWrap.style.opacity = '0';
-        resultWrap.innerHTML = '<div class="T-clash-yds" style="color:' + resultColor + ';font-size:' + ydsFontSize + ';' + resultGlow + resultAnim + '">' + resultText + '</div>';
-        overlay.appendChild(resultWrap);
+
+        // Quick yard flash (before the full result display)
+        if (!isTD && !r.isInterception && !r.isFumbleLost && !r.isIncomplete && r.yards !== 0) {
+          var yardFlash = document.createElement('div');
+          var yardSign = r.yards > 0 ? '+' : '';
+          yardFlash.style.cssText = "position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);z-index:14;font-family:'Teko';font-weight:700;font-size:48px;color:" + (r.yards > 0 ? '#00ff44' : '#ff0040') + ";text-shadow:0 0 20px " + (r.yards > 0 ? 'rgba(0,255,68,0.5)' : 'rgba(255,0,64,0.5)') + ";opacity:0;pointer-events:none;";
+          yardFlash.textContent = yardSign + r.yards;
+          overlay.appendChild(yardFlash);
+          try {
+            gsap.to(yardFlash, { opacity: 1, scale: 1, duration: 0.2, ease: 'back.out(2)' });
+            gsap.from(yardFlash, { scale: 1.5, duration: 0.2, ease: 'back.out(2)' });
+            gsap.to(yardFlash, { opacity: 0, y: -20, duration: 0.3, delay: 0.6 });
+          } catch(e) {}
+        }
+
+        var nonTdWrap = document.createElement('div');
+        nonTdWrap.className = 'T-clash-result';
+        if (resultPos) nonTdWrap.style.cssText = resultPos;
+        nonTdWrap.style.opacity = '0';
+        nonTdWrap.innerHTML = '<div class="T-clash-yds" style="color:' + resultColor + ';font-size:' + ydsFontSize + ';' + resultGlow + resultAnim + '">' + resultText + '</div>';
+        overlay.appendChild(nonTdWrap);
+        var resultWrap = nonTdWrap; // alias for code below that appends to resultWrap
         requestAnimationFrame(function() {
-          resultWrap.style.opacity = '1';
-          resultWrap.style.transition = 'opacity 0.3s';
+          nonTdWrap.style.opacity = '1';
+          nonTdWrap.style.transition = 'opacity 0.3s';
         });
 
         drawBug(); drawField();
+
+        // ── TURNOVER DRAMA ──
+        if ((r.isInterception || r.isFumbleLost) && !res._isConversion) {
+          var isUserTurnover = isUserOff; // User was on offense = bad for user
+          var turnoverColor = isUserTurnover ? '#ff0040' : '#00ff44';
+          var turnoverLabel = r.isInterception ? 'INTERCEPTED' : 'FUMBLE LOST';
+
+          // Screen edge vignette (red for user turnover, green for forced)
+          var vignetteEl = document.createElement('div');
+          vignetteEl.style.cssText = 'position:absolute;inset:0;z-index:6;pointer-events:none;' +
+            'background:radial-gradient(ellipse at center, transparent 40%, ' + turnoverColor + '20 100%);opacity:0;';
+          overlay.appendChild(vignetteEl);
+          try { gsap.to(vignetteEl, { opacity: 1, duration: 0.3 }); } catch(e) { vignetteEl.style.opacity = '1'; }
+
+          if (!isUserTurnover) {
+            // User FORCED the turnover — celebration flash
+            var forceEl = document.createElement('div');
+            forceEl.style.cssText = "position:absolute;bottom:20%;left:50%;transform:translateX(-50%);z-index:12;font-family:'Teko';font-weight:700;font-size:20px;color:#00ff44;letter-spacing:3px;text-shadow:0 0 16px rgba(0,255,68,0.6);opacity:0;white-space:nowrap;pointer-events:none;";
+            forceEl.textContent = 'YOUR BALL!';
+            overlay.appendChild(forceEl);
+            try {
+              gsap.to(forceEl, { opacity: 1, y: -5, duration: 0.4, delay: 0.6, ease: 'back.out(1.5)' });
+              gsap.to(forceEl, { opacity: 0, duration: 0.3, delay: 2.0 });
+            } catch(e) {}
+          } else {
+            // User LOST the ball — grief moment
+            var lostEl = document.createElement('div');
+            lostEl.style.cssText = "position:absolute;bottom:20%;left:50%;transform:translateX(-50%);z-index:12;font-family:'Rajdhani';font-weight:700;font-size:14px;color:#ff0040;letter-spacing:2px;opacity:0;pointer-events:none;";
+            lostEl.textContent = 'Possession lost.';
+            overlay.appendChild(lostEl);
+            try {
+              gsap.to(lostEl, { opacity: 0.7, duration: 0.5, delay: 0.8 });
+              gsap.to(lostEl, { opacity: 0, duration: 0.3, delay: 2.0 });
+            } catch(e) {}
+          }
+        }
+      }
+
+      // ── FIRST DOWN CELEBRATION OVERLAY ──
+      if (res.gotFirstDown && !isTD && !r.isInterception && !r.isFumbleLost && isUserOff) {
+        var fdEl = document.createElement('div');
+        fdEl.style.cssText = "position:absolute;top:15%;left:50%;transform:translateX(-50%);z-index:15;font-family:'Teko';font-weight:700;font-size:24px;color:#EBB010;letter-spacing:4px;text-shadow:0 0 16px rgba(235,176,16,0.5);opacity:0;white-space:nowrap;pointer-events:none;";
+        fdEl.textContent = 'FIRST DOWN';
+        overlay.appendChild(fdEl);
+        try {
+          gsap.to(fdEl, { opacity: 1, y: -5, duration: 0.3, delay: 0.1, ease: 'back.out(1.5)' });
+          gsap.to(fdEl, { opacity: 0, y: -15, duration: 0.4, delay: 1.2, ease: 'power2.in' });
+        } catch(e) { fdEl.style.opacity = '1'; }
+        // Chain move sound
+        try { SND.chime(); } catch(e) {}
       }
 
       // ── BEAT 2: CONTEXT (800ms-2s) — first down, down & distance, commentary (non-TD only) ──
       setTimeout(function() {
         if (isTD) return; // TD has its own commentary flow above
-
-        // First down — big broadcast-style slide-in
-        if (gotFirstDown) {
-          var fdColor = isUserOff ? '#00ff44' : '#888';
-          var fdText = isUserOff ? 'FIRST DOWN!' : 'First down.';
-          var fdFlash = document.createElement('div');
-          fdFlash.style.cssText = "font-family:'Teko';font-weight:700;font-size:" + (isUserOff ? '42px' : '24px') + ";color:" + fdColor + ";letter-spacing:4px;text-shadow:0 0 20px " + fdColor + "60;margin-top:8px;opacity:0;transform:translateX(-20px);transition:opacity 0.3s,transform 0.3s;";
-          fdFlash.textContent = fdText;
-          resultWrap.appendChild(fdFlash);
-          requestAnimationFrame(function() { fdFlash.style.opacity = '1'; fdFlash.style.transform = 'translateX(0)'; });
-          if (isUserOff) SND.chime();
-        }
+        if (!overlay.parentNode) return; // screen exited
 
         // New down & distance (skip if first down flash showing or conversion)
         if (!r.isInterception && !r.isFumbleLost && !gotFirstDown && !res._isConversion) {
@@ -2633,6 +3292,15 @@ export function buildGameplay() {
         }
         setNarr(commLine1, commLine2);
 
+        // Play description line (ESPN style)
+        if (espnDesc && espnDesc !== '?') {
+          var descEl = document.createElement('div');
+          descEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:12px;color:#888;letter-spacing:0.5px;margin-top:6px;max-width:320px;text-align:center;line-height:1.3;opacity:0;";
+          descEl.textContent = espnDesc;
+          resultWrap.appendChild(descEl);
+          try { gsap.to(descEl, { opacity: 1, duration: 0.3, delay: 0.2 }); } catch(e) { descEl.style.opacity = '1'; }
+        }
+
         var labelEl = document.createElement('div');
         labelEl.className = 'T-clash-label';
         labelEl.style.cssText = "color:#e8e6ff;opacity:0;transition:opacity 0.3s;margin-top:8px;font-family:'Rajdhani';font-size:15px;font-weight:700;line-height:1.3;text-align:center;max-width:280px;";
@@ -2658,6 +3326,7 @@ export function buildGameplay() {
 
       // ── BEAT 3: REWARD (2-3.5s) — TORCH points + combos ──
       setTimeout(function() {
+        if (!overlay.parentNode) return; // screen exited
         // Combo flash
         if (res._combos && res._combos.length > 0) {
           var comboEl = document.createElement('div');
@@ -2670,6 +3339,7 @@ export function buildGameplay() {
 
       // ── BEAT 4: READY (cleanup + proceed) ──
       setTimeout(function() {
+        if (!overlay.parentNode) return; // screen exited before animation completed
         overlay.style.opacity = '0';
         overlay.style.transition = 'opacity 0.4s';
         setTimeout(function() { overlay.remove(); }, 400);
@@ -2693,6 +3363,54 @@ export function buildGameplay() {
           // No gain (0 or negative play) — just unfreeze silently
           _torchDisplayFrozen = false;
           drawTorchBanner();
+        }
+
+        // ── REACTIVE TORCH CARD CHECK ──
+        // After seeing result, offer reactive cards if applicable
+        var _reactiveUsed = false;
+        var isHumanOff = prevPoss === hAbbr;
+
+        // SURE HANDS: cancel turnover when user is on offense
+        if (!_reactiveUsed && isHumanOff && (r.isInterception || r.isFumbleLost) && !res._isConversion) {
+          var shIdx = torchInventory.findIndex(function(c) { return c.id === 'sure_hands'; });
+          if (shIdx >= 0) {
+            _reactiveUsed = true;
+            // Auto-activate: cancel the turnover
+            torchInventory.splice(shIdx, 1);
+            if (GS.season) GS.season.torchCards = torchInventory.slice();
+            // Undo turnover in game state — restore possession and ball position
+            r.isInterception = false; r.isFumble = false; r.isFumbleLost = false;
+            r.yards = Math.max(0, r.yards);
+            r.description = 'SURE HANDS! Turnover cancelled — drive continues!';
+            // Restore possession if it was flipped
+            if (gs.possession !== prevPoss) {
+              gs.flipPossession(res._preSnap ? res._preSnap.ballPosition : gs.ballPosition);
+            }
+            res.gameEvent = null; // Clear turnover event
+            // Flash the card activation
+            setNarr('SURE HANDS!', 'Turnover cancelled — your drive continues.');
+          }
+        }
+
+        // CHALLENGE FLAG: reroll on bad result when user is on offense
+        if (!_reactiveUsed && isHumanOff && !res._isConversion && r.yards < 0 && !r.isTouchdown) {
+          var cfIdx = torchInventory.findIndex(function(c) { return c.id === 'challenge_flag'; });
+          if (cfIdx >= 0) {
+            _reactiveUsed = true;
+            torchInventory.splice(cfIdx, 1);
+            if (GS.season) GS.season.torchCards = torchInventory.slice();
+            // Card effect already fires in snapResolver when passed as offCard
+            // But reactive flow means it wasn't passed — so apply here
+            if (Math.random() < 0.5) {
+              r.yards = Math.max(0, Math.abs(r.yards)); // flip negative to positive
+              r.isSack = false;
+              r.description = 'CHALLENGE FLAG! Play overturned — gain of ' + r.yards + '!';
+              setNarr('CHALLENGE FLAG!', 'Overturned! Gain of ' + r.yards + ' yards.');
+            } else {
+              r.description = 'CHALLENGE FLAG! Review stands. Original call confirmed.';
+              setNarr('CHALLENGE FLAG!', 'Review stands. Original call confirmed.');
+            }
+          }
         }
 
         var shopTrigger = null;
@@ -2773,6 +3491,8 @@ export function buildGameplay() {
       var newHs = getHandState();
       handRedeal(newHs);
       resetDriveDiscards(newHs);
+      _driveHeat = 0; drawDriveHeat();
+      _driveCardsUsed = [];
     }
     phase = 'play';
     selP = null; selPl = null; selTorch = null; selectedPreSnap = null;
@@ -2786,11 +3506,16 @@ export function buildGameplay() {
       var aiDec = gs.ai4thDownDecision();
       if (aiDec === 'punt') {
         phase = 'busy';
+        // BLOCKED KICK: auto-consume from inventory if available
+        var _bkPuntIdx = torchInventory.findIndex(function(c) { return c.id === 'blocked_kick'; });
+        var _bkPuntOpts = {};
+        if (_bkPuntIdx >= 0) { _bkPuntOpts.blockedKick = true; torchInventory.splice(_bkPuntIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
         showSpecialTeamsResult(oTeam.name + ' ELECTS TO PUNT', '#4DA6FF', function() {
           var aiPunter = aiPickST(_cpuSTDeck, 'kickPower', gs.difficulty);
           if (aiPunter) burnPlayer(_cpuSTDeck, aiPunter, 'punter', 'AI punt');
-          var puntResult = gs.punt(aiPunter);
-          showSpecialTeamsResult(puntResult.label, '#4DA6FF', function() {
+          var puntResult = gs.punt(aiPunter, _bkPuntOpts);
+          var puntColor = puntResult.blocked ? '#00ff44' : '#4DA6FF';
+          showSpecialTeamsResult(puntResult.label, puntColor, function() {
             driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
             showPossCut('punt', function() { if (!checkEnd()) nextSnap(); });
           });
@@ -2800,13 +3525,21 @@ export function buildGameplay() {
       if (aiDec === 'field_goal') {
         phase = 'busy';
         var fgDist3 = gs.yardsToEndzone() + 17;
-        showSpecialTeamsResult(oTeam.name + ' ATTEMPTS A ' + fgDist3 + '-YARD FIELD GOAL', '#EBB010', function() {
+        // ICE THE KICKER + BLOCKED KICK: auto-consume from inventory
+        var _iceIdx = torchInventory.findIndex(function(c) { return c.id === 'ice_the_kicker'; });
+        var _bkFgIdx = torchInventory.findIndex(function(c) { return c.id === 'blocked_kick'; });
+        var _aiFgOpts = {};
+        if (_iceIdx >= 0) { _aiFgOpts.iceTheKicker = true; torchInventory.splice(_iceIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+        if (_bkFgIdx >= 0) { _aiFgOpts.blockedKick = true; torchInventory.splice(_bkFgIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+        var _iceLabel = _aiFgOpts.iceTheKicker ? 'ICE THE KICKER! ' : '';
+        showSpecialTeamsResult(_iceLabel + oTeam.name + ' ATTEMPTS A ' + fgDist3 + '-YARD FIELD GOAL', '#EBB010', function() {
           var aiKicker = aiPickST(_cpuSTDeck, 'kickAccuracy', gs.difficulty);
           if (aiKicker) burnPlayer(_cpuSTDeck, aiKicker, 'kicker', 'AI FG');
           SND.kickThud();
-          var fgResult = gs.attemptFieldGoal(aiKicker);
-          var fgColor = fgResult.made ? '#e03050' : '#00ff44';
-          showSpecialTeamsResult(fgResult.made ? 'IT\'S GOOD! +3' : 'NO GOOD!', fgColor, function() {
+          var fgResult = gs.attemptFieldGoal(aiKicker, _aiFgOpts);
+          var fgColor = fgResult.made ? '#ff0040' : '#00ff44';
+          var fgLabel = fgResult.blocked ? 'BLOCKED!' : (fgResult.made ? 'IT\'S GOOD! +3' : 'NO GOOD!');
+          showSpecialTeamsResult(fgLabel, fgColor, function() {
             driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
             showPossCut(fgResult.made ? 'score' : 'missed_fg', function() { if (!checkEnd()) nextSnap(); });
           });
@@ -2828,26 +3561,6 @@ export function buildGameplay() {
     // Human always picks cards — on offense they pick offPlay+player,
     // on defense they pick defPlay+player. doSnap() passes them in the right slots.
     // No auto-CPU here — the human taps SNAP every time.
-  }
-
-  // ── RESULT OVERLAY ──
-  function showResult(res, done) {
-    const r = res.result;
-    const isConv = res._isConversion;
-    const col = isConv ? (r.isComplete?'#3df58a':'#e03050') : r.isTouchdown?'#3df58a' : r.isSack||r.isInterception||r.isFumbleLost?'#e03050' : r.yards>=8?'#3df58a' : r.yards>=1?'#c8a030' : '#554f80';
-    const txt = isConv ? (r.isComplete?'GOOD!':'NO GOOD') : r.isTouchdown?'TOUCHDOWN' : r.isSack?'SACK' : r.isInterception?'INTERCEPTED' : r.isFumbleLost?'FUMBLE' : r.isIncomplete?'INCOMPLETE' : r.isSafety?'SAFETY' : yardText(r.yards).toUpperCase();
-    const bd = breakdown(res.offPlay, res.defPlay, r, res.featuredOff, res.featuredDef);
-    setNarr(r.description, bd);
-
-    const ov = document.createElement('div'); ov.className = 'T-ov T-ov-dark T-ov-result';
-    ov.style.cssText = 'opacity:0;transition:opacity .25s';
-    ov.innerHTML =
-      `<div class="T-r-play">${res.offPlay.name} vs ${res.defPlay.name}</div>`+
-      `<div class="T-r-big" style="color:${col}">${txt}</div>`+
-      `<div class="T-r-sub">${bd}</div>`;
-    el.appendChild(ov);
-    requestAnimationFrame(() => ov.style.opacity='1');
-    setTimeout(() => { ov.style.opacity='0'; setTimeout(() => { ov.remove(); done(); }, 250); }, 2400);
   }
 
   // ── POSSESSION CUT ──
@@ -2911,9 +3624,31 @@ export function buildGameplay() {
       ? 'background:radial-gradient(ellipse at 50% 40%,' + newPossTeam.colors.primary + '18 0%,transparent 70%),#0A0804;'
       : 'background:#0A0804;';
 
+    // Push possession change to ticker
+    pushTicker(newPossTeam.name.toUpperCase() + ' BALL — ' + nextCtx + (fieldPos ? ' at ' + fieldPos : ''), newPossTeam.accent);
+
     // Build overlay — centered content, dark background
     var ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;opacity:0;transition:opacity .3s;pointer-events:auto;cursor:pointer;' + bgGrad;
+
+    // Team-colored wipe bar
+    var wipeColor = newPossTeam.accent;
+    var wipeBar = document.createElement('div');
+    wipeBar.style.cssText = 'position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,' + wipeColor + '15,' + wipeColor + '25,' + wipeColor + '15,transparent);z-index:1;pointer-events:none;';
+    ov.appendChild(wipeBar);
+    try {
+      gsap.to(wipeBar, { left: '100%', duration: 0.6, ease: 'power2.inOut', onComplete: function() { wipeBar.remove(); } });
+    } catch(e) { wipeBar.remove(); }
+
+    // Team badge flash
+    var badgeFlash = document.createElement('div');
+    badgeFlash.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;opacity:0;pointer-events:none;filter:drop-shadow(0 0 20px ' + wipeColor + ');';
+    badgeFlash.innerHTML = renderTeamBadge(newPossTeam.id, 64);
+    ov.appendChild(badgeFlash);
+    try {
+      gsap.to(badgeFlash, { opacity: 0.3, scale: 1.2, duration: 0.3, delay: 0.15 });
+      gsap.to(badgeFlash, { opacity: 0, scale: 1.5, duration: 0.4, delay: 0.5 });
+    } catch(e) {}
 
     // Score bar with team badges — both visible, side by side
     var hScore = s.ctScore, oScore = s.irScore;
@@ -3009,8 +3744,8 @@ export function buildGameplay() {
     d.style.cssText = 'opacity:0;transition:opacity .3s';
     d.innerHTML =
       `<div class="T-drv-hdr" style="color:${dt.accent}">${dt.abbr} DRIVE \u2014 ${log.length} PLAYS, ${yds} YDS</div>`+
-      (td ? '<div class="T-drv-stat" style="color:#3df58a">TOUCHDOWN</div>' : '')+
-      (to ? '<div class="T-drv-stat" style="color:#e03050">TURNOVER</div>' : '')+
+      (td ? '<div class="T-drv-stat" style="color:#00ff44">TOUCHDOWN</div>' : '')+
+      (to ? '<div class="T-drv-stat" style="color:#ff0040">TURNOVER</div>' : '')+
       (!td && !to ? '<div class="T-drv-stat">Drive over.</div>' : '');
     panel.appendChild(d);
     requestAnimationFrame(() => d.style.opacity='1');
@@ -3043,7 +3778,7 @@ export function buildGameplay() {
     var w = document.createElement('div');
     w.style.cssText = 'display:flex;flex-direction:column;gap:8px;padding:8px;';
 
-    [{id:'xp',lbl:'EXTRA POINT',sub:'+1 (automatic)',col:'#3df58a'},
+    [{id:'xp',lbl:'EXTRA POINT',sub:'+1 (automatic)',col:'#00ff44'},
      {id:'2pt',lbl:'2-POINT CONVERSION',sub:'+2 from the 5 yard line',col:'#c8a030'},
      {id:'3pt',lbl:'3-POINT CONVERSION',sub:'+3 from the 10 yard line',col:'#e03050'}].forEach(function(c) {
       var b = document.createElement('button');
@@ -3127,18 +3862,20 @@ export function buildGameplay() {
 
     drawField(); drawPanel();
 
-    // Conversion-specific commentary
+    // Conversion-specific commentary — route through engine for variety
     var convLabel = cm.choice === '2pt' ? '2-point' : '3-point';
     var offName = fakeRes.featuredOff.name || 'QB';
     var defName = fakeRes.featuredDef.name || 'Defense';
     var isRun = offPlay && (offPlay.isRun || offPlay.type === 'run');
+    var convGameState = { down: 1, distance: cm.choice === '2pt' ? 5 : 10, yardsToEndzone: cm.choice === '2pt' ? 5 : 10, half: gs.half, ctScore: gs.ctScore, irScore: gs.irScore, possession: cm.team, playsUsed: gs.playsUsed, twoMinActive: gs.twoMinActive };
+    var convComm = generateCommentary(fakeRes, convGameState, hTeam.name, oTeam.name);
     if (convResult.success) {
-      fakeRes.result.description = isRun
-        ? offName + ' punches it in! ' + convLabel + ' conversion is GOOD!'
+      fakeRes.result.description = (convComm && convComm.line1) ? convComm.line1 + ' ' + convLabel + ' GOOD!'
+        : isRun ? offName + ' punches it in! ' + convLabel + ' conversion is GOOD!'
         : offName + ' fires to the end zone — CAUGHT! ' + convLabel + ' conversion GOOD!';
     } else {
-      fakeRes.result.description = isRun
-        ? offName + ' is stopped at the line. ' + convLabel + ' conversion fails.'
+      fakeRes.result.description = (convComm && convComm.line1) ? convComm.line1 + ' ' + convLabel + ' no good.'
+        : isRun ? offName + ' is stopped at the line. ' + convLabel + ' conversion fails.'
         : defName + ' breaks it up! ' + convLabel + ' conversion NO GOOD.';
     }
     // Mark as conversion so Beat 4 skips the TD celebration + conversion loop
@@ -3150,6 +3887,8 @@ export function buildGameplay() {
     // Run through the full 3-beat snap display (clash, result, commentary)
     var prevPossConv = cm.team;
     run3BeatSnap(fakeRes, prevPossConv, false, false);
+    // Safety: reset phase if still busy after max animation time
+    setTimeout(function() { if (phase === 'busy') { phase = 'play'; drawBug(); drawField(); drawPanel(); } }, 8000);
   }
 
   // ── 2-MIN WARNING (dramatic overlay) ──
@@ -3190,6 +3929,7 @@ export function buildGameplay() {
   }
 
   function showCoinToss(onDone) {
+    _driveHeat = 0;
     var humanWins = Math.random() < 0.5;
     var offers = rollCoinTossCards();
 
@@ -3473,58 +4213,75 @@ export function buildGameplay() {
   // Special teams result overlay (punt, FG, kickoff)
   function showSpecialTeamsResult(text, color, onDone) {
     var stOv = document.createElement('div');
+    var _stFired = false;
+    function _stDone() { if (_stFired) return; _stFired = true; if (stOv.parentNode) stOv.remove(); if (onDone) onDone(); }
     stOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.85);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;';
     stOv.innerHTML =
       "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + color + ";letter-spacing:3px;text-align:center;max-width:320px;text-shadow:0 0 20px " + color + "40;\">" + text + "</div>";
-    stOv.onclick = function() { stOv.style.opacity = '0'; setTimeout(function() { stOv.remove(); if (onDone) onDone(); }, 200); };
+    stOv.onclick = function() { stOv.style.opacity = '0'; setTimeout(_stDone, 200); };
     el.appendChild(stOv);
     requestAnimationFrame(function() { stOv.style.opacity = '1'; });
-    setTimeout(function() { if (stOv.parentNode) { stOv.style.opacity = '0'; setTimeout(function() { stOv.remove(); if (onDone) onDone(); }, 200); } }, 2500);
+    setTimeout(function() { if (stOv.parentNode) { stOv.style.opacity = '0'; setTimeout(_stDone, 200); } }, 2500);
   }
 
   // Brief kickoff result overlay
   function showKickoffResult(resultText, onDone) {
     var kov = document.createElement('div');
+    var _kovFired = false;
+    function _kovDone() { if (_kovFired) return; _kovFired = true; if (kov.parentNode) kov.remove(); if (onDone) onDone(); }
     kov.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.85);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;';
     kov.innerHTML =
       "<div style=\"font-family:'Teko';font-weight:700;font-size:24px;color:#EBB010;letter-spacing:3px;\">KICKOFF</div>" +
       "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:16px;color:#ccc;margin-top:6px;\">" + resultText + "</div>";
-    kov.onclick = function() { kov.style.opacity = '0'; setTimeout(function() { kov.remove(); if (onDone) onDone(); }, 200); };
+    kov.onclick = function() { kov.style.opacity = '0'; setTimeout(_kovDone, 200); };
     el.appendChild(kov);
     requestAnimationFrame(function() { kov.style.opacity = '1'; });
-    setTimeout(function() { if (kov.parentNode) { kov.style.opacity = '0'; setTimeout(function() { kov.remove(); if (onDone) onDone(); }, 200); } }, 2000);
-  }
-
-  // ── RULES OVERLAY ──
-  function showRules(onDone) {
-    var ov = document.createElement('div');
-    ov.className = 'T-ov T-ov-dark';
-    ov.style.cssText += 'pointer-events:auto;flex-direction:column;gap:12px;padding:24px;opacity:0;transition:opacity .3s;cursor:pointer;';
-    ov.innerHTML =
-      "<div style=\"font-family:'Teko';font-size:30px;color:var(--a-gold);letter-spacing:3px\">HOW TO PLAY</div>" +
-      "<div style=\"font-family:'Barlow Condensed';font-size:16px;color:#ccc;line-height:1.6;text-align:center;max-width:300px\">" +
-        "20 snaps per half<br>" +
-        "2-minute warning after snap 20<br>" +
-        "Real countdown clock<br>" +
-        "Both teams go for it on 4th down<br>" +
-      "</div>" +
-      "<div style=\"font-family:'Rajdhani';font-size:7px;color:var(--muted);letter-spacing:1px;margin-top:8px\">TAP TO START</div>";
-    el.appendChild(ov);
-    requestAnimationFrame(function() { ov.style.opacity = '1'; });
-    ov.onclick = function() { SND.click(); ov.style.opacity = '0'; setTimeout(function() { ov.remove(); onDone(); }, 250); };
+    setTimeout(function() { if (kov.parentNode) { kov.style.opacity = '0'; setTimeout(_kovDone, 200); } }, 2000);
   }
 
   // ── TRANSITIONS ──
+  function showHalfEnd(isGameEnd, onDone) {
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0);pointer-events:none;';
+    el.appendChild(ov);
+
+    try { gsap.to(ov, { backgroundColor: 'rgba(0,0,0,0.85)', duration: 0.4 }); } catch(e) { ov.style.background = 'rgba(0,0,0,0.85)'; }
+
+    var label = isGameEnd ? 'FINAL' : 'END OF HALF';
+    var textEl = document.createElement('div');
+    textEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:36px;color:#fff;letter-spacing:6px;opacity:0;text-shadow:0 0 20px rgba(255,255,255,0.3);";
+    textEl.textContent = label;
+    ov.appendChild(textEl);
+
+    var scoreEl = document.createElement('div');
+    scoreEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:24px;color:#EBB010;opacity:0;margin-top:8px;";
+    var hScore = hAbbr === 'CT' ? gs.ctScore : gs.irScore;
+    var cScore = hAbbr === 'CT' ? gs.irScore : gs.ctScore;
+    scoreEl.textContent = hScore + ' - ' + cScore;
+    ov.appendChild(scoreEl);
+
+    try {
+      gsap.to(textEl, { opacity: 1, duration: 0.3, delay: 0.3, ease: 'back.out(1.5)' });
+      gsap.from(textEl, { scale: 1.3, duration: 0.3, delay: 0.3, ease: 'back.out(1.5)' });
+      gsap.to(scoreEl, { opacity: 1, duration: 0.25, delay: 0.6 });
+    } catch(e) { textEl.style.opacity = '1'; scoreEl.style.opacity = '1'; }
+
+    setTimeout(function() {
+      try { gsap.to(ov, { opacity: 0, duration: 0.3, onComplete: function() { ov.remove(); onDone(); } }); }
+      catch(e) { ov.remove(); onDone(); }
+    }, isGameEnd ? 2500 : 2000);
+  }
+
   function checkEnd() {
     if (gs.gameOver) {
       SND.whistle();
       AudioStateManager.stopCrowd(2);
-      setTimeout(() => setGs(s => ({...s, screen:'end_game', finalEngine:gs, humanAbbr:hAbbr})), 1200);
+      showHalfEnd(true, function() { setGs(s => ({...s, screen:'end_game', finalEngine:gs, humanAbbr:hAbbr})); });
       return true;
     }
     if (gs.needsHalftime) {
       SND.whistle();
-      setTimeout(() => setGs(s => ({...s, screen:'halftime'})), 1200);
+      showHalfEnd(false, function() { setGs(s => ({...s, screen:'halftime'})); });
       return true;
     }
     return false;
@@ -3532,7 +4289,7 @@ export function buildGameplay() {
 
   // ── INIT ──
   drawBug(); drawField();
-  if (gs.twoMinActive) { prev2min = true; el.classList.add('T-urgent'); }
+  if (gs.twoMinActive) { prev2min = true; el.classList.add('T-urgent'); el.classList.add('T-2min-active'); }
 
   // First load: coin toss → kickoff → play
   if (!GS._coinTossDone) {
@@ -3545,8 +4302,8 @@ export function buildGameplay() {
       // 'card_cpu_receives' = CPU won toss and chose to receive, human got card (CPU receives).
       var humanReceives = result.chose === 'receive';
 
-      // Resolve kickoff and set field position
-      var kickResult = gs.constructor.resolveKickoff();
+      // Resolve kickoff and set field position (HOUSE_CALL auto-consumed if human receives)
+      var kickResult = _resolveKickoff(humanReceives);
       var startYard = kickResult === -1 ? 25 : kickResult; // return TD = rare, treat as touchback for simplicity
       if (humanReceives) {
         gs.possession = 'CT';
@@ -3595,7 +4352,10 @@ export function buildGameplay() {
   }
 
   function resolveHalftimeKickoff() {
-    var kickResult = gs.constructor.resolveKickoff();
+    // Reset half-scoped state for second half
+    _lastPlayFlashed = false;
+    prev2min = false;
+    var kickResult = _resolveKickoff(GS.humanReceives);
     var startYard = kickResult === -1 ? 25 : kickResult;
     if (GS.humanReceives) {
       gs.possession = 'CT';
@@ -3664,7 +4424,7 @@ export function buildGameplay() {
         // 'receive' = human chose to receive. 'card' = human drew card, kicks off (CPU receives).
       // 'card_cpu_receives' = CPU won toss and chose to receive, human got card (CPU receives).
       var humanReceives = result.chose === 'receive';
-        var kickResult = gs.constructor.resolveKickoff();
+        var kickResult = _resolveKickoff(humanReceives);
         var startYard = kickResult === -1 ? 25 : kickResult;
         gs.ballPosition = humanReceives ? startYard : 100 - startYard;
         gs.possession = humanReceives ? 'CT' : 'IR';
@@ -3673,7 +4433,7 @@ export function buildGameplay() {
       });
     },
     showKickoff: function() {
-      var kickResult = gs.constructor.resolveKickoff();
+      var kickResult = _resolveKickoff(gs.possession !== hAbbr);
       var startYard = kickResult === -1 ? 25 : kickResult;
       var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
       showKickoffResult(posLabel, function() { drawBug(); drawField(); drawPanel(); });
@@ -3682,6 +4442,42 @@ export function buildGameplay() {
       triggerShop('halftime', function() { drawBug(); drawField(); drawPanel(); });
     },
   });
+
+  // ── CLEANUP: remove document listeners + kill timers on screen exit ──
+  var _cleanup = function() {
+    if (_driveHeatFill && _driveHeatFill.parentNode) { _driveHeatFill.parentNode.remove(); _driveHeatFill = null; }
+    document.removeEventListener('mousemove', moveDrag);
+    document.removeEventListener('mouseup', endDrag);
+    document.removeEventListener('touchmove', moveDrag);
+    document.removeEventListener('touchend', endDrag);
+    if (twoMinTimer) { clearInterval(twoMinTimer); twoMinTimer = null; }
+    if (_tickerAnim) { try { _tickerAnim.kill(); } catch(e) {} _tickerAnim = null; }
+    try { gsap.killTweensOf(el.querySelectorAll('*')); } catch(e) {}
+    stopWeatherAudio();
+  };
+  // Expose cleanup so the router can call it directly before swapping screens
+  el._cleanup = _cleanup;
+
+  // Attach cleanup to a MutationObserver that fires when el is removed from DOM
+  var _cleanupObs = new MutationObserver(function(mutations) {
+    for (var m = 0; m < mutations.length; m++) {
+      for (var n = 0; n < mutations[m].removedNodes.length; n++) {
+        if (mutations[m].removedNodes[n] === el || mutations[m].removedNodes[n].contains(el)) {
+          _cleanup();
+          _cleanupObs.disconnect();
+          return;
+        }
+      }
+    }
+  });
+  if (el.parentNode) _cleanupObs.observe(el.parentNode, { childList: true });
+  else {
+    // Fallback: observe document.body once el is added
+    var _attachObs = new MutationObserver(function() {
+      if (el.parentNode) { _cleanupObs.observe(el.parentNode, { childList: true }); _attachObs.disconnect(); }
+    });
+    _attachObs.observe(document.body, { childList: true, subtree: true });
+  }
 
   return el;
 }
