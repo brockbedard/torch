@@ -136,19 +136,19 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
           off.name + ' punches it in! ' + yards + '-yard SCORE! ' + possTeam.toUpperCase() + '!',
         ]);
       }
-      line2 = possTeam + ' celebrates! The crowd is on their feet!';
+      line2 = 'The ' + possTeam + ' celebrate! The crowd is on their feet!';
     } else {
       // Opponent scores against user — flat, factual
       if (isPass) {
         line1 = pick([
-          possTeam + ' finds the end zone. ' + off.name + ', ' + yards + '-yard pass.',
-          off.name + ' catches a ' + yards + '-yard touchdown for ' + possTeam + '.',
-          'Score for ' + possTeam + '. ' + yards + ' yards.',
+          'The ' + possTeam + ' find the end zone. ' + off.name + ', ' + yards + '-yard pass.',
+          off.name + ' catches a ' + yards + '-yard touchdown for the ' + possTeam + '.',
+          'Score for the ' + possTeam + '. ' + yards + ' yards.',
         ]);
       } else {
         line1 = pick([
-          off.name + ' runs it in from ' + yards + ' out. ' + possTeam + ' scores.',
-          possTeam + ' punches it in. ' + yards + '-yard run.',
+          off.name + ' runs it in from ' + yards + ' out. The ' + possTeam + ' score.',
+          'The ' + possTeam + ' punch it in. ' + yards + '-yard run.',
         ]);
       }
       line2 = null; // No celebration for the opponent
@@ -162,7 +162,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
     if (!isHumanOnOff) {
       // User's defense got the sack — celebrate!
       line1 = pick([
-        'SACK!! ' + def.name + ' BURIES the QB' + (Math.abs(yards) > 0 ? ' for -' + Math.abs(yards) + '!' : '!'),
+        'SACK!! ' + def.name + ' BURIES the QB' + (Math.abs(yards) > 0 ? ' for a loss of ' + Math.abs(yards) + '!' : '!'),
         def.name + ' GETS THERE!' + (Math.abs(yards) > 0 ? ' Dropped for a ' + Math.abs(yards) + '-yard loss!' : ' NO GAIN!'),
         'NOWHERE TO THROW! ' + def.name + ' ' + pick(TACKLE_VERBS) + '! HUGE play!',
         'The pocket COLLAPSES! ' + def.name + ' brings the HEAT!',
@@ -172,7 +172,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       // User's QB got sacked — flat
       line1 = pick([
         'Sacked. ' + def.name + ' gets through.' + (Math.abs(yards) > 0 ? ' Loss of ' + Math.abs(yards) + '.' : ''),
-        def.name + ' brings the pressure.' + (Math.abs(yards) > 0 ? ' Down for -' + Math.abs(yards) + '.' : ' No gain.'),
+        def.name + ' brings the pressure.' + (Math.abs(yards) > 0 ? ' Loss of ' + Math.abs(yards) + '.' : ' No gain.'),
       ]);
     }
     return { line1: sanitize(line1), line2: sanitize(line2) };
@@ -186,9 +186,10 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
         'INTERCEPTED!! ' + def.name + ' JUMPS the route! WHAT A READ!',
         'PICKED OFF!! ' + def.name + ' was sitting on that ALL DAY!',
         'TURNOVER! ' + def.name + ' ' + pick(CATCH_VERBS) + ' it! ' + defTeam + ' ball!',
+      // Note: defTeam here is correct without "the" — used as possessive ("Boars ball")
         'BAD DECISION! ' + def.name + ' makes them PAY! PICKED!',
       ]);
-      line2 = defTeam + ' takes over! Momentum is YOURS!';
+      line2 = 'The ' + defTeam + ' take over! Momentum is YOURS!';
     } else {
       // User threw a pick — flat, move on
       line1 = pick([
@@ -196,7 +197,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
         'Turnover. ' + def.name + ' reads the throw.',
         'Bad throw. ' + def.name + ' comes away with it.',
       ]);
-      line2 = defTeam + ' takes over.';
+      line2 = 'The ' + defTeam + ' take over.';
     }
     return { line1: sanitize(line1), line2: sanitize(line2) };
   }
@@ -232,7 +233,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       // User's defense forces incomplete — positive
       line1 = pick([
         'Incomplete! ' + def.name + ' breaks it up! Great coverage!',
-        def.name + ' swats it away! Nothing doing for ' + possTeam + '.',
+        def.name + ' swats it away! Nothing doing for the ' + possTeam + '.',
         'Pass broken up! ' + def.name + ' was ALL OVER ' + off.name + '.',
         'Thrown away. Your defense had everyone covered.',
       ]);
@@ -266,10 +267,10 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
           line1 = receiverName + ' ' + pick(CATCH_VERBS) + ' a ' + (yards <= 5 ? 'short' : 'nice') + ' pass ' + pick(ROUTE_MODS) + '.' + tackleTag;
         } else if (tier === 2) {
           line1 = receiverName + ' ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + '!' + tackleTag;
-          if (res.gotFirstDown) line2 = 'FIRST DOWN ' + possTeam + '! Chains move!';
+          if (res.gotFirstDown) line2 = 'FIRST DOWN! The ' + possTeam + ' move the chains!';
         } else {
           line1 = receiverName + '! ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + '! WIDE OPEN!';
-          if (yards >= 20) line2 = 'BIG chunk play! ' + possTeam + ' is ROLLING!';
+          if (yards >= 20) line2 = 'BIG chunk play! The ' + possTeam + ' are ROLLING!';
           else if (res.gotFirstDown) line2 = 'Moves the chains on a KEY down!';
         }
       } else {
@@ -277,7 +278,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
           line1 = rusherName + ' ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + '.' + tackleTag;
         } else if (tier === 2) {
           line1 = rusherName + ' ' + pick(RUN_VERBS) + ' through ' + pick(RUN_MODS) + '!' + tackleTag;
-          if (res.gotFirstDown) line2 = 'FIRST DOWN! ' + possTeam + ' keeps it moving!';
+          if (res.gotFirstDown) line2 = 'FIRST DOWN! The ' + possTeam + ' keep it moving!';
         } else {
           line1 = rusherName + '! ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + '! HE\'S LOOSE!';
           if (yards >= 15) line2 = rusherName + ' is RUNNING WILD out there!';
@@ -287,10 +288,10 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       // Opponent gains against user — flat, no yards in text
       if (isPass) {
         line1 = receiverName + ' catches it ' + pick(ROUTE_MODS) + '.' + tackleTag;
-        if (res.gotFirstDown) line2 = 'First down ' + possTeam + '.';
+        if (res.gotFirstDown) line2 = 'First down for the ' + possTeam + '.';
       } else {
         line1 = rusherName + ' ' + pick(['finds a gap.','pushes ahead.','hits the hole.']) + tackleTag;
-        if (res.gotFirstDown) line2 = 'First down ' + possTeam + '.';
+        if (res.gotFirstDown) line2 = 'First down for the ' + possTeam + '.';
       }
     }
     return { line1: sanitize(line1), line2: sanitize(line2) };
@@ -300,7 +301,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
   if (!isHumanOnOff) {
     line1 = pick([
       'STUFFED! ' + def.name + ' meets him at the line!',
-      'NO GAIN! ' + defTeam + ' defense holds FIRM!',
+      'NO GAIN! The ' + defTeam + ' defense holds FIRM!',
       'STACKED UP! ' + def.name + ' plugs the gap!',
       'Going NOWHERE! ' + def.name + ' reads it perfectly!',
     ]);
@@ -335,16 +336,16 @@ export function generateContext(gameState, humanTeamName, oppTeamName, res) {
   // User-biased context
   if (isHumanOff) {
     // User on offense
-    if (ydsToEz <= 50 && ydsToEz > 45 && r && r.yards > 0) return possTeam + ' crosses midfield! Building momentum!';
+    if (ydsToEz <= 50 && ydsToEz > 45 && r && r.yards > 0) return 'The ' + possTeam + ' cross midfield! Building momentum!';
     if (ydsToEz <= 20 && ydsToEz > 15) return 'Inside the 20 — this is YOUR territory!';
     if (r && r.isTouchdown && scoreDiff > 0 && scoreDiff <= 7) return 'YOU take the lead!';
     if (r && r.isTouchdown && scoreDiff === 0) return 'All tied up!';
     if (gameState.down === 4) return 'Fourth down. You have to go for it.';
   } else {
     // User on defense
-    if (ydsToEz <= 50 && ydsToEz > 45 && r && r.yards > 0) return possTeam + ' crosses midfield.';
+    if (ydsToEz <= 50 && ydsToEz > 45 && r && r.yards > 0) return 'The ' + possTeam + ' cross midfield.';
     if (ydsToEz <= 20 && ydsToEz > 15) return 'They\'re inside the 20. Bend, don\'t break.';
-    if (r && r.isTouchdown && scoreDiff < 0 && scoreDiff >= -7) return possTeam + ' takes the lead.';
+    if (r && r.isTouchdown && scoreDiff < 0 && scoreDiff >= -7) return 'The ' + possTeam + ' take the lead.';
     if (r && r.isTouchdown && scoreDiff === 0) return 'Tied up.';
     if (r && (r.isInterception || r.isFumbleLost)) return 'TURNOVER! You get the ball back!';
     if (r && r.isSack && gameState.down >= 3) return 'Huge stop! They\'re going backwards!';
