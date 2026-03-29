@@ -752,6 +752,12 @@ export function createFieldRenderer(width, height) {
     var defGrad = makeCoreGrad(defRGB);
 
     function drawDot(px, py, rgb, coreGrad) {
+      // 0. Ground shadow (draws BEFORE glow, creates depth)
+      c.fillStyle = 'rgba(0,0,0,0.35)';
+      c.beginPath();
+      c.ellipse(px, py + 10, CORE_R * 0.8, CORE_R * 0.35, 0, 0, Math.PI * 2);
+      c.fill();
+
       // 1. Dark backing circle — eclipses LOS/1st-down lines underneath
       c.fillStyle = 'rgba(5,10,8,0.92)';
       c.beginPath();
@@ -909,14 +915,14 @@ export function createFieldRenderer(width, height) {
         // Render oversized static field (visible + padding) for smooth camera panning
         var padPx = Math.round(cameraPadding * YPX * DPR);
         staticCv.height = height * DPR + padPx;
-        sCtx.scale(DPR, DPR);
+        sCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
         drawStaticField(center, cameraPadding);
         _staticTopYard = topYard;
       } else {
         // Normal size
         if (staticCv.height !== height * DPR) {
           staticCv.height = height * DPR;
-          sCtx.scale(DPR, DPR);
+          sCtx.setTransform(DPR, 0, 0, DPR, 0, 0);
         }
         drawStaticField(center, 0);
         _staticTopYard = topYard;
