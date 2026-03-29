@@ -86,7 +86,7 @@ const CSS = `
 .T-torch-banner-flame{width:14px;height:14px;animation:none}
 @keyframes T-flame-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.85}}
 .T-torch-banner-label{font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:3px;line-height:1}
-.T-torch-banner-pts{font-family:'Teko';font-weight:700;font-size:32px;color:#fff;text-shadow:0 0 12px #EBB010,0 0 24px #EBB01066;line-height:1;transition:transform .3s;padding:2px 8px;border-radius:4px;background:rgba(235,176,16,0.12)}
+.T-torch-banner-pts{font-family:'Teko';font-weight:700;font-size:32px;color:#fff;text-shadow:0 0 16px #EBB010,0 0 32px #EBB01066;line-height:1;transition:transform .3s}
 
 /* drive summary */
 .T-drive{flex:1;overflow-y:auto;padding:12px 14px 16px;background:linear-gradient(180deg,rgba(10,8,4,0) 0%,rgba(10,8,4,0.95) 8%);font-family:'Rajdhani',sans-serif}
@@ -435,6 +435,7 @@ export function buildGameplay() {
   var _lastPlayFlashed = false; // true after LAST PLAY flash fires, reset each half
   var snapCount = 0; // Track snap number for teach tooltips
   var _tutorialStep = (FEATURES.tutorialSystem && GS.isFirstSeason) ? 1 : 0; // 0=done, 1=pick play, 2=pick player, 3=snap
+  var _torchTutorialShown = !!localStorage.getItem('torch_torch_tutorial'); // One-time torch card tutorial
   var twoMinTimer = null; // Real-time clock interval for 2-minute drill
   var _fourthDownDecided = false; // true after player clicks GO FOR IT (hides the bar)
   var _driveHeat = 0; // 0-120 momentum bar
@@ -1372,9 +1373,17 @@ export function buildGameplay() {
     strip.innerHTML = h;
 
     // Append actual shared-builder DOM cards into placed slots with lock-in animation
+    // Each placed slot is tappable to deselect the card
     if (selPl) {
       var playSlot = strip.querySelector('#T-placed-play-slot');
       if (playSlot) {
+        playSlot.style.cursor = 'pointer';
+        playSlot.onclick = function() {
+          SND.select();
+          try { gsap.to(playSlot, { y: -30, opacity: 0, scale: 0.85, duration: 0.2, ease: 'power2.in', onComplete: function() {
+            selPl = null; phase = 'play'; drawField(); drawPanel();
+          }}); } catch(e) { selPl = null; phase = 'play'; drawField(); drawPanel(); }
+        };
         var playEl = mkPlayCardEl(selPl);
         playEl.style.width = '100%';
         playEl.style.height = '100%';
@@ -1388,6 +1397,13 @@ export function buildGameplay() {
     if (selP) {
       var playerSlot = strip.querySelector('#T-placed-player-slot');
       if (playerSlot) {
+        playerSlot.style.cursor = 'pointer';
+        playerSlot.onclick = function() {
+          SND.select();
+          try { gsap.to(playerSlot, { y: -30, opacity: 0, scale: 0.85, duration: 0.2, ease: 'power2.in', onComplete: function() {
+            selP = null; phase = 'play'; drawField(); drawPanel();
+          }}); } catch(e) { selP = null; phase = 'play'; drawField(); drawPanel(); }
+        };
         var playerEl = mkPlayerCardEl(selP, hTeam);
         playerEl.style.width = '100%';
         playerEl.style.height = '100%';
@@ -1401,6 +1417,21 @@ export function buildGameplay() {
     if (selTorch) {
       var torchSlot = strip.querySelector('#T-placed-torch-slot');
       if (torchSlot) {
+        torchSlot.style.cursor = 'pointer';
+        torchSlot.onclick = function() {
+          SND.select();
+          try { gsap.to(torchSlot, { y: -30, opacity: 0, scale: 0.85, duration: 0.2, ease: 'power2.in', onComplete: function() {
+            var tcObj = TORCH_CARDS.find(function(c) { return c.id === selTorch; });
+            if (selectedPreSnap || tcObj) { torchInventory.push(selectedPreSnap || tcObj); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+            selTorch = null; selectedPreSnap = null;
+            phase = (selPl && selP) ? 'torch' : 'play';
+            drawField(); drawPanel();
+          }}); } catch(e) {
+            var tcObj = TORCH_CARDS.find(function(c) { return c.id === selTorch; });
+            if (selectedPreSnap || tcObj) { torchInventory.push(selectedPreSnap || tcObj); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+            selTorch = null; selectedPreSnap = null; phase = (selPl && selP) ? 'torch' : 'play'; drawField(); drawPanel();
+          }
+        };
         var tc = TORCH_CARDS.find(function(c) { return c.id === selTorch; });
         if (tc) {
           var torchEl = buildTorchCard(tc, 80, 150);
@@ -2237,6 +2268,17 @@ export function buildGameplay() {
     });
     panel.appendChild(trayEl);
 
+    // One-time torch card tutorial (fires first time torch cards appear in hand)
+    if (!_torchTutorialShown && phase === 'torch' && preSnapCards.length > 0) {
+      _torchTutorialShown = true;
+      try { localStorage.setItem('torch_torch_tutorial', '1'); } catch(e) {}
+      var torchTutEl = document.createElement('div');
+      torchTutEl.style.cssText = "text-align:center;padding:10px 12px;margin:0 8px;background:rgba(0,0,0,0.75);border:1px solid #EBB01044;border-radius:8px;";
+      torchTutEl.innerHTML =
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;text-shadow:0 0 16px #EBB01060;animation:T-snap-pulse 1.2s ease-in-out infinite;\">PLAY A TORCH CARD OR SKIP</div>" +
+        "<div style=\"font-family:'Rajdhani';font-size:11px;color:#aaa;margin-top:4px;line-height:1.3;\">Torch cards are single-use power-ups that boost your next play</div>";
+      panel.insertBefore(torchTutEl, panel.firstChild);
+    }
 
     if (_tutorialStep > 0 && snapCount === 0) {
       // Inline tooltip — positioned near the cards, not full-screen overlay
@@ -2256,7 +2298,7 @@ export function buildGameplay() {
   function doSnap() {
     if (phase === 'busy') return; // Prevent re-entrant snaps
     _tutorialStep = 0;
-        phase = 'busy';
+    phase = 'busy';
     // Restart real-time clock if it was stopped (spike/incomplete/out of bounds)
     if (gs.twoMinActive && !twoMinTimer) start2MinClock();
 

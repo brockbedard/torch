@@ -225,7 +225,6 @@ export function renderCardTray(opts) {
       }
     }
     wrap.appendChild(torchRow);
-    requestAnimationFrame(function() { animateDeal(torchEls, 0); });
   }
 
   // ── PLAY ROW ──
