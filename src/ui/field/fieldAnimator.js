@@ -93,23 +93,39 @@ function createParticleSystem() {
 // ── SPEED TRAIL ──
 function createSpeedTrail() {
   var positions = [];
-  var maxLen = 8;
   return {
-    push: function(x, y) {
+    push: function(x, y, velocity) {
       positions.push({ x: x, y: y });
-      if (positions.length > maxLen) positions.shift();
+      // Dynamic trail length based on speed
+      var maxLen = Math.min(16, 4 + Math.floor(velocity / 3));
+      while (positions.length > maxLen) positions.shift();
     },
     clear: function() { positions.length = 0; },
-    draw: function(ctx, rgb) {
+    draw: function(ctx, rgb, teamRGB) {
       if (positions.length < 2) return;
+
+      // Team-colored secondary trail (behind the white trail)
+      if (teamRGB) {
+        for (var j = 0; j < positions.length; j++) {
+          var t2 = j / positions.length;
+          var alpha2 = t2 * t2 * 0.15;
+          var radius2 = 5 + t2 * 8;
+          ctx.fillStyle = 'rgba(' + teamRGB[0] + ',' + teamRGB[1] + ',' + teamRGB[2] + ',' + alpha2 + ')';
+          ctx.beginPath();
+          ctx.arc(positions[j].x, positions[j].y, radius2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Draw trail with smooth gradient fade
       ctx.globalCompositeOperation = 'lighter';
-      for (var i = 0; i < positions.length - 1; i++) {
-        var norm = i / (positions.length - 1);
-        var alpha = 0.05 + norm * 0.25;
-        var r = 8 + norm * 10;
+      for (var i = 0; i < positions.length; i++) {
+        var t = i / positions.length; // 0 = oldest, 1 = newest
+        var alpha = t * t * 0.35; // Quadratic fade: newest is brightest
+        var radius = 3 + t * 5; // Smaller oldest, larger newest
         ctx.fillStyle = 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + alpha + ')';
         ctx.beginPath();
-        ctx.arc(positions[i].x, positions[i].y, r, 0, Math.PI * 2);
+        ctx.arc(positions[i].x, positions[i].y, radius, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.globalCompositeOperation = 'source-over';
@@ -117,22 +133,7 @@ function createSpeedTrail() {
   };
 }
 
-// ── IMPACT FLASH ──
-function drawImpactFlash(ctx, x, y, progress, rgb) {
-  if (progress >= 1) return;
-  var radius = 12 + progress * 35;
-  var alpha = 1.0 - progress * progress;
-  ctx.globalCompositeOperation = 'lighter';
-  var grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
-  grad.addColorStop(0, 'rgba(255,255,220,' + alpha + ')');
-  grad.addColorStop(0.4, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + (alpha*0.6) + ')');
-  grad.addColorStop(1, 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',0)');
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalCompositeOperation = 'source-over';
-}
+// ── IMPACT FLASH (replaced by inline multi-layer bloom in tick) ──
 
 // ── BALL FLIGHT ──
 function quadBezier(p0, p1, p2, t) {
@@ -147,7 +148,7 @@ function interpDot(keyframes, t, easeFn) {
   for (var i = 0; i < keyframes.length - 1; i++) {
     if (t >= keyframes[i].time && t <= keyframes[i+1].time) {
       var raw = (t - keyframes[i].time) / (keyframes[i+1].time - keyframes[i].time);
-      var e = easeFn ? easeFn(raw) : easeOutCubic(raw);
+      var e = easeFn ? easeFn(raw) : easeInOutCubic(raw);
       return { x: lerp(keyframes[i].x, keyframes[i+1].x, e), y: lerp(keyframes[i].y, keyframes[i+1].y, e) };
     }
   }
@@ -201,6 +202,8 @@ export function createFieldAnimator(width, height) {
   var _ballFlight = null;
   var _ballFlightProgress = 0; // 0→1 through the flight arc
   var _ballFlightElapsed = 0;  // ms since ball was thrown
+  var _ballPrevPos = null;     // previous frame ball position for velocity calculation
+  var _ballVelocity = 0;       // pixels/frame speed for dynamic trail length
 
   var VISIBLE_YARDS = 25;
   var YPX = height / VISIBLE_YARDS;
@@ -270,6 +273,8 @@ export function createFieldAnimator(width, height) {
           _ballFlight = null;
           _ballFlightProgress = 0;
           _ballFlightElapsed = 0;
+          _ballPrevPos = null;
+          _ballVelocity = 0;
         }
       }
 
@@ -317,6 +322,10 @@ export function createFieldAnimator(width, height) {
           var newTopYard = newCenter - VISIBLE_YARDS / 2;
           _camTarget = (newTopYard - _animTopYard) * YPX;
         }
+        // Clamp camera target to valid field range
+        var minTopYard = 0;
+        var maxTopYard = 120 - VISIBLE_YARDS;
+        _camTarget = Math.max(-maxTopYard * YPX, Math.min(0, _camTarget));
       }
       // Smooth dt-based damping — framerate independent, broadcast feel
       // smoothTime ~0.5s means camera takes ~0.5s to reach the target
@@ -341,6 +350,13 @@ export function createFieldAnimator(width, height) {
       renderState.ballYard = Math.min(120 - VISIBLE_YARDS / 2, (_animTopYard + VISIBLE_YARDS / 2) + camYards);
       renderState.cameraPadding = Math.ceil(camYards) + 5;
     }
+    // Ensure camera doesn't show field outside 0-120
+    if (renderState.ballYard !== undefined) {
+      var topYard = renderState.ballYard - VISIBLE_YARDS / 2;
+      var adjustedTopYard = topYard - (_camYShift / YPX);
+      if (adjustedTopYard < 0) _camYShift = topYard * YPX;
+      if (adjustedTopYard + VISIBLE_YARDS > 120) _camYShift = (topYard + VISIBLE_YARDS - 120) * YPX;
+    }
 
     // Render base field (skip static dots if animating sequence)
     if (_animSequence && _animSequence.dotKeyframes) {
@@ -361,18 +377,18 @@ export function createFieldAnimator(width, height) {
       var offRGB = (renderState.offTeam && TEAM_COLORS[renderState.offTeam]) || [242,140,40];
       var defRGB = (renderState.defTeam && TEAM_COLORS[renderState.defTeam]) || [59,165,93];
 
-      function drawAnimDot(cx2, cy2, rgb) {
+      function drawAnimDot(cx2, cy2, rgb, glowIntensity, glowRadius) {
         // Dark backing (large enough to eclipse lines)
         ctx.fillStyle = 'rgba(5,10,8,0.92)';
         ctx.beginPath(); ctx.arc(cx2, cy2, CORE_R+4, 0, Math.PI*2); ctx.fill();
-        // Two-layer glow (additive)
+        // Two-layer glow (additive) with velocity-scaled intensity
         var prev = ctx.globalCompositeOperation;
         ctx.globalCompositeOperation = 'lighter';
-        var outerSpr = getGlowSprite(rgb, Math.round(DOT_R*1.5), 0.35);
-        var outerSz = DOT_R * 6;
+        var outerSpr = getGlowSprite(rgb, Math.round(glowRadius*1.5), 0.35 * glowIntensity);
+        var outerSz = glowRadius * 6;
         ctx.drawImage(outerSpr, cx2-outerSz/2, cy2-outerSz/2, outerSz, outerSz);
-        var spr = getGlowSprite(rgb, DOT_R, 0.8);
-        ctx.drawImage(spr, cx2-DOT_R*2, cy2-DOT_R*2, DOT_R*4, DOT_R*4);
+        var spr = getGlowSprite(rgb, Math.round(glowRadius), 0.8 * glowIntensity);
+        ctx.drawImage(spr, cx2-glowRadius*2, cy2-glowRadius*2, glowRadius*4, glowRadius*4);
         ctx.globalCompositeOperation = prev;
         // Core
         ctx.save(); ctx.translate(cx2, cy2);
@@ -388,7 +404,16 @@ export function createFieldAnimator(width, height) {
       for (var di = 0; di < dkf.length; di++) {
         var pos = interpDot(dkf[di], animElapsed2);
         var rgb = dColors[di] === 'off' ? offRGB : defRGB;
-        drawAnimDot(pos.x, pos.y - _camYShift, rgb);
+        // Calculate dot velocity for glow intensity
+        var prevPos = interpDot(dkf[di], Math.max(0, animElapsed2 - 16));
+        var vdx = pos.x - prevPos.x;
+        var vdy = pos.y - prevPos.y;
+        var velocity = Math.sqrt(vdx * vdx + vdy * vdy);
+        var velocityNorm = Math.min(1.0, velocity / 8);
+        var baseIntensity = 0.6;
+        var glowIntensity = baseIntensity + velocityNorm * 0.4;
+        var glowRadius = DOT_R + velocityNorm * 6;
+        drawAnimDot(pos.x, pos.y - _camYShift, rgb, glowIntensity, glowRadius);
       }
       // Numbers on top
       ctx.font = "700 11px 'Teko'";
@@ -402,6 +427,38 @@ export function createFieldAnimator(width, height) {
         ctx.fillStyle = 'rgba(255,255,255,0.95)';
         ctx.fillText(dNums[ni], np.x, np.y - _camYShift);
       }
+
+      // OL/DL contact indicators
+      var numOff = 7; // First 7 are offense
+      // Check OL (indices 0-2 typically) vs DL (indices 7-9 typically)
+      for (var oi = 0; oi < 3; oi++) { // OL dots
+        var offPos = interpDot(dkf[oi], animElapsed2);
+        for (var di2 = numOff; di2 < numOff + 3; di2++) { // DL dots
+          if (di2 >= dkf.length) continue;
+          var defPos = interpDot(dkf[di2], animElapsed2);
+          var dist = Math.sqrt(
+            Math.pow(offPos.x - defPos.x, 2) +
+            Math.pow(offPos.y - defPos.y, 2)
+          );
+
+          // Contact threshold: dots within 12 pixels
+          if (dist < 12) {
+            // Draw contact flare between them
+            var midX = (offPos.x + defPos.x) / 2;
+            var midY = ((offPos.y + defPos.y) / 2) - _camYShift;
+            var contactIntensity = 1 - (dist / 12); // Stronger when closer
+
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            var flareGrad = ctx.createRadialGradient(midX, midY, 0, midX, midY, 6);
+            flareGrad.addColorStop(0, 'rgba(255,180,60,' + (0.3 * contactIntensity) + ')');
+            flareGrad.addColorStop(1, 'rgba(255,140,40,0)');
+            ctx.fillStyle = flareGrad;
+            ctx.fillRect(midX - 6, midY - 6, 12, 12);
+            ctx.restore();
+          }
+        }
+      }
     }
 
     // Apply screen shake
@@ -412,17 +469,46 @@ export function createFieldAnimator(width, height) {
       animating = true;
     }
 
-    // Flash effects
+    // Flash effects — multi-layer bloom
     if (_flashEffect) {
       var fe = _flashEffect;
-      var fp = (timestamp - fe.startTime) / fe.duration;
-      if (fp < 1) {
-        if (fe.type === 'red') {
-          ctx.fillStyle = 'rgba(255,40,20,' + (0.2 * (1-fp)) + ')';
-          ctx.fillRect(0, 0, width, height);
-        } else if (fe.type === 'white') {
-          drawImpactFlash(ctx, fe.x, fe.y, fp, fe.rgb || [255,200,100]);
-        }
+      var elapsed = (performance.now() - fe.startTime);
+      var progress = Math.min(elapsed / fe.duration, 1);
+
+      if (progress < 1) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+
+        // Layer 1: Wide soft bloom (large radius, low alpha)
+        var outerR = 60 + progress * 40;
+        var outerAlpha = 0.15 * (1 - progress * progress);
+        var outerGrad = ctx.createRadialGradient(fe.x, fe.y, 0, fe.x, fe.y, outerR);
+        outerGrad.addColorStop(0, 'rgba(' + fe.rgb[0] + ',' + fe.rgb[1] + ',' + fe.rgb[2] + ',' + outerAlpha + ')');
+        outerGrad.addColorStop(1, 'rgba(' + fe.rgb[0] + ',' + fe.rgb[1] + ',' + fe.rgb[2] + ',0)');
+        ctx.fillStyle = outerGrad;
+        ctx.fillRect(fe.x - outerR, fe.y - outerR, outerR * 2, outerR * 2);
+
+        // Layer 2: Medium colored bloom
+        var midR = 35 + progress * 20;
+        var midAlpha = 0.3 * (1 - progress);
+        var midGrad = ctx.createRadialGradient(fe.x, fe.y, 0, fe.x, fe.y, midR);
+        midGrad.addColorStop(0, 'rgba(' + fe.rgb[0] + ',' + fe.rgb[1] + ',' + fe.rgb[2] + ',' + midAlpha + ')');
+        midGrad.addColorStop(0.6, 'rgba(' + fe.rgb[0] + ',' + fe.rgb[1] + ',' + fe.rgb[2] + ',' + (midAlpha * 0.3) + ')');
+        midGrad.addColorStop(1, 'rgba(' + fe.rgb[0] + ',' + fe.rgb[1] + ',' + fe.rgb[2] + ',0)');
+        ctx.fillStyle = midGrad;
+        ctx.fillRect(fe.x - midR, fe.y - midR, midR * 2, midR * 2);
+
+        // Layer 3: Bright hot core (small, intense)
+        var coreR = 12 + progress * 8;
+        var coreAlpha = 0.8 * (1 - progress * progress);
+        var coreGrad = ctx.createRadialGradient(fe.x, fe.y, 0, fe.x, fe.y, coreR);
+        coreGrad.addColorStop(0, 'rgba(255,255,240,' + coreAlpha + ')');
+        coreGrad.addColorStop(0.5, 'rgba(' + fe.rgb[0] + ',' + fe.rgb[1] + ',' + fe.rgb[2] + ',' + (coreAlpha * 0.5) + ')');
+        coreGrad.addColorStop(1, 'rgba(' + fe.rgb[0] + ',' + fe.rgb[1] + ',' + fe.rgb[2] + ',0)');
+        ctx.fillStyle = coreGrad;
+        ctx.fillRect(fe.x - coreR, fe.y - coreR, coreR * 2, coreR * 2);
+
+        ctx.restore();
         animating = true;
       } else {
         _flashEffect = null;
@@ -436,8 +522,15 @@ export function createFieldAnimator(width, height) {
       var elapsed = _ballFlightElapsed;
 
       // Speed trail (drawn first, behind ball)
-      trail.push(bfx, bfy);
-      trail.draw(ctx, [255, 220, 140]);
+      if (_ballPrevPos) {
+        var dx = bfx - _ballPrevPos.x, dy = bfy - _ballPrevPos.y;
+        _ballVelocity = Math.sqrt(dx * dx + dy * dy);
+      }
+      _ballPrevPos = { x: bfx, y: bfy };
+      trail.push(bfx, bfy, _ballVelocity);
+      var TRAIL_TEAM_COLORS = { sentinels: [196,162,101], wolves: [232,84,143], stags: [93,173,226], serpents: [57,255,20] };
+      var trailTeamRGB = (_lastState && _lastState.offTeam && TRAIL_TEAM_COLORS[_lastState.offTeam]) || null;
+      trail.draw(ctx, [255, 220, 140], trailTeamRGB);
 
       // Glow (additive, behind ball)
       ctx.globalCompositeOperation = 'lighter';
@@ -514,7 +607,7 @@ export function createFieldAnimator(width, height) {
       case 'catch': {
         var catchCount = Math.round(10 * yardScale);
         particles.spawn(ex, ey, catchCount, [offTeamRGB, [255,255,220]], { speed: 80 });
-        _flashEffect = { startTime: performance.now(), duration: 200, x: ex, y: ey, type: 'white', rgb: offTeamRGB };
+        _flashEffect = { startTime: performance.now(), duration: 200, x: ex, y: ey, rgb: [255, 240, 200] };
         var catchTrauma = absYards < 8 ? 0.08 : absYards < 15 ? 0.15 : 0.25;
         shake.add(catchTrauma, absYards < 8 ? 5 : 3.5);
         break;
@@ -522,20 +615,26 @@ export function createFieldAnimator(width, height) {
       case 'tackle': {
         var tackleCount = Math.round(20 * yardScale);
         particles.spawn(ex, ey, tackleCount, [offTeamRGB, [255,255,220]], { speed: 130 });
-        _flashEffect = { startTime: performance.now(), duration: 200, x: ex, y: ey, type: 'white', rgb: [255,200,100] };
+        _flashEffect = { startTime: performance.now(), duration: 200, x: ex, y: ey, rgb: [255, 255, 255] };
         var tackleTrauma = absYards < 8 ? 0.2 : absYards < 15 ? 0.35 : 0.45;
         shake.add(tackleTrauma, 3.5);
         trail.clear();
+        // Ground dust on tackle
+        particles.spawn(ex, ey, 8, [[180,160,120],[140,120,90],[200,180,140]], { speed: 40, gravity: 200, decay: 3.5, vyBias: -30 });
+        // Small dust ring
+        particles.spawn(ex, ey + 5, 4, [[160,140,100]], { speed: 20, gravity: 150, decay: 5, vyBias: -15 });
         break;
       }
       case 'sack':
         particles.spawn(ex, ey, 24, [[255,60,30], offTeamRGB, [255,200,100]], { speed: 150 });
-        _flashEffect = { startTime: performance.now(), duration: 150, type: 'red' };
+        _flashEffect = { startTime: performance.now(), duration: 300, x: ex, y: ey, rgb: [255, 60, 30] };
         shake.add(0.6, 3);
+        // Ground dust on sack (heavier burst)
+        particles.spawn(ex, ey, 15, [[180,160,120],[140,120,90],[200,180,140]], { speed: 40, gravity: 200, decay: 3.5, vyBias: -30 });
         break;
       case 'interception':
         particles.spawn(ex, ey, 18, [defTeamRGB, [255,255,220]], { speed: 100 });
-        _flashEffect = { startTime: performance.now(), duration: 400, type: 'red' };
+        _flashEffect = { startTime: performance.now(), duration: 400, x: ex, y: ey, rgb: [40, 255, 120] };
         shake.add(0.5, 2.5);
         trail.clear();
         break;
@@ -548,7 +647,7 @@ export function createFieldAnimator(width, height) {
       case 'touchdown': {
         var tdCount = Math.round(40 * yardScale);
         particles.spawn(ex, ey, tdCount, [offTeamRGB, [255,220,50], [255,255,220]], { speed: 200, gravity: 150, decay: 0.8 });
-        _flashEffect = { startTime: performance.now(), duration: 300, x: ex, y: ey, type: 'white', rgb: [255,220,50] };
+        _flashEffect = { startTime: performance.now(), duration: 300, x: ex, y: ey, rgb: [255, 220, 50] };
         shake.add(0.7, 2);
         var tdColors = [offTeamRGB, [255,220,50], [255,255,220]];
         setTimeout(function() {
@@ -584,6 +683,8 @@ export function createFieldAnimator(width, height) {
     _ballFlight = null;
     _ballFlightProgress = 0;
     _ballFlightElapsed = 0;
+    _ballPrevPos = null;
+    _ballVelocity = 0;
 
     // Save the initial viewport for camera offset math
     _animTopYard = topYard;
@@ -605,6 +706,8 @@ export function createFieldAnimator(width, height) {
   }
 
   function scrollTo(fromYard, toYard, duration) {
+    fromYard = Math.max(VISIBLE_YARDS/2, Math.min(120 - VISIBLE_YARDS/2, fromYard));
+    toYard = Math.max(VISIBLE_YARDS/2, Math.min(120 - VISIBLE_YARDS/2, toYard));
     _scrollAnim = { from: fromYard, to: toYard, start: performance.now(), duration: duration || 600 };
     // Pre-render padded buffer covering both endpoints for smooth scroll (no redraws)
     var lo = Math.min(fromYard, toYard);

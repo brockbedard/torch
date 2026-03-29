@@ -355,6 +355,43 @@ document.fonts.ready.then(() => {
     resDiv.appendChild(btn);
   });
 
+  // PLAY ALL (AUTO) button
+  var playAllBtn = document.createElement('button');
+  playAllBtn.textContent = 'PLAY ALL (AUTO)';
+  playAllBtn.onclick = function() {
+    var types = [
+      { type: 'complete', yards: 8 },
+      { type: 'run', yards: 5 },
+      { type: 'sack', yards: -6 },
+      { type: 'incomplete', yards: 0 },
+      { type: 'interception', yards: 0 },
+      { type: 'touchdown', yards: 30 },
+    ];
+    var i = 0;
+    function playNext() {
+      if (i >= types.length) return;
+      resolvePlay(types[i].type, types[i].yards);
+      i++;
+      setTimeout(playNext, 5000);
+    }
+    playNext();
+  };
+  resDiv.appendChild(playAllBtn);
+
+  // RANDOM PLAY button
+  var randomBtn = document.createElement('button');
+  randomBtn.textContent = 'RANDOM';
+  randomBtn.onclick = function() {
+    var types = ['complete', 'run', 'sack', 'incomplete', 'interception'];
+    var type = types[Math.floor(Math.random() * types.length)];
+    var yards = type === 'sack' ? -(3 + Math.floor(Math.random() * 5)) :
+                type === 'incomplete' ? 0 :
+                type === 'interception' ? 0 :
+                3 + Math.floor(Math.random() * 20);
+    resolvePlay(type, yards);
+  };
+  resDiv.appendChild(randomBtn);
+
   // Manual formation buttons
   var fDiv = document.getElementById('formations');
   var CANONICAL = ['shotgun_deuce','trips','twins','bunch','iform_pistol','empty'];

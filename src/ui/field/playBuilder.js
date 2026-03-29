@@ -602,13 +602,30 @@ export function buildPlayAnimation(resultType, yardsGained, formation, playType,
       if (resultType === 'incomplete' && isPrimary) {
         var missY = (losYard + 10 - topYard) * ypx;
         rp.catchY = missY; rp.settleY = missY;
+        // Build receiver route to catch point, then inject a reach keyframe
         dotKF[pidx] = shape(rp);
+        var catchX = ps.x;
+        // Ball overshoots the receiver by 10-20px and drops below the catch point
+        var missOffsetX = (Math.random() > 0.5 ? 1 : -1) * (10 + Math.random() * 15);
+        var missOffsetY = 15 + Math.random() * 10; // Falls below the catch point
+        var ballEndX = catchX + missOffsetX;
+        var ballEndY = missY + missOffsetY;
         var qbPos = roles.qbIdx >= 0 ? starts[roles.qbIdx] : ps;
+        // Higher arc — overthrown feel, ball sails over the receiver
+        var arcPeakY = (qbPos.y - 12 + missY) / 2 - 35;
         seq.ball = { startTime: throwT, endTime: catchT,
           p0: { x: qbPos.x, y: qbPos.y - 12 },
-          p1: { x: (qbPos.x + ps.x) / 2, y: (qbPos.y - 12 + missY) / 2 - 15 },
-          p2: { x: ps.x + 10, y: missY + 10 } };
-        seq.events.push({ time: catchT + 50, type: 'incomplete', x: ps.x + 10, y: missY + 10 });
+          p1: { x: (qbPos.x + catchX) / 2, y: arcPeakY },
+          p2: { x: ballEndX, y: ballEndY },
+          type: 'incomplete' };
+        // Receiver reach: extends toward ball just before miss, then stops at route endpoint
+        var reachTime = catchT - 100;
+        if (dotKF[pidx] && dotKF[pidx].length > 0) {
+          var lastKF = dotKF[pidx][dotKF[pidx].length - 1];
+          dotKF[pidx].push({ time: reachTime, x: catchX + missOffsetX * 0.5, y: missY });
+          dotKF[pidx].push({ time: catchT, x: catchX, y: missY });
+        }
+        seq.events.push({ time: catchT + 50, type: 'incomplete', x: ballEndX, y: ballEndY });
       } else if (resultType === 'interception' && isPrimary) {
         var intY = (losYard + 8 - topYard) * ypx;
         rp.catchY = intY; rp.settleY = intY;
