@@ -163,72 +163,6 @@ export function buildPregame() {
 
   matchup.appendChild(rivalWrap);
 
-  // ── C3) SCOUTING REPORT ──
-  var oppOffRoster = getOffenseRoster(GS.opponent);
-  var oppDefRoster = getDefenseRoster(GS.opponent);
-  var oppStarOff = oppOffRoster.find(function(p) { return p.isStar; });
-  var oppStarDef = oppDefRoster.find(function(p) { return p.isStar; });
-
-  var scoutDelay = isFast ? t.wx - 0.05 : t.wx - 0.2;
-
-  var scoutCard = document.createElement('div');
-  scoutCard.style.cssText =
-    'flex-shrink:0;z-index:1;width:90%;max-width:320px;margin:0 auto 4px;padding:8px 12px;' +
-    'background:rgba(255,255,255,0.02);border:1px solid #1a1a1a;border-left:3px solid ' + opp.accent + '66;border-radius:8px;' +
-    'opacity:0;animation:pgFadeUp ' + t.dur + 's ease-out ' + scoutDelay + 's both;';
-
-  // Header row
-  var scoutHeader = document.createElement('div');
-  scoutHeader.style.cssText = "display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;";
-  scoutHeader.innerHTML =
-    "<span style=\"font-family:'Rajdhani';font-size:10px;font-weight:700;color:#444;letter-spacing:3px;\">SCOUTING REPORT</span>";
-  scoutCard.appendChild(scoutHeader);
-
-  // Divider
-  var scoutDiv = document.createElement('div');
-  scoutDiv.style.cssText = 'height:1px;background:#1a1a1a;margin-bottom:6px;';
-  scoutCard.appendChild(scoutDiv);
-
-  // Scheme rows
-  var schemeLines = [
-    { label: 'OFFENSE', value: opp.offScheme },
-    { label: 'DEFENSE', value: opp.defScheme },
-  ];
-  schemeLines.forEach(function(line) {
-    var row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px;';
-    row.innerHTML =
-      "<span style=\"font-family:'Rajdhani';font-size:11px;font-weight:600;color:" + opp.accent + "99;letter-spacing:2px;\">" + line.label + "</span>" +
-      "<span style=\"font-family:'Teko';font-size:14px;font-weight:700;color:" + opp.accent + ";letter-spacing:1px;\">" + line.value + "</span>";
-    scoutCard.appendChild(row);
-  });
-
-  // Vibe row
-  var vibeRow = document.createElement('div');
-  vibeRow.style.cssText = 'margin-bottom:5px;';
-  vibeRow.innerHTML =
-    "<span style=\"font-family:'Rajdhani';font-size:10px;font-weight:600;color:#555;font-style:italic;\">" + opp.vibe + "</span>";
-  scoutCard.appendChild(vibeRow);
-
-  // Star players
-  if (oppStarOff || oppStarDef) {
-    var starDiv = document.createElement('div');
-    starDiv.style.cssText = 'height:1px;background:#1a1a1a;margin-bottom:5px;';
-    scoutCard.appendChild(starDiv);
-
-    [oppStarOff, oppStarDef].forEach(function(p) {
-      if (!p) return;
-      var starRow = document.createElement('div');
-      starRow.style.cssText = 'display:flex;align-items:baseline;gap:4px;margin-bottom:2px;';
-      starRow.innerHTML =
-        "<span style=\"font-family:'Rajdhani';font-size:10px;font-weight:700;color:#EBB010;letter-spacing:2px;opacity:0.5;\">WATCH</span>" +
-        "<span style=\"font-family:'Teko';font-size:13px;color:#EBB010;letter-spacing:1px;\">" + p.firstName + ' ' + p.name + " <span style=\"font-size:11px;color:#888;\">(" + p.pos + ")</span> — " + p.trait + "</span>";
-      scoutCard.appendChild(starRow);
-    });
-  }
-
-  matchup.appendChild(scoutCard);
-
   // ── D) HOME TEAM PANEL ──
   var homePanel = document.createElement('div');
   homePanel.style.cssText =
@@ -246,6 +180,49 @@ export function buildPregame() {
   homeLayout.innerHTML = renderTeamBadge(homeId, 80) + buildTeamInfo(homeTeam, 'HOME', 'right');
   homePanel.appendChild(homeLayout);
   matchup.appendChild(homePanel);
+
+  // ── SCOUTING REPORT (below both teams) ──
+  var oppOffRoster = getOffenseRoster(GS.opponent);
+  var oppDefRoster = getDefenseRoster(GS.opponent);
+  var oppStarOff = oppOffRoster.find(function(p) { return p.isStar; });
+  var oppStarDef = oppDefRoster.find(function(p) { return p.isStar; });
+  var scoutDelay = isFast ? t.wx - 0.05 : t.wx - 0.2;
+
+  var scoutCard = document.createElement('div');
+  scoutCard.style.cssText =
+    'flex-shrink:0;z-index:1;width:92%;max-width:340px;margin:8px auto 0;padding:12px 14px;' +
+    'background:linear-gradient(135deg,rgba(' + (opp.colors ? '10,8,4' : '10,8,4') + ',0.95),' + opp.colors.primary + '15);' +
+    'border:1px solid ' + opp.accent + '33;border-top:2px solid ' + opp.accent + '66;border-radius:8px;' +
+    'opacity:0;animation:pgFadeUp ' + t.dur + 's ease-out ' + scoutDelay + 's both;';
+
+  // Header with opponent badge
+  scoutCard.innerHTML =
+    "<div style=\"display:flex;align-items:center;gap:8px;margin-bottom:8px;\">" +
+      renderTeamBadge(GS.opponent, 24) +
+      "<div style=\"flex:1;\">" +
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:" + opp.accent + ";letter-spacing:2px;\">SCOUTING REPORT</div>" +
+      "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:" + matchupColor + ";letter-spacing:1px;\">" + matchupType + "</div>" +
+    "</div>" +
+    "<div style='height:1px;background:" + opp.accent + "22;margin-bottom:8px;'></div>" +
+    // Scheme info - two columns
+    "<div style='display:flex;gap:12px;margin-bottom:8px;'>" +
+      "<div style='flex:1;'>" +
+        "<div style=\"font-family:'Rajdhani';font-size:9px;font-weight:700;color:#555;letter-spacing:2px;\">OFFENSE</div>" +
+        "<div style=\"font-family:'Teko';font-size:16px;font-weight:700;color:" + opp.accent + ";letter-spacing:1px;line-height:1.1;\">" + opp.offScheme + "</div>" +
+      "</div>" +
+      "<div style='flex:1;'>" +
+        "<div style=\"font-family:'Rajdhani';font-size:9px;font-weight:700;color:#555;letter-spacing:2px;\">DEFENSE</div>" +
+        "<div style=\"font-family:'Teko';font-size:16px;font-weight:700;color:" + opp.accent + ";letter-spacing:1px;line-height:1.1;\">" + opp.defScheme + "</div>" +
+      "</div>" +
+    "</div>" +
+    // Vibe
+    "<div style=\"font-family:'Rajdhani';font-size:11px;font-weight:600;color:#666;font-style:italic;margin-bottom:6px;\">" + opp.vibe + "</div>" +
+    // Star players
+    (oppStarOff ? "<div style='display:flex;align-items:center;gap:6px;margin-bottom:3px;'><span style=\"font-family:'Rajdhani';font-size:9px;font-weight:700;color:#ff0040;letter-spacing:1px;background:rgba(255,0,64,0.1);padding:1px 5px;border-radius:2px;\">WATCH</span><span style=\"font-family:'Teko';font-size:14px;font-weight:700;color:#fff;letter-spacing:0.5px;\">" + oppStarOff.firstName + ' ' + oppStarOff.name.split(' ').pop() + "</span><span style=\"font-family:'Rajdhani';font-size:10px;color:" + opp.accent + ";\">" + oppStarOff.pos + " · " + oppStarOff.trait + "</span></div>" : '') +
+    (oppStarDef ? "<div style='display:flex;align-items:center;gap:6px;'><span style=\"font-family:'Rajdhani';font-size:9px;font-weight:700;color:#ff0040;letter-spacing:1px;background:rgba(255,0,64,0.1);padding:1px 5px;border-radius:2px;\">WATCH</span><span style=\"font-family:'Teko';font-size:14px;font-weight:700;color:#fff;letter-spacing:0.5px;\">" + oppStarDef.firstName + ' ' + oppStarDef.name.split(' ').pop() + "</span><span style=\"font-family:'Rajdhani';font-size:10px;color:" + opp.accent + ";\">" + oppStarDef.pos + " · " + oppStarDef.trait + "</span></div>" : '');
+
+  matchup.appendChild(scoutCard);
 
   el.appendChild(matchup);
 
