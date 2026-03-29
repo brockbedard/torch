@@ -102,7 +102,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
     if (isNew) {
       cardEl.style.position = 'relative';
       var newBadge = document.createElement('div');
-      newBadge.style.cssText = "position:absolute;top:-4px;right:-4px;z-index:5;padding:1px 4px;border-radius:3px;background:#FF4511;font-family:'Rajdhani';font-weight:700;font-size:7px;color:#fff;letter-spacing:0.5px;";
+      newBadge.style.cssText = "position:absolute;top:4px;right:4px;z-index:5;padding:2px 5px;border-radius:3px;background:#FF4511;font-family:'Rajdhani';font-weight:700;font-size:8px;color:#fff;letter-spacing:0.5px;";
       newBadge.textContent = 'NEW';
       cardEl.appendChild(newBadge);
     }
@@ -204,10 +204,10 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
     localStorage.setItem('torch_first_shop_done', '1');
 
     var shopTip = document.createElement('div');
-    shopTip.style.cssText = "padding:8px 12px;margin-bottom:8px;background:rgba(235,176,16,0.08);border:1px solid #EBB01033;border-radius:6px;text-align:center;";
+    shopTip.style.cssText = "padding:12px 14px;margin-bottom:10px;background:rgba(235,176,16,0.1);border:2px solid #EBB01055;border-radius:8px;text-align:center;";
     shopTip.innerHTML =
-      "<div style=\"font-family:'Rajdhani';font-size:10px;color:#ccc;line-height:1.3;\">Cards are single-use power-ups. Buy one now or save your points for later.</div>" +
-      "<div style=\"font-family:'Rajdhani';font-size:9px;color:#888;margin-top:4px;\">Tap BUY to purchase.</div>";
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:16px;color:#EBB010;letter-spacing:2px;margin-bottom:4px;\">TORCH CARDS ARE SINGLE-USE POWER-UPS</div>" +
+      "<div style=\"font-family:'Rajdhani';font-size:12px;color:#ccc;line-height:1.3;\">Buy one now or save your points for later. Tap a card, then BUY to purchase.</div>";
     sheet.appendChild(shopTip);
   }
 

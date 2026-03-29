@@ -14,7 +14,7 @@ var TRAY_CSS = `
 .CT-wrap{display:flex;flex-direction:column;flex-shrink:0;background:#0E0A04;border-top:2px solid #FF6B0033;position:relative;z-index:1;padding-bottom:env(safe-area-inset-bottom,0px);overflow-y:auto;-webkit-overflow-scrolling:touch}
 .CT-header{display:flex;align-items:center;justify-content:center;gap:8px;padding:3px 8px 1px;flex-shrink:0}
 .CT-side{font-family:'Teko';font-weight:700;font-size:18px;letter-spacing:3px}
-.CT-disc-toggle{font-family:'Rajdhani';font-weight:700;font-size:11px;letter-spacing:1px;padding:6px 12px;border-radius:3px;border:1px solid #EBB01044;background:transparent;color:#EBB010;cursor:pointer}
+.CT-disc-toggle{font-family:'Rajdhani';font-weight:700;font-size:10px;letter-spacing:1px;padding:5px 10px;border-radius:3px;border:1px solid #33333366;background:transparent;color:#666;cursor:pointer}
 .CT-disc-toggle-used{color:#333;border-color:#1a1a1a;cursor:default}
 .CT-disc-toggle-active{background:rgba(235,176,16,0.1);border-color:#EBB010;animation:T-pulse 1.5s infinite}
 @keyframes T-snap-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
@@ -459,6 +459,20 @@ export function renderCardTray(opts) {
     discConfirm.textContent = count > 0 ? 'DISCARD ' + count + ' CARD' + (count > 1 ? 'S' : '') : 'SELECT CARDS TO DISCARD';
     discConfirm.disabled = count === 0;
     discConfirm.style.opacity = count > 0 ? '1' : '0.4';
+  }
+
+  // ── SELECTED TORCH CARD (tap to deselect) ──
+  if (opts.selectedTorchCard && opts.phase === 'ready') {
+    var stcRow = document.createElement('div');
+    stcRow.style.cssText = "display:flex;align-items:center;justify-content:center;gap:8px;padding:4px 8px;background:rgba(235,176,16,0.06);border:1px solid #EBB01033;border-radius:6px;margin:2px 8px;cursor:pointer;";
+    var stcName = opts.selectedTorchCard.name || 'TORCH CARD';
+    var stcTier = opts.selectedTorchCard.tier || 'BRONZE';
+    var stcColor = stcTier === 'GOLD' ? '#EBB010' : stcTier === 'SILVER' ? '#C0C0C0' : '#CD7F32';
+    stcRow.innerHTML =
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:13px;color:" + stcColor + ";letter-spacing:1px;\">" + stcName + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#888;letter-spacing:1px;\">TAP TO REMOVE</div>";
+    stcRow.onclick = function() { SND.click(); if (opts.onTorchCard) opts.onTorchCard(opts.selectedTorchCard); };
+    wrap.appendChild(stcRow);
   }
 
   // ── SNAP BAR ──
