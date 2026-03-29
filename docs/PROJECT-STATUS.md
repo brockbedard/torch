@@ -1,6 +1,6 @@
 # TORCH Football — Project Status
 
-**Last Updated:** 2026-03-29 (end of night playtest session)
+**Last Updated:** 2026-03-29 (end of session 2)
 **Updated By:** Claude Code session
 
 ---
@@ -11,7 +11,7 @@ TORCH Football is a mobile card game (Balatro meets college football). 4 fiction
 
 **Production (main):** v0.28.0 — Stable, playable, 24 cards, basic game loop. Live at torch.football.
 **Preview (dev remote):** Same as prod. Not updated with dev changes yet.
-**Local Dev (dev branch):** 37 commits ahead of prod. Massive feature expansion. NOT released.
+**Local Dev (dev branch):** 42 commits ahead of prod. Massive feature expansion. NOT released.
 **Field Animation (src/ui/field/):** Isolated project, iterating independently. NOT merged into game.
 
 ---
@@ -98,6 +98,9 @@ TORCH Football is a mobile card game (Balatro meets college football). 4 fiction
 - Scorebug optimized (DOM created once, cached refs)
 - Screen crossfade transitions (150ms out / 200ms in)
 
+### Hidden Features
+- **Custom Team Creator** — Engine + screen built, not wired to UI. Access via console.
+
 ### Onboarding
 - 3-step visual tutorial (glow highlights on play → player → SNAP)
 - Situational hints on ALL games (not just repeat players)
@@ -147,7 +150,7 @@ TORCH Football is a mobile card game (Balatro meets college football). 4 fiction
 
 **Location:** `src/ui/field/` (4 files only)
 **Test:** `http://localhost:5174/src/ui/field/test.html`
-**Status:** Phase 1 in progress. NOT merged into gameplay.
+**Status:** Phase 1+2 complete + 5 visual quality fixes applied (from 10-agent research audit). NOT merged into gameplay.
 
 ### What's Built
 - Premium static field renderer (dark glass floor aesthetic, A+ quality)
@@ -161,11 +164,29 @@ TORCH Football is a mobile card game (Balatro meets college football). 4 fiction
 - Sack QB scramble, INT defender return, TD particles at end zone
 - Team-aware particle colors, counts scale by yards
 - Test harness: yard slider, custom yards, defense scheme, replay, event log
+- Camera bounds clamped (no empty space on reverse plays)
+- Dot interpolation easeInOutCubic (smooth route breaks)
+- DEF_FORMATION_MAP fixed (was mapping coverage to wrong formations)
+- Boars formation pools fixed (removed Bunch, more I-Form)
 
-### Phase 1 Remaining
-- Camera bounds on reverse plays
-- Dot interpolation easing on route breaks
-- DEF_FORMATION_MAP fix (maps coverage to wrong formations)
+### Phase 2 Complete (Polish)
+- Yard lines/numbers 2x brighter for mobile readability
+- Team-colored endzones (offense/defense brand colors)
+- Formation name label, down & distance zone shading (gold tint)
+- Cinematic vignette (edge darkening for broadcast feel)
+- Enhanced mowing stripes (5-yard intervals, soft edges)
+- Improved jersey number contrast (dark backing + thicker stroke)
+- Pre-snap dot idle breathing animation
+- Multi-layer impact flash bloom (3 layers)
+- Velocity-based dot glow, dynamic speed trails
+- Ground dust particles on tackles/sacks
+- OL/DL contact flare indicators
+- Incomplete passes: ball overshoots + drops, receiver reaches
+- Test harness: PLAY ALL auto-cycle + RANDOM play buttons
+
+### Phase 3 (Future)
+- Commentary sync, camera zoom close-ups, ball rotation refinement
+- Wire into gameplay.js (replace DOM field strip)
 
 ### API Contract
 ```
@@ -213,7 +234,7 @@ Conversion: `ballYard = gs.ballPosition * 1.1 + 5`
 ## Git State
 
 **Production (main):** v0.28.0 + play card text hotfix
-**Dev branch:** 37 commits ahead. Clean working tree. All changes committed.
+**Dev branch:** 42 commits ahead. All changes committed.
 **Commit convention:** `feat:`, `fix:`, `test:`, `balance:`, `ui:`, `feat(field):`
 
 ### Key Commits (newest first)
@@ -279,7 +300,7 @@ node --input-type=module -e "import { runGameSim } from './src/tests/gameSimTest
 11. ⬜ All celebrations (sack, turnover, red zone, 2-min drill, end-of-half)
 12. ⬜ First-TD explainer + first-shop tooltip + discard discovery
 
-### Bugs Fixed During Playtesting (16 total)
+### Bugs Fixed During Playtesting Batches 1-4 (16 total)
 - Mobile snap button blocked by torch card row overflow
 - Crowd audio loop gap (html5 mode → Web Audio)
 - Torch card deselection (2 fixes — added TAP TO REMOVE bar)
@@ -305,7 +326,7 @@ node --input-type=module -e "import { runGameSim } from './src/tests/gameSimTest
 
 1. **Onboarding (highest leverage)** — Playtests proved players stay despite card confusion. Full onboarding spec v3.0 exists in Claude UI project (action-gated dismiss chains, 6 phases, tutorial reward, replayable HOW TO PLAY). Current dev has 3-step glow tutorial as foundation. Full spec NOT yet implemented.
 
-2. **Ship dev branch** — 20 commits of unreleased work creates merge risk the longer it sits. 810 tests + 1000-game sim give engine confidence. Need human playtest to validate UX before push.
+2. **Ship dev branch** — 42 commits of unreleased work creates merge risk the longer it sits. 810 tests + 1000-game sim give engine confidence. Need human playtest to validate UX before push.
 
 3. **Field animation integration** — 3 Phase 1 items remaining, then wire into gameplay.js. Biggest visual upgrade available. Isolated project, no rush.
 

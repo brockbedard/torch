@@ -144,8 +144,8 @@ Arm one of these before snapping — result fires once then clears.
 | Phase 4 — New Systems | ⬜ NOT STARTED | Momentum, combos, stats, Daily Drive untested |
 | Phase 5 — Season & Progression | ⬜ NOT STARTED | Achievements, streaks, history untested |
 | Phase 6 — Settings & Save | ⬜ NOT STARTED | Speed toggle, save/resume untested |
-| Phase 7 — Mobile & Visual Polish | 🟡 PARTIAL | Caught snap blocking, card dealing, tooltips. Celebrations untested. |
-| Phase 8 — Onboarding | 🟡 PARTIAL | Tutorial flow tested + fixed. First-TD/shop/discard tooltips untested. |
+| Phase 7 — Mobile & Visual Polish | 🟡 PARTIAL | Caught snap blocking, card dealing, tooltips in batches 1-4. Celebrations untested. |
+| Phase 8 — Onboarding | 🟡 PARTIAL | Tutorial flow tested + fixed in batches 1-4. First-TD/shop/discard tooltips untested. |
 
 **Bugs found and fixed during Phase 1/7/8 testing:**
 - Mobile snap button blocked by torch card row (FIXED)
