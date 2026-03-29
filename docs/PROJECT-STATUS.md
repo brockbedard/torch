@@ -1,7 +1,7 @@
 # TORCH Football — Project Status
 
-**Last Updated:** 2026-03-28 (evening)
-**Updated By:** Claude Code session (synced with Claude UI analysis)
+**Last Updated:** 2026-03-29 (end of night playtest session)
+**Updated By:** Claude Code session
 
 ---
 
@@ -11,7 +11,7 @@ TORCH Football is a mobile card game (Balatro meets college football). 4 fiction
 
 **Production (main):** v0.28.0 — Stable, playable, 24 cards, basic game loop. Live at torch.football.
 **Preview (dev remote):** Same as prod. Not updated with dev changes yet.
-**Local Dev (dev branch):** 20 commits ahead of prod. Massive feature expansion. NOT released.
+**Local Dev (dev branch):** 37 commits ahead of prod. Massive feature expansion. NOT released.
 **Field Animation (src/ui/field/):** Isolated project, iterating independently. NOT merged into game.
 
 ---
@@ -213,7 +213,7 @@ Conversion: `ballYard = gs.ballPosition * 1.1 + 5`
 ## Git State
 
 **Production (main):** v0.28.0 + play card text hotfix
-**Dev branch:** 20 commits ahead. Clean working tree. All changes committed.
+**Dev branch:** 37 commits ahead. Clean working tree. All changes committed.
 **Commit convention:** `feat:`, `fix:`, `test:`, `balance:`, `ui:`, `feat(field):`
 
 ### Key Commits (newest first)
@@ -254,16 +254,48 @@ node --input-type=module -e "import { runGameSim } from './src/tests/gameSimTest
 
 ---
 
-## What Needs Playtesting (Priority)
+## Playtesting Status (as of 2026-03-29)
 
-1. Season flow (3 games → recap → championship → new season)
-2. Reactive torch cards (SURE HANDS / CHALLENGE FLAG prompts)
-3. All 25 torch cards (use dev panel shortcuts)
-4. Halftime strategic decision (aggressive/balanced/conservative)
-5. Daily Drive (seeded matchup, share grid)
-6. Save/resume (refresh mid-game)
-7. Game speed settings (Normal/Fast/Turbo)
-8. First-game onboarding (clear localStorage, play fresh)
+### Completed
+- ✅ Core gameplay loop (snap → result → points → next play)
+- ✅ Card dealing and selection (play + player + torch)
+- ✅ Tutorial onboarding flow (3-step glow + field slot flash)
+- ✅ Mobile touch interactions (tap-to-select, tap-to-deselect)
+- ✅ Kickoff with team branding
+- ✅ Scouting report layout and content
+- ✅ Torch points color-coded breakdown in play-by-play
+
+### Remaining (Priority Order)
+1. ⬜ All 25 torch cards individually (use dev panel shortcuts)
+2. ⬜ Reactive card prompts (SURE HANDS / CHALLENGE FLAG USE IT / SAVE IT)
+3. ⬜ Season flow (3 games → recap → championship)
+4. ⬜ Halftime strategic decision (aggressive/balanced/conservative)
+5. ⬜ Daily Drive (seeded matchup, share grid)
+6. ⬜ Momentum pips + heat badges + card combos
+7. ⬜ Settings screen + game speed toggle
+8. ⬜ Save/resume (refresh mid-game)
+9. ⬜ Stats sheet (tap scorebug)
+10. ⬜ Film Room highlights + game grade
+11. ⬜ All celebrations (sack, turnover, red zone, 2-min drill, end-of-half)
+12. ⬜ First-TD explainer + first-shop tooltip + discard discovery
+
+### Bugs Fixed During Playtesting (16 total)
+- Mobile snap button blocked by torch card row overflow
+- Crowd audio loop gap (html5 mode → Web Audio)
+- Torch card deselection (2 fixes — added TAP TO REMOVE bar)
+- Plural team verb grammar (CHOOSES→CHOOSE, ELECTS→ELECT, etc.)
+- "NO TORCH CARD" → "TORCH" label brevity
+- "P1" scoreboard label removed (unclear)
+- Audible button removed entirely (tap-to-deselect replaces it)
+- Tutorial overlay blocking mobile (reverted to inline tooltips)
+- Scouting report: removed duplicate matchup text, added team colors, moved to bottom
+- Cards dealing before kickoff (hidden until after kickoff result)
+- Auto-advance removed (player must tap for next play)
+- Torch points visibility (now color-coded in play-by-play narr area)
+- TAP FOR NEXT PLAY line wrapping (added white-space:nowrap)
+- Auto-skip torch phase when no playable cards
+- Kickoff result missing team name/badge/color
+- Tutorial PLAYER field slot not flashing (added blue pulse)
 
 ---
 
