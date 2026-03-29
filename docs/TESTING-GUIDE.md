@@ -134,7 +134,40 @@ Arm one of these before snapping — result fires once then clears.
 
 ## 3. Sequential Testing Plan
 
-### Phase 1 — Core Gameplay (10 min)
+### Testing Progress (as of 2026-03-29)
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| Phase 1 — Core Gameplay | ✅ DONE | Full games played, snap→result→points flow verified |
+| Phase 2 — Torch Cards | ⬜ NOT STARTED | All 25 cards need individual testing |
+| Phase 3 — Season Flow | ⬜ NOT STARTED | 3-game season + championship untested |
+| Phase 4 — New Systems | ⬜ NOT STARTED | Momentum, combos, stats, Daily Drive untested |
+| Phase 5 — Season & Progression | ⬜ NOT STARTED | Achievements, streaks, history untested |
+| Phase 6 — Settings & Save | ⬜ NOT STARTED | Speed toggle, save/resume untested |
+| Phase 7 — Mobile & Visual Polish | 🟡 PARTIAL | Caught snap blocking, card dealing, tooltips. Celebrations untested. |
+| Phase 8 — Onboarding | 🟡 PARTIAL | Tutorial flow tested + fixed. First-TD/shop/discard tooltips untested. |
+
+**Bugs found and fixed during Phase 1/7/8 testing:**
+- Mobile snap button blocked by torch card row (FIXED)
+- Crowd audio loop gap (FIXED)
+- Torch card deselection not working (FIXED x2)
+- Grammar: plural team verbs (FIXED)
+- "NO TORCH CARD" label too long (FIXED)
+- "P1" on scoreboard unclear (REMOVED)
+- Audible button removed (FIXED — tap-to-deselect replaces it)
+- Tutorial overlay blocking mobile taps (REVERTED to inline)
+- Scouting report duplicate text + low team color (FIXED)
+- Cards dealing before kickoff (FIXED)
+- Auto-advance after snap (REMOVED — player must tap)
+- Torch points not visible in play-by-play (FIXED — color-coded breakdown)
+- TAP FOR NEXT PLAY wrapping to 2 lines (FIXED)
+- Auto-skip torch phase when no playable cards (FIXED)
+- Kickoff result missing team branding (FIXED)
+- PLAYER field slot not flashing during tutorial (FIXED)
+
+---
+
+### Phase 1 — Core Gameplay (10 min) ✅ DONE
 
 - Clear localStorage, start fresh
 - Verify tutorial tooltip appears on first snap (1st & Goal from the 9)
