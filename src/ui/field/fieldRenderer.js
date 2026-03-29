@@ -13,12 +13,12 @@
 const CFG = {
   bg: '#050a08',
   tile: { size: 40, color: 'rgba(0,255,100,0.05)' },
-  yard: { color: 'rgba(255,255,255,0.15)', w10: 1.5, w5: 1 },
-  goal: { color: 'rgba(255,160,20,0.30)', w: 3, glowColor: 'rgba(255,140,0,0.2)', glowBlur: 6 },
+  yard: { color: 'rgba(255,255,255,0.25)', w10: 2, w5: 1.2 },
+  goal: { color: 'rgba(255,160,20,0.45)', w: 4, glowColor: 'rgba(255,140,0,0.3)', glowBlur: 8 },
   border: { color: 'rgba(255,255,255,0.30)', w: 2.5 },
-  hash: { color: 'rgba(255,255,255,0.08)', len: 5.25 },
-  num: { color: 'rgba(255,245,220,0.10)', font: "700 34px 'Teko'", gap: 2, arrowOff: 22, arrowSz: 6, arrowColor: 'rgba(255,120,20,0.10)' },
-  endZone: { fill: 'rgba(255,69,17,0.04)', stripe: '#FF4511', stripeAlpha: 0.012, textColor: 'rgba(255,69,17,0.12)', textStroke: 'rgba(255,69,17,0.08)', textHighlight: 'rgba(235,176,16,0.04)', innerBorder: 'rgba(255,69,17,0.10)' },
+  hash: { color: 'rgba(255,255,255,0.12)', len: 5.25 },
+  num: { color: 'rgba(255,245,220,0.20)', font: "700 36px 'Teko'", gap: 2, arrowOff: 22, arrowSz: 6, arrowColor: 'rgba(255,120,20,0.15)' },
+  endZone: { fill: 'rgba(255,69,17,0.06)', stripe: '#FF4511', stripeAlpha: 0.018, textColor: 'rgba(255,69,17,0.18)', textStroke: 'rgba(255,69,17,0.12)', textHighlight: 'rgba(235,176,16,0.06)', innerBorder: 'rgba(255,69,17,0.15)' },
   los: { color: 'rgba(59,130,246,0.85)', w: 3, blur: 10 },
   firstDown: { color: 'rgba(251,191,36,0.85)', w: 3, blur: 10 },
   noise: { opacity: 0.04, count: 600 },
@@ -212,10 +212,10 @@ var TEAM_FORMATION_MAP = {
 // When rendering, pick from this pool randomly (weighted) instead of always the same formation.
 var TEAM_FORMATION_POOLS = {
   sentinels: {
-    RUN:    [['iform_pistol',50],['twins',30],['shotgun_deuce',20]],
-    SHORT:  [['twins',35],['iform_pistol',30],['shotgun_deuce',25],['trips',10]],
-    DEEP:   [['twins',30],['shotgun_deuce',30],['trips',25],['empty',15]],
-    QUICK:  [['shotgun_deuce',35],['twins',35],['bunch',20],['trips',10]],
+    RUN:    [['iform_pistol',55],['twins',30],['shotgun_deuce',15]],
+    SHORT:  [['twins',35],['iform_pistol',35],['shotgun_deuce',25],['trips',5]],
+    DEEP:   [['twins',35],['iform_pistol',25],['shotgun_deuce',25],['trips',15]],
+    QUICK:  [['shotgun_deuce',40],['twins',35],['iform_pistol',15],['trips',10]],
     SCREEN: [['twins',40],['shotgun_deuce',30],['iform_pistol',20],['trips',10]],
   },
   wolves: {
@@ -258,12 +258,17 @@ function pickFormation(teamId, playType) {
 }
 
 // ── DEFENSE SCHEME → ALIGNMENT MAPPING ──
-// Maps TORCH's engine coverage names to the research's 5 defensive looks
+// Maps TORCH's engine coverage names (defScheme) to the 5 defensive alignment variants.
+// Values correspond to DEF_* alignment arrays defined above (Section 4).
+// NOTE: Not yet wired into the rendering pipeline — ready for when defScheme is passed
+// in state. When integrated, resolve the alignment string to the matching DEF_* array
+// and override formation.defense before rendering.
 var DEF_FORMATION_MAP = {
-  ZONE:     'shotgun_deuce',   // Base 3-1-2-1 (via deuce's default def)
-  BLITZ:    'iform_pistol',    // Nickel 3-2-1-1 (via iform's default def)
-  PRESSURE: 'bunch',           // Press bracket look
-  HYBRID:   'shotgun_deuce',   // Base / pattern match
+  ZONE:     'DEF_COVER3',  // 3-0-3-1: three-under zone, deep S — Boars Cover 3 shell
+  BLITZ:    'DEF_PRESS',   // 3-1-3-0: Cover 0 press man, max aggression — Spectres blitz
+  PRESSURE: 'DEF_PRESS',   // 3-1-3-0: same press look, interior pass rush emphasis
+  HYBRID:   'DEF_COVER3',  // 3-0-3-1: disguised zone shell — Serpents multiple look
+  MAN:      'DEF_BASE',    // 3-1-2-1: Cover 1/3 base man — Dolphins spy shell
 };
 
 // ── PRE-RENDERED GLOW SPRITE CACHE ──
@@ -402,12 +407,40 @@ export function createFieldRenderer(width, height) {
     c.fillRect(0, 0, fieldW, renderHeight);
 
     // 2a. Mowing stripes (alternating 5-yard bands — broadcast look)
+    var centerY = height / 2;
     for (var myd = 0; myd < 120; myd += 5) {
       var my1 = (myd - topYard) * YPX;
       var my2 = ((myd + 5) - topYard) * YPX;
-      if (my2 < 0 || my1 > height) continue;
-      c.fillStyle = (myd / 5) % 2 === 0 ? 'rgba(255,255,255,0.018)' : 'rgba(0,0,0,0.015)';
-      c.fillRect(0, my1, fieldW, my2 - my1);
+      if (my2 < 0 || my1 > renderHeight) continue;
+      var stripeIdx = (myd / 5) % 2;
+
+      // Light direction — stripes closer to center are slightly brighter
+      var stripeMidY = my1 + YPX * 2.5;
+      var distFromCenter = Math.abs(stripeMidY - centerY) / (height / 2);
+      var lightMod = 1 - distFromCenter * 0.3; // 0.7 at edges, 1.0 at center
+
+      if (stripeIdx === 0) {
+        // Even bands: slightly greener tint (the "mowed toward camera" look)
+        var baseAlpha = 0.025 * lightMod;
+
+        // Soft top edge — 2px gradient transition into stripe
+        var edgeGrad = c.createLinearGradient(0, my1, 0, Math.min(my1 + 2, my2));
+        edgeGrad.addColorStop(0, 'rgba(0,255,100,0)');
+        edgeGrad.addColorStop(1, 'rgba(0,255,100,' + baseAlpha + ')');
+        c.fillStyle = edgeGrad;
+        c.fillRect(0, my1, fieldW, Math.min(2, my2 - my1));
+
+        // Stripe body fill
+        if (my2 - my1 > 2) {
+          c.fillStyle = 'rgba(0,255,100,' + baseAlpha + ')';
+          c.fillRect(0, my1 + 2, fieldW, my2 - my1 - 2);
+        }
+      } else {
+        // Odd bands: very slight darkening (the "mowed away from camera" look)
+        var darkAlpha = 0.012 * lightMod;
+        c.fillStyle = 'rgba(0,0,0,' + darkAlpha + ')';
+        c.fillRect(0, my1, fieldW, my2 - my1);
+      }
     }
 
     // 2b. Stadium ambient light (center bright, edges dark)
@@ -435,8 +468,10 @@ export function createFieldRenderer(width, height) {
     c.fillRect(0, 0, fieldW, renderHeight);
 
     // 3. End zones (yards 0-10 and 110-120)
-    drawEndZonePortrait(c, 0, 10, true, topYard);
-    drawEndZonePortrait(c, 110, 120, false, topYard);
+    var offRGB = (state.offTeam && CFG.teamDotColors[state.offTeam]) || [255, 69, 17];
+    var defRGB = (state.defTeam && CFG.teamDotColors[state.defTeam]) || [255, 69, 17];
+    drawEndZonePortrait(c, 0, 10, true, topYard, defRGB);
+    drawEndZonePortrait(c, 110, 120, false, topYard, offRGB);
 
     // 4. Yard lines (horizontal in portrait)
     for (var yd = 10; yd <= 110; yd++) {
@@ -533,19 +568,27 @@ export function createFieldRenderer(width, height) {
     c.fillRect(fieldW - 10, 0, 10, height);
   }
 
-  function drawEndZonePortrait(c, ydStart, ydEnd, isTop, topYard) {
+  function drawEndZonePortrait(c, ydStart, ydEnd, isTop, topYard, teamRGB) {
     var y1 = (ydStart - topYard) * YPX;
     var y2 = (ydEnd - topYard) * YPX;
     if (y2 < 0 || y1 > height) return;
     var ezH = y2 - y1;
 
-    c.fillStyle = CFG.endZone.fill;
+    var r = teamRGB[0], g = teamRGB[1], b = teamRGB[2];
+    var ezFill = 'rgba(' + r + ',' + g + ',' + b + ',0.06)';
+    var ezStripe = 'rgb(' + r + ',' + g + ',' + b + ')';
+    var ezTextColor = 'rgba(' + r + ',' + g + ',' + b + ',0.18)';
+    var ezTextStroke = 'rgba(' + r + ',' + g + ',' + b + ',0.12)';
+    var ezTextHighlight = 'rgba(' + r + ',' + g + ',' + b + ',0.06)';
+    var ezInnerBorder = 'rgba(' + r + ',' + g + ',' + b + ',0.15)';
+
+    c.fillStyle = ezFill;
     c.fillRect(0, y1, fieldW, ezH);
 
     // Diagonal stripes
     c.save();
     c.globalAlpha = CFG.endZone.stripeAlpha;
-    c.strokeStyle = CFG.endZone.stripe;
+    c.strokeStyle = ezStripe;
     c.lineWidth = 2;
     for (var sy = -fieldW; sy < ezH + fieldW; sy += 14) {
       c.beginPath();
@@ -564,7 +607,7 @@ export function createFieldRenderer(width, height) {
       if (!isTop) c.rotate(Math.PI);
       var letterW = fieldW * 0.12;
       c.font = "700 " + Math.min(40, fieldW * 0.10) + "px 'Teko'";
-      c.fillStyle = CFG.endZone.textColor;
+      c.fillStyle = ezTextColor;
       c.textAlign = 'center';
       c.textBaseline = 'middle';
       var letters = 'TORCH'.split('');
@@ -572,17 +615,17 @@ export function createFieldRenderer(width, height) {
       var spacing = totalSpan / (letters.length - 1);
       var startX = -totalSpan / 2;
       letters.forEach(function(ch, i) { c.fillText(ch, startX + i * spacing, 0); });
-      c.strokeStyle = CFG.endZone.textStroke;
+      c.strokeStyle = ezTextStroke;
       c.lineWidth = 2;
       letters.forEach(function(ch, i) { c.strokeText(ch, startX + i * spacing, 0); });
-      c.fillStyle = CFG.endZone.textHighlight;
+      c.fillStyle = ezTextHighlight;
       letters.forEach(function(ch, i) { c.fillText(ch, startX + i * spacing, -1); });
     }
     c.restore();
 
     // Inner border along goal line
     var borderY = isTop ? y2 : y1;
-    c.strokeStyle = CFG.endZone.innerBorder;
+    c.strokeStyle = ezInnerBorder;
     c.lineWidth = 1;
     c.beginPath(); c.moveTo(2, borderY); c.lineTo(fieldW - 2, borderY); c.stroke();
   }
@@ -765,19 +808,34 @@ export function createFieldRenderer(width, height) {
     var allPlayers = form.offense.map(function(p) { return { p: p, side: 'off', losY: losYard }; })
       .concat(form.defense.map(function(p) { return { p: p, side: 'def', losY: losYard }; }));
 
-    c.font = "700 11px 'Teko'"; // set once, not per player
     allPlayers.forEach(function(d) {
       var p = d.p;
       var px = p.x * fieldW;
       var py = (d.losY + p.y - topYard) * YPX;
-      // White number with dark stroke — reads on any colored core
-      c.strokeStyle = 'rgba(0,0,0,0.7)';
-      c.lineWidth = 2.5;
+      var isOffense = d.side === 'off';
+
+      c.save();
+      c.font = "700 11px 'Teko'";
       c.textAlign = 'center';
       c.textBaseline = 'middle';
-      c.strokeText(p.num, px, py);
-      c.fillStyle = 'rgba(255,255,255,0.95)';
-      c.fillText(p.num, px, py);
+
+      // Dark backing circle — ensures readability on any colored core
+      c.fillStyle = 'rgba(0,0,0,0.5)';
+      c.beginPath();
+      c.arc(px, py, 7, 0, Math.PI * 2);
+      c.fill();
+
+      // Number stroke (thicker for better contrast)
+      c.strokeStyle = 'rgba(0,0,0,0.9)';
+      c.lineWidth = 3;
+      c.lineJoin = 'round';
+      c.strokeText(p.num, px, py + 0.5);
+
+      // Number fill — warm tint for offense, cool tint for defense
+      c.fillStyle = isOffense ? 'rgba(255,250,240,0.95)' : 'rgba(240,245,255,0.95)';
+      c.fillText(p.num, px, py + 0.5);
+
+      c.restore();
     });
   }
 
@@ -848,15 +906,47 @@ export function createFieldRenderer(width, height) {
     }
     ctx.drawImage(staticCv, 0, srcOffY, width * DPR, height * DPR, 0, 0, width, height);
 
-    // Down-and-distance zone shading (yellow tint between LOS and 1st down)
-    if (fdYard > losYard && fdYard <= 110) {
-      var zoneY1 = Math.max(0, (losYard - topYard) * YPX);
-      var zoneY2 = Math.min(height, (fdYard - topYard) * YPX);
-      if (zoneY2 > zoneY1) {
-        ctx.fillStyle = 'rgba(251,210,50,0.035)';
-        ctx.fillRect(0, zoneY1, width, zoneY2 - zoneY1);
+    // Down & distance zone shading (between LOS and 1st down)
+    if (state.losYard && state.firstDownYard) {
+      var losY = (state.losYard - topYard) * YPX;
+      var fdY = (state.firstDownYard - topYard) * YPX;
+      var zoneTop = Math.min(losY, fdY);
+      var zoneBot = Math.max(losY, fdY);
+      var zoneH = zoneBot - zoneTop;
+
+      if (zoneH > 2 && zoneH < height) {
+        ctx.save();
+        var zoneGrad = ctx.createLinearGradient(0, zoneTop, 0, zoneBot);
+        zoneGrad.addColorStop(0, 'rgba(251,191,36,0.04)');
+        zoneGrad.addColorStop(0.5, 'rgba(251,191,36,0.06)');
+        zoneGrad.addColorStop(1, 'rgba(251,191,36,0.03)');
+        ctx.fillStyle = zoneGrad;
+        ctx.fillRect(0, zoneTop, width, zoneH);
+
+        // Thin side markers
+        ctx.fillStyle = 'rgba(251,191,36,0.08)';
+        ctx.fillRect(0, zoneTop, 3, zoneH);
+        ctx.fillRect(width - 3, zoneTop, 3, zoneH);
+        ctx.restore();
       }
     }
+
+    // Atmosphere layer — subtle vignette + brightness based on game state
+    // Currently static, but designed to respond to state.driveHeat in future
+
+    // Edge vignette (always present, darkens edges for cinematic feel)
+    var vigGrad = ctx.createRadialGradient(
+      width / 2, height / 2, Math.min(width, height) * 0.35,
+      width / 2, height / 2, Math.max(width, height) * 0.7
+    );
+    vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
+    vigGrad.addColorStop(1, 'rgba(0,0,0,0.2)');
+    ctx.fillStyle = vigGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // TODO: When state.driveHeat is available, modulate vignette:
+    // var heatMod = (state.driveHeat || 0) / 120; // 0-1
+    // vigIntensity = 0.25 - heatMod * 0.15; // Less vignette = brighter on hot drives
 
     // Dynamic overlays
     drawLOS(ctx, losYard, topYard);
@@ -865,6 +955,28 @@ export function createFieldRenderer(width, height) {
     }
     if (!state.skipDots) {
       drawPlayerDots(ctx, formation, losYard, topYard, state.offTeam, state.defTeam);
+    }
+
+    // Formation name label (small, unobtrusive)
+    if (state.formation) {
+      var formName = state.formation.replace(/_/g, ' ').toUpperCase();
+      // Map to readable names
+      var FORM_LABELS = {
+        'SHOTGUN DEUCE': 'SHOTGUN 2×2',
+        'TRIPS': 'TRIPS',
+        'TWINS': 'TWINS',
+        'BUNCH': 'BUNCH',
+        'IFORM PISTOL': 'PISTOL',
+        'EMPTY': 'EMPTY',
+      };
+      var label = FORM_LABELS[formName] || formName;
+
+      ctx.save();
+      ctx.font = "700 10px 'Teko'";
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.textAlign = 'left';
+      ctx.fillText(label, 8, height - 8);
+      ctx.restore();
     }
   }
 
