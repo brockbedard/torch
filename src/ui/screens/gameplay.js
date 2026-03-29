@@ -4481,6 +4481,7 @@ export function buildGameplay() {
       showKickoffResult(posLabel, function() {
         drawBug(); drawField();
         phase = 'play';
+        panel.style.display = ''; // Show card tray for the first time
         drawPanel();
       });
     });
