@@ -86,7 +86,7 @@ const CSS = `
 .T-torch-banner-flame{width:14px;height:14px;animation:none}
 @keyframes T-flame-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.85}}
 .T-torch-banner-label{font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:3px;line-height:1}
-.T-torch-banner-pts{font-family:'Teko';font-weight:700;font-size:32px;color:#fff;text-shadow:0 0 12px #EBB010;line-height:1;transition:transform .3s}
+.T-torch-banner-pts{font-family:'Teko';font-weight:700;font-size:32px;color:#fff;text-shadow:0 0 12px #EBB010,0 0 24px #EBB01066;line-height:1;transition:transform .3s;padding:2px 8px;border-radius:4px;background:rgba(235,176,16,0.12)}
 
 /* drive summary */
 .T-drive{flex:1;overflow-y:auto;padding:12px 14px 16px;background:linear-gradient(180deg,rgba(10,8,4,0) 0%,rgba(10,8,4,0.95) 8%);font-family:'Rajdhani',sans-serif}
@@ -1887,18 +1887,18 @@ export function buildGameplay() {
     var s = gs.getSummary();
     var isOff = gs.possession === hAbbr;
     if (!isOff) {
-      if (s.yardsToEndzone <= 10) return { text: 'Red zone defense', color: '#ff0040' };
-      if (s.down >= 3 && s.distance >= 8) return { text: 'Passing situation — bring pressure', color: '#4DA6FF' };
-      if (s.down >= 3 && s.distance <= 3) return { text: 'Short yardage — stack the box', color: '#EBB010' };
+      if (s.yardsToEndzone <= 10) return { text: 'RED ZONE DEFENSE', color: '#ff0040' };
+      if (s.down >= 3 && s.distance >= 8) return { text: 'PASSING SITUATION \u2014 BRING PRESSURE', color: '#4DA6FF' };
+      if (s.down >= 3 && s.distance <= 3) return { text: 'SHORT YARDAGE \u2014 STACK THE BOX', color: '#EBB010' };
       return null;
     }
-    if (s.yardsToEndzone <= 5) return { text: 'Goal line — power runs or quick passes', color: '#00ff44' };
-    if (s.yardsToEndzone <= 20) return { text: 'Red zone — high-percentage plays', color: '#EBB010' };
+    if (s.yardsToEndzone <= 5) return { text: 'GOAL LINE \u2014 POWER RUNS OR QUICK PASSES', color: '#00ff44' };
+    if (s.yardsToEndzone <= 20) return { text: 'RED ZONE \u2014 HIGH PERCENTAGE PLAYS', color: '#EBB010' };
     if (s.down === 1) return null;
-    if (s.down === 2 && s.distance <= 4) return { text: 'Short yardage — runs are strong', color: '#00ff44' };
-    if (s.down === 3 && s.distance <= 3) return { text: '3rd & short — run or quick pass', color: '#EBB010' };
-    if (s.down === 3 && s.distance >= 8) return { text: '3rd & long — need a big play', color: '#ff0040' };
-    if (s.down === 4) return { text: '4th down — high stakes', color: '#ff0040' };
+    if (s.down === 2 && s.distance <= 4) return { text: 'SHORT YARDAGE \u2014 RUNS ARE STRONG', color: '#00ff44' };
+    if (s.down === 3 && s.distance <= 3) return { text: '3RD & SHORT \u2014 RUN OR QUICK PASS', color: '#EBB010' };
+    if (s.down === 3 && s.distance >= 8) return { text: '3RD & LONG \u2014 NEED A BIG PLAY', color: '#ff0040' };
+    if (s.down === 4) return { text: '4TH DOWN \u2014 HIGH STAKES', color: '#ff0040' };
     return null;
   }
 
@@ -2123,6 +2123,7 @@ export function buildGameplay() {
       heatMap: isOff ? gs.offHeatMap : gs.defHeatMap,
       snapCount: snapCount,
       tutorialStep: _tutorialStep,
+      selectedTorchCard: selectedPreSnap,
       down: gs.down,
       distance: gs.distance,
       yardsToEndzone: gs.yardsToEndzone(),
@@ -2634,6 +2635,12 @@ export function buildGameplay() {
     });
     var _tickerColor = r.isTouchdown ? '#EBB010' : (r.isInterception || r.isFumbleLost) ? '#ff0040' : r.yards >= 10 ? '#00ff44' : '#888';
     pushTicker(espnDesc || ('Play: ' + r.yards + ' yards'), _tickerColor);
+    // Show TORCH points earned in ticker
+    if (res._torchEarned && res._torchEarned > 0) {
+      var _ptBreakdown = '+' + res._torchEarned + ' TORCH';
+      if (r.isTouchdown) _ptBreakdown = 'BASE ' + Math.max(0, res._torchEarned - 50) + ' + TD BONUS = +' + res._torchEarned + ' TORCH';
+      pushTicker(_ptBreakdown, '#EBB010');
+    }
     if (res.gotFirstDown) driveFirstDowns++;
 
     // Replace used cards in hand manager
@@ -4093,7 +4100,7 @@ export function buildGameplay() {
           var aiMsg = document.createElement('div');
           aiMsg.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:" + oTeam.accent + ";text-align:center;margin-top:8px;letter-spacing:1px;";
           aiMsg.textContent = aiTakesCard
-            ? oTeam.name + ' DRAWS A FREE TORCH CARD'
+            ? oTeam.name + ' DRAW A FREE TORCH CARD'
             : oTeam.name + ' CHOOSE TO RECEIVE';
           ov.appendChild(aiMsg);
 
