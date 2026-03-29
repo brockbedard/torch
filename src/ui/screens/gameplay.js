@@ -137,7 +137,7 @@ const CSS = `
 .T-drop-active .T-drop-lbl{color:#FF4511;font-size:11px;text-shadow:0 0 8px rgba(255,69,17,0.5)}
 
 /* cards section — hidden during play-by-play */
-.T-panel{display:flex;flex-direction:column;overflow:hidden;transition:background .6s,border-color .6s;flex-shrink:0;border-top:2px solid transparent;position:relative;z-index:1}
+.T-panel{display:flex;flex-direction:column;overflow:visible;transition:background .6s,border-color .6s;flex-shrink:0;border-top:2px solid transparent;position:relative;z-index:1}
 .T-panel-hidden{display:none}
 /* offense + defense panels — unified warm dark */
 .T-panel-off{background:#0E0A04;border-top-color:#FF6B0033}
@@ -1859,7 +1859,7 @@ export function buildGameplay() {
       var hit = touch.clientX >= r.left && touch.clientX <= r.right && touch.clientY >= r.top && touch.clientY <= r.bottom;
       if (hit && dz.dataset.drop === dragItem.type) {
         SND.cardSnap();
-        if (dragItem.type === 'play') { selPl = dragItem.data; phase = (selPl && selP) ? 'ready' : 'play'; }
+        if (dragItem.type === 'play') { selPl = dragItem.data; phase = (selPl && selP) ? (torchInventory.filter(function(c){return c.type==='pre-snap';}).length > 0 ? 'torch' : 'ready') : 'play'; }
         else if (dragItem.type === 'player') { selP = dragItem.data; phase = (selPl && selP) ? (torchInventory.filter(function(c){return c.type==='pre-snap';}).length > 0 ? 'torch' : 'ready') : 'play'; }
         else if (dragItem.type === 'torch') {
           selTorch = dragItem.data.id || dragItem.data;

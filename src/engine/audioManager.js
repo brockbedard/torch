@@ -68,9 +68,9 @@ var AudioManager = {
     loadPool('kickThud', ['/audio/sfx/kick_thud_01.wav']);
 
     // Crowd ambient loops
-    _crowd.low = new Howl({ src: ['/audio/crowd/crowd_low.wav'], html5: true, loop: true, volume: 0 });
-    _crowd.mid = new Howl({ src: ['/audio/crowd/crowd_mid.wav'], html5: true, loop: true, volume: 0 });
-    _crowd.high = new Howl({ src: ['/audio/crowd/crowd_high.wav'], html5: true, loop: true, volume: 0 });
+    _crowd.low = new Howl({ src: ['/audio/crowd/crowd_low.wav'], loop: true, volume: 0 });
+    _crowd.mid = new Howl({ src: ['/audio/crowd/crowd_mid.wav'], loop: true, volume: 0 });
+    _crowd.high = new Howl({ src: ['/audio/crowd/crowd_high.wav'], loop: true, volume: 0 });
 
     _initialized = true;
   },
