@@ -4372,13 +4372,18 @@ export function buildGameplay() {
 
   // Brief kickoff result overlay
   function showKickoffResult(resultText, onDone) {
+    // Determine receiving team
+    var recTeam = gs.possession === hAbbr ? hTeam : oTeam;
+    var recColor = recTeam.accent || '#EBB010';
     var kov = document.createElement('div');
     var _kovFired = false;
     function _kovDone() { if (_kovFired) return; _kovFired = true; if (kov.parentNode) kov.remove(); if (onDone) onDone(); }
     kov.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.85);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;';
     kov.innerHTML =
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:24px;color:#EBB010;letter-spacing:3px;\">KICKOFF</div>" +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:16px;color:#ccc;margin-top:6px;\">" + resultText + "</div>";
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#888;letter-spacing:3px;\">KICKOFF</div>" +
+      "<div style=\"display:flex;align-items:center;gap:8px;margin-top:8px;\">" + renderTeamBadge(recTeam.id, 32) +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:" + recColor + ";letter-spacing:2px;\">" + recTeam.name + " RECEIVE</div></div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:14px;color:#ccc;margin-top:6px;\">" + resultText + "</div>";
     kov.onclick = function() { kov.style.opacity = '0'; setTimeout(_kovDone, 200); };
     el.appendChild(kov);
     requestAnimationFrame(function() { kov.style.opacity = '1'; });
