@@ -148,11 +148,6 @@ export function buildPregame() {
     rivalWrap.appendChild(h2hEl);
   }
 
-  var matchupEl = document.createElement('div');
-  matchupEl.style.cssText = "font-family:'Rajdhani';font-size:11px;font-weight:700;color:" + matchupColor + ";letter-spacing:2px;opacity:0.85;";
-  matchupEl.textContent = matchupLabel.toUpperCase();
-  rivalWrap.appendChild(matchupEl);
-
   var streak = getStreak(GS.team);
   if (streak.currentWin >= 2) {
     var streakEl = document.createElement('div');
