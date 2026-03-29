@@ -144,8 +144,8 @@ export function renderCardTray(opts) {
     localStorage.setItem('torch_discard_tip', '1');
 
     var discTip = document.createElement('div');
-    discTip.style.cssText = "position:absolute;top:-28px;left:50%;transform:translateX(-50%);z-index:10;padding:4px 8px;background:rgba(235,176,16,0.15);border:1px solid #EBB01044;border-radius:4px;white-space:nowrap;pointer-events:none;";
-    discTip.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#EBB010;letter-spacing:0.5px;\">NEW! Swap out bad cards</div>";
+    discTip.style.cssText = "position:absolute;top:-42px;left:50%;transform:translateX(-50%);z-index:10;padding:6px 12px;background:rgba(0,0,0,0.8);border:1px solid #EBB01044;border-radius:6px;white-space:nowrap;pointer-events:none;";
+    discTip.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#EBB010;letter-spacing:2px;\">SWAP OUT BAD CARDS</div><div style=\"font-family:'Rajdhani';font-size:10px;color:#aaa;\">Discard and draw a replacement</div>";
 
     // Position relative to the discard button
     discToggle.style.position = 'relative';
@@ -493,6 +493,9 @@ export function renderCardTray(opts) {
   } else if (opts.tutorialStep === 3 && canSnap) {
     snapBtn.style.boxShadow = '0 0 20px rgba(0,255,68,0.6), 0 0 6px rgba(0,255,68,0.4)';
     snapBtn.style.borderColor = '#00ff44';
+    snapBtn.style.padding = '16px';
+    snapBtn.style.fontSize = '20px';
+    snapBtn.style.minHeight = '52px';
   }
   snapBtn.onclick = function() { if (!canSnap) return; SND.snap(); if (opts.onSnap) opts.onSnap(); };
   snapBar.appendChild(snapBtn);

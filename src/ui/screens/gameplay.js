@@ -129,8 +129,8 @@ const CSS = `
 .T-drop{position:absolute;top:50%;transform:translateY(-50%);height:150px;border:2px dashed rgba(255,255,255,0.4);border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:7;transition:all .3s ease;opacity:1;background:rgba(0,0,0,0.3)}
 .T-drop-play{left:3%;width:30%}
 .T-drop-player{left:35%;width:30%}
-.T-drop-torch{right:3%;width:28%;border:2px dashed rgba(255,69,17,0.35);animation:T-torch-ember 2.5s ease-in-out infinite}
-@keyframes T-torch-ember{0%,100%{box-shadow:0 0 4px rgba(255,69,17,0.15),inset 0 0 4px rgba(255,69,17,0.04);border-color:rgba(255,69,17,0.35)}50%{box-shadow:0 0 9px rgba(235,176,16,0.25),inset 0 0 7px rgba(235,176,16,0.07);border-color:rgba(235,176,16,0.45)}}
+.T-drop-torch{right:3%;width:28%;border:2px dashed rgba(255,69,17,0.5);animation:T-torch-ember 2s ease-in-out infinite}
+@keyframes T-torch-ember{0%,100%{box-shadow:0 0 8px rgba(255,69,17,0.3),inset 0 0 6px rgba(255,69,17,0.08);border-color:rgba(255,69,17,0.5)}50%{box-shadow:0 0 16px rgba(235,176,16,0.45),inset 0 0 10px rgba(235,176,16,0.12);border-color:rgba(235,176,16,0.65)}}
 .T-drop-torch.T-drop-active{animation:T-drop-pulse 1.5s ease-in-out infinite}
 .T-drop-lbl{font-family:'Rajdhani';font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-align:center;line-height:1.4}
 .T-drop-hover{border-color:#FF4511;background:rgba(255,69,17,.15);transform:translateY(-50%) scale(1.02)}
@@ -3564,8 +3564,22 @@ export function buildGameplay() {
               // Brief field-view pause — player sees field + result before cards deal
               drawBug(); drawField(); drawDriveSummary();
               panel.style.display = 'none';
+
+              // TORCH points breakdown visible on field strip (gold text)
+              if (res._torchEarned && res._torchEarned > 0) {
+                var ptLine = document.createElement('div');
+                ptLine.style.cssText = "position:absolute;bottom:44px;left:50%;transform:translateX(-50%);z-index:5;font-family:'Teko';font-weight:700;font-size:16px;color:#EBB010;letter-spacing:2px;text-shadow:0 0 12px rgba(235,176,16,0.5);white-space:nowrap;opacity:0;pointer-events:none;";
+                var ptText = r.isTouchdown
+                  ? 'BASE ' + Math.max(0, res._torchEarned - 50) + ' + TD BONUS = +' + res._torchEarned + ' TORCH'
+                  : '+' + res._torchEarned + ' TORCH';
+                ptLine.textContent = ptText;
+                strip.appendChild(ptLine);
+                try { gsap.to(ptLine, { opacity: 1, duration: 0.3, delay: 0.2 }); } catch(e) { ptLine.style.opacity = '1'; }
+              }
+
+              // TAP FOR NEXT PLAY (no auto-advance — player must tap)
               var tapNext = document.createElement('div');
-              tapNext.style.cssText = "position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:5;font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;letter-spacing:3px;pointer-events:none;animation:T-snap-pulse 1.2s ease-in-out infinite;text-shadow:0 0 12px rgba(235,176,16,0.4);";
+              tapNext.style.cssText = "position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:5;font-family:'Teko';font-weight:700;font-size:22px;color:#EBB010;letter-spacing:3px;pointer-events:none;animation:T-snap-pulse 1.2s ease-in-out infinite;text-shadow:0 0 12px rgba(235,176,16,0.4);";
               tapNext.textContent = 'TAP FOR NEXT PLAY';
               strip.appendChild(tapNext);
               var tapDismissed = false;
@@ -3575,12 +3589,12 @@ export function buildGameplay() {
                 el.removeEventListener('click', tapForNext);
                 el.removeEventListener('touchstart', tapForNext);
                 if (tapNext.parentNode) tapNext.remove();
+                if (ptLine && ptLine.parentNode) ptLine.remove();
                 nextSnap();
               }
               el.addEventListener('click', tapForNext, { once: true });
               el.addEventListener('touchstart', tapForNext, { once: true, passive: true });
-              // Auto-advance after 4 seconds
-              setTimeout(function() { if (!tapDismissed) tapForNext(); }, 4000);
+              // NO auto-advance — player must tap
             }
           }
         }
