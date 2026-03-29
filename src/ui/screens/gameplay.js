@@ -137,12 +137,12 @@ const CSS = `
 @keyframes T-drop-pulse{0%,100%{border-color:rgba(255,69,17,0.4);box-shadow:0 0 10px rgba(255,69,17,0.1)}50%{border-color:#FF4511;box-shadow:inset 0 0 15px rgba(255,69,17,.2),0 0 15px rgba(255,69,17,.4);background:rgba(255,69,17,0.05)}}
 .T-drop-active{animation:T-drop-pulse 1.5s ease-in-out infinite;border-style:solid;opacity:1;z-index:10}
 .T-drop-active .T-drop-lbl{color:#FF4511;font-size:11px;text-shadow:0 0 8px rgba(255,69,17,0.5)}
-.T-drop-tutorial{animation:T-tut-play-pulse 1.2s ease-in-out infinite !important;border:2px solid #EBB010 !important;border-style:solid !important}
-.T-drop-tutorial .T-drop-lbl{color:#EBB010 !important;font-size:12px !important;text-shadow:0 0 10px rgba(235,176,16,0.6) !important}
-@keyframes T-tut-play-pulse{0%,100%{box-shadow:0 0 8px rgba(235,176,16,0.2);border-color:#EBB01088}50%{box-shadow:0 0 20px rgba(235,176,16,0.5),inset 0 0 12px rgba(235,176,16,0.1);border-color:#EBB010}}
-.T-drop-tutorial-player{animation:T-tut-player-pulse 1.2s ease-in-out infinite !important;border:2px solid #4DA6FF !important;border-style:solid !important}
-.T-drop-tutorial-player .T-drop-lbl{color:#4DA6FF !important;font-size:12px !important;text-shadow:0 0 10px rgba(77,166,255,0.6) !important}
-@keyframes T-tut-player-pulse{0%,100%{box-shadow:0 0 8px rgba(77,166,255,0.2);border-color:#4DA6FF88}50%{box-shadow:0 0 20px rgba(77,166,255,0.5),inset 0 0 12px rgba(77,166,255,0.1);border-color:#4DA6FF}}
+.T-drop-tutorial{animation:T-tut-play-pulse 1s ease-in-out infinite !important;border:3px solid #EBB010 !important;border-style:solid !important;background:rgba(235,176,16,0.08) !important}
+.T-drop-tutorial .T-drop-lbl{color:#EBB010 !important;font-size:14px !important;font-weight:700 !important;text-shadow:0 0 12px rgba(235,176,16,0.8) !important;letter-spacing:2px !important}
+@keyframes T-tut-play-pulse{0%,100%{box-shadow:0 0 10px rgba(235,176,16,0.3);border-color:#EBB01088}50%{box-shadow:0 0 24px rgba(235,176,16,0.6),inset 0 0 16px rgba(235,176,16,0.15);border-color:#EBB010}}
+.T-drop-tutorial-player{animation:T-tut-player-pulse 1s ease-in-out infinite !important;border:3px solid #4DA6FF !important;border-style:solid !important;background:rgba(77,166,255,0.08) !important}
+.T-drop-tutorial-player .T-drop-lbl{color:#4DA6FF !important;font-size:14px !important;font-weight:700 !important;text-shadow:0 0 12px rgba(77,166,255,0.8) !important;letter-spacing:2px !important}
+@keyframes T-tut-player-pulse{0%,100%{box-shadow:0 0 10px rgba(77,166,255,0.3);border-color:#4DA6FF88}50%{box-shadow:0 0 24px rgba(77,166,255,0.6),inset 0 0 16px rgba(77,166,255,0.15);border-color:#4DA6FF}}
 
 /* cards section — hidden during play-by-play */
 .T-panel{display:flex;flex-direction:column;overflow:visible;transition:background .6s,border-color .6s;flex-shrink:0;border-top:2px solid transparent;position:relative;z-index:1}
