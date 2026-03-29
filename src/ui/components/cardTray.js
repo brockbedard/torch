@@ -172,6 +172,10 @@ export function renderCardTray(opts) {
     torchLabel.className = 'CT-row-label';
     torchLabel.style.color = '#EBB010';
     torchLabel.textContent = 'TORCH CARD \u2014 TAP TO PLAY OR SKIP';
+    // Hide torch row during tutorial steps 1 and 2
+    if (opts.tutorialStep === 1 || opts.tutorialStep === 2) {
+      torchLabel.style.display = 'none';
+    }
     wrap.appendChild(torchLabel);
     var torchRow = document.createElement('div');
     torchRow.className = 'CT-row';
@@ -287,6 +291,11 @@ export function renderCardTray(opts) {
     if (opts.tutorialStep === 1) {
       c.style.boxShadow = '0 0 12px rgba(235,176,16,0.6), inset 0 0 8px rgba(235,176,16,0.15)';
       c.style.animation = 'T-snap-pulse 1.2s ease-in-out infinite';
+    }
+    // Tutorial step 2: play cards are blocked (play already chosen)
+    if (opts.tutorialStep === 2) {
+      c.style.opacity = '0.3';
+      c.style.pointerEvents = 'none';
     }
 
     attachTouchFeedback(c);
@@ -464,6 +473,16 @@ export function renderCardTray(opts) {
   snapBtn.disabled = !canSnap;
   snapBtn.style.opacity = canSnap ? '1' : '0.3';
   if (canSnap) snapBtn.style.animation = 'T-snap-pulse 1.2s ease-in-out infinite';
+  // Tutorial: block snap on steps 1 and 2, highlight on step 3
+  if (opts.tutorialStep === 1 || opts.tutorialStep === 2) {
+    snapBtn.disabled = true;
+    snapBtn.style.opacity = '0.3';
+    snapBtn.style.animation = '';
+    snapBtn.style.pointerEvents = 'none';
+  } else if (opts.tutorialStep === 3 && canSnap) {
+    snapBtn.style.boxShadow = '0 0 20px rgba(0,255,68,0.6), 0 0 6px rgba(0,255,68,0.4)';
+    snapBtn.style.borderColor = '#00ff44';
+  }
   snapBtn.onclick = function() { if (!canSnap) return; SND.snap(); if (opts.onSnap) opts.onSnap(); };
   snapBar.appendChild(snapBtn);
   wrap.appendChild(snapBar);
