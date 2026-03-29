@@ -2113,6 +2113,11 @@ export function buildGameplay() {
     // ── 8-CARD TRAY (new component) ──
     var hs = getHandState();
     var preSnapCards = torchInventory.filter(function(c) { return c.type === 'pre-snap'; }).slice(0, 3);
+    // Check if any torch cards are actually playable on current side
+    var offCats = ['amplification', 'information'];
+    var defCats = ['disruption', 'protection'];
+    var applicableCats = isOff ? offCats : defCats;
+    var hasPlayableTorch = preSnapCards.some(function(c) { return applicableCats.indexOf(c.category) >= 0; });
     var hS = hAbbr === 'CT' ? gs.ctScore : gs.irScore;
     var cS = hAbbr === 'CT' ? gs.irScore : gs.ctScore;
 
@@ -2164,7 +2169,7 @@ export function buildGameplay() {
         if (_tutorialStep === 1) { _tutorialStep = 2; if (panel._tutOverlay) { panel._tutOverlay.remove(); panel._tutOverlay = null; } }
         // If both selected, advance to torch or ready
         if (selPl && selP) {
-          phase = preSnapCards.length > 0 ? 'torch' : 'ready';
+          phase = hasPlayableTorch ? 'torch' : 'ready';
         } else {
           phase = 'play';
         }
@@ -2175,7 +2180,7 @@ export function buildGameplay() {
         selP = selP === p ? null : p; // toggle
         if (_tutorialStep === 2) { _tutorialStep = 3; if (panel._tutOverlay) { panel._tutOverlay.remove(); panel._tutOverlay = null; } }
         if (selPl && selP) {
-          phase = preSnapCards.length > 0 ? 'torch' : 'ready';
+          phase = hasPlayableTorch ? 'torch' : 'ready';
         } else {
           phase = 'play';
         }
@@ -3568,7 +3573,7 @@ export function buildGameplay() {
               // TORCH points breakdown visible on field strip (gold text)
               if (res._torchEarned && res._torchEarned > 0) {
                 var ptLine = document.createElement('div');
-                ptLine.style.cssText = "position:fixed;bottom:35%;left:50%;transform:translateX(-50%);z-index:100;font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;text-shadow:0 0 20px rgba(235,176,16,0.7),0 0 40px rgba(235,176,16,0.3);white-space:nowrap;pointer-events:none;";
+                ptLine.style.cssText = "position:fixed;bottom:42%;left:50%;transform:translateX(-50%);z-index:100;font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;letter-spacing:2px;text-shadow:0 0 16px rgba(235,176,16,0.6),0 0 32px rgba(235,176,16,0.3);white-space:nowrap;pointer-events:none;";
                 var ptText = r.isTouchdown
                   ? 'BASE ' + Math.max(0, res._torchEarned - 50) + ' + TD BONUS = +' + res._torchEarned + ' TORCH'
                   : '+' + res._torchEarned + ' TORCH';
