@@ -12,6 +12,7 @@ import { buildPregame } from './ui/screens/pregame.js';
 import { buildRoster } from './ui/screens/roster.js';
 import { buildSeasonRecap } from './ui/screens/seasonRecap.js';
 import { buildSettings } from './ui/screens/settings.js';
+import { buildTeamCreator } from './ui/screens/teamCreator.js';
 
 const root = document.getElementById('root');
 
@@ -46,6 +47,7 @@ function render() {
       case 'end_game': content = buildEndGame(); break;
       case 'seasonRecap': content = buildSeasonRecap(); break;
       case 'settings': content = buildSettings(); break;
+      case 'teamCreator': content = buildTeamCreator(); break;
       default: content = buildHome();
     }
   }
