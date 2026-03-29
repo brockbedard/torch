@@ -3568,13 +3568,12 @@ export function buildGameplay() {
               // TORCH points breakdown visible on field strip (gold text)
               if (res._torchEarned && res._torchEarned > 0) {
                 var ptLine = document.createElement('div');
-                ptLine.style.cssText = "position:absolute;bottom:44px;left:50%;transform:translateX(-50%);z-index:5;font-family:'Teko';font-weight:700;font-size:16px;color:#EBB010;letter-spacing:2px;text-shadow:0 0 12px rgba(235,176,16,0.5);white-space:nowrap;opacity:0;pointer-events:none;";
+                ptLine.style.cssText = "position:fixed;bottom:35%;left:50%;transform:translateX(-50%);z-index:100;font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;text-shadow:0 0 20px rgba(235,176,16,0.7),0 0 40px rgba(235,176,16,0.3);white-space:nowrap;pointer-events:none;";
                 var ptText = r.isTouchdown
                   ? 'BASE ' + Math.max(0, res._torchEarned - 50) + ' + TD BONUS = +' + res._torchEarned + ' TORCH'
                   : '+' + res._torchEarned + ' TORCH';
                 ptLine.textContent = ptText;
-                strip.appendChild(ptLine);
-                try { gsap.to(ptLine, { opacity: 1, duration: 0.3, delay: 0.2 }); } catch(e) { ptLine.style.opacity = '1'; }
+                el.appendChild(ptLine);
               }
 
               // TAP FOR NEXT PLAY (no auto-advance — player must tap)
