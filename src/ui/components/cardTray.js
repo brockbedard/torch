@@ -11,7 +11,7 @@ import { Haptic } from '../../engine/haptics.js';
 
 var _cssInjected = false;
 var TRAY_CSS = `
-.CT-wrap{display:flex;flex-direction:column;flex-shrink:0;background:#0E0A04;border-top:2px solid #FF6B0033;position:relative;z-index:1;padding-bottom:env(safe-area-inset-bottom,0px)}
+.CT-wrap{display:flex;flex-direction:column;flex-shrink:0;background:#0E0A04;border-top:2px solid #FF6B0033;position:relative;z-index:1;padding-bottom:env(safe-area-inset-bottom,0px);overflow-y:auto;-webkit-overflow-scrolling:touch}
 .CT-header{display:flex;align-items:center;justify-content:center;gap:8px;padding:3px 8px 1px;flex-shrink:0}
 .CT-side{font-family:'Teko';font-weight:700;font-size:18px;letter-spacing:3px}
 .CT-disc-toggle{font-family:'Rajdhani';font-weight:700;font-size:11px;letter-spacing:1px;padding:6px 12px;border-radius:3px;border:1px solid #EBB01044;background:transparent;color:#EBB010;cursor:pointer}
@@ -158,8 +158,8 @@ export function renderCardTray(opts) {
     }, 5000);
   }
 
-  // ── TORCH CARDS ROW (shown only when both play + player selected and torch cards available) ──
-  var torchPhase = opts.phase === 'torch' || opts.phase === 'ready';
+  // ── TORCH CARDS ROW (shown only in 'torch' phase — hidden once player selects/skips) ──
+  var torchPhase = opts.phase === 'torch';
   var hasTorchRow = torchPhase && opts.torchCards && opts.torchCards.length > 0;
   if (torchPhase && (!opts.torchCards || opts.torchCards.length === 0)) {
     var emptyTorchRow = document.createElement('div');
@@ -460,7 +460,7 @@ export function renderCardTray(opts) {
   var snapBtn = document.createElement('button');
   snapBtn.className = 'CT-snap-btn';
   snapBtn.textContent = opts.isConversion ? 'ATTEMPT' : 'SNAP';
-  var canSnap = opts.selectedPlay && opts.selectedPlayer;
+  var canSnap = opts.selectedPlay && opts.selectedPlayer && opts.phase !== 'torch';
   snapBtn.disabled = !canSnap;
   snapBtn.style.opacity = canSnap ? '1' : '0.3';
   if (canSnap) snapBtn.style.animation = 'T-snap-pulse 1.2s ease-in-out infinite';
