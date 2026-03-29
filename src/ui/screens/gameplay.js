@@ -3583,7 +3583,7 @@ export function buildGameplay() {
 
               // TAP FOR NEXT PLAY (no auto-advance — player must tap)
               var tapNext = document.createElement('div');
-              tapNext.style.cssText = "position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:5;font-family:'Teko';font-weight:700;font-size:22px;color:#EBB010;letter-spacing:3px;pointer-events:none;animation:T-snap-pulse 1.2s ease-in-out infinite;text-shadow:0 0 12px rgba(235,176,16,0.4);";
+              tapNext.style.cssText = "position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:5;font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:2px;pointer-events:none;animation:T-snap-pulse 1.2s ease-in-out infinite;text-shadow:0 0 12px rgba(235,176,16,0.4);white-space:nowrap;";
               tapNext.textContent = 'TAP FOR NEXT PLAY';
               strip.appendChild(tapNext);
               var tapDismissed = false;
