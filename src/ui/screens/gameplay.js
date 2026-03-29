@@ -137,6 +137,12 @@ const CSS = `
 @keyframes T-drop-pulse{0%,100%{border-color:rgba(255,69,17,0.4);box-shadow:0 0 10px rgba(255,69,17,0.1)}50%{border-color:#FF4511;box-shadow:inset 0 0 15px rgba(255,69,17,.2),0 0 15px rgba(255,69,17,.4);background:rgba(255,69,17,0.05)}}
 .T-drop-active{animation:T-drop-pulse 1.5s ease-in-out infinite;border-style:solid;opacity:1;z-index:10}
 .T-drop-active .T-drop-lbl{color:#FF4511;font-size:11px;text-shadow:0 0 8px rgba(255,69,17,0.5)}
+.T-drop-tutorial{animation:T-tut-play-pulse 1.2s ease-in-out infinite !important;border:2px solid #EBB010 !important;border-style:solid !important}
+.T-drop-tutorial .T-drop-lbl{color:#EBB010 !important;font-size:12px !important;text-shadow:0 0 10px rgba(235,176,16,0.6) !important}
+@keyframes T-tut-play-pulse{0%,100%{box-shadow:0 0 8px rgba(235,176,16,0.2);border-color:#EBB01088}50%{box-shadow:0 0 20px rgba(235,176,16,0.5),inset 0 0 12px rgba(235,176,16,0.1);border-color:#EBB010}}
+.T-drop-tutorial-player{animation:T-tut-player-pulse 1.2s ease-in-out infinite !important;border:2px solid #4DA6FF !important;border-style:solid !important}
+.T-drop-tutorial-player .T-drop-lbl{color:#4DA6FF !important;font-size:12px !important;text-shadow:0 0 10px rgba(77,166,255,0.6) !important}
+@keyframes T-tut-player-pulse{0%,100%{box-shadow:0 0 8px rgba(77,166,255,0.2);border-color:#4DA6FF88}50%{box-shadow:0 0 20px rgba(77,166,255,0.5),inset 0 0 12px rgba(77,166,255,0.1);border-color:#4DA6FF}}
 
 /* cards section — hidden during play-by-play */
 .T-panel{display:flex;flex-direction:column;overflow:visible;transition:background .6s,border-color .6s;flex-shrink:0;border-top:2px solid transparent;position:relative;z-index:1}
@@ -1348,18 +1354,23 @@ export function buildGameplay() {
     h += `<div class="T-ltg" style="left:${tp}%;border-color:#c8a030"></div>`;
 
     // Drop zones — empty outlines for unfilled, actual card for filled
-    const playLbl = phase === 'play' ? 'TAP<br><br>PLAY<br><br>CARD' : 'PLAY';
+    // During tutorial: show instructional text + flash on the active slot
+    var isTutPlay = _tutorialStep === 1 && snapCount === 0;
+    var isTutPlayer = _tutorialStep === 2 && snapCount === 0;
+    const playLbl = isTutPlay ? 'TAP<br>PLAY<br>CARD' : (phase === 'play' ? 'TAP<br><br>PLAY<br><br>CARD' : 'PLAY');
     if (selPl) {
       h += '<div class="T-placed T-placed-play" id="T-placed-play-slot"></div>';
     } else {
-      h += '<div class="T-drop T-drop-play' + (phase==='play'?' T-drop-active':'') + '" data-drop="play"><span class="T-drop-lbl">' + playLbl + '</span></div>';
+      var playDropClass = 'T-drop T-drop-play' + (phase==='play'?' T-drop-active':'') + (isTutPlay ? ' T-drop-tutorial' : '');
+      h += '<div class="' + playDropClass + '" data-drop="play"><span class="T-drop-lbl">' + playLbl + '</span></div>';
     }
 
-    const playerLbl = phase === 'player' ? 'TAP<br><br>PLAYER<br><br>CARD' : 'PLAYER';
+    const playerLbl = isTutPlayer ? 'TAP<br>PLAYER<br>CARD' : (phase === 'player' ? 'TAP<br><br>PLAYER<br><br>CARD' : 'PLAYER');
     if (selP) {
       h += '<div class="T-placed T-placed-player" id="T-placed-player-slot"></div>';
     } else {
-      h += '<div class="T-drop T-drop-player' + (phase==='player'?' T-drop-active':'') + '" data-drop="player"><span class="T-drop-lbl">' + playerLbl + '</span></div>';
+      var playerDropClass = 'T-drop T-drop-player' + (phase==='player'?' T-drop-active':'') + (isTutPlayer ? ' T-drop-tutorial-player' : '');
+      h += '<div class="' + playerDropClass + '" data-drop="player"><span class="T-drop-lbl">' + playerLbl + '</span></div>';
     }
 
     if (selTorch) {
@@ -4445,7 +4456,7 @@ export function buildGameplay() {
   // First load: coin toss → kickoff → play
   if (!GS._coinTossDone) {
     GS._coinTossDone = true;
-    drawPanel();
+    panel.style.display = 'none'; // Hide card tray until after kickoff
     showCoinToss(function(result) {
       // result.chose = 'receive' | 'card' | 'card_cpu_receives'
       // Determine who receives the opening kickoff
