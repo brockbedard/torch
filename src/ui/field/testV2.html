@@ -26,7 +26,7 @@
 </head>
 <body>
 
-<div class="section">TORCH FIELD V2 — PHASE 1 TEST</div>
+<div class="section">TORCH FIELD V2 — PHASE 2 TEST</div>
 
 <!-- Canvas container -->
 <div id="wrap"></div>
@@ -48,6 +48,15 @@
 <div class="row">
   <input type="range" id="yardSlider" min="10" max="110" value="35" style="flex:1;">
   <span id="yardLabel" style="font-size:11px;color:#EBB010;min-width:60px;text-align:right;">OWN 25</span>
+</div>
+
+<!-- Play Results -->
+<div class="section">SNAP RESULT</div>
+<div class="row" id="results"></div>
+<div class="row">
+  <input type="number" id="customYards" value="8" min="-15" max="50" style="width:60px;background:#1a1a1a;color:#fff;border:1px solid #333;padding:4px;border-radius:4px;">
+  <button class="btn" id="playCustom" style="color:#EBB010;border-color:#EBB010;">CUSTOM</button>
+  <button class="btn" id="playRandom" style="color:#39FF14;border-color:#39FF14;">RANDOM</button>
 </div>
 
 <!-- Event log -->
@@ -165,8 +174,65 @@ yardSlider.oninput = function() {
   draw();
 };
 
+// ── Result Buttons ──
+var resultTypes = [
+  { label: '8-YD PASS', yards: 8, isRun: false, color: '#00ff44' },
+  { label: '18-YD DEEP', yards: 18, isRun: false, color: '#00ff44' },
+  { label: '4-YD RUN', yards: 4, isRun: true, color: '#00ff44' },
+  { label: 'SACK', yards: -5, isRun: false, isSack: true, color: '#ff4040' },
+  { label: 'INCOMPLETE', yards: 0, isRun: false, isIncomplete: true, color: '#ff4040' },
+  { label: 'INT', yards: 0, isRun: false, isInterception: true, color: '#ff4040' },
+  { label: 'TD', yards: 25, isRun: false, isTouchdown: true, color: '#EBB010' },
+  { label: '12-YD RUN', yards: 12, isRun: true, color: '#00ff44' },
+];
+var resDiv = document.getElementById('results');
+resultTypes.forEach(function(rt) {
+  var btn = document.createElement('button');
+  btn.className = 'btn';
+  btn.style.color = rt.color;
+  btn.style.borderColor = rt.color + '44';
+  btn.textContent = rt.label;
+  btn.onclick = function() {
+    logEvent('PLAY → ' + rt.label + ' (' + rt.yards + ' yds)');
+    field.animatePlay({
+      yards: rt.yards,
+      isRun: rt.isRun || false,
+      isTouchdown: rt.isTouchdown || false,
+      isSack: rt.isSack || false,
+      isInterception: rt.isInterception || false,
+      isIncomplete: rt.isIncomplete || false,
+      isFumbleLost: false,
+    });
+  };
+  resDiv.appendChild(btn);
+});
+
+// Custom yards button
+document.getElementById('playCustom').onclick = function() {
+  var y = parseInt(document.getElementById('customYards').value) || 0;
+  logEvent('CUSTOM PLAY → ' + y + ' yds');
+  field.animatePlay({ yards: y, isRun: false });
+};
+
+// Random play button
+document.getElementById('playRandom').onclick = function() {
+  var types = ['complete', 'run', 'sack', 'incomplete', 'interception'];
+  var t = types[Math.floor(Math.random() * types.length)];
+  var y = t === 'sack' ? -(3 + Math.floor(Math.random() * 5)) :
+          t === 'incomplete' ? 0 : t === 'interception' ? 0 :
+          3 + Math.floor(Math.random() * 20);
+  logEvent('RANDOM → ' + t + ' (' + y + ' yds)');
+  field.animatePlay({
+    yards: y,
+    isRun: t === 'run',
+    isSack: t === 'sack',
+    isIncomplete: t === 'incomplete',
+    isInterception: t === 'interception',
+  });
+};
+
 // ── Initial draw ──
-logEvent('FIELD V2 TEST READY — Phase 1');
+logEvent('FIELD V2 TEST READY — Phase 2');
 draw();
 </script>
 </body>
