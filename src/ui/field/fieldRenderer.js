@@ -468,8 +468,8 @@ export function createFieldRenderer(width, height) {
     c.fillRect(0, 0, fieldW, renderHeight);
 
     // 3. End zones (yards 0-10 and 110-120)
-    var offRGB = (state.offTeam && CFG.teamDotColors[state.offTeam]) || [255, 69, 17];
-    var defRGB = (state.defTeam && CFG.teamDotColors[state.defTeam]) || [255, 69, 17];
+    var offRGB = (_renderState.offTeam && CFG.teamDotColors[_renderState.offTeam]) || [255, 69, 17];
+    var defRGB = (_renderState.defTeam && CFG.teamDotColors[_renderState.defTeam]) || [255, 69, 17];
     drawEndZonePortrait(c, 0, 10, true, topYard, defRGB);
     drawEndZonePortrait(c, 110, 120, false, topYard, offRGB);
 
@@ -780,24 +780,46 @@ export function createFieldRenderer(width, height) {
       c.restore();
     }
 
+    // Subtle idle breathing — time-based vertical oscillation, staggered per player
+    var now = performance.now();
+
     // Draw all players
-    form.offense.forEach(function(p) {
+    form.offense.forEach(function(p, i) {
       var px = p.x * fieldW;
       var py = (losYard + p.y - topYard) * YPX;
-      drawDot(px, py, offRGB, offGrad);
+      var breathOffset = Math.sin(now / 800 + i * 1.2) * 1.5; // ±1.5px
+      var idlePy = py + breathOffset;
+
+      // QB (index 0) gets a subtle glow pulse for pre-snap anticipation
+      if (i === 0) {
+        var pulseIntensity = 0.6 + Math.sin(now / 600) * 0.15; // 0.45–0.75
+        var qbGlowSprite = getGlowSprite(offRGB, Math.round(DOT_R * 1.5), 0.35);
+        var qbGlowSz = DOT_R * 7;
+        var prevComp2 = c.globalCompositeOperation;
+        c.globalCompositeOperation = 'lighter';
+        c.globalAlpha = pulseIntensity;
+        c.drawImage(qbGlowSprite, px - qbGlowSz / 2, idlePy - qbGlowSz / 2, qbGlowSz, qbGlowSz);
+        c.globalAlpha = 1;
+        c.globalCompositeOperation = prevComp2;
+      }
+
+      drawDot(px, idlePy, offRGB, offGrad);
     });
 
-    form.defense.forEach(function(p) {
+    form.defense.forEach(function(p, i) {
       var px = p.x * fieldW;
       var py = (losYard + p.y - topYard) * YPX;
-      drawDot(px, py, defRGB, defGrad);
+      var breathOffset = Math.sin(now / 800 + (form.offense.length + i) * 1.2) * 1.5;
+      var idlePy = py + breathOffset;
+      drawDot(px, idlePy, defRGB, defGrad);
     });
 
-    // Ball glow at QB position
+    // Ball glow at QB position (follows QB's breath offset — index 0)
     var qb = form.offense.find(function(p) { return p.pos === 'QB'; });
     if (qb) {
       var bx = qb.x * fieldW;
-      var by = (losYard + qb.y - topYard) * YPX;
+      var qbBreathOffset = Math.sin(now / 800) * 1.5; // index 0 offset
+      var by = (losYard + qb.y - topYard) * YPX + qbBreathOffset;
       c.fillStyle = 'rgba(255,220,140,0.4)';
       c.beginPath();
       c.arc(bx, by, 6, 0, Math.PI * 2);
@@ -805,13 +827,15 @@ export function createFieldRenderer(width, height) {
     }
 
     // Jersey numbers on top (not additive)
-    var allPlayers = form.offense.map(function(p) { return { p: p, side: 'off', losY: losYard }; })
-      .concat(form.defense.map(function(p) { return { p: p, side: 'def', losY: losYard }; }));
+    var allPlayers = form.offense.map(function(p, i) { return { p: p, side: 'off', losY: losYard, idx: i }; })
+      .concat(form.defense.map(function(p, i) { return { p: p, side: 'def', losY: losYard, idx: form.offense.length + i }; }));
 
     allPlayers.forEach(function(d) {
       var p = d.p;
       var px = p.x * fieldW;
       var py = (d.losY + p.y - topYard) * YPX;
+      var breathOffset = Math.sin(now / 800 + d.idx * 1.2) * 1.5;
+      var idlePy = py + breathOffset;
       var isOffense = d.side === 'off';
 
       c.save();
@@ -822,18 +846,18 @@ export function createFieldRenderer(width, height) {
       // Dark backing circle — ensures readability on any colored core
       c.fillStyle = 'rgba(0,0,0,0.5)';
       c.beginPath();
-      c.arc(px, py, 7, 0, Math.PI * 2);
+      c.arc(px, idlePy, 7, 0, Math.PI * 2);
       c.fill();
 
       // Number stroke (thicker for better contrast)
       c.strokeStyle = 'rgba(0,0,0,0.9)';
       c.lineWidth = 3;
       c.lineJoin = 'round';
-      c.strokeText(p.num, px, py + 0.5);
+      c.strokeText(p.num, px, idlePy + 0.5);
 
       // Number fill — warm tint for offense, cool tint for defense
       c.fillStyle = isOffense ? 'rgba(255,250,240,0.95)' : 'rgba(240,245,255,0.95)';
-      c.fillText(p.num, px, py + 0.5);
+      c.fillText(p.num, px, idlePy + 0.5);
 
       c.restore();
     });
@@ -853,7 +877,10 @@ export function createFieldRenderer(width, height) {
    * @param {string} state.formation - formation key
    * @param {number} [state.cameraPadding] - extra yards to pre-render below for smooth panning
    */
+  var _renderState = {}; // Cached for drawStaticField access
+
   function render(state) {
+    _renderState = state;
     var ballYard = state.ballYard || 50;
     var losYard = state.losYard || ballYard;
     var fdYard = state.firstDownYard || losYard + 10;
