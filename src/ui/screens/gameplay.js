@@ -3389,15 +3389,26 @@ export function buildGameplay() {
         }
         setNarr(commLine1, commLine2);
 
-        // TORCH points earned — appended to narr below commentary
-        if (res._torchEarned && res._torchEarned > 0) {
+        // TORCH points earned — color-coded breakdown below commentary
+        if (res._torchSources && res._torchSources.length > 0) {
+          var srcColors = { play: '#F1F5F9', combo: '#FF6B2B', bonus: '#22D3EE' };
+          var srcLabels = { play: 'PLAY', combo: 'COMBO', bonus: 'BONUS' };
           var ptDiv = document.createElement('div');
-          ptDiv.style.cssText = "font-family:'Teko';font-weight:700;font-size:16px;color:#EBB010;letter-spacing:2px;text-shadow:0 0 12px rgba(235,176,16,0.5);margin-top:6px;text-align:center;";
-          var ptText = r.isTouchdown
-            ? 'BASE ' + Math.max(0, res._torchEarned - 50) + ' + TD BONUS = +' + res._torchEarned + ' TORCH'
-            : '+' + res._torchEarned + ' TORCH';
-          ptDiv.textContent = ptText;
+          ptDiv.style.cssText = "display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;flex-wrap:wrap;";
+          var parts = [];
+          res._torchSources.forEach(function(src, si) {
+            var col = srcColors[src.key] || '#F1F5F9';
+            parts.push("<span style=\"font-family:'Teko';font-weight:700;font-size:15px;color:" + col + ";letter-spacing:1px;text-shadow:0 0 8px " + col + "44;\">+" + src.pts + " " + (srcLabels[src.key] || src.key.toUpperCase()) + "</span>");
+          });
+          // Join with + separators then show total
+          ptDiv.innerHTML = parts.join("<span style=\"color:#555;font-family:'Teko';font-size:13px;\"> + </span>") +
+            "<span style=\"font-family:'Teko';font-weight:700;font-size:15px;color:#EBB010;letter-spacing:1px;margin-left:4px;\">= +" + res._torchEarned + " TORCH</span>";
           narr.appendChild(ptDiv);
+        } else if (res._torchEarned && res._torchEarned > 0) {
+          var ptSimple = document.createElement('div');
+          ptSimple.style.cssText = "font-family:'Teko';font-weight:700;font-size:15px;color:#EBB010;letter-spacing:2px;text-shadow:0 0 12px rgba(235,176,16,0.5);margin-top:8px;text-align:center;";
+          ptSimple.textContent = '+' + res._torchEarned + ' TORCH';
+          narr.appendChild(ptSimple);
         }
 
         // Play description line (ESPN style)
