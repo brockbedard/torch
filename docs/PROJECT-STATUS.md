@@ -11,7 +11,7 @@ TORCH Football is a mobile card game (Balatro meets college football). 4 fiction
 
 **Production (main):** v0.28.0 — Stable, playable, 24 cards, basic game loop. Live at torch.football.
 **Preview (dev remote):** Same as prod. Not updated with dev changes yet.
-**Local Dev (dev branch):** 42 commits ahead of prod. Massive feature expansion. NOT released.
+**Local Dev (dev branch):** 43 commits ahead of prod. Massive feature expansion. NOT released.
 **Field Animation (src/ui/field/):** Isolated project, iterating independently. NOT merged into game.
 
 ---
@@ -234,7 +234,7 @@ Conversion: `ballYard = gs.ballPosition * 1.1 + 5`
 ## Git State
 
 **Production (main):** v0.28.0 + play card text hotfix
-**Dev branch:** 42 commits ahead. All changes committed.
+**Dev branch:** 43 commits ahead. All changes committed.
 **Commit convention:** `feat:`, `fix:`, `test:`, `balance:`, `ui:`, `feat(field):`
 
 ### Key Commits (newest first)
