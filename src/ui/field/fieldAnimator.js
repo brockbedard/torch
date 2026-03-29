@@ -158,18 +158,21 @@ function interpDot(keyframes, t, easeFn) {
 // ── GLOW SPRITE (for animated dots) ──
 var _animGlowCache = {};
 function getGlowSprite(rgb, radius, intensity) {
-  var key = rgb.join(',')+':'+radius+':'+intensity;
+  var quantized = Math.round(intensity * 100) / 100;
+  var key = rgb.join(',')+':'+radius+':'+quantized;
   if (_animGlowCache[key]) return _animGlowCache[key];
   var size = radius * 4;
   var cv = document.createElement('canvas');
   cv.width = size; cv.height = size;
   var c = cv.getContext('2d');
   var cx = size/2, cy = size/2;
+  var r = rgb[0], g = rgb[1], b = rgb[2];
   var grad = c.createRadialGradient(cx,cy,0,cx,cy,radius);
-  grad.addColorStop(0, 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+(0.7*intensity)+')');
-  grad.addColorStop(0.3, 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+(0.3*intensity)+')');
-  grad.addColorStop(0.7, 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+(0.08*intensity)+')');
-  grad.addColorStop(1, 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',0)');
+  grad.addColorStop(0, 'rgba('+r+','+g+','+b+','+(0.95*intensity)+')');
+  grad.addColorStop(0.2, 'rgba('+r+','+g+','+b+','+(0.7*intensity)+')');
+  grad.addColorStop(0.5, 'rgba('+r+','+g+','+b+','+(0.3*intensity)+')');
+  grad.addColorStop(0.8, 'rgba('+r+','+g+','+b+','+(0.08*intensity)+')');
+  grad.addColorStop(1, 'rgba('+r+','+g+','+b+',0)');
   c.fillStyle = grad;
   c.fillRect(0,0,size,size);
   _animGlowCache[key] = cv;
@@ -198,6 +201,7 @@ export function createFieldAnimator(width, height) {
   var _animTopYard = 0; // topYard at animation start (for camera offset math)
   var _camYShift = 0; // current pixel shift applied to dots for camera follow
   var _camTarget = 0; // target pixel shift (smoothed toward by _camYShift)
+  var _hitstopEnd = 0; // performance.now() timestamp when hitstop expires
   var _flashEffect = null; // { startTime, duration, rgb, type }
   var _ballFlight = null;
   var _ballFlightProgress = 0; // 0→1 through the flight arc
@@ -251,6 +255,10 @@ export function createFieldAnimator(width, height) {
 
     // Process animation sequence events
     if (_animSequence) {
+      // Hitstop: freeze dot positions by pushing _animStartTime forward
+      if (performance.now() < _hitstopEnd) {
+        _animStartTime += dt * 1000;
+      }
       var animElapsed = timestamp - _animStartTime;
       var events = _animSequence.events;
       for (var ei = events.length - 1; ei >= 0; ei--) {
@@ -378,6 +386,12 @@ export function createFieldAnimator(width, height) {
       var defRGB = (renderState.defTeam && TEAM_COLORS[renderState.defTeam]) || [59,165,93];
 
       function drawAnimDot(cx2, cy2, rgb, glowIntensity, glowRadius) {
+        // Ground shadow (draws BEFORE glow, creates depth)
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.beginPath();
+        ctx.ellipse(cx2, cy2 + 10, CORE_R * 0.8, CORE_R * 0.35, 0, 0, Math.PI * 2);
+        ctx.fill();
+
         // Dark backing (large enough to eclipse lines)
         ctx.fillStyle = 'rgba(5,10,8,0.92)';
         ctx.beginPath(); ctx.arc(cx2, cy2, CORE_R+4, 0, Math.PI*2); ctx.fill();
@@ -410,7 +424,7 @@ export function createFieldAnimator(width, height) {
         var vdy = pos.y - prevPos.y;
         var velocity = Math.sqrt(vdx * vdx + vdy * vdy);
         var velocityNorm = Math.min(1.0, velocity / 8);
-        var baseIntensity = 0.6;
+        var baseIntensity = 0.8;
         var glowIntensity = baseIntensity + velocityNorm * 0.4;
         var glowRadius = DOT_R + velocityNorm * 6;
         drawAnimDot(pos.x, pos.y - _camYShift, rgb, glowIntensity, glowRadius);
@@ -419,13 +433,27 @@ export function createFieldAnimator(width, height) {
       ctx.font = "700 11px 'Teko'";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
+      var numOff2 = dColors ? dColors.filter(function(c2) { return c2 === 'off'; }).length : 7;
       for (var ni = 0; ni < dkf.length; ni++) {
         var np = interpDot(dkf[ni], animElapsed2);
-        ctx.strokeStyle = 'rgba(0,0,0,0.7)';
-        ctx.lineWidth = 2.5;
-        ctx.strokeText(dNums[ni], np.x, np.y - _camYShift);
-        ctx.fillStyle = 'rgba(255,255,255,0.95)';
-        ctx.fillText(dNums[ni], np.x, np.y - _camYShift);
+        var npx = np.x, npy = np.y - _camYShift;
+        var isOffense = ni < numOff2;
+
+        // Dark backing for readability
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.beginPath();
+        ctx.arc(npx, npy, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Thicker stroke
+        ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+        ctx.lineWidth = 3;
+        ctx.lineJoin = 'round';
+        ctx.strokeText(dNums[ni], npx, npy);
+
+        // Team-tinted fill
+        ctx.fillStyle = isOffense ? 'rgba(255,250,240,0.95)' : 'rgba(240,245,255,0.95)';
+        ctx.fillText(dNums[ni], npx, npy);
       }
 
       // OL/DL contact indicators
@@ -599,6 +627,11 @@ export function createFieldAnimator(width, height) {
     // Yard scale for particle count and shake
     var absYards = Math.abs(_lastYardsGained || 8);
     var yardScale = Math.max(0.5, Math.min(2.0, absYards / 10));
+
+    // Hitstop — freeze all dot movement for 100ms on big impacts
+    if (ev.type === 'sack' || ev.type === 'interception' || ev.type === 'touchdown') {
+      _hitstopEnd = performance.now() + 100;
+    }
 
     switch (ev.type) {
       case 'throw':
