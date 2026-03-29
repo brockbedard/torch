@@ -35,7 +35,8 @@ export function createFieldAnimatorV2(logicalWidth, logicalHeight) {
   // ── Renderer (static field — pre-rendered, blit via drawImage) ──
   const renderer = createFieldRenderer(logicalWidth, logicalHeight);
 
-  // ── Player canvas (animation layer, sits on top of field) ──
+  // ── Single canvas (field blit + animation on same surface) ──
+  // Using alpha:false since we redraw the full field each frame
   const canvas = document.createElement('canvas');
   canvas.width = logicalWidth * dpr;
   canvas.height = logicalHeight * dpr;

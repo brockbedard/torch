@@ -70,10 +70,8 @@ import { createFieldAnimatorV2 } from './fieldAnimatorV2.js';
 var wrap = document.getElementById('wrap');
 var field = createFieldAnimatorV2(375, 260);
 
-// Stack canvases: field (bottom) + player (top)
-field.fieldCanvas.style.cssText = 'position:absolute;top:0;left:0;width:375px;height:260px;';
-field.canvas.style.cssText = 'position:absolute;top:0;left:0;width:375px;height:260px;pointer-events:none;';
-wrap.appendChild(field.fieldCanvas);
+// Single canvas — field is blitted then dots drawn on same surface
+field.canvas.style.cssText = 'position:absolute;top:0;left:0;width:375px;height:260px;pointer-events:none;touch-action:none;';
 wrap.appendChild(field.canvas);
 
 // ── State ──
