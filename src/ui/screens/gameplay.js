@@ -2238,21 +2238,16 @@ export function buildGameplay() {
 
 
     if (_tutorialStep > 0 && snapCount === 0) {
-      // Broadcast-style overlay
-      var tutOverlay = document.createElement('div');
-      tutOverlay.style.cssText = 'position:fixed;inset:0;z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);pointer-events:none;';
-
+      // Inline tooltip — positioned near the cards, not full-screen overlay
+      var tutEl = document.createElement('div');
       var tutText = _tutorialStep === 1 ? 'PICK YOUR PLAY' : _tutorialStep === 2 ? 'PICK YOUR PLAYER' : 'TAP SNAP!';
       var tutSub = _tutorialStep === 1 ? 'Each card is a different offensive or defensive call' : _tutorialStep === 2 ? 'Higher stars = bigger impact on the play' : 'Run the play and see what happens';
       var tutColor = _tutorialStep === 3 ? '#00ff44' : '#EBB010';
-
-      tutOverlay.innerHTML =
-        "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:" + tutColor + ";letter-spacing:4px;text-shadow:0 0 20px " + tutColor + "60;\">" + tutText + "</div>" +
-        "<div style=\"font-family:'Rajdhani';font-size:14px;color:#aaa;margin-top:6px;max-width:280px;text-align:center;line-height:1.3;\">" + tutSub + "</div>";
-
-      document.body.appendChild(tutOverlay);
-      // Store reference for removal
-      panel._tutOverlay = tutOverlay;
+      tutEl.style.cssText = "text-align:center;padding:10px 12px;margin:0 8px;background:rgba(0,0,0,0.75);border:1px solid " + tutColor + "44;border-radius:8px;";
+      tutEl.innerHTML =
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:24px;color:" + tutColor + ";letter-spacing:3px;text-shadow:0 0 16px " + tutColor + "60;animation:T-snap-pulse 1.2s ease-in-out infinite;\">" + tutText + "</div>" +
+        "<div style=\"font-family:'Rajdhani';font-size:12px;color:#aaa;margin-top:4px;line-height:1.3;\">" + tutSub + "</div>";
+      panel.insertBefore(tutEl, panel.firstChild);
     }
   }
 
@@ -2260,8 +2255,7 @@ export function buildGameplay() {
   function doSnap() {
     if (phase === 'busy') return; // Prevent re-entrant snaps
     _tutorialStep = 0;
-    if (panel._tutOverlay) { panel._tutOverlay.remove(); panel._tutOverlay = null; }
-    phase = 'busy';
+        phase = 'busy';
     // Restart real-time clock if it was stopped (spike/incomplete/out of bounds)
     if (gs.twoMinActive && !twoMinTimer) start2MinClock();
 
