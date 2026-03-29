@@ -3378,6 +3378,17 @@ export function buildGameplay() {
         }
         setNarr(commLine1, commLine2);
 
+        // TORCH points earned — appended to narr below commentary
+        if (res._torchEarned && res._torchEarned > 0) {
+          var ptDiv = document.createElement('div');
+          ptDiv.style.cssText = "font-family:'Teko';font-weight:700;font-size:16px;color:#EBB010;letter-spacing:2px;text-shadow:0 0 12px rgba(235,176,16,0.5);margin-top:6px;text-align:center;";
+          var ptText = r.isTouchdown
+            ? 'BASE ' + Math.max(0, res._torchEarned - 50) + ' + TD BONUS = +' + res._torchEarned + ' TORCH'
+            : '+' + res._torchEarned + ' TORCH';
+          ptDiv.textContent = ptText;
+          narr.appendChild(ptDiv);
+        }
+
         // Play description line (ESPN style)
         if (espnDesc && espnDesc !== '?') {
           var descEl = document.createElement('div');
@@ -3570,17 +3581,6 @@ export function buildGameplay() {
               drawBug(); drawField(); drawDriveSummary();
               panel.style.display = 'none';
 
-              // TORCH points breakdown visible on field strip (gold text)
-              if (res._torchEarned && res._torchEarned > 0) {
-                var ptLine = document.createElement('div');
-                ptLine.style.cssText = "position:fixed;bottom:42%;left:50%;transform:translateX(-50%);z-index:100;font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;letter-spacing:2px;text-shadow:0 0 16px rgba(235,176,16,0.6),0 0 32px rgba(235,176,16,0.3);white-space:nowrap;pointer-events:none;";
-                var ptText = r.isTouchdown
-                  ? 'BASE ' + Math.max(0, res._torchEarned - 50) + ' + TD BONUS = +' + res._torchEarned + ' TORCH'
-                  : '+' + res._torchEarned + ' TORCH';
-                ptLine.textContent = ptText;
-                el.appendChild(ptLine);
-              }
-
               // TAP FOR NEXT PLAY (no auto-advance — player must tap)
               var tapNext = document.createElement('div');
               tapNext.style.cssText = "position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:5;font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:2px;pointer-events:none;animation:T-snap-pulse 1.2s ease-in-out infinite;text-shadow:0 0 12px rgba(235,176,16,0.4);white-space:nowrap;";
@@ -3593,7 +3593,6 @@ export function buildGameplay() {
                 el.removeEventListener('click', tapForNext);
                 el.removeEventListener('touchstart', tapForNext);
                 if (tapNext.parentNode) tapNext.remove();
-                if (ptLine && ptLine.parentNode) ptLine.remove();
                 nextSnap();
               }
               el.addEventListener('click', tapForNext, { once: true });
