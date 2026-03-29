@@ -161,8 +161,9 @@ export function createFieldAnimatorV2(logicalWidth, logicalHeight) {
   function renderStaticFrame() {
     if (!_state) return;
 
-    // 1. Blit the pre-rendered field
-    renderer.render(_state);
+    // 1. Blit the pre-rendered field (skip dots — V2 draws its own)
+    var renderState = Object.assign({}, _state, { skipDots: true });
+    renderer.render(renderState);
     ctx.drawImage(renderer.canvas, 0, 0, width, height);
 
     // 2. Calculate viewport
@@ -283,12 +284,12 @@ export function createFieldAnimatorV2(logicalWidth, logicalHeight) {
       ctx.translate(-_zoomCenterX, -_zoomCenterY);
     }
 
-    // Blit pre-rendered field
-    renderer.render(_state);
+    // Blit pre-rendered field (skip dots — V2 draws its own)
+    var rs = Object.assign({}, _state, { skipDots: true });
+    renderer.render(rs);
     ctx.drawImage(renderer.canvas, 0, 0, width, height);
 
-    // Draw dots (during animation, these will be driven by GSAP tweens)
-    // For now in Phase 1: draw static formation
+    // Draw dots
     renderFormationDots();
 
     ctx.restore();
@@ -622,8 +623,9 @@ export function createFieldAnimatorV2(logicalWidth, logicalHeight) {
       ctx.translate(-_zoomCenterX, -_zoomCenterY);
     }
 
-    // Blit field
-    renderer.render(_state);
+    // Blit field (skip dots — V2 draws animated dots)
+    var rsV2 = Object.assign({}, _state, { skipDots: true });
+    renderer.render(rsV2);
     ctx.drawImage(renderer.canvas, 0, 0, width, height);
 
     // White flash
