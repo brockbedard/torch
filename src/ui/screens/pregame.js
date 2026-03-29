@@ -174,15 +174,14 @@ export function buildPregame() {
   var scoutCard = document.createElement('div');
   scoutCard.style.cssText =
     'flex-shrink:0;z-index:1;width:90%;max-width:320px;margin:0 auto 4px;padding:8px 12px;' +
-    'background:rgba(255,255,255,0.02);border:1px solid #1a1a1a;border-radius:8px;' +
+    'background:rgba(255,255,255,0.02);border:1px solid #1a1a1a;border-left:3px solid ' + opp.accent + '66;border-radius:8px;' +
     'opacity:0;animation:pgFadeUp ' + t.dur + 's ease-out ' + scoutDelay + 's both;';
 
   // Header row
   var scoutHeader = document.createElement('div');
   scoutHeader.style.cssText = "display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;";
   scoutHeader.innerHTML =
-    "<span style=\"font-family:'Rajdhani';font-size:10px;font-weight:700;color:#444;letter-spacing:3px;\">SCOUTING REPORT</span>" +
-    "<span style=\"font-family:'Rajdhani';font-size:10px;font-weight:700;color:" + matchupColor + ";letter-spacing:2px;\">" + matchupType + "</span>";
+    "<span style=\"font-family:'Rajdhani';font-size:10px;font-weight:700;color:#444;letter-spacing:3px;\">SCOUTING REPORT</span>";
   scoutCard.appendChild(scoutHeader);
 
   // Divider
@@ -199,8 +198,8 @@ export function buildPregame() {
     var row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px;';
     row.innerHTML =
-      "<span style=\"font-family:'Rajdhani';font-size:11px;font-weight:600;color:#444;letter-spacing:2px;\">" + line.label + "</span>" +
-      "<span style=\"font-family:'Teko';font-size:13px;color:" + opp.accent + ";letter-spacing:1px;\">" + line.value + "</span>";
+      "<span style=\"font-family:'Rajdhani';font-size:11px;font-weight:600;color:" + opp.accent + "99;letter-spacing:2px;\">" + line.label + "</span>" +
+      "<span style=\"font-family:'Teko';font-size:14px;font-weight:700;color:" + opp.accent + ";letter-spacing:1px;\">" + line.value + "</span>";
     scoutCard.appendChild(row);
   });
 

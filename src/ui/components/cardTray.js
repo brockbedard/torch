@@ -292,10 +292,9 @@ export function renderCardTray(opts) {
       c.style.boxShadow = '0 0 12px rgba(235,176,16,0.6), inset 0 0 8px rgba(235,176,16,0.15)';
       c.style.animation = 'T-snap-pulse 1.2s ease-in-out infinite';
     }
-    // Tutorial step 2: play cards are blocked (play already chosen)
+    // Tutorial step 2: dim play cards (play already chosen, showing ghost slot)
     if (opts.tutorialStep === 2) {
-      c.style.opacity = '0.3';
-      c.style.pointerEvents = 'none';
+      c.style.opacity = '0.35';
     }
 
     attachTouchFeedback(c);
@@ -354,8 +353,7 @@ export function renderCardTray(opts) {
     if (isHot) { c.style.borderColor = '#FF4511'; c.style.boxShadow = '0 0 12px rgba(255,69,17,0.5)'; }
     // Tutorial step 1: dim player cards so only play cards glow
     if (opts.tutorialStep === 1) {
-      c.style.opacity = '0.3';
-      c.style.pointerEvents = 'none';
+      c.style.opacity = '0.35';
     }
     c.appendChild(playerCard);
     var momentum = (opts.momentumMap && p.id) ? (opts.momentumMap[p.id] || 0) : 0;
