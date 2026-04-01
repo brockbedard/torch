@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html><head>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Pregame B: Card Duel</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Barlow+Condensed:ital,wght@1,900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0A0804;overflow:hidden;height:100vh;height:100dvh;font-family:'Rajdhani',sans-serif}
+</style>
+</head><body>
+<div id="app" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;"></div>
+<script>
+var app = document.getElementById('app');
+
+var user = { name: 'DOLPHINS', school: 'CORAL BAY', accent: '#E854A0', primary: '#8B2252', scheme: 'Spread Option' };
+var opp = { name: 'SPECTRES', school: 'HOLLOWRIDGE', accent: '#5DADE2', primary: '#1a3a5c', scheme: 'Spread RPO' };
+
+// Felt table
+var felt = document.createElement('div');
+felt.style.cssText = 'position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,#12100a 0%,#0A0804 70%);';
+app.appendChild(felt);
+
+// Gold frame
+var frame = document.createElement('div');
+frame.style.cssText = 'position:absolute;inset:10px;border:1px solid rgba(235,176,16,0);border-radius:12px;pointer-events:none;z-index:1;';
+app.appendChild(frame);
+
+// GAME DAY header
+var hdr = document.createElement('div');
+hdr.style.cssText = "position:absolute;top:20px;left:0;right:0;text-align:center;z-index:2;font-family:'Teko';font-weight:700;font-size:14px;color:#EBB01044;letter-spacing:8px;opacity:0;";
+hdr.textContent = 'GAME DAY';
+app.appendChild(hdr);
+
+// Card area
+var area = document.createElement('div');
+area.style.cssText = 'position:relative;z-index:2;width:320px;height:260px;perspective:800px;';
+
+var CW=140,CH=210;
+
+function makeCard(tm, isUser, side) {
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:absolute;width:'+CW+'px;height:'+CH+'px;' + (side==='left'?'left:10px;':'right:10px;') + 'transform-style:preserve-3d;opacity:0;';
+
+  // Back
+  var back = document.createElement('div');
+  back.style.cssText = 'position:absolute;inset:0;backface-visibility:hidden;border-radius:10px;border:2px solid ' + tm.accent + '44;background:#0E0A04;overflow:hidden;display:flex;align-items:center;justify-content:center;';
+  back.innerHTML = '<div style="width:100%;height:100%;background:radial-gradient(ellipse at 50% 40%,' + tm.primary + '44,' + tm.primary + '11);display:flex;align-items:center;justify-content:center;border-radius:inherit;"><div style="font-family:\'Teko\';font-size:48px;color:' + tm.accent + '33;">?</div></div>';
+
+  // Front
+  var front = document.createElement('div');
+  front.style.cssText = 'position:absolute;inset:0;backface-visibility:hidden;transform:rotateY(180deg);border-radius:10px;border:2px solid ' + tm.accent + ';background:#0E0A04;overflow:hidden;' + (isUser ? 'box-shadow:0 0 20px ' + tm.accent + '33;' : '');
+  front.innerHTML =
+    '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px 10px;">' +
+      '<div style="padding:1px 8px;border-radius:2px;font-family:\'Rajdhani\';font-weight:700;font-size:9px;letter-spacing:2px;' + (isUser ? 'background:rgba(235,176,16,0.15);color:#EBB010;' : 'background:rgba(255,255,255,0.06);color:#666;') + '">' + (isUser ? 'YOUR TEAM' : 'OPPONENT') + '</div>' +
+      '<div style="width:' + (isUser?64:56) + 'px;height:' + (isUser?64:56) + 'px;border-radius:50%;background:' + tm.primary + ';display:flex;align-items:center;justify-content:center;border:2px solid ' + tm.accent + '66;"><div style="font-family:\'Teko\';font-size:24px;color:#fff;">' + tm.name[0] + '</div></div>' +
+      '<div style="font-family:\'Teko\';font-weight:700;font-size:' + (tm.name.length>7?22:28) + 'px;color:#fff;letter-spacing:3px;line-height:1;text-shadow:0 2px 8px ' + tm.primary + ';">' + tm.name + '</div>' +
+      '<div style="font-family:\'Rajdhani\';font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:2px;">' + tm.school + '</div>' +
+      '<div style="font-family:\'Teko\';font-size:13px;color:' + tm.accent + ';letter-spacing:3px;opacity:0.8;">' + tm.scheme + '</div>' +
+    '</div>';
+
+  wrap.appendChild(back);
+  wrap.appendChild(front);
+  return wrap;
+}
+
+var oppCard = makeCard(opp, false, 'left');
+var userCard = makeCard(user, true, 'right');
+area.appendChild(oppCard);
+area.appendChild(userCard);
+
+// VS badge
+var vs = document.createElement('div');
+vs.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(3);z-index:3;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:36px;font-style:italic;color:#fff;letter-spacing:3px;text-shadow:0 0 20px rgba(255,69,17,0.6),0 0 40px rgba(235,176,16,0.3),0 3px 0 rgba(0,0,0,0.9);-webkit-text-stroke:1px rgba(235,176,16,0.3);opacity:0;";
+vs.textContent = 'VS';
+area.appendChild(vs);
+
+app.appendChild(area);
+
+// Info below cards
+var info = document.createElement('div');
+info.style.cssText = 'z-index:2;display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:16px;opacity:0;';
+info.innerHTML =
+  '<div style="padding:2px 14px;border-radius:3px;font-family:\'Rajdhani\';font-weight:700;font-size:11px;letter-spacing:2px;color:#EBB010;border:1px solid #EBB01044;background:#EBB01011;">EVEN MATCHUP</div>' +
+  '<div style="font-family:\'Rajdhani\';font-size:11px;font-weight:700;color:#555;letter-spacing:2px;">H2H 3-2</div>';
+app.appendChild(info);
+
+// Dossier
+var dossier = document.createElement('div');
+dossier.style.cssText = 'position:absolute;bottom:0;left:0;right:0;z-index:4;background:linear-gradient(180deg,transparent,#0E0A04 12%,#0E0A04);padding:16px 20px 24px;transform:translateY(100%);';
+dossier.innerHTML =
+  '<div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:4px 0 10px;">' +
+    '<div style="font-family:\'Rajdhani\';font-size:10px;font-weight:700;color:#EBB010;letter-spacing:1px;">CLEAR 72\u00b0</div>' +
+    '<div style="width:1px;height:10px;background:#333;"></div>' +
+    '<div style="font-family:\'Rajdhani\';font-size:10px;font-weight:700;color:#888;letter-spacing:1px;">GRASS</div>' +
+  '</div>' +
+  '<div style="font-family:\'Teko\';font-weight:700;font-size:13px;color:' + opp.accent + ';letter-spacing:2px;margin-bottom:4px;">SCOUTING REPORT</div>' +
+  '<div style="display:flex;gap:12px;margin-bottom:6px;">' +
+    '<div style="flex:1;"><div style="font-family:\'Rajdhani\';font-size:8px;font-weight:700;color:#444;letter-spacing:1px;">OFF</div><div style="font-family:\'Teko\';font-size:14px;color:' + opp.accent + ';letter-spacing:1px;line-height:1;">Spread RPO</div></div>' +
+    '<div style="flex:1;"><div style="font-family:\'Rajdhani\';font-size:8px;font-weight:700;color:#444;letter-spacing:1px;">DEF</div><div style="font-family:\'Teko\';font-size:14px;color:' + opp.accent + ';letter-spacing:1px;line-height:1;">Cover 0 Blitz</div></div>' +
+  '</div>' +
+  '<div style="display:flex;align-items:center;gap:5px;"><span style="font-family:\'Rajdhani\';font-size:8px;font-weight:700;color:#ff0040;background:rgba(255,0,64,0.1);padding:1px 4px;border-radius:2px;">WATCH</span><span style="font-family:\'Rajdhani\';font-size:11px;font-weight:700;color:#ccc;">DaCosta</span><span style="font-family:\'Rajdhani\';font-size:9px;color:' + opp.accent + ';">WR \u00b7 BURNER</span></div>' +
+  '<div style="text-align:center;margin-top:12px;font-family:\'Rajdhani\';font-size:10px;color:rgba(255,255,255,0.2);letter-spacing:4px;">TAP TO CONTINUE</div>';
+app.appendChild(dossier);
+
+// ANIMATE
+var tl = gsap.timeline();
+
+// Frame glow
+tl.to(frame, { borderColor: 'rgba(235,176,16,0.08)', duration: 0.5 })
+  .to(hdr, { opacity: 1, duration: 0.3 }, 0.2)
+
+// Cards deal
+  .fromTo(oppCard, { x: -200, y: -300, rotation: -30, opacity: 0 },
+    { x: 0, y: 0, rotation: 5, opacity: 1, duration: 0.6, ease: 'power3.out' }, 0.5)
+  .fromTo(userCard, { x: 200, y: 300, rotation: 30, opacity: 0 },
+    { x: 0, y: 0, rotation: -5, opacity: 1, duration: 0.6, ease: 'power3.out' }, 0.8)
+
+// Opponent flip
+  .to(oppCard, { rotateY: 180, duration: 0.6, ease: 'power2.inOut' }, 1.8)
+
+// Your card flip (bigger bounce)
+  .to(userCard, { rotateY: 180, duration: 0.7, ease: 'back.out(1.5)' }, 2.8)
+
+// VS slam
+  .to(vs, { scale: 1, opacity: 1, rotation: 0, duration: 0.4, ease: 'back.out(2)' }, 3.2)
+
+// Info
+  .to(info, { opacity: 1, duration: 0.3 }, 3.5)
+
+// Dossier slides up
+  .to(dossier, { y: 0, duration: 0.5, ease: 'power2.out' }, 4.0);
+
+app.onclick = function() { location.reload(); };
+</script>
+</body></html>

@@ -11,7 +11,7 @@ import { STAGS_OFF_PLAYS, STAGS_DEF_PLAYS } from './data/stagsPlays.js';
 import { SERPENTS_OFF_PLAYS, SERPENTS_DEF_PLAYS } from './data/serpentsPlays.js';
 import { getOffenseRoster, getDefenseRoster } from './data/players.js';
 
-export var VERSION = '0.28.0';
+export var VERSION = '0.29.0';
 export var VERSION_NAME = 'Audio + Replay Loop';
 
 export var GAME_SPEED = { current: 'normal' }; // 'normal', 'fast', 'turbo'
@@ -121,7 +121,7 @@ export function clearGameSave() {
   localStorage.removeItem('torch_save');
 }
 
-export var render = function() {};
+export let render = function() {};
 export function setRender(fn) { render = fn; }
 
 // ============================================================

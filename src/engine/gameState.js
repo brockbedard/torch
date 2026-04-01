@@ -12,8 +12,8 @@ import { updateHeat } from './personnelSystem.js';
 import { updateMomentum, decayMomentum } from './momentumSystem.js';
 import { calcReturnYards } from './turnoverReturns.js';
 import { checkInjury, healInjuries } from './injuries.js';
-import { aiSelectPlay, aiSelectPlayer } from './aiOpponent.js';
-import { TORCH_CARDS } from '../data/torchCards.js';
+import { aiSelectPlay, aiSelectPlayer, aiBuyTorchCard } from './aiOpponent.js';
+import { TORCH_CARDS, getBoosterOffers } from '../data/torchCards.js';
 // Old CT/IR play imports removed — plays come from constructor args
 
 export class GameState {
@@ -683,6 +683,10 @@ export class GameState {
       const offPts = calcOffenseTorchPoints(result, false);
       const defPts = calcDefenseTorchPoints(result, false);
       this._awardTorchPts(offPts, defPts);
+      
+      // AI Shop trigger for turnovers (if human is CT, IR gets a chance)
+      if (this.humanTeam === 'CT') this._triggerAiShop('turnover');
+
       this._checkHalfEnd();
       this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown, offCard: offCard || null });
       return { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent };
@@ -719,6 +723,10 @@ export class GameState {
       const offPts = calcOffenseTorchPoints(result, false);
       const defPts = calcDefenseTorchPoints(result, false);
       this._awardTorchPts(offPts, defPts);
+      
+      // AI Shop trigger for turnovers (if human is CT, IR gets a chance)
+      if (this.humanTeam === 'CT') this._triggerAiShop('turnover');
+
       this._checkHalfEnd();
       this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown, offCard: offCard || null });
       return { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent };
@@ -751,6 +759,9 @@ export class GameState {
       const defPts = calcDefenseTorchPoints(result, false);
       this._awardTorchPts(offPts, defPts);
 
+      // AI Shop trigger for touchdown (if human is CT, scoring IR gets a chance)
+      if (this.humanTeam === 'CT' && scoringTeam === 'IR') this._triggerAiShop('touchdown');
+
       gameEvent = 'touchdown';
       this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown, offCard: offCard || null });
       // Possession flip will happen in handleConversion, but we should ensure ball resets to 50 there too.
@@ -770,10 +781,8 @@ export class GameState {
       this.distance = ydsLeft <= 10 ? ydsLeft : 10;
       if (this.possession === 'CT') {
         this.stats.ctFirstDowns++;
-        this.ctTorchPts += 10;
       } else {
         this.stats.irFirstDowns++;
-        this.irTorchPts += 10;
       }
       if (is4th) this.stats.fourthDownConversions++;
     } else {
@@ -789,6 +798,8 @@ export class GameState {
       if (this.down > 4) {
         if (this.drivePlays <= 4) this.stats.threeAndOuts++;
         gameEvent = 'turnover_on_downs';
+        // AI shop trigger for turnover on downs stop
+        if (this.humanTeam === 'CT' && this.possession === 'CT') this._triggerAiShop('fourthDownStop');
         this.flipPossession(this.ballPosition);
       }
     }
@@ -932,94 +943,34 @@ export class GameState {
 
   /** Halftime Booster Shop — port of halftime_booster logic from sim */
   halftimeShop() {
-    for (const teamAbbr of ['CT', 'IR']) {
-      const isHuman = this.humanTeam === teamAbbr;
-      const pts = teamAbbr === 'CT' ? this.ctTorchPts : this.irTorchPts;
-      const inv = isHuman ? this.humanTorchCards : this.cpuTorchCards;
-
-      const purchased = this._halftimeBooster(pts, isHuman);
-      for (const cardId of purchased) {
-        if (inv.length < 3) {
-          inv.push(cardId);
-          const card = TORCH_CARDS.find(c => c.id === cardId);
-          if (teamAbbr === 'CT') this.ctTorchPts -= card.cost;
-          else this.irTorchPts -= card.cost;
-        }
-      }
-    }
-  }
-
-  _halftimeBooster(currentPts, isHuman) {
-    const purchased = [];
-    const pool = TORCH_CARDS.map(c => c.id);
-    // Rough weighted choice
-    const getOffer = () => {
-      const r = Math.random();
-      let tierPool;
-      if (r < 0.50) tierPool = TORCH_CARDS.filter(c => c.tier === 'BRONZE');
-      else if (r < 0.85) tierPool = TORCH_CARDS.filter(c => c.tier === 'SILVER');
-      else tierPool = TORCH_CARDS.filter(c => c.tier === 'GOLD');
-      return tierPool[Math.floor(Math.random() * tierPool.length)].id;
-    };
-
-    const offers = [getOffer(), getOffer(), getOffer()];
-
-    if (isHuman) {
-      // Human sees the shop UI — no auto-buy
-      return purchased;
-    }
-
-    // AI impact priority lists (cards that have real snap-level effects)
-    const HIGH_IMPACT = ['deep_shot', 'truck_stick', 'prime_time', 'hard_count', 'challenge_flag', 'sure_hands', 'scout_team'];
-    const MED_IMPACT  = ['play_action', 'scramble_drill', 'twelfth_man', 'ice', 'twelfth_man'];
-
-    // Score card impact for prioritized buying
-    const impactScore = (id) => {
-      if (HIGH_IMPACT.includes(id)) return 3;
-      if (MED_IMPACT.includes(id)) return 2;
-      return 1;
-    };
-
-    // AI buying logic based on difficulty
-    const affordable = offers.filter(id => {
-      const card = TORCH_CARDS.find(c => c.id === id);
-      return card && card.cost <= currentPts;
-    });
-    if (this.difficulty === 'EASY') {
-      // Easy AI never buys
-    } else if (this.difficulty === 'MEDIUM') {
-      // Medium: buy 1 card, prefer situational value over cheapest
-      if (affordable.length > 0) {
-        const best = affordable.reduce((a, b) => impactScore(a) >= impactScore(b) ? a : b);
-        purchased.push(best);
-      }
-    } else {
-      // Hard: buy up to 2, prioritize high-impact cards first
-      var sorted = affordable.slice().sort((a, b) => {
-        var diff = impactScore(b) - impactScore(a);
-        if (diff !== 0) return diff;
-        // Tie-break: higher cost = more powerful
-        return TORCH_CARDS.find(c => c.id === b).cost - TORCH_CARDS.find(c => c.id === a).cost;
-      });
-      for (var bi = 0; bi < Math.min(2, sorted.length); bi++) {
-        var cardCost = TORCH_CARDS.find(c => c.id === sorted[bi]).cost;
-        if (cardCost <= currentPts) {
-          purchased.push(sorted[bi]);
-          currentPts -= cardCost;
-        }
-      }
-    }
-    return purchased;
+    this._triggerAiShop('halftime');
   }
 
   /** Award TORCH points to the correct teams */
   _awardTorchPts(offPts, defPts) {
+    // IR (CPU) gets a 20% boost to TORCH points to help their economy
+    const irOff = this.possession === 'IR' ? Math.ceil(offPts * 1.2) : offPts;
+    const irDef = this.possession === 'CT' ? Math.ceil(defPts * 1.2) : defPts;
+
     if (this.possession === 'CT') {
       this.ctTorchPts += offPts;
-      this.irTorchPts += defPts;
+      this.irTorchPts += irDef;
     } else {
-      this.irTorchPts += offPts;
+      this.irTorchPts += irOff;
       this.ctTorchPts += defPts;
+    }
+  }
+
+  /** AI Shop trigger — CPU buys cards based on situation */
+  _triggerAiShop(trigger) {
+    if (this.difficulty === 'EASY' || this.difficulty === 'RANDOM') return;
+    if (this.cpuTorchCards.length >= 3) return;
+
+    const offers = getBoosterOffers(trigger);
+    const bought = aiBuyTorchCard(offers, this.irTorchPts, this.cpuTorchCards, this.difficulty);
+    if (bought) {
+      this.cpuTorchCards.push(bought.id);
+      this.irTorchPts -= bought.cost;
     }
   }
 

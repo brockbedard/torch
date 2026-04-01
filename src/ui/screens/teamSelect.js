@@ -40,7 +40,8 @@ function injectAnimations() {
     '@keyframes tsVsSlam { 0%{transform:scale(2.5);opacity:0} 60%{transform:scale(0.9);opacity:1} 100%{transform:scale(1)} }' +
     '@keyframes tsShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-3px)} 40%{transform:translateX(3px)} 60%{transform:translateX(-2px)} 80%{transform:translateX(2px)} }' +
     '@keyframes tsWipe { 0%{clip-path:inset(0 100% 0 0)} 100%{clip-path:inset(0 0 0 0)} }' +
-    '@keyframes tsTooltipIn { 0%{opacity:0;transform:translateY(8px)} 100%{opacity:1;transform:none} }';
+    '@keyframes tsTooltipIn { 0%{opacity:0;transform:translateY(8px)} 100%{opacity:1;transform:none} }' +
+    '@keyframes tsBreathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.01)} }';
   document.head.appendChild(s);
 }
 
@@ -89,7 +90,7 @@ export function buildTeamSelect() {
   var _seasonGame = _existingSeason ? (GS.season.currentGame || 0) + 1 : 1;
   var _seasonLabel = _seasonGame <= 3 ? 'CONFERENCE SEASON \u2014 GAME ' + _seasonGame + ' OF 3' : 'CHOOSE YOUR TEAM';
   instrWrap.innerHTML =
-    "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:var(--a-gold);letter-spacing:3px;\">" + (_existingSeason ? _seasonLabel : 'CHOOSE YOUR TEAM') + "</div>";
+    "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:var(--a-gold);letter-spacing:3px;text-shadow:0 0 16px rgba(235,176,16,0.3);\">" + (_existingSeason ? _seasonLabel : 'CHOOSE YOUR TEAM') + "</div>";
   content.appendChild(instrWrap);
 
   // ── 2x2 TEAM GRID — fills available space ──
@@ -106,7 +107,7 @@ export function buildTeamSelect() {
       'border:2px solid ' + team.colors.primary + '88;' +
       'box-shadow:0 4px 16px rgba(0,0,0,0.5);' +
       'transition:all 0.25s cubic-bezier(0.22,1.3,0.36,1);' +
-      'opacity:0;animation:tsCardIn 0.35s ease-out ' + (idx * 0.08) + 's both;';
+      'opacity:0;animation:tsCardIn 0.35s ease-out ' + (idx * 0.08) + 's both, tsBreathe 3s ease-in-out ' + (0.5 + idx * 0.4) + 's infinite;';
 
     // Background gradient — team color throughout so badge pops
     var bgLayer = document.createElement('div');
@@ -131,7 +132,7 @@ export function buildTeamSelect() {
 
     // Team name — consistent size
     var nameEl = document.createElement('div');
-    nameEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:#fff;letter-spacing:3px;line-height:0.9;text-shadow:2px 3px 0 rgba(0,0,0,0.8);white-space:nowrap;";
+    nameEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:#fff;letter-spacing:3px;line-height:0.9;text-shadow:0 2px 8px rgba(0,0,0,0.9);white-space:nowrap;";
     nameEl.textContent = team.name;
     info.appendChild(nameEl);
 
@@ -163,7 +164,7 @@ export function buildTeamSelect() {
 
     // Vibe one-liner
     var vibeEl = document.createElement('div');
-    vibeEl.style.cssText = "font-family:'Rajdhani';font-weight:500;font-size:12px;color:rgba(255,255,255,0.45);line-height:1.2;min-height:28px;";
+    vibeEl.style.cssText = "font-family:'Rajdhani';font-weight:500;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.2;min-height:28px;";
     vibeEl.textContent = TEAM_VIBES[tid] || '';
     info.appendChild(vibeEl);
 
@@ -204,7 +205,8 @@ export function buildTeamSelect() {
           c.style.zIndex = '1';
         }
       });
-      // Show player preview in selected card
+      // Clear player previews from ALL cards, then show for selected
+      grid.querySelectorAll('[data-player-preview]').forEach(function(el) { el.remove(); });
       var existingPreview = info.querySelector('[data-player-preview]');
       if (!existingPreview) {
         var roster = getOffenseRoster(tid).concat(getDefenseRoster(tid));
@@ -244,12 +246,17 @@ export function buildTeamSelect() {
   });
   content.appendChild(grid);
 
+  // ── DIVIDER between grid and button ──
+  var gridDivider = document.createElement('div');
+  gridDivider.style.cssText = 'flex-shrink:0;height:1px;margin:4px 20px 0;background:linear-gradient(90deg,transparent,rgba(235,176,16,0.15),rgba(255,69,17,0.15),transparent);';
+  content.appendChild(gridDivider);
+
   // ── KICK OFF BUTTON (hidden until team selected) ──
   var selectedTeamId = null;
   var selectedTeam = null;
   var kickOffBtn = document.createElement('button');
   kickOffBtn.className = 'btn-blitz';
-  kickOffBtn.style.cssText = 'flex-shrink:0;margin:6px 20px 8px;border-color:#FF4511;color:#000;background:linear-gradient(180deg,#EBB010 0%,#FF4511 100%);font-size:24px;padding:20px 24px;letter-spacing:5px;opacity:0.3;pointer-events:none;transition:opacity 0.3s;text-align:center;display:block;width:calc(100% - 40px);animation:ctaGlow 3s ease-in-out 0.3s infinite;';
+  kickOffBtn.style.cssText = 'flex-shrink:0;margin:6px 20px 8px;border-color:#FF4511;color:#000;background:linear-gradient(180deg,#EBB010 0%,#FF4511 100%);font-size:26px;padding:22px 24px;letter-spacing:5px;opacity:0.3;pointer-events:none;transition:opacity 0.3s;text-align:center;display:block;width:calc(100% - 40px);animation:ctaGlow 3s ease-in-out 0.3s infinite;box-shadow:0 4px 20px rgba(255,69,17,0.3);';
   kickOffBtn.textContent = 'KICK OFF!';
   kickOffBtn.onclick = function() {
   if (!selectedTeamId) return;
@@ -306,7 +313,7 @@ export function buildTeamSelect() {
       btn.className = 'btn-blitz';
       var isSel = selDiff === d.id;
       btn.style.cssText = 'font-size:10px;padding:8px 16px;flex:1;' +
-        (isSel ? 'background:' + d.color + ';color:#000;border-color:' + d.color + ';' : 'background:transparent;color:#aaa;border-color:#333;');
+        (isSel ? 'background:' + d.color + ';color:#000;border-color:' + d.color + ';box-shadow:0 0 12px ' + d.color + '44;font-weight:700;' : 'background:transparent;color:#666;border-color:#222;opacity:0.7;');
       btn.textContent = d.label;
       btn.onclick = function(e) {
         e.stopPropagation();
@@ -375,7 +382,8 @@ function startSelectionAnimation(container, teamId, team, isFirst) {
       'animation:tsPlayerFan 0.35s ease-out ' + (0.3 + i * 0.08) + 's both;';
     var card = buildMaddenPlayer({
       name: p.name, pos: p.pos, ovr: p.ovr, num: p.num,
-      badge: p.badge, isStar: p.isStar, teamColor: team.colors.primary
+      badge: p.badge, isStar: p.isStar, stars: p.stars, trait: p.trait,
+      teamColor: team.colors.primary
     }, 60, 84);
     card.style.opacity = '0.7';
     pc.appendChild(card);

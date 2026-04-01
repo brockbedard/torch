@@ -245,7 +245,7 @@ function generateHeadline(won, tied, hScore, cScore, team, opp, mvp, gs) {
     var blowoutLines = [
       team.name + ' ROUT ' + opp.name + ' IN ' + margin + '-POINT BLOWOUT',
       'NO CONTEST! ' + team.name + ' CRUISE PAST ' + opp.name,
-      (mvpName || team.name) + ' LEADS ' + margin + '-POINT DEMOLITION OF ' + opp.name,
+      (mvpName ? mvpName + ' LEADS' : team.name + ' LEAD') + ' ' + margin + '-POINT DEMOLITION OF ' + opp.name,
     ];
     return blowoutLines[Math.floor(Math.random() * blowoutLines.length)];
   }
@@ -253,14 +253,14 @@ function generateHeadline(won, tied, hScore, cScore, team, opp, mvp, gs) {
     var closeLines = [
       team.name + ' SURVIVE ' + opp.name + ' SCARE IN ' + hScore + '-' + cScore + ' THRILLER',
       'NAIL-BITER! ' + team.name + ' EDGE ' + opp.name + ' BY ' + margin,
-      (mvpName || team.name) + ' DELIVERS IN CLUTCH ' + hScore + '-' + cScore + ' WIN',
+      (mvpName ? mvpName + ' DELIVERS' : team.name + ' DELIVER') + ' IN CLUTCH ' + hScore + '-' + cScore + ' WIN',
     ];
     return closeLines[Math.floor(Math.random() * closeLines.length)];
   }
   if (won) {
     var winLines = [
       team.name + ' TAKE DOWN ' + opp.name + ' ' + hScore + '-' + cScore,
-      (mvpName || team.name) + ' POWERS ' + team.name + ' PAST ' + opp.name,
+      (mvpName ? mvpName + ' POWERS ' + team.name + ' PAST ' + opp.name : team.name + ' POWER PAST ' + opp.name),
       team.name + ' TRIUMPH OVER ' + opp.name + ' IN CONFERENCE CLASH',
     ];
     return winLines[Math.floor(Math.random() * winLines.length)];
@@ -282,13 +282,13 @@ function generateHeadline(won, tied, hScore, cScore, team, opp, mvp, gs) {
 // ── BUILD END GAME ──
 export function buildEndGame() {
   clearGameSave();
-  AudioStateManager.setState('game_over');
-
   var gs = GS.finalEngine;
   var _humanScore = gs.ctScore;
   var _cpuScore = gs.irScore;
   var _humanWon = _humanScore > _cpuScore;
   var _tied = _humanScore === _cpuScore;
+  // Set audio state based on outcome
+  AudioStateManager.setState(_humanWon ? 'game_over_win' : 'game_over');
   // Victory/defeat fanfare
   setTimeout(function() {
     if (_humanWon) SND.victory();

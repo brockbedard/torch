@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coach's Notebook Play Card - Power O</title>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Gloria+Hallelujah&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --paper-bg: #f4f1ea;
+            --pencil-color: #333;
+            --lead-color: #444;
+            --red-pen: #b22222;
+        }
+
+        body {
+            background-color: #2c3e50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Caveat', cursive;
+        }
+
+        /* 120x168px Play Card */
+        .play-card {
+            width: 120px;
+            height: 168px;
+            background-color: var(--paper-bg);
+            background-image: 
+                linear-gradient(90deg, transparent 79px, #abced4 79px, #abced4 81px, transparent 81px),
+                linear-gradient(#eee .1em, transparent .1em);
+            background-size: 100% 1.2em;
+            border: 1px solid #dcdcdc;
+            box-shadow: 
+                2px 2px 5px rgba(0,0,0,0.2),
+                inset 0 0 30px rgba(0,0,0,0.05);
+            position: relative;
+            padding: 10px 6px;
+            box-sizing: border-box;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transform: rotate(-1deg);
+        }
+
+        /* Crumpled effect using SVG filter in body or a pseudo-element */
+        .play-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.05;
+            pointer-events: none;
+        }
+
+        .header {
+            font-family: 'Gloria Hallelujah', cursive;
+            color: var(--pencil-color);
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 5px;
+            text-decoration: underline;
+            line-height: 1;
+        }
+
+        /* Schematic Diagram Area */
+        .diagram {
+            width: 108px;
+            height: 110px;
+            position: relative;
+            flex-grow: 1;
+        }
+
+        /* Hand-drawn markers */
+        .marker {
+            position: absolute;
+            font-weight: bold;
+            font-size: 14px;
+            color: var(--lead-color);
+            line-height: 1;
+        }
+
+        /* Offensive Line (O's) */
+        .o { font-family: 'Caveat', cursive; font-size: 16px; }
+        .lt { top: 40px; left: 15px; }
+        .lg { top: 40px; left: 30px; }
+        .c  { top: 40px; left: 45px; }
+        .rg { top: 40px; left: 60px; }
+        .rt { top: 40px; left: 75px; }
+        .te { top: 40px; left: 90px; }
+
+        /* Backfield */
+        .qb { top: 55px; left: 45px; }
+        .rb { top: 75px; left: 45px; }
+
+        /* Defensive markers (X's) - simplified */
+        .x { 
+            color: var(--red-pen); 
+            font-size: 14px; 
+            opacity: 0.8;
+        }
+        .dl1 { top: 25px; left: 32px; }
+        .dl2 { top: 25px; left: 48px; }
+        .dl3 { top: 25px; left: 64px; }
+        .lb1 { top: 15px; left: 40px; }
+        .lb2 { top: 15px; left: 60px; }
+
+        /* Hand-drawn arrows using SVG */
+        .arrows-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .path {
+            fill: none;
+            stroke: var(--lead-color);
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 0;
+        }
+
+        .pull {
+            stroke: var(--pencil-color);
+            stroke-width: 2;
+        }
+
+        .rb-path {
+            stroke: var(--red-pen);
+        }
+
+        .footer {
+            margin-top: auto;
+            color: #666;
+            font-size: 9px;
+            text-align: right;
+            font-style: italic;
+        }
+
+        .notes {
+            position: absolute;
+            bottom: 25px;
+            left: 5px;
+            font-size: 8px;
+            color: #555;
+            transform: rotate(-2deg);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="play-card">
+        <div class="header">POWER O</div>
+        
+        <div class="diagram">
+            <svg class="arrows-svg" viewBox="0 0 108 110">
+                <!-- Pulling Guard (LG) -->
+                <path class="path pull" d="M 35 45 Q 35 60 70 60 Q 85 60 85 45" />
+                <!-- Arrowhead for LG -->
+                <path class="path pull" d="M 80 50 L 85 45 L 90 50" />
+                
+                <!-- RB Path -->
+                <path class="path rb-path" d="M 50 80 Q 55 70 75 65 Q 85 60 85 30" />
+                <!-- Arrowhead for RB -->
+                <path class="path rb-path" d="M 80 35 L 85 30 L 90 35" />
+
+                <!-- Down blocks -->
+                <path class="path" d="M 50 40 L 55 30" /> <!-- C -->
+                <path class="path" d="M 65 40 L 70 30" /> <!-- RG -->
+                <path class="path" d="M 80 40 L 85 30" /> <!-- RT -->
+            </svg>
+
+            <!-- Offensive Players -->
+            <div class="marker o lt">O</div>
+            <div class="marker o lg">O</div>
+            <div class="marker o c">O</div>
+            <div class="marker o rg">O</div>
+            <div class="marker o rt">O</div>
+            <div class="marker o te">O</div>
+            
+            <div class="marker o qb">O</div>
+            <div class="marker o rb">O</div>
+
+            <!-- Defensive Players -->
+            <div class="marker x dl1">x</div>
+            <div class="marker x dl2">x</div>
+            <div class="marker x dl3">x</div>
+            <div class="marker x lb1">x</div>
+            <div class="marker x lb2">x</div>
+        </div>
+
+        <div class="notes">BSG Pull -></div>
+        <div class="footer">Coach Miller - '24</div>
+    </div>
+
+</body>
+</html>

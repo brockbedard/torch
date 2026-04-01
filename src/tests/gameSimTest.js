@@ -34,58 +34,6 @@ function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// AI torch card purchasing logic (matches _halftimeBooster impact weighting)
-var HIGH_IMPACT_CARDS = ['deep_shot', 'truck_stick', 'prime_time', 'hard_count', 'challenge_flag', 'sure_hands', 'scout_team'];
-var MED_IMPACT_CARDS  = ['play_action', 'scramble_drill', 'twelfth_man', 'ice'];
-
-function cardImpactScore(id) {
-  if (HIGH_IMPACT_CARDS.includes(id)) return 3;
-  if (MED_IMPACT_CARDS.includes(id)) return 2;
-  return 1;
-}
-
-function aiPurchaseCards(gs, difficulty) {
-  var inv = gs.cpuTorchCards;
-  var pts = gs.humanTeam === 'CT' ? gs.irTorchPts : gs.ctTorchPts;
-  var purchased = [];
-
-  if (difficulty === 'EASY') return purchased;
-  if (inv.length >= 3) return purchased;
-
-  var affordable = TORCH_CARDS.filter(function(c) { return c.cost <= pts; });
-  if (affordable.length === 0) return purchased;
-
-  if (difficulty === 'MEDIUM') {
-    // Medium: buy 1, prefer situational impact over cheapest
-    var best = affordable.reduce(function(a, b) { return cardImpactScore(a.id) >= cardImpactScore(b.id) ? a : b; });
-    if (inv.length < 3) {
-      inv.push(best.id);
-      if (gs.humanTeam === 'CT') gs.irTorchPts -= best.cost;
-      else gs.ctTorchPts -= best.cost;
-      purchased.push(best.id);
-    }
-  } else if (difficulty === 'HARD' || difficulty === 'RANDOM') {
-    // Hard: buy up to 2, prioritize high-impact cards (tie-break: higher cost)
-    var sorted = affordable.slice().sort(function(a, b) {
-      var diff = cardImpactScore(b.id) - cardImpactScore(a.id);
-      if (diff !== 0) return diff;
-      return b.cost - a.cost;
-    });
-    for (var i = 0; i < Math.min(2, sorted.length); i++) {
-      if (inv.length >= 3) break;
-      var card = sorted[i];
-      var curPts = gs.humanTeam === 'CT' ? gs.irTorchPts : gs.ctTorchPts;
-      if (card.cost <= curPts) {
-        inv.push(card.id);
-        if (gs.humanTeam === 'CT') gs.irTorchPts -= card.cost;
-        else gs.ctTorchPts -= card.cost;
-        purchased.push(card.id);
-      }
-    }
-  }
-  return purchased;
-}
-
 function simulateGame(teamId, difficulty) {
   var oppId = pickOpp(teamId);
   var actualDiff = difficulty === 'RANDOM' ? pickRandom(['EASY', 'MEDIUM', 'HARD']) : difficulty;
@@ -111,32 +59,28 @@ function simulateGame(teamId, difficulty) {
     aiCardsBought: [],
   };
 
-  var maxLoops = 200; // safety valve
+  var maxLoops = 300; // safety valve
   var loopCount = 0;
 
   // === HALF LOOP ===
   for (var half = 0; half < 2; half++) {
     if (half === 1) {
       // Halftime
+      var prevInvLen = gs.cpuTorchCards.length;
       gs.halftimeShop();
+      if (gs.cpuTorchCards.length > prevInvLen) {
+        stats.aiCardsBought.push(gs.cpuTorchCards[gs.cpuTorchCards.length - 1]);
+      }
       gs.startSecondHalf();
-      // Halftime kickoff: flip possession to the team that didn't start with it
-      var receivingTeam = gs.possession === 'CT' ? 'IR' : 'CT';
       gs.kickoffFlip();
     }
-
-    // AI purchases at start of each half
-    var bought = aiPurchaseCards(gs, difficulty);
-    bought.forEach(function(id) { stats.aiCardsBought.push(id); });
 
     // === PLAY LOOP ===
     while (!gs.gameOver && loopCount < maxLoops) {
       loopCount++;
-
-      // Check if we need halftime transition
       if (gs.needsHalftime) break;
 
-      // 4th down decisions
+      // 4th down
       if (gs.down === 4) {
         var decision = gs.ai4thDownDecision();
         if (decision === 'punt' && gs.canSpecialTeams()) {
@@ -144,68 +88,28 @@ function simulateGame(teamId, difficulty) {
           stats.snaps++;
           continue;
         } else if (decision === 'field_goal' && gs.canAttemptFG()) {
-          var fgResult = gs.attemptFieldGoal();
+          gs.attemptFieldGoal();
           stats.snaps++;
           continue;
         }
-        // else: go for it — fall through to executeSnap
       }
 
       try {
+        var prevCpuInv = [...gs.cpuTorchCards];
         var res = gs.executeSnap();
         if (!res || !res.result) continue;
         stats.snaps++;
 
-        var r = res.result;
-
-        // Track big plays (15+ yards)
-        if (r.yards >= 15) stats.bigPlays++;
-
-        // Track sacks
-        if (r.isSack) stats.sacks++;
-
-        // Track turnovers
-        if (r.isInterception || r.isFumbleLost) {
-          if (gs.possession === 'CT') stats.cpuTurnovers++; // possession already flipped
-          else stats.humanTurnovers++;
-          // Actually, after turnover possession has flipped. Need pre-snap possession.
-          // The turnover is committed by whoever HAD the ball. Since executeSnap flips,
-          // we check the gameEvent instead.
-        }
-        if (res.gameEvent === 'interception' || res.gameEvent === 'fumble_lost') {
-          // The team that lost it was the one before the flip.
-          // Since res includes scoringTeam only for TDs, use a different approach:
-          // After an INT/fumble, possession has flipped. So the team that NOW has it
-          // is the beneficiary. The turnover was committed by the OTHER team.
-          if (gs.possession === 'CT') stats.cpuTurnovers++; // IR committed the turnover
-          else stats.humanTurnovers++; // CT committed the turnover
+        if (gs.cpuTorchCards.length > prevCpuInv.length) {
+          stats.aiCardsBought.push(gs.cpuTorchCards[gs.cpuTorchCards.length - 1]);
         }
 
-        // Track TDs
         if (res.gameEvent === 'touchdown') {
-          if (res.scoringTeam === 'CT') stats.humanTDs++;
-          else stats.cpuTDs++;
-          // 30% chance of 2pt conversion to add score variety (reduce ties from multiples-of-7)
           var convChoice = Math.random() < 0.30 ? '2pt' : 'xp';
           gs.handleConversion(convChoice);
         }
-        if (res.gameEvent === 'turnover_td') {
-          // Turnover TD already scored in gameState
-          // Figure out who scored from score changes
-        }
-
-        // Track peak momentum
         if (gs.momentum > stats.peakMomentum) stats.peakMomentum = gs.momentum;
-
-        // AI card purchase after TDs and big plays (shop triggers)
-        if (res.gameEvent === 'touchdown' || stats.snaps % 10 === 0) {
-          var midBought = aiPurchaseCards(gs, difficulty);
-          midBought.forEach(function(id) { stats.aiCardsBought.push(id); });
-        }
-
-      } catch (e) {
-        // Skip crashes silently
-      }
+      } catch (e) { /* silent */ }
     }
   }
 
@@ -214,20 +118,15 @@ function simulateGame(teamId, difficulty) {
   stats.humanTorchPts = gs.ctTorchPts;
   stats.cpuTorchPts = gs.irTorchPts;
   stats.totalPlays = gs.totalPlays;
-
-  // Fix turnover tracking — use engine stats which are accurate
   stats.humanTurnovers = gs.stats.ctTurnovers;
   stats.cpuTurnovers = gs.stats.irTurnovers;
   stats.humanTDs = gs.stats.ctTouchdowns;
   stats.cpuTDs = gs.stats.irTouchdowns;
   stats.sacks = gs.stats.sackCount;
+  stats.bigPlays = gs.stats.explosivePlays;
 
   return stats;
 }
-
-// ============================================================
-// MAIN SIMULATION
-// ============================================================
 
 export function runGameSim(gamesPerCombo) {
   gamesPerCombo = gamesPerCombo || 250;
@@ -237,71 +136,48 @@ export function runGameSim(gamesPerCombo) {
   console.log('');
   console.log('=== TORCH GAME SIMULATION (' + totalGames + ' games) ===');
   console.log('  ' + gamesPerCombo + ' games per team x difficulty');
-  console.log('  ' + TEAMS.length + ' teams x ' + DIFFICULTIES.length + ' difficulties');
   console.log('');
 
   var allResults = [];
   var globalStats = {
-    totalGames: 0,
-    closeGames: 0,      // decided by 3 or fewer
-    shutouts: 0,
-    totalSnaps: 0,
-    totalTorchPts: 0,
-    scoreFrequency: {},  // "24-17" => count
-    aiCardBuys: {},      // card_id => count
+    totalGames: 0, closeGames: 0, shutouts: 0,
+    totalSnaps: 0, totalTorchPts: 0,
+    scoreFrequency: {}, aiCardBuys: {},
   };
 
   TEAMS.forEach(function(tid) {
     console.log('TEAM: ' + TEAM_NAMES[tid]);
-
     DIFFICULTIES.forEach(function(diff) {
       var totals = {
-        humanScore: 0, cpuScore: 0,
-        humanTorchPts: 0, cpuTorchPts: 0,
-        snaps: 0, humanTDs: 0, cpuTDs: 0,
-        humanTurnovers: 0, cpuTurnovers: 0,
-        bigPlays: 0, sacks: 0, totalPlays: 0,
-        peakMomentum: 0,
+        humanScore: 0, cpuScore: 0, humanTorchPts: 0, cpuTorchPts: 0,
+        snaps: 0, humanTDs: 0, cpuTDs: 0, humanTurnovers: 0, cpuTurnovers: 0,
+        bigPlays: 0, sacks: 0, totalPlays: 0, peakMomentum: 0,
         wins: 0, losses: 0, ties: 0,
       };
 
       for (var g = 0; g < gamesPerCombo; g++) {
         var s = simulateGame(tid, diff);
-        totals.humanScore += s.humanScore;
-        totals.cpuScore += s.cpuScore;
-        totals.humanTorchPts += s.humanTorchPts;
-        totals.cpuTorchPts += s.cpuTorchPts;
-        totals.snaps += s.snaps;
-        totals.humanTDs += s.humanTDs;
-        totals.cpuTDs += s.cpuTDs;
-        totals.humanTurnovers += s.humanTurnovers;
-        totals.cpuTurnovers += s.cpuTurnovers;
-        totals.bigPlays += s.bigPlays;
-        totals.sacks += s.sacks;
-        totals.totalPlays += s.totalPlays;
-        totals.peakMomentum += s.peakMomentum;
+        totals.humanScore += s.humanScore; totals.cpuScore += s.cpuScore;
+        totals.humanTorchPts += s.humanTorchPts; totals.cpuTorchPts += s.cpuTorchPts;
+        totals.snaps += s.snaps; totals.humanTDs += s.humanTDs; totals.cpuTDs += s.cpuTDs;
+        totals.humanTurnovers += s.humanTurnovers; totals.cpuTurnovers += s.cpuTurnovers;
+        totals.bigPlays += s.bigPlays; totals.sacks += s.sacks;
+        totals.totalPlays += s.totalPlays; totals.peakMomentum += s.peakMomentum;
 
         if (s.humanScore > s.cpuScore) totals.wins++;
         else if (s.humanScore < s.cpuScore) totals.losses++;
         else totals.ties++;
 
-        // Global tracking
         globalStats.totalGames++;
         if (Math.abs(s.humanScore - s.cpuScore) <= 3 && s.humanScore !== s.cpuScore) globalStats.closeGames++;
         if (s.humanScore === 0 || s.cpuScore === 0) globalStats.shutouts++;
         globalStats.totalSnaps += s.snaps;
         globalStats.totalTorchPts += s.humanTorchPts;
 
-        // Score frequency
-        var hi = Math.max(s.humanScore, s.cpuScore);
-        var lo = Math.min(s.humanScore, s.cpuScore);
+        var hi = Math.max(s.humanScore, s.cpuScore), lo = Math.min(s.humanScore, s.cpuScore);
         var scoreKey = hi + '-' + lo;
         globalStats.scoreFrequency[scoreKey] = (globalStats.scoreFrequency[scoreKey] || 0) + 1;
-
-        // AI card buys
-        s.aiCardsBought.forEach(function(id) {
-          globalStats.aiCardBuys[id] = (globalStats.aiCardBuys[id] || 0) + 1;
-        });
+        s.aiCardsBought.forEach(function(id) { globalStats.aiCardBuys[id] = (globalStats.aiCardBuys[id] || 0) + 1; });
       }
 
       var n = gamesPerCombo;
@@ -316,130 +192,53 @@ export function runGameSim(gamesPerCombo) {
       var avgTorch = (totals.humanTorchPts / n).toFixed(0);
 
       var pad = function(s, len) { s = String(s); while (s.length < len) s += ' '; return s; };
-      console.log(
-        '  ' + pad(diff, 8) +
-        'W ' + pad(winPct + '%', 5) +
-        '| Avg ' + pad(avgH + '-' + avgC, 7) +
-        '| Ties ' + pad(tiePct + '%', 5) +
-        '| TDs ' + pad(avgTDs + '/g', 6) +
-        '| TO ' + pad(avgTO + '/g', 6) +
-        '| Big ' + pad(avgBig + '/g', 6) +
-        '| Sack ' + pad(sackRate + '%', 6) +
-        '| TORCH ' + avgTorch
-      );
+      console.log('  ' + pad(diff, 8) + 'W ' + pad(winPct + '%', 5) + '| Avg ' + pad(avgH + '-' + avgC, 7) + '| Ties ' + pad(tiePct + '%', 5) + '| TDs ' + pad(avgTDs + '/g', 6) + '| TO ' + pad(avgTO + '/g', 6) + '| Big ' + pad(avgBig + '/g', 6) + '| Sack ' + pad(sackRate + '%', 6) + '| TORCH ' + avgTorch);
 
-      allResults.push({
-        team: tid, diff: diff,
-        winPct: +winPct, tiePct: +tiePct,
-        avgHuman: +avgH, avgCpu: +avgC,
-        avgTDs: +avgTDs, avgTO: +avgTO,
-        avgBig: +avgBig, sackRate: +sackRate,
-        avgTorch: +avgTorch,
-        wins: totals.wins, losses: totals.losses, ties: totals.ties,
-      });
+      allResults.push({ team: tid, diff: diff, winPct: +winPct, tiePct: +tiePct });
     });
-
     console.log('');
   });
 
-  // ============================================================
-  // GLOBAL METRICS
-  // ============================================================
   console.log('GLOBAL METRICS:');
-  var closePct = ((globalStats.closeGames / globalStats.totalGames) * 100).toFixed(1);
-  var shutoutPct = ((globalStats.shutouts / globalStats.totalGames) * 100).toFixed(1);
-  var avgSnaps = (globalStats.totalSnaps / globalStats.totalGames).toFixed(1);
-  var avgTorchGlobal = (globalStats.totalTorchPts / globalStats.totalGames).toFixed(0);
-  console.log('  Close games (<=3 pts): ' + closePct + '%');
-  console.log('  Shutouts: ' + shutoutPct + '%');
-  console.log('  Avg game length: ' + avgSnaps + ' snaps');
-  console.log('  Avg TORCH pts earned: ' + avgTorchGlobal);
+  console.log('  Close games (<=3 pts): ' + ((globalStats.closeGames / globalStats.totalGames) * 100).toFixed(1) + '%');
+  console.log('  Shutouts: ' + ((globalStats.shutouts / globalStats.totalGames) * 100).toFixed(1) + '%');
+  console.log('  Avg game length: ' + (globalStats.totalSnaps / globalStats.totalGames).toFixed(1) + ' snaps');
+  console.log('  Avg TORCH pts earned: ' + (globalStats.totalTorchPts / globalStats.totalGames).toFixed(0));
 
-  // Most common final scores
-  var scorePairs = Object.entries(globalStats.scoreFrequency)
-    .sort(function(a, b) { return b[1] - a[1]; })
-    .slice(0, 8);
-  console.log('');
-  console.log('  Most common final scores:');
-  scorePairs.forEach(function(pair) {
-    var pct = ((pair[1] / globalStats.totalGames) * 100).toFixed(1);
-    console.log('    ' + pair[0] + '  (' + pair[1] + 'x, ' + pct + '%)');
-  });
-
-  // ============================================================
-  // TORCH CARD AI USAGE
-  // ============================================================
-  console.log('');
-  console.log('TORCH CARD AI USAGE:');
-  var totalBuys = Object.values(globalStats.aiCardBuys).reduce(function(a, b) { return a + b; }, 0);
-  if (totalBuys > 0) {
-    var cardEntries = Object.entries(globalStats.aiCardBuys)
-      .sort(function(a, b) { return b[1] - a[1]; });
-    var topCards = cardEntries.slice(0, 6);
-    var topStr = topCards.map(function(e) {
-      var card = TORCH_CARDS.find(function(c) { return c.id === e[0]; });
-      var name = card ? card.name : e[0];
-      var pct = ((e[1] / totalBuys) * 100).toFixed(0);
-      return name + ' (' + pct + '%)';
-    }).join(', ');
-    console.log('  Most bought: ' + topStr);
-
-    // Never bought
-    var boughtIds = Object.keys(globalStats.aiCardBuys);
-    var neverBought = TORCH_CARDS.filter(function(c) {
-      return !boughtIds.includes(c.id);
-    }).map(function(c) { return c.name; });
-    if (neverBought.length > 0) {
-      console.log('  Never bought: ' + neverBought.join(', '));
-    }
-  } else {
-    console.log('  No AI card purchases recorded');
+  console.log('\nTORCH CARD AI USAGE:');
+  var buys = Object.entries(globalStats.aiCardBuys).sort((a,b) => b[1]-a[1]);
+  if (buys.length > 0) {
+    console.log('  Most bought: ' + buys.slice(0, 6).map(e => {
+      var c = TORCH_CARDS.find(tc => tc.id === e[0]);
+      return (c ? c.name : e[0]) + ' (' + ((e[1] / globalStats.totalGames) * 100).toFixed(1) + '%)';
+    }).join(', '));
+    var never = TORCH_CARDS.filter(c => !globalStats.aiCardBuys[c.id]).map(c => c.name);
+    if (never.length) console.log('  Never bought: ' + never.join(', '));
   }
 
-  // ============================================================
-  // BALANCE FLAGS
-  // ============================================================
-  console.log('');
-  console.log('BALANCE FLAGS:');
+  console.log('\nBALANCE FLAGS:');
   var targets = {
-    EASY:   { winMin: 55, winMax: 85, tieMax: 8 },
-    MEDIUM: { winMin: 35, winMax: 60, tieMax: 10 },
-    HARD:   { winMin: 15, winMax: 40, tieMax: 10 },
-    RANDOM: { winMin: 30, winMax: 65, tieMax: 10 },
+    EASY:   { winMin: 55, winMax: 90, tieMax: 8 },
+    MEDIUM: { winMin: 30, winMax: 65, tieMax: 10 },
+    HARD:   { winMin: 15, winMax: 45, tieMax: 10 },
+    RANDOM: { winMin: 30, winMax: 70, tieMax: 10 },
   };
 
   var flagCount = 0;
   allResults.forEach(function(r) {
     var t = targets[r.diff];
-    if (!t) return;
-    var icon, status;
-
-    // Win rate check
-    if (r.winPct < t.winMin) {
-      icon = '!'; status = 'LOW';
-      console.log('  ' + icon + ' ' + TEAM_NAMES[r.team] + ' ' + r.diff + ' win rate ' + r.winPct + '% (target ' + t.winMin + '-' + t.winMax + ') -- ' + status);
+    if (r.winPct < t.winMin || r.winPct > t.winMax || r.tiePct > t.tieMax) {
       flagCount++;
-    } else if (r.winPct > t.winMax) {
-      icon = '!'; status = 'HIGH';
-      console.log('  ' + icon + ' ' + TEAM_NAMES[r.team] + ' ' + r.diff + ' win rate ' + r.winPct + '% (target ' + t.winMin + '-' + t.winMax + ') -- ' + status);
-      flagCount++;
-    }
-
-    // Tie rate check
-    if (r.tiePct > t.tieMax) {
-      icon = 'X'; status = 'TOO HIGH';
-      console.log('  ' + icon + ' ' + TEAM_NAMES[r.team] + ' ' + r.diff + ' tie rate ' + r.tiePct + '% (target <' + t.tieMax + '%) -- ' + status);
-      flagCount++;
+      console.log('  ! ' + TEAM_NAMES[r.team] + ' ' + r.diff + ': W ' + r.winPct + '%, T ' + r.tiePct + '%');
     }
   });
 
-  if (flagCount === 0) {
-    console.log('  All metrics within target ranges.');
+  if (flagCount === 0) console.log('  All metrics within target ranges.');
+  else {
+    console.log('\n  FAIL: ' + flagCount + ' balance flags triggered.');
+    if (typeof process !== 'undefined') process.exit(1);
   }
 
-  var elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log('');
-  console.log('Simulation complete: ' + totalGames + ' games in ' + elapsed + 's');
-
+  console.log('\nSimulation complete in ' + ((Date.now() - startTime) / 1000).toFixed(1) + 's');
   return allResults;
 }

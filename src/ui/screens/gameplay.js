@@ -56,7 +56,7 @@ const CSS = `
 .T{height:100%;display:flex;flex-direction:column;background:#0A0804;overflow:hidden;position:relative;font-family:'Barlow Condensed',sans-serif}
 
 /* scoreboard */
-.T-sb{background:#0E0A04;border-bottom:1px solid #1E1610;flex-shrink:0;z-index:60;overflow:hidden;padding-top:env(safe-area-inset-top,0px)}
+.T-sb{background:#0E0A04;border-bottom:none;flex-shrink:0;z-index:60;overflow:hidden;padding-top:env(safe-area-inset-top,0px)}
 /* score row: 5 columns — icon | team+score | center | team+score | icon */
 .T-sb-row{display:grid;grid-template-columns:44px 1fr minmax(70px,auto) 1fr 44px;align-items:center;justify-items:center;padding:6px 10px;gap:4px}
 .T-sb-icon{line-height:1;text-align:center;display:flex;align-items:center;justify-content:center}
@@ -82,7 +82,7 @@ const CSS = `
 .T-sb-sit-torch{font-family:'Rajdhani';font-size:12px;color:#c8a030;letter-spacing:.5px;transition:transform .08s,text-shadow .08s;flex-shrink:0}
 
 /* TORCH points banner */
-.T-torch-banner{display:flex;align-items:center;justify-content:center;gap:4px;padding:8px 16px;background:linear-gradient(90deg,rgba(235,176,16,0.12) 0%,rgba(255,69,17,0.12) 100%);border-top:2px solid #EBB010;border-bottom:2px solid #EBB010;flex-shrink:0}
+.T-torch-banner{display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 16px;background:linear-gradient(90deg,rgba(235,176,16,0.12) 0%,rgba(255,69,17,0.12) 100%);border-top:2px solid #EBB010;border-bottom:2px solid #EBB010;flex-shrink:0}
 .T-torch-banner-flame{width:14px;height:14px;animation:none}
 @keyframes T-flame-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.85}}
 .T-torch-banner-label{font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:3px;line-height:1}
@@ -99,13 +99,13 @@ const CSS = `
 .T-drive-row-play{font-family:'Rajdhani';font-size:12px;color:#fff;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .T-drive-row-res{font-family:'Teko';font-weight:700;font-size:14px;min-width:40px;text-align:right;flex-shrink:0}
 .T-drive-stats{border-top:1px solid #2a2a2a;margin-top:10px;padding-top:8px;display:flex;gap:20px}
-.T-drive-stat{font-family:'Rajdhani';font-size:11px;font-weight:600;color:#fff}
-.T-drive-comm{margin-top:8px;font-family:'Rajdhani';font-size:16px;font-weight:700;color:#e8e6ff;line-height:1.3;letter-spacing:.3px}
-.T-drive-comm-sub{font-family:'Rajdhani';font-size:13px;color:#C4A265;line-height:1.2;margin-top:2px}
+.T-drive-stat{font-family:'Rajdhani';font-size:13px;font-weight:600;color:#fff}
+.T-drive-comm{margin-top:8px;font-family:'Rajdhani';font-size:13px;font-weight:700;color:#e8e6ff;line-height:1.3;letter-spacing:.3px}
+.T-drive-comm-sub{font-family:'Rajdhani';font-size:12px;color:#C4A265;line-height:1.2;margin-top:2px}
 .T-drive-idle{font-family:'Rajdhani';font-size:11px;color:#444;letter-spacing:.5px;margin-top:8px}
 
 /* field strip — Tecmo Bowl inspired */
-.T-strip{height:160px;flex-shrink:0;position:relative;background:transparent;overflow:hidden;border-bottom:1px solid #1E1610}
+.T-strip{height:136px;flex-shrink:0;position:relative;background:#050a08;overflow:hidden;border-bottom:1px solid #1E1610}
 .T-field-turf{display:none}
 .T-yard{display:none}
 .T-yard-5{display:none}
@@ -121,28 +121,30 @@ const CSS = `
 .T-midfield-logo{display:none}
 .T-hash{display:none}
 /* placed cards on field — centered vertically */
-.T-placed{position:absolute;top:50%;transform:translateY(-50%);height:150px;z-index:8;border-radius:6px;overflow:hidden;background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);border:2px solid #00ff44;box-shadow:0 0 12px rgba(0,255,68,.2),0 3px 10px rgba(0,0,0,0.5);display:flex;flex-direction:column}
-.T-placed-play{left:3%;width:30%}
-.T-placed-player{left:35%;width:30%}
-.T-placed-torch{right:3%;width:28%}
+.T-placed{position:absolute;top:50%;transform:translateY(-50%);height:120px;z-index:8;border-radius:6px;overflow:hidden;background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);border:2px solid #00ff44;box-shadow:0 0 12px rgba(0,255,68,.2),0 3px 10px rgba(0,0,0,0.5);display:flex;flex-direction:column}
+.T-placed-play{left:2%;width:26%}
+.T-placed-player{left:30%;width:26%}
+.T-placed-torch{left:58%;width:24%}
 /* empty drop outlines — centered vertically */
-.T-drop{position:absolute;top:50%;transform:translateY(-50%);height:150px;border:2px dashed rgba(255,255,255,0.4);border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:7;transition:all .3s ease;opacity:1;background:rgba(0,0,0,0.3)}
-.T-drop-play{left:3%;width:30%}
-.T-drop-player{left:35%;width:30%}
-.T-drop-torch{right:3%;width:28%;border:2px dashed rgba(255,69,17,0.5);animation:T-torch-ember 2s ease-in-out infinite}
-@keyframes T-torch-ember{0%,100%{box-shadow:0 0 8px rgba(255,69,17,0.3),inset 0 0 6px rgba(255,69,17,0.08);border-color:rgba(255,69,17,0.5)}50%{box-shadow:0 0 16px rgba(235,176,16,0.45),inset 0 0 10px rgba(235,176,16,0.12);border-color:rgba(235,176,16,0.65)}}
+.T-drop{position:absolute;top:50%;transform:translateY(-50%);height:120px;border:2px dashed rgba(255,255,255,0.4);border-radius:6px;display:flex;align-items:center;justify-content:center;z-index:7;transition:all .3s ease;opacity:1;background:rgba(0,0,0,0.3)}
+.T-drop-play{left:2%;width:26%}
+.T-drop-player{left:30%;width:26%}
+.T-drop-torch{left:58%;width:24%;border:2px dashed rgba(255,69,17,0.5);animation:T-torch-ember 2s ease-in-out infinite}
+@keyframes T-torch-ember{0%,100%{box-shadow:0 0 12px rgba(255,69,17,0.4),inset 0 0 8px rgba(255,69,17,0.1);border-color:rgba(255,69,17,0.6)}50%{box-shadow:0 0 24px rgba(235,176,16,0.55),inset 0 0 14px rgba(235,176,16,0.18);border-color:rgba(235,176,16,0.8)}}
+.T-torch-brand{font-family:'Teko';font-weight:700;font-size:16px;letter-spacing:4px;text-shadow:0 0 10px rgba(255,69,17,0.6)}
 .T-drop-torch.T-drop-active{animation:T-drop-pulse 1.5s ease-in-out infinite}
 .T-drop-lbl{font-family:'Rajdhani';font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-align:center;line-height:1.4}
 .T-drop-hover{border-color:#FF4511;background:rgba(255,69,17,.15);transform:translateY(-50%) scale(1.02)}
 @keyframes T-drop-pulse{0%,100%{border-color:rgba(255,69,17,0.4);box-shadow:0 0 10px rgba(255,69,17,0.1)}50%{border-color:#FF4511;box-shadow:inset 0 0 15px rgba(255,69,17,.2),0 0 15px rgba(255,69,17,.4);background:rgba(255,69,17,0.05)}}
 .T-drop-active{animation:T-drop-pulse 1.5s ease-in-out infinite;border-style:solid;opacity:1;z-index:10}
 .T-drop-active .T-drop-lbl{color:#FF4511;font-size:11px;text-shadow:0 0 8px rgba(255,69,17,0.5)}
-.T-drop-tutorial{animation:T-tut-play-pulse 1s ease-in-out infinite !important;border:3px solid #EBB010 !important;border-style:solid !important;background:rgba(235,176,16,0.08) !important}
-.T-drop-tutorial .T-drop-lbl{color:#EBB010 !important;font-size:14px !important;font-weight:700 !important;text-shadow:0 0 12px rgba(235,176,16,0.8) !important;letter-spacing:2px !important}
-@keyframes T-tut-play-pulse{0%,100%{box-shadow:0 0 10px rgba(235,176,16,0.3);border-color:#EBB01088}50%{box-shadow:0 0 24px rgba(235,176,16,0.6),inset 0 0 16px rgba(235,176,16,0.15);border-color:#EBB010}}
-.T-drop-tutorial-player{animation:T-tut-player-pulse 1s ease-in-out infinite !important;border:3px solid #4DA6FF !important;border-style:solid !important;background:rgba(77,166,255,0.08) !important}
-.T-drop-tutorial-player .T-drop-lbl{color:#4DA6FF !important;font-size:14px !important;font-weight:700 !important;text-shadow:0 0 12px rgba(77,166,255,0.8) !important;letter-spacing:2px !important}
-@keyframes T-tut-player-pulse{0%,100%{box-shadow:0 0 10px rgba(77,166,255,0.3);border-color:#4DA6FF88}50%{box-shadow:0 0 24px rgba(77,166,255,0.6),inset 0 0 16px rgba(77,166,255,0.15);border-color:#4DA6FF}}
+.T-drop-player.T-drop-active{animation:T-drop-player-pulse 1.5s ease-in-out infinite}
+.T-drop-player.T-drop-active .T-drop-lbl{color:#4DA6FF;font-size:11px;text-shadow:0 0 8px rgba(77,166,255,0.5)}
+@keyframes T-drop-player-pulse{0%,100%{border-color:rgba(77,166,255,0.4);box-shadow:0 0 10px rgba(77,166,255,0.1)}50%{border-color:#4DA6FF;box-shadow:inset 0 0 15px rgba(77,166,255,.2),0 0 15px rgba(77,166,255,.4);background:rgba(77,166,255,0.05)}}
+.T-drop-tutorial{animation:T-drop-pulse 1.5s ease-in-out infinite !important;border:3px solid #FF4511 !important;border-style:solid !important;background:rgba(255,69,17,0.06) !important}
+.T-drop-tutorial .T-drop-lbl{color:#FF4511 !important;font-size:11px !important;font-weight:700 !important;text-shadow:0 0 8px rgba(255,69,17,0.5) !important}
+.T-drop-tutorial-player{animation:T-drop-player-pulse 1.5s ease-in-out infinite !important;border:3px solid #4DA6FF !important;border-style:solid !important;background:rgba(77,166,255,0.06) !important}
+.T-drop-tutorial-player .T-drop-lbl{color:#4DA6FF !important;font-size:11px !important;font-weight:700 !important;text-shadow:0 0 8px rgba(77,166,255,0.5) !important}
 
 /* cards section — hidden during play-by-play */
 .T-panel{display:flex;flex-direction:column;overflow:visible;transition:background .6s,border-color .6s;flex-shrink:0;border-top:2px solid transparent;position:relative;z-index:1}
@@ -181,11 +183,11 @@ const CSS = `
 
 /* play-by-play terminal */
 /* Commentary — broadcast booth ticker */
-.T-narr{flex:1 1 auto;min-height:70px;max-height:120px;background:rgba(10,8,4,0.85);border-top:2px solid #FF6B00;overflow-y:auto;padding:8px 12px}
+.T-narr{flex:1 1 auto;min-height:70px;max-height:120px;background:rgba(10,8,4,0.85);overflow-y:auto;padding:8px 12px}
 .T-pbp{display:flex;flex-direction:column;gap:4px}
-.T-pbp-line{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:#fff;line-height:1.3;letter-spacing:.3px}
+.T-pbp-line{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;color:#fff;line-height:1.3;letter-spacing:.3px}
 .T-pbp-live{color:#fff}
-.T-pbp-sub{font-family:'Rajdhani';font-size:13px;color:#C4A265;line-height:1.2}
+.T-pbp-sub{font-family:'Rajdhani';font-size:14px;color:#C4A265;line-height:1.2}
 .T-pbp-result{font-family:'Rajdhani';font-size:12px;letter-spacing:.5px;line-height:1;margin-top:6px;white-space:nowrap;overflow:hidden}
 .T-pbp-down{font-family:'Rajdhani';font-size:10px;color:#FF6B00;margin-top:4px;letter-spacing:.5px;line-height:1;white-space:nowrap;overflow:hidden}
 .T-pbp-idle{font-family:'Rajdhani',sans-serif;font-size:11px;color:#444;letter-spacing:.5px}
@@ -277,13 +279,13 @@ const CSS = `
 @keyframes T-2min-pulse { 0%,100% { box-shadow: inset 0 0 0 0 transparent; } 50% { box-shadow: inset 0 0 30px rgba(255,0,64,0.08); } }
 @keyframes T-clock-critical { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
 @keyframes T-snap-pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-.T-clash-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:auto}
-.T-clash-dim{position:absolute;inset:0;background:rgba(6,4,2,0.85);transition:opacity 0.3s}
+.T-clash-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;pointer-events:auto}
+.T-clash-dim{position:absolute;inset:0;background:#0A0804;transition:opacity 0.3s}
 .T-clash-cards{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:12px;perspective:800px}
-.T-clash-card-wrap{border-radius:8px;overflow:hidden;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s,box-shadow 0.3s;transform-style:preserve-3d}
-.T-clash-card-off{background:rgba(255,255,255,0.06);border:2px solid rgba(255,255,255,0.2);padding:10px 12px;text-align:center;min-width:80px}
-.T-clash-card-def{background:rgba(255,255,255,0.06);border:2px solid rgba(255,255,255,0.2);padding:10px 12px;text-align:center;min-width:80px}
-.T-clash-result{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:20px}
+.T-clash-card-wrap{border-radius:10px;overflow:hidden;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s,box-shadow 0.3s;transform-style:preserve-3d;max-width:calc(50% - 24px);flex:1}
+.T-clash-card-off{background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.15);padding:12px 16px;text-align:center;min-width:100px}
+.T-clash-card-def{background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.15);padding:12px 16px;text-align:center;min-width:100px}
+.T-clash-result{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:6px}
 .T-clash-yds{font-family:'Teko';font-weight:700;font-size:64px;line-height:1;text-shadow:0 0 24px currentColor;animation:T-clash-yds 0.6s cubic-bezier(0.22,1.3,0.36,1) both}
 .T-clash-label{font-family:'Rajdhani';font-weight:700;font-size:14px;letter-spacing:1px;opacity:0.8}
 .T-clash-flash{position:absolute;inset:0;z-index:4;pointer-events:none;animation:T-clash-flash 0.3s ease-out forwards}
@@ -310,7 +312,7 @@ function mkPlayerCardEl(p, team) {
   return buildMaddenPlayer({
     name: p.name, pos: p.pos, ovr: p.ovr,
     num: p.num || '', tier: tier, badge: p.badge, isStar: p.isStar,
-    ability: p.ability || '',
+    ability: p.ability || '', stars: p.stars, trait: p.trait,
     teamColor: team.colors ? team.colors.primary : (team.accent || '#FF4511'),
     teamId: GS.team
   }, 80, 150);
@@ -438,10 +440,13 @@ export function buildGameplay() {
   let phase = 'play'; // play | torch | ready | busy
   let driveSnaps = [];
   let prev2min = gs.twoMinActive;
+  var _scoutActive = false; // Scout Report card effect
   var _lastPlayFlashed = false; // true after LAST PLAY flash fires, reset each half
+  var _pbpVisible = false; // Play-by-play toggle state
   var snapCount = 0; // Track snap number for teach tooltips
-  var _tutorialStep = (FEATURES.tutorialSystem && GS.isFirstSeason) ? 1 : 0; // 0=done, 1=pick play, 2=pick player, 3=snap
-  var _torchTutorialShown = !!localStorage.getItem('torch_torch_tutorial'); // One-time torch card tutorial
+  var _onboardingDone = true; // Onboarding disabled — will revisit
+  var _tutorialStep = 0;
+  var _torchTutorialShown = true; // Onboarding disabled — will revisit
   var twoMinTimer = null; // Real-time clock interval for 2-minute drill
   var _fourthDownDecided = false; // true after player clicks GO FOR IT (hides the bar)
   var _driveHeat = 0; // 0-120 momentum bar
@@ -578,6 +583,8 @@ export function buildGameplay() {
   var cOffQBName = '', cOffRBName = '', cOffWRName = '';
   // CPU defense stats (tracking CPU's defensive players)
   var cDefStats = {}; // { name: { pos, tkl, pbu, int, sack } }
+  // Per-player game stats for card display (keyed by player id)
+  var _playerGameStats = {}; // { id: { yds, rec, recYds, rushAtt, rushYds, passAtt, passComp, passYds, tkl, pbu, int, sack, td } }
   // CPU roster for QB lookup
   var cpuOffRoster = getOffenseRoster(oppId);
 
@@ -592,12 +599,21 @@ export function buildGameplay() {
   var torchInventory = (GS.season && GS.season.torchCards) ? GS.season.torchCards.slice() : [];
   var selectedPreSnap = null; // card object selected for current snap
 
+  // Consume a torch card from both UI and engine inventories
+  function consumeTorchCard(cardId) {
+    var idx = torchInventory.findIndex(function(c) { return c.id === cardId; });
+    if (idx >= 0) torchInventory.splice(idx, 1);
+    if (GS.season) GS.season.torchCards = torchInventory.slice();
+    var eIdx = gs ? gs.humanTorchCards.indexOf(cardId) : -1;
+    if (eIdx >= 0) gs.humanTorchCards.splice(eIdx, 1);
+  }
+
   // Helper: resolve kickoff with HOUSE_CALL auto-consumption
   function _resolveKickoff(humanReceives) {
     var opts = {};
     if (humanReceives) {
       var hcIdx = torchInventory.findIndex(function(c) { return c.id === 'house_call'; });
-      if (hcIdx >= 0) { opts.houseCall = true; torchInventory.splice(hcIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); torchCardToast('HOUSE CALL', 'Guaranteed 50+ yard return'); }
+      if (hcIdx >= 0) { opts.houseCall = true; consumeTorchCard('house_call'); torchCardToast('HOUSE CALL', 'Guaranteed 50+ yard return'); }
     }
     return gs.constructor.resolveKickoff(null, opts);
   }
@@ -673,21 +689,31 @@ export function buildGameplay() {
   bug.addEventListener('click', function() {
     if (phase === 'busy') return;
     import('../components/statsSheet.js').then(function(mod) {
+      // Compute TDs, sacks, INTs from tracked stats
+      var _hTDs = 0, _hSacks = 0, _hInts = 0;
+      var _cTDs = 0, _cSacks = 0, _cInts = 0;
+      Object.keys(hDefStats).forEach(function(k) { var d = hDefStats[k]; _hSacks += d.sack; _hInts += d.int; });
+      Object.keys(cDefStats).forEach(function(k) { var d = cDefStats[k]; _cSacks += d.sack; _cInts += d.int; });
+      var s = gs.getSummary();
       mod.showStatsSheet(el, {
         humanTeam: hTeam, oppTeam: oTeam,
-        humanScore: hAbbr === 'CT' ? gs.ctScore : gs.irScore,
-        oppScore: hAbbr === 'CT' ? gs.irScore : gs.ctScore,
+        humanScore: hAbbr === 'CT' ? s.ctScore : s.irScore,
+        oppScore: hAbbr === 'CT' ? s.irScore : s.ctScore,
         half: gs.half, playsUsed: gs.playsUsed,
-        offPassAtt: hOffPassAtt || 0, offPassComp: hOffPassComp || 0, offPassYds: hOffPassYds || 0,
-        offRushAtt: hOffRushAtt || 0, offRushYds: hOffRushYds || 0, offTDs: 0,
-        defSacks: 0, defInts: 0, defPBUs: 0,
-        torchPts: hAbbr === 'CT' ? gs.getSummary().ctTorchPts : gs.getSummary().irTorchPts,
+        hPassAtt: hOffPassAtt, hPassComp: hOffPassComp, hPassYds: hOffPassYds,
+        hRushAtt: hOffRushAtt, hRushYds: hOffRushYds,
+        hSacks: _hSacks, hInts: _hInts,
+        hTorch: hAbbr === 'CT' ? s.ctTorchPts : s.irTorchPts,
+        cPassAtt: cOffPassAtt, cPassComp: cOffPassComp, cPassYds: cOffPassYds,
+        cRushAtt: cOffRushAtt, cRushYds: cOffRushYds,
+        cSacks: _cSacks, cInts: _cInts,
+        cTorch: hAbbr === 'CT' ? s.irTorchPts : s.ctTorchPts,
       });
     });
   });
   // ── PLAY-BY-PLAY TICKER ──
   var ticker = document.createElement('div');
-  ticker.style.cssText = "position:relative;height:18px;overflow:hidden;background:rgba(0,0,0,0.6);border-bottom:1px solid #1a1a1a;flex-shrink:0;";
+  ticker.style.cssText = "position:relative;height:0;overflow:hidden;background:transparent;border:none;flex-shrink:0;display:none;";
   var tickerInner = document.createElement('div');
   tickerInner.style.cssText = "position:absolute;white-space:nowrap;font-family:'Rajdhani';font-weight:700;font-size:10px;color:#888;letter-spacing:0.5px;line-height:18px;padding-left:100%;";
   ticker.appendChild(tickerInner);
@@ -957,7 +983,7 @@ export function buildGameplay() {
     const halfName = s.twoMinActive ? '2-MINUTE DRILL' : (s.half === 1 ? 'FIRST HALF' : 'SECOND HALF');
     _bugEls.halfEl.textContent = halfName;
     _bugEls.halfEl.style.color = s.twoMinActive ? '#e03050' : '';
-    _bugEls.snapEl.textContent = s.playsUsed + '/20';
+    _bugEls.snapEl.textContent = s.playsUsed + '/' + (gs.playsPerHalf || 20);
     _bugEls.snapEl.style.display = s.twoMinActive ? 'none' : '';
     _bugEls.clockEl.textContent = fmtClock(Math.max(0, s.clockSeconds));
     _bugEls.clockEl.className = s.twoMinActive ? 'T-sb-countdown T-sb-countdown-live' : 'T-sb-countdown';
@@ -1082,6 +1108,69 @@ export function buildGameplay() {
     }
 
     drawTorchBanner();
+
+    // Dim non-active UI during tutorial
+    var _isTut = _tutorialStep > 0 && snapCount === 0;
+    bug.style.opacity = _isTut ? '0.2' : '';
+    bug.style.pointerEvents = _isTut ? 'none' : '';
+    torchBanner.style.opacity = _isTut ? '0.2' : '';
+    torchBanner.style.pointerEvents = _isTut ? 'none' : '';
+    stripWrap.style.opacity = _isTut ? '0.3' : '';
+
+    // One-time tooltip: play counter (after 3rd snap — give them time to settle in)
+    if (!_playCounterTipShown && s.playsUsed >= 3 && !_isTut && !s.twoMinActive) {
+      _playCounterTipShown = true;
+      showBugTooltip(_bugEls.snapEl, s.playsUsed + ' of ' + (gs.playsPerHalf || 20) + ' plays used this half. Then the 2-minute drill begins.', 'torch_tip_playcounter');
+    }
+
+    // One-time hint: scorebug is tappable for stats (after 5th snap)
+    if (!_statsTipShown && s.playsUsed >= 5 && !_isTut && !s.twoMinActive) {
+      _statsTipShown = true;
+      localStorage.setItem('torch_tip_stats', '1');
+      var statHint = document.createElement('div');
+      statHint.style.cssText = "text-align:center;padding:2px;font-family:'Rajdhani';font-weight:700;font-size:9px;color:#555;letter-spacing:1px;cursor:pointer;";
+      statHint.textContent = 'TAP SCOREBOARD FOR GAME STATS';
+      statHint.onclick = function() { bug.click(); };
+      bug.appendChild(statHint);
+      setTimeout(function() {
+        if (statHint.parentNode) {
+          try { gsap.to(statHint, { opacity: 0, duration: 0.3, onComplete: function() { statHint.remove(); } }); }
+          catch(e) { statHint.remove(); }
+        }
+      }, 6000);
+    }
+
+    // One-time tooltip: 2-minute drill (first time it activates)
+    if (!_2minTipShown && s.twoMinActive) {
+      _2minTipShown = true;
+      showBugTooltip(_bugEls.clockEl, '2-MINUTE DRILL! Clock runs on completions and runs. Incompletes and spikes stop it.', 'torch_tip_2min');
+    }
+  }
+  var _playCounterTipShown = true; // Onboarding disabled — will revisit
+  var _2minTipShown = true;
+  var _statsTipShown = true;
+
+  function showBugTooltip(anchor, text, storageKey) {
+    if (!anchor) return;
+    if (storageKey) localStorage.setItem(storageKey, '1');
+    var tip = document.createElement('div');
+    tip.style.cssText = "position:absolute;left:50%;transform:translateX(-50%);top:100%;margin-top:4px;z-index:100;padding:8px 12px;background:rgba(10,8,4,0.95);border:1px solid #EBB01044;border-radius:6px;max-width:260px;text-align:center;pointer-events:auto;";
+    tip.innerHTML =
+      "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:12px;color:#ccc;line-height:1.3;\">" + text + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#EBB010;letter-spacing:1px;margin-top:4px;cursor:pointer;\">GOT IT</div>";
+    tip.onclick = function(e) {
+      e.stopPropagation();
+      try { gsap.to(tip, { opacity: 0, y: -4, duration: 0.2, onComplete: function() { tip.remove(); } }); }
+      catch(err) { tip.remove(); }
+    };
+    var parent = anchor.parentNode;
+    if (parent) { parent.style.position = 'relative'; parent.appendChild(tip); }
+    setTimeout(function() {
+      if (tip.parentNode) {
+        try { gsap.to(tip, { opacity: 0, y: -4, duration: 0.2, onComplete: function() { tip.remove(); } }); }
+        catch(err) { tip.remove(); }
+      }
+    }, 8000);
   }
 
   // ── TORCH POINTS BANNER ──
@@ -1099,7 +1188,8 @@ export function buildGameplay() {
     }
     var flameSvg = '<svg class="T-torch-banner-flame" viewBox="0 0 44 44" fill="none"><defs><linearGradient id="tbf" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#EBB010"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#tbf)"/></svg>';
     var cardCount = torchInventory.length;
-    var cardsBtn = cardCount > 0 ? '<button style="font-family:\'Rajdhani\';font-weight:700;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:3px;border:1px solid #EBB01066;background:transparent;color:#EBB010;cursor:pointer;" id="torch-cards-btn">CARDS (' + cardCount + ')</button>' : '';
+    var cardsBtn = cardCount > 0 ? '<button style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:\'Teko\';font-weight:700;font-size:11px;letter-spacing:1px;padding:3px 8px;border-radius:4px;border:1px solid ' + hTeam.accent + '88;background:rgba(255,69,17,0.06);color:' + hTeam.accent + ';cursor:pointer;text-shadow:0 0 6px ' + hTeam.accent + '40;box-shadow:0 0 8px ' + hTeam.accent + '20;animation:T-torch-ember 2s ease-in-out infinite;" id="torch-cards-btn">' + cardCount + ' CARD' + (cardCount > 1 ? 'S' : '') + '</button>' : '';
+    torchBanner.style.position = 'relative';
     torchBanner.innerHTML = flameSvg +
       '<div class="T-torch-banner-label">TORCH</div>' +
       '<div class="T-torch-banner-pts" style="text-shadow:0 0 12px ' + hTeam.accent + ';">' + displayVal + '</div>' +
@@ -1172,6 +1262,22 @@ export function buildGameplay() {
   const strip = document.createElement('div'); strip.className = 'T-strip';
   stripWrap.appendChild(strip);
 
+  // LOS + FD lines on stripWrap (not strip — survives innerHTML)
+  // Full-width lines so they're unmissable
+  var _losLine = document.createElement('div');
+  _losLine.style.cssText = 'position:absolute;left:0;right:0;height:3px;border-radius:1px;z-index:8;pointer-events:none;';
+  stripWrap.appendChild(_losLine);
+  var _fdLine = document.createElement('div');
+  _fdLine.style.cssText = 'position:absolute;left:0;right:0;height:3px;background:#EBB010;box-shadow:0 0 6px rgba(235,176,16,0.5);border-radius:1px;z-index:8;pointer-events:none;';
+  stripWrap.appendChild(_fdLine);
+  var _ballYardLabel = document.createElement('div');
+  _ballYardLabel.style.cssText = "position:absolute;z-index:9;pointer-events:none;font-family:'Rajdhani';font-weight:700;font-size:11px;letter-spacing:0.5px;text-shadow:0 1px 4px rgba(0,0,0,0.9),0 0 8px rgba(0,0,0,0.9);white-space:nowrap;transform:translateY(-50%);";
+  stripWrap.appendChild(_ballYardLabel);
+  var _fdLabel = document.createElement('div');
+  _fdLabel.style.cssText = "position:absolute;z-index:9;pointer-events:none;font-family:'Rajdhani';font-weight:700;font-size:11px;color:#EBB010;letter-spacing:0.5px;text-shadow:0 1px 4px rgba(0,0,0,0.9),0 0 8px rgba(0,0,0,0.9);white-space:nowrap;transform:translateY(-50%);";
+  _fdLabel.textContent = '1ST';
+  stripWrap.appendChild(_fdLabel);
+
   // Canvas field renderer — layered behind card drop zones
   var _fieldAnimator = null;
   var _fieldCanvas = null;
@@ -1207,6 +1313,8 @@ export function buildGameplay() {
     if (wId === 'clear' || wId === 'heat') return;
     try {
       _weatherAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      // Resume for iOS (AudioContext created outside user gesture)
+      if (_weatherAudioCtx.state === 'suspended') _weatherAudioCtx.resume();
       var gain = _weatherAudioCtx.createGain();
       gain.gain.value = 0.03;
       gain.connect(_weatherAudioCtx.destination);
@@ -1281,7 +1389,7 @@ export function buildGameplay() {
     // Canvas field render (behind DOM overlay)
     initFieldCanvas();
     if (_fieldAnimator) {
-      var ballYard = s.ballPosition * 1.1 + 5; // 0-100 → ~5-115 yard range
+      var ballYard = s.ballPosition + 10; // 0-100 → 10-110 (matches canvas yard line scale)
       var firstDownYard = ballYard + (isOff ? s.distance : -s.distance);
       var offTeamId = isOff ? GS.team : (GS.opponent || 'wolves');
       var defTeamId = isOff ? (GS.opponent || 'wolves') : GS.team;
@@ -1292,17 +1400,81 @@ export function buildGameplay() {
           : (_fieldAnimator.PLAY_FORMATION_MAP[selPl.playType] || 'shotgun_deuce');
       }
       _fieldAnimator.render({
-        ballYard: Math.max(5, Math.min(115, ballYard)),
-        losYard: Math.max(5, Math.min(115, ballYard)),
-        firstDownYard: Math.max(0, Math.min(120, firstDownYard)),
+        ballYard: Math.max(10, Math.min(110, ballYard)),
+        losYard: null,
+        firstDownYard: null,
         formation: formation,
         offTeam: offTeamId,
         defTeam: defTeamId,
+        skipDots: true,
+        skipLOS: true,
       });
     }
 
-    // Red zone intensity glow
+    // Ball position indicator bar
     var ydsToEz = gs.yardsToEndzone();
+    var ballPct = 7 + s.ballPosition * 0.86; // same math as lp
+    // Position LOS and FD lines to match canvas yard lines exactly.
+    // Lines are children of stripWrap. Canvas is child of strip which is child of stripWrap.
+    // We need pixel offset from stripWrap's top edge to where the yard line appears on screen.
+    // Position LOS + FD lines to match canvas yard lines.
+    // Canvas uses ballYard = ballPosition * 1.1 + 5 to map 0-100 → 5-115.
+    // Canvas yard numbers: "20" is at absolute yard 30 (nyd-10 display).
+    // For DOM overlay we use the same ballYard and same viewport math.
+    var _byrd = s.ballPosition + 10; // same transform as canvas render call
+    var _visYards = 25;
+    var _cntr = Math.max(_visYards / 2, Math.min(120 - _visYards / 2, _byrd));
+    var _topYard = _cntr - _visYards / 2;
+    var _h = strip.clientHeight || 136;
+    var _ypx = _h / _visYards;
+
+    // LOS line
+    var _losPx = ((_byrd - _topYard) * _ypx) - 1;
+    _losLine.style.top = _losPx + 'px';
+    _losLine.style.left = '90%';
+    _losLine.style.right = '0';
+    _losLine.style.background = pc;
+    _losLine.style.boxShadow = '0 0 6px ' + pc;
+
+    // CT offense drives DOWN canvas (higher yard = lower pixel). Behind = above (lower px).
+    var _offDrivesDown = (gs.possession === 'CT');
+
+    // First down line — half width
+    var _fdYard = _byrd + (isOff ? s.distance : -s.distance);
+    var _fdPx = ((_fdYard - _topYard) * _ypx) - 1;
+    if (_fdPx >= -3 && _fdPx <= _h + 3) {
+      _fdLine.style.top = _fdPx + 'px';
+      _fdLine.style.left = '90%';
+      _fdLine.style.right = '0';
+      _fdLine.style.display = '';
+      // Label — "TD" in goal-to-go, "1ST" otherwise
+      _fdLabel.textContent = ydsToEz <= 10 ? 'TD' : '1ST';
+      _fdLabel.style.color = ydsToEz <= 10 ? '#ff0040' : '#EBB010';
+      _fdLabel.style.top = (_fdPx + 1) + 'px';
+      _fdLabel.style.right = '10.5%';
+      _fdLabel.style.display = '';
+    } else {
+      _fdLine.style.display = 'none';
+      _fdLabel.style.display = 'none';
+    }
+
+    // Yard label — BEHIND the LOS (on the offense's own side)
+    var _yardDisplay = ydsToEz <= 10 ? 'GL' : ydsToEz === 50 ? '50' : ydsToEz <= 50 ? ydsToEz : (100 - ydsToEz);
+    var _caret = _offDrivesDown ? '\u25BE' : '\u25B4';
+    // Yard label — left of the LOS line, vertically centered
+    _ballYardLabel.style.top = (_losPx + 1) + 'px';
+    _ballYardLabel.style.right = '10.5%';
+    _ballYardLabel.style.color = pc;
+    _ballYardLabel.textContent = _yardDisplay + _caret;
+
+    // Red zone: intensify
+    if (ydsToEz <= 20 && gs.possession === hAbbr) {
+      _losLine.style.background = '#ff0040';
+      _losLine.style.boxShadow = '0 0 12px #ff0040, 0 0 24px rgba(255,0,64,0.6)';
+      _ballYardLabel.style.color = '#ff0040';
+    }
+
+    // Red zone intensity glow
     var isInRedZone = gs.possession === hAbbr && ydsToEz <= 20;
     if (isInRedZone) {
       stripWrap.style.boxShadow = 'inset 0 0 20px rgba(255,0,64,0.1), inset 0 0 40px rgba(255,0,64,0.05)';
@@ -1355,46 +1527,66 @@ export function buildGameplay() {
 
     // Drop zones — empty outlines for unfilled, actual card for filled
     // During tutorial: show instructional text + flash on the active slot
+    var isTut = _tutorialStep > 0 && snapCount === 0;
     var isTutPlay = _tutorialStep === 1 && snapCount === 0;
     var isTutPlayer = _tutorialStep === 2 && snapCount === 0;
-    const playLbl = isTutPlay ? 'TAP<br>PLAY<br>CARD' : (phase === 'play' ? 'TAP<br><br>PLAY<br><br>CARD' : 'PLAY');
+    var isTutSnap = _tutorialStep === 3 && snapCount === 0;
+    const playLbl = 'TAP<br><br>PLAY<br><br>CARD';
     if (selPl) {
       h += '<div class="T-placed T-placed-play" id="T-placed-play-slot"></div>';
     } else {
-      var playDropClass = 'T-drop T-drop-play' + (phase==='play'?' T-drop-active':'') + (isTutPlay ? ' T-drop-tutorial' : '');
-      h += '<div class="' + playDropClass + '" data-drop="play"><span class="T-drop-lbl">' + playLbl + '</span></div>';
+      var playDimStyle = (isTut && !isTutPlay) ? 'opacity:0.15;pointer-events:none;' : '';
+      var playDropClass = 'T-drop T-drop-play T-drop-active' + (isTutPlay ? ' T-drop-tutorial' : '');
+      h += '<div class="' + playDropClass + '" data-drop="play" style="' + playDimStyle + '"><span class="T-drop-lbl">' + playLbl + '</span></div>';
     }
 
-    const playerLbl = isTutPlayer ? 'TAP<br>PLAYER<br>CARD' : (phase === 'player' ? 'TAP<br><br>PLAYER<br><br>CARD' : 'PLAYER');
+    const playerLbl = 'TAP<br><br>PLAYER<br><br>CARD';
     if (selP) {
       h += '<div class="T-placed T-placed-player" id="T-placed-player-slot"></div>';
     } else {
-      var playerDropClass = 'T-drop T-drop-player' + (phase==='player'?' T-drop-active':'') + (isTutPlayer ? ' T-drop-tutorial-player' : '');
-      h += '<div class="' + playerDropClass + '" data-drop="player"><span class="T-drop-lbl">' + playerLbl + '</span></div>';
+      var playerDimStyle = (isTut && !isTutPlayer) ? 'opacity:0.15;pointer-events:none;' : '';
+      var playerDropClass = 'T-drop T-drop-player T-drop-active' + (isTutPlayer ? ' T-drop-tutorial-player' : '');
+      h += '<div class="' + playerDropClass + '" data-drop="player" style="' + playerDimStyle + '"><span class="T-drop-lbl">' + playerLbl + '</span></div>';
     }
 
     if (selTorch) {
       h += '<div class="T-placed T-placed-torch" id="T-placed-torch-slot"></div>';
     } else {
       const hasTorchCards = torchInventory.length > 0;
-      const torchLbl = hasTorchCards ? (phase === 'torch' ? 'TAP<br><br>TORCH<br><br>CARD' : 'TORCH') : 'TORCH';
-      h += '<div class="T-drop T-drop-torch' + (phase==='torch'?' T-drop-active':'') + '" data-drop="torch"><span class="T-drop-lbl">' + torchLbl + '</span></div>';
+      var _flameSvg = '<svg viewBox="0 0 44 44" width="16" height="18" fill="none" style="display:block;margin:0 auto 2px;animation:T-flame-pulse 2s ease-in-out infinite;filter:drop-shadow(0 0 4px ' + hTeam.accent + ')"><defs><linearGradient id="tf' + hTeam.accent.replace('#','') + '" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="' + hTeam.accent + '"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#tf' + hTeam.accent.replace('#','') + ')"/></svg>';
+      const torchLbl = hasTorchCards
+        ? (phase === 'torch' ? 'TAP<br><br>TORCH<br><br>CARD' : _flameSvg + '<span class="T-torch-brand" style="color:' + hTeam.accent + '">TORCH</span>')
+        : _flameSvg + '<span class="T-torch-brand" style="color:' + hTeam.accent + '">TORCH</span>';
+      var torchDimStyle = (isTut && !isTutSnap) ? 'opacity:0.15;pointer-events:none;' : '';
+      h += '<div class="T-drop T-drop-torch' + (phase==='torch'?' T-drop-active':'') + '" data-drop="torch" style="' + torchDimStyle + '"><span class="T-drop-lbl">' + torchLbl + '</span></div>';
     }
 
     strip.innerHTML = h;
+
+    // Re-insert canvas field behind everything (strip.innerHTML destroys it)
+    if (_fieldCanvas && _fieldCanvas.parentNode !== strip) {
+      strip.insertBefore(_fieldCanvas, strip.firstChild);
+    }
+    // Re-insert ball position indicator (also destroyed by innerHTML)
+    // LOS/FD lines are on stripWrap, not strip — no re-insert needed
 
     // Append actual shared-builder DOM cards into placed slots with lock-in animation
     // Each placed slot is tappable to deselect the card
     if (selPl) {
       var playSlot = strip.querySelector('#T-placed-play-slot');
       if (playSlot) {
-        playSlot.style.cursor = 'pointer';
-        playSlot.onclick = function() {
-          SND.select();
-          try { gsap.to(playSlot, { y: -30, opacity: 0, scale: 0.85, duration: 0.2, ease: 'power2.in', onComplete: function() {
-            selPl = null; phase = 'play'; drawField(); drawPanel();
-          }}); } catch(e) { selPl = null; phase = 'play'; drawField(); drawPanel(); }
-        };
+        if (_tutorialStep > 0 && snapCount === 0) {
+          playSlot.style.opacity = '0.3';
+          playSlot.style.pointerEvents = 'none';
+        } else {
+          playSlot.style.cursor = 'pointer';
+          playSlot.onclick = function() {
+            SND.select();
+            try { gsap.to(playSlot, { y: -30, opacity: 0, scale: 0.85, duration: 0.2, ease: 'power2.in', onComplete: function() {
+              selPl = null; phase = 'play'; drawField(); drawPanel();
+            }}); } catch(e) { selPl = null; phase = 'play'; drawField(); drawPanel(); }
+          };
+        }
         var playEl = mkPlayCardEl(selPl);
         playEl.style.width = '100%';
         playEl.style.height = '100%';
@@ -1408,17 +1600,42 @@ export function buildGameplay() {
     if (selP) {
       var playerSlot = strip.querySelector('#T-placed-player-slot');
       if (playerSlot) {
-        playerSlot.style.cursor = 'pointer';
-        playerSlot.onclick = function() {
-          SND.select();
-          try { gsap.to(playerSlot, { y: -30, opacity: 0, scale: 0.85, duration: 0.2, ease: 'power2.in', onComplete: function() {
-            selP = null; phase = 'play'; drawField(); drawPanel();
-          }}); } catch(e) { selP = null; phase = 'play'; drawField(); drawPanel(); }
-        };
+        if (_tutorialStep > 0 && snapCount === 0) {
+          playerSlot.style.opacity = '0.3';
+          playerSlot.style.pointerEvents = 'none';
+        } else {
+          playerSlot.style.cursor = 'pointer';
+          playerSlot.onclick = function() {
+            SND.select();
+            try { gsap.to(playerSlot, { y: -30, opacity: 0, scale: 0.85, duration: 0.2, ease: 'power2.in', onComplete: function() {
+              selP = null; phase = 'play'; drawField(); drawPanel();
+            }}); } catch(e) { selP = null; phase = 'play'; drawField(); drawPanel(); }
+          };
+        }
         var playerEl = mkPlayerCardEl(selP, hTeam);
         playerEl.style.width = '100%';
         playerEl.style.height = '100%';
         playerSlot.appendChild(playerEl);
+        // Add player game stats to placed card
+        var _pStats = selP.id ? _playerGameStats[selP.id] : null;
+        if (_pStats) {
+          var _sp = [];
+          if (_pStats.passComp || _pStats.passAtt) _sp.push((_pStats.passComp||0)+'/'+(_pStats.passAtt||0)+', '+(_pStats.passYds||0)+'y');
+          if (_pStats.rec) _sp.push(_pStats.rec+'rec '+(_pStats.recYds||0)+'y');
+          if (_pStats.rushAtt) _sp.push(_pStats.rushAtt+'car '+(_pStats.rushYds||0)+'y');
+          if (_pStats.td) _sp.push(_pStats.td+'TD');
+          if (_pStats.tkl) _sp.push(_pStats.tkl+'tkl');
+          if (_pStats.sack) _sp.push(_pStats.sack+'sck');
+          if (_pStats.int) _sp.push(_pStats.int+'INT');
+          if (_pStats.pbu) _sp.push(_pStats.pbu+'PBU');
+          if (_sp.length > 0) {
+            playerSlot.style.position = 'relative';
+            var _statBar = document.createElement('div');
+            _statBar.style.cssText = "position:absolute;bottom:0;left:0;right:0;z-index:10;background:linear-gradient(180deg,transparent," + hTeam.accent + "22);border-top:1px solid " + hTeam.accent + "44;padding:3px 4px 2px;border-radius:0 0 6px 6px;";
+            _statBar.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:" + hTeam.accent + ";text-align:center;letter-spacing:0.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 0 4px " + hTeam.accent + "40;\">" + _sp.join(' \u00b7 ') + "</div>";
+            playerSlot.appendChild(_statBar);
+          }
+        }
         try {
           gsap.from(playerSlot, { y: 40, scale: 0.8, opacity: 0, duration: 0.35, ease: 'power2.out' });
           setTimeout(function() { SND.cardThud(); }, 300);
@@ -1458,7 +1675,7 @@ export function buildGameplay() {
   const panel = document.createElement('div'); panel.className = 'T-panel'; el.appendChild(panel);
 
   // ── DRIVE SUMMARY PANEL (replaces old play-by-play booth) ──
-  const driveSummaryEl = document.createElement('div'); driveSummaryEl.className = 'T-drive'; el.appendChild(driveSummaryEl);
+  const driveSummaryEl = document.createElement('div'); driveSummaryEl.className = 'T-drive'; driveSummaryEl.style.display = 'none'; el.appendChild(driveSummaryEl);
 
   // Keep narr as a virtual container for backward compat — content mirrored into drive summary commentary
   const narr = document.createElement('div'); narr.className = 'T-narr'; narr.style.display = 'none';
@@ -1489,22 +1706,9 @@ export function buildGameplay() {
     // Drive log — show last 4 plays full, compress older ones
     if (driveSummaryLog.length > 0) {
       var logLen = driveSummaryLog.length;
-      var showFull = Math.min(4, logLen); // last 4 full
-      var compressed = logLen - showFull;
 
-      // Compressed older plays on one line
-      if (compressed > 0) {
-        var compParts = [];
-        for (var _ci = 0; _ci < compressed; _ci++) {
-          var ce = driveSummaryLog[_ci];
-          var cy = ce.isTD ? 'TD' : ce.isSack ? 'SK' : ce.isInt ? 'INT' : ce.isFumble ? 'FUM' : ce.isInc ? 'INC' : yardTextShort(ce.yards);
-          compParts.push(cy);
-        }
-        html += '<div style="font-family:\'Rajdhani\';font-size:10px;color:#555;padding:2px 0;border-bottom:1px solid #1a1a1a;">' + compParts.join(' | ') + '</div>';
-      }
-
-      // Full entries (newest first within the visible window)
-      for (var _ti = logLen - 1; _ti >= compressed; _ti--) {
+      // All entries (newest first)
+      for (var _ti = logLen - 1; _ti >= 0; _ti--) {
         var e = driveSummaryLog[_ti];
         var isNewest = _ti === logLen - 1;
         var resColor, resText;
@@ -1530,7 +1734,7 @@ export function buildGameplay() {
           : 'opacity:0.5';
         var playFs = isNewest ? 'font-size:13px;font-weight:700;' : '';
         html += '<div class="T-drive-row" style="' + rowStyle + '">' +
-          '<div class="T-drive-row-dd" style="color:' + drivePossColor + ';font-size:13px;font-weight:700">' + dn + ' & ' + e.dist + '</div>' +
+          '<div class="T-drive-row-dd" style="color:' + drivePossColor + ';font-size:13px;font-weight:700">' + dn + ' & ' + (e.ydsToEz !== undefined && e.ydsToEz <= 10 ? 'GL' : e.dist) + '</div>' +
           '<div class="T-drive-row-play" style="' + playFs + '">' + e.playName + '</div>' +
           '<div class="T-drive-row-res" style="color:' + resColor + '">' + resText + '</div>' +
           '</div>';
@@ -1581,7 +1785,7 @@ export function buildGameplay() {
     if (offParts.length > 0 || defPart) {
       var offTeamLabel = (isHumanBall ? hTeam : oTeam).name;
       var defTeamLabel = (isHumanBall ? oTeam : hTeam).name;
-      html += '<div class="T-drive-stats" style="font-family:\'Rajdhani\';font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;gap:6px;flex-wrap:nowrap">';
+      html += '<div class="T-drive-stats" style="font-family:\'Rajdhani\';font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;gap:6px;flex-wrap:nowrap">';
       if (offParts.length > 0) {
         html += '<span style="color:' + offStatColor + '">' + offParts.join(' · ') + '</span>';
       }
@@ -1596,8 +1800,17 @@ export function buildGameplay() {
 
     // Commentary text
     if (driveCommLine1) {
-      html += '<div class="T-drive-comm">' + driveCommLine1 + '</div>';
-      if (driveCommLine2) html += '<div class="T-drive-comm-sub">' + driveCommLine2 + '</div>';
+      html += '<div class="T-drive-comm"><span style="color:' + driveColor + ';">Last Play: </span>' + driveCommLine1 + '</div>';
+      // Show yards + next down & distance instead of commentary sub-line
+      if (driveSummaryLog.length > 0) {
+        var _lastEntry = driveSummaryLog[driveSummaryLog.length - 1];
+        var _ydsText = _lastEntry.isTD ? 'TOUCHDOWN' : _lastEntry.isSack ? 'SACK' : _lastEntry.isInt ? 'INTERCEPTION' : _lastEntry.isFumble ? 'FUMBLE' : _lastEntry.isInc ? 'NO GAIN' : (_lastEntry.yards > 0 ? '+' + _lastEntry.yards + ' yards' : _lastEntry.yards < 0 ? _lastEntry.yards + ' yards' : 'No gain');
+        var _nextS = gs.getSummary();
+        var _dnLabels = ['','1st','2nd','3rd','4th'];
+        var _nextDn = fmtDownDist(_nextS.down, _nextS.distance, _nextS.yardsToEndzone);
+        var _ydsColor = _lastEntry.isTD || _lastEntry.yards > 0 ? '#00ff44' : _lastEntry.yards < 0 || _lastEntry.isSack ? '#ff0040' : '#888';
+        html += '<div class="T-drive-comm-sub"><span style="color:' + _ydsColor + ';">' + _ydsText + '</span> <span style="color:#666;">\u2014</span> <span style="color:' + driveColor + ';">' + _nextDn + '</span></div>';
+      }
     } else {
       html += '<div class="T-drive-idle">Awaiting snap</div>';
     }
@@ -1609,11 +1822,17 @@ export function buildGameplay() {
 
   function distLabel(dist, ydsToEz) {
     var yz = ydsToEz !== undefined ? ydsToEz : gs.getSummary().yardsToEndzone;
-    if (yz <= dist) return 'GOAL';
-    // Cap distance display at 10 on 1st down (safety clamp)
+    if (yz <= 10) return 'GOAL';
     var s = gs.getSummary();
     if (s.down === 1 && dist > 10) dist = Math.min(10, yz);
     return dist;
+  }
+  // Format down & distance string with GL support
+  function fmtDownDist(down, dist, ydsToEz) {
+    var dnLabels = ['','1st','2nd','3rd','4th'];
+    var dn = dnLabels[down] || '';
+    var d = (ydsToEz !== undefined && ydsToEz <= 10) ? 'GL' : dist;
+    return dn + ' & ' + d;
   }
 
   function ballSideLabel() {
@@ -1902,8 +2121,8 @@ export function buildGameplay() {
       var hit = touch.clientX >= r.left && touch.clientX <= r.right && touch.clientY >= r.top && touch.clientY <= r.bottom;
       if (hit && dz.dataset.drop === dragItem.type) {
         SND.cardSnap();
-        if (dragItem.type === 'play') { selPl = dragItem.data; phase = (selPl && selP) ? (torchInventory.filter(function(c){return c.type==='pre-snap';}).length > 0 ? 'torch' : 'ready') : 'play'; }
-        else if (dragItem.type === 'player') { selP = dragItem.data; phase = (selPl && selP) ? (torchInventory.filter(function(c){return c.type==='pre-snap';}).length > 0 ? 'torch' : 'ready') : 'play'; }
+        if (dragItem.type === 'play') { selPl = dragItem.data; phase = (selPl && selP) ? (torchInventory.length > 0 ? 'torch' : 'ready') : (selPl ? 'player' : 'play'); }
+        else if (dragItem.type === 'player') { selP = dragItem.data; phase = (selPl && selP) ? (torchInventory.length > 0 ? 'torch' : 'ready') : 'play'; }
         else if (dragItem.type === 'torch') {
           selTorch = dragItem.data.id || dragItem.data;
           selectedPreSnap = dragItem.data;
@@ -1993,7 +2212,7 @@ export function buildGameplay() {
       var ctxLabel = document.createElement('div');
       var ydsToEz = gs.yardsToEndzone();
       ctxLabel.style.cssText = "font-family:'Teko';font-weight:700;font-size:14px;color:#e03050;letter-spacing:2px;width:100%;text-align:center;margin-bottom:4px;";
-      ctxLabel.textContent = '4TH & ' + gs.distance + ' AT OPP ' + ydsToEz;
+      ctxLabel.textContent = '4TH & ' + (ydsToEz <= 10 ? 'GOAL' : gs.distance) + ' AT OPP ' + ydsToEz;
       fourthBar.insertBefore(ctxLabel, fourthBar.firstChild);
       fourthBar.style.cssText = "display:flex;flex-direction:column;gap:6px;padding:8px 12px;flex-shrink:0;background:rgba(224,48,80,0.06);border-bottom:2px solid #e0305044;";
 
@@ -2030,9 +2249,9 @@ export function buildGameplay() {
             // Check for ST torch cards: COFFIN CORNER, FAIR CATCH GHOST
             var puntOpts = {};
             var ccIdx = torchInventory.findIndex(function(c) { return c.id === 'coffin_corner'; });
-            if (ccIdx >= 0) { puntOpts.coffinCorner = true; torchInventory.splice(ccIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); torchCardToast('COFFIN CORNER', 'Punt guaranteed inside the 10'); }
+            if (ccIdx >= 0) { puntOpts.coffinCorner = true; consumeTorchCard('coffin_corner'); torchCardToast('COFFIN CORNER', 'Punt guaranteed inside the 10'); }
             var fcIdx = torchInventory.findIndex(function(c) { return c.id === 'fair_catch_ghost'; });
-            if (fcIdx >= 0) { puntOpts.fairCatchGhost = true; torchInventory.splice(fcIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); torchCardToast('FAIR CATCH GHOST', 'Forced fair catch'); }
+            if (fcIdx >= 0) { puntOpts.fairCatchGhost = true; consumeTorchCard('fair_catch_ghost'); torchCardToast('FAIR CATCH GHOST', 'Forced fair catch'); }
             var puntResult = gs.punt(punter, puntOpts);
             burnPlayer(_humanSTDeck, punter, 'punter', puntResult.gross + '-yard punt');
             driveSummaryLog.push({ down: 4, dist: gs.distance, playName: puntResult.label, yards: 0, isUserOff: true });
@@ -2059,7 +2278,7 @@ export function buildGameplay() {
           // RINGER: use highest-star player regardless of deck
           if (_hasRinger) {
             var ringerIdx = torchInventory.findIndex(function(c) { return c.id === 'ringer'; });
-            if (ringerIdx >= 0) { torchInventory.splice(ringerIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
+            if (ringerIdx >= 0) { consumeTorchCard('ringer'); }
             var allPlayers = (isOff ? getOffenseRoster(GS.team) : getDefenseRoster(GS.team)).concat(isOff ? getDefenseRoster(GS.team) : getOffenseRoster(GS.team));
             var bestKicker = allPlayers.slice().sort(function(a, b) { return ((b.st && b.st.kickAccuracy) || 0) - ((a.st && a.st.kickAccuracy) || 0); })[0];
             if (bestKicker) {
@@ -2093,7 +2312,7 @@ export function buildGameplay() {
               SND.kickThud();
               // CANNON LEG: consume card if in inventory
               var clIdx = torchInventory.findIndex(function(c) { return c.id === 'cannon_leg'; });
-              if (clIdx >= 0) { torchInventory.splice(clIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); torchCardToast('CANNON LEG', 'FG range extended +10 yards'); }
+              if (clIdx >= 0) { consumeTorchCard('cannon_leg'); torchCardToast('CANNON LEG', 'FG range extended +10 yards'); }
               var fgResult = gs.attemptFieldGoal(kicker);
               if (fgResult.made) SND.kickGood(); else SND.kickMiss();
               var fgContext = (fgResult.made ? 'Made ' : 'Missed ') + fgResult.distance + '-yard FG';
@@ -2124,18 +2343,18 @@ export function buildGameplay() {
     // ── 8-CARD TRAY (new component) ──
     var hs = getHandState();
     var preSnapCards = torchInventory.filter(function(c) { return c.type === 'pre-snap'; }).slice(0, 3);
-    // Check if any torch cards are actually playable on current side
-    var offCats = ['amplification', 'information'];
-    var defCats = ['disruption', 'protection'];
+    // hand = both sides, special_teams = auto-consumed only (never playable in snap phase)
+    var offCats = ['amplification', 'information', 'hand'];
+    var defCats = ['disruption', 'protection', 'hand'];
     var applicableCats = isOff ? offCats : defCats;
-    var hasPlayableTorch = preSnapCards.some(function(c) { return applicableCats.indexOf(c.category) >= 0; });
+    var hasPlayableTorch = preSnapCards.some(function(c) { return c.category !== 'special_teams' && applicableCats.indexOf(c.category) >= 0; });
     var hS = hAbbr === 'CT' ? gs.ctScore : gs.irScore;
     var cS = hAbbr === 'CT' ? gs.irScore : gs.ctScore;
 
     // SCOUT REPORT: show all 7 players instead of just 4
     var trayPlayers = hs.playerHand;
-    if (selTorch === 'scout_report') {
-      var fullRoster = isOff ? getOffenseRoster(GS.team) : getDefenseRoster(GS.team);
+    if (_scoutActive && isOff) {
+      var fullRoster = getOffenseRoster(GS.team);
       trayPlayers = fullRoster.filter(function(p) { return !p.injured; });
     }
 
@@ -2157,7 +2376,7 @@ export function buildGameplay() {
       teamId: GS.team,
       canDiscardPlays: canDiscard(hs, 'play'),
       canDiscardPlayers: canDiscard(hs, 'player'),
-      torchCards: preSnapCards,
+      torchCards: torchInventory.slice(0, 3),
       phase: phase,
       isConversion: !!conversionMode,
       is2Min: gs.twoMinActive,
@@ -2174,13 +2393,20 @@ export function buildGameplay() {
       down: gs.down,
       distance: gs.distance,
       yardsToEndzone: gs.yardsToEndzone(),
+      playerGameStats: _playerGameStats,
+      onTogglePBP: function() {
+        _pbpVisible = !_pbpVisible;
+        driveSummaryEl.style.display = _pbpVisible ? '' : 'none';
+      },
       onSelectPlay: function(play) {
         if (phase === 'busy') return;
         selPl = selPl === play ? null : play; // toggle
         if (_tutorialStep === 1) { _tutorialStep = 2; if (panel._tutOverlay) { panel._tutOverlay.remove(); panel._tutOverlay = null; } }
-        // If both selected, advance to torch or ready
+        // If both selected, show torch phase only if player has cards
         if (selPl && selP) {
-          phase = hasPlayableTorch ? 'torch' : 'ready';
+          phase = torchInventory.length > 0 ? 'torch' : 'ready';
+        } else if (selPl && !selP) {
+          phase = 'player';
         } else {
           phase = 'play';
         }
@@ -2191,7 +2417,7 @@ export function buildGameplay() {
         selP = selP === p ? null : p; // toggle
         if (_tutorialStep === 2) { _tutorialStep = 3; if (panel._tutOverlay) { panel._tutOverlay.remove(); panel._tutOverlay = null; } }
         if (selPl && selP) {
-          phase = hasPlayableTorch ? 'torch' : 'ready';
+          phase = torchInventory.length > 0 ? 'torch' : 'ready';
         } else {
           phase = 'play';
         }
@@ -2284,28 +2510,54 @@ export function buildGameplay() {
     });
     panel.appendChild(trayEl);
 
-    // One-time torch card tutorial (fires first time torch cards appear in hand)
-    if (!_torchTutorialShown && phase === 'torch' && preSnapCards.length > 0) {
+    // Torch card tutorial — disabled, will revisit
+    if (false) {
       _torchTutorialShown = true;
-      try { localStorage.setItem('torch_torch_tutorial', '1'); } catch(e) {}
-      var torchTutEl = document.createElement('div');
-      torchTutEl.style.cssText = "text-align:center;padding:10px 12px;margin:0 8px;background:rgba(0,0,0,0.75);border:1px solid #EBB01044;border-radius:8px;";
-      torchTutEl.innerHTML =
-        "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;text-shadow:0 0 16px #EBB01060;animation:T-snap-pulse 1.2s ease-in-out infinite;\">PLAY A TORCH CARD OR SKIP</div>" +
-        "<div style=\"font-family:'Rajdhani';font-size:11px;color:#aaa;margin-top:4px;line-height:1.3;\">Torch cards are single-use power-ups that boost your next play</div>";
-      panel.insertBefore(torchTutEl, panel.firstChild);
+      // Show informational overlay — tap to dismiss
+      var torchTutOv = document.createElement('div');
+      torchTutOv.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(10,8,4,0.92);opacity:0;transition:opacity .3s;pointer-events:auto;';
+      var _flameTutSvg = '<svg viewBox="0 0 44 44" width="40" height="46" fill="none" style="animation:T-flame-pulse 2s ease-in-out infinite;filter:drop-shadow(0 0 12px ' + hTeam.accent + ')"><defs><linearGradient id="tft" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="' + hTeam.accent + '"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#tft)"/></svg>';
+      var _hasReactiveOnly2 = torchInventory.every(function(c) { return c.type === 'reactive'; });
+      var _tutDesc2 = _hasReactiveOnly2
+        ? 'Reactive cards activate automatically when triggered. Look for the prompt during play!'
+        : 'When you have a playable card, tap it to power up your play before you snap.';
+      torchTutOv.innerHTML =
+        _flameTutSvg +
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + hTeam.accent + ";letter-spacing:4px;text-shadow:0 0 20px " + hTeam.accent + "40;\">TORCH CARD EARNED!</div>" +
+        "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:14px;color:#999;letter-spacing:2px;text-align:center;max-width:280px;line-height:1.4;\">" + _tutDesc2 + "</div>" +
+        "<button class='btn-blitz' style='margin-top:20px;font-size:16px;padding:14px 40px;background:#141008;color:" + hTeam.accent + ";border-color:" + hTeam.accent + ";letter-spacing:3px;'>GOT IT</button>";
+      torchTutOv.querySelector('button').onclick = function() {
+        torchTutOv.style.opacity = '0';
+        setTimeout(function() { torchTutOv.remove(); }, 300);
+      };
+      el.appendChild(torchTutOv);
+      requestAnimationFrame(function() { torchTutOv.style.opacity = '1'; });
     }
 
     if (_tutorialStep > 0 && snapCount === 0) {
-      // Inline tooltip — positioned near the cards, not full-screen overlay
       var tutEl = document.createElement('div');
-      var tutText = _tutorialStep === 1 ? 'PICK YOUR PLAY' : _tutorialStep === 2 ? 'PICK YOUR PLAYER' : 'TAP SNAP!';
-      var tutSub = _tutorialStep === 1 ? 'Each card is a different offensive or defensive call' : _tutorialStep === 2 ? 'Higher stars = bigger impact on the play' : 'Run the play and see what happens';
-      var tutColor = _tutorialStep === 3 ? '#00ff44' : '#EBB010';
-      tutEl.style.cssText = "text-align:center;padding:10px 12px;margin:0 8px;background:rgba(0,0,0,0.75);border:1px solid " + tutColor + "44;border-radius:8px;";
+      var tutText, tutSub, tutColor;
+      if (_tutorialStep === 1) {
+        tutText = 'PICK A PLAY';
+        tutSub = 'Each card is a different offensive or defensive call';
+        tutColor = '#FF4511';
+      } else if (_tutorialStep === 2) {
+        tutText = 'PICK A PLAYER';
+        tutSub = 'Match player traits to your play for the biggest boost';
+        tutColor = '#4DA6FF';
+      } else if (phase === 'torch') {
+        tutText = 'PLAY A TORCH CARD';
+        tutSub = 'Tap a card to power up, or SKIP to snap';
+        tutColor = '#EBB010';
+      } else {
+        tutText = 'TAP SNAP!';
+        tutSub = 'Run the play and see what happens!';
+        tutColor = '#00ff44';
+      }
+      tutEl.style.cssText = "text-align:center;padding:10px 12px;margin:0 8px;background:rgba(10,8,4,0.85);border:1px solid " + tutColor + "44;border-radius:8px;";
       tutEl.innerHTML =
         "<div style=\"font-family:'Teko';font-weight:700;font-size:24px;color:" + tutColor + ";letter-spacing:3px;text-shadow:0 0 16px " + tutColor + "60;animation:T-snap-pulse 1.2s ease-in-out infinite;\">" + tutText + "</div>" +
-        "<div style=\"font-family:'Rajdhani';font-size:12px;color:#aaa;margin-top:4px;line-height:1.3;\">" + tutSub + "</div>";
+        "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:14px;color:" + tutColor + "aa;margin-top:6px;line-height:1.3;letter-spacing:1px;\">" + tutSub + "</div>";
       panel.insertBefore(tutEl, panel.firstChild);
     }
   }
@@ -2314,6 +2566,7 @@ export function buildGameplay() {
   function doSnap() {
     if (phase === 'busy') return; // Prevent re-entrant snaps
     _tutorialStep = 0;
+    if (!_onboardingDone) { _onboardingDone = true; localStorage.setItem('torch_onboarding_done', '1'); }
     phase = 'busy';
     // Restart real-time clock if it was stopped (spike/incomplete/out of bounds)
     if (gs.twoMinActive && !twoMinTimer) start2MinClock();
@@ -2327,6 +2580,7 @@ export function buildGameplay() {
     var offCard = isOff ? selTorch : null;
     var defCard = isOff ? null : selTorch;
     var playedPlay = selPl;
+    var playedPlayer = selP;
 
     // Torch card activation fanfare — tier-scaled (Bronze→Silver→Gold escalation)
     if (selectedPreSnap && selectedPreSnap.name) {
@@ -2399,8 +2653,11 @@ export function buildGameplay() {
     if (selTorchId === 'fresh_legs') {
       var hs = getHandState();
       if (hs) {
-        hs.playDiscardsUsed = Math.max(0, hs.playDiscardsUsed - 1);
-        hs.playerDiscardsUsed = Math.max(0, hs.playerDiscardsUsed - 1);
+        hs.maxPlayDiscards++;
+        hs.maxPlayerDiscards++;
+        torchCardToast('FRESH LEGS', 'Extra discard granted!');
+        try { navigator.vibrate(30); } catch(e) {}
+        SND.cardDeal();
       }
     }
 
@@ -2408,6 +2665,13 @@ export function buildGameplay() {
     if (selTorchId === 'game_plan' && selP) {
       var heatMap = isOff ? gs.offHeatMap : gs.defHeatMap;
       if (heatMap && selP.id) heatMap[selP.id] = 0;
+    }
+
+    // SCOUT REPORT: see all 7 players instead of 4
+    if (selTorchId === 'scout_report') {
+      _scoutActive = true;
+      torchCardToast('SCOUT REPORT', 'Full roster revealed!');
+      try { navigator.vibrate(15); } catch(e) {}
     }
 
     // TIMEOUT: add 30 seconds to 2-minute drill clock
@@ -2476,6 +2740,8 @@ export function buildGameplay() {
     const res = isOff
       ? gs.executeSnap(selPl, selP, null, null, offCard, defCard, _devForceResult)
       : gs.executeSnap(null, null, selPl, selP, offCard, defCard, _devForceResult);
+
+    _scoutActive = false; // Reset card effect after snap
 
     // Apply combo bonus
     if (_activeDriveCombo && res && res.result) {
@@ -2593,7 +2859,7 @@ export function buildGameplay() {
 
     // Track drive summary
     var r = res.result;
-    var defName = res.featuredDef ? res.featuredDef.name : '';
+    var defName = res.featuredDef ? res.featuredDef.name : 'the defense';
     var isPassPlay = r.playType === 'pass';
 
     // Resolve QB and receiver/rusher names properly
@@ -2610,6 +2876,10 @@ export function buildGameplay() {
     }
     // On run plays: ball carrier = featuredOff
     var rusherName = featuredName;
+
+    // Attach resolved names to res so commentary.js uses consistent names
+    res._receiverName = receiverName;
+    res._rusherName = rusherName;
 
     // ESPN-style play description with player names
     var espnDesc = '?';
@@ -2684,8 +2954,28 @@ export function buildGameplay() {
         else if (!r.isTouchdown) hds.tkl++;
       }
     }
+    // Per-player stat accumulation for card display
+    function _addStat(pid, key, val) {
+      if (!pid) return;
+      if (!_playerGameStats[pid]) _playerGameStats[pid] = {};
+      _playerGameStats[pid][key] = (_playerGameStats[pid][key] || 0) + (val || 1);
+    }
+    var _offId = res.featuredOff ? res.featuredOff.id : null;
+    var _defId = res.featuredDef ? res.featuredDef.id : null;
+    if (isPassPlay) {
+      if (_offId && res.featuredOff.pos === 'QB') { _addStat(_offId, 'passAtt'); if (r.isComplete) { _addStat(_offId, 'passComp'); _addStat(_offId, 'passYds', r.yards); } }
+      if (_offId && res.featuredOff.pos !== 'QB' && r.isComplete) { _addStat(_offId, 'rec'); _addStat(_offId, 'recYds', r.yards); }
+    } else if (!r.isSack) {
+      if (_offId) { _addStat(_offId, 'rushAtt'); _addStat(_offId, 'rushYds', r.yards); }
+    }
+    if (r.isTouchdown && _offId) _addStat(_offId, 'td');
+    if (r.isSack && _defId) _addStat(_defId, 'sack');
+    if (r.isInterception && _defId) _addStat(_defId, 'int');
+    if (r.isIncomplete && _defId) _addStat(_defId, 'pbu');
+    if (!r.isTouchdown && !r.isSack && !r.isInterception && !r.isIncomplete && _defId) _addStat(_defId, 'tkl');
+
     driveSummaryLog.push({
-      down: preSnap.down, dist: preSnap.distance,
+      down: preSnap.down, dist: preSnap.distance, ydsToEz: preSnap.yardsToEndzone,
       playName: espnDesc,
       yards: r.yards, isTD: r.isTouchdown, isSack: r.isSack,
       isInc: r.isIncomplete, isInt: r.isInterception, isFumble: r.isFumbleLost,
@@ -2712,8 +3002,12 @@ export function buildGameplay() {
     } else {
       cycleCard(playedPlay, sides.defHand, getDefCards(teamId), teamId);
     }
-    selP = null; selPl = null; selTorch = null;
-    drawField(); drawPanel();
+    // Don't clear selP/selPl yet — keep placed cards visible on field during post-play
+    selTorch = null;
+    // Don't redraw field or panel — cards stay placed during result animation
+    phase = 'busy';
+    panel.className = 'T-panel T-panel-hidden';
+    driveSummaryEl.style.display = ''; // Show PBP during snap result
     res._preSnap = preSnap;
 
     // Check star activation
@@ -2773,14 +3067,16 @@ export function buildGameplay() {
       var _animType = isTD ? 'touchdown' : r.isSack ? 'sack' : r.isInterception ? 'interception' : r.isIncomplete ? 'incomplete' : (res.offPlay && res.offPlay.isRun) ? 'run' : 'complete';
       try {
         _fieldAnimator.playSequence(_animType, r.yards, {
-          ballYard: Math.max(5, Math.min(115, _ballYard)),
-          losYard: Math.max(5, Math.min(115, _ballYard)),
-          firstDownYard: Math.max(0, Math.min(120, _ballYard + _s.distance)),
+          ballYard: Math.max(10, Math.min(110, _ballYard)),
+          losYard: Math.max(10, Math.min(110, _ballYard)),
+          firstDownYard: Math.max(10, Math.min(110, _ballYard + _s.distance)),
           formation: _formation,
           playType: res.offPlay ? res.offPlay.playType : 'SHORT',
           defScheme: res.defPlay ? res.defPlay.cardType : 'ZONE',
           offTeam: _offTeamId,
           defTeam: _defTeamId,
+          skipDots: true,
+          skipLOS: true,
         });
       } catch(e) { /* Field animation is non-critical */ }
     }
@@ -2855,7 +3151,7 @@ export function buildGameplay() {
       if (skipped) { doSettle(); return; }
 
       // ── PHASE 3: RESULT SLAM — result text slams in, screen shake, particles ──
-      blackout.style.opacity = '0.4'; // lighten to reveal field
+      blackout.style.opacity = '0'; // dim handles full coverage, blackout fades out
 
       // Screen shake
       if (shakeAmt > 0) {
@@ -2916,11 +3212,12 @@ export function buildGameplay() {
         } catch(e) {}
       }
 
-      // Sound
-      if (isTD && isUserOff) { SND.td(); AudioStateManager.setState('touchdown'); }
-      else if (isTD && !isUserOff) { SND.turnover(); AudioStateManager.setState('turnover'); }
-      else if (isGoodForUser && tier >= 2) { SND.bigPlay(); AudioStateManager.setState('big_moment'); }
-      else if (isBadForUser) { SND.turnover(); AudioStateManager.setState('turnover'); }
+      // Sound — crowd spikes on big plays, holds, then settles
+      var _settleState = gs.twoMinActive ? 'two_min_drill' : 'normal_play';
+      if (isTD && isUserOff) { SND.td(); AudioStateManager.setState('touchdown'); AudioStateManager.holdThenSettle(4000, _settleState); }
+      else if (isTD && !isUserOff) { SND.turnover(); AudioStateManager.setState('turnover'); AudioStateManager.holdThenSettle(3000, _settleState); }
+      else if (isGoodForUser && tier >= 2) { SND.bigPlay(); AudioStateManager.setState('big_moment'); AudioStateManager.holdThenSettle(2000, _settleState); }
+      else if (isBadForUser) { SND.turnover(); AudioStateManager.setState('turnover'); AudioStateManager.holdThenSettle(3000, _settleState); }
       else if (r.isIncomplete) { SND.incomp(); }
       else { tier === 1 && r.yards > 0 ? SND.hit() : SND.snap(); }
 
@@ -2936,53 +3233,43 @@ export function buildGameplay() {
         var offTeamColor = (prevPoss === hAbbr) ? hTeam.accent : oTeam.accent;
         var defTeamColor = (prevPoss === hAbbr) ? oTeam.accent : hTeam.accent;
 
-        var offCardEl = document.createElement('div');
-        offCardEl.className = 'T-clash-card-wrap T-clash-card-off';
-        offCardEl.style.cssText = 'animation:T-clash-slideL ' + slideMs + 'ms cubic-bezier(0.22,1.3,0.36,1) both;transform:scale(' + cardScale + ');border-color:' + offTeamColor + '66;background:' + offTeamColor + '18;';
         var _offPlayName = (res.offPlay && res.offPlay.name) || '—';
         var _offFeatName = (res.featuredOff && res.featuredOff.name) || '—';
         var _offFeatPos  = (res.featuredOff && res.featuredOff.pos)  || '';
-        offCardEl.innerHTML =
-          "<div style=\"font-family:'Teko';font-size:18px;color:#fff;line-height:1;letter-spacing:1px\">" + _offPlayName + '</div>' +
-          "<div style=\"font-family:'Rajdhani';font-size:10px;color:" + offTeamColor + ";margin-top:3px\">" + _offFeatName + ' \u00b7 ' + _offFeatPos + '</div>';
-
-        var defCardEl = document.createElement('div');
-        defCardEl.className = 'T-clash-card-wrap T-clash-card-def';
-        defCardEl.style.cssText = 'animation:T-clash-slideR ' + slideMs + 'ms cubic-bezier(0.22,1.3,0.36,1) both;transform:scale(' + cardScale + ');border-color:' + defTeamColor + '66;background:' + defTeamColor + '18;';
         var _defPlayName = (res.defPlay && res.defPlay.name) || '—';
         var _defFeatName = (res.featuredDef && res.featuredDef.name) || '—';
         var _defFeatPos  = (res.featuredDef && res.featuredDef.pos)  || '';
+
+        var _offTeamName = (prevPoss === hAbbr ? hTeam : oTeam).name;
+        var _defTeamName = (prevPoss === hAbbr ? oTeam : hTeam).name;
+
+        // Offense card
+        var offCardEl = document.createElement('div');
+        offCardEl.className = 'T-clash-card-wrap T-clash-card-off';
+        offCardEl.style.cssText = 'animation:T-clash-slideL ' + slideMs + 'ms cubic-bezier(0.22,1.3,0.36,1) both;transform:scale(' + cardScale + ');border-color:' + offTeamColor + '66;background:' + offTeamColor + '12;';
+        offCardEl.innerHTML =
+          "<div style=\"font-family:'Rajdhani';font-size:9px;font-weight:700;color:" + offTeamColor + ";letter-spacing:2px;margin-bottom:4px;\">" + _offTeamName.toUpperCase() + "</div>" +
+          "<div style=\"font-family:'Teko';font-size:20px;color:#fff;line-height:1;letter-spacing:1px\">" + _offPlayName + '</div>' +
+          "<div style=\"font-family:'Rajdhani';font-size:11px;color:" + offTeamColor + ";margin-top:4px\">" + _offFeatName + ' \u00b7 ' + _offFeatPos + '</div>';
+
+        // VS divider
+        var vsEl = document.createElement('div');
+        vsEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:16px;color:#555;letter-spacing:2px;flex-shrink:0;";
+        vsEl.textContent = 'VS';
+
+        // Defense card
+        var defCardEl = document.createElement('div');
+        defCardEl.className = 'T-clash-card-wrap T-clash-card-def';
+        defCardEl.style.cssText = 'animation:T-clash-slideR ' + slideMs + 'ms cubic-bezier(0.22,1.3,0.36,1) both;transform:scale(' + cardScale + ');border-color:' + defTeamColor + '66;background:' + defTeamColor + '12;';
         defCardEl.innerHTML =
-          "<div style=\"font-family:'Teko';font-size:18px;color:#fff;line-height:1;letter-spacing:1px\">" + _defPlayName + '</div>' +
-          "<div style=\"font-family:'Rajdhani';font-size:10px;color:" + defTeamColor + ";margin-top:3px\">" + _defFeatName + ' \u00b7 ' + _defFeatPos + '</div>';
+          "<div style=\"font-family:'Rajdhani';font-size:9px;font-weight:700;color:" + defTeamColor + ";letter-spacing:2px;margin-bottom:4px;\">" + _defTeamName.toUpperCase() + "</div>" +
+          "<div style=\"font-family:'Teko';font-size:20px;color:#fff;line-height:1;letter-spacing:1px\">" + _defPlayName + '</div>' +
+          "<div style=\"font-family:'Rajdhani';font-size:11px;color:" + defTeamColor + ";margin-top:4px\">" + _defFeatName + ' \u00b7 ' + _defFeatPos + '</div>';
 
         cardsEl.appendChild(offCardEl);
+        cardsEl.appendChild(vsEl);
         cardsEl.appendChild(defCardEl);
         overlay.appendChild(cardsEl);
-
-        // Play type indicator (between the two cards)
-        var playTypeEl = document.createElement('div');
-        var isRunPlay = res.offPlay && (res.offPlay.isRun || res.offPlay.playType === 'RUN' || res.offPlay.playType === 'OPTION');
-        var playIcon = isRunPlay ? '\u2192' : '\u2191'; // \u2192 for run, \u2191 for pass
-        var playTypeLabel = res.offPlay ? (res.offPlay.playType || 'PLAY') : 'PLAY';
-        playTypeEl.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:6;text-align:center;opacity:0;pointer-events:none;";
-        playTypeEl.innerHTML =
-          "<div style=\"font-size:20px;color:#EBB010;\">" + playIcon + "</div>" +
-          "<div style=\"font-family:'Teko';font-weight:700;font-size:10px;color:#888;letter-spacing:2px;\">" + playTypeLabel + "</div>";
-        overlay.appendChild(playTypeEl);
-        try {
-          gsap.to(playTypeEl, { opacity: 0.6, duration: 0.2, delay: 0.1 });
-          gsap.to(playTypeEl, { opacity: 0, duration: 0.3, delay: 0.8 });
-        } catch(e) {}
-
-        // Matchup line: "WR Martinez vs CB Jackson"
-        if (tier >= 3) {
-          var matchupEl = document.createElement('div');
-          matchupEl.style.cssText = "position:absolute;top:38%;left:50%;transform:translateX(-50%);z-index:6;font-family:'Rajdhani';font-weight:700;font-size:11px;color:#888;letter-spacing:2px;white-space:nowrap;opacity:0;";
-          matchupEl.textContent = _offFeatPos + ' ' + _offFeatName.split(' ').pop() + ' vs ' + _defFeatPos + ' ' + _defFeatName.split(' ').pop();
-          overlay.appendChild(matchupEl);
-          try { gsap.to(matchupEl, { opacity: 1, duration: 0.3, delay: 0.2 }); } catch(e) { matchupEl.style.opacity = '1'; }
-        }
 
         // User card glow after brief settle
         setTimeout(function() {
@@ -3044,7 +3331,7 @@ export function buildGameplay() {
 
       // ── LAYER 5: Timing — good lingers, bad moves on fast ──
       var holdMultiplier = isGoodForUser ? 1.5 : isBadForUser ? 0.9 : 1.0;
-      var totalDur = Math.round((level === 3 ? 5000 : level === 2 ? 3500 : 2200) * holdMultiplier * getSpeedMultiplier());
+      var totalDur = Math.round((level === 3 ? 6000 : level === 2 ? 4500 : 3200) * holdMultiplier * getSpeedMultiplier());
 
       // Detect game-winning/go-ahead score
       var preSnapScore = res._preSnap;
@@ -3064,7 +3351,7 @@ export function buildGameplay() {
       // ── TD CELEBRATION — separate flow for touchdowns ──
       if (isTD && isUserOff && !res._isConversion) {
         // USER SCORES — "The Moment"
-        totalDur = 4500;
+        totalDur = 5500;
         var teamAccent = hTeam.accent || '#EBB010';
 
         // Full dark overlay behind everything
@@ -3082,21 +3369,26 @@ export function buildGameplay() {
         // Haptic
         if (navigator.vibrate) try { navigator.vibrate([30, 50, 80]); } catch(e) {}
 
-        // Team logo pulsing behind text
+        // Team logo pulsing behind text — low opacity for contrast
         var logoBg = document.createElement('div');
-        logoBg.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9;opacity:0.12;animation:T-flame-pulse 1.5s ease-in-out infinite;';
-        logoBg.innerHTML = renderTeamBadge(GS.team, 200);
+        logoBg.style.cssText = 'position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);z-index:9;opacity:0.06;animation:T-flame-pulse 1.5s ease-in-out infinite;';
+        logoBg.innerHTML = renderTeamBadge(GS.team, 180);
         overlay.appendChild(logoBg);
 
-        // Result wrap — centered
+        // Dark vignette behind text for contrast
+        var tdVignette = document.createElement('div');
+        tdVignette.style.cssText = 'position:absolute;inset:0;z-index:9;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0.5) 0%,transparent 60%);pointer-events:none;';
+        overlay.appendChild(tdVignette);
+
+        // Result wrap — centered, above logo
         var resultWrap = document.createElement('div');
         resultWrap.className = 'T-clash-result';
-        resultWrap.style.cssText = 'z-index:10;';
+        resultWrap.style.cssText = 'z-index:10;gap:8px;';
         resultWrap.style.opacity = '0';
 
-        // "TOUCHDOWN" — auto-sized to fit screen width
+        // "TOUCHDOWN" — auto-sized with strong contrast
         var tdTextEl = document.createElement('div');
-        tdTextEl.style.cssText = "font-family:'Teko';font-weight:700;color:" + teamAccent + ";letter-spacing:6px;text-shadow:0 0 40px " + teamAccent + "80,0 0 80px " + teamAccent + "40;animation:T-clash-yds 0.5s cubic-bezier(0.34,1.56,0.64,1) both;white-space:nowrap;font-size:72px;";
+        tdTextEl.style.cssText = "font-family:'Teko';font-weight:700;color:" + teamAccent + ";letter-spacing:6px;text-shadow:0 0 40px " + teamAccent + "80,0 0 80px " + teamAccent + "40,0 2px 0 rgba(0,0,0,0.9),0 0 20px rgba(0,0,0,0.8);-webkit-text-stroke:1px rgba(0,0,0,0.3);animation:T-clash-yds 0.5s cubic-bezier(0.34,1.56,0.64,1) both;white-space:nowrap;font-size:72px;";
         tdTextEl.textContent = 'TOUCHDOWN';
         resultWrap.appendChild(tdTextEl);
         overlay.appendChild(resultWrap);
@@ -3109,10 +3401,10 @@ export function buildGameplay() {
           while (tdTextEl.scrollWidth > maxW && fs > 28) { fs -= 2; tdTextEl.style.fontSize = fs + 'px'; }
         });
 
-        // Team name slides up
+        // Team name slides up — below TOUCHDOWN with gap
         setTimeout(function() {
           var teamLine = document.createElement('div');
-          teamLine.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:" + teamAccent + ";letter-spacing:4px;text-shadow:0 0 16px " + teamAccent + "40;opacity:0;transform:translateY(10px);transition:opacity 0.3s,transform 0.3s;";
+          teamLine.style.cssText = "font-family:'Teko';font-weight:700;font-size:24px;color:" + teamAccent + ";letter-spacing:4px;text-shadow:0 0 16px " + teamAccent + "40,0 2px 0 rgba(0,0,0,0.9);opacity:0;transform:translateY(10px);transition:opacity 0.3s,transform 0.3s;";
           teamLine.textContent = hTeam.name.toUpperCase() + '!';
           resultWrap.appendChild(teamLine);
           requestAnimationFrame(function() { teamLine.style.opacity = '1'; teamLine.style.transform = 'translateY(0)'; });
@@ -3189,11 +3481,12 @@ export function buildGameplay() {
         setTimeout(function() {
           if (!overlay.parentNode) return; // screen exited
           var gameCtx = gs.getSummary();
+          gameCtx.preSnapPossession = prevPoss;
           var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
           setNarr(comm.line1, comm.line2 || '');
           var tdTeamObj = prevPoss === hAbbr ? hTeam : oTeam;
           var labelEl = document.createElement('div');
-          labelEl.style.cssText = "color:" + tdTeamObj.accent + ";opacity:0;transition:opacity 0.4s;margin-top:12px;font-family:'Rajdhani';font-size:16px;font-weight:700;line-height:1.3;text-align:center;max-width:280px;";
+          labelEl.style.cssText = "color:" + tdTeamObj.accent + ";opacity:0;transition:opacity 0.4s;margin-top:20px;font-family:'Rajdhani';font-size:13px;font-weight:600;line-height:1.3;text-align:center;max-width:260px;padding:6px 10px;background:rgba(0,0,0,0.5);border-radius:6px;text-shadow:0 1px 4px rgba(0,0,0,0.9);";
           labelEl.textContent = comm.line1;
           resultWrap.appendChild(labelEl);
           requestAnimationFrame(function() { labelEl.style.opacity = '1'; });
@@ -3248,8 +3541,8 @@ export function buildGameplay() {
         drawBug(); drawField();
 
       } else if (isTD && (!isUserOff || res._isConversion)) {
-        // OPPONENT SCORES or CONVERSION — muted, move on fast
-        totalDur = 1800;
+        // OPPONENT SCORES or CONVERSION — muted, but still readable
+        totalDur = 2800;
         var oppTdWrap = document.createElement('div');
         oppTdWrap.className = 'T-clash-result';
         oppTdWrap.style.cssText = 'position:absolute;top:22%;left:50%;transform:translateX(-50%);width:90%;text-align:center;';
@@ -3261,6 +3554,7 @@ export function buildGameplay() {
 
         setTimeout(function() {
           var gameCtx = gs.getSummary();
+          gameCtx.preSnapPossession = prevPoss;
           var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
           setNarr(comm.line1, '');
         }, 400);
@@ -3288,7 +3582,14 @@ export function buildGameplay() {
         nonTdWrap.className = 'T-clash-result';
         if (resultPos) nonTdWrap.style.cssText = resultPos;
         nonTdWrap.style.opacity = '0';
-        nonTdWrap.innerHTML = '<div class="T-clash-yds" style="color:' + resultColor + ';font-size:' + ydsFontSize + ';' + resultGlow + resultAnim + '">' + resultText + '</div>';
+        // Result text + play description + situation
+        var _preS = res._preSnap || preSnap;
+        var _preDn = ['','1st','2nd','3rd','4th'][_preS.down] || '';
+        var _preDist = _preS.yardsToEndzone <= 10 ? 'GL' : _preS.distance;
+        var _prePos = _preS.yardsToEndzone <= 50 ? 'OPP ' + _preS.yardsToEndzone : 'OWN ' + (100 - _preS.yardsToEndzone);
+        nonTdWrap.innerHTML =
+          "<div style=\"font-family:'Rajdhani';font-size:13px;font-weight:600;color:rgba(255,255,255,0.55);letter-spacing:1px;margin-top:10px;margin-bottom:6px;text-align:center;\">" + _preDn + ' & ' + _preDist + ' \u00b7 ' + _prePos + "</div>" +
+          '<div class="T-clash-yds" style="color:' + resultColor + ';font-size:' + ydsFontSize + ';' + resultGlow + resultAnim + '">' + resultText + '</div>';
         overlay.appendChild(nonTdWrap);
         var resultWrap = nonTdWrap; // alias for code below that appends to resultWrap
         requestAnimationFrame(function() {
@@ -3346,7 +3647,7 @@ export function buildGameplay() {
       // ── FIRST DOWN CELEBRATION OVERLAY ──
       if (res.gotFirstDown && !isTD && !r.isInterception && !r.isFumbleLost && isUserOff) {
         var fdEl = document.createElement('div');
-        fdEl.style.cssText = "position:absolute;top:15%;left:50%;transform:translateX(-50%);z-index:15;font-family:'Teko';font-weight:700;font-size:24px;color:#EBB010;letter-spacing:4px;text-shadow:0 0 16px rgba(235,176,16,0.5);opacity:0;white-space:nowrap;pointer-events:none;";
+        fdEl.style.cssText = "position:relative;z-index:15;font-family:'Teko';font-weight:700;font-size:22px;color:#EBB010;letter-spacing:4px;text-shadow:0 0 16px rgba(235,176,16,0.5);opacity:0;white-space:nowrap;pointer-events:none;margin-top:4px;";
         fdEl.textContent = 'FIRST DOWN';
         overlay.appendChild(fdEl);
         try {
@@ -3366,7 +3667,7 @@ export function buildGameplay() {
         if (!r.isInterception && !r.isFumbleLost && !gotFirstDown && !res._isConversion) {
           var newS = gs.getSummary();
           var dnLabels = ['','1ST','2ND','3RD','4TH'];
-          var dnText = (dnLabels[newS.down] || '') + ' & ' + newS.distance;
+          var dnText = (dnLabels[newS.down] || '') + ' & ' + (newS.yardsToEndzone <= 10 ? 'GOAL' : newS.distance);
           var dnPossTeam = newS.possession === 'CT' ? hTeam : oTeam;
           var dnColor = dnPossTeam.accent;
           var dnEl = document.createElement('div');
@@ -3382,6 +3683,7 @@ export function buildGameplay() {
           commLine2 = '';
         } else {
           var gameCtx = gs.getSummary();
+          gameCtx.preSnapPossession = prevPoss;
           var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
           var ctx = generateContext(gameCtx, hTeam.name, oTeam.name, res);
           commLine1 = comm.line1;
@@ -3467,8 +3769,7 @@ export function buildGameplay() {
         var finalTotal = hAbbr === 'CT' ? gs.getSummary().ctTorchPts : gs.getSummary().irTorchPts;
         var actualGain = finalTotal - _torchFrozenValue;
         if (actualGain > 0 && torchBannerPtsEl) {
-          // Build sources from res._torchSources, or fall back to a single "play" source
-          var srcs = (res._torchSources && res._torchSources.length > 0) ? res._torchSources : [{ key: 'play', pts: actualGain }];
+          var srcs = [{ key: 'play', pts: actualGain }];
           var isBigPlay = r.isTouchdown || r.isInterception || r.isFumbleLost || r.yards >= 15;
           playPointsSequence({
             counterEl: torchBannerPtsEl,
@@ -3476,10 +3777,10 @@ export function buildGameplay() {
             sources: srcs,
             startValue: _torchFrozenValue,
             shake: isBigPlay,
+            hideSourceLabel: true,
             onComplete: function() { _torchDisplayFrozen = false; drawTorchBanner(); },
           });
         } else {
-          // No gain (0 or negative play) — just unfreeze silently
           _torchDisplayFrozen = false;
           drawTorchBanner();
         }
@@ -3528,9 +3829,11 @@ export function buildGameplay() {
             _reactiveOv.remove();
 
             if (useIt) {
-              // Consume the card
+              // Consume the card from both UI and engine inventories
               torchInventory.splice(reactiveCard.idx, 1);
               if (GS.season) GS.season.torchCards = torchInventory.slice();
+              var _engineIdx = gs.humanTorchCards.indexOf(reactiveCard.id);
+              if (_engineIdx >= 0) gs.humanTorchCards.splice(_engineIdx, 1);
 
               if (reactiveCard.id === 'sure_hands') {
                 // Cancel the turnover
@@ -3599,27 +3902,45 @@ export function buildGameplay() {
             showPossCut(res.gameEvent, function() { showDrive(driveSnaps, prevPoss, function() { driveSnaps=[]; drivePlayHistory=[]; resetDriveSummary(); if(!checkEnd()) nextSnap(); }); });
           } else {
             if (!checkEnd()) {
-              // Brief field-view pause — player sees field + result before cards deal
-              drawBug(); drawField(); drawDriveSummary();
+              // Post-play view: cards stay placed on field, add NEXT PLAY button
+              driveSummaryEl.style.display = ''; // Always show PBP during post-play
+              drawBug(); drawDriveSummary();
               panel.style.display = 'none';
 
-              // TAP FOR NEXT PLAY (no auto-advance — player must tap)
-              var tapNext = document.createElement('div');
-              tapNext.style.cssText = "position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:5;font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:2px;pointer-events:none;animation:T-snap-pulse 1.2s ease-in-out infinite;text-shadow:0 0 12px rgba(235,176,16,0.4);white-space:nowrap;";
-              tapNext.textContent = 'TAP FOR NEXT PLAY';
-              strip.appendChild(tapNext);
+              // Hide the torch drop zone on the field (not relevant post-play)
+              var _torchDrop = strip.querySelector('.T-drop-torch');
+              if (_torchDrop) _torchDrop.style.display = 'none';
+
+              // NEXT PLAY button below everything (remove any existing one first)
+              var _existingNext = el.querySelector('#T-next-play-wrap');
+              if (_existingNext) _existingNext.remove();
+              var tapNextWrap = document.createElement('div');
+              tapNextWrap.id = 'T-next-play-wrap';
+              tapNextWrap.style.cssText = 'padding:12px 16px;flex-shrink:0;';
+              var tapNextBtn = document.createElement('button');
+              tapNextBtn.className = 'btn-blitz';
+              tapNextBtn.style.cssText = "width:100%;font-size:16px;padding:14px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;animation:T-snap-pulse 1.2s ease-in-out infinite;";
+              tapNextBtn.textContent = 'NEXT PLAY';
               var tapDismissed = false;
-              function tapForNext() {
+              tapNextBtn.onclick = function() {
                 if (tapDismissed) return;
                 tapDismissed = true;
-                el.removeEventListener('click', tapForNext);
-                el.removeEventListener('touchstart', tapForNext);
-                if (tapNext.parentNode) tapNext.remove();
-                nextSnap();
-              }
-              el.addEventListener('click', tapForNext, { once: true });
-              el.addEventListener('touchstart', tapForNext, { once: true, passive: true });
-              // NO auto-advance — player must tap
+                // Animate placed cards off the field
+                var placedCards = strip.querySelectorAll('.T-placed');
+                try {
+                  gsap.to(placedCards, { y: -40, opacity: 0, scale: 0.8, duration: 0.25, stagger: 0.05, ease: 'power2.in', onComplete: function() {
+                    selP = null; selPl = null;
+                    tapNextWrap.remove();
+                    nextSnap();
+                  }});
+                } catch(e) {
+                  selP = null; selPl = null;
+                  tapNextWrap.remove();
+                  nextSnap();
+                }
+              };
+              tapNextWrap.appendChild(tapNextBtn);
+              el.appendChild(tapNextWrap);
             }
           }
         }
@@ -3666,7 +3987,12 @@ export function buildGameplay() {
     selP = null; selPl = null; selTorch = null; selectedPreSnap = null;
     _fourthDownDecided = false;
     panel.style.display = '';
-    AudioStateManager.setState(gs.twoMinActive ? 'two_min_drill' : 'normal_play');
+    // Hide PBP unless user toggled it on
+    if (!_pbpVisible) driveSummaryEl.style.display = 'none';
+    // Don't force-reset crowd here — holdThenSettle handles it after big plays.
+    // Only set state if we're not in an elevated hold (the hold timer will settle naturally).
+    // For 2-min drill, always ensure it's set since it's a persistent state.
+    if (gs.twoMinActive) AudioStateManager.setState('two_min_drill');
 
     // AI 4th down decision — resolve BEFORE showing cards to the player
     var isUserDef = gs.possession !== hAbbr;
@@ -3677,7 +4003,7 @@ export function buildGameplay() {
         // BLOCKED KICK: auto-consume from inventory if available
         var _bkPuntIdx = torchInventory.findIndex(function(c) { return c.id === 'blocked_kick'; });
         var _bkPuntOpts = {};
-        if (_bkPuntIdx >= 0) { _bkPuntOpts.blockedKick = true; torchInventory.splice(_bkPuntIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); torchCardToast('BLOCKED KICK', 'Chance to block the punt'); }
+        if (_bkPuntIdx >= 0) { _bkPuntOpts.blockedKick = true; consumeTorchCard('blocked_kick'); torchCardToast('BLOCKED KICK', 'Chance to block the punt'); }
         showSpecialTeamsResult(oTeam.name + ' ELECT TO PUNT', '#4DA6FF', function() {
           var aiPunter = aiPickST(_cpuSTDeck, 'kickPower', gs.difficulty);
           if (aiPunter) burnPlayer(_cpuSTDeck, aiPunter, 'punter', 'AI punt');
@@ -3696,9 +4022,9 @@ export function buildGameplay() {
         // ICE THE KICKER + BLOCKED KICK: auto-consume from inventory
         var _aiFgOpts = {};
         var _iceIdx = torchInventory.findIndex(function(c) { return c.id === 'ice_the_kicker'; });
-        if (_iceIdx >= 0) { _aiFgOpts.iceTheKicker = true; torchInventory.splice(_iceIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); torchCardToast('ICE THE KICKER', 'Kicker accuracy reduced'); }
+        if (_iceIdx >= 0) { _aiFgOpts.iceTheKicker = true; consumeTorchCard('ice_the_kicker'); torchCardToast('ICE THE KICKER', 'Kicker accuracy reduced'); }
         var _bkFgIdx = torchInventory.findIndex(function(c) { return c.id === 'blocked_kick'; });
-        if (_bkFgIdx >= 0) { _aiFgOpts.blockedKick = true; torchInventory.splice(_bkFgIdx, 1); if (GS.season) GS.season.torchCards = torchInventory.slice(); torchCardToast('BLOCKED KICK', 'Chance to block the kick'); }
+        if (_bkFgIdx >= 0) { _aiFgOpts.blockedKick = true; consumeTorchCard('blocked_kick'); torchCardToast('BLOCKED KICK', 'Chance to block the kick'); }
         var _iceLabel = _aiFgOpts.iceTheKicker ? 'ICE THE KICKER! ' : '';
         showSpecialTeamsResult(_iceLabel + oTeam.name + ' ATTEMPT A ' + fgDist3 + '-YARD FIELD GOAL', '#EBB010', function() {
           var aiKicker = aiPickST(_cpuSTDeck, 'kickAccuracy', gs.difficulty);
@@ -3717,7 +4043,7 @@ export function buildGameplay() {
       if (aiDec === 'go_for_it') {
         // Brief flash then proceed to normal card selection
         var goFlash = document.createElement('div');
-        goFlash.style.cssText = "position:fixed;top:30%;left:50%;transform:translateX(-50%);z-index:650;font-family:'Teko';font-weight:700;font-size:24px;color:#e03050;letter-spacing:3px;text-shadow:0 0 16px rgba(224,48,80,0.4);pointer-events:none;opacity:0;transition:opacity 0.3s;";
+        goFlash.style.cssText = "position:fixed;top:30%;left:0;right:0;z-index:650;font-family:'Teko';font-weight:700;font-size:24px;color:#e03050;letter-spacing:3px;text-shadow:0 0 16px rgba(224,48,80,0.4);pointer-events:none;opacity:0;transition:opacity 0.3s;text-align:center;white-space:nowrap;";
         goFlash.textContent = oTeam.name + ' GO FOR IT!';
         el.appendChild(goFlash);
         requestAnimationFrame(function() { goFlash.style.opacity = '1'; });
@@ -3771,14 +4097,14 @@ export function buildGameplay() {
       else if (ev === 'fumble_lost') { title = 'TURNOVER'; subtitle = 'Fumble. ' + otherTeam.name + ' recovers.'; }
       else if (ev === 'turnover_on_downs') { title = 'TURNOVER ON DOWNS'; subtitle = 'Failed to convert.'; }
       else if (ev === 'punt') { title = 'PUNT'; subtitle = newPossTeam.name + ' ball.'; }
-      else if (ev === 'missed_fg') { title = 'FIELD GOAL GOOD'; subtitle = newPossTeam.name + ' ball.'; }
+      else if (ev === 'missed_fg') { title = 'MISSED FIELD GOAL'; subtitle = newPossTeam.name + ' ball.'; }
       else if (ev === 'touchdown' || ev === 'turnover_td' || ev === 'score') { title = 'NEW DRIVE'; subtitle = newPossTeam.name + ' ball.'; }
       else { title = 'CHANGE OF POSSESSION'; subtitle = newPossTeam.name + ' ball.'; }
     }
 
     // Next situation context
     var nextCtx = '1st & 10';
-    if (s.down && s.distance) nextCtx = ['','1st','2nd','3rd','4th'][s.down] + ' & ' + s.distance;
+    if (s.down && s.distance) nextCtx = fmtDownDist(s.down, s.distance, s.yardsToEndzone);
     var fieldPos = s.yardsToEndzone ? (s.yardsToEndzone <= 50 ? 'OPP ' + s.yardsToEndzone : 'OWN ' + (100 - s.yardsToEndzone)) : '';
 
     // Sizes based on sentiment
@@ -3795,96 +4121,84 @@ export function buildGameplay() {
     // Push possession change to ticker
     pushTicker(newPossTeam.name.toUpperCase() + ' BALL — ' + nextCtx + (fieldPos ? ' at ' + fieldPos : ''), newPossTeam.accent);
 
-    // Build overlay — centered content, dark background
+    // Build overlay
     var ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;opacity:0;transition:opacity .3s;pointer-events:auto;cursor:pointer;' + bgGrad;
+    ov.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:0;transition:opacity .3s;pointer-events:auto;background:#0A0804;';
 
-    // Team-colored wipe bar
-    var wipeColor = newPossTeam.accent;
-    var wipeBar = document.createElement('div');
-    wipeBar.style.cssText = 'position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,' + wipeColor + '15,' + wipeColor + '25,' + wipeColor + '15,transparent);z-index:1;pointer-events:none;';
-    ov.appendChild(wipeBar);
-    try {
-      gsap.to(wipeBar, { left: '100%', duration: 0.6, ease: 'power2.inOut', onComplete: function() { wipeBar.remove(); } });
-    } catch(e) { wipeBar.remove(); }
+    // Background radial glow in possessing team's color
+    var bgGlow = document.createElement('div');
+    bgGlow.style.cssText = 'position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%,' + newPossTeam.colors.primary + '20 0%,transparent 60%);pointer-events:none;';
+    ov.appendChild(bgGlow);
 
-    // Team badge flash
-    var badgeFlash = document.createElement('div');
-    badgeFlash.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;opacity:0;pointer-events:none;filter:drop-shadow(0 0 20px ' + wipeColor + ');';
-    badgeFlash.innerHTML = renderTeamBadge(newPossTeam.id, 64);
-    ov.appendChild(badgeFlash);
-    try {
-      gsap.to(badgeFlash, { opacity: 0.3, scale: 1.2, duration: 0.3, delay: 0.15 });
-      gsap.to(badgeFlash, { opacity: 0, scale: 1.5, duration: 0.4, delay: 0.5 });
-    } catch(e) {}
-
-    // Score bar with team badges — both visible, side by side
-    var hScore = s.ctScore, oScore = s.irScore;
-    var scoreBar = document.createElement('div');
-    scoreBar.style.cssText = 'display:flex;align-items:center;gap:20px;';
-    scoreBar.innerHTML =
-      '<div style="text-align:center;">' +
-        renderTeamBadge(GS.team, isYourBall ? 80 : 56) +
-        "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:" + (isYourBall ? '28' : '22') + "px;color:" + (isYourBall ? '#fff' : '#666') + ";margin-top:4px;\">" + hScore + '</div>' +
-      '</div>' +
-      "<div style=\"font-family:'Teko';font-size:18px;color:#444;letter-spacing:2px;\">—</div>" +
-      '<div style="text-align:center;">' +
-        renderTeamBadge(GS.opponent, isYourBall ? 56 : 80) +
-        "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:" + (isYourBall ? '22' : '28') + "px;color:" + (isYourBall ? '#666' : '#fff') + ";margin-top:4px;\">" + oScore + '</div>' +
-      '</div>';
-    ov.appendChild(scoreBar);
-
-    // Divider line
-    var divider = document.createElement('div');
-    divider.style.cssText = 'width:50%;height:1px;background:linear-gradient(90deg,transparent,' + (isGoodForUser ? newPossTeam.accent + '88' : '#44444488') + ',transparent);';
-    ov.appendChild(divider);
-
-    // Title — big and clear
+    // Title — big and clear at top
     var titleEl = document.createElement('div');
-    titleEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:" + titleSize + ";color:" + titleColor + ";letter-spacing:4px;text-align:center;";
-    if (isGoodForUser) titleEl.style.textShadow = '0 0 20px ' + newPossTeam.accent + '40';
+    titleEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:" + (isGoodForUser ? '32px' : '24px') + ";color:" + titleColor + ";letter-spacing:5px;text-align:center;z-index:1;";
+    if (isGoodForUser) titleEl.style.textShadow = '0 0 24px ' + newPossTeam.accent + '60';
     titleEl.textContent = title;
     ov.appendChild(titleEl);
 
     // Subtitle
     var subEl = document.createElement('div');
-    subEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:13px;color:" + (isGoodForUser ? '#ccc' : '#666') + ";letter-spacing:2px;";
+    subEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:14px;color:" + (isGoodForUser ? '#ccc' : '#666') + ";letter-spacing:2px;margin-top:4px;z-index:1;";
     subEl.textContent = subtitle;
     ov.appendChild(subEl);
 
-    // Next situation + mini field position bar
+    // Score bar — broadcast style with team names
+    var hScore = s.ctScore, oScore = s.irScore;
+    var scoreBar = document.createElement('div');
+    scoreBar.style.cssText = 'display:flex;align-items:center;gap:16px;margin-top:24px;z-index:1;padding:16px 24px;background:rgba(255,255,255,0.02);border-radius:12px;border:1px solid rgba(255,255,255,0.04);';
+    scoreBar.innerHTML =
+      '<div style="text-align:center;min-width:80px;">' +
+        renderTeamBadge(GS.team, 56) +
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:" + hTeam.accent + ";letter-spacing:2px;margin-top:4px;\">" + hTeam.name + '</div>' +
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:" + (isYourBall ? '#fff' : '#555') + ";line-height:1;\">" + hScore + '</div>' +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">' +
+        "<div style=\"width:40px;height:1px;background:rgba(255,255,255,0.1);\"></div>" +
+        "<div style=\"font-family:'Rajdhani';font-size:10px;color:#444;letter-spacing:2px;\">VS</div>" +
+        "<div style=\"width:40px;height:1px;background:rgba(255,255,255,0.1);\"></div>" +
+      '</div>' +
+      '<div style="text-align:center;min-width:80px;">' +
+        renderTeamBadge(GS.opponent, 56) +
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:" + oTeam.accent + ";letter-spacing:2px;margin-top:4px;\">" + oTeam.name + '</div>' +
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:" + (!isYourBall ? '#fff' : '#555') + ";line-height:1;\">" + oScore + '</div>' +
+      '</div>';
+    ov.appendChild(scoreBar);
+
+    // Next situation + field position
     if (fieldPos) {
       var ctxWrap = document.createElement('div');
-      ctxWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:8px;width:80%;max-width:280px;';
+      ctxWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:20px;width:85%;max-width:300px;z-index:1;';
 
       // Mini field bar
       var fieldBar = document.createElement('div');
-      fieldBar.style.cssText = 'width:100%;height:6px;background:#1a1a1a;border-radius:3px;position:relative;overflow:hidden;';
+      fieldBar.style.cssText = 'width:100%;height:8px;background:#1a1a1a;border-radius:4px;position:relative;overflow:hidden;';
       var ballPct = s.possession === 'CT' ? s.ballPosition : 100 - s.ballPosition;
       var ballDot = document.createElement('div');
-      ballDot.style.cssText = 'position:absolute;top:0;bottom:0;left:' + ballPct + '%;width:8px;transform:translateX(-50%);background:' + newPossTeam.accent + ';border-radius:3px;box-shadow:0 0 6px ' + newPossTeam.accent + ';';
+      ballDot.style.cssText = 'position:absolute;top:0;bottom:0;left:' + ballPct + '%;width:10px;transform:translateX(-50%);background:' + newPossTeam.accent + ';border-radius:4px;box-shadow:0 0 8px ' + newPossTeam.accent + ';';
       fieldBar.appendChild(ballDot);
       ctxWrap.appendChild(fieldBar);
 
       var ctxEl = document.createElement('div');
-      ctxEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:11px;color:" + newPossTeam.accent + ";letter-spacing:1px;";
+      ctxEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:16px;color:" + newPossTeam.accent + ";letter-spacing:2px;";
       ctxEl.textContent = nextCtx + ' \u2022 ' + fieldPos;
       ctxWrap.appendChild(ctxEl);
 
       ov.appendChild(ctxWrap);
     }
 
-    // Tap prompt
-    var tapEl = document.createElement('div');
-    tapEl.style.cssText = "font-family:'Rajdhani';font-size:9px;color:#444;letter-spacing:1px;margin-top:8px;";
-    tapEl.textContent = 'TAP TO CONTINUE';
-    ov.appendChild(tapEl);
+    // Continue button
+    var contBtn = document.createElement('button');
+    contBtn.className = 'btn-blitz';
+    contBtn.style.cssText = "font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;margin-top:24px;z-index:1;";
+    contBtn.textContent = 'CONTINUE';
+    ov.appendChild(contBtn);
 
     // Sound
     if (isGoodForUser) { try { SND.chime(); } catch(e) {} }
     else { try { SND.snap(); } catch(e) {} }
 
-    // Tap to skip + auto-advance
+    // Tap to advance (button or overlay)
     var dismissed = false;
     function dismiss() {
       if (dismissed) return;
@@ -3892,11 +4206,10 @@ export function buildGameplay() {
       ov.style.opacity = '0';
       setTimeout(function() { if (ov.parentNode) ov.remove(); done(); }, 300);
     }
+    contBtn.onclick = function(e) { e.stopPropagation(); dismiss(); };
     ov.onclick = dismiss;
     el.appendChild(ov);
     requestAnimationFrame(function() { ov.style.opacity = '1'; });
-    var autoTime = isGoodForUser ? 2800 : 2000;
-    setTimeout(function() { if (!dismissed) dismiss(); }, autoTime);
   }
 
   // ── DRIVE SUMMARY ──
@@ -3940,7 +4253,7 @@ export function buildGameplay() {
     inst.style.cssText = "text-align:center;padding:8px 0 4px;";
     inst.innerHTML =
       "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + scoringTeamObj.accent + ";letter-spacing:4px;text-shadow:0 0 16px " + scoringTeamObj.accent + "40;\">TOUCHDOWN!</div>" +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:#888;letter-spacing:2px;margin-top:2px;\">CHOOSE CONVERSION</div>";
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:14px;color:#999;letter-spacing:3px;margin-top:4px;\">CHOOSE CONVERSION</div>";
     panel.appendChild(inst);
 
     var w = document.createElement('div');
@@ -3951,8 +4264,8 @@ export function buildGameplay() {
      {id:'3pt',lbl:'3-POINT CONVERSION',sub:'+3 from the 10 yard line',col:'#e03050'}].forEach(function(c) {
       var b = document.createElement('button');
       b.className = 'btn-blitz';
-      b.style.cssText = 'background:transparent;color:' + c.col + ';border-color:' + c.col + ';font-size:11px;box-shadow:4px 4px 0 ' + c.col + '44, 6px 6px 0 #000;';
-      b.innerHTML = c.lbl + '<br><span style="font-size:7px;color:#554f80">' + c.sub + '</span>';
+      b.style.cssText = "background:transparent;color:" + c.col + ";border-color:" + c.col + ";font-family:'Teko';font-size:18px;letter-spacing:2px;padding:14px 16px;box-shadow:4px 4px 0 " + c.col + "44, 6px 6px 0 #000;";
+      b.innerHTML = c.lbl + "<br><span style=\"font-family:'Rajdhani';font-size:12px;font-weight:600;color:" + c.col + "88;letter-spacing:1px;\">" + c.sub + '</span>';
       b.onclick = function() {
         SND.snap();
         if (c.id === 'xp') {
@@ -3962,9 +4275,14 @@ export function buildGameplay() {
         } else {
           // Enter card selection for 2pt/3pt conversion
           conversionMode = { choice: c.id, team: team };
+          // Set ball position to conversion yard line so scoreboard shows correctly
+          var convYards = c.id === '2pt' ? 5 : 10;
+          gs.ballPosition = gs.possession === 'CT' ? (100 - convYards) : convYards;
+          gs.down = 1;
+          gs.distance = convYards;
           setNarr(c.lbl + ' attempt', 'Select your play, player, and snap');
           phase = 'play';
-          drawField(); drawPanel();
+          drawBug(); drawField(); drawPanel();
         }
       };
       w.appendChild(b);
@@ -4075,8 +4393,8 @@ export function buildGameplay() {
     var ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);opacity:0;transition:opacity .25s;pointer-events:auto;cursor:pointer;';
     ov.innerHTML =
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:48px;color:#e03050;letter-spacing:6px;text-shadow:0 0 30px rgba(224,48,80,0.5);animation:T-clash-yds 0.4s cubic-bezier(0.34,1.56,0.64,1) both;\">2-MINUTE WARNING</div>" +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:14px;color:#888;letter-spacing:2px;margin-top:8px;\">The clock is live. Every second counts.</div>";
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:36px;color:#e03050;letter-spacing:4px;text-shadow:0 0 30px rgba(224,48,80,0.5);animation:T-clash-yds 0.4s cubic-bezier(0.34,1.56,0.64,1) both;text-align:center;white-space:nowrap;\">2-MINUTE WARNING</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:14px;color:#888;letter-spacing:2px;margin-top:8px;text-align:center;\">The clock is live. Every second counts.</div>";
     ov.onclick = function() { ov.style.opacity = '0'; setTimeout(function() { ov.remove(); }, 250); };
     el.appendChild(ov);
     requestAnimationFrame(function() { ov.style.opacity = '1'; });
@@ -4108,7 +4426,7 @@ export function buildGameplay() {
 
     // Phase 1: Tap to flip — 3D coin with team logos on each side
     var tossTitle = document.createElement('div');
-    tossTitle.style.cssText = "font-family:'Teko';font-weight:700;font-size:32px;color:#EBB010;letter-spacing:5px;margin-bottom:16px;";
+    tossTitle.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:4px;margin-bottom:16px;";
     tossTitle.textContent = 'COIN TOSS';
     ov.appendChild(tossTitle);
 
@@ -4144,28 +4462,44 @@ export function buildGameplay() {
       setTimeout(function() {
         // Phase 2: Result + Choice
         ov.innerHTML = '';
+        ov.style.background = '#0A0804';
         var winner = humanWins ? hTeam.name : oTeam.name;
-        var resultEl = document.createElement('div');
         var winnerColor = humanWins ? hTeam.accent : oTeam.accent;
-        resultEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:" + winnerColor + ";letter-spacing:3px;text-align:center;";
+        var winnerTeam = humanWins ? hTeam : oTeam;
+
+        // Background glow
+        var tossGlow = document.createElement('div');
+        tossGlow.style.cssText = 'position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%,' + winnerTeam.colors.primary + '15 0%,transparent 60%);pointer-events:none;';
+        ov.appendChild(tossGlow);
+
+        var resultEl = document.createElement('div');
+        resultEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:30px;color:" + winnerColor + ";letter-spacing:4px;text-align:center;text-shadow:0 0 20px " + winnerColor + "40;z-index:1;";
         resultEl.textContent = humanWins ? 'YOU WON THE TOSS!' : winner + ' WIN THE TOSS';
         ov.appendChild(resultEl);
 
         if (humanWins) {
           // Human chooses: Torch Card or Receive
           var choiceWrap = document.createElement('div');
-          choiceWrap.style.cssText = 'display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px;margin-top:12px;';
+          choiceWrap.style.cssText = 'display:flex;flex-direction:column;gap:14px;width:100%;max-width:320px;margin-top:20px;z-index:1;';
 
           var cardBtn = document.createElement('button');
           cardBtn.className = 'btn-blitz';
-          cardBtn.style.cssText = "width:100%;font-size:13px;padding:14px;background:#141008;color:#EBB010;border-color:#EBB010;text-align:left;";
-          cardBtn.innerHTML = "<div style=\"font-family:'Teko';font-size:18px;letter-spacing:2px;\">DRAW A FREE TORCH CARD</div><div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:2px;\">Pick 1 of 3 mystery cards \u2014 but you kick off to them</div>";
+          cardBtn.style.cssText = "width:100%;padding:16px;background:rgba(235,176,16,0.06);color:#EBB010;border:2px solid #EBB01066;text-align:left;border-radius:10px;";
+          cardBtn.innerHTML =
+            "<div style=\"display:flex;align-items:center;gap:10px;\">" +
+              "<svg viewBox='0 0 44 44' width='28' height='30' fill='none'><defs><linearGradient id='tcb1' x1='22' y1='40' x2='22' y2='0'><stop offset='0%' stop-color='#FF4511'/><stop offset='100%' stop-color='#EBB010'/></linearGradient></defs><path d='M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z' fill='url(#tcb1)'/></svg>" +
+              "<div><div style=\"font-family:'Teko';font-size:20px;letter-spacing:2px;\">DRAW A FREE TORCH CARD</div><div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:2px;\">Pick 1 of 3 mystery cards \u2014 but you kick off</div></div>" +
+            "</div>";
           cardBtn.onclick = function() { showFaceDownCards(ov, offers, true, onDone); };
 
           var recBtn = document.createElement('button');
           recBtn.className = 'btn-blitz';
-          recBtn.style.cssText = "width:100%;font-size:13px;padding:14px;background:#141008;color:#00ff44;border-color:#00ff44;text-align:left;";
-          recBtn.innerHTML = "<div style=\"font-family:'Teko';font-size:18px;letter-spacing:2px;\">RECEIVE THE KICK</div><div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:2px;\">Start with the ball \u2014 but no free card until halftime</div>";
+          recBtn.style.cssText = "width:100%;padding:16px;background:rgba(0,255,68,0.04);color:#00ff44;border:2px solid #00ff4444;text-align:left;border-radius:10px;";
+          recBtn.innerHTML =
+            "<div style=\"display:flex;align-items:center;gap:10px;\">" +
+              "<svg viewBox='0 0 100 100' width='28' height='28' fill='none' style='filter:drop-shadow(0 0 4px rgba(0,255,68,0.4));'><defs><linearGradient id='rcvFb' x1='15' y1='15' x2='85' y2='85' gradientUnits='userSpaceOnUse'><stop offset='0%' stop-color='#00ff44'/><stop offset='100%' stop-color='#00aa22'/></linearGradient></defs><g transform='translate(50,50) rotate(-45) scale(0.22) translate(-256,-256)'><path fill='url(#rcvFb)' d='M247.5 25.4c-13.5 3.3-26.4 7.2-38.6 11.7C142.9 61.6 96.7 103.6 66 153.6C47.8 183.4 35.1 215.9 26.9 249L264.5 486.6c13.5-3.3 26.4-7.2 38.6-11.7c66-24.5 112.2-66.5 142.9-116.5c18.3-29.8 30.9-62.3 39.1-95.3L247.5 25.4zM495.2 205.3c6.1-56.8 1.4-112.2-7.7-156.4c-2.7-12.9-13-22.9-26.1-25.1c-58.2-9.7-109.9-12-155.6-7.9L495.2 205.3zM206.1 496L16.8 306.7c-6.1 56.8-1.4 112.2 7.7 156.4c2.7 12.9 13 22.9 26.1 25.1c58.2 9.7 109.9 12 155.6 7.9z'/><path fill='#fff' d='M260.7 164.7c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6z'/></g></svg>" +
+              "<div><div style=\"font-family:'Teko';font-size:20px;letter-spacing:2px;\">RECEIVE THE KICK</div><div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:2px;\">Start with the ball \u2014 no free card until halftime</div></div>" +
+            "</div>";
           recBtn.onclick = function() {
             SND.snap();
             ov.style.opacity = '0';
@@ -4176,28 +4510,49 @@ export function buildGameplay() {
           choiceWrap.appendChild(recBtn);
           ov.appendChild(choiceWrap);
         } else {
-          // CPU won — AI chooses (weighted by difficulty)
+          // CPU won — AI chooses
           var aiTakesCard = Math.random() < ({ EASY: 0.6, MEDIUM: 0.5, HARD: 0.4 }[gs.difficulty] || 0.5);
+
+          // Opponent badge
+          var badgeWrap = document.createElement('div');
+          badgeWrap.style.cssText = 'margin-top:20px;z-index:1;';
+          badgeWrap.innerHTML = renderTeamBadge(GS.opponent, 64);
+          ov.appendChild(badgeWrap);
+
+          // What they chose
           var aiMsg = document.createElement('div');
-          aiMsg.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:" + oTeam.accent + ";text-align:center;margin-top:8px;letter-spacing:1px;";
-          aiMsg.textContent = aiTakesCard
-            ? oTeam.name + ' DRAW A FREE TORCH CARD'
-            : oTeam.name + ' CHOOSE TO RECEIVE';
+          aiMsg.style.cssText = "font-family:'Teko';font-weight:700;font-size:18px;color:" + oTeam.accent + ";text-align:center;letter-spacing:2px;margin-top:10px;z-index:1;";
+          aiMsg.textContent = aiTakesCard ? 'THEY TAKE A TORCH CARD' : 'THEY CHOOSE TO RECEIVE';
           ov.appendChild(aiMsg);
 
-          setTimeout(function() {
+          // Divider
+          var div = document.createElement('div');
+          div.style.cssText = 'width:60px;height:2px;background:linear-gradient(90deg,transparent,' + oTeam.accent + '66,transparent);margin:14px 0;border-radius:1px;z-index:1;';
+          ov.appendChild(div);
+
+          // What you get — flame icon for card, football for receive
+          var youIcon = aiTakesCard
+            ? ''
+            : "<svg viewBox='0 0 44 44' width='28' height='30' fill='none' style='margin-bottom:4px;'><defs><linearGradient id='yg1' x1='22' y1='40' x2='22' y2='0'><stop offset='0%' stop-color='#FF4511'/><stop offset='100%' stop-color='#EBB010'/></linearGradient></defs><path d='M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z' fill='url(#yg1)'/></svg>";
+          var youGetMsg = document.createElement('div');
+          youGetMsg.style.cssText = "text-align:center;z-index:1;";
+          youGetMsg.innerHTML = youIcon +
+            "<div style=\"font-family:'Teko';font-weight:700;font-size:24px;color:#EBB010;letter-spacing:3px;text-shadow:0 0 16px rgba(235,176,16,0.3);\">" + (aiTakesCard ? 'YOU RECEIVE THE KICK' : 'YOU DRAW A FREE TORCH CARD') + "</div>";
+          ov.appendChild(youGetMsg);
+
+          var contBtn = document.createElement('button');
+          contBtn.className = 'btn-blitz';
+          contBtn.style.cssText = "margin-top:24px;font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;z-index:1;";
+          contBtn.textContent = 'CONTINUE';
+          contBtn.onclick = function() {
+            contBtn.onclick = null;
             if (!aiTakesCard) {
-              // AI receives, human gets a card
-              var youGet = document.createElement('div');
-              youGet.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;text-align:center;margin-top:8px;";
-              youGet.textContent = 'YOU DRAW A FREE TORCH CARD';
-              ov.appendChild(youGet);
-              setTimeout(function() { showFaceDownCards(ov, offers, false, onDone); }, 800);
+              showFaceDownCards(ov, offers, false, onDone);
             } else {
-              // AI draws — show the same face-down interface, AI auto-picks after 1.5s
               showAICardPick(ov, offers, onDone);
             }
-          }, 1500);
+          };
+          ov.appendChild(contBtn);
         }
       }, 1600);
     };
@@ -4206,24 +4561,40 @@ export function buildGameplay() {
   // Face-down card selection (used by coin toss and halftime)
   function showFaceDownCards(ov, offers, humanKicks, onDone) {
     ov.innerHTML = '';
+    ov.style.cssText += 'background:radial-gradient(ellipse at 50% 30%,rgba(235,176,16,0.06) 0%,transparent 60%),rgba(10,8,4,0.95);';
+
+    // Flame icon
+    var flameSvg = '<svg viewBox="0 0 44 44" width="36" height="40" fill="none" style="filter:drop-shadow(0 0 12px rgba(235,176,16,0.5));"><defs><linearGradient id="fdc" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#EBB010"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#fdc)"/></svg>';
+    var flameEl = document.createElement('div');
+    flameEl.style.cssText = 'text-align:center;margin-bottom:8px;';
+    flameEl.innerHTML = flameSvg;
+    ov.appendChild(flameEl);
+
     var title = document.createElement('div');
-    title.style.cssText = "font-family:'Teko';font-weight:700;font-size:36px;color:" + hTeam.accent + ";letter-spacing:5px;text-align:center;text-shadow:0 0 24px " + hTeam.accent + "60;";
-    title.textContent = 'TAP A CARD TO REVEAL';
+    title.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:5px;text-align:center;text-shadow:0 0 20px rgba(235,176,16,0.4);";
+    title.textContent = 'FREE TORCH CARD';
     ov.appendChild(title);
 
     var subtitle = document.createElement('div');
-    subtitle.style.cssText = "font-family:'Rajdhani';font-size:14px;color:#aaa;text-align:center;margin-top:8px;max-width:280px;line-height:1.4;";
-    subtitle.textContent = 'Torch cards are single-use power-ups. Some work on offense, some on defense. They cost TORCH points to buy more.';
+    subtitle.style.cssText = "font-family:'Rajdhani';font-size:13px;font-weight:600;color:#888;text-align:center;margin-top:6px;max-width:260px;line-height:1.4;letter-spacing:1px;";
+    subtitle.textContent = 'Pick one. Single-use power-ups that boost your plays.';
     ov.appendChild(subtitle);
 
+    var tapHint = document.createElement('div');
+    tapHint.style.cssText = "font-family:'Rajdhani';font-size:11px;font-weight:700;color:#EBB01088;text-align:center;margin-top:12px;letter-spacing:2px;animation:T-snap-pulse 1.2s ease-in-out infinite;";
+    tapHint.textContent = 'TAP A CARD TO REVEAL';
+    ov.appendChild(tapHint);
+
     var cardRow = document.createElement('div');
-    cardRow.style.cssText = 'display:flex;gap:12px;justify-content:center;margin-top:20px;';
+    cardRow.style.cssText = 'display:flex;gap:14px;justify-content:center;margin-top:16px;';
 
     offers.forEach(function(card, idx) {
       var wrap = document.createElement('div');
-      wrap.style.cssText = 'width:100px;height:140px;border-radius:10px;background:linear-gradient(135deg,#1a1208,#0E0A04);border:2px solid #EBB01033;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.4s;opacity:0;transform:translateY(30px) scale(0.9);box-shadow:0 4px 16px rgba(0,0,0,0.5);';
-      wrap.innerHTML = "<div style=\"font-family:'Teko';font-size:42px;color:#EBB01055;\">?</div>";
-      setTimeout(function() { wrap.style.opacity = '1'; wrap.style.transform = 'translateY(0) scale(1)'; }, 300 + idx * 150);
+      wrap.style.cssText = 'width:100px;height:140px;border-radius:10px;background:linear-gradient(180deg,#1a1208 0%,#0E0A04 100%);border:2px solid #EBB01044;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:all 0.4s;opacity:0;transform:translateY(30px) scale(0.9);box-shadow:0 4px 20px rgba(0,0,0,0.6),0 0 12px rgba(235,176,16,0.08);';
+      wrap.innerHTML =
+        '<svg viewBox="0 0 44 44" width="24" height="26" fill="none" style="opacity:0.3;"><defs><linearGradient id="fdm' + idx + '" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#EBB010"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#fdm' + idx + ')"/></svg>' +
+        "<div style=\"font-family:'Teko';font-size:32px;color:#EBB01033;line-height:1;\">?</div>";
+      setTimeout(function() { wrap.style.opacity = '1'; wrap.style.transform = 'translateY(0) scale(1)'; }, 400 + idx * 180);
 
       wrap.onclick = function() {
         cardRow.querySelectorAll('div').forEach(function(c) { c.onclick = null; });
@@ -4293,88 +4664,98 @@ export function buildGameplay() {
 
   // AI picks a face-down card — same visual as human but auto-selects
   function showAICardPick(ov, offers, onDone) {
+    // Reset overlay completely
     ov.innerHTML = '';
+    ov.onclick = null;
+    ov.style.cssText = 'position:fixed;inset:0;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#0A0804;pointer-events:auto;';
+
+    var pickIdx = Math.floor(Math.random() * offers.length);
+    var pickedCard = offers[pickIdx];
+
+    // Badge + title
+    var badge = document.createElement('div');
+    badge.innerHTML = renderTeamBadge(GS.opponent, 48);
+    ov.appendChild(badge);
+
     var title = document.createElement('div');
     title.style.cssText = "font-family:'Teko';font-weight:700;font-size:22px;color:" + oTeam.accent + ";letter-spacing:3px;text-align:center;";
     title.textContent = oTeam.name + ' ARE CHOOSING...';
     ov.appendChild(title);
 
-    var subtitle = document.createElement('div');
-    subtitle.style.cssText = "font-family:'Rajdhani';font-size:12px;color:#888;text-align:center;margin-top:4px;max-width:280px;";
-    subtitle.textContent = 'Torch cards are single-use power-ups. Some work on offense, some on defense. They cost TORCH points to buy more.';
-    ov.appendChild(subtitle);
-
+    // 3 face-down cards
     var cardRow = document.createElement('div');
-    cardRow.style.cssText = 'display:flex;gap:12px;justify-content:center;margin-top:20px;';
-    var wraps = [];
-
+    cardRow.style.cssText = 'display:flex;gap:14px;justify-content:center;margin-top:16px;';
     offers.forEach(function(card, idx) {
-      var wrap = document.createElement('div');
-      wrap.style.cssText = 'width:100px;height:140px;border-radius:10px;background:linear-gradient(135deg,#1a1208,#0E0A04);border:2px solid ' + oTeam.accent + '33;display:flex;align-items:center;justify-content:center;transition:all 0.4s;opacity:0;transform:translateY(30px) scale(0.9);box-shadow:0 4px 16px rgba(0,0,0,0.5);';
-      wrap.innerHTML = "<div style=\"font-family:'Teko';font-size:42px;color:" + oTeam.accent + "55;\">?</div>";
-      setTimeout(function() { wrap.style.opacity = '1'; wrap.style.transform = 'translateY(0) scale(1)'; }, 300 + idx * 150);
-      wraps.push(wrap);
-      cardRow.appendChild(wrap);
+      var w = document.createElement('div');
+      w.style.cssText = 'width:100px;height:140px;border-radius:10px;background:linear-gradient(180deg,#1a1208,#0E0A04);border:2px solid ' + oTeam.accent + '33;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.5);';
+      w.innerHTML = "<div style=\"font-family:'Teko';font-size:36px;color:" + oTeam.accent + "44;\">?</div>";
+      cardRow.appendChild(w);
     });
     ov.appendChild(cardRow);
 
-    // AI auto-picks after 1.5s
-    var pickIdx = Math.floor(Math.random() * offers.length);
-    var pickedCard = offers[pickIdx];
-
+    // After 1.5s: fade non-selected, flip selected, show reveal
     setTimeout(function() {
-      var picked = wraps[pickIdx];
-      // Fade others
-      wraps.forEach(function(w, i) {
-        if (i !== pickIdx) { w.style.opacity = '0.15'; w.style.transform = 'scale(0.9)'; }
-      });
+      if (!ov.parentNode) return;
+      var cards = cardRow.children;
 
-      // Flip picked card
-      picked.style.transform = 'scale(0.8) rotateY(90deg)';
+      // Fade non-selected
+      for (var i = 0; i < cards.length; i++) {
+        if (i !== pickIdx) {
+          cards[i].style.transition = 'opacity 0.3s';
+          cards[i].style.opacity = '0.15';
+        }
+      }
+
+      // Flip selected card
+      var picked = cards[pickIdx];
+      picked.style.transition = 'transform 0.3s, border-color 0.3s';
+      picked.style.transform = 'scale(0.85) rotateY(90deg)';
       picked.style.borderColor = oTeam.accent;
 
       setTimeout(function() {
+        if (!ov.parentNode) return;
+        // Replace with revealed card
         picked.innerHTML = '';
         picked.style.width = '120px';
         picked.style.height = '168px';
         picked.style.background = 'transparent';
         picked.style.border = 'none';
-        picked.style.boxShadow = '0 0 30px ' + oTeam.accent + '66';
+        picked.style.boxShadow = '0 0 24px ' + oTeam.accent + '44';
         var revealed = buildTorchCard(pickedCard, 120, 168);
         picked.appendChild(revealed);
-        picked.style.transform = 'scale(1.08) rotateY(0deg)';
-        SND.snap();
-      }, 300);
+        picked.style.transform = 'scale(1.05) rotateY(0deg)';
+        try { SND.snap(); } catch(e) {}
 
-      // Show card info
-      setTimeout(function() {
+        // Update title
         title.textContent = oTeam.name + ' DREW:';
+
+        // Card info below
         var tierColors = { GOLD: '#EBB010', SILVER: '#C0C0C0', BRONZE: '#CD7F32' };
         var tierCol = tierColors[pickedCard.tier] || '#EBB010';
         var info = document.createElement('div');
-        info.style.cssText = 'text-align:center;margin-top:16px;opacity:0;transform:translateY(10px);transition:opacity 0.4s,transform 0.4s;';
+        info.style.cssText = 'text-align:center;margin-top:8px;max-width:260px;';
         info.innerHTML =
           "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:" + tierCol + ";letter-spacing:2px;\">" + pickedCard.tier + "</div>" +
-          "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:#fff;letter-spacing:2px;margin-top:2px;\">" + pickedCard.name + "</div>" +
-          "<div style=\"font-family:'Rajdhani';font-size:13px;color:#ccc;margin-top:4px;max-width:260px;line-height:1.4;\">" + pickedCard.effect + "</div>";
+          "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#fff;letter-spacing:2px;margin-top:2px;\">" + pickedCard.name + "</div>" +
+          "<div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:4px;line-height:1.3;\">" + pickedCard.effect + "</div>";
         ov.appendChild(info);
-        requestAnimationFrame(function() { info.style.opacity = '1'; info.style.transform = 'translateY(0)'; });
-      }, 600);
 
-      // Give AI the card
-      gs.cpuTorchCards.push(pickedCard.id);
+        // Give AI the card
+        gs.cpuTorchCards.push(pickedCard.id);
 
-      // Continue button
-      var continueBtn = document.createElement('button');
-      continueBtn.className = 'btn-blitz';
-      continueBtn.style.cssText = "width:80%;max-width:280px;font-size:14px;background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;letter-spacing:3px;margin-top:20px;opacity:0;transition:opacity 0.3s;";
-      continueBtn.textContent = 'CONTINUE';
-      continueBtn.onclick = function() {
-        ov.style.opacity = '0';
-        setTimeout(function() { ov.remove(); onDone({ chose: 'receive' }); }, 250);
-      };
-      ov.appendChild(continueBtn);
-      setTimeout(function() { continueBtn.style.opacity = '1'; }, 1500);
+        // Continue button — visible immediately
+        var btn = document.createElement('button');
+        btn.className = 'btn-blitz';
+        btn.style.cssText = "font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;margin-top:16px;";
+        btn.textContent = 'CONTINUE';
+        btn.onclick = function() {
+          btn.onclick = null;
+          ov.style.transition = 'opacity 0.25s';
+          ov.style.opacity = '0';
+          setTimeout(function() { if (ov.parentNode) ov.remove(); onDone({ chose: 'receive' }); }, 250);
+        };
+        ov.appendChild(btn);
+      }, 350);
     }, 1500);
   }
 
@@ -4383,13 +4764,14 @@ export function buildGameplay() {
     var stOv = document.createElement('div');
     var _stFired = false;
     function _stDone() { if (_stFired) return; _stFired = true; if (stOv.parentNode) stOv.remove(); if (onDone) onDone(); }
-    stOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.85);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;';
+    stOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.92);opacity:0;transition:opacity 0.3s;pointer-events:auto;';
     stOv.innerHTML =
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + color + ";letter-spacing:3px;text-align:center;max-width:320px;text-shadow:0 0 20px " + color + "40;\">" + text + "</div>";
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + color + ";letter-spacing:4px;text-align:center;max-width:320px;text-shadow:0 0 20px " + color + "40;\">" + text + "</div>" +
+      "<button class='btn-blitz' style=\"margin-top:20px;font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;\">CONTINUE</button>";
+    stOv.querySelector('button').onclick = function(e) { e.stopPropagation(); stOv.style.opacity = '0'; setTimeout(_stDone, 200); };
     stOv.onclick = function() { stOv.style.opacity = '0'; setTimeout(_stDone, 200); };
     el.appendChild(stOv);
     requestAnimationFrame(function() { stOv.style.opacity = '1'; });
-    setTimeout(function() { if (stOv.parentNode) { stOv.style.opacity = '0'; setTimeout(_stDone, 200); } }, 2500);
   }
 
   // Brief kickoff result overlay
@@ -4400,49 +4782,63 @@ export function buildGameplay() {
     var kov = document.createElement('div');
     var _kovFired = false;
     function _kovDone() { if (_kovFired) return; _kovFired = true; if (kov.parentNode) kov.remove(); if (onDone) onDone(); }
-    kov.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.85);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;';
+    kov.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#0A0804;opacity:0;transition:opacity 0.3s;pointer-events:auto;';
+    // Background glow
     kov.innerHTML =
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#888;letter-spacing:3px;\">KICKOFF</div>" +
-      "<div style=\"display:flex;align-items:center;gap:8px;margin-top:8px;\">" + renderTeamBadge(recTeam.id, 32) +
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:" + recColor + ";letter-spacing:2px;\">" + recTeam.name + " RECEIVE</div></div>" +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:14px;color:#ccc;margin-top:6px;\">" + resultText + "</div>";
-    kov.onclick = function() { kov.style.opacity = '0'; setTimeout(_kovDone, 200); };
+      "<div style=\"position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%," + recTeam.colors.primary + "12 0%,transparent 60%);pointer-events:none;\"></div>" +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:24px;color:#666;letter-spacing:5px;z-index:1;\">KICKOFF</div>" +
+      "<div style=\"z-index:1;margin-top:4px;\">" + renderTeamBadge(recTeam.id, 64) + "</div>" +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + recColor + ";letter-spacing:3px;text-shadow:0 0 16px " + recColor + "40;z-index:1;\">" + recTeam.name + " RECEIVE</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:16px;color:#ccc;z-index:1;\">" + resultText + "</div>" +
+      "<button class='btn-blitz' style=\"margin-top:16px;font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;z-index:1;\">CONTINUE</button>";
+    kov.querySelector('button').onclick = function(e) { e.stopPropagation(); kov.style.opacity = '0'; setTimeout(_kovDone, 200); };
     el.appendChild(kov);
     requestAnimationFrame(function() { kov.style.opacity = '1'; });
-    setTimeout(function() { if (kov.parentNode) { kov.style.opacity = '0'; setTimeout(_kovDone, 200); } }, 2000);
   }
 
   // ── TRANSITIONS ──
   function showHalfEnd(isGameEnd, onDone) {
     var ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0);pointer-events:none;';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0);pointer-events:auto;';
     el.appendChild(ov);
 
-    try { gsap.to(ov, { backgroundColor: 'rgba(0,0,0,0.85)', duration: 0.4 }); } catch(e) { ov.style.background = 'rgba(0,0,0,0.85)'; }
+    try { gsap.to(ov, { backgroundColor: 'rgba(10,8,4,0.92)', duration: 0.4 }); } catch(e) { ov.style.background = 'rgba(10,8,4,0.92)'; }
 
     var label = isGameEnd ? 'FINAL' : 'END OF HALF';
     var textEl = document.createElement('div');
-    textEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:36px;color:#fff;letter-spacing:6px;opacity:0;text-shadow:0 0 20px rgba(255,255,255,0.3);";
+    textEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:4px;opacity:0;text-shadow:0 0 20px rgba(235,176,16,0.3);";
     textEl.textContent = label;
     ov.appendChild(textEl);
 
     var scoreEl = document.createElement('div');
-    scoreEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:24px;color:#EBB010;opacity:0;margin-top:8px;";
+    scoreEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:24px;color:#fff;opacity:0;margin-top:8px;";
     var hScore = hAbbr === 'CT' ? gs.ctScore : gs.irScore;
     var cScore = hAbbr === 'CT' ? gs.irScore : gs.ctScore;
     scoreEl.textContent = hScore + ' - ' + cScore;
     ov.appendChild(scoreEl);
 
+    var contBtn = document.createElement('button');
+    contBtn.className = 'btn-blitz';
+    contBtn.style.cssText = "font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;margin-top:20px;opacity:0;";
+    contBtn.textContent = 'CONTINUE';
+    ov.appendChild(contBtn);
+
+    var dismissed = false;
+    function dismiss() {
+      if (dismissed) return;
+      dismissed = true;
+      try { gsap.to(ov, { opacity: 0, duration: 0.3, onComplete: function() { ov.remove(); onDone(); } }); }
+      catch(e) { ov.remove(); onDone(); }
+    }
+    contBtn.onclick = function(e) { e.stopPropagation(); dismiss(); };
+    ov.onclick = dismiss;
+
     try {
       gsap.to(textEl, { opacity: 1, duration: 0.3, delay: 0.3, ease: 'back.out(1.5)' });
       gsap.from(textEl, { scale: 1.3, duration: 0.3, delay: 0.3, ease: 'back.out(1.5)' });
       gsap.to(scoreEl, { opacity: 1, duration: 0.25, delay: 0.6 });
-    } catch(e) { textEl.style.opacity = '1'; scoreEl.style.opacity = '1'; }
-
-    setTimeout(function() {
-      try { gsap.to(ov, { opacity: 0, duration: 0.3, onComplete: function() { ov.remove(); onDone(); } }); }
-      catch(e) { ov.remove(); onDone(); }
-    }, isGameEnd ? 2500 : 2000);
+      gsap.to(contBtn, { opacity: 1, duration: 0.25, delay: 0.8 });
+    } catch(e) { textEl.style.opacity = '1'; scoreEl.style.opacity = '1'; contBtn.style.opacity = '1'; }
   }
 
   function checkEnd() {
@@ -4491,9 +4887,37 @@ export function buildGameplay() {
       var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
       showKickoffResult(posLabel, function() {
         drawBug(); drawField();
-        phase = 'play';
-        panel.style.display = ''; // Show card tray for the first time
-        drawPanel();
+        // Torch tutorial — disabled, will revisit
+        if (false) {
+          _torchTutorialShown = true;
+          var torchTutOv = document.createElement('div');
+          torchTutOv.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(10,8,4,0.92);opacity:0;transition:opacity .3s;pointer-events:auto;';
+          var _ftSvg = '<svg viewBox="0 0 44 44" width="40" height="46" fill="none" style="animation:T-flame-pulse 2s ease-in-out infinite;filter:drop-shadow(0 0 12px ' + hTeam.accent + ')"><defs><linearGradient id="tft2" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="' + hTeam.accent + '"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#tft2)"/></svg>';
+          var _hasReactiveOnly = torchInventory.every(function(c) { return c.type === 'reactive'; });
+          var _tutDesc = _hasReactiveOnly
+            ? 'Reactive cards activate automatically when triggered. Look for the prompt during play!'
+            : 'When you have a playable card, tap it to power up your play before you snap.';
+          torchTutOv.innerHTML =
+            _ftSvg +
+            "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + hTeam.accent + ";letter-spacing:4px;text-shadow:0 0 20px " + hTeam.accent + "40;\">TORCH CARD EARNED!</div>" +
+            "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:14px;color:#999;letter-spacing:2px;text-align:center;max-width:280px;line-height:1.4;\">" + _tutDesc + "</div>" +
+            "<button class='btn-blitz' style='margin-top:20px;font-size:16px;padding:14px 40px;background:#141008;color:" + hTeam.accent + ";border-color:" + hTeam.accent + ";letter-spacing:3px;'>GOT IT</button>";
+          torchTutOv.querySelector('button').onclick = function() {
+            torchTutOv.style.opacity = '0';
+            setTimeout(function() {
+              torchTutOv.remove();
+              phase = 'play';
+              panel.style.display = '';
+              drawPanel();
+            }, 300);
+          };
+          el.appendChild(torchTutOv);
+          requestAnimationFrame(function() { torchTutOv.style.opacity = '1'; });
+        } else {
+          phase = 'play';
+          panel.style.display = '';
+          drawPanel();
+        }
       });
     });
   } else if (gs.half === 2 && GS._halftimeCardDone === false) {

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Arcade Play Card - Switch Pass</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-green: #00FF00;
+            --neon-pink: #FF00FF;
+            --neon-cyan: #00FFFF;
+            --neon-yellow: #FFFF00;
+            --bg-black: #000000;
+        }
+
+        body {
+            background-color: #222;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        /* 120x168px Play Card */
+        .play-card {
+            width: 120px;
+            height: 168px;
+            background-color: var(--bg-black);
+            border: 4px solid var(--neon-green);
+            box-shadow: 
+                0 0 0 4px var(--bg-black),
+                0 0 0 8px var(--neon-pink);
+            position: relative;
+            padding: 8px;
+            box-sizing: border-box;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            color: var(--neon-cyan);
+            font-size: 6px;
+            text-align: center;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+
+        /* Schematic Diagram Area */
+        .diagram {
+            width: 100px;
+            height: 100px;
+            border: 2px solid var(--neon-yellow);
+            position: relative;
+            background-image: 
+                linear-gradient(var(--neon-yellow) 1px, transparent 1px),
+                linear-gradient(90deg, var(--neon-yellow) 1px, transparent 1px);
+            background-size: 10px 10px;
+            background-color: #050505;
+        }
+
+        /* Players (Blocky Shapes) */
+        .player {
+            width: 6px;
+            height: 6px;
+            position: absolute;
+            background-color: var(--neon-cyan);
+        }
+
+        /* QB */
+        .player.qb {
+            bottom: 10px;
+            left: 47px;
+            background-color: var(--neon-pink);
+        }
+
+        /* WR Left */
+        .player.wr1 {
+            bottom: 30px;
+            left: 10px;
+        }
+
+        /* WR Right */
+        .player.wr2 {
+            bottom: 30px;
+            right: 10px;
+        }
+
+        /* Routes (Switch Pass) */
+        .route {
+            position: absolute;
+            background-color: var(--neon-green);
+        }
+
+        /* WR1 Route: Diagonal to center-right */
+        .wr1-route-1 {
+            width: 2px;
+            height: 40px;
+            bottom: 36px;
+            left: 12px;
+            transform: skewX(-45deg);
+            transform-origin: bottom;
+        }
+
+        /* WR2 Route: Diagonal to center-left */
+        .wr2-route-1 {
+            width: 2px;
+            height: 40px;
+            bottom: 36px;
+            right: 12px;
+            transform: skewX(45deg);
+            transform-origin: bottom;
+            background-color: var(--neon-yellow);
+        }
+
+        .arrow {
+            width: 0;
+            height: 0;
+            border-left: 3px solid transparent;
+            border-right: 3px solid transparent;
+            border-bottom: 5px solid var(--neon-green);
+            position: absolute;
+        }
+
+        .wr1-arrow {
+            top: 25px;
+            right: 25px;
+            transform: rotate(45deg);
+        }
+
+        .wr2-arrow {
+            top: 25px;
+            left: 25px;
+            transform: rotate(-45deg);
+            border-bottom-color: var(--neon-yellow);
+        }
+
+        .footer {
+            margin-top: auto;
+            color: var(--neon-pink);
+            font-size: 5px;
+            text-align: center;
+        }
+
+        .coin-op {
+            margin-top: 4px;
+            color: var(--neon-yellow);
+            font-size: 4px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="play-card">
+        <div class="header">SWITCH<br>PASS</div>
+        
+        <div class="diagram">
+            <!-- Quarterback -->
+            <div class="player qb"></div>
+            
+            <!-- Receivers -->
+            <div class="player wr1"></div>
+            <div class="player wr2"></div>
+            
+            <!-- Routes -->
+            <div class="route wr1-route-1"></div>
+            <div class="route wr2-route-1"></div>
+            
+            <!-- Arrows -->
+            <div class="arrow wr1-arrow"></div>
+            <div class="arrow wr2-arrow"></div>
+        </div>
+
+        <div class="footer">LVL 01-1</div>
+        <div class="coin-op">INSERT COIN</div>
+    </div>
+
+</body>
+</html>

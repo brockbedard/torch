@@ -166,3 +166,63 @@ export function aiSelectPlayer(roster, play, difficulty, isOffense, heatMap) {
   // Hard: optimal with heat awareness (naturally rotates players)
   return scored[0].player;
 }
+
+/**
+ * AI decides which Torch Card to buy from a shop offer.
+ * @param {object[]} offers - 3 card offers
+ * @param {number} points - AI's current TORCH points
+ * @param {string[]} inventory - Current AI inventory (IDs)
+ * @param {'EASY'|'MEDIUM'|'HARD'} difficulty
+ * @returns {object|null} The card to buy, or null to pass
+ */
+export function aiBuyTorchCard(offers, points, inventory, difficulty) {
+  if (difficulty === 'EASY' || difficulty === 'RANDOM') return null;
+  if (inventory.length >= 3) return null;
+
+  // Filter affordable
+  var affordable = offers.filter(function(c) { return c.cost <= points; });
+  if (affordable.length === 0) return null;
+
+  // Medium: 50% chance to buy the cheapest affordable card if it's Bronze/Silver
+  if (difficulty === 'MEDIUM') {
+    if (Math.random() < 0.5) {
+      affordable.sort(function(a, b) { return a.cost - b.cost; });
+      return affordable[0];
+    }
+    return null;
+  }
+
+  // Hard: 80% chance to buy the "best" card based on situational value
+  if (difficulty === 'HARD') {
+    if (Math.random() < 0.2) return null; // 20% pass to save points
+
+    // Value mapping for AI priorities
+    var tierValue = { GOLD: 100, SILVER: 50, BRONZE: 20 };
+    // Base value mapping for AI priorities (ensures every card has a score)
+    var specificValue = {
+      'sure_hands': 150, 'house_call': 140, 'scout_team': 130,
+      'deep_shot': 80, 'truck_stick': 80, 'prime_time': 70,
+      'blocked_kick': 90, 'challenge_flag': 85,
+      'timeout': 60, 'scout_report': 50, 'pre_snap_read': 45,
+      'ice_the_kicker': 40, 'cannon_leg': 35, 'ringer': 30,
+      'play_action': 25, 'scramble_drill': 20, 'twelfth_man': 40,
+      'ice': 45, 'personnel_report': 30, 'fresh_legs': 15,
+      'game_plan': 15, 'coffin_corner': 25, 'fair_catch_ghost': 20,
+      'iron_man': 20
+    };
+
+    var scored = affordable.map(function(c) {
+      var score = tierValue[c.tier] || 0;
+      // Use mapped value or a default of 10 if missing
+      score += (specificValue[c.id] || 10);
+      // Randomize slightly so they don't always pick the same card
+      score *= (0.8 + Math.random() * 0.4);
+      return { card: c, score: score };
+    });
+
+    scored.sort(function(a, b) { return b.score - a.score; });
+    return scored[0].card;
+  }
+
+  return null;
+}

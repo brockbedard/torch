@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tactical Dashboard Play Card - Blitz</title>
+    <style>
+        :root {
+            --bg-color: #05080a;
+            --primary-accent: #00ff66; /* Tactical Green */
+            --secondary-accent: #00d4ff; /* HUD Blue */
+            --warning-accent: #ff3c00; /* Alert Red */
+            --grid-color: rgba(0, 255, 102, 0.1);
+            --font-mono: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            background-color: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: var(--font-mono);
+        }
+
+        .play-card {
+            width: 120px;
+            height: 168px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--primary-accent);
+            position: relative;
+            overflow: hidden;
+            color: var(--primary-accent);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            padding: 4px;
+            box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
+        }
+
+        /* HUD Background Grid */
+        .play-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 10px 10px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* HUD Corner Brackets */
+        .hud-bracket {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border: 1px solid var(--primary-accent);
+            z-index: 2;
+        }
+        .top-left { top: 2px; left: 2px; border-right: none; border-bottom: none; }
+        .top-right { top: 2px; right: 2px; border-left: none; border-bottom: none; }
+        .bottom-left { bottom: 2px; left: 2px; border-right: none; border-top: none; }
+        .bottom-right { bottom: 2px; right: 2px; border-left: none; border-top: none; }
+
+        /* Header */
+        .header {
+            position: relative;
+            z-index: 1;
+            border-bottom: 1px solid var(--primary-accent);
+            padding-bottom: 2px;
+            margin-bottom: 4px;
+        }
+
+        .play-id {
+            font-size: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
+        .play-name {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 0;
+            color: #fff;
+            text-shadow: 0 0 5px var(--primary-accent);
+        }
+
+        /* Telemetry Section */
+        .telemetry {
+            display: flex;
+            justify-content: space-between;
+            z-index: 1;
+            margin-bottom: 4px;
+        }
+
+        .gauge-container {
+            width: 45%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .gauge-label {
+            font-size: 5px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .gauge-bar {
+            width: 100%;
+            height: 3px;
+            background: rgba(0, 255, 102, 0.2);
+            position: relative;
+        }
+
+        .gauge-fill {
+            height: 100%;
+            background: var(--primary-accent);
+            box-shadow: 0 0 3px var(--primary-accent);
+        }
+
+        /* Circular Success Rate */
+        .success-indicator {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            margin: 4px auto;
+            z-index: 1;
+        }
+
+        .circle-svg {
+            transform: rotate(-90deg);
+        }
+
+        .circle-bg {
+            fill: none;
+            stroke: rgba(0, 212, 255, 0.1);
+            stroke-width: 3;
+        }
+
+        .circle-val {
+            fill: none;
+            stroke: var(--secondary-accent);
+            stroke-width: 3;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 25; /* 75% success */
+            stroke-linecap: round;
+            filter: drop-shadow(0 0 2px var(--secondary-accent));
+        }
+
+        .success-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 8px;
+            font-weight: bold;
+            color: var(--secondary-accent);
+        }
+
+        /* Play Diagram / HUD Area */
+        .diagram {
+            flex-grow: 1;
+            border: 1px solid rgba(0, 255, 102, 0.3);
+            position: relative;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1;
+            margin-top: 2px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hud-crosshair {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 0.5px dashed var(--warning-accent);
+            border-radius: 50%;
+            opacity: 0.6;
+        }
+
+        .blitz-arrows {
+            width: 80%;
+            height: 80%;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 4px;
+            border-top: 1px solid var(--primary-accent);
+            padding-top: 2px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 5px;
+            z-index: 1;
+            text-transform: uppercase;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 255, 102, 0.1);
+            opacity: 0.5;
+            animation: scan 4s linear infinite;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+
+        .flicker {
+            animation: flicker 2s linear infinite;
+        }
+
+        @keyframes flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+            20%, 22%, 24%, 55% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="play-card flicker">
+        <div class="hud-bracket top-left"></div>
+        <div class="hud-bracket top-right"></div>
+        <div class="hud-bracket bottom-left"></div>
+        <div class="hud-bracket bottom-right"></div>
+        <div class="scan-line"></div>
+
+        <div class="header">
+            <div class="play-id">SEC-PL-007</div>
+            <h1 class="play-name">Blitz</h1>
+        </div>
+
+        <div class="telemetry">
+            <div class="gauge-container">
+                <span class="gauge-label">Aggression</span>
+                <div class="gauge-bar">
+                    <div class="gauge-fill" style="width: 90%;"></div>
+                </div>
+            </div>
+            <div class="gauge-container">
+                <span class="gauge-label">Risk-LVL</span>
+                <div class="gauge-bar" style="background: rgba(255, 60, 0, 0.2);">
+                    <div class="gauge-fill" style="width: 75%; background: var(--warning-accent); box-shadow: 0 0 3px var(--warning-accent);"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="success-indicator">
+            <svg class="circle-svg" viewBox="0 0 36 36">
+                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="circle-val" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            </svg>
+            <div class="success-label">75%</div>
+            <div style="font-size: 4px; text-align: center; position: absolute; bottom: -8px; width: 100%; color: var(--secondary-accent);">SUCC-RATE</div>
+        </div>
+
+        <div class="diagram">
+            <div class="hud-crosshair"></div>
+            <svg class="blitz-arrows" viewBox="0 0 100 100">
+                <!-- Defensive Line -->
+                <line x1="20" y1="70" x2="80" y2="70" stroke="var(--primary-accent)" stroke-width="2" />
+                <!-- Blitz Paths -->
+                <path d="M30,85 Q30,75 25,60" fill="none" stroke="var(--warning-accent)" stroke-width="2" marker-end="url(#arrow)" />
+                <path d="M70,85 Q70,75 75,60" fill="none" stroke="var(--warning-accent)" stroke-width="2" marker-end="url(#arrow)" />
+                <path d="M50,90 L50,65" fill="none" stroke="var(--warning-accent)" stroke-width="3" marker-end="url(#arrow)" />
+                
+                <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--warning-accent)" />
+                    </marker>
+                </defs>
+            </svg>
+        </div>
+
+        <div class="footer">
+            <span>Lat: 34.0522</span>
+            <span>Lon: 118.2437</span>
+        </div>
+    </div>
+
+</body>
+</html>

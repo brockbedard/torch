@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html><head>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Pregame C: Tunnel Walk</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Barlow+Condensed:ital,wght@1,900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#020202;overflow:hidden;height:100vh;height:100dvh;font-family:'Rajdhani',sans-serif}
+</style>
+</head><body>
+<div id="app" style="position:fixed;inset:0;overflow:hidden;"></div>
+<script>
+var app = document.getElementById('app');
+
+var user = { name: 'DOLPHINS', school: 'CORAL BAY', accent: '#E854A0', primary: '#8B2252', scheme: 'Spread Option', motto: 'RIDE THE CURRENT' };
+var opp = { name: 'SPECTRES', school: 'HOLLOWRIDGE', accent: '#5DADE2', primary: '#1a3a5c', scheme: 'Spread RPO' };
+
+// Container that "scrolls" (camera moves)
+var container = document.createElement('div');
+container.style.cssText = 'position:absolute;inset:0;';
+app.appendChild(container);
+
+// Stage 1: TUNNEL
+// Left/right tunnel wall lines
+var wallL = document.createElement('div');
+wallL.style.cssText = 'position:absolute;top:0;bottom:0;left:12%;width:1px;background:linear-gradient(180deg,transparent,' + user.accent + '15,transparent);opacity:0;';
+container.appendChild(wallL);
+var wallR = document.createElement('div');
+wallR.style.cssText = 'position:absolute;top:0;bottom:0;right:12%;width:1px;background:linear-gradient(180deg,transparent,' + user.accent + '15,transparent);opacity:0;';
+container.appendChild(wallR);
+
+// Team badge (monochrome initially)
+var badge = document.createElement('div');
+badge.style.cssText = 'position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);width:80px;height:80px;border-radius:50%;background:' + user.primary + ';display:flex;align-items:center;justify-content:center;border:2px solid ' + user.accent + '44;filter:saturate(0.3) brightness(0.6);opacity:0;';
+badge.innerHTML = "<div style=\"font-family:'Teko';font-size:36px;color:#fff;\">" + user.name[0] + "</div>";
+container.appendChild(badge);
+
+// Motto
+var motto = document.createElement('div');
+motto.style.cssText = "position:absolute;top:56%;left:50%;transform:translateX(-50%);font-family:'Rajdhani';font-weight:700;font-size:11px;color:rgba(255,255,255,0.1);letter-spacing:4px;white-space:nowrap;opacity:0;";
+motto.textContent = user.motto;
+container.appendChild(motto);
+
+// Stage 2: LIGHT — expanding from top
+var light = document.createElement('div');
+light.style.cssText = 'position:absolute;top:0;left:0;right:0;height:2px;background:radial-gradient(ellipse at 50% 100%,rgba(255,255,255,0.9) 0%,' + user.primary + '88 40%,transparent 70%);opacity:0;overflow:hidden;';
+container.appendChild(light);
+
+// Conditions bar (in the light)
+var condBar = document.createElement('div');
+condBar.style.cssText = "position:absolute;top:5%;left:50%;transform:translateX(-50%);font-family:'Rajdhani';font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:2px;opacity:0;white-space:nowrap;";
+condBar.textContent = 'CLEAR 72\u00b0 \u00b7 GRASS';
+container.appendChild(condBar);
+
+// Stage 3: FIELD VIEW
+var field = document.createElement('div');
+field.style.cssText = 'position:absolute;top:8%;left:10%;right:10%;height:30%;background:#0a2a0a;border:1px solid #1a4a1a;border-radius:6px;opacity:0;overflow:hidden;';
+// Yard lines
+var fieldInner = '';
+for (var i = 0; i <= 10; i++) {
+  var pct = i * 10;
+  fieldInner += '<div style="position:absolute;top:' + pct + '%;left:0;right:0;height:1px;background:rgba(255,255,255,' + (i===5?0.2:0.06) + ');"></div>';
+  if (i > 0 && i < 10) fieldInner += '<div style="position:absolute;top:' + pct + '%;left:50%;transform:translateX(-50%);font-family:\'Teko\';font-size:10px;color:rgba(255,255,255,0.1);">' + (i<=5 ? i*10 : (10-i)*10) + '</div>';
+}
+// 50 yard line highlight
+fieldInner += '<div style="position:absolute;top:50%;left:0;right:0;height:2px;background:rgba(255,255,255,0.15);"></div>';
+field.innerHTML = fieldInner;
+container.appendChild(field);
+
+// Team badges on field
+var oppBadgeField = document.createElement('div');
+oppBadgeField.style.cssText = 'position:absolute;top:20%;left:25%;transform:translate(-50%,-50%) scale(0);width:44px;height:44px;border-radius:50%;background:' + opp.primary + ';display:flex;align-items:center;justify-content:center;border:2px solid ' + opp.accent + '44;z-index:2;';
+oppBadgeField.innerHTML = "<div style=\"font-family:'Teko';font-size:20px;color:#fff;\">" + opp.name[0] + "</div>";
+field.appendChild(oppBadgeField);
+
+var userBadgeField = document.createElement('div');
+userBadgeField.style.cssText = 'position:absolute;top:20%;right:25%;transform:translate(50%,-50%) scale(0);width:50px;height:50px;border-radius:50%;background:' + user.primary + ';display:flex;align-items:center;justify-content:center;border:2px solid ' + user.accent + ';z-index:2;box-shadow:0 0 12px ' + user.accent + '44;';
+userBadgeField.innerHTML = "<div style=\"font-family:'Teko';font-size:22px;color:#fff;\">" + user.name[0] + "</div>";
+field.appendChild(userBadgeField);
+
+// Matchup text stack
+var matchStack = document.createElement('div');
+matchStack.style.cssText = 'position:absolute;top:42%;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:2px;opacity:0;';
+matchStack.innerHTML =
+  '<div style="display:flex;align-items:center;gap:8px;">' +
+    "<div style=\"font-family:'Teko';font-size:24px;color:" + opp.accent + ";letter-spacing:2px;\">" + opp.name + "</div>" +
+    "<div style=\"font-family:'Barlow Condensed';font-weight:900;font-style:italic;font-size:14px;color:#555;\">VS</div>" +
+    "<div style=\"font-family:'Teko';font-size:28px;color:" + user.accent + ";letter-spacing:2px;\">" + user.name + "</div>" +
+  '</div>' +
+  '<div style="font-family:\'Rajdhani\';font-size:10px;color:#EBB010;letter-spacing:2px;">EVEN MATCHUP \u00b7 H2H 3-2</div>';
+field.appendChild(matchStack);
+
+// Scouting clipboard
+var clipboard = document.createElement('div');
+clipboard.style.cssText = 'position:absolute;top:60%;left:8%;right:8%;padding:12px 14px;background:#0E0A04;border:1px solid ' + opp.accent + '33;border-top:2px solid ' + opp.accent + '66;border-radius:6px;opacity:0;z-index:2;';
+clipboard.innerHTML =
+  '<div style="font-family:\'Teko\';font-weight:700;font-size:13px;color:' + opp.accent + ';letter-spacing:2px;margin-bottom:4px;">SCOUTING REPORT</div>' +
+  '<div style="display:flex;gap:12px;margin-bottom:6px;">' +
+    '<div style="flex:1;"><div style="font-family:\'Rajdhani\';font-size:8px;font-weight:700;color:#444;letter-spacing:1px;">OFF</div><div style="font-family:\'Teko\';font-size:14px;color:' + opp.accent + ';letter-spacing:1px;line-height:1;">' + opp.scheme + '</div></div>' +
+    '<div style="flex:1;"><div style="font-family:\'Rajdhani\';font-size:8px;font-weight:700;color:#444;letter-spacing:1px;">DEF</div><div style="font-family:\'Teko\';font-size:14px;color:' + opp.accent + ';letter-spacing:1px;line-height:1;">Cover 0 Blitz</div></div>' +
+  '</div>' +
+  '<div style="display:flex;align-items:center;gap:5px;"><span style="font-family:\'Rajdhani\';font-size:8px;font-weight:700;color:#ff0040;background:rgba(255,0,64,0.1);padding:1px 4px;border-radius:2px;">WATCH</span><span style="font-family:\'Rajdhani\';font-size:11px;font-weight:700;color:#ccc;">DaCosta</span><span style="font-family:\'Rajdhani\';font-size:9px;color:' + opp.accent + ';">WR \u00b7 BURNER</span></div>';
+container.appendChild(clipboard);
+
+// Football at 50
+var fb = document.createElement('div');
+fb.style.cssText = 'position:absolute;top:0;left:50%;transform:translate(-50%,-50%) scale(0);z-index:3;';
+fb.innerHTML = '<svg viewBox="0 0 100 100" width="20" height="20" fill="none" style="filter:drop-shadow(0 0 6px rgba(255,69,17,0.5));"><defs><linearGradient id="fb1" x1="15" y1="15" x2="85" y2="85" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#EBB010"/></linearGradient></defs><g transform="translate(50,50) rotate(-45) scale(0.22) translate(-256,-256)"><path fill="url(#fb1)" d="M247.5 25.4c-13.5 3.3-26.4 7.2-38.6 11.7C142.9 61.6 96.7 103.6 66 153.6C47.8 183.4 35.1 215.9 26.9 249L264.5 486.6c13.5-3.3 26.4-7.2 38.6-11.7c66-24.5 112.2-66.5 142.9-116.5c18.3-29.8 30.9-62.3 39.1-95.3L247.5 25.4z"/></g></svg>';
+field.appendChild(fb);
+// Position at 50 yard line
+fb.style.top = '50%';
+
+// CTA
+var cta = document.createElement('div');
+cta.style.cssText = "position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:5;font-family:'Rajdhani';font-size:11px;font-weight:600;color:rgba(255,255,255,0.2);letter-spacing:4px;opacity:0;";
+cta.textContent = 'TAP TO KICK OFF';
+container.appendChild(cta);
+
+// ANIMATE
+var tl = gsap.timeline();
+
+// Stage 1: Tunnel
+tl.to(wallL, { opacity: 0.15, duration: 0.5 })
+  .to(wallR, { opacity: 0.15, duration: 0.5 }, 0)
+  .to(badge, { opacity: 0.7, duration: 0.8, ease: 'power2.out' }, 0.3)
+  .to(motto, { opacity: 0.15, duration: 0.6 }, 0.5)
+  .to(container, { y: -60, duration: 1.5, ease: 'none' }, 0)
+
+// Stage 2: Light expands
+  .to(light, { height: '35%', opacity: 1, duration: 0.8, ease: 'power2.out' }, 1.5)
+  .to(badge, { filter: 'saturate(1) brightness(1)', opacity: 1, duration: 0.5 }, 1.8)
+  .to(motto, { opacity: 0.5, color: user.accent, duration: 0.3 }, 2.0)
+  .to(condBar, { opacity: 1, duration: 0.4 }, 2.2)
+
+// Stage 3: Field reveals
+  .to(light, { height: '50%', opacity: 0.8, duration: 0.4 }, 2.5)
+  .to(field, { opacity: 1, duration: 0.6, ease: 'power2.out' }, 2.5)
+  .to(oppBadgeField, { scale: 1, duration: 0.4, ease: 'back.out(1.4)' }, 2.9)
+  .to(userBadgeField, { scale: 1, duration: 0.4, ease: 'back.out(1.4)' }, 3.0)
+  .to(matchStack, { opacity: 1, duration: 0.4 }, 3.1)
+  .to(clipboard, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 3.4)
+
+// Stage 4: Kickoff ready
+  .to(fb, { scale: 1, duration: 0.3, ease: 'back.out(2)' }, 4.0)
+  .to(cta, { opacity: 0.25, duration: 0.5 }, 4.2)
+
+// Fade tunnel elements
+  .to(badge, { opacity: 0.1, y: -30, duration: 0.5 }, 2.5)
+  .to(motto, { opacity: 0, y: -20, duration: 0.3 }, 2.5)
+  .to(wallL, { opacity: 0, duration: 0.4 }, 2.5)
+  .to(wallR, { opacity: 0, duration: 0.4 }, 2.5);
+
+app.onclick = function() { location.reload(); };
+</script>
+</body></html>
