@@ -27,10 +27,10 @@
 
 // ─── SOURCE DEFINITIONS ─────────────────────────────────────
 const SOURCES = {
-  play:   { label: 'PLAY',   color: '#F1F5F9', glow: 'rgba(241,245,249,0.3)' },
-  combo:  { label: 'COMBO',  color: '#FF6B2B', glow: 'rgba(255,107,43,0.4)' },
-  streak: { label: 'STREAK', color: '#EBB010', glow: 'rgba(235,176,16,0.4)' },
-  bonus:  { label: 'BONUS',  color: '#22D3EE', glow: 'rgba(34,211,238,0.4)' },
+  play:   { label: 'TORCH PTS',  color: '#EBB010', glow: 'rgba(235,176,16,0.3)' },
+  combo:  { label: 'COMBO',      color: '#FF6B2B', glow: 'rgba(255,107,43,0.4)' },
+  streak: { label: 'STREAK',     color: '#EBB010', glow: 'rgba(235,176,16,0.4)' },
+  bonus:  { label: 'BONUS',      color: '#22D3EE', glow: 'rgba(34,211,238,0.4)' },
 };
 
 // ─── EASING ──────────────────────────────────────────────────
@@ -259,13 +259,7 @@ function spawnFlyer(containerEl, value, sourceKey, lane = 0) {
   valEl.style.color = src.color;
   valEl.style.textShadow = `0 0 12px ${src.glow}`;
 
-  const labelEl = document.createElement('div');
-  labelEl.className = 'tp-flyer-label';
-  labelEl.textContent = src.label;
-  labelEl.style.color = src.color;
-
   flyer.appendChild(valEl);
-  flyer.appendChild(labelEl);
   containerEl.appendChild(flyer);
 
   setTimeout(() => flyer.remove(), flyDur + 100);
@@ -363,6 +357,7 @@ export function playPointsSequence({
   shake = false,
   onComplete = null,
   gap = 750,
+  hideSourceLabel = false,
 }) {
   if (_isPlaying) return;
   if (!sources || sources.length === 0) return;
@@ -383,8 +378,8 @@ export function playPointsSequence({
     const delay = i * gap;
 
     setTimeout(() => {
-      // Show source label to the right
-      showSourceLabel(containerEl, key);
+      // Show source label to the right (unless hidden)
+      if (!hideSourceLabel) showSourceLabel(containerEl, key);
 
       // Spawn flyer
       const flyDur = spawnFlyer(containerEl, pts, key, i);

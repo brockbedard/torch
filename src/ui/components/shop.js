@@ -179,7 +179,57 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
             var newInv = inventory.slice();
             newInv.push(card);
             onBuy(card, newInv, card.cost);
-            closeShop();
+
+            // Full-screen acquisition overlay — matches game overlay style
+            var tierColors = { GOLD: '#EBB010', SILVER: '#C0C0C0', BRONZE: '#CD7F32' };
+            var acqColor = tierColors[card.tier] || '#EBB010';
+
+            // Take over the shop sheet
+            sheet.innerHTML = '';
+            sheet.style.cssText = "position:relative;z-index:1;background:#0E0A04;border-top:2px solid " + acqColor + ";border-radius:12px 12px 0 0;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;overflow:hidden;";
+
+            // Background glow
+            var acqGlow = document.createElement('div');
+            acqGlow.style.cssText = "position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%," + acqColor + "15,transparent 70%);pointer-events:none;";
+            sheet.appendChild(acqGlow);
+
+            // Tier label
+            var acqTier = document.createElement('div');
+            acqTier.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:11px;color:" + acqColor + ";letter-spacing:3px;opacity:0;position:relative;z-index:1;";
+            acqTier.textContent = card.tier;
+            sheet.appendChild(acqTier);
+            gsap.to(acqTier, { opacity: 0.7, duration: 0.3, delay: 0.1 });
+
+            // Card render
+            var acqCardWrap = document.createElement('div');
+            acqCardWrap.style.cssText = "margin:12px 0;position:relative;z-index:1;opacity:0;transform:scale(0.8);";
+            var acqCardEl = buildTorchCard(card, 140, 196);
+            acqCardWrap.appendChild(acqCardEl);
+            sheet.appendChild(acqCardWrap);
+            gsap.to(acqCardWrap, { opacity: 1, scale: 1, duration: 0.4, delay: 0.15, ease: 'back.out(1.7)' });
+
+            // ACQUIRED text
+            var acqLabel = document.createElement('div');
+            acqLabel.style.cssText = "font-family:'Teko';font-weight:700;font-size:36px;color:" + acqColor + ";letter-spacing:6px;text-shadow:0 0 24px " + acqColor + "66,0 2px 0 rgba(0,0,0,0.9);opacity:0;transform:scale(1.5);position:relative;z-index:1;";
+            acqLabel.textContent = 'ACQUIRED';
+            sheet.appendChild(acqLabel);
+            gsap.to(acqLabel, { opacity: 1, scale: 1, duration: 0.4, delay: 0.4, ease: 'back.out(2)' });
+
+            // Card name + effect
+            var acqInfo = document.createElement('div');
+            acqInfo.style.cssText = "text-align:center;margin-top:8px;opacity:0;position:relative;z-index:1;max-width:260px;";
+            acqInfo.innerHTML =
+              "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#fff;letter-spacing:2px;\">" + card.name + "</div>" +
+              "<div style=\"font-family:'Rajdhani';font-size:12px;color:#999;margin-top:4px;line-height:1.3;\">" + card.effect + "</div>";
+            sheet.appendChild(acqInfo);
+            gsap.to(acqInfo, { opacity: 1, duration: 0.3, delay: 0.6 });
+
+            // Auto-close after hold
+            setTimeout(function() {
+              gsap.to(sheet, { opacity: 0, y: 40, duration: 0.4, ease: 'power2.in', onComplete: function() {
+                closeShop();
+              }});
+            }, 2500);
           }
         };
         confirmWrap.appendChild(confirmBtn);
@@ -191,13 +241,43 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
         wrap.appendChild(confirmWrap);
       };
     } else {
-      buyBtn.style.cssText = "font-size:10px;padding:8px 16px;width:100%;min-width:90px;background:#1a1a1a;color:#555;border-color:#333;font-family:'Rajdhani';font-weight:700;letter-spacing:1px;cursor:not-allowed;";
+      buyBtn.style.cssText = "font-size:9px;padding:6px 4px;width:100%;background:#1a1a1a;color:#555;border-color:#333;font-family:'Rajdhani';font-weight:700;letter-spacing:0.5px;cursor:not-allowed;white-space:nowrap;";
       buyBtn.textContent = 'NEED ' + (card.cost - points) + ' MORE';
       buyBtn.disabled = true;
     }
     wrap.appendChild(buyBtn);
     offersRow.appendChild(wrap);
   });
+  // "Score = Wallet" coach mark — disabled, will revisit
+  if (false && !localStorage.getItem('torch_shop_tutorial')) {
+    localStorage.setItem('torch_shop_tutorial', '1');
+
+    var walletTip = document.createElement('div');
+    walletTip.style.cssText = 'background:rgba(10,8,4,0.95);border:1px solid #EBB01044;border-radius:8px;padding:10px 14px;margin:0 12px 8px;display:flex;align-items:center;justify-content:space-between;gap:10px;';
+    var walletText = document.createElement('div');
+    walletText.innerHTML =
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;letter-spacing:2px;line-height:1.2;\">YOUR SCORE IS YOUR WALLET</div>" +
+      "<div style=\"font-family:'Rajdhani';font-size:12px;color:#999;line-height:1.3;\">Buying cards spends your TORCH points</div>";
+    walletTip.appendChild(walletText);
+
+    var gotItBtn = document.createElement('button');
+    gotItBtn.style.cssText = "font-family:'Teko';font-weight:700;font-size:12px;color:#EBB010;background:transparent;border:1px solid #EBB01044;border-radius:4px;padding:4px 10px;cursor:pointer;white-space:nowrap;letter-spacing:1px;";
+    gotItBtn.textContent = 'GOT IT';
+    gotItBtn.onclick = function() {
+      gsap.to(walletTip, { opacity: 0, height: 0, marginBottom: 0, padding: 0, duration: 0.3, ease: 'power2.in', onComplete: function() { walletTip.remove(); } });
+    };
+    walletTip.appendChild(gotItBtn);
+
+    // Auto-dismiss after 8 seconds
+    setTimeout(function() {
+      if (walletTip.parentNode) {
+        gsap.to(walletTip, { opacity: 0, height: 0, marginBottom: 0, padding: 0, duration: 0.3, ease: 'power2.in', onComplete: function() { walletTip.remove(); } });
+      }
+    }, 8000);
+
+    sheet.appendChild(walletTip);
+  }
+
   // First-time shop tutorial banner
   var _firstShopDone = localStorage.getItem('torch_first_shop_done');
   if (!_firstShopDone) {

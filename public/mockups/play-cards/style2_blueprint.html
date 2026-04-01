@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Style 2: Blueprint Play Card</title>
+    <style>
+        :root {
+            --blueprint-blue: #0047AB;
+            --blueprint-line: rgba(255, 255, 255, 0.9);
+            --blueprint-grid: rgba(255, 255, 255, 0.15);
+            --card-width: 120px;
+            --card-height: 168px;
+        }
+
+        body {
+            background-color: #121212;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .play-card {
+            width: var(--card-width);
+            height: var(--card-height);
+            background-color: var(--blueprint-blue);
+            border: 1.5px solid white;
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 6px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* Grid Overlay */
+        .play-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(var(--blueprint-grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--blueprint-grid) 1px, transparent 1px);
+            background-size: 12px 12px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .header {
+            font-size: 7px;
+            text-transform: uppercase;
+            border-bottom: 0.8px solid var(--blueprint-line);
+            padding-bottom: 2px;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        .play-title {
+            font-size: 9px;
+            text-align: center;
+            margin-bottom: 6px;
+            border: 0.8px solid var(--blueprint-line);
+            padding: 2px;
+            background: rgba(255,255,255,0.05);
+            z-index: 2;
+            font-weight: bold;
+        }
+
+        .diagram {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .footer {
+            font-size: 6px;
+            text-align: justify;
+            text-align-last: justify;
+            border-top: 0.8px solid var(--blueprint-line);
+            padding-top: 2px;
+            margin-top: 4px;
+            opacity: 0.8;
+            z-index: 2;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .blueprint-object {
+            fill: none;
+            stroke: white;
+            stroke-width: 1.2;
+        }
+
+        .action-line {
+            fill: none;
+            stroke: white;
+            stroke-width: 1.5;
+        }
+
+        .block-line {
+            fill: none;
+            stroke: white;
+            stroke-width: 1;
+            stroke-dasharray: 2, 2;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="play-card">
+        <div class="header">DWG NO: BP-01-IZ</div>
+        <div class="play-title">INSIDE ZONE</div>
+        
+        <div class="diagram">
+            <svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <marker id="arrowhead" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+                        <polygon points="0 0, 6 2, 0 4" fill="white" />
+                    </marker>
+                </defs>
+
+                <!-- Line of Scrimmage -->
+                <line x1="5" y1="65" x2="95" y2="65" stroke="rgba(255,255,255,0.3)" stroke-width="0.5" />
+
+                <!-- Offensive Line -->
+                <!-- LT -->
+                <circle cx="20" cy="65" r="4.5" class="blueprint-object" />
+                <path d="M 20 60 L 25 50" class="block-line" />
+                
+                <!-- LG -->
+                <circle cx="35" cy="65" r="4.5" class="blueprint-object" />
+                <path d="M 35 60 L 40 50" class="block-line" />
+
+                <!-- C -->
+                <circle cx="50" cy="65" r="4.5" class="blueprint-object" />
+                <path d="M 50 60 L 55 50" class="block-line" />
+
+                <!-- RG -->
+                <circle cx="65" cy="65" r="4.5" class="blueprint-object" />
+                <path d="M 65 60 L 70 50" class="block-line" />
+
+                <!-- RT -->
+                <circle cx="80" cy="65" r="4.5" class="blueprint-object" />
+                <path d="M 80 60 L 85 50" class="block-line" />
+
+                <!-- QB -->
+                <rect x="46" y="80" width="8" height="8" class="blueprint-object" />
+                <path d="M 50 88 L 40 88" class="block-line" />
+                
+                <!-- RB -->
+                <rect x="46" y="105" width="8" height="8" class="blueprint-object" />
+                <!-- RB Path: Aiming for Guard/Center Gap -->
+                <path d="M 50 105 L 50 90 L 60 55" class="action-line" marker-end="url(#arrowhead)" />
+            </svg>
+        </div>
+
+        <div class="footer">
+            <span>SCALE: 1:1</span>
+            <span>REV: A-02</span>
+        </div>
+    </div>
+
+</body>
+</html>

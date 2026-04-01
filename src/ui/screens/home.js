@@ -5,6 +5,7 @@ import { buildHomeCard } from '../components/cards.js';
 import AudioStateManager from '../../engine/audioManager.js';
 
 var DEV_LOG = [
+  "v0.29.0 \u2014 Premium UI + QA: Complete visual overhaul \u2014 result overlays, possession changes, coin toss, kickoff, shop acquisition, roster, pregame. Audio tuning (crowd transitions, new ElevenLabs loops, asymmetric fades). Torch card category audit (8 cards recategorized). Commentary grammar fixes. Canvas field renderer + LOS/FD yard markers. Per-player stats on cards. Play-by-play toggle. Conversion UI polish. 40+ bug fixes from 5-agent QA audit.",
   "v0.28.0 \u2014 Audio + Replay Loop: Howler.js audio (15 SFX pools, 3-tier crowd ambient, master compression). End game redesign (MVP card, open loop, PLAY AGAIN dominant). Per-team win-loss records. Loss: RUN IT BACK. Tie: SETTLE IT. Film Room opt-in. Phase B complete (AI player selection, ST ratings affect distributions). Codebase cleanup (-22K lines dead code).",
   "v0.27.0 \u2014 Personnel System: 56 players with stars, traits, ST ratings. 8-card hand (4 plays + 4 players visible simultaneously). Hand carry-over + discard system. Special teams burn deck with kicker/punter selection. GSAP card animations (deal, select, touch). Meet Your Squad roster preview. 24 Torch Cards (12 new). Full names on all players. Down/distance in team color everywhere.",
   "v0.26.1 \u2014 Game Flow: End game single-game format with TORCH point carryover. Conversion display (GOOD!/NO GOOD, play commentary). Halftime 2nd-half card pick + kickoff. 2-min clock expiry ends half. Dev panel: force result + force conversion buttons. No shop on conversions. PAT doesn't say TOUCHDOWN.",
@@ -114,7 +115,7 @@ export function buildHome(){
   var fanY=[12,0,12];
   var fanZ=[1,3,1];
   var fanScale=[1,1.2,1];
-  var dealDelay=[0,0.12,0.24];
+  var dealDelay=[0,0.1,0.2];
   for(var c=0;c<3;c++){
     var isTorch=fanTypes[c]==='torch';
     var isOff=fanTypes[c]==='offense';
@@ -179,25 +180,26 @@ export function buildHome(){
 
   // === TAGLINE ===
   var tagline=document.createElement('div');
-  tagline.style.cssText="font-family:'Rajdhani',sans-serif;font-size:12px;color:#888;letter-spacing:2px;text-align:center;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.8s both;flex-shrink:0;";
-  tagline.textContent='Score points. Buy cards. Win the game.';
+  tagline.style.cssText="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:16px;color:transparent;letter-spacing:4px;text-transform:uppercase;text-align:center;z-index:2;opacity:0;animation:homeRevealUp 0.4s ease-out 0.8s both;flex-shrink:0;white-space:nowrap;background:linear-gradient(180deg,#EBB010 0%,#FFF5E6 40%,#EBB010 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));";
+  tagline.textContent='SCORE POINTS \u00b7 BUY CARDS \u00b7 WIN';
   el.append(tagline);
 
   // === CTA BUTTON ===
   var playWrap=document.createElement('div');
   playWrap.style.cssText='width:100%;z-index:2;position:relative;display:flex;flex-direction:column;gap:10px;opacity:0;animation:homeRevealBtn 0.4s ease-out 1.0s both;flex-shrink:0;';
 
-  // RESUME GAME — show if a mid-game save exists
+  // RESUME GAME — disabled, will revisit
+  if(false){
   var _save=loadGameState();
-  if(_save && _save.screen==='gameplay' && _save.engineSnapshot && !_save.engineSnapshot.gameOver){
     var resumeBtn=document.createElement('button');
     resumeBtn.className='btn-blitz';
     resumeBtn.style.cssText='border-color:#EBB010;color:#EBB010;background:transparent;font-size:18px;padding:16px 24px;letter-spacing:4px;text-align:center;display:block;width:100%;';
     resumeBtn.textContent='RESUME GAME';
     resumeBtn.onclick=function(){
-      clearGameSave();
       SND.click();
       AudioStateManager.init();
+      AudioStateManager.setState('menu');
+      // Don't clear save until gameplay successfully loads
       setGs(function(s){
         return Object.assign({},s||{},{
           screen:'gameplay',
@@ -210,55 +212,27 @@ export function buildHome(){
           humanReceives:_save.humanReceives,
           gameConditions:_save.gameConditions,
           _coinTossDone:true,
-          _halftimeCardDone:true,
+          _halftimeCardDone: _save.engineSnapshot && _save.engineSnapshot.half >= 2,
           _engineSnapshot:_save.engineSnapshot,
           engine:null,
         });
       });
+      clearGameSave();
     };
     playWrap.appendChild(resumeBtn);
   }
 
   var playBtn=document.createElement('button');
   playBtn.className='btn-blitz';
-  playBtn.style.cssText='border-color:#FF4511;color:#000;background:linear-gradient(180deg,#EBB010 0%,#FF4511 100%);font-size:24px;padding:20px 24px;animation:ctaGlow 3s ease-in-out 0.3s infinite;letter-spacing:5px;text-align:center;display:block;width:100%;';
+  playBtn.style.cssText='border-color:#FF4511;color:#000;background:linear-gradient(180deg,#EBB010 0%,#FF4511 100%);font-size:28px;padding:22px 24px;animation:ctaGlow 3s ease-in-out 0.3s infinite;letter-spacing:6px;text-align:center;display:block;width:100%;box-shadow:0 4px 24px rgba(255,69,17,0.4),0 0 40px rgba(235,176,16,0.15);';
   playBtn.textContent="LET'S GO!";
   playBtn.onclick=function(){
     SND.click();
     AudioStateManager.init(); // First user interaction — init audio
+    AudioStateManager.setState('menu'); // Quiet distant hum
     var firstDone = localStorage.getItem('torch_first_season_done');
     setGs(function(s){ return Object.assign({}, s || {}, {screen:'teamSelect', team:null, isFirstSeason: !firstDone}); });
   };
-
-  var dailyBtn=document.createElement('button');
-  dailyBtn.className='btn-blitz';
-  dailyBtn.style.cssText='border-color:#EBB010;color:#EBB010;background:transparent;font-size:14px;padding:13px 24px;letter-spacing:4px;text-align:center;display:block;width:100%;';
-  dailyBtn.textContent='DAILY DRIVE';
-  dailyBtn.onclick=function(){
-    SND.click();
-    AudioStateManager.init();
-    setGs(function(s){ return Object.assign({}, s || {}, {screen:'dailyDrive'}); });
-  };
-
-  var speedRow=document.createElement('div');
-  speedRow.style.cssText='display:flex;gap:6px;justify-content:center;padding:4px 20px;';
-  ['normal','fast','turbo'].forEach(function(speed){
-    var btn=document.createElement('button');
-    var isSel=GAME_SPEED.current===speed;
-    btn.style.cssText='font-family:\'Rajdhani\';font-weight:700;font-size:9px;letter-spacing:1px;padding:4px 12px;border-radius:4px;cursor:pointer;border:1px solid '+(isSel?'#EBB010':'#333')+';background:'+(isSel?'#EBB010':'transparent')+';color:'+(isSel?'#000':'#555')+';';
-    btn.textContent=speed.toUpperCase();
-    btn.onclick=function(){
-      setGameSpeed(speed);
-      speedRow.querySelectorAll('button').forEach(function(b,i){
-        var s=['normal','fast','turbo'][i];
-        var sel=s===speed;
-        b.style.borderColor=sel?'#EBB010':'#333';
-        b.style.background=sel?'#EBB010':'transparent';
-        b.style.color=sel?'#000':'#555';
-      });
-    };
-    speedRow.appendChild(btn);
-  });
 
   var devBtn=document.createElement('button');
   devBtn.className='btn-blitz';
@@ -266,7 +240,7 @@ export function buildHome(){
   devBtn.textContent='DEV: RESET DAILY LOCK';
   devBtn.onclick=function(){localStorage.clear(); render();};
 
-  playWrap.append(playBtn,dailyBtn,speedRow,devBtn);
+  playWrap.append(playBtn,devBtn);
   el.appendChild(playWrap);
 
   // DEV-ONLY: Quick Play — skip all drafts, straight to gameplay
@@ -306,15 +280,9 @@ export function buildHome(){
   }
 
   var buildLabel=document.createElement('div');
-  buildLabel.style.cssText='position:absolute;bottom:12px;width:100%;text-align:center;font-family:"Courier New",monospace;font-size:8px;color:#ffffff22;letter-spacing:1px;z-index:2;opacity:0;animation:fi 0.3s ease-out 1.5s both;';
+  buildLabel.style.cssText='position:absolute;bottom:12px;width:100%;text-align:center;font-family:"Courier New",monospace;font-size:9px;color:#ffffff4d;letter-spacing:1px;z-index:2;opacity:0;animation:fi 0.3s ease-out 1.5s both;';
   buildLabel.textContent='v' + VERSION + ' \u00b7 ' + VERSION_NAME;
   el.appendChild(buildLabel);
-
-  var settingsBtn=document.createElement('div');
-  settingsBtn.style.cssText="position:absolute;top:12px;right:12px;font-family:'Rajdhani';font-weight:700;font-size:10px;color:#555;cursor:pointer;padding:8px;letter-spacing:1px;z-index:10;";
-  settingsBtn.textContent='SETTINGS';
-  settingsBtn.onclick=function(){ setGs(function(s){ return Object.assign({},s||{},{screen:'settings'}); }); };
-  el.appendChild(settingsBtn);
 
   return el;
 }

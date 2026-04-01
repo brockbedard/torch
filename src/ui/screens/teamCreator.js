@@ -5,7 +5,7 @@
  */
 
 import { setGs, GS } from '../../state.js';
-import { createCustomTeam, saveCustomTeam, getColorPresets, SCHEME_OPTIONS } from '../../engine/teamCreator.js';
+import { createCustomTeam, saveCustomTeam, getColorPresets, SCHEME_OPTIONS, generateRoster } from '../../engine/teamCreator.js';
 
 // ── HELPERS ──
 
@@ -183,11 +183,6 @@ export function buildTeamCreator() {
     scheme: 'power_spread',
     roster: null,
   };
-
-  // Pre-generate roster (auto-gen, user never sees individual player picks)
-  var { generateRoster } = { generateRoster: null };
-  // Import inline — since this module already imports from teamCreator engine
-  // we need to call createCustomTeam later; roster will be generated at create time
 
   // ── PREVIEW (top) ──
   var previewSec = section('PREVIEW', '#EBB010');

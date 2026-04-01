@@ -180,10 +180,34 @@ export function buildHalftime() {
     cardEl.style.opacity = canAfford ? '1' : '0.4';
     if (canAfford) {
       cardEl.onclick = function() {
-        SND.snap();
-        gs.humanTorchCards.push(card.id);
-        gs.ctTorchPts -= card.cost;
-        setGs(function(s) { return Object.assign({}, s, { screen: 'halftime' }); });
+        SND.click();
+        // Confirmation overlay
+        var confirmOv = document.createElement('div');
+        confirmOv.style.cssText = "position:fixed;inset:0;z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(10,8,4,0.92);pointer-events:auto;";
+        var tierColors = { GOLD: '#EBB010', SILVER: '#C0C0C0', BRONZE: '#CD7F32' };
+        var acqColor = tierColors[card.tier] || '#EBB010';
+        confirmOv.innerHTML =
+          "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:" + acqColor + ";letter-spacing:3px;\">" + card.name + "</div>" +
+          "<div style=\"font-family:'Rajdhani';font-size:13px;color:#999;text-align:center;max-width:260px;line-height:1.3;\">" + card.effect + "</div>" +
+          "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;letter-spacing:2px;margin-top:8px;\">BUY FOR " + card.cost + " PTS?</div>";
+        var confirmBtn = document.createElement('button');
+        confirmBtn.className = 'btn-blitz';
+        confirmBtn.style.cssText = "font-size:14px;padding:12px 32px;background:linear-gradient(180deg,#00ff44,#00aa22);color:#000;border-color:#00ff44;letter-spacing:2px;";
+        confirmBtn.textContent = 'CONFIRM';
+        confirmBtn.onclick = function() {
+          SND.snap();
+          confirmOv.remove();
+          gs.humanTorchCards.push(card.id);
+          gs.ctTorchPts -= card.cost;
+          setGs(function(s) { return Object.assign({}, s, { screen: 'halftime' }); });
+        };
+        var cancelBtn = document.createElement('button');
+        cancelBtn.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:12px;color:#666;background:transparent;border:none;padding:10px 20px;cursor:pointer;letter-spacing:1px;";
+        cancelBtn.textContent = 'CANCEL';
+        cancelBtn.onclick = function() { confirmOv.remove(); };
+        confirmOv.appendChild(confirmBtn);
+        confirmOv.appendChild(cancelBtn);
+        el.appendChild(confirmOv);
       };
     }
     offersRow.appendChild(cardEl);

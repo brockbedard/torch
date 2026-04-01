@@ -138,7 +138,9 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
   var offPlay = res.offPlay;
   var yards = r.yards || 0;
   var isPass = r.playType === 'pass';
-  var isHumanOnOff = gameState.possession === 'CT';
+  // Use pre-snap possession if provided (post-snap possession may have flipped on turnovers)
+  var preSnapPoss = gameState.preSnapPossession || gameState.possession;
+  var isHumanOnOff = preSnapPoss === 'CT';
   var possTeam = isHumanOnOff ? humanTeamName : oppTeamName;
   var defTeam = isHumanOnOff ? oppTeamName : humanTeamName;
 
@@ -156,9 +158,10 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
   // Null safety: derive positional fallbacks before any name is used
   if (!off) off = { name: null, pos: 'QB' };
   if (!def) def = { name: null, pos: 'LB' };
+  // Use res._receiverName if gameplay.js resolved one from the roster (Bug 3 fix: consistent names)
   var qbName = (off.pos === 'QB' ? (off.name || 'the QB') : 'the QB');
-  var receiverName = (off.pos !== 'QB' ? (off.name || 'the receiver') : (def && def.pos && def.pos !== 'LB' ? (def.name || 'the receiver') : 'the receiver'));
-  var rusherName = off.name || 'the runner';
+  var receiverName = res._receiverName || (off.pos !== 'QB' ? (off.name || 'the receiver') : 'the receiver');
+  var rusherName = res._rusherName || off.name || 'the runner';
   var defName = def.name || 'the defense';
   var defLineman = def.name || 'the pass rusher';
 
@@ -247,7 +250,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       // Opponent scores against user — flat, factual
       if (isPass) {
         line1 = pick([
-          'The ' + possTeam + ' finds the end zone. ' + (off.name || 'the receiver') + ', ' + yards + '-yard pass.',
+          'The ' + possTeam + ' find the end zone. ' + (off.name || 'the receiver') + ', ' + yards + '-yard pass.',
           (off.name || 'the receiver') + ' catches a ' + yards + '-yard touchdown for the ' + possTeam + '.',
           'Score for the ' + possTeam + '. ' + yards + ' yards.',
           'Touchdown pass. ' + yards + ' yards. The ' + possTeam + ' score.',
@@ -335,7 +338,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
         intPool.push(defName + ' owned that route. ' + defTeam.toUpperCase() + ' BALL!');
       }
       line1 = pick(intPool);
-      line2 = 'The ' + defTeam + ' takes over! Momentum is YOURS!';
+      line2 = 'The ' + defTeam + ' take over! Momentum is YOURS!';
     } else {
       // User threw a pick — flat, move on
       line1 = pick([
@@ -345,7 +348,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
         defName + ' undercuts the route. Interception.',
         'Into coverage. ' + defName + ' has it.',
       ]);
-      line2 = 'The ' + defTeam + ' takes over.';
+      line2 = 'The ' + defTeam + ' take over.';
     }
     return { line1: sanitize(line1), line2: sanitize(line2) };
   }
@@ -357,14 +360,14 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       line1 = pick([
         'FUMBLE!! ' + defName + ' STRIPS the ball! ' + defTeam + ' RECOVERS!',
         'STRIPPED! ' + defName + ' forces it loose! TURNOVER!',
-        'BALL\'S OUT! ' + defTeam + ' jumps on it! HUGE play by ' + defName + '!',
+        'BALL\'S OUT! ' + defTeam + ' jump on it! HUGE play by ' + defName + '!',
       ]);
       line2 = 'Your defense creates the turnover!';
     } else {
       // User fumbled — flat
       line1 = pick([
         'Fumble. ' + (off.name || 'the ball carrier') + ' loses the ball. ' + defTeam + ' recovers.',
-        'Ball comes loose. ' + defTeam + ' has it.',
+        'Ball comes loose. ' + defTeam + ' have it.',
       ]);
       line2 = null;
     }
@@ -416,7 +419,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
     if (!isHumanOnOff) {
       // User's defense stops opponent on 4th — big moment
       line1 = pick([
-        'TURNOVER ON DOWNS!! Your defense holds! ' + possTeam + ' comes up SHORT!',
+        'TURNOVER ON DOWNS!! Your defense holds! ' + possTeam + ' come up SHORT!',
         'STOPS THEM ON FOURTH! ' + defName + ' MAKES THE PLAY! TURNOVER ON DOWNS!',
         'FOURTH DOWN STOP!! ' + defTeam.toUpperCase() + ' DEFENSE HOLDS! YOU GET THE BALL!',
         'THEY CAME UP SHORT! Your defense just SLAMMED THE DOOR!',
@@ -427,7 +430,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       // User fails on 4th down — flat
       line1 = pick([
         'Turnover on downs. The ' + defTeam + ' holds.',
-        'Comes up short on fourth. ' + defTeam + ' takes over.',
+        'Comes up short on fourth. ' + defTeam + ' take over.',
         'Short of the marker. Turnover on downs.',
         'Fourth down stop by the ' + defTeam + '. Their ball.',
       ]);
@@ -463,7 +466,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
           if (traitFlavor(off)) t2PassPool.push('That ' + traitFlavor(off) + ' route from ' + receiverName + ' creates the opening!' + tackleTag);
           if (isPositionMatchupGain) t2PassPool.push(receiverName + ' wins the route against ' + defName + '!' + tackleTag);
           line1 = pick(t2PassPool);
-          if (res.gotFirstDown) line2 = 'FIRST DOWN! The ' + possTeam + ' moves the chains!';
+          if (res.gotFirstDown) line2 = 'FIRST DOWN! The ' + possTeam + ' move the chains!';
         } else {
           var t3PassPool = [
             receiverName + ' ' + pick(CATCH_VERBS_SOLO) + ' ' + pick(ROUTE_MODS) + '! WIDE OPEN!',
@@ -476,7 +479,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
             t3PassPool.push(defName + ' had no answer for ' + receiverName + '. BIG gain!');
           }
           line1 = pick(t3PassPool);
-          if (yards >= 20) line2 = 'BIG chunk play! The ' + possTeam + ' is ROLLING!';
+          if (yards >= 20) line2 = 'BIG chunk play! The ' + possTeam + ' are ROLLING!';
           else if (res.gotFirstDown) line2 = 'Moves the chains on a KEY down!';
         }
       } else {
@@ -494,7 +497,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
           if (traitFlavor(off)) t2RunPool.push(rusherName + '\'s ' + (off.trait || 'physicality') + ' shows up on this carry!' + tackleTag);
           if (isPositionMatchupGain) t2RunPool.push(rusherName + ' wins the matchup against ' + defName + '!' + tackleTag);
           line1 = pick(t2RunPool);
-          if (res.gotFirstDown) line2 = 'FIRST DOWN! The ' + possTeam + ' keeps it moving!';
+          if (res.gotFirstDown) line2 = 'FIRST DOWN! The ' + possTeam + ' keep it moving!';
         } else {
           var t3RunPool = [
             rusherName + ' ' + pick(RUN_VERBS) + ' through a crease ' + pick(RUN_MODS) + '! HE\'S LOOSE!',
@@ -522,7 +525,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       } else {
         line1 = pick([
           (off.name || 'the runner') + ' ' + pick(['finds a gap','pushes ahead','hits the hole']) + '.' + tackleTag,
-          'Run play. The ' + possTeam + ' picks up yards.' + tackleTag,
+          'Run play. The ' + possTeam + ' pick up yards.' + tackleTag,
           'Handoff. Gains ground.' + tackleTag,
         ]);
         if (res.gotFirstDown) line2 = 'First down for the ' + possTeam + '.';
@@ -583,7 +586,8 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
  */
 export function generateContext(gameState, humanTeamName, oppTeamName, res) {
   var r = res ? res.result : null;
-  var isHumanOff = gameState.possession === 'CT';
+  var preSnapPoss = gameState.preSnapPossession || gameState.possession;
+  var isHumanOff = preSnapPoss === 'CT';
   var possTeam = isHumanOff ? humanTeamName : oppTeamName;
   var ydsToEz = gameState.yardsToEndzone;
   var scoreDiff = gameState.ctScore - gameState.irScore;
@@ -594,16 +598,16 @@ export function generateContext(gameState, humanTeamName, oppTeamName, res) {
   // User-biased context
   if (isHumanOff) {
     // User on offense
-    if (ydsToEz <= 50 && ydsToEz > 45 && r && r.yards > 0) return 'The ' + possTeam + ' crosses midfield! Building momentum!';
+    if (ydsToEz <= 50 && ydsToEz > 45 && r && r.yards > 0) return 'The ' + possTeam + ' cross midfield! Building momentum!';
     if (ydsToEz <= 20 && ydsToEz > 15) return 'Inside the 20 — this is YOUR territory!';
     if (r && r.isTouchdown && scoreDiff > 0 && scoreDiff <= 7) return 'YOU take the lead!';
     if (r && r.isTouchdown && scoreDiff === 0) return 'All tied up!';
     if (gameState.down === 4) return 'Fourth down. You have to go for it.';
   } else {
     // User on defense
-    if (ydsToEz <= 50 && ydsToEz > 45 && r && r.yards > 0) return 'The ' + possTeam + ' crosses midfield.';
+    if (ydsToEz <= 50 && ydsToEz > 45 && r && r.yards > 0) return 'The ' + possTeam + ' cross midfield.';
     if (ydsToEz <= 20 && ydsToEz > 15) return 'They\'re inside the 20. Bend, don\'t break.';
-    if (r && r.isTouchdown && scoreDiff < 0 && scoreDiff >= -7) return 'The ' + possTeam + ' takes the lead.';
+    if (r && r.isTouchdown && scoreDiff < 0 && scoreDiff >= -7) return 'The ' + possTeam + ' take the lead.';
     if (r && r.isTouchdown && scoreDiff === 0) return 'Tied up.';
     if (r && (r.isInterception || r.isFumbleLost)) return 'TURNOVER! You get the ball back!';
     if (r && r.isSack && gameState.down >= 3) return 'Huge stop! They\'re going backwards!';

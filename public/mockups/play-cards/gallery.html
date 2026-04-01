@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TORCH — Play Card Mockup Gallery</title>
+    <style>
+        body {
+            background: #0A0804;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            font-family: 'Teko', sans-serif;
+            font-size: 48px;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            color: #EBB010;
+        }
+        p {
+            color: #999;
+            margin-bottom: 40px;
+            max-width: 600px;
+            text-align: center;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .mockup-item {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.2s ease;
+        }
+        .mockup-item:hover {
+            transform: translateY(-5px);
+            border-color: #EBB010;
+        }
+        .mockup-title {
+            font-family: 'Teko', sans-serif;
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #ccc;
+        }
+        iframe {
+            width: 260px;
+            height: 360px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+        }
+        .view-btn {
+            margin-top: 15px;
+            padding: 8px 16px;
+            background: #EBB010;
+            color: #000;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;700&family=Teko:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <h1>PLAY CARD V2 EXPLORATION</h1>
+    <p>10 unique aesthetic directions for the next generation of TORCH play cards. Each style explores different schematic diagrams and thematic vibes.</p>
+
+    <div class="grid">
+        <div class="mockup-item">
+            <div class="mockup-title">1. Retro Arcade</div>
+            <iframe src="/mockups/play-cards/style1_retro.html"></iframe>
+            <a href="/mockups/play-cards/style1_retro.html" class="view-btn" target="_blank">Full Screen</a>
+        </div>
+        <div class="mockup-item">
+            <div class="mockup-title">2. Technical Blueprint</div>
+            <iframe src="/mockups/play-cards/style2_blueprint.html"></iframe>
+            <a href="/mockups/play-cards/style2_blueprint.html" class="view-btn" target="_blank">Full Screen</a>
+        </div>
+        <div class="mockup-item">
+            <div class="mockup-title">3. Cyberpunk Neon</div>
+            <iframe src="/mockups/play-cards/style3_neon.html"></iframe>
+            <a href="/mockups/play-cards/style3_neon.html" class="view-btn" target="_blank">Full Screen</a>
+        </div>
+        <div class="mockup-item">
+            <div class="mockup-title">4. Minimalist Swiss</div>
+            <iframe src="/mockups/play-cards/style4_minimalist.html"></iframe>
+            <a href="/mockups/play-cards/style4_minimalist.html" class="view-btn" target="_blank">Full Screen</a>
+        </div>
+        <div class="mockup-item">
+            <div class="mockup-title">5. Coach's Notebook</div>
+            <iframe src="/mockups/play-cards/style5_handdrawn.html"></iframe>
+            <a href="/mockups/play-cards/style5_handdrawn.html" class="view-btn" target="_blank">Full Screen</a>
+        </div>
+        <div class="mockup-item">
+            <div class="mockup-title">6. Trading Card</div>
+            <iframe src="/mockups/play-cards/style6_tradingcard.html"></iframe>
+            <a href="/mockups/play-cards/style6_tradingcard.html" class="view-btn" target="_blank">Full Screen</a>
+        </div>
+        <div class="mockup-item">
+            <div class="mockup-title">7. Tactical Dashboard</div>
+            <iframe src="/mockups/play-cards/style7_dashboard.html"></iframe>
+            <a href="/mockups/play-cards/style7_dashboard.html" class="view-btn" target="_blank">Full Screen</a>
+        </div>
+        <div class="mockup-item">
+            <div class="mockup-title">8. Abstract Geometric</div>
+            <iframe src="/mockups/play-cards/style8_geometric.html"></iframe>
+            <a href="/mockups/play-cards/style8_geometric.html" class="view-btn" target="_blank">Full Screen</a>
+        </div>
+        <div class="mockup-item">
+            <div class="mockup-title">9. Vintage Newspaper</div>
+            <iframe src="/mockups/play-cards/style9_vintage.html"></iframe>
+            <a href="/mockups/play-cards/style9_vintage.html" class="view-btn" target="_blank">Full Screen</a>
+        </div>
+        <div class="mockup-item">
+            <div class="mockup-title">10. Balatro-Max</div>
+            <iframe src="/mockups/play-cards/style10_balatro.html"></iframe>
+            <a href="/mockups/play-cards/style10_balatro.html" class="view-btn" target="_blank">Full Screen</a>
+        </div>
+    </div>
+
+</body>
+</html>

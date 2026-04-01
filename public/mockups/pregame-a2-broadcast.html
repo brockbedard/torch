@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html><head>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Pregame A2: ESPN Broadcast (Revised)</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Barlow+Condensed:ital,wght@0,700;1,900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0A0804;overflow:hidden;height:100vh;height:100dvh}
+</style>
+</head><body>
+<div id="app" style="position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden;"></div>
+<script>
+var app = document.getElementById('app');
+
+// Mock data
+var user = { name: 'DOLPHINS', school: 'CORAL BAY', accent: '#E854A0', primary: '#8B2252', scheme: 'Spread Option', offRating: 4, defRating: 3 };
+var opp = { name: 'SPECTRES', school: 'HOLLOWRIDGE', accent: '#5DADE2', primary: '#1a3a5c', scheme: 'Spread RPO', offRating: 3, defRating: 4 };
+
+// Flame pips helper
+function pips(filled, total, color, sz) {
+  var h = '';
+  var FLAME = 'M6 0C6 0 2 5 1.5 8C1 11 3 13.5 5 14.5C5 14.5 3.5 11 5 8C5.5 6.5 6 5 6 3.5C6 5 6.5 6.5 7 8C8.5 11 7 14.5 7 14.5C9 13.5 11 11 10.5 8C10 5 6 0 6 0Z';
+  for (var i = 0; i < total; i++) {
+    var c = i < filled ? color : '#333';
+    h += '<svg viewBox="0 0 12 16" width="' + sz + '" height="' + Math.round(sz*1.3) + '" style="margin-right:1px;"><path d="' + FLAME + '" fill="' + c + '"/></svg>';
+  }
+  return h;
+}
+
+// ── HEADER ──
+var header = document.createElement('div');
+header.style.cssText = 'flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:24px 0 6px;z-index:1;opacity:0;';
+var FLAME_PATH = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
+header.innerHTML =
+  '<svg viewBox="0 0 44 44" width="36" height="40" fill="none" style="filter:drop-shadow(0 0 12px rgba(255,69,17,0.5));"><defs><linearGradient id="hf" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#EBB010"/></linearGradient></defs><path d="' + FLAME_PATH + '" fill="url(#hf)"/></svg>' +
+  "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:#EBB010;letter-spacing:12px;margin-top:4px;text-shadow:0 0 20px rgba(235,176,16,0.3);\">GAME DAY</div>";
+app.appendChild(header);
+
+// ── AWAY PANEL (opponent — compressed, muted) ──
+var away = document.createElement('div');
+away.style.cssText = 'position:relative;display:flex;align-items:center;padding:12px 16px;min-height:100px;overflow:hidden;border-left:3px solid ' + opp.accent + '88;background:linear-gradient(100deg,' + opp.primary + '88 0%,rgba(10,8,4,0.97) 55%);opacity:0;';
+// Scanline texture
+away.innerHTML += '<div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:1;"></div>';
+// Edge fade
+away.innerHTML += '<div style="position:absolute;right:0;top:0;bottom:0;width:50px;background:linear-gradient(90deg,transparent,rgba(10,8,4,0.8));pointer-events:none;"></div>';
+// Content
+var awayContent = document.createElement('div');
+awayContent.style.cssText = 'display:flex;align-items:center;gap:12px;width:100%;position:relative;z-index:2;';
+awayContent.innerHTML =
+  // Badge placeholder
+  '<div style="width:56px;height:56px;border-radius:50%;background:' + opp.primary + ';border:2px solid ' + opp.accent + '44;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="font-family:\'Teko\';font-size:24px;color:#fff;">' + opp.name[0] + '</div></div>' +
+  '<div style="flex:1;min-width:0;">' +
+    "<div style=\"display:inline-block;padding:1px 8px;border-radius:2px;font-family:'Rajdhani';font-weight:700;font-size:9px;letter-spacing:3px;background:rgba(255,255,255,0.05);color:#555;\">AWAY</div>" +
+    "<div style=\"font-family:'Rajdhani';font-size:10px;color:rgba(255,255,255,0.25);letter-spacing:2px;margin-top:2px;\">" + opp.school + "</div>" +
+    "<div style=\"font-family:'Teko';font-weight:900;font-size:28px;color:rgba(255,255,255,0.8);letter-spacing:2px;line-height:1;text-shadow:0 2px 8px " + opp.primary + ";\">" + opp.name + "</div>" +
+    "<div style=\"font-family:'Teko';font-size:12px;color:" + opp.accent + ";letter-spacing:3px;opacity:0.7;\">" + opp.scheme + "</div>" +
+    '<div style="display:flex;gap:8px;margin-top:3px;">' +
+      '<div style="display:flex;align-items:center;gap:3px;"><span style="font-family:\'Rajdhani\';font-size:8px;color:#444;letter-spacing:1px;">OFF</span>' + pips(opp.offRating, 5, '#00ff44', 9) + '</div>' +
+      '<div style="display:flex;align-items:center;gap:3px;"><span style="font-family:\'Rajdhani\';font-size:8px;color:#444;letter-spacing:1px;">DEF</span>' + pips(opp.defRating, 5, '#4488ff', 9) + '</div>' +
+    '</div>' +
+  '</div>';
+away.appendChild(awayContent);
+app.appendChild(away);
+
+// ── VS DIAGONAL COLLISION ZONE ──
+var vsZone = document.createElement('div');
+vsZone.style.cssText = 'flex-shrink:0;position:relative;height:56px;display:flex;align-items:center;justify-content:center;overflow:hidden;z-index:2;';
+// Diagonal color bleeds
+vsZone.innerHTML =
+  '<div style="position:absolute;inset:0;background:linear-gradient(172deg,' + opp.primary + '40 0%,transparent 50%);pointer-events:none;"></div>' +
+  '<div style="position:absolute;inset:0;background:linear-gradient(352deg,' + user.primary + '66 0%,transparent 50%);pointer-events:none;"></div>' +
+  // Diagonal slash line
+  '<div id="vs-slash" style="position:absolute;top:50%;left:50%;width:0%;height:2px;background:linear-gradient(90deg,transparent,' + opp.accent + '66,#EBB010,' + user.accent + ',transparent);transform:translate(-50%,-50%) rotate(-8deg);pointer-events:none;"></div>' +
+  // Glow
+  '<div style="position:absolute;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,rgba(235,176,16,0.15) 0%,transparent 70%);"></div>' +
+  // VS text
+  '<div id="vs-text" style="position:relative;z-index:3;opacity:0;">' +
+    "<div style=\"font-family:'Teko';font-weight:900;font-size:44px;color:#fff;letter-spacing:6px;line-height:1;text-shadow:0 0 20px rgba(235,176,16,0.4),0 2px 4px rgba(0,0,0,0.8);\">" +
+      "<span style=\"position:absolute;inset:0;display:flex;align-items:center;justify-content:center;-webkit-text-stroke:2px #EBB010;color:transparent;font-family:'Teko';font-weight:900;font-size:44px;letter-spacing:6px;\">VS</span>" +
+      'VS' +
+    '</div>' +
+  '</div>';
+app.appendChild(vsZone);
+
+// ── MATCHUP BADGE ──
+var matchBadge = document.createElement('div');
+matchBadge.style.cssText = "flex-shrink:0;text-align:center;padding:3px 0;z-index:1;opacity:0;";
+matchBadge.innerHTML =
+  "<div style=\"display:inline-block;padding:2px 14px;border-radius:2px;font-family:'Rajdhani';font-weight:700;font-size:10px;letter-spacing:3px;color:#EBB010;border:1px solid #EBB01044;background:#EBB01011;\">EVEN MATCHUP</div>" +
+  "<div style=\"font-family:'Rajdhani';font-size:10px;font-weight:600;color:#444;letter-spacing:2px;margin-top:2px;\">H2H 3-2</div>";
+app.appendChild(matchBadge);
+
+// ── HOME PANEL (user — expanded, bright, hero) ──
+var home = document.createElement('div');
+home.style.cssText = 'position:relative;display:flex;align-items:center;padding:18px 16px;min-height:140px;overflow:hidden;border-right:4px solid ' + user.accent + ';background:linear-gradient(260deg,' + user.primary + ' 0%,rgba(10,8,4,0.92) 70%);opacity:0;';
+// Glass flute texture (ESPN-inspired)
+home.innerHTML += '<div style="position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 3px,rgba(255,255,255,0.012) 3px,rgba(255,255,255,0.012) 4px);pointer-events:none;z-index:1;"></div>';
+// Ambient glow
+home.innerHTML += '<div style="position:absolute;right:-20px;top:50%;transform:translateY(-50%);width:120px;height:120px;background:radial-gradient(circle,' + user.primary + '44,transparent 70%);pointer-events:none;"></div>';
+// Edge fade
+home.innerHTML += '<div style="position:absolute;left:0;top:0;bottom:0;width:50px;background:linear-gradient(270deg,transparent,rgba(10,8,4,0.7));pointer-events:none;"></div>';
+// Content (reversed — badge on right)
+var homeContent = document.createElement('div');
+homeContent.style.cssText = 'display:flex;align-items:center;gap:14px;width:100%;position:relative;z-index:2;flex-direction:row-reverse;';
+homeContent.innerHTML =
+  // Badge placeholder (bigger)
+  '<div style="width:72px;height:72px;border-radius:50%;background:' + user.primary + ';border:2px solid ' + user.accent + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 16px ' + user.accent + '44;"><div style="font-family:\'Teko\';font-size:30px;color:#fff;">' + user.name[0] + '</div></div>' +
+  '<div style="flex:1;min-width:0;text-align:right;">' +
+    "<div style=\"display:inline-block;padding:2px 10px;border-radius:2px;font-family:'Rajdhani';font-weight:700;font-size:10px;letter-spacing:3px;background:rgba(235,176,16,0.15);color:#EBB010;\">YOUR TEAM</div>" +
+    "<div style=\"font-family:'Rajdhani';font-size:12px;color:rgba(255,255,255,0.4);letter-spacing:3px;margin-top:3px;text-align:right;\">" + user.school + "</div>" +
+    "<div style=\"font-family:'Teko';font-weight:900;font-size:44px;color:#fff;letter-spacing:3px;line-height:1;text-shadow:0 2px 12px " + user.primary + ",0 0 30px " + user.primary + "44;text-align:right;\">" + user.name + "</div>" +
+    "<div style=\"font-family:'Teko';font-size:14px;color:" + user.accent + ";letter-spacing:4px;opacity:0.9;text-align:right;\">" + user.scheme + "</div>" +
+    '<div style="display:flex;gap:10px;margin-top:4px;justify-content:flex-end;">' +
+      '<div style="display:flex;align-items:center;gap:3px;"><span style="font-family:\'Rajdhani\';font-size:9px;color:#555;letter-spacing:1px;">OFF</span>' + pips(user.offRating, 5, '#00ff44', 12) + '</div>' +
+      '<div style="display:flex;align-items:center;gap:3px;"><span style="font-family:\'Rajdhani\';font-size:9px;color:#555;letter-spacing:1px;">DEF</span>' + pips(user.defRating, 5, '#4488ff', 12) + '</div>' +
+    '</div>' +
+  '</div>';
+home.appendChild(homeContent);
+app.appendChild(home);
+
+// ── SCOUTING REPORT ──
+var scout = document.createElement('div');
+scout.style.cssText = 'flex-shrink:0;z-index:1;width:92%;max-width:340px;margin:8px auto 0;padding:12px 14px;background:linear-gradient(135deg,rgba(10,8,4,0.95),' + opp.primary + '15);border:1px solid ' + opp.accent + '33;border-top:2px solid ' + opp.accent + '66;border-radius:8px;opacity:0;';
+scout.innerHTML =
+  '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">' +
+    '<div style="width:20px;height:20px;border-radius:50%;background:' + opp.primary + ';display:flex;align-items:center;justify-content:center;border:1px solid ' + opp.accent + '44;"><div style="font-family:\'Teko\';font-size:10px;color:#fff;">' + opp.name[0] + '</div></div>' +
+    "<div style=\"flex:1;font-family:'Teko';font-weight:700;font-size:13px;color:" + opp.accent + ";letter-spacing:2px;\">SCOUTING REPORT</div>" +
+    "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#EBB010;letter-spacing:1px;\">EVEN</div>" +
+  '</div>' +
+  '<div style="height:1px;background:' + opp.accent + '22;margin-bottom:6px;"></div>' +
+  '<div style="display:flex;gap:12px;margin-bottom:6px;">' +
+    '<div style="flex:1;"><div style="font-family:\'Rajdhani\';font-size:8px;font-weight:700;color:#444;letter-spacing:1px;">OFFENSE</div><div style="font-family:\'Teko\';font-size:15px;color:' + opp.accent + ';letter-spacing:1px;line-height:1;">Spread RPO</div></div>' +
+    '<div style="flex:1;"><div style="font-family:\'Rajdhani\';font-size:8px;font-weight:700;color:#444;letter-spacing:1px;">DEFENSE</div><div style="font-family:\'Teko\';font-size:15px;color:' + opp.accent + ';letter-spacing:1px;line-height:1;">Cover 0 Blitz</div></div>' +
+  '</div>' +
+  '<div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;"><span style="font-family:\'Rajdhani\';font-size:8px;font-weight:700;color:#ff0040;background:rgba(255,0,64,0.1);padding:1px 4px;border-radius:2px;">WATCH</span><span style="font-family:\'Rajdhani\';font-size:11px;font-weight:700;color:#ccc;">Rafael DaCosta</span><span style="font-family:\'Rajdhani\';font-size:9px;color:' + opp.accent + ';">WR \u00b7 BURNER</span></div>' +
+  '<div style="display:flex;align-items:center;gap:5px;"><span style="font-family:\'Rajdhani\';font-size:8px;font-weight:700;color:#ff0040;background:rgba(255,0,64,0.1);padding:1px 4px;border-radius:2px;">WATCH</span><span style="font-family:\'Rajdhani\';font-size:11px;font-weight:700;color:#ccc;">Zion Blackwell</span><span style="font-family:\'Rajdhani\';font-size:9px;color:' + opp.accent + ';">DL \u00b7 EDGE SPEED</span></div>';
+app.appendChild(scout);
+
+// ── CONDITIONS ──
+var cond = document.createElement('div');
+cond.style.cssText = 'flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 0;z-index:1;opacity:0;';
+cond.innerHTML =
+  "<div style=\"font-family:'Rajdhani';font-size:10px;font-weight:700;color:#EBB010;letter-spacing:1px;\">CLEAR 72\u00b0</div>" +
+  "<div style=\"width:1px;height:10px;background:#333;\"></div>" +
+  "<div style=\"font-family:'Rajdhani';font-size:10px;font-weight:700;color:#888;letter-spacing:1px;\">GRASS</div>";
+app.appendChild(cond);
+
+// ── SHIMMER + CTA ──
+var shimWrap = document.createElement('div');
+shimWrap.style.cssText = 'flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:4px 24px 20px;';
+shimWrap.innerHTML =
+  '<div style="width:60%;height:2px;border-radius:1px;background:linear-gradient(90deg,#FF4511,#EBB010,#FF4511);background-size:200% 100%;animation:shim 3s linear infinite;"></div>' +
+  "<div style=\"font-family:'Rajdhani';font-size:11px;font-weight:600;color:rgba(255,255,255,0.2);letter-spacing:4px;margin-top:8px;\">TAP TO CONTINUE</div>";
+var shimStyle = document.createElement('style');
+shimStyle.textContent = '@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}';
+document.head.appendChild(shimStyle);
+app.appendChild(shimWrap);
+
+// ── GSAP ANIMATION ──
+var tl = gsap.timeline();
+
+tl.to(header, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 0)
+  .fromTo(away, { x: '-100%', opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: 'expo.out' }, 0.3)
+  .fromTo(home, { x: '100%', opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: 'expo.out' }, 0.5)
+  .fromTo('#vs-text', { scale: 2.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(1.7)' }, 0.7)
+  .to('#vs-slash', { width: '140%', duration: 0.3, ease: 'power3.out' }, 0.7)
+  .fromTo(matchBadge, { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(1.4)' }, 0.9)
+  .fromTo(scout, { y: 12, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out' }, 1.1)
+  .fromTo(cond, { opacity: 0 }, { opacity: 1, duration: 0.3 }, 1.3)
+  .fromTo(shimWrap, { opacity: 0 }, { opacity: 1, duration: 0.3 }, 1.5);
+
+app.onclick = function() { location.reload(); };
+</script>
+</body></html>

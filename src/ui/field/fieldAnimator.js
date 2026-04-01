@@ -367,13 +367,13 @@ export function createFieldAnimator(width, height) {
     }
 
     // Render base field (skip static dots if animating sequence)
-    if (_animSequence && _animSequence.dotKeyframes) {
-      renderState.skipDots = true;
-    }
+    // Always skip dots — field is decoration only, no player dots
+    renderState.skipDots = true;
+    renderState.skipLOS = true;
     renderer.render(renderState);
 
-    // Draw animated dots from keyframes
-    if (_animSequence && _animSequence.dotKeyframes) {
+    // Skip animated dots from keyframes (disabled — dots not shown in gameplay)
+    if (false && _animSequence && _animSequence.dotKeyframes) {
       var animElapsed2 = timestamp - _animStartTime;
       var dkf = _animSequence.dotKeyframes;
       var dColors = _animSequence.dotColors;

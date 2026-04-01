@@ -19,16 +19,24 @@ export function showStatsSheet(parentEl, stats) {
   var sheet = document.createElement('div');
   sheet.style.cssText = "position:relative;z-index:1;background:#141008;border-top:2px solid #FF4511;border-radius:12px 12px 0 0;padding:14px 12px 28px;max-height:70vh;overflow-y:auto;";
 
-  var compPct = stats.offPassAtt > 0 ? Math.round((stats.offPassComp / stats.offPassAtt) * 100) : 0;
+  var hPA = stats.hPassAtt || 0;
+  var hPC = stats.hPassComp || 0;
+  var hPY = stats.hPassYds || 0;
+  var hRA = stats.hRushAtt || 0;
+  var hRY = stats.hRushYds || 0;
+  var cPA = stats.cPassAtt || 0;
+  var cPC = stats.cPassComp || 0;
+  var cPY = stats.cPassYds || 0;
+  var cRA = stats.cRushAtt || 0;
+  var cRY = stats.cRushYds || 0;
 
   var rows = [
-    { label: 'Score',    human: stats.humanScore,   opp: stats.oppScore },
-    { label: 'Passing',  human: stats.offPassComp + '/' + stats.offPassAtt + ' · ' + stats.offPassYds + ' yds', opp: '—' },
-    { label: 'Rushing',  human: stats.offRushAtt + ' att · ' + stats.offRushYds + ' yds', opp: '—' },
-    { label: 'TDs',      human: stats.offTDs,        opp: '—' },
-    { label: 'Sacks',    human: stats.defSacks,      opp: '—' },
-    { label: 'INTs',     human: stats.defInts,       opp: '—' },
-    { label: 'TORCH',    human: stats.torchPts + ' pts', opp: '—' },
+    { label: 'Score',    human: stats.humanScore || 0,                        opp: stats.oppScore || 0 },
+    { label: 'Passing',  human: hPC + '/' + hPA + ' \u00b7 ' + hPY + ' yds', opp: cPC + '/' + cPA + ' \u00b7 ' + cPY + ' yds' },
+    { label: 'Rushing',  human: hRA + ' att \u00b7 ' + hRY + ' yds',         opp: cRA + ' att \u00b7 ' + cRY + ' yds' },
+    { label: 'Sacks',    human: stats.hSacks || 0,                            opp: stats.cSacks || 0 },
+    { label: 'INTs',     human: stats.hInts || 0,                             opp: stats.cInts || 0 },
+    { label: 'TORCH',    human: (stats.hTorch || 0) + ' pts',                 opp: (stats.cTorch || 0) + ' pts' },
   ];
 
   var rowsHtml = rows.map(function(r, i) {
@@ -36,7 +44,7 @@ export function showStatsSheet(parentEl, stats) {
     return "<div style=\"display:flex;align-items:center;" + border + "padding:8px 0;\">" +
       "<div style=\"font-family:'Rajdhani';font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;width:70px;flex-shrink:0;\">" + r.label + "</div>" +
       "<div style=\"font-family:'Rajdhani';font-size:13px;font-weight:700;color:#eee;flex:1;text-align:center;\">" + r.human + "</div>" +
-      "<div style=\"font-family:'Rajdhani';font-size:13px;font-weight:700;color:#888;flex:1;text-align:center;\">" + r.opp + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-size:13px;font-weight:700;color:#ccc;flex:1;text-align:center;\">" + r.opp + "</div>" +
     "</div>";
   }).join('');
 
@@ -46,7 +54,7 @@ export function showStatsSheet(parentEl, stats) {
   sheet.innerHTML =
     "<div style=\"display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;\">" +
       "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#FF4511;letter-spacing:2px;\">GAME STATS</div>" +
-      "<div style=\"font-family:'Rajdhani';font-size:10px;color:#444;letter-spacing:1px;\">" + halfLabel + (playsLabel ? " · " + playsLabel : "") + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-size:10px;color:#444;letter-spacing:1px;\">" + halfLabel + (playsLabel ? " \u00b7 " + playsLabel : "") + "</div>" +
     "</div>" +
     "<div style=\"display:flex;margin-bottom:6px;\">" +
       "<div style=\"width:70px;flex-shrink:0;\"></div>" +

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High-End Trading Card - Jet Sweep</title>
+    <style>
+        :root {
+            --gold: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+            --silver: linear-gradient(135deg, #707070, #e0e0e0, #888888, #d0d0d0, #606060);
+            --holofoil: linear-gradient(
+                125deg,
+                rgba(255, 0, 0, 0.2) 0%,
+                rgba(255, 154, 0, 0.2) 10%,
+                rgba(208, 222, 33, 0.2) 20%,
+                rgba(79, 220, 74, 0.2) 30%,
+                rgba(63, 218, 216, 0.2) 40%,
+                rgba(47, 201, 226, 0.2) 50%,
+                rgba(28, 127, 238, 0.2) 60%,
+                rgba(95, 21, 242, 0.2) 70%,
+                rgba(186, 12, 248, 0.2) 80%,
+                rgba(251, 7, 217, 0.2) 90%,
+                rgba(255, 0, 0, 0.2) 100%
+            );
+        }
+
+        body {
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .card {
+            width: 120px;
+            height: 168px;
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            background: #222;
+            padding: 4px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gold);
+            z-index: 1;
+        }
+
+        .inner-container {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            background: #111;
+            border-radius: 5px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .holofoil-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--holofoil);
+            background-size: 200% 200%;
+            animation: holoShift 5s ease infinite alternate;
+            opacity: 0.6;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        @keyframes holoShift {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 4px 6px;
+            z-index: 4;
+        }
+
+        .play-title {
+            color: #fcf6ba;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .play-type {
+            color: #aaa;
+            font-size: 6px;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .diagram-area {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5px;
+            z-index: 4;
+        }
+
+        .diagram-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 2px rgba(255, 215, 0, 0.3));
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+            padding: 4px;
+            background: rgba(0, 0, 0, 0.4);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 4;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            padding: 2px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 5px;
+            color: #888;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+
+        .stat-value {
+            font-size: 9px;
+            color: #fff;
+            font-weight: bold;
+            line-height: 1.1;
+        }
+
+        .rarity-badge {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 12px;
+            height: 12px;
+            background: var(--gold);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 6px;
+            font-weight: bold;
+            color: #000;
+            z-index: 5;
+            box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        }
+
+        .card-texture {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiIHZpZXdCb3g9IjAgMCA0IDQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9Im5vbmUiLz48Y2lyY2xlIGN4PSIxIiBjeT0iMSIgcj0iMC41IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIi8+PC9zdmc+');
+            pointer-events: none;
+            z-index: 3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="inner-container">
+            <div class="holofoil-overlay"></div>
+            <div class="card-texture"></div>
+            
+            <header class="glass-header">
+                <h1 class="play-title">Jet Sweep</h1>
+                <p class="play-type">Offensive Play • Run</p>
+            </header>
+
+            <div class="diagram-area">
+                <svg class="diagram-svg" viewBox="0 0 100 80">
+                    <!-- Offensive Line -->
+                    <circle cx="30" cy="50" r="3" fill="#666" />
+                    <circle cx="40" cy="50" r="3" fill="#666" />
+                    <circle cx="50" cy="50" r="4" stroke="#bf953f" fill="none" stroke-width="1" /> <!-- Center -->
+                    <circle cx="60" cy="50" r="3" fill="#666" />
+                    <circle cx="70" cy="50" r="3" fill="#666" />
+                    
+                    <!-- QB -->
+                    <circle cx="50" cy="65" r="3" fill="#444" />
+                    
+                    <!-- WR in Motion (The Jet) -->
+                    <circle cx="85" cy="55" r="3" fill="#fcf6ba" />
+                    <path d="M 85 55 Q 50 55 20 40" stroke="#fcf6ba" fill="none" stroke-width="2" stroke-dasharray="2,1" />
+                    <path d="M 20 40 L 15 25" stroke="#fcf6ba" fill="none" stroke-width="2" marker-end="url(#arrowhead)" />
+                    
+                    <!-- Defense Placeholders -->
+                    <rect x="25" y="30" width="4" height="4" fill="rgba(255,0,0,0.3)" />
+                    <rect x="48" y="28" width="4" height="4" fill="rgba(255,0,0,0.3)" />
+                    <rect x="71" y="30" width="4" height="4" fill="rgba(255,0,0,0.3)" />
+
+                    <!-- Arrowhead definition -->
+                    <defs>
+                        <marker id="arrowhead" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto">
+                            <polygon points="0 0, 5 2.5, 0 5" fill="#fcf6ba" />
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="stat-label">Speed</span>
+                    <span class="stat-value">98</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Agility</span>
+                    <span class="stat-value">94</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Deception</span>
+                    <span class="stat-value">88</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Impact</span>
+                    <span class="stat-value">S+</span>
+                </div>
+            </div>
+
+            <div class="rarity-badge">G</div>
+        </div>
+    </div>
+
+</body>
+</html>

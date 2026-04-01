@@ -4,7 +4,7 @@
 TORCH Football is a mobile card game (Balatro meets college football). 4 fictional college teams with distinct offensive schemes. Single-game format — each session is one game, TORCH points persist across games. Card-based play selection, personnel system with stars/traits, special teams burn deck, and TORCH points (score = wallet). Built with Vite + vanilla JS + GSAP, deployed on Vercel.
 
 ## Version
-**v0.28.0 "Audio + Replay Loop"** — Howler.js audio (15 SFX pools, 3-tier crowd ambient), end game replay loop (MVP card, open loop, team-colored PLAY AGAIN), per-team win-loss records, Phase B complete (AI traits/stars, ST ratings affect distributions), codebase cleanup.
+**v0.29.0 "Premium UI + QA"** — Complete UI overhaul (result overlays, possession changes, coin toss, kickoff, shop, roster, pregame), audio system tuning (crowd transitions, new ElevenLabs loops, asymmetric fades), torch card category audit (8 cards recategorized, special_teams/hand categories), commentary grammar fixes (plural team names, player attribution, turnover perspective), canvas field renderer wired in, LOS/FD yard markers, per-player game stats on cards, play-by-play toggle, conversion UI polish, 20-play-per-half fix, first-down TORCH points fix, onboarding disabled for rebuild.
 
 ## Environments & Deployment
 
@@ -14,9 +14,23 @@ TORCH Football is a mobile card game (Balatro meets college football). 4 fiction
 | **Preview** | `dev` | Auto-generated per `git push origin dev` | Shareable test URL |
 | **Production** | `main` | `torch.football` | Merge dev→main + push |
 
+### Local Development (Vite)
 ```bash
-npx vite --host              # Local dev (port 5173, phone accessible via LAN)
-npx vite build               # Production build (dist/)
+npm run dev                  # Local dev (port 5173, phone accessible via LAN)
+npm run build                # Production build (dist/)
+```
+
+### Persistent Dev Server (PM2)
+The dev server is configured to run 24/7 in the background via PM2. This allows for instant access from mobile devices without keeping a terminal open.
+```bash
+pm2 list                     # Check server status
+pm2 logs torch-dev           # View QR code and Network URL
+pm2 restart torch-dev        # Refresh the server
+pm2 stop torch-dev           # Stop the background process
+```
+
+### Deployment (Vercel)
+```bash
 git push origin dev           # Preview deploy (auto)
 git checkout main && git merge dev --no-edit && git push origin main  # Production deploy (auto)
 ```

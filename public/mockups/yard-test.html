@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html><head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yard Line Alignment Test</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0A0804;color:#fff;font-family:monospace;padding:20px}
+.test{position:relative;width:100%;height:136px;background:#050a08;border:1px solid #333;margin:20px 0;overflow:hidden}
+.canvas-sim{position:absolute;inset:0}
+.yard-line{position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,0.2)}
+.yard-num{position:absolute;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.15);font-family:'Teko',monospace}
+.los-line{position:absolute;left:0;right:0;height:3px;background:#E854A0;box-shadow:0 0 8px #E854A0}
+.fd-line{position:absolute;left:0;right:0;height:3px;background:#EBB010;box-shadow:0 0 8px rgba(235,176,16,0.5)}
+.dom-los{position:absolute;right:0;width:15%;height:3px;background:red;z-index:10}
+.dom-fd{position:absolute;right:0;width:15%;height:3px;background:yellow;z-index:10}
+.label{font-size:12px;color:#888;margin-top:10px}
+</style>
+</head><body>
+<h2 style="color:#EBB010;font-family:Teko,sans-serif;letter-spacing:3px">YARD LINE ALIGNMENT TEST</h2>
+<p style="font-size:11px;color:#666;margin:8px 0">Pink = LOS (canvas math). Gold = First Down (canvas math).<br>Red = DOM LOS indicator. Yellow = DOM FD indicator.<br>They should overlap perfectly.</p>
+
+<div id="tests"></div>
+
+<script>
+// Exact math from fieldRenderer.js
+var VISIBLE_YARDS = 25;
+var STRIP_HEIGHT = 136;
+var YPX = STRIP_HEIGHT / VISIBLE_YARDS;
+
+function makeTest(ballPosition, distance, label) {
+  var container = document.createElement('div');
+
+  // Exact transform from gameplay.js line 1397
+  var ballYard = ballPosition * 1.1 + 5;
+
+  // Exact clamp from fieldRenderer.js line 897
+  var center = Math.max(VISIBLE_YARDS / 2, Math.min(120 - VISIBLE_YARDS / 2, ballYard));
+  var topYard = center - VISIBLE_YARDS / 2;
+
+  // Canvas yard line positions (same as fieldRenderer yardToY)
+  var losPixel = (ballYard - topYard) * YPX;
+  var fdYard = ballYard + distance; // offense advancing
+  var fdPixel = (fdYard - topYard) * YPX;
+
+  // DOM percentage (same as gameplay.js)
+  var losPct = ((ballYard - topYard) / VISIBLE_YARDS) * 100;
+  var fdPct = ((fdYard - topYard) / VISIBLE_YARDS) * 100;
+
+  var ydsToEz = 100 - ballPosition;
+  var fieldLabel = ydsToEz <= 50 ? 'OPP ' + ydsToEz : 'OWN ' + (100 - ydsToEz);
+
+  container.innerHTML = '<div class="label">ballPos=' + ballPosition + ' (' + fieldLabel + ') | distance=' + distance + ' | ballYard=' + ballYard.toFixed(1) + ' | center=' + center.toFixed(1) + ' | topYard=' + topYard.toFixed(1) + '</div>';
+
+  var strip = document.createElement('div');
+  strip.className = 'test';
+
+  // Draw visible yard lines (same loop as fieldRenderer)
+  for (var yd = 10; yd <= 110; yd++) {
+    var py = (yd - topYard) * YPX;
+    if (py < -5 || py > STRIP_HEIGHT + 5) continue;
+
+    if (yd % 10 === 0 && yd >= 10 && yd <= 110) {
+      var line = document.createElement('div');
+      line.className = 'yard-line';
+      line.style.top = py + 'px';
+      if (yd === 10 || yd === 110) line.style.background = 'rgba(255,160,20,0.3)';
+      strip.appendChild(line);
+
+      // Yard number
+      var num = document.createElement('div');
+      num.className = 'yard-num';
+      var displayNum = yd <= 60 ? (yd - 10) : (110 - yd);
+      num.textContent = displayNum;
+      num.style.top = (py + 2) + 'px';
+      strip.appendChild(num);
+    }
+    if (yd % 5 === 0 && yd % 10 !== 0) {
+      var line5 = document.createElement('div');
+      line5.style.cssText = 'position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,0.08);top:' + py + 'px;';
+      strip.appendChild(line5);
+    }
+  }
+
+  // Canvas-math LOS line (pink, full width)
+  var los = document.createElement('div');
+  los.className = 'los-line';
+  los.style.top = losPixel + 'px';
+  strip.appendChild(los);
+
+  // Canvas-math FD line (gold, full width)
+  if (fdPixel >= 0 && fdPixel <= STRIP_HEIGHT) {
+    var fd = document.createElement('div');
+    fd.className = 'fd-line';
+    fd.style.top = fdPixel + 'px';
+    strip.appendChild(fd);
+  }
+
+  // DOM indicator LOS — try PIXEL positioning (should match exactly)
+  var domLosPixel = document.createElement('div');
+  domLosPixel.style.cssText = 'position:absolute;right:0;width:10%;height:3px;background:lime;z-index:10;';
+  domLosPixel.style.top = losPixel + 'px';
+  strip.appendChild(domLosPixel);
+
+  // DOM indicator LOS — percentage positioning (what gameplay.js does)
+  var domLosPct = document.createElement('div');
+  domLosPct.className = 'dom-los';
+  domLosPct.style.top = losPct + '%';
+  strip.appendChild(domLosPct);
+
+  // DOM indicator FD — pixel
+  if (fdPixel >= 0 && fdPixel <= STRIP_HEIGHT) {
+    var domFdPixel = document.createElement('div');
+    domFdPixel.style.cssText = 'position:absolute;right:0;width:10%;height:3px;background:cyan;z-index:10;';
+    domFdPixel.style.top = fdPixel + 'px';
+    strip.appendChild(domFdPixel);
+  }
+
+  // DOM indicator FD — percentage
+  if (fdPct >= 0 && fdPct <= 100) {
+    var domFd = document.createElement('div');
+    domFd.className = 'dom-fd';
+    domFd.style.top = fdPct + '%';
+    strip.appendChild(domFd);
+  }
+
+  // Info overlay
+  var info = document.createElement('div');
+  info.style.cssText = 'position:absolute;top:2px;left:2px;font-size:9px;color:#555;z-index:20;';
+  info.innerHTML = 'LOS: ' + losPixel.toFixed(1) + 'px = ' + losPct.toFixed(1) + '%<br>FD: ' + fdPixel.toFixed(1) + 'px = ' + fdPct.toFixed(1) + '%';
+  strip.appendChild(info);
+
+  container.appendChild(strip);
+  document.getElementById('tests').appendChild(container);
+}
+
+// Test cases
+makeTest(25, 10, 'Own 25, 1st & 10');
+makeTest(50, 10, 'Midfield, 1st & 10');
+makeTest(72, 7, 'OPP 28, 2nd & 7');
+makeTest(83, 3, 'OPP 17, 3rd & 3');
+makeTest(93, 5, 'OPP 7 (red zone), 1st & GL');
+makeTest(10, 10, 'Own 10 (deep), 1st & 10');
+makeTest(95, 2, 'OPP 5 (goal line), 2nd & GL');
+</script>
+</body></html>

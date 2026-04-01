@@ -227,7 +227,8 @@ var POS_COLORS = {
 };
 
 export function buildMaddenPlayer(p, w, h) {
-  var isStar = p.isStar || false;
+  var stars = p.stars || (p.isStar ? 4 : 3);
+  var trait = p.trait || '';
   var teamColor = p.teamColor || '#FF4511';
   var posColor = POS_COLORS[p.pos] || '#aaa';
   var fullPos = POS_NAMES[p.pos] || p.pos;
@@ -235,29 +236,30 @@ export function buildMaddenPlayer(p, w, h) {
 
   card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;border-top:3px solid '+posColor+';border-left:1px solid #2a2a2a;border-right:1px solid #2a2a2a;border-bottom:1px solid #2a2a2a;background:linear-gradient(180deg,'+teamColor+'14 0%,#0a0906 60%);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.5);display:flex;flex-direction:column;position:relative;';
 
-  // Star badge
-  var starIcon = '';
-  if (isStar) {
-    starIcon = '<div style="position:absolute;top:3px;right:4px;z-index:5;filter:drop-shadow(0 1px 2px rgba(235,176,16,0.6));">'
-      + '<svg viewBox="0 0 24 24" width="10" height="10"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01z" fill="#EBB010"/></svg>'
-      + '</div>';
-  }
+  // Star pips (using team color)
+  var pips = renderFlamePips(stars, 5, teamColor, 7);
 
   // Content
   var nameFs = p.name.length > 8 ? 13 : 16;
-  card.innerHTML = starIcon +
-    '<div style="padding:4px 6px 6px;display:flex;flex-direction:column;flex:1;min-height:0;">' +
-      // Position + Number row
-      "<div style=\"display:flex;align-items:baseline;gap:4px;\">" +
-        "<div style=\"font-family:'Teko';font-weight:900;font-size:22px;color:"+posColor+";line-height:1;\">"+fullPos+'</div>' +
-        "<div style=\"font-family:'Teko';font-size:12px;color:rgba(255,255,255,0.25);line-height:1;\">#"+(p.num||'')+'</div>' +
+  card.innerHTML = 
+    '<div style="padding:8px;display:flex;flex-direction:column;flex:1;min-height:0;">' +
+      // Header row: Position and Number
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;">' +
+        '<div style="font-family:\'Teko\';font-weight:900;font-size:20px;color:'+posColor+';line-height:1;">'+fullPos+'</div>' +
+        '<div style="font-family:\'Teko\';font-weight:700;font-size:18px;color:'+teamColor+';line-height:1;">#'+(p.num||'')+'</div>' +
       '</div>' +
+      // Stars row
+      '<div style="display:flex;gap:1px;opacity:0.8;margin-bottom:6px;">'+pips+'</div>' +
       // Player name
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:"+nameFs+"px;color:#fff;letter-spacing:0.5px;line-height:1;margin-top:1px;\">"+p.name+'</div>' +
+      '<div style="font-family:\'Teko\';font-weight:700;font-size:'+nameFs+'px;color:#fff;letter-spacing:0.5px;line-height:1;margin-bottom:4px;">'+p.name+'</div>' +
       // Position color accent line
-      '<div style="height:2px;background:linear-gradient(90deg,'+posColor+',transparent);margin:4px 0;flex-shrink:0;"></div>' +
-      // Ability text
-      (p.ability ? "<div style=\"font-family:'Rajdhani';font-size:8.5px;color:rgba(255,255,255,0.45);line-height:1.25;\">"+p.ability+'</div>' : '') +
+      '<div style="height:1px;background:linear-gradient(90deg,'+posColor+'66,transparent);margin-bottom:4px;flex-shrink:0;"></div>' +
+      // Trait / Ability (moved up, no longer at bottom)
+      '<div>' +
+        (trait ? '<div style="display:inline-block;padding:1px 4px;background:'+posColor+'11;border:1px solid '+posColor+'33;border-radius:2px;font-family:\'Rajdhani\';font-size:8px;font-weight:700;color:'+posColor+';letter-spacing:0.5px;text-transform:uppercase;">'+trait+'</div>' : '') +
+        // Ability text fallback
+        (p.ability && !trait ? '<div style="font-family:\'Rajdhani\';font-size:8.5px;color:rgba(255,255,255,0.4);line-height:1.2;">'+p.ability+'</div>' : '') +
+      '</div>' +
     '</div>';
   return card;
 }
@@ -339,7 +341,10 @@ export function buildPlayV1(p, w, h) {
         "<div style=\"font-family:'Teko';font-weight:700;font-size:8px;color:"+tc.accent+";letter-spacing:1px;line-height:1;\">"+typeKey+'</div></div>' +
     '</div>' +
     // 3. Description — line-clamped to prevent cutoff
-    "<div style=\"padding:0 5px;font-family:'Rajdhani';font-size:8.5px;color:rgba(255,255,255,0.45);line-height:1.25;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;\">"+(p.desc || '')+'</div>' +
+    "<div style=\"padding:0 5px;font-family:'Rajdhani';font-size:8.5px;color:rgba(255,255,255,0.45);line-height:1.25;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;\">" +
+      (p.flavor ? '<span style="color:#EBB010;font-style:italic;">"'+p.flavor+'"</span> ' : '') + 
+      (p.desc || '') + 
+    '</div>' +
     // 4. Footer bar: RISK + pips
     '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 5px;background:rgba(0,0,0,0.3);border-top:1px solid '+tc.accent+'22;flex-shrink:0;">' +
       "<div style=\"font-family:'Teko';font-size:8px;color:#555;letter-spacing:1px;\">RISK</div>" +
@@ -363,7 +368,7 @@ export function buildTorchCard(tc, w, h) {
   var glowStyle = isGold ? '0 0 12px ' + bc + '44,0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.5)';
   if (isSilver) glowStyle = '0 0 8px rgba(192,192,192,0.2),' + glowStyle;
 
-  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:'+borderStyle+';background:radial-gradient(ellipse at 50% 30%,'+catColor+'0d,#0A0804 70%),#0A0804;position:relative;box-shadow:'+glowStyle+';display:flex;flex-direction:column;align-items:center;overflow:hidden;';
+  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:'+borderStyle+';background:radial-gradient(ellipse at 50% 30%,'+catColor+'0d,#0A0804 70%),#0A0804;position:relative;box-shadow:'+glowStyle+';display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;';
 
   // Gold shimmer animation
   if (isGold) card.style.animation = 'T-pulse 3s ease-in-out infinite';

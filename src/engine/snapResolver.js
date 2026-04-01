@@ -277,7 +277,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   // === RUN PLAY RESOLUTION (skip completion check entirely) ===
   else {
     // ── STUFF CHECK ──
-    let stuffRate = 0.14; // Reduced from 0.18 to improve drive success rate
+    let stuffRate = 0.11; // Reduced from 0.14 to improve drive success rate
 
     if (defPlay.runDefMod < -2) stuffRate += 0.10;
     else if (defPlay.runDefMod < 0) stuffRate += 0.05;

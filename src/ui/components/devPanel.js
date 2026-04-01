@@ -10,6 +10,7 @@ import { TEAMS, getSeasonOpponents } from '../../data/teams.js';
 import { generateConditions } from '../../data/gameConditions.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
 import { SND } from '../../engine/sound.js';
+import AudioStateManager from '../../engine/audioManager.js';
 
 var _panel = null;
 var _open = false;
@@ -177,6 +178,17 @@ export function injectDevPanel(el, gs, callbacks) {
   html += btn('Set Score 21-14 (leading)', 'dev-score-2114', '#3df58a');
   html += btn('Set Score 7-21 (trailing)', 'dev-score-0721', '#FF6B00');
   html += btn('Force Game Over', 'dev-force-gameover', '#e03050');
+
+  // ── AUDIO DEBUG ──
+  html += section('AUDIO');
+  html += '<div id="dev-audio-state" style="font-family:Rajdhani;font-size:10px;color:#EBB010;padding:2px 4px;margin-bottom:4px;">STATE: -- | VOL: --</div>';
+  html += '<div style="display:flex;gap:3px;flex-wrap:wrap;">';
+  html += btnInline('Normal', 'dev-audio-normal', '#3df58a');
+  html += btnInline('Big', 'dev-audio-big', '#EBB010');
+  html += btnInline('TD', 'dev-audio-td', '#FF4511');
+  html += btnInline('Turn', 'dev-audio-turn', '#e03050');
+  html += btnInline('2Min', 'dev-audio-2min', '#4DA6FF');
+  html += '</div>';
 
   // ── ACHIEVEMENTS ──
   html += section('ACHIEVEMENTS');
@@ -413,6 +425,12 @@ export function injectDevPanel(el, gs, callbacks) {
       localStorage.removeItem('torch_achievements');
       alert('torch_achievements cleared.');
     }
+    // Audio debug
+    if (id === 'dev-audio-normal') AudioStateManager.setState('normal_play');
+    if (id === 'dev-audio-big') AudioStateManager.setState('big_moment');
+    if (id === 'dev-audio-td') AudioStateManager.setState('touchdown');
+    if (id === 'dev-audio-turn') AudioStateManager.setState('turnover');
+    if (id === 'dev-audio-2min') AudioStateManager.setState('two_min_drill');
     if (id === 'dev-clear-all') {
       var toClear = [];
       for (var k = 0; k < localStorage.length; k++) {
@@ -442,6 +460,11 @@ function updateStateReadout(gs) {
     engineCards: gs.humanTorchCards ? gs.humanTorchCards.length : 0,
     uiCards: gs.humanTorchCards ? gs.humanTorchCards.join(',') : '',
   }, null, 1);
+  // Audio debug readout
+  var audioEl = _panel.querySelector('#dev-audio-state');
+  if (audioEl) {
+    audioEl.textContent = 'STATE: ' + AudioStateManager.getState() + ' | VOL: ' + AudioStateManager.getCrowdIntensity().toFixed(2);
+  }
 }
 
 function giveTorchCards(gs, tier, callbacks) {

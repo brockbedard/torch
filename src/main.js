@@ -111,3 +111,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// Initialize audio on first user interaction (standard browser security policy)
+function handleFirstInteraction() {
+  // Use the SND object which already has a reference to AudioManager
+  // to ensure we call init() synchronously in the event loop
+  if (SND && SND.init) {
+    SND.init();
+  } else {
+    // Fallback: reach into the imported AudioManager if SND doesn't expose it
+    import('./engine/audioManager.js').then(m => {
+      if (m.default && m.default.init) m.default.init();
+    });
+  }
+  document.removeEventListener('touchstart', handleFirstInteraction);
+  document.removeEventListener('mousedown', handleFirstInteraction);
+}
+
+document.addEventListener('touchstart', handleFirstInteraction, { passive: true });
+document.addEventListener('mousedown', handleFirstInteraction, { passive: true });

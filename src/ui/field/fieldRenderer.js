@@ -896,6 +896,7 @@ export function createFieldRenderer(width, height) {
     // Clamp center so we don't show beyond the field
     var center = Math.max(VISIBLE_YARDS / 2, Math.min(120 - VISIBLE_YARDS / 2, ballYard));
     var topYard = center - VISIBLE_YARDS / 2;
+    _renderState._topYard = topYard;
 
     // Re-render static layer if center changed significantly OR padding changed
     var needsRedraw = Math.abs(center - _lastCenter) > 0.5 || cameraPadding !== _staticPadding;
@@ -982,9 +983,11 @@ export function createFieldRenderer(width, height) {
     // vigIntensity = 0.25 - heatMod * 0.15; // Less vignette = brighter on hot drives
 
     // Dynamic overlays
-    drawLOS(ctx, losYard, topYard);
-    if (fdYard > losYard && fdYard <= 110) {
-      drawFirstDownMarker(ctx, fdYard, topYard);
+    if (!state.skipLOS) {
+      drawLOS(ctx, losYard, topYard);
+      if (fdYard > losYard && fdYard <= 110) {
+        drawFirstDownMarker(ctx, fdYard, topYard);
+      }
     }
     if (!state.skipDots) {
       drawPlayerDots(ctx, formation, losYard, topYard, state.offTeam, state.defTeam);
@@ -1019,6 +1022,8 @@ export function createFieldRenderer(width, height) {
     TEAM_FORMATION_MAP: TEAM_FORMATION_MAP,
     TEAM_FORMATION_POOLS: TEAM_FORMATION_POOLS,
     DEF_FORMATION_MAP: DEF_FORMATION_MAP,
-    pickFormation: pickFormation
+    pickFormation: pickFormation,
+    // Exposed for DOM overlay alignment
+    getViewport: function() { return { topYard: _renderState._topYard || 0, ypx: YPX, visibleYards: VISIBLE_YARDS, height: height }; },
   };
 }

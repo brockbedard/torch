@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html><head>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Pregame A: ESPN Broadcast</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0A0804;overflow:hidden;height:100vh;height:100dvh;font-family:'Rajdhani',sans-serif}
+</style>
+</head><body>
+<div id="app" style="position:fixed;inset:0;overflow:hidden;"></div>
+<script>
+var app = document.getElementById('app');
+
+// Mock team data
+var userTeam = { name: 'DOLPHINS', school: 'CORAL BAY', accent: '#E854A0', primary: '#8B2252', scheme: 'Spread Option' };
+var oppTeam = { name: 'SPECTRES', school: 'HOLLOWRIDGE', accent: '#5DADE2', primary: '#1a3a5c', scheme: 'Spread RPO' };
+
+// Phase 1: Color flood
+var flood = document.createElement('div');
+flood.style.cssText = 'position:absolute;inset:0;background:' + userTeam.primary + ';opacity:0;';
+app.appendChild(flood);
+
+// Watermark badge (just text for mockup)
+var watermark = document.createElement('div');
+watermark.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Teko';font-size:200px;color:rgba(255,255,255,0.04);letter-spacing:10px;";
+watermark.textContent = userTeam.name[0];
+app.appendChild(watermark);
+
+// Phase 2: Split — opponent color floods top
+var oppFlood = document.createElement('div');
+oppFlood.style.cssText = 'position:absolute;top:0;left:0;right:0;height:45%;background:' + oppTeam.primary + ';clip-path:polygon(0 0,100% 0,100% 90%,0 100%);opacity:0;';
+app.appendChild(oppFlood);
+
+// Diagonal split line
+var splitLine = document.createElement('div');
+splitLine.style.cssText = 'position:absolute;top:43%;left:0;right:0;height:4px;background:linear-gradient(90deg,' + userTeam.accent + ',' + oppTeam.accent + ');transform:rotate(-2deg) scaleX(0);transform-origin:left;z-index:5;box-shadow:0 0 20px rgba(255,255,255,0.3);';
+app.appendChild(splitLine);
+
+// Opponent info card (top)
+var oppCard = document.createElement('div');
+oppCard.style.cssText = 'position:absolute;top:8%;right:-100%;width:85%;padding:16px 20px;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);border-left:3px solid ' + oppTeam.accent + ';border-radius:0 12px 12px 0;z-index:6;';
+oppCard.innerHTML =
+  "<div style=\"font-family:'Rajdhani';font-size:10px;color:#777;letter-spacing:3px;\">AWAY</div>" +
+  "<div style=\"font-family:'Rajdhani';font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:2px;margin-top:2px;\">" + oppTeam.school + "</div>" +
+  "<div style=\"font-family:'Teko';font-size:32px;color:#fff;letter-spacing:3px;line-height:1;text-shadow:0 2px 8px " + oppTeam.primary + ";\">" + oppTeam.name + "</div>" +
+  "<div style=\"font-family:'Teko';font-size:14px;color:" + oppTeam.accent + ";letter-spacing:3px;\">" + oppTeam.scheme + "</div>";
+app.appendChild(oppCard);
+
+// User info card (bottom)
+var userCard = document.createElement('div');
+userCard.style.cssText = 'position:absolute;bottom:22%;left:-100%;width:85%;padding:18px 20px;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);border-right:3px solid ' + userTeam.accent + ';border-radius:12px 0 0 12px;z-index:6;text-align:right;';
+userCard.innerHTML =
+  "<div style=\"font-family:'Rajdhani';font-size:10px;color:#EBB010;letter-spacing:3px;\">YOUR TEAM</div>" +
+  "<div style=\"font-family:'Rajdhani';font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:2px;margin-top:2px;\">" + userTeam.school + "</div>" +
+  "<div style=\"font-family:'Teko';font-size:40px;color:#fff;letter-spacing:3px;line-height:1;text-shadow:0 2px 8px " + userTeam.primary + ";\">" + userTeam.name + "</div>" +
+  "<div style=\"font-family:'Teko';font-size:14px;color:" + userTeam.accent + ";letter-spacing:3px;\">" + userTeam.scheme + "</div>";
+app.appendChild(userCard);
+
+// Matchup pill (at the split)
+var matchPill = document.createElement('div');
+matchPill.style.cssText = "position:absolute;top:42%;left:50%;transform:translate(-50%,-50%) scale(0);z-index:10;padding:4px 16px;border-radius:4px;background:rgba(0,0,0,0.8);border:1px solid #EBB01066;font-family:'Rajdhani';font-weight:700;font-size:12px;color:#EBB010;letter-spacing:2px;";
+matchPill.textContent = 'EVEN MATCHUP';
+app.appendChild(matchPill);
+
+// Intel strip at bottom
+var intel = document.createElement('div');
+intel.style.cssText = 'position:absolute;bottom:0;left:0;right:0;padding:10px 16px;background:rgba(0,0,0,0.8);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:space-between;z-index:8;transform:translateY(100%);';
+intel.innerHTML =
+  "<div style=\"font-family:'Rajdhani';font-size:10px;color:#EBB010;letter-spacing:1px;\">CLEAR 72\u00b0 \u00b7 GRASS</div>" +
+  "<div style=\"display:flex;align-items:center;gap:6px;\"><span style=\"font-family:'Rajdhani';font-size:8px;font-weight:700;color:#ff0040;background:rgba(255,0,64,0.15);padding:1px 5px;border-radius:2px;\">WATCH</span><span style=\"font-family:'Rajdhani';font-size:11px;color:#ccc;\">DaCosta \u00b7 WR \u00b7 BURNER</span></div>";
+app.appendChild(intel);
+
+// Shimmer line
+var shimmer = document.createElement('div');
+shimmer.style.cssText = 'position:absolute;top:43%;left:0;right:0;height:2px;z-index:6;background:linear-gradient(90deg,transparent,#FF4511,#EBB010,#FF4511,transparent);background-size:200% 100%;animation:shimmer 2s linear infinite;opacity:0;';
+app.appendChild(shimmer);
+
+// CTA
+var cta = document.createElement('div');
+cta.style.cssText = "position:absolute;bottom:50px;left:50%;transform:translateX(-50%);z-index:9;font-family:'Rajdhani';font-size:11px;color:rgba(255,255,255,0.2);letter-spacing:4px;opacity:0;";
+cta.textContent = 'TAP TO CONTINUE';
+app.appendChild(cta);
+
+var style = document.createElement('style');
+style.textContent = '@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}';
+document.head.appendChild(style);
+
+// Animate
+var tl = gsap.timeline();
+tl.to(flood, { opacity: 1, duration: 0.4 })
+  .to(watermark, { opacity: 0.04, scale: 1, duration: 0.6 }, 0.2)
+  .to(oppFlood, { opacity: 1, duration: 0.5 }, 0.8)
+  .to(splitLine, { scaleX: 1, duration: 0.4, ease: 'power3.out' }, 0.9)
+  .to(oppCard, { right: 0, duration: 0.5, ease: 'power3.out' }, 1.5)
+  .to(userCard, { left: 0, duration: 0.5, ease: 'power3.out' }, 1.7)
+  .to(matchPill, { scale: 1, duration: 0.3, ease: 'back.out(2)' }, 2.1)
+  .to(intel, { y: 0, duration: 0.4, ease: 'power2.out' }, 2.5)
+  .to(shimmer, { opacity: 1, duration: 0.3 }, 2.8)
+  .to(cta, { opacity: 0.25, duration: 0.5 }, 3.0);
+
+app.onclick = function() { location.reload(); };
+</script>
+</body></html>

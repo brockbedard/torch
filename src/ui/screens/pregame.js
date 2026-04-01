@@ -27,7 +27,7 @@ export function buildPregame() {
 
   var team = TEAMS[GS.team];
   var opp = TEAMS[GS.opponent];
-  if (!team || !opp) { setGs(function(s) { return Object.assign({}, s, { screen: 'gameplay' }); }); return el; }
+  if (!team || !opp) { setGs(function(s) { return Object.assign({}, s, { screen: 'roster' }); }); return el; }
 
   var conditions = GS.gameConditions || { weather: 'clear', field: 'turf', crowd: 'home' };
   var gamesPlayed = parseInt(localStorage.getItem('torch_games_played') || '0');
@@ -277,7 +277,7 @@ export function buildPregame() {
     el.style.transition = 'opacity 0.3s';
     el.style.opacity = '0';
     setTimeout(function() {
-      setGs(function(s) { return Object.assign({}, s, { screen: 'gameplay' }); });
+      setGs(function(s) { return Object.assign({}, s, { screen: 'roster' }); });
     }, 300);
   }
   el.onclick = skip;

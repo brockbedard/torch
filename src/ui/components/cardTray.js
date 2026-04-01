@@ -14,8 +14,8 @@ var TRAY_CSS = `
 .CT-wrap{display:flex;flex-direction:column;flex-shrink:0;background:#0E0A04;border-top:2px solid #FF6B0033;position:relative;z-index:1;padding-bottom:env(safe-area-inset-bottom,0px);overflow-y:auto;-webkit-overflow-scrolling:touch}
 .CT-header{display:flex;align-items:center;justify-content:center;gap:8px;padding:3px 8px 1px;flex-shrink:0}
 .CT-side{font-family:'Teko';font-weight:700;font-size:18px;letter-spacing:3px}
-.CT-disc-toggle{font-family:'Rajdhani';font-weight:700;font-size:10px;letter-spacing:1px;padding:5px 10px;border-radius:3px;border:1px solid #33333366;background:transparent;color:#666;cursor:pointer}
-.CT-disc-toggle-used{color:#333;border-color:#1a1a1a;cursor:default}
+.CT-disc-toggle{font-family:'Rajdhani';font-weight:700;font-size:10px;letter-spacing:1px;padding:5px 10px;border-radius:3px;border:1px solid #555;background:transparent;color:#aaa;cursor:pointer}
+.CT-disc-toggle-used{color:#333;border-color:#1a1a1a;cursor:default;opacity:0.4}
 .CT-disc-toggle-active{background:rgba(235,176,16,0.1);border-color:#EBB010;animation:T-pulse 1.5s infinite}
 @keyframes T-snap-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
 .CT-row{display:flex;gap:3px;padding:2px 3px;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -134,60 +134,66 @@ export function renderCardTray(opts) {
   discToggle.className = 'CT-disc-toggle' + (canDiscAny ? '' : ' CT-disc-toggle-used');
   discToggle.textContent = canDiscAny ? 'DISCARD' : 'NO DISCARDS';
   discToggle.disabled = !canDiscAny;
+  if (opts.tutorialStep > 0) { discToggle.style.opacity = '0.15'; discToggle.style.pointerEvents = 'none'; }
   header.appendChild(discToggle);
   wrap.appendChild(header);
 
-  // First-time discard discovery (game 2+, shown once)
-  var _discardTipShown = localStorage.getItem('torch_discard_tip');
-  var gamesPlayed = parseInt(localStorage.getItem('torch_games_played') || '0');
-  if (!_discardTipShown && gamesPlayed >= 1 && opts.canDiscardPlays) {
+  // First-time discard discovery — disabled, will revisit
+  var _discardTipShown = true;
+  if (false) {
     localStorage.setItem('torch_discard_tip', '1');
 
     var discTip = document.createElement('div');
-    discTip.style.cssText = "position:absolute;top:-42px;left:50%;transform:translateX(-50%);z-index:10;padding:6px 12px;background:rgba(0,0,0,0.8);border:1px solid #EBB01044;border-radius:6px;white-space:nowrap;pointer-events:none;";
-    discTip.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#EBB010;letter-spacing:2px;\">SWAP OUT BAD CARDS</div><div style=\"font-family:'Rajdhani';font-size:10px;color:#aaa;\">Discard and draw a replacement</div>";
-
-    // Position relative to the discard button
-    discToggle.style.position = 'relative';
-    discToggle.appendChild(discTip);
-
-    // Auto-dismiss after 5 seconds
-    setTimeout(function() {
-      try { gsap.to(discTip, { opacity: 0, duration: 0.3, onComplete: function() { discTip.remove(); } }); }
+    discTip.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;margin:0 6px 4px;background:rgba(10,8,4,0.95);border:1px solid #EBB01044;border-radius:6px;";
+    var discTipText = document.createElement('div');
+    discTipText.innerHTML =
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:16px;color:#EBB010;letter-spacing:2px;line-height:1.2;\">DON'T LIKE YOUR CARDS?</div>" +
+      "<div style=\"font-family:'Rajdhani';font-size:12px;color:#999;line-height:1.3;\">Tap DISCARD to swap out 1 play + 1 player per drive</div>";
+    discTip.appendChild(discTipText);
+    var discTipBtn = document.createElement('button');
+    discTipBtn.style.cssText = "font-family:'Teko';font-weight:700;font-size:11px;color:#EBB010;background:transparent;border:1px solid #EBB01044;border-radius:4px;padding:3px 8px;cursor:pointer;white-space:nowrap;letter-spacing:1px;";
+    discTipBtn.textContent = 'GOT IT';
+    discTipBtn.onclick = function() {
+      try { gsap.to(discTip, { opacity: 0, height: 0, marginBottom: 0, padding: 0, duration: 0.3, ease: 'power2.in', onComplete: function() { discTip.remove(); } }); }
       catch(e) { discTip.remove(); }
-    }, 5000);
+    };
+    discTip.appendChild(discTipBtn);
+    wrap.insertBefore(discTip, wrap.firstChild);
+
+    // Auto-dismiss after 10 seconds
+    setTimeout(function() {
+      if (discTip.parentNode) {
+        try { gsap.to(discTip, { opacity: 0, height: 0, marginBottom: 0, padding: 0, duration: 0.3, ease: 'power2.in', onComplete: function() { discTip.remove(); } }); }
+        catch(e) { discTip.remove(); }
+      }
+    }, 10000);
   }
 
-  // ── TORCH CARDS ROW (shown only in 'torch' phase — hidden once player selects/skips) ──
+  // ── TORCH CARDS ROW (always shown in 'torch' phase — cards + SKIP) ──
   var torchPhase = opts.phase === 'torch';
-  var hasTorchRow = torchPhase && opts.torchCards && opts.torchCards.length > 0;
-  if (torchPhase && (!opts.torchCards || opts.torchCards.length === 0)) {
-    var emptyTorchRow = document.createElement('div');
-    emptyTorchRow.style.cssText = "display:flex;align-items:center;justify-content:center;padding:8px;gap:6px;";
-    emptyTorchRow.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:#443;letter-spacing:1px;\">NO TORCH CARDS \u2014 VISIT TORCH STORE TO BUILD YOUR DECK</div>";
-    wrap.appendChild(emptyTorchRow);
-  }
-  if (hasTorchRow) {
+  var _torchLabelEl = null, _torchRowEl = null;
+  if (torchPhase) {
+    var torchSlots = (opts.torchCards || []).filter(function(c) { return c.type === 'pre-snap'; }).slice(0, 3);
     var torchLabel = document.createElement('div');
     torchLabel.className = 'CT-row-label';
     torchLabel.style.color = '#EBB010';
-    torchLabel.textContent = 'TORCH CARD \u2014 TAP TO PLAY OR SKIP';
-    // Hide torch row during tutorial steps 1 and 2
-    if (opts.tutorialStep === 1 || opts.tutorialStep === 2) {
-      torchLabel.style.display = 'none';
-    }
+    torchLabel.textContent = torchSlots.length > 0 ? 'TORCH CARD \u2014 TAP TO PLAY OR SKIP' : 'NO PLAYABLE TORCH CARDS \u2014 TAP SKIP';
     wrap.appendChild(torchLabel);
     var torchRow = document.createElement('div');
     torchRow.className = 'CT-row';
-    var offCats = ['amplification', 'information'];
-    var defCats = ['disruption', 'protection'];
+    // hand = both sides, special_teams = auto-consumed (never playable in snap phase)
+    var offCats = ['amplification', 'information', 'hand'];
+    var defCats = ['disruption', 'protection', 'hand'];
     var applicable = opts.isOffense ? offCats : defCats;
     var torchEls = [];
-    var torchSlots = opts.torchCards.slice(0, 3);
+    // Show all pre-snap cards (playable or not) + reactive/ST cards greyed out
+    var allCards = (opts.torchCards || []).slice(0, 3);
     for (var ti = 0; ti < 4; ti++) {
-      if (ti < torchSlots.length) {
-        var tc = torchSlots[ti];
-        var isApp = applicable.indexOf(tc.category) >= 0;
+      if (ti < allCards.length) {
+        var tc = allCards[ti];
+        var isPreSnap = tc.type === 'pre-snap';
+        var isST = tc.category === 'special_teams';
+        var isApp = isPreSnap && !isST && applicable.indexOf(tc.category) >= 0;
         var c = document.createElement('div');
         c.className = 'CT-card' + (isApp ? '' : ' CT-card-disabled');
         c.style.position = 'relative';
@@ -201,21 +207,20 @@ export function renderCardTray(opts) {
           })(tc);
         } else {
           // Greyed out with explanation
-          var sideOnly = opts.isOffense ? 'DEFENSE ONLY' : 'OFFENSE ONLY';
+          var lockText = !isPreSnap ? 'REACTIVE' : isST ? 'SPECIAL TEAMS' : (opts.isOffense ? 'DEFENSE ONLY' : 'OFFENSE ONLY');
           var lockLabel = document.createElement('div');
           lockLabel.style.cssText = "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);border-radius:6px;z-index:3;";
-          lockLabel.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#e03050;letter-spacing:2px;text-align:center;\">" + sideOnly + "</div>";
+          lockLabel.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#e03050;letter-spacing:2px;text-align:center;\">" + lockText + "</div>";
           c.appendChild(lockLabel);
         }
         torchRow.appendChild(c);
         torchEls.push(c);
       } else {
-        // Empty slot or SKIP
+        // SKIP slot — always present as the first empty slot after cards
         var empty = document.createElement('div');
         empty.className = 'CT-card';
         empty.style.cssText = 'border:2px dashed #554f8022;display:flex;align-items:center;justify-content:center;';
-        if (ti === torchSlots.length) {
-          // First empty slot = SKIP button
+        if (ti === allCards.length) {
           empty.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:#554f80;letter-spacing:1px;\">SKIP</div>";
           empty.style.cursor = 'pointer';
           empty.onclick = function() { SND.click(); if (opts.onSkipTorch) opts.onSkipTorch(); };
@@ -224,6 +229,8 @@ export function renderCardTray(opts) {
         torchEls.push(empty);
       }
     }
+    _torchLabelEl = torchLabel;
+    _torchRowEl = torchRow;
     wrap.appendChild(torchRow);
   }
 
@@ -231,6 +238,7 @@ export function renderCardTray(opts) {
   var playLabel = document.createElement('div');
   playLabel.className = 'CT-row-label';
   playLabel.textContent = 'PLAYS';
+  if (opts.tutorialStep === 2 || opts.tutorialStep === 3) { playLabel.style.opacity = '0.2'; }
   wrap.appendChild(playLabel);
 
   var playRow = document.createElement('div');
@@ -247,7 +255,12 @@ export function renderCardTray(opts) {
       ghost.className = 'CT-card';
       ghost.style.cssText = 'border:2px dashed #00ff4433;background:rgba(0,255,68,0.03);display:flex;align-items:center;justify-content:center;';
       ghost.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:#00ff4466;letter-spacing:1px;\">ON FIELD</div>";
-      ghost.onclick = function() { SND.select(); if (opts.onSelectPlay) opts.onSelectPlay(play); };
+      if (opts.tutorialStep > 0) {
+        ghost.style.opacity = '0.2';
+        ghost.style.pointerEvents = 'none';
+      } else {
+        ghost.onclick = function() { SND.select(); if (opts.onSelectPlay) opts.onSelectPlay(play); };
+      }
       playRow.appendChild(ghost);
       playCardEls.push(ghost);
       playCards.push(play);
@@ -280,20 +293,23 @@ export function renderCardTray(opts) {
       c.style.borderColor = '#EBB01066';
       // Add subtle "STRONG" label
       var strongLabel = document.createElement('div');
-      strongLabel.style.cssText = 'position:absolute;top:-1px;right:2px;z-index:5;font-family:Rajdhani;font-weight:700;font-size:7px;color:#EBB010;letter-spacing:0.5px;opacity:0.7;';
+      strongLabel.style.cssText = "position:absolute;bottom:18px;left:3px;z-index:5;font-family:'Rajdhani';font-weight:700;font-size:7px;color:#000;letter-spacing:0.5px;background:#EBB010;padding:1px 4px;border-radius:2px;";
       strongLabel.textContent = 'STRONG';
       c.style.position = 'relative';
       c.appendChild(strongLabel);
     }
 
-    // Tutorial highlight for play cards
+    // Tutorial step 1: highlight play cards, they're the active element
     if (opts.tutorialStep === 1) {
-      c.style.boxShadow = '0 0 12px rgba(235,176,16,0.6), inset 0 0 8px rgba(235,176,16,0.15)';
+      c.style.boxShadow = '0 0 16px rgba(255,69,17,0.6), inset 0 0 8px rgba(255,69,17,0.15)';
       c.style.animation = 'T-snap-pulse 1.2s ease-in-out infinite';
+      c.style.position = 'relative';
+      c.style.zIndex = '1001';
     }
-    // Tutorial step 2: dim play cards (play already chosen, showing ghost slot)
-    if (opts.tutorialStep === 2) {
-      c.style.opacity = '0.35';
+    // Tutorial step 2+3: dim play cards
+    if (opts.tutorialStep === 2 || opts.tutorialStep === 3) {
+      c.style.opacity = '0.2';
+      c.style.pointerEvents = 'none';
     }
 
     attachTouchFeedback(c);
@@ -317,6 +333,7 @@ export function renderCardTray(opts) {
   var playerLabel = document.createElement('div');
   playerLabel.className = 'CT-row-label';
   playerLabel.textContent = 'PLAYERS';
+  if (opts.tutorialStep === 1 || opts.tutorialStep === 3) { playerLabel.style.opacity = '0.2'; }
   wrap.appendChild(playerLabel);
 
   var playerRow = document.createElement('div');
@@ -352,9 +369,34 @@ export function renderCardTray(opts) {
     if (isHot) { c.style.borderColor = '#FF4511'; c.style.boxShadow = '0 0 12px rgba(255,69,17,0.5)'; }
     // Tutorial step 1: dim player cards so only play cards glow
     if (opts.tutorialStep === 1) {
-      c.style.opacity = '0.35';
+      c.style.opacity = '0.2';
+      c.style.pointerEvents = 'none';
     }
     c.appendChild(playerCard);
+    // Per-player game stats at bottom of card
+    var pStats = (opts.playerGameStats && p.id) ? opts.playerGameStats[p.id] : null;
+    if (pStats) {
+      var statParts = [];
+      if (pStats.passComp || pStats.passAtt) statParts.push((pStats.passComp || 0) + '/' + (pStats.passAtt || 0) + ', ' + (pStats.passYds || 0) + 'y');
+      if (pStats.rec) statParts.push(pStats.rec + 'rec ' + (pStats.recYds || 0) + 'y');
+      if (pStats.rushAtt) statParts.push(pStats.rushAtt + 'car ' + (pStats.rushYds || 0) + 'y');
+      if (pStats.td) statParts.push(pStats.td + 'TD');
+      if (pStats.tkl) statParts.push(pStats.tkl + 'tkl');
+      if (pStats.sack) statParts.push(pStats.sack + 'sck');
+      if (pStats.int) statParts.push(pStats.int + 'INT');
+      if (pStats.pbu) statParts.push(pStats.pbu + 'PBU');
+      if (statParts.length > 0) {
+        c.style.position = 'relative';
+        var _tc = opts.team && opts.team.accent ? opts.team.accent : '#EBB010';
+        var statBar = document.createElement('div');
+        statBar.style.cssText = "position:absolute;bottom:0;left:0;right:0;z-index:5;background:linear-gradient(180deg,transparent," + _tc + "18);border-top:1px solid " + _tc + "33;padding:3px 4px 2px;border-radius:0 0 6px 6px;";
+        var statText = document.createElement('div');
+        statText.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:8px;color:" + _tc + ";text-align:center;letter-spacing:0.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 0 4px " + _tc + "40;";
+        statText.textContent = statParts.join(' \u00b7 ');
+        statBar.appendChild(statText);
+        c.appendChild(statBar);
+      }
+    }
     var momentum = (opts.momentumMap && p.id) ? (opts.momentumMap[p.id] || 0) : 0;
     if (momentum >= 3) {
       var pipWrap = document.createElement('div');
@@ -380,10 +422,17 @@ export function renderCardTray(opts) {
       c.style.position = 'relative';
       c.appendChild(heatBadge);
     }
-    // Tutorial highlight for player cards
+    // Tutorial step 2: highlight player cards, they're the active element
     if (opts.tutorialStep === 2) {
-      c.style.boxShadow = '0 0 12px rgba(235,176,16,0.6), inset 0 0 8px rgba(235,176,16,0.15)';
+      c.style.boxShadow = '0 0 16px rgba(77,166,255,0.6), inset 0 0 8px rgba(77,166,255,0.15)';
       c.style.animation = 'T-snap-pulse 1.2s ease-in-out infinite';
+      c.style.position = 'relative';
+      c.style.zIndex = '1001';
+    }
+    // Tutorial step 3: dim player cards
+    if (opts.tutorialStep === 3) {
+      c.style.opacity = '0.2';
+      c.style.pointerEvents = 'none';
     }
     attachTouchFeedback(c);
     c.onclick = function() {
@@ -404,12 +453,15 @@ export function renderCardTray(opts) {
   wrap.appendChild(playerRow);
 
   // Deal new cards into their slots
+  // During tutorial, only animate the active row — dimmed cards skip the deal animation
   requestAnimationFrame(function() {
     var newPlays = playCardEls.filter(function(c) { return c._isNew; });
     var newPlayers = playerCardEls.filter(function(c) { return c._isNew; });
     var isFullDeal = newPlays.length >= 4 && newPlayers.length >= 4;
-    if (newPlays.length > 0) animateDeal(newPlays, 0, isFullDeal);
-    if (newPlayers.length > 0) animateDeal(newPlayers, newPlays.length > 0 ? (isFullDeal ? 0.4 : 0.15) : 0, isFullDeal);
+    var dimPlays = opts.tutorialStep === 2 || opts.tutorialStep === 3;
+    var dimPlayers = opts.tutorialStep === 1 || opts.tutorialStep === 3;
+    if (newPlays.length > 0 && !dimPlays) animateDeal(newPlays, 0, isFullDeal);
+    if (newPlayers.length > 0 && !dimPlayers) animateDeal(newPlayers, newPlays.length > 0 && !dimPlays ? (isFullDeal ? 0.4 : 0.15) : 0, isFullDeal);
   });
   _prevPlayIds = curPlayIds;
   _prevPlayerIds = curPlayerIds;
@@ -447,6 +499,8 @@ export function renderCardTray(opts) {
     playerCardEls.forEach(function(c) { if (c._marked) { c._marked = false; animateUnmark(c); } });
     discBar.style.display = 'none';
     snapBar.style.display = '';
+    if (_torchLabelEl) _torchLabelEl.style.display = '';
+    if (_torchRowEl) _torchRowEl.style.display = '';
     discToggle.className = 'CT-disc-toggle';
     discToggle.textContent = 'DISCARD';
   };
@@ -458,20 +512,6 @@ export function renderCardTray(opts) {
     discConfirm.textContent = count > 0 ? 'DISCARD ' + count + ' CARD' + (count > 1 ? 'S' : '') : 'SELECT CARDS TO DISCARD';
     discConfirm.disabled = count === 0;
     discConfirm.style.opacity = count > 0 ? '1' : '0.4';
-  }
-
-  // ── SELECTED TORCH CARD (tap to deselect) ──
-  if (opts.selectedTorchCard && opts.phase === 'ready') {
-    var stcRow = document.createElement('div');
-    stcRow.style.cssText = "display:flex;align-items:center;justify-content:center;gap:8px;padding:4px 8px;background:rgba(235,176,16,0.06);border:1px solid #EBB01033;border-radius:6px;margin:2px 8px;cursor:pointer;";
-    var stcName = opts.selectedTorchCard.name || 'TORCH CARD';
-    var stcTier = opts.selectedTorchCard.tier || 'BRONZE';
-    var stcColor = stcTier === 'GOLD' ? '#EBB010' : stcTier === 'SILVER' ? '#C0C0C0' : '#CD7F32';
-    stcRow.innerHTML =
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:13px;color:" + stcColor + ";letter-spacing:1px;\">" + stcName + "</div>" +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#888;letter-spacing:1px;\">TAP TO REMOVE</div>";
-    stcRow.onclick = function() { SND.click(); if (opts.onTorchCard) opts.onTorchCard(opts.selectedTorchCard); };
-    wrap.appendChild(stcRow);
   }
 
   // ── SNAP BAR ──
@@ -487,7 +527,7 @@ export function renderCardTray(opts) {
   // Tutorial: block snap on steps 1 and 2, highlight on step 3
   if (opts.tutorialStep === 1 || opts.tutorialStep === 2) {
     snapBtn.disabled = true;
-    snapBtn.style.opacity = '0.3';
+    snapBtn.style.opacity = '0.15';
     snapBtn.style.animation = '';
     snapBtn.style.pointerEvents = 'none';
   } else if (opts.tutorialStep === 3 && canSnap) {
@@ -496,9 +536,23 @@ export function renderCardTray(opts) {
     snapBtn.style.padding = '16px';
     snapBtn.style.fontSize = '20px';
     snapBtn.style.minHeight = '52px';
+    snapBtn.style.position = 'relative';
+    snapBtn.style.zIndex = '1001';
+    snapBtn.style.animation = 'T-snap-pulse 1.2s ease-in-out infinite';
   }
   snapBtn.onclick = function() { if (!canSnap) return; SND.snap(); if (opts.onSnap) opts.onSnap(); };
   snapBar.appendChild(snapBtn);
+
+  // PLAY-BY-PLAY toggle button
+  if (opts.onTogglePBP) {
+    var pbpBtn = document.createElement('button');
+    var _teamCol = opts.team && opts.team.accent ? opts.team.accent : '#FF4511';
+    pbpBtn.style.cssText = "font-family:'Teko';font-weight:700;font-size:12px;letter-spacing:2px;padding:6px 12px;border-radius:4px;border:1px solid " + _teamCol + "66;background:transparent;color:" + _teamCol + ";cursor:pointer;white-space:nowrap;";
+    pbpBtn.textContent = 'PLAY-BY-PLAY';
+    pbpBtn.onclick = function() { SND.click(); if (opts.onTogglePBP) opts.onTogglePBP(); };
+    snapBar.appendChild(pbpBtn);
+  }
+
   wrap.appendChild(snapBar);
 
   // ── DISCARD TOGGLE HANDLER ──
@@ -510,6 +564,8 @@ export function renderCardTray(opts) {
       discToggle.textContent = 'MARKING...';
       snapBar.style.display = 'none';
       discBar.style.display = '';
+      if (_torchLabelEl) _torchLabelEl.style.display = 'none';
+      if (_torchRowEl) _torchRowEl.style.display = 'none';
       updateDiscBar();
     } else {
       // Cancel

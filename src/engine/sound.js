@@ -10,6 +10,9 @@ import AudioManager from './audioManager.js';
 function safe(fn) { return function() { try { fn(); } catch(e) {} }; }
 
 export const SND = {
+  // Init
+  init:       function() { AudioManager.init(); },
+
   // UI
   click:      safe(function() { AudioManager.play('menuTap'); }),
   select:     safe(function() { AudioManager.play('cardPlace', { volume: 0.5 }); }),

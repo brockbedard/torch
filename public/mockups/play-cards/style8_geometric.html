@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play Card Mockup - Style 8: Abstract Geometric</title>
+    <style>
+        :root {
+            --card-width: 120px;
+            --card-height: 168px;
+            
+            /* Risk-based Palette: High Risk (Aggressive) */
+            --bg-base: #1a0f1f;
+            --accent-primary: #ff3e3e;
+            --accent-secondary: #ff8a3d;
+            --accent-tertiary: #7e22ce;
+            --text-main: #ffffff;
+            --text-dim: rgba(255, 255, 255, 0.6);
+        }
+
+        /* 
+           Palette Shift Reference:
+           Low Risk:  #0f172a (BG), #4ade80 (Primary), #38bdf8 (Secondary)
+           Med Risk:  #1c1917 (BG), #fbbf24 (Primary), #f59e0b (Secondary)
+           High Risk: #1a0f1f (BG), #ff3e3e (Primary), #ff8a3d (Secondary)
+        */
+
+        body {
+            background-color: #050505;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .card {
+            width: var(--card-width);
+            height: var(--card-height);
+            background-color: var(--bg-base);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            user-select: none;
+        }
+
+        /* Abstract Geometric Background */
+        .shards-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .shard {
+            position: absolute;
+            mix-blend-mode: screen;
+        }
+
+        /* Content Overlay */
+        .content {
+            position: relative;
+            z-index: 10;
+            padding: 10px;
+            height: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(180deg, rgba(26, 15, 31, 0.4) 0%, rgba(26, 15, 31, 0.8) 100%);
+        }
+
+        .risk-tag {
+            font-size: 7px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent-primary);
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .risk-tag::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            background-color: var(--accent-primary);
+            border-radius: 50%;
+            box-shadow: 0 0 5px var(--accent-primary);
+        }
+
+        .play-title {
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -0.2px;
+            border-left: 2px solid var(--accent-primary);
+            padding-left: 6px;
+        }
+
+        .diagram-area {
+            flex-grow: 1;
+            position: relative;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 2px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .play-metadata {
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .formation-code {
+            font-size: 8px;
+            color: var(--text-dim);
+            font-family: monospace;
+        }
+
+        .yardage {
+            font-size: 14px;
+            font-weight: 900;
+            color: var(--accent-secondary);
+            font-style: italic;
+            line-height: 1;
+        }
+
+        /* Y-Corner SVG Styles */
+        .route-line {
+            fill: none;
+            stroke: #fff;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .route-primary {
+            stroke: var(--accent-primary);
+            stroke-width: 2;
+            filter: drop-shadow(0 0 2px var(--accent-primary));
+        }
+
+        .player-node {
+            fill: rgba(255, 255, 255, 0.8);
+        }
+
+        .player-y {
+            fill: var(--accent-primary);
+        }
+
+        .label {
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <!-- Background Shards -->
+        <svg class="shards-container" viewBox="0 0 120 168" preserveAspectRatio="none">
+            <!-- Low-poly overlapping shards -->
+            <polygon class="shard" points="0,0 90,0 0,70" fill="#4c1d95" opacity="0.4" />
+            <polygon class="shard" points="120,40 40,84 120,128" fill="#7e22ce" opacity="0.3" />
+            <polygon class="shard" points="0,168 120,168 60,110" fill="#9d174d" opacity="0.3" />
+            <polygon class="shard" points="0,100 40,140 0,168" fill="#be123c" opacity="0.4" />
+            <!-- Accent Shards -->
+            <polygon class="shard" points="120,0 80,0 120,30" fill="#ff3e3e" opacity="0.2" />
+            <polygon class="shard" points="20,40 100,20 110,60" fill="#ff8a3d" opacity="0.1" />
+        </svg>
+
+        <div class="content">
+            <div class="risk-tag">High Risk</div>
+            <div class="play-title">Y-CORNER</div>
+            
+            <div class="diagram-area">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                    <!-- LOS -->
+                    <line x1="10" y1="85" x2="90" y2="85" stroke="rgba(255,255,255,0.2)" stroke-width="0.5" stroke-dasharray="2,2" />
+                    
+                    <!-- Offensive Line (Simplified) -->
+                    <rect x="40" y="83" width="20" height="4" fill="rgba(255,255,255,0.1)" rx="1" />
+                    
+                    <!-- Routes -->
+                    <!-- Y Route: Corner -->
+                    <path class="route-line route-primary" d="M 70 85 L 70 50 L 95 35" />
+                    <polyline points="91,35 95,35 95,39" fill="none" stroke="#ff3e3e" stroke-width="1.5" />
+                    
+                    <!-- Slot Route: Flat/Out -->
+                    <path class="route-line" d="M 30 85 L 30 75 L 10 70" opacity="0.6" />
+                    
+                    <!-- X Route: Vertical/Clearout -->
+                    <path class="route-line" d="M 50 85 L 50 20" opacity="0.4" />
+                    <polyline points="47,24 50,20 53,24" fill="none" stroke="white" stroke-width="1" opacity="0.4" />
+
+                    <!-- Players -->
+                    <circle cx="50" cy="92" r="2.5" fill="var(--accent-secondary)" /> <!-- QB -->
+                    <circle cx="30" cy="85" r="2.5" class="player-node" /> <!-- Slot -->
+                    <circle cx="70" cy="85" r="3" class="player-y" /> <!-- Y Receiver -->
+                    
+                    <text x="70" y="95" font-size="6" fill="var(--accent-primary)" font-weight="900" text-anchor="middle">Y</text>
+                </svg>
+            </div>
+
+            <div class="play-metadata">
+                <div class="formation-code">DBL-RGT</div>
+                <div class="yardage">15+</div>
+            </div>
+        </div>
+    </div>
+
+    <p style="color: #444; font-size: 10px; margin-top: 20px; max-width: 200px; text-align: center;">
+        Abstract Geometric Style<br>
+        120x168px Viewport<br>
+        Dynamic Shard Rendering
+    </p>
+
+</body>
+</html>

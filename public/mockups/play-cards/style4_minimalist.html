@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Style 4: Minimalist Swiss - Quick Slant</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --accent-color: #000000;
+            --font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .play-card {
+            width: 120px;
+            height: 168px;
+            background-color: var(--bg-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: relative;
+            padding: 12px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+        }
+
+        .header {
+            border-top: 4px solid var(--accent-color);
+            padding-top: 4px;
+        }
+
+        .play-name {
+            font-family: var(--font-family);
+            font-weight: 900;
+            font-size: 14px;
+            line-height: 1.1;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+        }
+
+        .diagram-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin: 10px 0;
+        }
+
+        .diagram-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .footer {
+            font-family: var(--font-family);
+            font-weight: 500;
+            font-size: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .id-number {
+            font-weight: 900;
+            font-size: 10px;
+        }
+
+        /* Abstract Geometric Elements */
+        .circle { fill: var(--accent-color); }
+        .line { stroke: var(--accent-color); stroke-width: 1.5; fill: none; }
+        .dashed-line { stroke: var(--accent-color); stroke-width: 0.5; stroke-dasharray: 2, 2; fill: none; }
+        .arrowhead { fill: var(--accent-color); }
+    </style>
+</head>
+<body>
+
+    <div class="play-card">
+        <div class="header">
+            <div class="play-name">Quick<br>Slant</div>
+        </div>
+
+        <div class="diagram-container">
+            <svg class="diagram-svg" viewBox="0 0 100 100">
+                <!-- Abstract LOS -->
+                <line x1="10" y1="70" x2="90" y2="70" class="dashed-line" />
+                
+                <!-- QB Position (Abstract) -->
+                <circle cx="50" cy="85" r="3" class="circle" />
+                
+                <!-- WR Position (Abstract) -->
+                <circle cx="20" cy="70" r="3" class="circle" />
+                
+                <!-- The Slant Route - Bold Abstract Path -->
+                <path d="M 20 70 L 20 60 L 45 35" class="line" />
+                
+                <!-- Arrowhead -->
+                <polygon points="42,38 48,32 48,41" class="arrowhead" />
+
+                <!-- Decorative Grid Element (Swiss Style) -->
+                <rect x="80" y="10" width="10" height="2" class="circle" />
+                <rect x="80" y="14" width="10" height="2" class="circle" />
+            </svg>
+        </div>
+
+        <div class="footer">
+            <span>Pass / West Coast</span>
+            <span class="id-number">04</span>
+        </div>
+    </div>
+
+</body>
+</html>

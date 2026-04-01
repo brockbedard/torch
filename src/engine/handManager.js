@@ -39,6 +39,8 @@ export function createHandState(allPlays, allPlayers) {
     // Discard usage tracking (1 of each per drive)
     playDiscardsUsed: 0,
     playerDiscardsUsed: 0,
+    maxPlayDiscards: 1,
+    maxPlayerDiscards: 1,
 
     // Full source arrays for reshuffle
     _allPlays: allPlays,
@@ -153,8 +155,8 @@ export function discard(hs, type, markedCards) {
  * Check if a discard is available.
  */
 export function canDiscard(hs, type) {
-  if (type === 'play') return hs.playDiscardsUsed < 1;
-  return hs.playerDiscardsUsed < 1;
+  if (type === 'play') return hs.playDiscardsUsed < hs.maxPlayDiscards;
+  return hs.playerDiscardsUsed < hs.maxPlayerDiscards;
 }
 
 /**
