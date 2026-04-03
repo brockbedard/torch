@@ -158,11 +158,13 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
   // Null safety: derive positional fallbacks before any name is used
   if (!off) off = { name: null, pos: 'QB' };
   if (!def) def = { name: null, pos: 'LB' };
-  // Use res._receiverName if gameplay.js resolved one from the roster (Bug 3 fix: consistent names)
+  // OL/DL should never be featured — if they slip through, use generic names
+  var _offIsLineman = off.pos === 'OL' || off.pos === 'DL';
+  var _defIsLineman = def.pos === 'OL' || def.pos === 'DL';
   var qbName = (off.pos === 'QB' ? (off.name || 'the QB') : 'the QB');
-  var receiverName = res._receiverName || (off.pos !== 'QB' ? (off.name || 'the receiver') : 'the receiver');
-  var rusherName = res._rusherName || off.name || 'the runner';
-  var defName = def.name || 'the defense';
+  var receiverName = res._receiverName || (_offIsLineman ? 'the receiver' : (off.pos !== 'QB' ? (off.name || 'the receiver') : 'the receiver'));
+  var rusherName = res._rusherName || (_offIsLineman ? 'the runner' : (off.name || 'the runner'));
+  var defName = _defIsLineman ? 'the defense' : (def.name || 'the defense');
   var defLineman = def.name || 'the pass rusher';
 
   // Determine emotional tier
