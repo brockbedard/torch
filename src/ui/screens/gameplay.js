@@ -1224,76 +1224,8 @@ export function buildGameplay() {
     _fieldCanvas.style.cssText = 'position:absolute;inset:0;z-index:0;width:100%;height:100%;border-radius:inherit;';
     strip.insertBefore(_fieldCanvas, strip.firstChild);
   }
-  // Weather particle effects removed — field stays clean
-  // Weather ambient audio (Web Audio API — no files needed)
-  var _weatherAudioCtx = null;
-  var _weatherNodes = [];
-  function startWeatherAudio(wId) {
-    if (wId === 'clear' || wId === 'heat') return;
-    try {
-      _weatherAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      // Resume for iOS (AudioContext created outside user gesture)
-      if (_weatherAudioCtx.state === 'suspended') _weatherAudioCtx.resume();
-      var gain = _weatherAudioCtx.createGain();
-      gain.gain.value = 0.03;
-      gain.connect(_weatherAudioCtx.destination);
-      if (wId === 'rain') {
-        var bufferSize = 2 * _weatherAudioCtx.sampleRate;
-        var buffer = _weatherAudioCtx.createBuffer(1, bufferSize, _weatherAudioCtx.sampleRate);
-        var data = buffer.getChannelData(0);
-        for (var i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-        var noise = _weatherAudioCtx.createBufferSource();
-        noise.buffer = buffer;
-        noise.loop = true;
-        var filter = _weatherAudioCtx.createBiquadFilter();
-        filter.type = 'highpass';
-        filter.frequency.value = 4000;
-        noise.connect(filter);
-        filter.connect(gain);
-        noise.start();
-        _weatherNodes.push(noise);
-        gain.gain.value = 0.015;
-      } else if (wId === 'wind') {
-        var osc = _weatherAudioCtx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.value = 120;
-        var lfo = _weatherAudioCtx.createOscillator();
-        lfo.type = 'sine';
-        lfo.frequency.value = 0.3;
-        var lfoGain = _weatherAudioCtx.createGain();
-        lfoGain.gain.value = 40;
-        lfo.connect(lfoGain);
-        lfoGain.connect(osc.frequency);
-        osc.connect(gain);
-        osc.start();
-        lfo.start();
-        _weatherNodes.push(osc, lfo);
-        gain.gain.value = 0.02;
-      } else if (wId === 'snow') {
-        var bufSize = 2 * _weatherAudioCtx.sampleRate;
-        var buf = _weatherAudioCtx.createBuffer(1, bufSize, _weatherAudioCtx.sampleRate);
-        var d = buf.getChannelData(0);
-        for (var j = 0; j < bufSize; j++) d[j] = Math.random() * 2 - 1;
-        var src = _weatherAudioCtx.createBufferSource();
-        src.buffer = buf;
-        src.loop = true;
-        var lpf = _weatherAudioCtx.createBiquadFilter();
-        lpf.type = 'lowpass';
-        lpf.frequency.value = 800;
-        src.connect(lpf);
-        lpf.connect(gain);
-        src.start();
-        _weatherNodes.push(src);
-        gain.gain.value = 0.01;
-      }
-    } catch(e) { /* Web Audio not supported — silent fallback */ }
-  }
-  function stopWeatherAudio() {
-    _weatherNodes.forEach(function(n) { try { n.stop(); } catch(e) {} });
-    _weatherNodes = [];
-    if (_weatherAudioCtx) { try { _weatherAudioCtx.close(); } catch(e) {} _weatherAudioCtx = null; }
-  }
-  if (FEATURES.weatherAudio) startWeatherAudio(weatherId);
+  // Weather audio removed — oscillator-based static replaced by silence.
+  // Real weather audio can be added later with proper audio files.
   el.appendChild(stripWrap);
   function drawField() {
     const s = gs.getSummary();
@@ -5507,7 +5439,6 @@ export function buildGameplay() {
     // Remove any lingering clash overlays from document.body
     document.querySelectorAll('.T-clash-overlay').forEach(function(ov) { ov.remove(); });
     try { gsap.killTweensOf(el.querySelectorAll('*')); } catch(e) {}
-    stopWeatherAudio();
   };
   // Expose cleanup so the router can call it directly before swapping screens
   el._cleanup = _cleanup;

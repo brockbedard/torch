@@ -35,6 +35,68 @@ function pickVariant(name) {
   return pool[idx];
 }
 
+// Crossfade loop: starts a second instance before the first ends,
+// crossfading over 500ms for seamless gapless playback.
+function _createCrossfadeLoop(sources) {
+  var XFADE = 500; // crossfade duration in ms
+  var _vol = 0;
+  var _playing = false;
+  var _current = null;
+  var _timer = null;
+
+  function _newHowl() {
+    return new Howl({ src: sources, preload: true, volume: 0 });
+  }
+
+  function _scheduleNext(howl) {
+    var dur = howl.duration() * 1000;
+    if (dur <= 0) { // Duration not yet known — retry after load
+      howl.once('load', function() { _scheduleNext(howl); });
+      return;
+    }
+    var triggerAt = Math.max(100, dur - XFADE);
+    _timer = setTimeout(function() {
+      if (!_playing) return;
+      // Start next instance, crossfade
+      var next = _newHowl();
+      next.volume(0);
+      next.play();
+      next.fade(0, _vol, XFADE);
+      howl.fade(_vol, 0, XFADE);
+      setTimeout(function() { howl.stop(); howl.unload(); }, XFADE + 50);
+      _current = next;
+      _scheduleNext(next);
+    }, triggerAt);
+  }
+
+  return {
+    play: function() {
+      if (_playing) return;
+      _playing = true;
+      _current = _newHowl();
+      _current.volume(_vol);
+      _current.play();
+      _scheduleNext(_current);
+    },
+    stop: function() {
+      _playing = false;
+      if (_timer) { clearTimeout(_timer); _timer = null; }
+      if (_current) { _current.stop(); _current.unload(); _current = null; }
+    },
+    fade: function(from, to, dur) {
+      _vol = to;
+      if (_current && _playing) {
+        _current.fade(from, to, dur);
+      }
+    },
+    volume: function(v) {
+      if (v !== undefined) { _vol = v; if (_current) _current.volume(v); return v; }
+      return _vol;
+    },
+    playing: function() { return _playing; },
+  };
+}
+
 var AudioManager = {
   init: function() {
     if (_initialized) return;
@@ -132,10 +194,10 @@ var AudioManager = {
     loadPool('groan', ['/audio/crowd/groan_01.wav','/audio/crowd/groan_02.wav'], { volume: 0.6 });
     loadPool('victoryCrowd', ['/audio/crowd/victory_crowd_01.wav'], { volume: 0.7 });
 
-    // Crowd ambient loops (webm/opus primary, mp3 fallback for Safari)
-    _crowd.low = new Howl({ src: ['/audio/crowd/crowd_low.webm', '/audio/crowd/crowd_low.mp3'], loop: true, volume: 0 });
-    _crowd.mid = new Howl({ src: ['/audio/crowd/crowd_mid.webm', '/audio/crowd/crowd_mid.mp3'], loop: true, volume: 0 });
-    _crowd.high = new Howl({ src: ['/audio/crowd/crowd_high.webm', '/audio/crowd/crowd_high.mp3'], loop: true, volume: 0 });
+    // Crowd ambient loops — crossfade looping for seamless playback
+    _crowd.low = _createCrossfadeLoop(['/audio/crowd/crowd_low.webm', '/audio/crowd/crowd_low.mp3']);
+    _crowd.mid = _createCrossfadeLoop(['/audio/crowd/crowd_mid.webm', '/audio/crowd/crowd_mid.mp3']);
+    _crowd.high = _createCrossfadeLoop(['/audio/crowd/crowd_high.webm', '/audio/crowd/crowd_high.mp3']);
 
     _initialized = true;
     console.log('[Audio] AudioManager initialized successfully');
