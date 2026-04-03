@@ -276,7 +276,7 @@ const CSS = `
 @keyframes coinGlow{0%,100%{box-shadow:0 0 20px rgba(235,176,16,0.3)}50%{box-shadow:0 0 40px rgba(235,176,16,0.5),0 0 60px rgba(255,69,17,0.2)}}
 @keyframes pulseHint{0%,100%{opacity:0.5}50%{opacity:1}}
 @keyframes floatCard{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-.T-clash-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;pointer-events:auto}
+.T-clash-overlay{position:absolute;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;pointer-events:auto}
 .T-clash-dim{position:absolute;inset:0;background:#0A0804;transition:opacity 0.3s}
 .T-clash-result{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:6px}
 .T-clash-yds{font-family:'Teko';font-weight:700;font-size:64px;line-height:1;text-shadow:0 0 24px currentColor;animation:T-clash-yds 0.6s cubic-bezier(0.22,1.3,0.36,1) both}
@@ -2058,13 +2058,16 @@ export function buildGameplay() {
       if (opts.effects.burst) impactBurst(opts.effects.burst);
     }
 
-    // Cleanup
+    // Cleanup — use raw setTimeout (not _setTimeout) so visual cleanup
+    // is never blocked by the screen-exit timer registry
     var dur = opts.duration || 1800;
-    _setTimeout(function() {
+    setTimeout(function() {
       try {
-        gsap.to(container, { opacity: 0, duration: 0.4, onComplete: function() { container.remove(); } });
-      } catch(e) { container.remove(); }
+        gsap.to(container, { opacity: 0, duration: 0.4, onComplete: function() { if (container.parentNode) container.remove(); } });
+      } catch(e) { if (container.parentNode) container.remove(); }
     }, dur);
+    // Safety: force-remove after max display time regardless
+    setTimeout(function() { if (container.parentNode) container.remove(); }, dur + 600);
 
     return container;
   }
@@ -2219,6 +2222,8 @@ export function buildGameplay() {
   // ── RENDER PANEL ──
   function drawPanel() {
     panel.innerHTML = '';
+    // Sweep lingering clash overlays from previous plays
+    el.querySelectorAll('.T-clash-overlay').forEach(function(ov) { ov.remove(); });
     const isOff = gs.possession === hAbbr;
     const sides = gs.getCurrentSides();
     // Filter out OL/DL — only show skill position players, then take 4
@@ -4016,12 +4021,14 @@ export function buildGameplay() {
 
       // ── BEAT 4: READY (cleanup + proceed) ──
       _setTimeout(function() {
-        // Clean up overlay (may already be removed if screen exited)
+        // Clean up overlay
         if (overlay.parentNode) {
           overlay.style.opacity = '0';
           overlay.style.transition = 'opacity 0.4s';
-          _setTimeout(function() { if (overlay.parentNode) overlay.remove(); }, 400);
+          setTimeout(function() { if (overlay.parentNode) overlay.remove(); }, 400);
         }
+        // Safety: force-remove after 1s regardless
+        setTimeout(function() { if (overlay.parentNode) overlay.remove(); }, 1000);
 
         // TORCH points — ALL increases go through the sequential flyer animation
         var finalTotal = hAbbr === 'CT' ? gs.getSummary().ctTorchPts : gs.getSummary().irTorchPts;
