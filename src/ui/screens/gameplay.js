@@ -63,7 +63,7 @@ const CSS = `
 .T-sb-panel-home{border-right:1px solid #1a1a1a}
 .T-sb-panel-away{border-left:1px solid #1a1a1a}
 .T-sb-name{font-family:'Oswald',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;line-height:1;white-space:nowrap}
-.T-sb-score{font-family:'Teko';font-weight:900;font-size:42px;line-height:0.9;color:#fff;transition:transform 0.2s}
+.T-sb-score{font-family:'Teko';font-weight:900;font-size:42px;line-height:0.9;color:#fff;transition:transform 0.2s;animation:segFlicker 4s ease-in-out infinite}
 .T-sb-poss-dot{width:4px;height:4px;border-radius:50%;margin-top:3px}
 .T-sb-center{padding:6px 14px;background:#0a0a0a;min-width:80px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .T-sb-half{font-family:'Rajdhani';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:2px;line-height:1}
