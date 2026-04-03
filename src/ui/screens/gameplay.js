@@ -3452,28 +3452,26 @@ export function buildGameplay() {
       // ── LAYER 4: Visual weight — size based on user sentiment, not raw yards ──
       var level = tier;
       var gotFirstDown = res.gotFirstDown;
-      // Scale font based on sentiment AND text length so it fits the overlay
+      // Scale font — hero text should DOMINATE the screen
       var textLen = resultText.length;
       var ydsFontSize, resultGlow, resultAnim, resultPos;
       if (isGoodForUser) {
-        // Big, centered, glowing — but scale down for long text
-        var goodBase = level === 3 ? 72 : level === 2 ? 56 : 48;
-        if (textLen > 12) goodBase = Math.min(goodBase, 40);
-        else if (textLen > 8) goodBase = Math.min(goodBase, 48);
+        var goodBase = level === 3 ? 72 : level === 2 ? 64 : 56;
+        if (textLen > 12) goodBase = Math.min(goodBase, 48);
+        else if (textLen > 8) goodBase = Math.min(goodBase, 56);
         ydsFontSize = goodBase + 'px';
-        resultGlow = 'text-shadow:0 0 20px ' + resultColor + '60,0 0 40px ' + resultColor + '30;';
+        resultGlow = 'text-shadow:0 0 24px ' + resultColor + '60,0 0 48px ' + resultColor + '30;';
         resultAnim = 'animation:T-clash-yds 0.4s cubic-bezier(0.34,1.56,0.64,1) both;';
         resultPos = '';
       } else if (isBadForUser) {
-        // Smaller, top area, muted — acknowledge and move on
-        var badBase = level === 3 ? 40 : 32;
-        if (textLen > 12) badBase = Math.min(badBase, 28);
+        var badBase = level === 3 ? 52 : 44;
+        if (textLen > 12) badBase = Math.min(badBase, 36);
         ydsFontSize = badBase + 'px';
-        resultGlow = '';
+        resultGlow = 'text-shadow:0 0 16px ' + resultColor + '40;';
         resultAnim = 'animation:T-clash-yds 0.25s ease-out both;';
-        resultPos = 'position:absolute;top:20%;left:50%;transform:translateX(-50%);width:90%;text-align:center;';
+        resultPos = '';
       } else {
-        ydsFontSize = textLen > 10 ? '36px' : '44px';
+        ydsFontSize = textLen > 10 ? '44px' : '52px';
         resultGlow = '';
         resultAnim = 'animation:T-clash-yds 0.3s ease-out both;';
         resultPos = '';
@@ -3864,7 +3862,7 @@ export function buildGameplay() {
 
         // Hero text
         var heroEl = document.createElement('div');
-        heroEl.style.cssText = "font-family:'Teko';font-weight:900;font-size:" + ydsFontSize + ";color:" + resultColor + ";letter-spacing:3px;line-height:1;text-shadow:0 0 20px " + resultColor + "60,0 2px 6px rgba(0,0,0,0.8);opacity:0;transform:scale(0.3);text-align:center;";
+        heroEl.style.cssText = "font-family:'Teko';font-weight:900;font-size:" + ydsFontSize + ";color:" + resultColor + ";letter-spacing:3px;line-height:1;text-shadow:0 0 24px " + resultColor + "60,0 0 48px " + resultColor + "20,0 2px 6px rgba(0,0,0,0.8);opacity:0;transform:scale(0.3);text-align:center;";
         heroEl.textContent = resultText;
         nonTdWrap.appendChild(heroEl);
 
@@ -3879,7 +3877,7 @@ export function buildGameplay() {
 
         // Context label (below hero)
         var ctxLabel = document.createElement('div');
-        ctxLabel.style.cssText = "font-family:'Oswald';font-weight:700;font-size:12px;letter-spacing:3px;text-shadow:0 2px 4px rgba(0,0,0,0.8);opacity:0;transform:translateY(8px);";
+        ctxLabel.style.cssText = "font-family:'Oswald';font-weight:700;font-size:18px;letter-spacing:3px;text-shadow:0 2px 4px rgba(0,0,0,0.8);opacity:0;transform:translateY(8px);";
         if (r.isSack) {
           // Hero: "SACK" or "SACKED!" — context adds the yardage detail
           ctxLabel.textContent = r.yards !== 0 ? 'LOSS OF ' + Math.abs(r.yards) : '';
@@ -3911,7 +3909,7 @@ export function buildGameplay() {
 
         // Gradient divider after hero+context
         var divider = document.createElement('div');
-        divider.style.cssText = "width:60px;height:1px;background:linear-gradient(90deg,transparent," + resultColor + "44,transparent);margin:6px 0;transform:scaleX(0);";
+        divider.style.cssText = "width:80px;height:1px;background:linear-gradient(90deg,transparent," + resultColor + "44,transparent);margin:8px 0;transform:scaleX(0);";
         nonTdWrap.appendChild(divider);
 
         // Turnover sub-label (inside the flow, not absolute)
@@ -4041,7 +4039,7 @@ export function buildGameplay() {
           var dnPossTeam = newS.possession === 'CT' ? hTeam : oTeam;
           var dnColor = dnPossTeam.accent;
           var dnEl = document.createElement('div');
-          dnEl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:10px;color:" + dnColor + ";letter-spacing:2px;margin-top:6px;opacity:0;transform:translateY(6px);";
+          dnEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:22px;color:" + dnColor + ";letter-spacing:3px;margin-top:6px;opacity:0;transform:translateY(6px);";
           dnEl.textContent = dnText;
           resultWrap.appendChild(dnEl);
           try { gsap.to(dnEl, { opacity: 1, y: 0, duration: 0.2, delay: 0.1, ease: 'power2.out' }); } catch(e) { dnEl.style.opacity = '1'; }
@@ -4065,7 +4063,7 @@ export function buildGameplay() {
         // Commentary text on the result overlay (not just narr)
         if (commLine1 && !res._isConversion) {
           var commEl = document.createElement('div');
-          commEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:11px;color:rgba(255,255,255,0.6);text-shadow:0 2px 4px rgba(0,0,0,0.8);max-width:260px;text-align:center;margin-top:4px;opacity:0;transform:translateY(6px);";
+          commEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:16px;color:rgba(255,255,255,0.7);text-shadow:0 2px 4px rgba(0,0,0,0.8);max-width:300px;text-align:center;margin-top:6px;opacity:0;transform:translateY(6px);line-height:1.3;";
           commEl.textContent = commLine1;
           resultWrap.appendChild(commEl);
           try { gsap.to(commEl, { opacity: 1, y: 0, duration: 0.25, delay: 0.15, ease: 'power2.out' }); } catch(e) { commEl.style.opacity = '1'; }
@@ -4076,7 +4074,7 @@ export function buildGameplay() {
           var FLAME = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
           var tpEl = document.createElement('div');
           tpEl.style.cssText = "display:flex;align-items:center;gap:4px;justify-content:center;margin-top:6px;opacity:0;transform:translateY(10px) scale(0.8);";
-          tpEl.innerHTML = "<svg viewBox='0 0 44 56' width='12' height='16' fill='#EBB010'><path d='" + FLAME + "'/></svg><span style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;text-shadow:0 0 8px rgba(235,176,16,0.4);letter-spacing:1px;\">+" + res._torchEarned + "</span>";
+          tpEl.innerHTML = "<svg viewBox='0 0 44 56' width='14' height='18' fill='#EBB010'><path d='" + FLAME + "'/></svg><span style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;text-shadow:0 0 8px rgba(235,176,16,0.4);letter-spacing:1px;\">+" + res._torchEarned + "</span>";
           resultWrap.appendChild(tpEl);
           try { gsap.to(tpEl, { opacity: 1, y: 0, scale: 1, duration: 0.3, delay: 0.3, ease: 'back.out(1.5)' }); } catch(e) { tpEl.style.opacity = '1'; tpEl.style.transform = 'none'; }
         }
@@ -5085,7 +5083,7 @@ export function buildGameplay() {
     var cardWraps = [];
     offers.forEach(function(card, idx) {
       var wrap = document.createElement('div');
-      wrap.style.cssText = 'cursor:pointer;opacity:0;transform:translateY(30px);transition:opacity 0.3s,transform 0.3s;animation:floatCard 3s ease-in-out infinite;animation-delay:' + (idx * 0.4) + 's;';
+      wrap.style.cssText = 'cursor:pointer;opacity:0;transform:translateY(30px);transition:opacity 0.3s,transform 0.3s;animation:floatCard 3s ease-in-out infinite;animation-delay:' + (idx * 0.4) + 's;position:relative;will-change:transform;';
       var backCard = buildHomeCard('torch', 95, 133);
       wrap.appendChild(backCard);
       wrap._card = card;
@@ -5109,15 +5107,20 @@ export function buildGameplay() {
         // Flip the selected card: center on screen → scaleX squeeze → swap content → expand
         var isDramatic = card.tier === 'GOLD';
         var flipDur = isDramatic ? 0.18 : 0.12;
+
+        // Kill CSS float animation so it doesn't fight GSAP
+        wrap.style.animation = 'none';
+        wrap.style.transition = 'none';
+
         try {
           // Calculate delta to center the card on screen
           var cardRect = wrap.getBoundingClientRect();
-          var centerX = window.innerWidth / 2 - cardRect.left - cardRect.width / 2;
-          var centerY = window.innerHeight * 0.4 - cardRect.top - cardRect.height / 2;
+          var centerX = (window.innerWidth / 2) - cardRect.left - (cardRect.width / 2);
+          var centerY = (window.innerHeight * 0.38) - cardRect.top - (cardRect.height / 2);
 
           var tl = gsap.timeline();
           // Move to center + scale up
-          tl.to(wrap, { x: centerX, y: centerY, scale: 1.15, duration: 0.35, ease: 'power2.out' });
+          tl.to(wrap, { x: centerX, y: centerY, scale: 1.2, duration: 0.4, ease: 'power2.inOut', zIndex: 10 });
           // Then flip
           tl.to(wrap, { scaleX: 0, duration: flipDur, ease: 'power2.in' });
           tl.call(function() {
