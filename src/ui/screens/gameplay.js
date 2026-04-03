@@ -67,7 +67,7 @@ const CSS = `
 .T-sb-poss-dot{width:4px;height:4px;border-radius:50%;margin-top:3px}
 .T-sb-center{padding:6px 14px;background:#0a0a0a;min-width:80px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .T-sb-half{font-family:'Rajdhani';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:2px;line-height:1}
-.T-sb-snap{font-family:'Teko';font-weight:700;font-size:18px;color:#aaa;line-height:1;margin-top:2px}
+.T-sb-snap{font-family:'Teko';font-weight:700;font-size:18px;color:#aaa;line-height:1;margin-top:2px;animation:segFlicker 5s ease-in-out 2.3s infinite}
 .T-sb-divider{width:40px;height:1px;background:#333;margin:4px 0}
 .T-sb-down{font-family:'Oswald',sans-serif;font-weight:700;font-size:11px;color:#FF6B00;letter-spacing:1px;line-height:1}
 .T-sb-ball{font-family:'Rajdhani';font-weight:600;font-size:10px;color:#888;letter-spacing:0.5px;margin-top:1px}
@@ -811,7 +811,7 @@ export function buildGameplay() {
     const irNameEl = document.createElement('div'); irNameEl.className = 'T-sb-name';
     irNameEl.style.color = ir.accent;
     irNameEl.textContent = ir.name.toUpperCase();
-    const irScoreEl = document.createElement('div'); irScoreEl.className = 'T-sb-score';
+    const irScoreEl = document.createElement('div'); irScoreEl.className = 'T-sb-score'; irScoreEl.style.animationDelay = '1.7s';
     const irDotEl = document.createElement('div'); irDotEl.className = 'T-sb-poss-dot';
     irPanel.appendChild(irNameEl);
     irPanel.appendChild(irScoreEl);
