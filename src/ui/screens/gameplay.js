@@ -3079,6 +3079,7 @@ export function buildGameplay() {
     var rusherName = featuredName;
 
     // Attach resolved names to res so commentary.js uses consistent names
+    res._qbName = qbName;
     res._receiverName = receiverName;
     res._rusherName = rusherName;
 

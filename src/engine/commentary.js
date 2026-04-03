@@ -161,9 +161,12 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
   // OL/DL should never be featured — if they slip through, use generic names
   var _offIsLineman = off.pos === 'OL' || off.pos === 'DL';
   var _defIsLineman = def.pos === 'OL' || def.pos === 'DL';
-  var qbName = (off.pos === 'QB' ? (off.name || 'the QB') : 'the QB');
+  // QB always throws — use roster QB name, not featured player
+  var qbName = res._qbName || (off.pos === 'QB' ? (off.name || 'the QB') : 'the QB');
+  // Receiver is the featured non-QB skill player on pass plays
   var receiverName = res._receiverName || (_offIsLineman ? 'the receiver' : (off.pos !== 'QB' ? (off.name || 'the receiver') : 'the receiver'));
-  var rusherName = res._rusherName || (_offIsLineman ? 'the runner' : (off.name || 'the runner'));
+  // Rusher is the featured skill player on run plays
+  var rusherName = res._rusherName || (_offIsLineman ? 'the runner' : (off.pos !== 'QB' ? (off.name || 'the runner') : 'the runner'));
   var defName = _defIsLineman ? 'the defense' : (def.name || 'the defense');
   var defLineman = def.name || 'the pass rusher';
 
