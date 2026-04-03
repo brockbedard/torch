@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TORCH Cards — Mockup v2</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#050403;color:#fff;font-family:'Rajdhani',sans-serif;padding:20px;}
+h2{font-family:'Teko';font-weight:700;font-size:24px;color:#EBB010;letter-spacing:4px;margin:20px 0 10px;}
+.row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:24px;}
+.note{font-family:'Rajdhani';font-size:12px;color:#555;margin-bottom:20px;}
+</style>
+</head>
+<body>
+<div class="note">This mockup uses the REAL buildTorchCard() from cards.js with real SVG icons. Cards shown at 90×126 (tray size).</div>
+<h2>GOLD</h2>
+<div class="row" id="gold"></div>
+<h2>SILVER</h2>
+<div class="row" id="silver"></div>
+<h2>BRONZE</h2>
+<div class="row" id="bronze"></div>
+
+<h2 style="margin-top:40px;">LARGER (120×168 — shop/reveal size)</h2>
+<div class="row" id="large"></div>
+
+<script type="module">
+import { TORCH_CARDS } from '/src/data/torchCards.js';
+import { buildTorchCard } from '/src/ui/components/cards.js';
+
+var goldEl = document.getElementById('gold');
+var silverEl = document.getElementById('silver');
+var bronzeEl = document.getElementById('bronze');
+var largeEl = document.getElementById('large');
+
+TORCH_CARDS.forEach(function(tc) {
+  var card = buildTorchCard(tc, 90, 126);
+  var target = tc.tier === 'GOLD' ? goldEl : tc.tier === 'SILVER' ? silverEl : bronzeEl;
+  target.appendChild(card);
+});
+
+// Large versions of a few cards
+['scout_team', 'deep_shot', 'scramble_drill', 'blocked_kick', 'sure_hands'].forEach(function(id) {
+  var tc = TORCH_CARDS.find(function(c) { return c.id === id; });
+  if (tc) {
+    var card = buildTorchCard(tc, 120, 168);
+    largeEl.appendChild(card);
+  }
+});
+</script>
+</body>
+</html>

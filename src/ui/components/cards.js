@@ -430,7 +430,7 @@ export function buildTorchCard(tc, w, h) {
     cardAnim = 'goldPulse 3s ease-in-out infinite';
     shimmerColor = 'rgba(255,200,80,0.1)'; shimmerDur = '3s';
     tierLabelStyle = "font-family:'Oswald';font-weight:700;font-size:9px;letter-spacing:3px;background:linear-gradient(180deg,#FFD060,#EBB010,#8B4A1F);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;";
-    iconSize = 26; nameColor = '#fff'; effectColor = '#ddd';
+    nameColor = '#fff'; effectColor = '#ddd';
     footerBg = 'rgba(0,0,0,0.4)'; footerBorder = '1px solid #EBB01022';
     shadowStyle = '';
   } else if (isSilver) {
@@ -440,7 +440,7 @@ export function buildTorchCard(tc, w, h) {
     cardAnim = 'silverShimmer 3s ease-in-out infinite';
     shimmerColor = 'rgba(192,192,192,0.06)'; shimmerDur = '4s';
     tierLabelStyle = "font-family:'Oswald';font-weight:700;font-size:9px;letter-spacing:2px;color:#C0C0C0;opacity:0.6;";
-    iconSize = 22; nameColor = '#fff'; effectColor = '#bbb';
+    nameColor = '#fff'; effectColor = '#bbb';
     footerBg = 'rgba(0,0,0,0.3)'; footerBorder = '1px solid #C0C0C015';
     shadowStyle = '0 4px 12px rgba(0,0,0,0.5)';
   } else {
@@ -449,10 +449,13 @@ export function buildTorchCard(tc, w, h) {
     bgGrad = 'linear-gradient(170deg,#B8733310,#0a0804 50%)';
     cardAnim = ''; shimmerColor = ''; shimmerDur = '';
     tierLabelStyle = "font-family:'Oswald';font-weight:700;font-size:9px;letter-spacing:2px;color:#B87333;opacity:0.5;";
-    iconSize = 20; nameColor = '#ddd'; effectColor = '#aaa';
+    nameColor = '#ddd'; effectColor = '#aaa';
     footerBg = 'rgba(0,0,0,0.25)'; footerBorder = '1px solid #B8733318';
     shadowStyle = '0 4px 12px rgba(0,0,0,0.5)';
   }
+
+  // Icon scales with card width — fills the center zone
+  var iconSize = Math.round(w * (isGold ? 0.4 : isSilver ? 0.36 : 0.33));
 
   // Gold gets an outer double frame
   var outer;
@@ -492,7 +495,8 @@ export function buildTorchCard(tc, w, h) {
   }
 
   var nameLen = (tc.name || '').length;
-  var nameFs = nameLen >= 13 ? 10 : nameLen >= 10 ? 11 : 13;
+  var _baseNameFs = Math.round(w * 0.14);
+  var nameFs = nameLen >= 13 ? Math.max(9, _baseNameFs - 3) : nameLen >= 10 ? Math.max(10, _baseNameFs - 2) : Math.max(11, _baseNameFs);
   var nameEl = document.createElement('div');
   nameEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:" + nameFs + "px;color:" + nameColor + ";text-align:center;letter-spacing:0.5px;line-height:1;padding:0 4px;" + (isGold ? "text-shadow:0 0 8px rgba(235,176,16,0.3);" : "");
   nameEl.textContent = tc.name;
@@ -501,20 +505,22 @@ export function buildTorchCard(tc, w, h) {
   card.appendChild(centerZone);
 
   // Effect footer (pinned bottom)
+  var _effectFs = Math.max(7, Math.round(w * 0.085));
+  var _effectPad = Math.max(4, Math.round(w * 0.06));
   var footer = document.createElement('div');
-  footer.style.cssText = 'flex-shrink:0;background:' + footerBg + ';border-top:' + footerBorder + ';padding:5px 7px;border-radius:0 0 4px 4px;position:relative;z-index:1;';
+  footer.style.cssText = 'flex-shrink:0;background:' + footerBg + ';border-top:' + footerBorder + ';padding:' + _effectPad + 'px ' + (_effectPad + 2) + 'px;border-radius:0 0 4px 4px;position:relative;z-index:1;';
   var effectEl = document.createElement('div');
-  effectEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:8px;color:" + effectColor + ";text-align:center;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;";
+  effectEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:" + _effectFs + "px;color:" + effectColor + ";text-align:center;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;";
   effectEl.textContent = tc.effect;
   footer.appendChild(effectEl);
   card.appendChild(footer);
 
-  // Reactive label
+  // Reactive label — inside footer, below effect text
   if (isReactive) {
     var reactLabel = document.createElement('div');
-    reactLabel.style.cssText = "position:absolute;top:3px;right:4px;font-family:'Rajdhani';font-weight:700;font-size:6px;color:#4488FF;letter-spacing:1px;opacity:0.8;z-index:2;";
+    reactLabel.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:7px;color:#4488FF;letter-spacing:1.5px;text-align:center;margin-top:2px;opacity:0.7;";
     reactLabel.textContent = 'REACTIVE';
-    card.appendChild(reactLabel);
+    footer.appendChild(reactLabel);
   }
 
   // Attach to outer frame or return card directly
