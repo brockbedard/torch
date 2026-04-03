@@ -4972,44 +4972,44 @@ export function buildGameplay() {
         var winnerColor = humanWins ? hTeam.accent : oTeam.accent;
         var winnerTeam = humanWins ? hTeam : oTeam;
 
-        // Background glow
+        // Background glow in team color
         var tossGlow = document.createElement('div');
-        tossGlow.style.cssText = 'position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%,' + winnerTeam.colors.primary + '15 0%,transparent 60%);pointer-events:none;';
+        tossGlow.style.cssText = 'position:absolute;inset:0;background:radial-gradient(ellipse at 50% 25%,' + winnerColor + '12,transparent 60%);pointer-events:none;';
         ov.appendChild(tossGlow);
 
         var resultEl = document.createElement('div');
-        resultEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:30px;color:" + winnerColor + ";letter-spacing:4px;text-align:center;text-shadow:0 0 20px " + winnerColor + "40;z-index:1;";
+        resultEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:32px;color:" + winnerColor + ";letter-spacing:5px;text-align:center;text-shadow:0 0 24px " + winnerColor + "50;z-index:1;";
         resultEl.textContent = humanWins ? 'YOU WON THE TOSS!' : winner + ' WIN THE TOSS';
         ov.appendChild(resultEl);
 
         if (humanWins) {
-          // Human chooses: Torch Card or Receive
           var FLAME = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
           var choiceWrap = document.createElement('div');
-          choiceWrap.style.cssText = 'display:flex;flex-direction:column;gap:14px;width:100%;max-width:320px;margin-top:20px;z-index:1;padding:0 16px;';
+          choiceWrap.style.cssText = 'display:flex;flex-direction:column;gap:12px;width:100%;max-width:340px;margin-top:16px;z-index:1;padding:0 20px;';
 
           var cardOpt = document.createElement('div');
-          cardOpt.style.cssText = 'width:100%;border-radius:8px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;border:1.5px solid #EBB01044;background:linear-gradient(135deg,#FF451108,#EBB01008,transparent);';
+          cardOpt.style.cssText = 'width:100%;border-radius:8px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;border:1.5px solid #EBB01044;background:linear-gradient(135deg,#FF451108,#EBB01008,transparent);position:relative;overflow:hidden;';
           cardOpt.innerHTML =
-            '<div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#FF451115,#EBB01015);border:1px solid #EBB01033;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+            '<div style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 30%,rgba(235,176,16,0.04) 48%,transparent 70%);background-size:200px 100%;animation:shimmer 4s ease-in-out infinite;border-radius:7px;"></div>' +
+            '<div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#FF451115,#EBB01015);border:1px solid #EBB01033;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;z-index:1;">' +
               "<svg viewBox='0 0 44 56' width='20' height='26' fill='#EBB010'><path d='" + FLAME + "'/></svg>" +
             '</div>' +
-            '<div style="flex:1;">' +
-              "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;letter-spacing:2px;\">FREE TORCH CARD</div>" +
-              "<div style=\"font-family:'Rajdhani';font-size:11px;color:#888;\">Pick 1 of 3 mystery cards \u2014 but you kick off</div>" +
+            '<div style="flex:1;position:relative;z-index:1;">' +
+              "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:2px;\">FREE TORCH CARD</div>" +
+              "<div style=\"font-family:'Rajdhani';font-size:12px;color:#888;\">Pick 1 of 3 mystery cards \u2014 but you kick off</div>" +
             '</div>';
           cardOpt.onclick = function() { showFaceDownCards(ov, offers, true, onDone); };
 
           var recvOpt = document.createElement('div');
-          recvOpt.style.cssText = 'width:100%;border-radius:8px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;border:1.5px solid #00ff4444;background:linear-gradient(135deg,#00ff4408,transparent);';
+          recvOpt.style.cssText = 'width:100%;border-radius:8px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;border:1.5px solid #00ff4444;background:linear-gradient(135deg,#00ff4408,transparent);';
           var _fbSvg = '<svg viewBox="0 0 100 100" width="24" height="24" fill="none" style="filter:drop-shadow(0 0 4px rgba(0,255,68,0.4));"><defs><linearGradient id="rcvG" x1="15" y1="15" x2="85" y2="85" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#44ff88"/><stop offset="45%" stop-color="#00ff44"/><stop offset="100%" stop-color="#00aa22"/></linearGradient></defs><g transform="translate(50,50) rotate(-45) scale(0.22) translate(-256,-256)"><path fill="url(#rcvG)" d="M247.5 25.4c-13.5 3.3-26.4 7.2-38.6 11.7C142.9 61.6 96.7 103.6 66 153.6C47.8 183.4 35.1 215.9 26.9 249L264.5 486.6c13.5-3.3 26.4-7.2 38.6-11.7c66-24.5 112.2-66.5 142.9-116.5c18.3-29.8 30.9-62.3 39.1-95.3L247.5 25.4zM495.2 205.3c6.1-56.8 1.4-112.2-7.7-156.4c-2.7-12.9-13-22.9-26.1-25.1c-58.2-9.7-109.9-12-155.6-7.9L495.2 205.3zM206.1 496L16.8 306.7c-6.1 56.8-1.4 112.2 7.7 156.4c2.7 12.9 13 22.9 26.1 25.1c58.2 9.7 109.9 12 155.6 7.9z"/><path fill="#FFFBE6" d="M260.7 164.7c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6z"/></g></svg>';
           recvOpt.innerHTML =
             '<div style="width:44px;height:44px;border-radius:8px;background:#00ff4408;border:1px solid #00ff4433;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
               _fbSvg +
             '</div>' +
             '<div style="flex:1;">' +
-              "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#00ff44;letter-spacing:2px;\">RECEIVE THE KICK</div>" +
-              "<div style=\"font-family:'Rajdhani';font-size:11px;color:#888;\">Start with the ball \u2014 no free card until halftime</div>" +
+              "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#00ff44;letter-spacing:2px;\">RECEIVE THE KICK</div>" +
+              "<div style=\"font-family:'Rajdhani';font-size:12px;color:#888;\">Start with the ball \u2014 no free card until halftime</div>" +
             '</div>';
           recvOpt.onclick = function() {
             SND.snap();
