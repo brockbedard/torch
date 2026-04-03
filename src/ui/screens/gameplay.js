@@ -2578,6 +2578,26 @@ export function buildGameplay() {
         if (GS.season) GS.season.torchCards = torchInventory.slice();
         phase = 'ready';
 
+        // SCOUT TEAM: reveal opponent's play
+        if (tc.id === 'scout_team') {
+          var _stSides = gs.getCurrentSides();
+          var _stOppPlay = isOff
+            ? aiSelectPlay(_stSides.defHand, 'defense', gs.difficulty, { down: gs.down, distance: gs.distance, ballPos: gs.ballPosition })
+            : aiSelectPlay(_stSides.offHand, 'offense', gs.difficulty, { down: gs.down, distance: gs.distance, ballPos: gs.ballPosition, teamId: oppId });
+          if (_stOppPlay) {
+            var _stOv = document.createElement('div');
+            _stOv.style.cssText = "position:fixed;inset:0;z-index:660;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);pointer-events:auto;opacity:0;";
+            _stOv.innerHTML =
+              "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#EBB010;letter-spacing:3px;margin-bottom:6px;\">OPPONENT'S PLAY</div>" +
+              "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:#fff;letter-spacing:2px;\">" + (_stOppPlay.name || 'Unknown') + "</div>" +
+              "<div style=\"font-family:'Rajdhani';font-size:12px;color:" + oTeam.accent + ";margin-top:4px;letter-spacing:1px;\">" + (_stOppPlay.cardType || _stOppPlay.playType || '') + "</div>";
+            el.appendChild(_stOv);
+            try { gsap.to(_stOv, { opacity: 1, duration: 0.2 }); } catch(e) { _stOv.style.opacity = '1'; }
+            setTimeout(function() { try { gsap.to(_stOv, { opacity: 0, duration: 0.3, onComplete: function() { if (_stOv.parentNode) _stOv.remove(); } }); } catch(e) { if (_stOv.parentNode) _stOv.remove(); } }, 2500);
+            setTimeout(function() { if (_stOv.parentNode) _stOv.remove(); }, 3000);
+          }
+        }
+
         // PERSONNEL_REPORT / PRE_SNAP_READ: reveal opponent's featured player
         if (tc.id === 'personnel_report' || tc.id === 'pre_snap_read') {
           var oppSides = gs.getCurrentSides();
