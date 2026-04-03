@@ -71,7 +71,7 @@ export function buildPregame() {
 
   // ── 2. CARDS AREA ──
   var cardsArea = document.createElement('div');
-  cardsArea.style.cssText = 'flex:1;display:flex;flex-direction:column;padding:8px 14px;gap:8px;min-height:0;';
+  cardsArea.style.cssText = 'flex:1;display:flex;flex-direction:column;justify-content:center;padding:8px 14px;gap:12px;min-height:0;';
 
   // ── 3. AWAY TEAM CARD ──
   var awayCard = buildTeamCard(awayTeam, awayId, awayColor, 'away');
@@ -190,8 +190,8 @@ export function buildPregame() {
 function buildTeamCard(tm, tmId, accent, side) {
   var isHome = side === 'home';
   var card = document.createElement('div');
-  card.style.cssText = 'flex:1;border-radius:8px;border:1.5px solid ' + accent + '44;overflow:hidden;position:relative;display:flex;align-items:center;padding:0 20px;' +
-    'background:linear-gradient(170deg,' + accent + '18,' + accent + '08,#0a0804 60%);';
+  card.style.cssText = 'border-radius:8px;border:1.5px solid ' + accent + '44;overflow:hidden;position:relative;display:flex;align-items:center;padding:20px;' +
+    'background:linear-gradient(170deg,' + accent + '18,' + accent + '08,#0a0804 60%);flex-shrink:0;';
 
   // Left accent edge (both cards)
   var edge = document.createElement('div');
@@ -229,7 +229,7 @@ function buildTeamCard(tm, tmId, accent, side) {
   var vibeStr = TEAM_VIBES[tmId] || tm.vibe || '';
 
   var infoRow = document.createElement('div');
-  infoRow.style.cssText = "font-family:'Rajdhani';font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;line-height:1.3;";
+  infoRow.style.cssText = "font-family:'Rajdhani';font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
   infoRow.innerHTML = "<span style=\"font-family:'Oswald';font-weight:700;color:" + accent + ";letter-spacing:1.5px;\">" + schemeStr + "</span>" +
     (vibeStr ? " <span style='color:rgba(255,255,255,0.12);'>\u00b7</span> " + vibeStr : '');
   info.appendChild(infoRow);
