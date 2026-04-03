@@ -4995,9 +4995,10 @@ export function buildGameplay() {
 
           var recvOpt = document.createElement('div');
           recvOpt.style.cssText = 'width:100%;border-radius:8px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;border:1.5px solid #00ff4444;background:linear-gradient(135deg,#00ff4408,transparent);';
+          var _fbSvg = '<svg viewBox="0 0 100 100" width="24" height="24" fill="none" style="filter:drop-shadow(0 0 4px rgba(0,255,68,0.4));"><defs><linearGradient id="rcvG" x1="15" y1="15" x2="85" y2="85" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#44ff88"/><stop offset="45%" stop-color="#00ff44"/><stop offset="100%" stop-color="#00aa22"/></linearGradient></defs><g transform="translate(50,50) rotate(-45) scale(0.22) translate(-256,-256)"><path fill="url(#rcvG)" d="M247.5 25.4c-13.5 3.3-26.4 7.2-38.6 11.7C142.9 61.6 96.7 103.6 66 153.6C47.8 183.4 35.1 215.9 26.9 249L264.5 486.6c13.5-3.3 26.4-7.2 38.6-11.7c66-24.5 112.2-66.5 142.9-116.5c18.3-29.8 30.9-62.3 39.1-95.3L247.5 25.4zM495.2 205.3c6.1-56.8 1.4-112.2-7.7-156.4c-2.7-12.9-13-22.9-26.1-25.1c-58.2-9.7-109.9-12-155.6-7.9L495.2 205.3zM206.1 496L16.8 306.7c-6.1 56.8-1.4 112.2 7.7 156.4c2.7 12.9 13 22.9 26.1 25.1c58.2 9.7 109.9 12 155.6 7.9z"/><path fill="#FFFBE6" d="M260.7 164.7c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6z"/></g></svg>';
           recvOpt.innerHTML =
             '<div style="width:44px;height:44px;border-radius:8px;background:#00ff4408;border:1px solid #00ff4433;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
-              '<svg viewBox="0 0 24 24" width="20" height="20" fill="#00ff44"><ellipse cx="12" cy="12" rx="10" ry="7" transform="rotate(-45 12 12)" stroke="#00ff44" stroke-width="1.5" fill="none"/><line x1="8" y1="8" x2="16" y2="16" stroke="#00ff44" stroke-width="1" opacity="0.5"/><line x1="10" y1="10" x2="14" y2="14" stroke="#00ff44" stroke-width="0.8" opacity="0.3"/></svg>' +
+              _fbSvg +
             '</div>' +
             '<div style="flex:1;">' +
               "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#00ff44;letter-spacing:2px;\">RECEIVE THE KICK</div>" +
@@ -5122,15 +5123,23 @@ export function buildGameplay() {
           tl.call(function() {
             wrap.innerHTML = '';
             wrap.style.background = 'transparent';
-            var revealed = buildTorchCard(card, 100, 140);
+            wrap.style.animation = 'none'; // Stop float animation
+            var revealed = buildTorchCard(card, 120, 168);
             wrap.appendChild(revealed);
-            if (isDramatic) { try { SND.flip(); } catch(e) {} }
-            else { try { SND.cardSnap(); } catch(e) {} }
+            // Tiered sounds: Gold = ignite (flame whoosh), Silver = dramatic flip, Bronze = standard flip
+            if (card.tier === 'GOLD') { try { SND.ignite(); } catch(e) {} }
+            else if (card.tier === 'SILVER') { try { SND.flipDramatic(); } catch(e) {} }
+            else { try { SND.flip(); } catch(e) {} }
           });
           tl.to(wrap, { scaleX: 1, duration: flipDur, ease: 'power2.out' });
-          tl.to(wrap, { scale: 1.1, duration: 0.15, ease: 'back.out(2)' });
+          tl.to(wrap, { scale: 1.05, duration: 0.2, ease: 'back.out(2)' });
+          // Gold glow burst
           if (isDramatic) {
-            tl.fromTo(wrap, { boxShadow: '0 0 0 rgba(235,176,16,0)' }, { boxShadow: '0 0 30px rgba(235,176,16,0.6)', duration: 0.2, yoyo: true, repeat: 1 }, '-=0.15');
+            tl.fromTo(wrap, { boxShadow: '0 0 0 rgba(235,176,16,0)' }, { boxShadow: '0 0 40px rgba(235,176,16,0.7)', duration: 0.3, yoyo: true, repeat: 1 }, '-=0.2');
+          }
+          // Silver shimmer
+          if (card.tier === 'SILVER') {
+            tl.fromTo(wrap, { boxShadow: '0 0 0 rgba(192,192,192,0)' }, { boxShadow: '0 0 24px rgba(192,192,192,0.4)', duration: 0.2, yoyo: true, repeat: 1 }, '-=0.2');
           }
         } catch(e) {
           wrap.innerHTML = '';
@@ -5234,7 +5243,9 @@ export function buildGameplay() {
         tl.call(function() {
           picked.innerHTML = '';
           picked.appendChild(buildTorchCard(pickedCard, 100, 140));
-          try { SND.cardSnap(); } catch(e) {}
+          if (pickedCard.tier === 'GOLD') { try { SND.ignite(); } catch(e) {} }
+          else if (pickedCard.tier === 'SILVER') { try { SND.flipDramatic(); } catch(e) {} }
+          else { try { SND.flip(); } catch(e) {} }
           title.textContent = oTeam.name + ' DREW:';
         });
         tl.to(picked, { scaleX: 1, duration: 0.12, ease: 'power2.out' });
