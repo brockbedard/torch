@@ -3237,10 +3237,10 @@ export function buildGameplay() {
         try { gsap.to(_tcFlash, { opacity: 0, duration: 0.4, delay: 0.15, onComplete: function() { _tcFlash.remove(); } }); } catch(e) { _tcFlash.remove(); }
       }
 
-      // Hit-stop: brief frozen moment before impact (tier 2+)
+      // Hit-stop: brief freeze then settle to readable dim level
       if (tier >= 2) {
-        dim.style.opacity = tier === 3 ? '0.85' : '0.7';
-        setTimeout(function() { dim.style.opacity = '0.5'; }, tier === 3 ? 150 : 80);
+        dim.style.opacity = '1';
+        setTimeout(function() { dim.style.opacity = '0.8'; }, tier === 3 ? 150 : 80);
       }
 
       // Screen shake
@@ -3320,8 +3320,8 @@ export function buildGameplay() {
     function doSettle() {
       if (_settled) return; _settled = true;
       overlay.onclick = null;
-      // Ensure dim is at a consistent level for the result display
-      dim.style.opacity = '0.5';
+      // Ensure dim is at a readable level for the result display
+      dim.style.opacity = '0.8';
 
       // ── LAYER 4: Visual weight — size based on user sentiment, not raw yards ──
       var level = tier;
