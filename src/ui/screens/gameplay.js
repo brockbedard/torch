@@ -1016,6 +1016,14 @@ export function buildGameplay() {
 
     drawTorchBanner();
 
+    // Onboarding: down & distance explanation
+    if (snapCount === 3 && shouldShowHint('torch_hint_down_distance')) {
+      setTimeout(function() {
+        var downEl = _bugEls.downEl;
+        if (downEl) showOnboardingBubble(downEl, 'That\'s your down and distance. Get 10 yards in 4 plays for a first down.', 'torch_hint_down_distance', { autoDismiss: 3000 });
+      }, 800);
+    }
+
     // Dim non-active UI during tutorial
     var _isTut = _tutorialStep > 0 && snapCount === 0;
     bug.style.opacity = _isTut ? '0.2' : '';
@@ -1842,6 +1850,111 @@ export function buildGameplay() {
     setTimeout(function() { imp.remove(); }, 400);
   }
 
+  // ── ONBOARDING SYSTEM — learn by doing ──
+  var _onboardingActive = false; // true while a hint bubble is showing
+  var _onboardingCooldown = false; // 500ms gap between hints
+  var _onboardingSkipped = !!localStorage.getItem('torch_onboarding_complete');
+  var _idleTimer = null;
+
+  function shouldShowHint(key) {
+    if (_onboardingSkipped) return false;
+    if (_onboardingActive) return false;
+    if (_onboardingCooldown) return false;
+    if (localStorage.getItem(key)) return false;
+    return true;
+  }
+
+  function showOnboardingBubble(targetEl, text, storageKey, opts) {
+    opts = opts || {};
+    if (!targetEl) return null;
+    if (storageKey && !shouldShowHint(storageKey)) return null;
+    _onboardingActive = true;
+
+    // Spotlight overlay
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.6);';
+
+    // Lift target above overlay
+    var origZ = targetEl.style.zIndex;
+    var origPos = targetEl.style.position;
+    targetEl.style.zIndex = '801';
+    if (!origPos || origPos === 'static') targetEl.style.position = 'relative';
+
+    // Bubble
+    var bubble = document.createElement('div');
+    bubble.style.cssText = "position:fixed;z-index:802;max-width:260px;background:rgba(10,8,4,0.95);border:1px solid #1a1a1a;border-left:3px solid #FF4511;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.6);font-family:'Rajdhani';font-weight:600;font-size:13px;color:#fff;line-height:1.3;pointer-events:none;";
+    bubble.textContent = text;
+
+    // Position bubble near target
+    document.body.appendChild(overlay);
+    document.body.appendChild(bubble);
+
+    requestAnimationFrame(function() {
+      var rect = targetEl.getBoundingClientRect();
+      var bw = bubble.offsetWidth;
+      var bh = bubble.offsetHeight;
+      var left = Math.max(12, Math.min(window.innerWidth - bw - 12, rect.left + rect.width / 2 - bw / 2));
+
+      // Place above or below target
+      if (rect.top > window.innerHeight / 2) {
+        // Target is in lower half — bubble goes above
+        bubble.style.top = (rect.top - bh - 12) + 'px';
+      } else {
+        // Target is in upper half — bubble goes below
+        bubble.style.top = (rect.bottom + 12) + 'px';
+      }
+      bubble.style.left = left + 'px';
+
+      try {
+        gsap.from(bubble, { opacity: 0, y: 8, scale: 0.95, duration: 0.25, ease: 'back.out(1.5)' });
+      } catch(e) {}
+    });
+
+    // Dismiss function
+    var dismissed = false;
+    function dismiss() {
+      if (dismissed) return;
+      dismissed = true;
+      _onboardingActive = false;
+      if (storageKey) localStorage.setItem(storageKey, '1');
+      targetEl.style.zIndex = origZ || '';
+      if (!origPos || origPos === 'static') targetEl.style.position = origPos || '';
+      try {
+        gsap.to(bubble, { opacity: 0, duration: 0.15, onComplete: function() { if (bubble.parentNode) bubble.remove(); } });
+      } catch(e) { if (bubble.parentNode) bubble.remove(); }
+      if (overlay.parentNode) overlay.remove();
+      // Cooldown
+      _onboardingCooldown = true;
+      setTimeout(function() { _onboardingCooldown = false; }, 500);
+    }
+
+    overlay.onclick = dismiss;
+
+    // Auto-dismiss option
+    if (opts.autoDismiss) {
+      setTimeout(dismiss, opts.autoDismiss);
+    }
+
+    return { dismiss: dismiss };
+  }
+
+  // Skip tutorial button (persistent during first game)
+  if (!_onboardingSkipped) {
+    var skipBtn = document.createElement('div');
+    skipBtn.style.cssText = "position:fixed;top:8px;right:12px;z-index:810;font-family:'Rajdhani';font-weight:600;font-size:9px;color:#555;letter-spacing:1px;cursor:pointer;padding:6px;";
+    skipBtn.textContent = 'SKIP TUTORIAL';
+    skipBtn.onclick = function() {
+      localStorage.setItem('torch_onboarding_complete', '1');
+      _onboardingSkipped = true;
+      skipBtn.remove();
+      // Dismiss any active bubble
+      _onboardingActive = false;
+      document.querySelectorAll('[style*="z-index:800"]').forEach(function(ov) { ov.remove(); });
+      document.querySelectorAll('[style*="z-index:802"]').forEach(function(b) { b.remove(); });
+    };
+    el.appendChild(skipBtn);
+  }
+
   /** Flame badge CONTINUE button — shared across overlays */
   function _flameBadgeContinue(text, onTap) {
     var FLAME = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
@@ -2337,6 +2450,13 @@ export function buildGameplay() {
       stRow.appendChild(fgBtn);
       fourthBar.appendChild(stRow);
       panel.appendChild(fourthBar);
+
+      // Onboarding: 4th down decision
+      if (shouldShowHint('torch_hint_fourth_down')) {
+        setTimeout(function() {
+          showOnboardingBubble(fourthBar, '4th down — decision time. Go for it or play it safe.', 'torch_hint_fourth_down');
+        }, 500);
+      }
     }
 
     // ── 8-CARD TRAY (new component) ──
@@ -2400,6 +2520,7 @@ export function buildGameplay() {
       },
       onSelectPlay: function(play) {
         if (phase === 'busy') return;
+        if (_idleTimer) { clearTimeout(_idleTimer); _idleTimer = null; }
         selPl = selPl === play ? null : play; // toggle
         if (_tutorialStep === 1) { _tutorialStep = 2; if (panel._tutOverlay) { panel._tutOverlay.remove(); panel._tutOverlay = null; } }
         // If both selected, show torch phase only if player has cards
@@ -2511,6 +2632,48 @@ export function buildGameplay() {
     });
     panel.appendChild(trayEl);
     _isNewDrive = false; // consume the flag after rendering
+
+    // ── ONBOARDING HINTS ──
+    if (!_onboardingSkipped && !_onboardingActive) {
+      setTimeout(function() {
+        // S1: Pick a play (first snap, offense)
+        if (snapCount === 0 && isOff && phase === 'play' && !selPl && shouldShowHint('torch_hint_pick_play')) {
+          var playRow = trayEl.querySelector('.CT-row');
+          if (playRow) showOnboardingBubble(playRow, 'Pick a play to call it.', 'torch_hint_pick_play');
+        }
+        // S3: Pick a player (first snap, offense, play selected)
+        else if (snapCount === 0 && isOff && phase === 'player' && selPl && !selP && shouldShowHint('torch_hint_pick_player')) {
+          var rows = trayEl.querySelectorAll('.CT-row');
+          var playerRow = rows.length > 1 ? rows[1] : rows[0];
+          if (playerRow) showOnboardingBubble(playerRow, 'Now pick your star player.', 'torch_hint_pick_player');
+        }
+        // S5: Snap button ready (first snap, both selected)
+        else if (snapCount === 0 && isOff && selPl && selP && phase !== 'torch' && shouldShowHint('torch_hint_snap')) {
+          var snapBtnEl = trayEl.querySelector('.CT-snap-btn');
+          if (snapBtnEl) showOnboardingBubble(snapBtnEl, "Hit SNAP to run the play. Let's see what happens!", 'torch_hint_snap');
+        }
+        // D1: First defense
+        else if (!isOff && shouldShowHint('torch_hint_defense')) {
+          var defRow = trayEl.querySelector('.CT-row');
+          if (defRow) showOnboardingBubble(defRow, 'Other team has the ball now. Pick a defensive play to stop them.', 'torch_hint_defense');
+        }
+        // TC1: Torch cards (after snap 4, has cards)
+        else if (snapCount >= 4 && torchInventory.length > 0 && phase === 'torch' && shouldShowHint('torch_hint_torch_card')) {
+          var torchRow = trayEl.querySelector('.CT-torch-row') || trayEl.querySelector('.CT-row');
+          if (torchRow) showOnboardingBubble(torchRow, 'Got a torch card? Tap here for a bonus this snap. Totally optional.', 'torch_hint_torch_card');
+        }
+      }, 400);
+
+      // S6: Idle fallback (8s without action)
+      if (phase === 'play' && !selPl && !_onboardingSkipped) {
+        if (_idleTimer) clearTimeout(_idleTimer);
+        _idleTimer = setTimeout(function() {
+          if (phase === 'play' && !selPl && !_onboardingActive && !_onboardingSkipped) {
+            showOnboardingBubble(trayEl, "Pick a play — any play works, you'll get the hang of it.", null);
+          }
+        }, 8000);
+      }
+    }
 
     // Torch card tutorial — disabled, will revisit
     if (false) {
@@ -3763,6 +3926,14 @@ export function buildGameplay() {
         drawBug(); drawField();
       }
 
+      // Onboarding: first result explanation
+      if (snapCount <= 1 && shouldShowHint('torch_hint_result')) {
+        setTimeout(function() {
+          var resultEl = overlay.querySelector('.T-clash-result') || nonTdWrap || overlay;
+          showOnboardingBubble(resultEl, "Green means good for you. Red means bad. That's all you need to know.", 'torch_hint_result', { autoDismiss: 3000 });
+        }, 1500);
+      }
+
       // ── GAME OVER — dramatic freeze for close games ──
       if (gs.gameOver && !res._isConversion) {
         var _margin = Math.abs(gs.ctScore - gs.irScore);
@@ -4671,6 +4842,14 @@ export function buildGameplay() {
       } catch(e) { hero.style.opacity='1';hero.style.transform='scale(1)'; sub.style.opacity='0.8'; desc.style.opacity='1'; }
     });
     setTimeout(function() { if (ov.parentNode) { ov.style.opacity = '0'; setTimeout(function() { if (ov.parentNode) ov.remove(); }, 250); } }, 2500);
+
+    // Onboarding: 2-minute drill
+    if (shouldShowHint('torch_hint_two_min')) {
+      setTimeout(function() {
+        var clockEl = _bugEls.clockEl || _bugEls.snapEl;
+        if (clockEl) showOnboardingBubble(clockEl, '2-minute drill! Clock runs on completions and runs. Incompletes stop it.', 'torch_hint_two_min', { autoDismiss: 3000 });
+      }, 2500);
+    }
   }
 
   // ── COIN TOSS OVERLAY ──
@@ -4725,6 +4904,13 @@ export function buildGameplay() {
     label.textContent = 'TAP TO FLIP';
     ov.appendChild(coin);
     ov.appendChild(label);
+
+    // Onboarding: coin toss
+    if (shouldShowHint('torch_hint_coin_toss')) {
+      setTimeout(function() {
+        showOnboardingBubble(coin, 'Tap to flip. Winner chooses: draw a free torch card or receive the kickoff.', 'torch_hint_coin_toss');
+      }, 800);
+    }
 
     coin.onclick = function() {
       coin.onclick = null;
@@ -4952,6 +5138,13 @@ export function buildGameplay() {
       cardWraps.push(wrap);
     });
     ov.appendChild(cardRow);
+
+    // Onboarding: face-down cards
+    if (shouldShowHint('torch_hint_face_down')) {
+      setTimeout(function() {
+        showOnboardingBubble(cardRow, 'Torch cards are single-use power-ups. Pick one — you\'ll see what it does.', 'torch_hint_face_down');
+      }, 1200);
+    }
   }
 
   // AI picks a face-down card — shows card backs, auto-selects one, flips to reveal
@@ -5131,6 +5324,14 @@ export function buildGameplay() {
         gsap.to(contBtn, { opacity: 1, y: 0, duration: 0.2, delay: 0.45 });
       } catch(e) { label.style.opacity='1';teamEl.style.opacity='1';teamEl.style.transform='scale(1)';resEl.style.opacity='1';contBtn.style.opacity='1'; }
     });
+
+    // Onboarding: kickoff
+    if (gs.possession === hAbbr && shouldShowHint('torch_hint_kickoff')) {
+      setTimeout(function() {
+        var contEl = kov.querySelector('button') || kov;
+        showOnboardingBubble(contEl, "You've got the ball. Time to drive.", 'torch_hint_kickoff');
+      }, 800);
+    }
   }
 
   // ── TRANSITIONS ──

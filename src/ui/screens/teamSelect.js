@@ -309,5 +309,22 @@ export function buildTeamSelect() {
     }
   }); });
 
+  // Onboarding: team select hint
+  if (!localStorage.getItem('torch_onboarding_complete') && !localStorage.getItem('torch_hint_team_select')) {
+    setTimeout(function() {
+      if (panels.length > 0 && !localStorage.getItem('torch_hint_team_select')) {
+        var ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.5);';
+        var bub = document.createElement('div');
+        bub.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:802;max-width:260px;background:rgba(10,8,4,0.95);border:1px solid #1a1a1a;border-left:3px solid #FF4511;border-radius:8px;padding:12px 16px;box-shadow:0 8px 24px rgba(0,0,0,0.6);font-family:'Rajdhani';font-weight:600;font-size:13px;color:#fff;line-height:1.3;text-align:center;";
+        bub.textContent = 'Pick your squad. Each team plays a little different.';
+        ov.onclick = function() { localStorage.setItem('torch_hint_team_select', '1'); ov.remove(); bub.remove(); };
+        el.appendChild(ov);
+        el.appendChild(bub);
+        try { gsap.from(bub, { opacity: 0, y: 8, scale: 0.95, duration: 0.25, ease: 'back.out(1.5)' }); } catch(e) {}
+      }
+    }, 1200);
+  }
+
   return el;
 }

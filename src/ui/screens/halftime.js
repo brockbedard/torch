@@ -229,6 +229,31 @@ export function buildHalftime() {
   shopBox.appendChild(offersRow);
   content.appendChild(shopBox);
 
+  // Onboarding: halftime store
+  if (!localStorage.getItem('torch_onboarding_complete') && !localStorage.getItem('torch_hint_halftime_store')) {
+    setTimeout(function() {
+      if (!localStorage.getItem('torch_hint_halftime_store')) {
+        var htOv = document.createElement('div');
+        htOv.style.cssText = 'position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.5);';
+        var htBub = document.createElement('div');
+        htBub.style.cssText = "position:fixed;z-index:802;max-width:260px;background:rgba(10,8,4,0.95);border:1px solid #1a1a1a;border-left:3px solid #FF4511;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.6);font-family:'Rajdhani';font-weight:600;font-size:13px;color:#fff;line-height:1.3;";
+        htBub.textContent = 'Spend your TORCH points on new cards. These last the rest of the game.';
+        // Position near the shop
+        requestAnimationFrame(function() {
+          var shopRect = shopBox.getBoundingClientRect();
+          htBub.style.top = (shopRect.top - 50) + 'px';
+          htBub.style.left = Math.max(12, shopRect.left) + 'px';
+        });
+        function dismissHt() { localStorage.setItem('torch_hint_halftime_store', '1'); htOv.remove(); htBub.remove(); }
+        htOv.onclick = dismissHt;
+        setTimeout(dismissHt, 3000); // auto-dismiss
+        el.appendChild(htOv);
+        el.appendChild(htBub);
+        try { gsap.from(htBub, { opacity: 0, y: 8, scale: 0.95, duration: 0.25, ease: 'back.out(1.5)' }); } catch(e) {}
+      }
+    }, 1000);
+  }
+
   // ── 2ND HALF RECEIVE INFO ──
   var receiverIsHuman = !GS.humanReceives;
   var receiverTeam = receiverIsHuman ? team : opp;
