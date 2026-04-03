@@ -276,7 +276,7 @@ const CSS = `
 @keyframes coinGlow{0%,100%{box-shadow:0 0 20px rgba(235,176,16,0.3)}50%{box-shadow:0 0 40px rgba(235,176,16,0.5),0 0 60px rgba(255,69,17,0.2)}}
 @keyframes pulseHint{0%,100%{opacity:0.5}50%{opacity:1}}
 @keyframes floatCard{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-.T-clash-overlay{position:absolute;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;pointer-events:auto}
+.T-clash-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;pointer-events:auto}
 .T-clash-dim{position:absolute;inset:0;background:#0A0804;transition:opacity 0.3s}
 .T-clash-result{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:6px}
 .T-clash-yds{font-family:'Teko';font-weight:700;font-size:64px;line-height:1;text-shadow:0 0 24px currentColor;animation:T-clash-yds 0.6s cubic-bezier(0.22,1.3,0.36,1) both}
@@ -2222,8 +2222,6 @@ export function buildGameplay() {
   // ── RENDER PANEL ──
   function drawPanel() {
     panel.innerHTML = '';
-    // Sweep lingering clash overlays from previous plays
-    el.querySelectorAll('.T-clash-overlay').forEach(function(ov) { ov.remove(); });
     const isOff = gs.possession === hAbbr;
     const sides = gs.getCurrentSides();
     // Filter out OL/DL — only show skill position players, then take 4
@@ -3216,7 +3214,7 @@ export function buildGameplay() {
     dim.className = 'T-clash-dim';
     dim.style.opacity = '1';
     overlay.appendChild(dim);
-    el.appendChild(overlay);
+    document.body.appendChild(overlay);
 
     // ── PHASE 1: COMMIT (0.2s) — screen dims, snap sound ──
     SND.cardSnap();
@@ -3228,7 +3226,7 @@ export function buildGameplay() {
     overlay.appendChild(blackout);
     requestAnimationFrame(function() { blackout.style.opacity = tier === 1 ? '0.6' : tier === 2 ? '0.8' : '0.95'; });
 
-    _setTimeout(function() {
+    setTimeout(function() {
       if (skipped) { doSettle(); return; }
 
       // ── PHASE 3: RESULT SLAM — result text slams in, screen shake, particles ──
@@ -3315,7 +3313,7 @@ export function buildGameplay() {
 
       // ── PHASE 4: SETTLE — proceed to result display ──
       var settleDelay = tier === 1 ? 100 : tier === 2 ? 300 : 500;
-      _setTimeout(function() {
+      setTimeout(function() {
         if (skipped) { doSettle(); return; }
         doSettle();
       }, settleDelay);
@@ -4020,15 +4018,14 @@ export function buildGameplay() {
       }, 2000);
 
       // ── BEAT 4: READY (cleanup + proceed) ──
-      _setTimeout(function() {
-        // Clean up overlay
+      // Uses raw setTimeout — this timer MUST fire to continue the game
+      setTimeout(function() {
+        // Clean up overlay from document.body
         if (overlay.parentNode) {
           overlay.style.opacity = '0';
           overlay.style.transition = 'opacity 0.4s';
-          setTimeout(function() { if (overlay.parentNode) overlay.remove(); }, 400);
+          setTimeout(function() { if (overlay.parentNode) overlay.remove(); }, 500);
         }
-        // Safety: force-remove after 1s regardless
-        setTimeout(function() { if (overlay.parentNode) overlay.remove(); }, 1000);
 
         // TORCH points — ALL increases go through the sequential flyer animation
         var finalTotal = hAbbr === 'CT' ? gs.getSummary().ctTorchPts : gs.getSummary().irTorchPts;
