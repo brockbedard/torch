@@ -419,12 +419,16 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     result.torchCardUsed = 'truck_stick';
   }
 
-  // PRIME TIME (Silver, pre-snap): featured player OVR = 99
-  // Already applied via ovrMods earlier — we add the difference here
+  // PRIME TIME (Silver, pre-snap): featured player OVR = 99 this snap
+  // Boost yards based on the gap between actual OVR and 99 — more impact for weaker players
   if (oCard === 'prime_time') {
-    var primeBoost = Math.round(((99 - (featuredOff.ovr || 78)) / 5) * 0.5);
+    var _origOvr = featuredOff.ovr || 78;
+    var primeBoost = Math.max(2, Math.round((99 - _origOvr) * 0.2));
     result.yards += primeBoost;
-    result.description = result.description || (featuredOff.name + " is in PRIME TIME mode! +" + primeBoost + " yard boost!");
+    // Also prevent negative outcomes — PRIME TIME player doesn't get sacked or fumble
+    if (result.yards < 0) result.yards = Math.max(0, result.yards + 3);
+    if (result.isFumble) { result.isFumble = false; result.isFumbleLost = false; }
+    result.description = result.description || (featuredOff.name + ' goes PRIME TIME! +' + primeBoost + ' yards!');
     result.torchCardUsed = 'prime_time';
   }
 

@@ -396,7 +396,7 @@ export function renderCardTray(opts) {
         ghost.style.opacity = '0.2';
         ghost.style.pointerEvents = 'none';
       } else {
-        ghost.onclick = function() { SND.select(); if (opts.onSelectPlay) opts.onSelectPlay(play); };
+        ghost.onclick = function() { SND.cardThud(); if (opts.onSelectPlay) opts.onSelectPlay(play); };
       }
       playRow.appendChild(ghost);
       playCardEls.push(ghost);
@@ -456,7 +456,7 @@ export function renderCardTray(opts) {
         updateDiscBar();
         return;
       }
-      SND.select(); Haptic.cardSelect();
+      SND.cardThud(); Haptic.cardSelect();
       if (opts.onSelectPlay) opts.onSelectPlay(play);
     };
     playRow.appendChild(c);
@@ -485,7 +485,7 @@ export function renderCardTray(opts) {
       ghost.className = 'CT-card';
       ghost.style.cssText = 'border:2px dashed #00ff4433;background:rgba(0,255,68,0.03);display:flex;align-items:center;justify-content:center;';
       ghost.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:#00ff4466;letter-spacing:1px;\">ON FIELD</div>";
-      ghost.onclick = function() { SND.select(); if (opts.onSelectPlayer) opts.onSelectPlayer(p); };
+      ghost.onclick = function() { SND.cardThud(); if (opts.onSelectPlayer) opts.onSelectPlayer(p); };
       playerRow.appendChild(ghost);
       playerCardEls.push(ghost);
       playerCards.push(p);
@@ -571,7 +571,7 @@ export function renderCardTray(opts) {
         return;
       }
       if (p.injured) return;
-      SND.select(); Haptic.cardSelect();
+      SND.cardThud(); Haptic.cardSelect();
       if (opts.onSelectPlayer) opts.onSelectPlayer(p);
     };
     playerRow.appendChild(c);

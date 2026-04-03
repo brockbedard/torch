@@ -137,7 +137,7 @@ export function buildRoster() {
 
   // ── START GAME BUTTON ──
   var btnWrap = document.createElement('div');
-  btnWrap.style.cssText = 'flex-shrink:0;padding:8px 14px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom,0px));';
+  btnWrap.style.cssText = 'flex-shrink:0;padding:8px 14px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom,0px));position:relative;z-index:25;';
 
   var startBtn = buildFlameBadgeButton('START GAME', function() {
     SND.snap();
@@ -146,9 +146,6 @@ export function buildRoster() {
 
   btnWrap.appendChild(startBtn);
   el.appendChild(btnWrap);
-
-  // Bottom accent
-  el.appendChild(buildAccentBar(teamColor, teamColor));
 
   return el;
 }

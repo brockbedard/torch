@@ -252,9 +252,9 @@ export function buildEndGame() {
   var cpuScore = gs.irScore;
   var humanWon = humanScore > cpuScore;
   var tied = humanScore === cpuScore;
-  var humanTorch = gs.ctTorchPts;
-  var winBonus = humanWon ? 20 : 0;
-  var totalEarned = humanTorch + winBonus;
+  var humanTorch = gs.ctTorchPts; // Already includes win bonus from engine
+  var winBonus = 0; // Win bonus already applied in gameState._endGame()
+  var totalEarned = humanTorch;
 
   // Persist
   var season = GS.season || { torchCards: [], carryoverPoints: 0, opponents: [], currentGame: 0, results: [] };
@@ -511,7 +511,7 @@ export function buildEndGame() {
   playBtn.style.cssText = "width:100%;padding:16px;border-radius:6px;border:none;font-family:'Teko';font-weight:700;font-size:24px;letter-spacing:6px;color:" + ctaColor + ";background:" + ctaGrad + ";cursor:pointer;opacity:0;";
   playBtn.textContent = ctaText;
   playBtn.onclick = function() {
-    SND.snap();
+    SND.click();
     if (seasonComplete) {
       setGs(function(s) {
         return Object.assign({}, s, {

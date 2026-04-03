@@ -71,7 +71,7 @@ export function buildPregame() {
 
   // ── 2. CARDS AREA ──
   var cardsArea = document.createElement('div');
-  cardsArea.style.cssText = 'flex:1;display:flex;flex-direction:column;padding:8px 14px;gap:8px;min-height:0;';
+  cardsArea.style.cssText = 'flex:1;display:flex;flex-direction:column;justify-content:center;padding:8px 14px;gap:12px;min-height:0;';
 
   // ── 3. AWAY TEAM CARD ──
   var awayCard = buildTeamCard(awayTeam, awayId, awayColor, 'away');
@@ -161,13 +161,13 @@ export function buildPregame() {
   }); });
 
   // ── SOUNDS ──
-  SND.click();
-  setTimeout(function() { try { SND.hit(); } catch(e) {} }, isFast ? 300 : 700);
+  SND.whooshIn();
+  setTimeout(function() { try { SND.whooshIn(); } catch(e) {} }, isFast ? 300 : 700);
 
   // ── TAP TO CONTINUE ──
   var skipped = false;
   var canSkip = false;
-  setTimeout(function() { canSkip = true; }, isFast ? 1200 : 2500);
+  setTimeout(function() { canSkip = true; }, isFast ? 1500 : 3500);
   function skip() {
     if (skipped || !canSkip) return;
     skipped = true;
@@ -181,22 +181,21 @@ export function buildPregame() {
   el.onclick = skip;
 
   // Auto-advance
-  setTimeout(function() { if (!skipped) skip(); }, isFast ? 2500 : 6000);
+  setTimeout(function() { if (!skipped) skip(); }, isFast ? 3500 : 8000);
 
   return el;
 }
 
-// ── Build a team card ──
+// ── Build a team card — both cards use same layout (badge left, text right) ──
 function buildTeamCard(tm, tmId, accent, side) {
   var isHome = side === 'home';
   var card = document.createElement('div');
-  card.style.cssText = 'flex:1;border-radius:8px;border:1.5px solid ' + accent + '44;overflow:hidden;position:relative;display:flex;align-items:center;padding:0 20px;' +
-    (isHome ? 'flex-direction:row-reverse;' : '') +
-    'background:linear-gradient(' + (isHome ? '190' : '170') + 'deg,' + accent + '18,' + accent + '08,#0a0804 60%);';
+  card.style.cssText = 'border-radius:8px;border:1.5px solid ' + accent + '44;overflow:hidden;position:relative;display:flex;align-items:center;padding:20px;' +
+    'background:linear-gradient(170deg,' + accent + '18,' + accent + '08,#0a0804 60%);flex-shrink:0;';
 
-  // Accent edge
+  // Left accent edge (both cards)
   var edge = document.createElement('div');
-  edge.style.cssText = 'position:absolute;' + (isHome ? 'right' : 'left') + ':0;top:0;bottom:0;width:3px;background:' + accent + ';';
+  edge.style.cssText = 'position:absolute;left:0;top:0;bottom:0;width:3px;background:' + accent + ';';
   card.appendChild(edge);
 
   // Shimmer
@@ -204,15 +203,15 @@ function buildTeamCard(tm, tmId, accent, side) {
   shimmer.style.cssText = 'position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 30%,' + accent + '06 48%,transparent 70%);background-size:200px 100%;animation:shimmer 5s ease-in-out infinite;';
   card.appendChild(shimmer);
 
-  // Badge
+  // Badge (left, vertically centered)
   var badgeWrap = document.createElement('div');
   badgeWrap.style.cssText = 'flex-shrink:0;position:relative;z-index:1;filter:drop-shadow(0 6px 16px rgba(0,0,0,0.6)) drop-shadow(0 0 20px ' + accent + '33);';
   badgeWrap.innerHTML = renderTeamBadge(tmId, 72);
   card.appendChild(badgeWrap);
 
-  // Info column
+  // Info column (right of badge)
   var info = document.createElement('div');
-  info.style.cssText = 'flex:1;min-width:0;position:relative;z-index:1;' + (isHome ? 'text-align:right;margin-right:16px;' : 'margin-left:16px;');
+  info.style.cssText = 'flex:1;min-width:0;position:relative;z-index:1;margin-left:16px;';
 
   var schoolName = (tm.school || '').toUpperCase();
   var label = document.createElement('div');
@@ -225,29 +224,27 @@ function buildTeamCard(tm, tmId, accent, side) {
   nameEl.textContent = tm.name;
   info.appendChild(nameEl);
 
-  // Scheme + vibe row
-  var infoRow = document.createElement('div');
-  infoRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:4px;' + (isHome ? 'justify-content:flex-end;' : '');
+  // Scheme (single line with dot separator) + vibe
+  var schemeStr = (tm.offScheme || '').replace(/\s+/g, ' ');
+  var vibeStr = TEAM_VIBES[tmId] || tm.vibe || '';
 
-  var schemeEl = document.createElement('span');
-  schemeEl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:10px;color:" + accent + ";letter-spacing:1.5px;";
-  schemeEl.textContent = tm.offScheme;
-  infoRow.appendChild(schemeEl);
+  // Scheme label
+  var schemeEl = document.createElement('div');
+  schemeEl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:10px;color:" + accent + ";letter-spacing:1.5px;margin-top:4px;";
+  schemeEl.textContent = schemeStr;
+  info.appendChild(schemeEl);
 
-  var divider = document.createElement('span');
-  divider.style.cssText = 'width:1px;height:10px;background:rgba(255,255,255,0.08);';
-  infoRow.appendChild(divider);
-
-  var vibeEl = document.createElement('span');
-  vibeEl.style.cssText = "font-family:'Rajdhani';font-weight:500;font-size:10px;color:rgba(255,255,255,0.3);";
-  vibeEl.textContent = TEAM_VIBES[tmId] || tm.vibe || '';
-  infoRow.appendChild(vibeEl);
-
-  info.appendChild(infoRow);
+  // Vibe description (separate line, wraps naturally)
+  if (vibeStr) {
+    var vibeEl = document.createElement('div');
+    vibeEl.style.cssText = "font-family:'Rajdhani';font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;line-height:1.3;";
+    vibeEl.textContent = vibeStr;
+    info.appendChild(vibeEl);
+  }
 
   // Ratings row
   var ratingsRow = document.createElement('div');
-  ratingsRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:8px;' + (isHome ? 'justify-content:flex-end;' : '');
+  ratingsRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:6px;';
   ratingsRow.innerHTML =
     '<div style="display:flex;align-items:center;gap:4px;">' +
       "<span style=\"font-family:'Rajdhani';font-weight:600;font-size:9px;color:#888;letter-spacing:1px;\">OFF</span>" +

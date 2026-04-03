@@ -68,7 +68,7 @@ const CSS = `
 .T-sb-center{padding:6px 14px;background:#0a0a0a;min-width:80px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .T-sb-half{font-family:'Rajdhani';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:2px;line-height:1}
 .T-sb-snap{font-family:'Teko';font-weight:700;font-size:18px;color:#aaa;line-height:1;margin-top:2px;animation:segFlicker 5s ease-in-out 2.3s infinite}
-.T-sb-divider{width:40px;height:1px;background:#333;margin:4px 0}
+.T-sb-divider{display:none}
 .T-sb-down{font-family:'Oswald',sans-serif;font-weight:700;font-size:11px;color:#FF6B00;letter-spacing:1px;line-height:1}
 .T-sb-ball{font-family:'Rajdhani';font-weight:600;font-size:10px;color:#888;letter-spacing:0.5px;margin-top:1px}
 .T-sb-clock{font-family:'Teko';font-weight:900;font-size:28px;line-height:1}
@@ -653,8 +653,8 @@ export function buildGameplay() {
   }
 
   function spendTorchPoints(amount) {
-    if (hAbbr === 'CT') gs.ctTorchPts -= amount;
-    else gs.irTorchPts -= amount;
+    if (hAbbr === 'CT') gs.ctTorchPts = Math.max(0, gs.ctTorchPts - amount);
+    else gs.irTorchPts = Math.max(0, gs.irTorchPts - amount);
   }
 
   // Trigger shop after a big moment
@@ -1015,6 +1015,15 @@ export function buildGameplay() {
     }
 
     drawTorchBanner();
+
+    // Onboarding: down & distance explanation (fire once at snap 3)
+    if (snapCount === 3 && !_onboardingActive && shouldShowHint('torch_hint_down_distance')) {
+      localStorage.setItem('torch_hint_down_distance', '1'); // Mark immediately to prevent re-queuing
+      setTimeout(function() {
+        var downEl = _bugEls.downEl;
+        if (downEl) showOnboardingBubble(downEl, 'That\'s your down and distance. Get 10 yards in 4 plays for a first down.', null, { autoDismiss: 3000 });
+      }, 800);
+    }
 
     // Dim non-active UI during tutorial
     var _isTut = _tutorialStep > 0 && snapCount === 0;
@@ -1462,7 +1471,7 @@ export function buildGameplay() {
         } else {
           playSlot.style.cursor = 'pointer';
           playSlot.onclick = function() {
-            SND.select();
+            SND.cardThud();
             try { gsap.to(playSlot, { y: -30, opacity: 0, scale: 0.85, duration: 0.2, ease: 'power2.in', onComplete: function() {
               selPl = null; phase = 'play'; drawField(); drawPanel();
             }}); } catch(e) { selPl = null; phase = 'play'; drawField(); drawPanel(); }
@@ -1487,7 +1496,7 @@ export function buildGameplay() {
         } else {
           playerSlot.style.cursor = 'pointer';
           playerSlot.onclick = function() {
-            SND.select();
+            SND.cardThud();
             try { gsap.to(playerSlot, { y: -30, opacity: 0, scale: 0.85, duration: 0.2, ease: 'power2.in', onComplete: function() {
               selP = null; phase = 'play'; drawField(); drawPanel();
             }}); } catch(e) { selP = null; phase = 'play'; drawField(); drawPanel(); }
@@ -1532,7 +1541,7 @@ export function buildGameplay() {
       if (torchSlot) {
         torchSlot.style.cursor = 'pointer';
         torchSlot.onclick = function() {
-          SND.select();
+          SND.cardThud();
           try { gsap.to(torchSlot, { y: -30, opacity: 0, scale: 0.85, duration: 0.2, ease: 'power2.in', onComplete: function() {
             var tcObj = TORCH_CARDS.find(function(c) { return c.id === selTorch; });
             if (selectedPreSnap || tcObj) { torchInventory.push(selectedPreSnap || tcObj); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
@@ -1708,7 +1717,7 @@ export function buildGameplay() {
 
     // Commentary text
     if (driveCommLine1) {
-      html += '<div class="T-drive-comm"><span style="color:' + driveColor + ';">Last Play: </span>' + driveCommLine1 + '</div>';
+      html += '<div class="T-drive-comm">' + driveCommLine1 + '</div>';
       // Show yards + next down & distance instead of commentary sub-line
       if (driveSummaryLog.length > 0) {
         var _lastEntry = driveSummaryLog[driveSummaryLog.length - 1];
@@ -1840,6 +1849,111 @@ export function buildGameplay() {
     imp.style.boxShadow = '0 0 30px ' + color;
     strip.appendChild(imp);
     setTimeout(function() { imp.remove(); }, 400);
+  }
+
+  // ── ONBOARDING SYSTEM — learn by doing ──
+  var _onboardingActive = false; // true while a hint bubble is showing
+  var _onboardingCooldown = false; // 500ms gap between hints
+  var _onboardingSkipped = !!localStorage.getItem('torch_onboarding_complete');
+  var _idleTimer = null;
+
+  function shouldShowHint(key) {
+    if (_onboardingSkipped) return false;
+    if (_onboardingActive) return false;
+    if (_onboardingCooldown) return false;
+    if (localStorage.getItem(key)) return false;
+    return true;
+  }
+
+  function showOnboardingBubble(targetEl, text, storageKey, opts) {
+    opts = opts || {};
+    if (!targetEl) return null;
+    if (storageKey && !shouldShowHint(storageKey)) return null;
+    _onboardingActive = true;
+
+    // Spotlight overlay — pointer-events:none so taps pass through to the target
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.6);pointer-events:auto;';
+
+    // Store original styles
+    var origZ = targetEl.style.zIndex;
+    var origPos = targetEl.style.position;
+    var origPE = targetEl.style.pointerEvents;
+
+    // Bubble
+    var bubble = document.createElement('div');
+    bubble.style.cssText = "position:fixed;z-index:802;max-width:260px;background:rgba(10,8,4,0.95);border:1px solid #1a1a1a;border-left:3px solid #FF4511;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.6);font-family:'Rajdhani';font-weight:600;font-size:13px;color:#fff;line-height:1.3;pointer-events:none;";
+    bubble.textContent = text;
+
+    // Position bubble near target
+    document.body.appendChild(overlay);
+    document.body.appendChild(bubble);
+
+    requestAnimationFrame(function() {
+      var rect = targetEl.getBoundingClientRect();
+      var bw = bubble.offsetWidth;
+      var bh = bubble.offsetHeight;
+      var left = Math.max(12, Math.min(window.innerWidth - bw - 12, rect.left + rect.width / 2 - bw / 2));
+
+      // Place above or below target
+      if (rect.top > window.innerHeight / 2) {
+        // Target is in lower half — bubble goes above
+        bubble.style.top = (rect.top - bh - 12) + 'px';
+      } else {
+        // Target is in upper half — bubble goes below
+        bubble.style.top = (rect.bottom + 12) + 'px';
+      }
+      bubble.style.left = left + 'px';
+
+      try {
+        gsap.from(bubble, { opacity: 0, y: 8, scale: 0.95, duration: 0.25, ease: 'back.out(1.5)' });
+      } catch(e) {}
+    });
+
+    // Dismiss function
+    var dismissed = false;
+    function dismiss() {
+      if (dismissed) return;
+      dismissed = true;
+      _onboardingActive = false;
+      if (storageKey) localStorage.setItem(storageKey, '1');
+      targetEl.style.zIndex = origZ || '';
+      targetEl.style.position = origPos || '';
+      targetEl.style.pointerEvents = origPE || '';
+      try {
+        gsap.to(bubble, { opacity: 0, duration: 0.15, onComplete: function() { if (bubble.parentNode) bubble.remove(); } });
+      } catch(e) { if (bubble.parentNode) bubble.remove(); }
+      if (overlay.parentNode) overlay.remove();
+      // Cooldown
+      _onboardingCooldown = true;
+      setTimeout(function() { _onboardingCooldown = false; }, 500);
+    }
+
+    overlay.onclick = dismiss;
+
+    // Auto-dismiss option
+    if (opts.autoDismiss) {
+      setTimeout(dismiss, opts.autoDismiss);
+    }
+
+    return { dismiss: dismiss };
+  }
+
+  // Skip tutorial button (persistent during first game)
+  if (!_onboardingSkipped) {
+    var skipBtn = document.createElement('div');
+    skipBtn.style.cssText = "position:fixed;top:8px;right:12px;z-index:810;font-family:'Rajdhani';font-weight:600;font-size:9px;color:#555;letter-spacing:1px;cursor:pointer;padding:6px;";
+    skipBtn.textContent = 'SKIP TUTORIAL';
+    skipBtn.onclick = function() {
+      localStorage.setItem('torch_onboarding_complete', '1');
+      _onboardingSkipped = true;
+      skipBtn.remove();
+      // Dismiss any active bubble
+      _onboardingActive = false;
+      document.querySelectorAll('[style*="z-index:800"]').forEach(function(ov) { ov.remove(); });
+      document.querySelectorAll('[style*="z-index:802"]').forEach(function(b) { b.remove(); });
+    };
+    el.appendChild(skipBtn);
   }
 
   /** Flame badge CONTINUE button — shared across overlays */
@@ -2030,7 +2144,9 @@ export function buildGameplay() {
       }
 
       if (r.isTouchdown) {
-        SND.td();
+        try { SND.anvilImpact(); } catch(e) {}
+        setTimeout(function() { try { SND.td(); } catch(e) {} }, 100);
+        if (tier === 5) { setTimeout(function() { try { SND.horn(); } catch(e) {} }, 400); }
         shakeScreen(6);
         var tColor = isDef ? '#ff0040' : '#00ff44';
         flashField(tColor + '88', 800);
@@ -2337,6 +2453,13 @@ export function buildGameplay() {
       stRow.appendChild(fgBtn);
       fourthBar.appendChild(stRow);
       panel.appendChild(fourthBar);
+
+      // Onboarding: 4th down decision
+      if (shouldShowHint('torch_hint_fourth_down')) {
+        setTimeout(function() {
+          showOnboardingBubble(fourthBar, '4th down — decision time. Go for it or play it safe.', 'torch_hint_fourth_down');
+        }, 500);
+      }
     }
 
     // ── 8-CARD TRAY (new component) ──
@@ -2400,6 +2523,7 @@ export function buildGameplay() {
       },
       onSelectPlay: function(play) {
         if (phase === 'busy') return;
+        if (_idleTimer) { clearTimeout(_idleTimer); _idleTimer = null; }
         selPl = selPl === play ? null : play; // toggle
         if (_tutorialStep === 1) { _tutorialStep = 2; if (panel._tutOverlay) { panel._tutOverlay.remove(); panel._tutOverlay = null; } }
         // If both selected, show torch phase only if player has cards
@@ -2453,6 +2577,26 @@ export function buildGameplay() {
         if (idx >= 0) torchInventory.splice(idx, 1);
         if (GS.season) GS.season.torchCards = torchInventory.slice();
         phase = 'ready';
+
+        // SCOUT TEAM: reveal opponent's play
+        if (tc.id === 'scout_team') {
+          var _stSides = gs.getCurrentSides();
+          var _stOppPlay = isOff
+            ? aiSelectPlay(_stSides.defHand, 'defense', gs.difficulty, { down: gs.down, distance: gs.distance, ballPos: gs.ballPosition })
+            : aiSelectPlay(_stSides.offHand, 'offense', gs.difficulty, { down: gs.down, distance: gs.distance, ballPos: gs.ballPosition, teamId: oppId });
+          if (_stOppPlay) {
+            var _stOv = document.createElement('div');
+            _stOv.style.cssText = "position:fixed;inset:0;z-index:660;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);pointer-events:auto;opacity:0;";
+            _stOv.innerHTML =
+              "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#EBB010;letter-spacing:3px;margin-bottom:6px;\">OPPONENT'S PLAY</div>" +
+              "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:#fff;letter-spacing:2px;\">" + (_stOppPlay.name || 'Unknown') + "</div>" +
+              "<div style=\"font-family:'Rajdhani';font-size:12px;color:" + oTeam.accent + ";margin-top:4px;letter-spacing:1px;\">" + (_stOppPlay.cardType || _stOppPlay.playType || '') + "</div>";
+            el.appendChild(_stOv);
+            try { gsap.to(_stOv, { opacity: 1, duration: 0.2 }); } catch(e) { _stOv.style.opacity = '1'; }
+            setTimeout(function() { try { gsap.to(_stOv, { opacity: 0, duration: 0.3, onComplete: function() { if (_stOv.parentNode) _stOv.remove(); } }); } catch(e) { if (_stOv.parentNode) _stOv.remove(); } }, 2500);
+            setTimeout(function() { if (_stOv.parentNode) _stOv.remove(); }, 3000);
+          }
+        }
 
         // PERSONNEL_REPORT / PRE_SNAP_READ: reveal opponent's featured player
         if (tc.id === 'personnel_report' || tc.id === 'pre_snap_read') {
@@ -2511,6 +2655,60 @@ export function buildGameplay() {
     });
     panel.appendChild(trayEl);
     _isNewDrive = false; // consume the flag after rendering
+
+    // ── ONBOARDING HINTS ──
+    // Delay varies by hint to account for cooldown from previous hint dismissal
+    if (!_onboardingSkipped) {
+      var _hintDelay = _onboardingCooldown ? 600 : 400;
+      setTimeout(function() {
+        if (_onboardingActive || _onboardingSkipped) return;
+        // Re-read current state (drawPanel may have been called again)
+        var _curPhase = phase;
+        var _curSelPl = selPl;
+        var _curSelP = selP;
+
+        // S1: Pick a play (first snap, offense)
+        if (snapCount === 0 && isOff && _curPhase === 'play' && !_curSelPl && shouldShowHint('torch_hint_pick_play')) {
+          var _pr = panel.querySelector('.CT-row');
+          if (_pr) showOnboardingBubble(_pr, 'Pick a play to call it.', 'torch_hint_pick_play');
+        }
+        // S3: Pick a player (first snap, offense, play selected)
+        else if (snapCount === 0 && isOff && _curPhase === 'player' && _curSelPl && !_curSelP && shouldShowHint('torch_hint_pick_player')) {
+          var _rows = panel.querySelectorAll('.CT-row');
+          var _plRow = _rows.length > 1 ? _rows[1] : _rows[0];
+          if (_plRow) showOnboardingBubble(_plRow, 'Now pick your star player.', 'torch_hint_pick_player');
+        }
+        // S5: Snap button ready (first snap, both selected)
+        else if (snapCount === 0 && isOff && _curSelPl && _curSelP && shouldShowHint('torch_hint_snap')) {
+          var _sb = panel.querySelector('.CT-snap-btn');
+          if (_sb) showOnboardingBubble(_sb, "Hit SNAP to run the play. Let's see what happens!", 'torch_hint_snap');
+        }
+        // D1: First defense
+        else if (!isOff && _curPhase === 'play' && shouldShowHint('torch_hint_defense')) {
+          var _dr = panel.querySelector('.CT-row');
+          if (_dr) showOnboardingBubble(_dr, 'Other team has the ball now. Pick a defensive play to stop them.', 'torch_hint_defense');
+        }
+        // TC1: Torch cards (after snap 4, has cards, in torch phase)
+        else if (snapCount >= 4 && torchInventory.length > 0 && _curPhase === 'torch' && shouldShowHint('torch_hint_torch_card')) {
+          var _tr = panel.querySelector('.CT-row');
+          if (_tr) showOnboardingBubble(_tr, 'Got a torch card? Tap here for a bonus this snap. Totally optional.', 'torch_hint_torch_card');
+        }
+      }, _hintDelay);
+
+      // S6: Idle fallback (8s without action during play selection)
+      if (phase === 'play' && !selPl) {
+        if (_idleTimer) clearTimeout(_idleTimer);
+        _idleTimer = setTimeout(function() {
+          if (phase === 'play' && !selPl && !_onboardingActive && !_onboardingSkipped) {
+            var _ir = panel.querySelector('.CT-row');
+            if (_ir) showOnboardingBubble(_ir, "Pick a play — any play works, you'll get the hang of it.", null);
+          }
+        }, 8000);
+      } else if (_idleTimer) {
+        clearTimeout(_idleTimer);
+        _idleTimer = null;
+      }
+    }
 
     // Torch card tutorial — disabled, will revisit
     if (false) {
@@ -2615,7 +2813,7 @@ export function buildGameplay() {
           gsap.from(tcVisual, { y: -30, duration: 0.5, ease: 'back.out(2.5)' });
           // Gold shimmer pulse
           gsap.to(tcVisual, { boxShadow: '0 0 80px ' + tcTierCol + 'aa, 0 0 120px ' + tcTierCol + '44', duration: 0.3, delay: 0.4, yoyo: true, repeat: 1 });
-          SND.flip();
+          SND.ignite();
           if (navigator.vibrate) try { navigator.vibrate([30, 50, 80]); } catch(e) {}
         } else if (tcTier === 'SILVER') {
           gsap.to(tcOv, { opacity: 1, duration: 0.15 });
@@ -2785,10 +2983,10 @@ export function buildGameplay() {
       var _comboPts = Math.max(0, Math.floor(isOff ? (_r.offComboPts || 0) : (_r.defComboPts || 0)));
       var _bonusPts = 0;
       if (isOff) {
-        if (_r.isTouchdown) _bonusPts += 50;
-        if (res.gotFirstDown) _bonusPts += 10;
+        if (_r.isTouchdown) _bonusPts += 15;
+        if (res.gotFirstDown) _bonusPts += 2;
       } else {
-        if (_r.isSafety) _bonusPts += 30;
+        if (_r.isSafety) _bonusPts += 10;
       }
       // Clamp combo+bonus so they don't exceed the total
       if (_comboPts + _bonusPts > torchEarned) {
@@ -3146,7 +3344,7 @@ export function buildGameplay() {
     document.body.appendChild(overlay);
 
     // ── PHASE 1: COMMIT (0.2s) — screen dims, snap sound ──
-    SND.cardSnap();
+    SND.snap();
 
     // ── PHASE 2: BLACKOUT (tier-scaled tension) — field animates underneath ──
     var blackoutMs = Math.round((tier === 1 ? 200 : tier === 2 ? 400 : 700) * _speedMult);
@@ -3234,7 +3432,8 @@ export function buildGameplay() {
       else if (isGoodForUser && tier >= 2) { SND.bigPlay(); AudioStateManager.setState('big_moment'); AudioStateManager.holdThenSettle(2000, _settleState); }
       else if (isBadForUser) { SND.turnover(); AudioStateManager.setState('turnover'); AudioStateManager.holdThenSettle(3000, _settleState); }
       else if (r.isIncomplete) { SND.incomp(); }
-      else { tier === 1 && r.yards > 0 ? SND.hit() : SND.snap(); }
+      else if (tier === 1 && r.yards > 0) { SND.hit(); }
+      // Zero or negative yards = no sound (silence for nothing plays)
 
       // ── PHASE 4: SETTLE — proceed to result display ──
       var settleDelay = tier === 1 ? 100 : tier === 2 ? 300 : 500;
@@ -3253,28 +3452,26 @@ export function buildGameplay() {
       // ── LAYER 4: Visual weight — size based on user sentiment, not raw yards ──
       var level = tier;
       var gotFirstDown = res.gotFirstDown;
-      // Scale font based on sentiment AND text length so it fits the overlay
+      // Scale font — hero text should DOMINATE the screen
       var textLen = resultText.length;
       var ydsFontSize, resultGlow, resultAnim, resultPos;
       if (isGoodForUser) {
-        // Big, centered, glowing — but scale down for long text
-        var goodBase = level === 3 ? 72 : level === 2 ? 56 : 48;
-        if (textLen > 12) goodBase = Math.min(goodBase, 40);
-        else if (textLen > 8) goodBase = Math.min(goodBase, 48);
+        var goodBase = level === 3 ? 72 : level === 2 ? 64 : 56;
+        if (textLen > 12) goodBase = Math.min(goodBase, 48);
+        else if (textLen > 8) goodBase = Math.min(goodBase, 56);
         ydsFontSize = goodBase + 'px';
-        resultGlow = 'text-shadow:0 0 20px ' + resultColor + '60,0 0 40px ' + resultColor + '30;';
+        resultGlow = 'text-shadow:0 0 24px ' + resultColor + '60,0 0 48px ' + resultColor + '30;';
         resultAnim = 'animation:T-clash-yds 0.4s cubic-bezier(0.34,1.56,0.64,1) both;';
         resultPos = '';
       } else if (isBadForUser) {
-        // Smaller, top area, muted — acknowledge and move on
-        var badBase = level === 3 ? 40 : 32;
-        if (textLen > 12) badBase = Math.min(badBase, 28);
+        var badBase = level === 3 ? 52 : 44;
+        if (textLen > 12) badBase = Math.min(badBase, 36);
         ydsFontSize = badBase + 'px';
-        resultGlow = '';
+        resultGlow = 'text-shadow:0 0 16px ' + resultColor + '40;';
         resultAnim = 'animation:T-clash-yds 0.25s ease-out both;';
-        resultPos = 'position:absolute;top:20%;left:50%;transform:translateX(-50%);width:90%;text-align:center;';
+        resultPos = '';
       } else {
-        ydsFontSize = textLen > 10 ? '36px' : '44px';
+        ydsFontSize = textLen > 10 ? '44px' : '52px';
         resultGlow = '';
         resultAnim = 'animation:T-clash-yds 0.3s ease-out both;';
         resultPos = '';
@@ -3665,7 +3862,7 @@ export function buildGameplay() {
 
         // Hero text
         var heroEl = document.createElement('div');
-        heroEl.style.cssText = "font-family:'Teko';font-weight:900;font-size:" + ydsFontSize + ";color:" + resultColor + ";letter-spacing:3px;line-height:1;text-shadow:0 0 20px " + resultColor + "60,0 2px 6px rgba(0,0,0,0.8);opacity:0;transform:scale(0.3);text-align:center;";
+        heroEl.style.cssText = "font-family:'Teko';font-weight:900;font-size:" + ydsFontSize + ";color:" + resultColor + ";letter-spacing:3px;line-height:1;text-shadow:0 0 24px " + resultColor + "60,0 0 48px " + resultColor + "20,0 2px 6px rgba(0,0,0,0.8);opacity:0;transform:scale(0.3);text-align:center;";
         heroEl.textContent = resultText;
         nonTdWrap.appendChild(heroEl);
 
@@ -3680,7 +3877,7 @@ export function buildGameplay() {
 
         // Context label (below hero)
         var ctxLabel = document.createElement('div');
-        ctxLabel.style.cssText = "font-family:'Oswald';font-weight:700;font-size:12px;letter-spacing:3px;text-shadow:0 2px 4px rgba(0,0,0,0.8);opacity:0;transform:translateY(8px);";
+        ctxLabel.style.cssText = "font-family:'Oswald';font-weight:700;font-size:18px;letter-spacing:3px;text-shadow:0 2px 4px rgba(0,0,0,0.8);opacity:0;transform:translateY(8px);";
         if (r.isSack) {
           // Hero: "SACK" or "SACKED!" — context adds the yardage detail
           ctxLabel.textContent = r.yards !== 0 ? 'LOSS OF ' + Math.abs(r.yards) : '';
@@ -3712,7 +3909,7 @@ export function buildGameplay() {
 
         // Gradient divider after hero+context
         var divider = document.createElement('div');
-        divider.style.cssText = "width:60px;height:1px;background:linear-gradient(90deg,transparent," + resultColor + "44,transparent);margin:6px 0;transform:scaleX(0);";
+        divider.style.cssText = "width:80px;height:1px;background:linear-gradient(90deg,transparent," + resultColor + "44,transparent);margin:8px 0;transform:scaleX(0);";
         nonTdWrap.appendChild(divider);
 
         // Turnover sub-label (inside the flow, not absolute)
@@ -3761,6 +3958,14 @@ export function buildGameplay() {
         }
 
         drawBug(); drawField();
+      }
+
+      // Onboarding: first result explanation
+      if (snapCount <= 1 && shouldShowHint('torch_hint_result')) {
+        setTimeout(function() {
+          var resultEl = overlay.querySelector('.T-clash-result') || nonTdWrap || overlay;
+          showOnboardingBubble(resultEl, "Green means good for you. Red means bad. That's all you need to know.", 'torch_hint_result', { autoDismiss: 3000 });
+        }, 1500);
       }
 
       // ── GAME OVER — dramatic freeze for close games ──
@@ -3834,7 +4039,7 @@ export function buildGameplay() {
           var dnPossTeam = newS.possession === 'CT' ? hTeam : oTeam;
           var dnColor = dnPossTeam.accent;
           var dnEl = document.createElement('div');
-          dnEl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:10px;color:" + dnColor + ";letter-spacing:2px;margin-top:6px;opacity:0;transform:translateY(6px);";
+          dnEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:22px;color:" + dnColor + ";letter-spacing:3px;margin-top:6px;opacity:0;transform:translateY(6px);";
           dnEl.textContent = dnText;
           resultWrap.appendChild(dnEl);
           try { gsap.to(dnEl, { opacity: 1, y: 0, duration: 0.2, delay: 0.1, ease: 'power2.out' }); } catch(e) { dnEl.style.opacity = '1'; }
@@ -3853,12 +4058,23 @@ export function buildGameplay() {
           commLine1 = comm.line1;
           commLine2 = comm.line2 || ctx || '';
         }
-        setNarr(commLine1, commLine2);
+        // Build commentary opts for the badge row
+        var _narrBias = isGoodForUser ? '#00ff44' : isBadForUser ? '#ff0040' : '#EBB010';
+        var _narrEvent = r.isTouchdown ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTION' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : res.gotFirstDown ? 'FIRST DOWN' : null;
+        var _narrPlay = res.offPlay ? res.offPlay.name : null;
+        var _narrPlayer = res.featuredOff ? res.featuredOff.name : null;
+        setNarr(commLine1, commLine2, {
+          biasColor: _narrBias,
+          yards: r.yards,
+          event: _narrEvent,
+          playName: _narrPlay,
+          playerName: _narrPlayer
+        });
 
         // Commentary text on the result overlay (not just narr)
         if (commLine1 && !res._isConversion) {
           var commEl = document.createElement('div');
-          commEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:11px;color:rgba(255,255,255,0.6);text-shadow:0 2px 4px rgba(0,0,0,0.8);max-width:260px;text-align:center;margin-top:4px;opacity:0;transform:translateY(6px);";
+          commEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:16px;color:rgba(255,255,255,0.7);text-shadow:0 2px 4px rgba(0,0,0,0.8);max-width:300px;text-align:center;margin-top:6px;opacity:0;transform:translateY(6px);line-height:1.3;";
           commEl.textContent = commLine1;
           resultWrap.appendChild(commEl);
           try { gsap.to(commEl, { opacity: 1, y: 0, duration: 0.25, delay: 0.15, ease: 'power2.out' }); } catch(e) { commEl.style.opacity = '1'; }
@@ -3869,7 +4085,7 @@ export function buildGameplay() {
           var FLAME = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
           var tpEl = document.createElement('div');
           tpEl.style.cssText = "display:flex;align-items:center;gap:4px;justify-content:center;margin-top:6px;opacity:0;transform:translateY(10px) scale(0.8);";
-          tpEl.innerHTML = "<svg viewBox='0 0 44 56' width='12' height='16' fill='#EBB010'><path d='" + FLAME + "'/></svg><span style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;text-shadow:0 0 8px rgba(235,176,16,0.4);letter-spacing:1px;\">+" + res._torchEarned + "</span>";
+          tpEl.innerHTML = "<svg viewBox='0 0 44 56' width='14' height='18' fill='#EBB010'><path d='" + FLAME + "'/></svg><span style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;text-shadow:0 0 8px rgba(235,176,16,0.4);letter-spacing:1px;\">+" + res._torchEarned + "</span>";
           resultWrap.appendChild(tpEl);
           try { gsap.to(tpEl, { opacity: 1, y: 0, scale: 1, duration: 0.3, delay: 0.3, ease: 'back.out(1.5)' }); } catch(e) { tpEl.style.opacity = '1'; tpEl.style.transform = 'none'; }
         }
@@ -4104,9 +4320,9 @@ export function buildGameplay() {
               tapNextWrap.id = 'T-next-play-wrap';
               tapNextWrap.style.cssText = 'padding:12px 16px;flex-shrink:0;';
               var tapNextBtn = document.createElement('button');
-              tapNextBtn.className = 'btn-blitz';
-              tapNextBtn.style.cssText = "width:100%;font-size:16px;padding:14px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;animation:T-snap-pulse 1.2s ease-in-out infinite;";
-              tapNextBtn.textContent = 'NEXT PLAY';
+              var _FLNP = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
+              tapNextBtn.style.cssText = "width:100%;padding:0;border:none;border-radius:6px;background:linear-gradient(180deg,#EBB010,#FF4511);display:flex;align-items:stretch;overflow:hidden;cursor:pointer;box-shadow:0 4px 16px rgba(255,69,17,0.3);";
+              tapNextBtn.innerHTML = '<div style="background:rgba(0,0,0,0.2);padding:12px 14px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(0,0,0,0.15);"><svg viewBox=\'0 0 44 56\' width=\'14\' height=\'18\' fill=\'#fff\'><path d=\'' + _FLNP + '\'/></svg></div><div style="flex:1;padding:14px;font-family:\'Teko\';font-weight:700;font-size:20px;color:#fff;letter-spacing:6px;text-align:center;line-height:1;">NEXT PLAY</div>';
               var tapDismissed = false;
               tapNextBtn.onclick = function() {
                 if (tapDismissed) return;
@@ -4406,16 +4622,14 @@ export function buildGameplay() {
       ov.appendChild(posEl);
     }
 
-    // Continue button
-    var contBtn = document.createElement('button');
-    contBtn.className = 'btn-blitz';
-    contBtn.style.cssText = "font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;margin-top:16px;z-index:1;opacity:0;transform:translateY(10px);";
-    contBtn.textContent = 'CONTINUE';
+    // Continue button (flame badge)
+    var contBtn = _flameBadgeContinue('CONTINUE', null);
+    contBtn.style.cssText += 'margin-top:16px;z-index:1;opacity:0;transform:translateY(10px);';
     ov.appendChild(contBtn);
 
     // Sound
     if (isGoodForUser) { try { SND.chime(); } catch(e) {} }
-    else { try { SND.snap(); } catch(e) {} }
+    else { try { SND.whooshIn(); } catch(e) {} }
 
     // Animate in
     var dismissed = false;
@@ -4518,7 +4732,7 @@ export function buildGameplay() {
         "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:" + c.color + ";letter-spacing:1px;padding:2px 6px;border:1px solid " + c.color + "33;border-radius:3px;margin-top:4px;\">" + c.risk + "</div>";
 
       card.onclick = function() {
-        SND.snap();
+        SND.click();
         if (c.id === 'xp') {
           gs.handleConversion('xp'); drawBug();
           setNarr('Extra point is GOOD!', '+1 point');
@@ -4629,6 +4843,7 @@ export function buildGameplay() {
   // ── 2-MIN WARNING (dramatic overlay) ──
   function show2MinWarn() {
     SND.whistle();
+    setTimeout(function() { try { SND.horn(); } catch(e) {} }, 300);
     shakeScreen(4);
     flashField('rgba(224,48,80,.3)');
 
@@ -4671,6 +4886,14 @@ export function buildGameplay() {
       } catch(e) { hero.style.opacity='1';hero.style.transform='scale(1)'; sub.style.opacity='0.8'; desc.style.opacity='1'; }
     });
     setTimeout(function() { if (ov.parentNode) { ov.style.opacity = '0'; setTimeout(function() { if (ov.parentNode) ov.remove(); }, 250); } }, 2500);
+
+    // Onboarding: 2-minute drill
+    if (shouldShowHint('torch_hint_two_min')) {
+      setTimeout(function() {
+        var clockEl = _bugEls.clockEl || _bugEls.snapEl;
+        if (clockEl) showOnboardingBubble(clockEl, '2-minute drill! Clock runs on completions and runs. Incompletes stop it.', 'torch_hint_two_min', { autoDismiss: 3000 });
+      }, 2500);
+    }
   }
 
   // ── COIN TOSS OVERLAY ──
@@ -4726,13 +4949,20 @@ export function buildGameplay() {
     ov.appendChild(coin);
     ov.appendChild(label);
 
+    // Onboarding: coin toss
+    if (shouldShowHint('torch_hint_coin_toss')) {
+      setTimeout(function() {
+        showOnboardingBubble(coin, 'Tap to flip. Winner chooses: draw a free torch card or receive the kickoff.', 'torch_hint_coin_toss');
+      }, 800);
+    }
+
     coin.onclick = function() {
       coin.onclick = null;
       // Land on winner's side: even rotations = front (human), odd half = back (opponent)
       var rotations = humanWins ? 1800 : 1980; // 1800 = 5 full turns (front), 1980 = 5.5 turns (back)
       coinInner.style.transform = 'rotateY(' + rotations + 'deg)';
       label.textContent = '';
-      SND.flip();
+      SND.coinFlip();
 
       setTimeout(function() {
         // Phase 2: Result + Choice
@@ -4742,43 +4972,44 @@ export function buildGameplay() {
         var winnerColor = humanWins ? hTeam.accent : oTeam.accent;
         var winnerTeam = humanWins ? hTeam : oTeam;
 
-        // Background glow
+        // Background glow in team color
         var tossGlow = document.createElement('div');
-        tossGlow.style.cssText = 'position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%,' + winnerTeam.colors.primary + '15 0%,transparent 60%);pointer-events:none;';
+        tossGlow.style.cssText = 'position:absolute;inset:0;background:radial-gradient(ellipse at 50% 25%,' + winnerColor + '12,transparent 60%);pointer-events:none;';
         ov.appendChild(tossGlow);
 
         var resultEl = document.createElement('div');
-        resultEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:30px;color:" + winnerColor + ";letter-spacing:4px;text-align:center;text-shadow:0 0 20px " + winnerColor + "40;z-index:1;";
+        resultEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:32px;color:" + winnerColor + ";letter-spacing:5px;text-align:center;text-shadow:0 0 24px " + winnerColor + "50;z-index:1;";
         resultEl.textContent = humanWins ? 'YOU WON THE TOSS!' : winner + ' WIN THE TOSS';
         ov.appendChild(resultEl);
 
         if (humanWins) {
-          // Human chooses: Torch Card or Receive
           var FLAME = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
           var choiceWrap = document.createElement('div');
-          choiceWrap.style.cssText = 'display:flex;flex-direction:column;gap:14px;width:100%;max-width:320px;margin-top:20px;z-index:1;padding:0 16px;';
+          choiceWrap.style.cssText = 'display:flex;flex-direction:column;gap:12px;width:100%;max-width:340px;margin-top:16px;z-index:1;padding:0 20px;';
 
           var cardOpt = document.createElement('div');
-          cardOpt.style.cssText = 'width:100%;border-radius:8px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;border:1.5px solid #EBB01044;background:linear-gradient(135deg,#FF451108,#EBB01008,transparent);';
+          cardOpt.style.cssText = 'width:100%;border-radius:8px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;border:1.5px solid #EBB01044;background:linear-gradient(135deg,#FF451108,#EBB01008,transparent);position:relative;overflow:hidden;';
           cardOpt.innerHTML =
-            '<div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#FF451115,#EBB01015);border:1px solid #EBB01033;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+            '<div style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 30%,rgba(235,176,16,0.04) 48%,transparent 70%);background-size:200px 100%;animation:shimmer 4s ease-in-out infinite;border-radius:7px;"></div>' +
+            '<div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#FF451115,#EBB01015);border:1px solid #EBB01033;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;z-index:1;">' +
               "<svg viewBox='0 0 44 56' width='20' height='26' fill='#EBB010'><path d='" + FLAME + "'/></svg>" +
             '</div>' +
-            '<div style="flex:1;">' +
-              "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;letter-spacing:2px;\">FREE TORCH CARD</div>" +
-              "<div style=\"font-family:'Rajdhani';font-size:11px;color:#888;\">Pick 1 of 3 mystery cards \u2014 but you kick off</div>" +
+            '<div style="flex:1;position:relative;z-index:1;">' +
+              "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:2px;\">FREE TORCH CARD</div>" +
+              "<div style=\"font-family:'Rajdhani';font-size:12px;color:#888;\">Pick 1 of 3 mystery cards \u2014 but you kick off</div>" +
             '</div>';
           cardOpt.onclick = function() { showFaceDownCards(ov, offers, true, onDone); };
 
           var recvOpt = document.createElement('div');
-          recvOpt.style.cssText = 'width:100%;border-radius:8px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;border:1.5px solid #00ff4444;background:linear-gradient(135deg,#00ff4408,transparent);';
+          recvOpt.style.cssText = 'width:100%;border-radius:8px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;border:1.5px solid #00ff4444;background:linear-gradient(135deg,#00ff4408,transparent);';
+          var _fbSvg = '<svg viewBox="0 0 100 100" width="24" height="24" fill="none" style="filter:drop-shadow(0 0 4px rgba(0,255,68,0.4));"><defs><linearGradient id="rcvG" x1="15" y1="15" x2="85" y2="85" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#44ff88"/><stop offset="45%" stop-color="#00ff44"/><stop offset="100%" stop-color="#00aa22"/></linearGradient></defs><g transform="translate(50,50) rotate(-45) scale(0.22) translate(-256,-256)"><path fill="url(#rcvG)" d="M247.5 25.4c-13.5 3.3-26.4 7.2-38.6 11.7C142.9 61.6 96.7 103.6 66 153.6C47.8 183.4 35.1 215.9 26.9 249L264.5 486.6c13.5-3.3 26.4-7.2 38.6-11.7c66-24.5 112.2-66.5 142.9-116.5c18.3-29.8 30.9-62.3 39.1-95.3L247.5 25.4zM495.2 205.3c6.1-56.8 1.4-112.2-7.7-156.4c-2.7-12.9-13-22.9-26.1-25.1c-58.2-9.7-109.9-12-155.6-7.9L495.2 205.3zM206.1 496L16.8 306.7c-6.1 56.8-1.4 112.2 7.7 156.4c2.7 12.9 13 22.9 26.1 25.1c58.2 9.7 109.9 12 155.6 7.9z"/><path fill="#FFFBE6" d="M260.7 164.7c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6z"/></g></svg>';
           recvOpt.innerHTML =
             '<div style="width:44px;height:44px;border-radius:8px;background:#00ff4408;border:1px solid #00ff4433;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
-              '<svg viewBox="0 0 24 24" width="20" height="20" fill="#00ff44"><ellipse cx="12" cy="12" rx="10" ry="7" transform="rotate(-45 12 12)" stroke="#00ff44" stroke-width="1.5" fill="none"/><line x1="8" y1="8" x2="16" y2="16" stroke="#00ff44" stroke-width="1" opacity="0.5"/><line x1="10" y1="10" x2="14" y2="14" stroke="#00ff44" stroke-width="0.8" opacity="0.3"/></svg>' +
+              _fbSvg +
             '</div>' +
             '<div style="flex:1;">' +
-              "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#00ff44;letter-spacing:2px;\">RECEIVE THE KICK</div>" +
-              "<div style=\"font-family:'Rajdhani';font-size:11px;color:#888;\">Start with the ball \u2014 no free card until halftime</div>" +
+              "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#00ff44;letter-spacing:2px;\">RECEIVE THE KICK</div>" +
+              "<div style=\"font-family:'Rajdhani';font-size:12px;color:#888;\">Start with the ball \u2014 no free card until halftime</div>" +
             '</div>';
           recvOpt.onclick = function() {
             SND.snap();
@@ -4861,7 +5092,7 @@ export function buildGameplay() {
     var cardWraps = [];
     offers.forEach(function(card, idx) {
       var wrap = document.createElement('div');
-      wrap.style.cssText = 'cursor:pointer;opacity:0;transform:translateY(30px);transition:opacity 0.3s,transform 0.3s;animation:floatCard 3s ease-in-out infinite;animation-delay:' + (idx * 0.4) + 's;';
+      wrap.style.cssText = 'cursor:pointer;opacity:0;transform:translateY(30px);transition:opacity 0.3s,transform 0.3s;animation:floatCard 3s ease-in-out infinite;animation-delay:' + (idx * 0.4) + 's;position:relative;will-change:transform;';
       var backCard = buildHomeCard('torch', 95, 133);
       wrap.appendChild(backCard);
       wrap._card = card;
@@ -4885,33 +5116,36 @@ export function buildGameplay() {
         // Flip the selected card: center on screen → scaleX squeeze → swap content → expand
         var isDramatic = card.tier === 'GOLD';
         var flipDur = isDramatic ? 0.18 : 0.12;
-        try {
-          // Calculate delta to center the card on screen
-          var cardRect = wrap.getBoundingClientRect();
-          var centerX = window.innerWidth / 2 - cardRect.left - cardRect.width / 2;
-          var centerY = window.innerHeight * 0.4 - cardRect.top - cardRect.height / 2;
 
-          var tl = gsap.timeline();
-          // Move to center + scale up
-          tl.to(wrap, { x: centerX, y: centerY, scale: 1.15, duration: 0.35, ease: 'power2.out' });
-          // Then flip
-          tl.to(wrap, { scaleX: 0, duration: flipDur, ease: 'power2.in' });
-          tl.call(function() {
-            wrap.innerHTML = '';
-            wrap.style.background = 'transparent';
-            var revealed = buildTorchCard(card, 100, 140);
-            wrap.appendChild(revealed);
-            if (isDramatic) { try { SND.flip(); } catch(e) {} }
-            else { try { SND.cardSnap(); } catch(e) {} }
-          });
-          tl.to(wrap, { scaleX: 1, duration: flipDur, ease: 'power2.out' });
-          tl.to(wrap, { scale: 1.1, duration: 0.15, ease: 'back.out(2)' });
-          if (isDramatic) {
-            tl.fromTo(wrap, { boxShadow: '0 0 0 rgba(235,176,16,0)' }, { boxShadow: '0 0 30px rgba(235,176,16,0.6)', duration: 0.2, yoyo: true, repeat: 1 }, '-=0.15');
-          }
+        // Simple flip: scaleX squeeze → swap content → expand. No center animation.
+        wrap.style.animation = 'none';
+
+        try {
+          // Lift + squeeze
+          gsap.to(wrap, { y: -10, scale: 1.1, duration: 0.2, ease: 'power2.out', onComplete: function() {
+            // Squeeze to line
+            gsap.to(wrap, { scaleX: 0, duration: isDramatic ? 0.18 : 0.12, ease: 'power2.in', onComplete: function() {
+              // Swap content
+              wrap.innerHTML = '';
+              var revealed = buildTorchCard(card, 120, 168);
+              wrap.appendChild(revealed);
+              // Sound
+              if (card.tier === 'GOLD') { try { SND.ignite(); } catch(e2) {} }
+              else if (card.tier === 'SILVER') { try { SND.flipDramatic(); } catch(e2) {} }
+              else { try { SND.flip(); } catch(e2) {} }
+              // Expand back
+              gsap.to(wrap, { scaleX: 1, duration: isDramatic ? 0.18 : 0.12, ease: 'power2.out', onComplete: function() {
+                gsap.to(wrap, { y: 0, scale: 1, duration: 0.2, ease: 'back.out(2)' });
+                // Glow burst
+                if (isDramatic) {
+                  gsap.fromTo(wrap, { boxShadow: '0 0 0 rgba(235,176,16,0)' }, { boxShadow: '0 0 40px rgba(235,176,16,0.7)', duration: 0.3, yoyo: true, repeat: 1 });
+                }
+              }});
+            }});
+          }});
         } catch(e) {
           wrap.innerHTML = '';
-          wrap.appendChild(buildTorchCard(card, 100, 140));
+          wrap.appendChild(buildTorchCard(card, 120, 168));
         }
 
         // Show card name + effect below
@@ -4952,6 +5186,13 @@ export function buildGameplay() {
       cardWraps.push(wrap);
     });
     ov.appendChild(cardRow);
+
+    // Onboarding: face-down cards
+    if (shouldShowHint('torch_hint_face_down')) {
+      setTimeout(function() {
+        showOnboardingBubble(cardRow, 'Torch cards are single-use power-ups. Pick one — you\'ll see what it does.', 'torch_hint_face_down');
+      }, 1200);
+    }
   }
 
   // AI picks a face-down card — shows card backs, auto-selects one, flips to reveal
@@ -5004,7 +5245,9 @@ export function buildGameplay() {
         tl.call(function() {
           picked.innerHTML = '';
           picked.appendChild(buildTorchCard(pickedCard, 100, 140));
-          try { SND.cardSnap(); } catch(e) {}
+          if (pickedCard.tier === 'GOLD') { try { SND.ignite(); } catch(e) {} }
+          else if (pickedCard.tier === 'SILVER') { try { SND.flipDramatic(); } catch(e) {} }
+          else { try { SND.flip(); } catch(e) {} }
           title.textContent = oTeam.name + ' DREW:';
         });
         tl.to(picked, { scaleX: 1, duration: 0.12, ease: 'power2.out' });
@@ -5131,6 +5374,14 @@ export function buildGameplay() {
         gsap.to(contBtn, { opacity: 1, y: 0, duration: 0.2, delay: 0.45 });
       } catch(e) { label.style.opacity='1';teamEl.style.opacity='1';teamEl.style.transform='scale(1)';resEl.style.opacity='1';contBtn.style.opacity='1'; }
     });
+
+    // Onboarding: kickoff
+    if (gs.possession === hAbbr && shouldShowHint('torch_hint_kickoff')) {
+      setTimeout(function() {
+        var contEl = kov.querySelector('button') || kov;
+        showOnboardingBubble(contEl, "You've got the ball. Time to drive.", 'torch_hint_kickoff');
+      }, 800);
+    }
   }
 
   // ── TRANSITIONS ──
@@ -5180,10 +5431,8 @@ export function buildGameplay() {
     scoreEl.textContent = hTeam.name.toUpperCase() + ' ' + hScore + ' \u00b7 ' + oTeam.name.toUpperCase() + ' ' + cScore;
     ov.appendChild(scoreEl);
 
-    var contBtn = document.createElement('button');
-    contBtn.className = 'btn-blitz';
-    contBtn.style.cssText = "font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;margin-top:20px;opacity:0;z-index:1;transform:translateY(10px);";
-    contBtn.textContent = 'CONTINUE';
+    var contBtn = _flameBadgeContinue('CONTINUE', null);
+    contBtn.style.cssText += 'margin-top:20px;opacity:0;z-index:1;transform:translateY(10px);';
     ov.appendChild(contBtn);
 
     var dismissed = false;
