@@ -35,25 +35,24 @@ export function showDetail(target, data) {
     transition: opacity 0.2s, transform 0.2s;
   `;
 
-  // Content
+  // Content — clean and compact
   let html = `
-    <div style="color: #EBB010; font-family: 'Teko'; font-size: 20px; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 8px; padding-bottom: 4px;">
+    <div style="color: #EBB010; font-family: 'Teko'; font-size: 18px; letter-spacing: 2px; margin-bottom: 6px;">
       ${data.title.toUpperCase()}
     </div>
-    <div style="color: #fff; font-size: 13px; line-height: 1.4; margin-bottom: 10px;">
+    <div style="color: rgba(255,255,255,0.8); font-size: 12px; line-height: 1.4;">
       ${data.text}
     </div>
   `;
 
   if (data.keywords && data.keywords.length > 0) {
+    html += `<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">`;
     data.keywords.forEach(kw => {
-      html += `
-        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1);">
-          <span style="color: #00FF44; font-weight: 700; font-size: 11px;">${kw.word.toUpperCase()}</span>
-          <div style="color: rgba(255,255,255,0.7); font-size: 11px;">${kw.definition}</div>
-        </div>
-      `;
+      if (!kw.word) return;
+      var kwColor = kw.word === 'GOLD' ? '#EBB010' : kw.word === 'SILVER' ? '#C0C0C0' : kw.word === 'BRONZE' ? '#B87333' : '#888';
+      html += `<span style="font-family:'Rajdhani';font-weight:700;font-size:9px;color:${kwColor};letter-spacing:1px;padding:2px 6px;border:1px solid ${kwColor}33;border-radius:3px;">${kw.word.toUpperCase()}</span>`;
     });
+    html += `</div>`;
   }
 
   detail.innerHTML = html;
