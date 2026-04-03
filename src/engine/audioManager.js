@@ -75,22 +75,62 @@ var AudioManager = {
       console.warn('[Audio] Failed to setup master processing chain:', e);
     }
 
-    // SFX pools
-    loadPool('cardDeal', ['/audio/sfx/card_deal_01.wav','/audio/sfx/card_deal_02.wav','/audio/sfx/card_deal_03.wav','/audio/sfx/card_deal_04.wav']);
-    loadPool('cardPlace', ['/audio/sfx/card_place_01.wav','/audio/sfx/card_place_02.wav','/audio/sfx/card_place_03.wav','/audio/sfx/card_place_04.wav']);
-    loadPool('cardFlip', ['/audio/sfx/card_flip_01.wav','/audio/sfx/card_flip_02.wav','/audio/sfx/card_flip_03.wav']);
-    loadPool('cardFlipDramatic', ['/audio/sfx/card_flip_dramatic_01.wav','/audio/sfx/card_flip_dramatic_02.wav']);
-    loadPool('cardDiscard', ['/audio/sfx/card_discard_01.wav','/audio/sfx/card_discard_02.wav']);
+    // SFX pools — UI
+    loadPool('menuTap', ['/audio/sfx/menu_tap_01.wav','/audio/sfx/menu_tap_02.wav','/audio/sfx/menu_tap_03.wav'], { volume: 0.35 });
+    loadPool('click', ['/audio/sfx/click_01.wav','/audio/sfx/click_02.wav','/audio/sfx/click_03.wav'], { volume: 0.3 });
+    loadPool('chime', ['/audio/sfx/chime_01.wav','/audio/sfx/chime_02.wav','/audio/sfx/chime_03.wav','/audio/sfx/chime_04.wav'], { volume: 0.45 });
+    loadPool('scoreTick', ['/audio/sfx/score_tick_01.wav','/audio/sfx/score_tick_02.wav','/audio/sfx/score_tick_03.wav'], { volume: 0.5 });
+    loadPool('shimmer', ['/audio/sfx/shimmer_01.wav','/audio/sfx/shimmer_02.wav','/audio/sfx/shimmer_03.wav'], { volume: 0.4 });
+    loadPool('ping', ['/audio/sfx/ping_01.wav','/audio/sfx/ping_02.wav'], { volume: 0.4 });
+    loadPool('jackpot', ['/audio/sfx/jackpot_01.wav'], { volume: 0.5 });
+    loadPool('clockTick', ['/audio/sfx/clock_tick_01.wav'], { volume: 0.5 });
+
+    // SFX pools — Cards
+    loadPool('cardDeal', ['/audio/sfx/card_deal_01.wav','/audio/sfx/card_deal_02.wav','/audio/sfx/card_deal_03.wav','/audio/sfx/card_deal_04.wav'], { volume: 0.5 });
+    loadPool('cardPlace', ['/audio/sfx/card_place_01.wav','/audio/sfx/card_place_02.wav','/audio/sfx/card_place_03.wav','/audio/sfx/card_place_04.wav'], { volume: 0.5 });
+    loadPool('cardFlip', ['/audio/sfx/card_flip_01.wav','/audio/sfx/card_flip_02.wav','/audio/sfx/card_flip_03.wav'], { volume: 0.5 });
+    loadPool('cardFlipSlam', ['/audio/sfx/card_flip_slam_01.wav'], { volume: 0.6 });
+    loadPool('cardFlipDramatic', ['/audio/sfx/card_flip_dramatic_01.wav','/audio/sfx/card_flip_dramatic_02.wav'], { volume: 0.6 });
+    loadPool('cardDiscard', ['/audio/sfx/card_discard_01.wav','/audio/sfx/card_discard_02.wav'], { volume: 0.5 });
+
+    // SFX pools — Football
+    loadPool('snap', ['/audio/sfx/snap_01.wav','/audio/sfx/snap_02.wav'], { volume: 0.6 });
+    loadPool('throw', ['/audio/sfx/throw_01.wav'], { volume: 0.5 });
+    loadPool('catch', ['/audio/sfx/catch_01.wav'], { volume: 0.5 });
+    loadPool('kick', ['/audio/sfx/kick_01.wav'], { volume: 0.6 });
+    loadPool('kickThud', ['/audio/sfx/kick_thud_01.wav'], { volume: 0.6 });
+    loadPool('whistle', ['/audio/sfx/whistle_01.wav','/audio/sfx/whistle_short_01.wav'], { volume: 0.5 });
+    loadPool('whistleLong', ['/audio/sfx/whistle_long_01.wav'], { volume: 0.5 });
+
+    // SFX pools — Impacts
+    loadPool('hitComposite', ['/audio/sfx/hit_composite_01.wav','/audio/sfx/hit_composite_02.wav','/audio/sfx/hit_composite_03.wav','/audio/sfx/hit_composite_04.wav'], { volume: 0.7 });
+    loadPool('hitHeavy', ['/audio/sfx/hit_heavy_01.wav','/audio/sfx/hit_heavy_02.wav','/audio/sfx/hit_heavy_03.wav','/audio/sfx/hit_heavy_04.wav','/audio/sfx/hit_heavy_05.wav','/audio/sfx/hit_heavy_06.wav'], { volume: 0.8 });
+    loadPool('hitModerate', ['/audio/sfx/hit_moderate_01.wav','/audio/sfx/hit_moderate_02.wav'], { volume: 0.6 });
     loadPool('resultSlam', ['/audio/sfx/result_slam_01.wav'], { volume: 0.85 });
+
+    // SFX pools — Cinematic
+    loadPool('anvilImpact', ['/audio/sfx/anvil_impact_01.wav'], { volume: 0.8 });
+    loadPool('bassDrop', ['/audio/sfx/bass_drop_01.wav','/audio/sfx/bass_drop_02.wav'], { volume: 0.7 });
+    loadPool('victoryImpact', ['/audio/sfx/victory_impact_01.wav','/audio/sfx/victory_impact_02.wav'], { volume: 0.7 });
+    loadPool('horn', ['/audio/sfx/horn_01.wav','/audio/sfx/horn_02.wav','/audio/sfx/horn_03.wav'], { volume: 0.7 });
+    loadPool('whooshIn', ['/audio/sfx/whoosh_in_01.wav','/audio/sfx/whoosh_in_02.wav'], { volume: 0.4 });
+    loadPool('broadcastSweep', ['/audio/sfx/broadcast_sweep_01.wav'], { volume: 0.4 });
+    loadPool('paperFlip', ['/audio/sfx/paper_flip_01.wav'], { volume: 0.5 });
+
+    // SFX pools — Special
+    loadPool('ignite', ['/audio/sfx/ignite_01.wav'], { volume: 0.6 });
+    loadPool('coinFlip', ['/audio/sfx/coin_flip_01.wav'], { volume: 0.6 });
     loadPool('tdCelebration', ['/audio/sfx/td_celebration_01.mp3'], { volume: 0.9 });
     loadPool('gameOverWin', ['/audio/sfx/game_over_win_01.wav'], { volume: 0.9 });
-    loadPool('gameOverLoss', ['/audio/sfx/game_over_loss_01.wav'], { volume: 0.9 });
-    loadPool('scoreTick', ['/audio/sfx/score_tick_01.wav','/audio/sfx/score_tick_02.wav','/audio/sfx/score_tick_03.wav'], { volume: 0.55 });
-    loadPool('menuTap', ['/audio/sfx/menu_tap_01.wav','/audio/sfx/menu_tap_02.wav','/audio/sfx/menu_tap_03.wav'], { volume: 0.5 });
-    loadPool('crowdCheer', ['/audio/sfx/crowd_cheer_01.wav'], { volume: 0.8 });
+    loadPool('gameOverLoss', ['/audio/sfx/game_over_loss_01.wav'], { volume: 0.7 });
+
+    // SFX pools — Crowd reactions (one-shots)
+    loadPool('crowdCheer', ['/audio/sfx/crowd_cheer_01.wav'], { volume: 0.7 });
     loadPool('crowdGroan', ['/audio/sfx/crowd_groan_01.wav'], { volume: 0.6 });
-    loadPool('whistle', ['/audio/sfx/whistle_01.wav']);
-    loadPool('kickThud', ['/audio/sfx/kick_thud_01.wav']);
+    loadPool('tdEruption', ['/audio/crowd/td_eruption_01.wav','/audio/crowd/td_eruption_02.wav'], { volume: 0.8 });
+    loadPool('bigPlayCrowd', ['/audio/crowd/big_play_01.wav','/audio/crowd/big_play_02.wav'], { volume: 0.7 });
+    loadPool('groan', ['/audio/crowd/groan_01.wav','/audio/crowd/groan_02.wav'], { volume: 0.6 });
+    loadPool('victoryCrowd', ['/audio/crowd/victory_crowd_01.wav'], { volume: 0.7 });
 
     // Crowd ambient loops (webm/opus primary, mp3 fallback for Safari)
     _crowd.low = new Howl({ src: ['/audio/crowd/crowd_low.webm', '/audio/crowd/crowd_low.mp3'], loop: true, volume: 0 });
