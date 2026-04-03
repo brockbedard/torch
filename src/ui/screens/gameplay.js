@@ -3211,7 +3211,7 @@ export function buildGameplay() {
     dim.className = 'T-clash-dim';
     dim.style.opacity = '1';
     overlay.appendChild(dim);
-    document.body.appendChild(overlay);
+    el.appendChild(overlay);
 
     // ── PHASE 1: COMMIT (0.2s) — screen dims, snap sound ──
     SND.cardSnap();
@@ -3320,6 +3320,8 @@ export function buildGameplay() {
     function doSettle() {
       if (_settled) return; _settled = true;
       overlay.onclick = null;
+      // Ensure dim is at a consistent level for the result display
+      dim.style.opacity = '0.5';
 
       // ── LAYER 4: Visual weight — size based on user sentiment, not raw yards ──
       var level = tier;
@@ -5507,6 +5509,8 @@ export function buildGameplay() {
     if (twoMinTimer) { clearInterval(twoMinTimer); twoMinTimer = null; }
     if (_tickerAnim) { try { _tickerAnim.kill(); } catch(e) {} _tickerAnim = null; }
     _timers.forEach(clearTimeout); _timers.length = 0;
+    // Remove any lingering clash overlays (they used to be on document.body)
+    document.querySelectorAll('.T-clash-overlay').forEach(function(ov) { ov.remove(); });
     try { gsap.killTweensOf(el.querySelectorAll('*')); } catch(e) {}
     stopWeatherAudio();
   };
