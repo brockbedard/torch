@@ -167,7 +167,7 @@ export function buildPregame() {
   // ── TAP TO CONTINUE ──
   var skipped = false;
   var canSkip = false;
-  setTimeout(function() { canSkip = true; }, isFast ? 1200 : 2500);
+  setTimeout(function() { canSkip = true; }, isFast ? 1500 : 3500);
   function skip() {
     if (skipped || !canSkip) return;
     skipped = true;
@@ -181,7 +181,7 @@ export function buildPregame() {
   el.onclick = skip;
 
   // Auto-advance
-  setTimeout(function() { if (!skipped) skip(); }, isFast ? 2500 : 6000);
+  setTimeout(function() { if (!skipped) skip(); }, isFast ? 3500 : 8000);
 
   return el;
 }
@@ -228,11 +228,19 @@ function buildTeamCard(tm, tmId, accent, side) {
   var schemeStr = (tm.offScheme || '').replace(/\s+/g, ' ');
   var vibeStr = TEAM_VIBES[tmId] || tm.vibe || '';
 
-  var infoRow = document.createElement('div');
-  infoRow.style.cssText = "font-family:'Rajdhani';font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
-  infoRow.innerHTML = "<span style=\"font-family:'Oswald';font-weight:700;color:" + accent + ";letter-spacing:1.5px;\">" + schemeStr + "</span>" +
-    (vibeStr ? " <span style='color:rgba(255,255,255,0.12);'>\u00b7</span> " + vibeStr : '');
-  info.appendChild(infoRow);
+  // Scheme label
+  var schemeEl = document.createElement('div');
+  schemeEl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:10px;color:" + accent + ";letter-spacing:1.5px;margin-top:4px;";
+  schemeEl.textContent = schemeStr;
+  info.appendChild(schemeEl);
+
+  // Vibe description (separate line, wraps naturally)
+  if (vibeStr) {
+    var vibeEl = document.createElement('div');
+    vibeEl.style.cssText = "font-family:'Rajdhani';font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;line-height:1.3;";
+    vibeEl.textContent = vibeStr;
+    info.appendChild(vibeEl);
+  }
 
   // Ratings row
   var ratingsRow = document.createElement('div');
