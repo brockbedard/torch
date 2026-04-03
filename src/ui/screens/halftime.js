@@ -1,198 +1,212 @@
 /**
- * TORCH v0.29 — Halftime: Strategic Adjustment Gate
- * Score + drive summary + coaching decision + shop + start 2nd half.
+ * TORCH — Halftime Screen
+ * Jumbotron score, stat strip, strategic adjustment, torch store, flame badge CTA.
  */
 
+import { gsap } from 'gsap';
 import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam } from '../../state.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
-import { buildTorchCard } from '../components/cards.js';
+import { buildTorchCard, buildHomeCard } from '../components/cards.js';
 import { renderTeamBadge } from '../../data/teamLogos.js';
+import { FLAME_PATH, buildTorchHeader, buildFlameBadgeButton, buildAccentBar } from '../components/brand.js';
 import AudioStateManager from '../../engine/audioManager.js';
 import { setHalftimeScore } from '../../engine/commentary.js';
 
 var ADJUSTMENTS = [
-  {
-    id: 'aggressive',
-    label: 'AGGRESSIVE',
-    desc: 'Push the pace. Higher risk, higher reward.',
-    effect: '+2 yds per play  /  +5% turnover risk',
-    border: '#FF4511',
-    bg: 'rgba(255,69,17,0.08)',
-    glow: 'rgba(255,69,17,0.25)',
-  },
-  {
-    id: 'balanced',
-    label: 'BALANCED',
-    desc: 'Stay the course. Trust the process.',
-    effect: 'No modifier — default game plan.',
-    border: '#EBB010',
-    bg: 'rgba(235,176,16,0.07)',
-    glow: 'rgba(235,176,16,0.20)',
-  },
-  {
-    id: 'conservative',
-    label: 'CONSERVATIVE',
-    desc: 'Protect the ball. Grind it out.',
-    effect: '−1 yd per play  /  −50% turnover chance',
-    border: '#4488FF',
-    bg: 'rgba(68,136,255,0.08)',
-    glow: 'rgba(68,136,255,0.22)',
-  },
+  { id: 'aggressive', label: 'AGGRESSIVE', desc: 'Push the pace. Higher risk, higher reward.', effect: '+2 yds / +5% turnover risk', color: '#FF4511' },
+  { id: 'balanced', label: 'BALANCED', desc: 'Stay the course. Trust the process.', effect: 'No modifier', color: '#EBB010' },
+  { id: 'conservative', label: 'CONSERVATIVE', desc: 'Protect the ball. Grind it out.', effect: '\u22121 yd / \u221250% turnover chance', color: '#4DA6FF' },
 ];
+
+// Keyframes borderFlow, emblemPulse, breatheGlow now in style.css
 
 export function buildHalftime() {
   AudioStateManager.setState('halftime');
+
   var el = document.createElement('div');
-  el.className = 'sup';
-  el.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;background:var(--bg);overflow-y:auto;';
+  el.style.cssText = 'height:100vh;height:100dvh;display:flex;flex-direction:column;background:#0A0804;overflow:hidden;position:relative;padding-top:env(safe-area-inset-top,0px);';
 
   var gs = GS.engine;
   var team = getTeam(GS.team);
   var opp = getTeam(GS.opponent || 'wolves');
+  var teamColor = team.accent || team.colors.primary;
+  var oppColor = opp.accent || opp.colors.primary;
   var humanScore = gs.ctScore;
   var cpuScore = gs.irScore;
   var humanPts = gs.ctTorchPts;
 
-  // Record halftime score differential for comeback narrative tracking
   setHalftimeScore(humanScore - cpuScore);
 
-  // Seed the adjustment to balanced if not set yet
   if (!GS.halftimeAdjustment) {
     setGs(function(s) { return Object.assign({}, s, { halftimeAdjustment: 'balanced' }); });
   }
   var selectedAdj = GS.halftimeAdjustment || 'balanced';
 
-  // ── Header ────────────────────────────────────────────────────────────────
-  var hdr = document.createElement('div');
-  hdr.style.cssText = 'background:rgba(0,0,0,0.7);padding:10px 14px;text-align:center;flex-shrink:0;border-bottom:3px solid #FF6B00;';
-  hdr.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:#FF6B00;letter-spacing:4px;font-style:italic;transform:skewX(-8deg);text-shadow:2px 2px 0 rgba(0,0,0,0.9);\">HALFTIME</div>";
-  el.appendChild(hdr);
+  // ── HEADER ──
+  el.appendChild(buildTorchHeader('HALFTIME'));
 
+  // ── CONTENT (scrollable) ──
   var content = document.createElement('div');
-  content.style.cssText = 'padding:12px 16px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;';
+  content.style.cssText = 'flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px;display:flex;flex-direction:column;gap:10px;align-items:center;';
 
-  // ── Score ─────────────────────────────────────────────────────────────────
-  var scoreBlock = document.createElement('div');
-  scoreBlock.style.cssText = 'display:flex;align-items:center;gap:12px;width:100%;max-width:320px;justify-content:center;';
-  scoreBlock.innerHTML =
-    '<div style="display:flex;align-items:center;gap:6px;">' + renderTeamBadge(GS.team, 32) +
-      "<div style='text-align:center;'><div style=\"font-family:'Teko';font-size:14px;color:" + team.accent + ";letter-spacing:1px;\">" + team.name + "</div>" +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:32px;color:#fff;\">" + humanScore + "</div></div></div>" +
-    "<div style=\"font-family:'Teko';font-size:20px;color:#555;\">—</div>" +
-    '<div style="display:flex;align-items:center;gap:6px;flex-direction:row-reverse;">' + renderTeamBadge(GS.opponent, 32) +
-      "<div style='text-align:center;'><div style=\"font-family:'Teko';font-size:14px;color:" + opp.accent + ";letter-spacing:1px;\">" + opp.name + "</div>" +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:32px;color:#fff;\">" + cpuScore + "</div></div></div>";
-  content.appendChild(scoreBlock);
+  // ── SCORE PANEL — jumbotron ──
+  var scorePanel = document.createElement('div');
+  scorePanel.style.cssText = 'display:flex;align-items:center;width:100%;max-width:340px;border-radius:8px;background:linear-gradient(180deg,#0e0a06,#080604);border:1px solid #1a1a1a;overflow:hidden;';
 
-  // ── Drive summary ─────────────────────────────────────────────────────────
+  // Home team side
+  scorePanel.innerHTML =
+    '<div style="flex:1;padding:10px 8px;text-align:center;background:linear-gradient(180deg,' + teamColor + '08,transparent);">' +
+      '<div style="display:flex;justify-content:center;">' + renderTeamBadge(GS.team, 32) + '</div>' +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:12px;color:" + teamColor + ";letter-spacing:1px;margin-top:4px;\">" + team.name + '</div>' +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:36px;color:#fff;line-height:0.9;\">" + humanScore + '</div>' +
+    '</div>' +
+    '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 6px;">' +
+      '<div style="width:1px;height:20px;background:#1a1a1a;"></div>' +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#333;letter-spacing:2px;\">HALF</div>" +
+      '<div style="width:1px;height:20px;background:#1a1a1a;"></div>' +
+    '</div>' +
+    '<div style="flex:1;padding:10px 8px;text-align:center;background:linear-gradient(180deg,' + oppColor + '08,transparent);">' +
+      '<div style="display:flex;justify-content:center;">' + renderTeamBadge(GS.opponent, 32) + '</div>' +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:12px;color:" + oppColor + ";letter-spacing:1px;margin-top:4px;\">" + opp.name + '</div>' +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:36px;color:#fff;line-height:0.9;\">" + cpuScore + '</div>' +
+    '</div>';
+  content.appendChild(scorePanel);
+
+  // ── STAT STRIP ──
   var st = gs.stats || {};
-  var summaryBlock = document.createElement('div');
-  summaryBlock.style.cssText = 'width:100%;max-width:320px;background:var(--bg-surface);border:1px solid #1E1610;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;';
-  var statRows = [
-    ['Total Yards', (st.ctTotalYards || 0) + ' — ' + (st.irTotalYards || 0)],
-    ['First Downs', (st.ctFirstDowns || 0) + ' — ' + (st.irFirstDowns || 0)],
-    ['Turnovers', (st.ctTurnovers || 0) + ' — ' + (st.irTurnovers || 0)],
+  var stats = [
+    { label: 'YARDS', yours: st.ctTotalYards || 0, theirs: st.irTotalYards || 0 },
+    { label: '1ST DOWNS', yours: st.ctFirstDowns || 0, theirs: st.irFirstDowns || 0 },
+    { label: 'TURNOVERS', yours: st.ctTurnovers || 0, theirs: st.irTurnovers || 0 },
   ];
-  statRows.forEach(function(row) {
-    var r = document.createElement('div');
-    r.style.cssText = "display:flex;justify-content:space-between;font-family:'Rajdhani';font-size:11px;color:#aaa;padding:2px 0;border-bottom:1px solid #0E0A04;";
-    r.innerHTML = '<span>' + row[0] + '</span><span style="color:#fff;">' + row[1] + '</span>';
-    summaryBlock.appendChild(r);
+  var statStrip = document.createElement('div');
+  statStrip.style.cssText = 'display:flex;width:100%;max-width:340px;border-radius:6px;border:1px solid #1a1a1a;overflow:hidden;';
+  stats.forEach(function(s, i) {
+    var cell = document.createElement('div');
+    cell.style.cssText = 'flex:1;padding:6px 4px;text-align:center;' + (i < stats.length - 1 ? 'border-right:1px solid #1a1a1a;' : '');
+    cell.innerHTML =
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:7px;color:#555;letter-spacing:1px;\">" + s.label + '</div>' +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:16px;line-height:1;margin-top:2px;\">" +
+        "<span style='color:" + teamColor + ";'>" + s.yours + "</span>" +
+        "<span style='color:#333;'> \u2013 </span>" +
+        "<span style='color:" + oppColor + ";'>" + s.theirs + "</span>" +
+      '</div>';
+    statStrip.appendChild(cell);
   });
-  content.appendChild(summaryBlock);
+  content.appendChild(statStrip);
 
-  // ── Strategic Adjustment ──────────────────────────────────────────────────
+  // ── 2ND HALF GAME PLAN ──
   var adjSection = document.createElement('div');
-  adjSection.style.cssText = 'width:100%;max-width:320px;display:flex;flex-direction:column;gap:8px;';
+  adjSection.style.cssText = 'width:100%;max-width:340px;';
 
-  var adjHeader = document.createElement('div');
-  adjHeader.style.cssText = 'text-align:center;padding-bottom:2px;';
-  adjHeader.innerHTML =
-    "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#FF6B00;letter-spacing:3px;\">HALFTIME ADJUSTMENT</div>" +
-    "<div style=\"font-family:'Rajdhani';font-size:11px;color:#888;letter-spacing:1px;margin-top:2px;\">Choose your 2nd half approach</div>";
-  adjSection.appendChild(adjHeader);
+  // Section header
+  var adjHdr = document.createElement('div');
+  adjHdr.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:8px;';
+  adjHdr.innerHTML =
+    '<div style="flex:1;height:1px;background:linear-gradient(90deg,transparent,#FF451133);"></div>' +
+    "<div style=\"font-family:'Oswald';font-weight:700;font-size:10px;color:#FF4511;letter-spacing:3px;\">2ND HALF GAME PLAN</div>" +
+    '<div style="flex:1;height:1px;background:linear-gradient(270deg,transparent,#FF451133);"></div>';
+  adjSection.appendChild(adjHdr);
 
-  var btnWrap = document.createElement('div');
-  btnWrap.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
+  var adjBtns = document.createElement('div');
+  adjBtns.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
 
-  ADJUSTMENTS.forEach(function(adj) {
-    var btn = document.createElement('button');
-    var isSelected = selectedAdj === adj.id;
-    btn.style.cssText =
-      'width:100%;background:' + (isSelected ? adj.bg : 'rgba(255,255,255,0.02)') + ';' +
-      'border:2px solid ' + (isSelected ? adj.border : '#2A2420') + ';' +
-      'border-radius:8px;padding:10px 14px;cursor:pointer;text-align:left;' +
-      'display:flex;flex-direction:column;gap:2px;' +
-      'box-shadow:' + (isSelected ? '0 0 12px ' + adj.glow : 'none') + ';' +
-      'transition:border-color 0.15s,box-shadow 0.15s;';
+  ADJUSTMENTS.forEach(function(adj, idx) {
+    var btn = document.createElement('div');
+    var isSel = selectedAdj === adj.id;
+    btn.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;cursor:pointer;transition:all 0.15s;' +
+      (isSel ? 'border:1.5px solid ' + adj.color + '66;background:' + adj.color + '08;box-shadow:0 0 12px ' + adj.color + '22;' : 'border:1.5px solid #1a1a1a;background:rgba(255,255,255,0.01);');
 
     btn.innerHTML =
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:16px;color:" + (isSelected ? adj.border : '#ccc') + ";letter-spacing:2px;\">" + adj.label + "</div>" +
-      "<div style=\"font-family:'Rajdhani';font-size:12px;color:" + (isSelected ? '#ddd' : '#888') + ";line-height:1.3;\">" + adj.desc + "</div>" +
-      "<div style=\"font-family:'Rajdhani';font-size:10px;color:" + (isSelected ? adj.border : '#555') + ";letter-spacing:0.5px;margin-top:2px;\">" + adj.effect + "</div>";
+      '<div style="width:3px;height:32px;border-radius:2px;background:' + adj.color + ';opacity:' + (isSel ? '1' : '0.3') + ';flex-shrink:0;"></div>' +
+      '<div style="flex:1;">' +
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:15px;color:" + (isSel ? adj.color : '#888') + ";letter-spacing:2px;\">" + adj.label + '</div>' +
+        "<div style=\"font-family:'Rajdhani';font-size:10px;color:" + (isSel ? '#bbb' : '#555') + ";line-height:1.3;\">" + adj.desc + '</div>' +
+      '</div>' +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:" + (isSel ? adj.color : '#444') + ";max-width:80px;text-align:right;letter-spacing:0.3px;\">" + adj.effect + '</div>';
 
-    btn.ontouchstart = function() {};  // enable :active on iOS
     btn.onclick = function() {
       SND.snap();
       selectedAdj = adj.id;
       setGs(function(s) { return Object.assign({}, s, { halftimeAdjustment: adj.id }); });
-      // Re-render all buttons to reflect new selection
-      Array.from(btnWrap.children).forEach(function(child, i) {
+      // Re-render button states
+      Array.from(adjBtns.children).forEach(function(child, i) {
         var a = ADJUSTMENTS[i];
         var sel = a.id === adj.id;
-        child.style.background = sel ? a.bg : 'rgba(255,255,255,0.02)';
-        child.style.border = '2px solid ' + (sel ? a.border : '#2A2420');
-        child.style.boxShadow = sel ? '0 0 12px ' + a.glow : 'none';
-        var label = child.children[0];
-        var desc = child.children[1];
-        var effect = child.children[2];
-        label.style.color = sel ? a.border : '#ccc';
-        desc.style.color = sel ? '#ddd' : '#888';
-        effect.style.color = sel ? a.border : '#555';
+        child.style.border = '1.5px solid ' + (sel ? a.color + '66' : '#1a1a1a');
+        child.style.background = sel ? a.color + '08' : 'rgba(255,255,255,0.01)';
+        child.style.boxShadow = sel ? '0 0 12px ' + a.color + '22' : 'none';
+        var indicator = child.children[0];
+        var infoDiv = child.children[1];
+        var effectDiv = child.children[2];
+        if (indicator) indicator.style.opacity = sel ? '1' : '0.3';
+        if (infoDiv && infoDiv.children[0]) infoDiv.children[0].style.color = sel ? a.color : '#888';
+        if (infoDiv && infoDiv.children[1]) infoDiv.children[1].style.color = sel ? '#bbb' : '#555';
+        if (effectDiv) effectDiv.style.color = sel ? a.color : '#444';
       });
     };
-
-    btnWrap.appendChild(btn);
+    adjBtns.appendChild(btn);
   });
-
-  adjSection.appendChild(btnWrap);
+  adjSection.appendChild(adjBtns);
   content.appendChild(adjSection);
 
-  // ── Locker Room Shop ──────────────────────────────────────────────────────
+  // ── TORCH STORE ──
   var shopBox = document.createElement('div');
-  shopBox.style.cssText = 'width:100%;max-width:320px;background:var(--bg-surface);border:1px solid #333;border-radius:8px;padding:10px 12px;';
-  shopBox.innerHTML = "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid #1E1610;padding-bottom:6px;\"><div style=\"font-family:'Rajdhani';font-weight:700;font-size:11px;color:#FF6B00;letter-spacing:1px;\">TORCH STORE</div><div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:#00ff44;\">" + humanPts + " PTS</div></div>";
+  shopBox.style.cssText = 'width:100%;max-width:340px;';
+
+  var shopHdr = document.createElement('div');
+  shopHdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;';
+  shopHdr.innerHTML =
+    '<div style="display:flex;align-items:center;gap:6px;">' +
+      '<div style="width:12px;height:2px;background:#EBB010;border-radius:1px;"></div>' +
+      "<div style=\"font-family:'Oswald';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:3px;\">TORCH STORE</div>" +
+    '</div>' +
+    '<div style="display:flex;align-items:center;gap:4px;">' +
+      "<svg viewBox='0 0 44 56' width='10' height='13' fill='#EBB010'><path d='" + FLAME_PATH + "'/></svg>" +
+      "<span style=\"font-family:'Teko';font-weight:700;font-size:16px;color:#EBB010;\">" + humanPts + "</span>" +
+      "<span style=\"font-family:'Rajdhani';font-weight:600;font-size:8px;color:#EBB01066;letter-spacing:1px;\">PTS</span>" +
+    '</div>';
+  shopBox.appendChild(shopHdr);
 
   var offersRow = document.createElement('div');
   offersRow.style.cssText = 'display:flex;gap:6px;';
+
   var getOffer = function() {
     var r = Math.random();
     var tier = r < 0.3 ? 'BRONZE' : r < 0.7 ? 'SILVER' : 'GOLD';
     var pool = TORCH_CARDS.filter(function(c) { return c.tier === tier; });
     return pool[Math.floor(Math.random() * pool.length)];
   };
+
+  var TIER_COLORS = { GOLD: '#EBB010', SILVER: '#C0C0C0', BRONZE: '#B87333' };
   [getOffer(), getOffer(), getOffer()].forEach(function(card) {
     var canAfford = humanPts >= card.cost;
-    var cardEl = buildTorchCard(card, 80, 112);
-    cardEl.style.flex = '1';
-    cardEl.style.cursor = canAfford ? 'pointer' : 'not-allowed';
-    cardEl.style.opacity = canAfford ? '1' : '0.4';
+    var tc = TIER_COLORS[card.tier] || '#EBB010';
+
+    var cardSlot = document.createElement('div');
+    cardSlot.style.cssText = 'flex:1;border-radius:6px;border:1.5px solid ' + tc + '33;background:linear-gradient(170deg,' + tc + '10,#0a0804 55%);padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:' + (canAfford ? 'pointer' : 'not-allowed') + ';opacity:' + (canAfford ? '1' : '0.4') + ';';
+
+    cardSlot.innerHTML =
+      "<div style=\"font-family:'Oswald';font-weight:700;font-size:7px;color:" + tc + ";opacity:0.5;letter-spacing:1px;\">" + card.tier + '</div>' +
+      "<svg viewBox='0 0 44 56' width='16' height='21' fill='" + tc + "' style='opacity:0.5;'><path d='" + FLAME_PATH + "'/></svg>" +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:10px;color:#fff;text-align:center;line-height:1;letter-spacing:0.5px;\">" + card.name + '</div>' +
+      '<div style="display:flex;align-items:center;gap:2px;margin-top:2px;">' +
+        "<svg viewBox='0 0 44 56' width='8' height='10' fill='#EBB010'><path d='" + FLAME_PATH + "'/></svg>" +
+        "<span style=\"font-family:'Teko';font-weight:700;font-size:12px;color:#EBB010;\">" + card.cost + '</span>' +
+      '</div>';
+
     if (canAfford) {
-      cardEl.onclick = function() {
+      cardSlot.onclick = function() {
         SND.click();
-        // Confirmation overlay
         var confirmOv = document.createElement('div');
-        confirmOv.style.cssText = "position:fixed;inset:0;z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(10,8,4,0.92);pointer-events:auto;";
-        var tierColors = { GOLD: '#EBB010', SILVER: '#C0C0C0', BRONZE: '#CD7F32' };
-        var acqColor = tierColors[card.tier] || '#EBB010';
+        confirmOv.style.cssText = 'position:fixed;inset:0;z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(10,8,4,0.92);pointer-events:auto;';
         confirmOv.innerHTML =
-          "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:" + acqColor + ";letter-spacing:3px;\">" + card.name + "</div>" +
-          "<div style=\"font-family:'Rajdhani';font-size:13px;color:#999;text-align:center;max-width:260px;line-height:1.3;\">" + card.effect + "</div>" +
-          "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;letter-spacing:2px;margin-top:8px;\">BUY FOR " + card.cost + " PTS?</div>";
+          "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:" + tc + ";letter-spacing:3px;\">" + card.name + '</div>' +
+          "<div style=\"font-family:'Rajdhani';font-size:13px;color:#999;text-align:center;max-width:260px;line-height:1.3;\">" + card.effect + '</div>' +
+          "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;letter-spacing:2px;margin-top:8px;\">BUY FOR " + card.cost + ' PTS?</div>';
         var confirmBtn = document.createElement('button');
-        confirmBtn.className = 'btn-blitz';
-        confirmBtn.style.cssText = "font-size:14px;padding:12px 32px;background:linear-gradient(180deg,#00ff44,#00aa22);color:#000;border-color:#00ff44;letter-spacing:2px;";
+        confirmBtn.style.cssText = "padding:12px 32px;border:none;border-radius:6px;background:linear-gradient(180deg,#00ff44,#00aa22);font-family:'Teko';font-weight:700;font-size:16px;color:#000;letter-spacing:2px;cursor:pointer;";
         confirmBtn.textContent = 'CONFIRM';
         confirmBtn.onclick = function() {
           SND.snap();
@@ -210,34 +224,38 @@ export function buildHalftime() {
         el.appendChild(confirmOv);
       };
     }
-    offersRow.appendChild(cardEl);
+    offersRow.appendChild(cardSlot);
   });
   shopBox.appendChild(offersRow);
   content.appendChild(shopBox);
 
-  // ── Second half receive info ───────────────────────────────────────────────
+  // ── 2ND HALF RECEIVE INFO ──
   var receiverIsHuman = !GS.humanReceives;
   var receiverTeam = receiverIsHuman ? team : opp;
   var receiveInfo = document.createElement('div');
-  receiveInfo.style.cssText = "width:100%;max-width:320px;text-align:center;font-family:'Rajdhani';font-size:11px;color:#888;padding:4px 0;";
+  receiveInfo.style.cssText = "text-align:center;font-family:'Rajdhani';font-weight:600;font-size:10px;color:#555;";
   receiveInfo.innerHTML = "<span style='color:" + receiverTeam.accent + ";font-weight:700;'>" + receiverTeam.name + "</span> receive to start the 2nd half";
   content.appendChild(receiveInfo);
 
-  // ── Resume button ─────────────────────────────────────────────────────────
-  var resumeBtn = document.createElement('button');
-  resumeBtn.className = 'btn-blitz';
-  resumeBtn.style.cssText = "width:100%;max-width:320px;font-size:14px;background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;letter-spacing:2px;";
-  resumeBtn.textContent = 'START SECOND HALF \u2192';
-  resumeBtn.onclick = function() {
+  el.appendChild(content);
+
+  // ── CTA BUTTON ──
+  var ctaWrap = document.createElement('div');
+  ctaWrap.style.cssText = 'flex-shrink:0;padding:6px 14px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom,0px));';
+
+  var ctaBtn = buildFlameBadgeButton('2ND HALF', function() {
     SND.snap();
     gs.startSecondHalf();
-    // Apply halftime adjustment to game engine
     gs.halftimeAdjustment = GS.halftimeAdjustment || 'balanced';
     var humanReceives2nd = !GS.humanReceives;
     setGs(function(s) { return Object.assign({}, s, { screen: 'gameplay', humanReceives: humanReceives2nd, _halftimeCardDone: false }); });
-  };
-  content.appendChild(resumeBtn);
+  });
 
-  el.appendChild(content);
+  ctaWrap.appendChild(ctaBtn);
+  el.appendChild(ctaWrap);
+
+  // ── BOTTOM ACCENT BAR ──
+  el.appendChild(buildAccentBar(teamColor, oppColor));
+
   return el;
 }

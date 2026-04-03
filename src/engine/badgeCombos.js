@@ -54,7 +54,7 @@ export function checkOffensiveBadgeCombo(badge, play, is3rd4th, isConversion) {
       break;
     case 'CROSSHAIR':
       // Precision: ONLY quick passes (+3 yds, 15pts)
-      if (pt === 'QUICK') { yardBonus = 3; pointBonus = 15; }
+      if (pt === 'SHORT') { yardBonus = 3; pointBonus = 15; }
       break;
     case 'BOLT':
       // Agility: ONLY screens (+3 yds, 15pts)

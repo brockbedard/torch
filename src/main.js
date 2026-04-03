@@ -1,3 +1,21 @@
+// Local font bundles — latin subset only (offline-ready, no Google CDN dependency)
+// Note: Teko max weight is 700; CSS font-weight:900 will map to 700 automatically
+import '@fontsource/teko/latin-400.css';
+import '@fontsource/teko/latin-500.css';
+import '@fontsource/teko/latin-600.css';
+import '@fontsource/teko/latin-700.css';
+import '@fontsource/rajdhani/latin-400.css';
+import '@fontsource/rajdhani/latin-500.css';
+import '@fontsource/rajdhani/latin-600.css';
+import '@fontsource/rajdhani/latin-700.css';
+import '@fontsource/barlow-condensed/latin-400.css';
+import '@fontsource/barlow-condensed/latin-600.css';
+import '@fontsource/barlow-condensed/latin-700.css';
+import '@fontsource/oswald/latin-500.css';
+import '@fontsource/oswald/latin-600.css';
+import '@fontsource/oswald/latin-700.css';
+import '@fontsource/bebas-neue/latin-400.css';
+
 import { GS, setRender } from './state.js';
 import { SND } from './engine/sound.js';
 import { buildHome } from './ui/screens/home.js';
@@ -22,7 +40,7 @@ function render() {
   // Crowd audio managed by AudioStateManager.setState() per screen — don't kill it here
   // Clean up gameplay mode when leaving
   root.classList.remove('gp-2min');
-  try { screen.orientation.unlock(); } catch (e) {}
+  try { screen.orientation.lock('portrait').catch(function() {}); } catch (e) {}
   let content;
 
   // Dev-only routes — gated behind localStorage torch_dev flag

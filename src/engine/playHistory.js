@@ -16,7 +16,7 @@ export function getPlayHistoryBonus(history, currentPlay) {
 
   let bonus = 0;
   const currentIsRun = isRunType(currentPlay.playType);
-  const currentIsPass = ['SHORT', 'QUICK', 'DEEP', 'SCREEN'].includes(currentPlay.playType);
+  const currentIsPass = ['SHORT', 'DEEP', 'SCREEN'].includes(currentPlay.playType);
   const currentIsPA = currentPlay.id === 'pa_flat' || currentPlay.id === 'pa_post';
 
   // Count consecutive runs/passes from most recent

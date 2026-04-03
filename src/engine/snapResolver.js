@@ -198,7 +198,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
 
     // Play-type completion boost
     var pt = offPlay.playType;
-    if (pt === 'QUICK' || pt === 'SHORT') compRate += 0.10;
+    if (pt === 'SHORT') compRate += 0.10;
     else if (pt === 'SCREEN') compRate += 0.12;
 
     if (covMean <= -2) compRate -= 0.08;
@@ -430,7 +430,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
 
   // PLAY ACTION (Bronze, pre-snap): +5 yards if opponent played run defense
   if (oCard === 'play_action') {
-    var isRunDef = defPlay && (defPlay.cardType === 'BLITZ' || defPlay.cardType === 'PRESSURE' || (defPlay.runDefMod && defPlay.runDefMod < -1));
+    var isRunDef = defPlay && (defPlay.cardType === 'BLITZ' || (defPlay.runDefMod && defPlay.runDefMod < -1));
     if (isRunDef) {
       result.yards += 5;
       result.description = "PLAY ACTION! Defense bit on the run fake. 5 bonus yards!";

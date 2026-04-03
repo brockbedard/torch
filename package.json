@@ -1,6 +1,6 @@
 {
   "name": "torch-football",
-  "version": "0.29.0",
+  "version": "0.30.0",
   "description": "TORCH — The Football Card Game",
   "scripts": {
     "dev": "vite",
@@ -31,6 +31,11 @@
     "vite-plugin-qrcode": "^0.4.1"
   },
   "dependencies": {
+    "@fontsource/barlow-condensed": "^5.2.8",
+    "@fontsource/bebas-neue": "^5.2.7",
+    "@fontsource/oswald": "^5.2.8",
+    "@fontsource/rajdhani": "^5.2.7",
+    "@fontsource/teko": "^5.2.7",
     "gsap": "^3.14.2",
     "howler": "^2.2.4"
   }

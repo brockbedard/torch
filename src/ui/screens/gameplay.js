@@ -10,7 +10,7 @@ import { GameState } from '../../engine/gameState.js';
 import { getOffenseRoster, getDefenseRoster, getFullRoster } from '../../data/players.js';
 // playSvg removed — play cards no longer use SVG diagrams
 import { TORCH_CARDS } from '../../data/torchCards.js';
-import { buildMaddenPlayer, buildPlayV1, buildTorchCard } from '../components/cards.js';
+import { buildMaddenPlayer, buildPlayV1, buildTorchCard, buildHomeCard, flipRevealTorchCard } from '../components/cards.js';
 import { showShop } from '../components/shop.js';
 // tooltip system removed — will be rebuilt in v2
 import AudioStateManager from '../../engine/audioManager.js';
@@ -53,40 +53,43 @@ var TEAM_CELEBRATION = {
    ═══════════════════════════════════════════ */
 const CSS = `
 /* root */
-.T{height:100%;display:flex;flex-direction:column;background:#0A0804;overflow:hidden;position:relative;font-family:'Barlow Condensed',sans-serif}
+.T{height:100%;display:flex;flex-direction:column;background:#0A0804;overflow:hidden;position:relative;font-family:'Barlow Condensed',sans-serif;padding-top:env(safe-area-inset-top,0px)}
 
-/* scoreboard */
-.T-sb{background:#0E0A04;border-bottom:none;flex-shrink:0;z-index:60;overflow:hidden;padding-top:env(safe-area-inset-top,0px)}
-/* score row: 5 columns — icon | team+score | center | team+score | icon */
-.T-sb-row{display:grid;grid-template-columns:44px 1fr minmax(70px,auto) 1fr 44px;align-items:center;justify-items:center;padding:6px 10px;gap:4px}
-.T-sb-icon{line-height:1;text-align:center;display:flex;align-items:center;justify-content:center}
-.T-sb-side{display:flex;flex-direction:column;align-items:center;padding:4px 6px;border-radius:6px;position:relative}
-.T-sb-side-glow{background:radial-gradient(ellipse,rgba(255,204,0,.15) 0%,rgba(255,204,0,.04) 50%,transparent 75%);box-shadow:0 0 16px rgba(255,204,0,.12);border:1px solid rgba(255,204,0,.15)}
-.T-sb-name{font-family:'Teko';font-weight:700;font-size:20px;font-style:italic;line-height:1;letter-spacing:1px;white-space:nowrap;flex-shrink:1;min-width:0}
-.T-sb-score-row{position:relative;margin-top:2px;display:flex;justify-content:center}
-.T-sb-pos-arrow{position:absolute;top:50%;transform:translateY(-50%);font-size:14px;color:#00ff44;line-height:1}
-.T-sb-pos-arrow-l{left:-16px}
-.T-sb-pos-arrow-r{right:-16px}
-.T-sb-pts{font-family:'Rajdhani';font-size:28px;color:#e8e6ff;line-height:1}
-.T-sb-pts-glow{text-shadow:0 0 14px rgba(255,204,0,.5)}
-.T-sb-center{text-align:center;padding:0 6px;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);min-width:70px}
-.T-sb-half{font-family:'Teko';font-size:11px;color:#c8a030;letter-spacing:2px;line-height:1;white-space:nowrap}
-.T-sb-snap{font-family:'Teko';font-weight:700;font-size:22px;color:#e8e6ff;margin-top:2px;line-height:1;text-shadow:0 0 4px rgba(255,255,255,.2)}
-.T-sb-countdown{font-family:'Teko';font-size:18px;color:#554f80;margin-top:2px;line-height:1}
-.T-sb-countdown-live{font-size:24px;color:#e03050;text-shadow:0 0 10px rgba(224,48,80,.5);background:rgba(224,48,80,.1);padding:2px 8px;border-radius:4px}
-/* situation bar — always one line, never wraps */
-.T-sb-sit{display:flex;align-items:center;justify-content:center;padding:4px 8px;background:rgba(0,0,0,.4);border-top:1px solid rgba(255,255,255,.04);gap:6px;white-space:nowrap;overflow:hidden}
-.T-sb-sit-down{font-family:'Rajdhani';font-size:10px;color:#FF6B00;letter-spacing:.5px;flex-shrink:0}
-.T-sb-sit-div{width:1px;height:14px;background:rgba(255,255,255,.12);flex-shrink:0}
-.T-sb-sit-ball{font-family:'Rajdhani';font-size:10px;color:#e8e6ff;opacity:.7;letter-spacing:.5px;flex-shrink:1;overflow:hidden;text-overflow:ellipsis}
-.T-sb-sit-torch{font-family:'Rajdhani';font-size:12px;color:#c8a030;letter-spacing:.5px;transition:transform .08s,text-shadow .08s;flex-shrink:0}
+/* scoreboard — jumbotron */
+.T-sb{background:#080808;overflow:hidden;flex-shrink:0;z-index:60;margin-bottom:6px}
+.T-sb-led{height:2px}
+.T-sb-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch}
+.T-sb-panel{padding:8px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.T-sb-panel-home{border-right:1px solid #1a1a1a}
+.T-sb-panel-away{border-left:1px solid #1a1a1a}
+.T-sb-name{font-family:'Oswald',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;line-height:1;white-space:nowrap}
+.T-sb-score{font-family:'Teko';font-weight:900;font-size:42px;line-height:0.9;color:#fff;transition:transform 0.2s}
+.T-sb-poss-dot{width:4px;height:4px;border-radius:50%;margin-top:3px}
+.T-sb-center{padding:6px 14px;background:#0a0a0a;min-width:80px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.T-sb-half{font-family:'Rajdhani';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:2px;line-height:1}
+.T-sb-snap{font-family:'Teko';font-weight:700;font-size:18px;color:#aaa;line-height:1;margin-top:2px}
+.T-sb-divider{width:40px;height:1px;background:#333;margin:4px 0}
+.T-sb-down{font-family:'Oswald',sans-serif;font-weight:700;font-size:11px;color:#FF6B00;letter-spacing:1px;line-height:1}
+.T-sb-ball{font-family:'Rajdhani';font-weight:600;font-size:10px;color:#888;letter-spacing:0.5px;margin-top:1px}
+.T-sb-clock{font-family:'Teko';font-weight:900;font-size:28px;line-height:1}
+.T-sb-clock-label{font-family:'Rajdhani';font-weight:700;font-size:9px;color:#e03050;letter-spacing:2px;opacity:0.7}
+@keyframes segFlicker{0%,95%{opacity:1}96%{opacity:0.7}97%{opacity:1}98%{opacity:0.85}100%{opacity:1}}
+@keyframes clockPulse{0%,100%{text-shadow:0 0 8px rgba(224,48,80,0.4);color:#e03050}50%{text-shadow:0 0 16px rgba(224,48,80,0.7),0 0 30px rgba(224,48,80,0.3);color:#ff4060}}
+@keyframes urgentLed{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes urgentPulse{0%,100%{border-color:#e0305044;background:rgba(224,48,80,0.03)}50%{border-color:#e0305088;background:rgba(224,48,80,0.06)}}
 
 /* TORCH points banner */
-.T-torch-banner{display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 16px;background:linear-gradient(90deg,rgba(235,176,16,0.12) 0%,rgba(255,69,17,0.12) 100%);border-top:2px solid #EBB010;border-bottom:2px solid #EBB010;flex-shrink:0}
-.T-torch-banner-flame{width:14px;height:14px;animation:none}
+.T-torch-banner{flex-shrink:0;display:flex;flex-direction:column}
+.T-torch-banner-border{height:2px;background:linear-gradient(90deg,#8B4A1F,#EBB010,#FFD060,#EBB010,#8B4A1F);background-size:200% 100%;animation:borderFlow 3s linear infinite}
+@keyframes borderFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.T-torch-banner-content{background:linear-gradient(180deg,#1a1208 0%,#0a0804 40%,#0a0804 60%,#1a1208 100%);padding:8px 14px;display:flex;align-items:center;justify-content:center;gap:8px;position:relative}
+.T-torch-banner-flame{animation:emblemPulse 3s ease-in-out infinite}
+@keyframes emblemPulse{0%,100%{filter:drop-shadow(0 0 4px rgba(255,69,17,0.3))}50%{filter:drop-shadow(0 0 10px rgba(255,69,17,0.6))}}
 @keyframes T-flame-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.85}}
-.T-torch-banner-label{font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:3px;line-height:1}
-.T-torch-banner-pts{font-family:'Teko';font-weight:700;font-size:32px;color:#fff;text-shadow:0 0 16px #EBB010,0 0 32px #EBB01066;line-height:1;transition:transform .3s}
+.T-torch-banner-label{font-family:'Teko';font-weight:700;font-size:28px;letter-spacing:6px;line-height:1;background:linear-gradient(180deg,#FFD060 0%,#EBB010 30%,#8B4A1F 60%,#EBB010 80%,#FFD060 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.T-torch-banner-sep{width:1px;height:16px;background:linear-gradient(180deg,transparent,#EBB01044,transparent)}
+.T-torch-banner-pts{font-family:'Teko';font-weight:700;font-size:26px;color:#fff;line-height:1;transition:transform .3s;animation:scoreGlow 2.5s ease-in-out infinite}
+@keyframes scoreGlow{0%,100%{text-shadow:0 0 6px rgba(255,255,255,0.2)}50%{text-shadow:0 0 12px rgba(255,255,255,0.5),0 0 20px rgba(255,69,17,0.2)}}
 
 /* drive summary */
 .T-drive{flex:1;overflow-y:auto;padding:12px 14px 16px;background:linear-gradient(180deg,rgba(10,8,4,0) 0%,rgba(10,8,4,0.95) 8%);font-family:'Rajdhani',sans-serif}
@@ -102,7 +105,7 @@ const CSS = `
 .T-drive-stat{font-family:'Rajdhani';font-size:13px;font-weight:600;color:#fff}
 .T-drive-comm{margin-top:8px;font-family:'Rajdhani';font-size:13px;font-weight:700;color:#e8e6ff;line-height:1.3;letter-spacing:.3px}
 .T-drive-comm-sub{font-family:'Rajdhani';font-size:12px;color:#C4A265;line-height:1.2;margin-top:2px}
-.T-drive-idle{font-family:'Rajdhani';font-size:11px;color:#444;letter-spacing:.5px;margin-top:8px}
+.T-drive-idle{font-family:'Rajdhani';font-size:11px;color:#666;letter-spacing:.5px;margin-top:8px}
 
 /* field strip — Tecmo Bowl inspired */
 .T-strip{height:136px;flex-shrink:0;position:relative;background:#050a08;overflow:hidden;border-bottom:1px solid #1E1610}
@@ -133,7 +136,7 @@ const CSS = `
 @keyframes T-torch-ember{0%,100%{box-shadow:0 0 12px rgba(255,69,17,0.4),inset 0 0 8px rgba(255,69,17,0.1);border-color:rgba(255,69,17,0.6)}50%{box-shadow:0 0 24px rgba(235,176,16,0.55),inset 0 0 14px rgba(235,176,16,0.18);border-color:rgba(235,176,16,0.8)}}
 .T-torch-brand{font-family:'Teko';font-weight:700;font-size:16px;letter-spacing:4px;text-shadow:0 0 10px rgba(255,69,17,0.6)}
 .T-drop-torch.T-drop-active{animation:T-drop-pulse 1.5s ease-in-out infinite}
-.T-drop-lbl{font-family:'Rajdhani';font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-align:center;line-height:1.4}
+.T-drop-lbl{font-family:'Rajdhani';font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-align:center;line-height:1.4}
 .T-drop-hover{border-color:#FF4511;background:rgba(255,69,17,.15);transform:translateY(-50%) scale(1.02)}
 @keyframes T-drop-pulse{0%,100%{border-color:rgba(255,69,17,0.4);box-shadow:0 0 10px rgba(255,69,17,0.1)}50%{border-color:#FF4511;box-shadow:inset 0 0 15px rgba(255,69,17,.2),0 0 15px rgba(255,69,17,.4);background:rgba(255,69,17,0.05)}}
 .T-drop-active{animation:T-drop-pulse 1.5s ease-in-out infinite;border-style:solid;opacity:1;z-index:10}
@@ -176,7 +179,7 @@ const CSS = `
 
 /* 2min buttons */
 .T-2btns{display:flex;gap:5px}
-.T-2btn{flex:1;padding:10px;font-family:'Rajdhani';font-size:7px;cursor:pointer;text-align:center;background:none;letter-spacing:.5px;text-transform:uppercase;border:4px solid}
+.T-2btn{flex:1;padding:14px;font-family:'Rajdhani';font-size:10px;cursor:pointer;text-align:center;background:none;letter-spacing:.5px;text-transform:uppercase;border:2px solid;border-radius:6px}
 .T-2btn:active{transform:translate(3px,3px)}
 .T-spike{color:#FF6B00;border-color:#FF6B00;box-shadow:4px 4px 0 #803500,6px 6px 0 #000}
 .T-kneel{color:#554f80;border-color:#554f80;box-shadow:4px 4px 0 #2a2840,6px 6px 0 #000}
@@ -190,7 +193,7 @@ const CSS = `
 .T-pbp-sub{font-family:'Rajdhani';font-size:14px;color:#C4A265;line-height:1.2}
 .T-pbp-result{font-family:'Rajdhani';font-size:12px;letter-spacing:.5px;line-height:1;margin-top:6px;white-space:nowrap;overflow:hidden}
 .T-pbp-down{font-family:'Rajdhani';font-size:10px;color:#FF6B00;margin-top:4px;letter-spacing:.5px;line-height:1;white-space:nowrap;overflow:hidden}
-.T-pbp-idle{font-family:'Rajdhani',sans-serif;font-size:11px;color:#444;letter-spacing:.5px}
+.T-pbp-idle{font-family:'Rajdhani',sans-serif;font-size:11px;color:#666;letter-spacing:.5px}
 /* torch points fly animation */
 .T-torch-fly{position:fixed;z-index:9999;font-family:'Rajdhani';font-size:12px;color:#c8a030;pointer-events:none;text-shadow:0 0 8px rgba(200,160,48,.5)}
 @keyframes T-flyup{0%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(.6)}}
@@ -213,11 +216,6 @@ const CSS = `
 @keyframes T-blink{0%,100%{opacity:1}50%{opacity:0}}
 /* card matchup display on field — helmet crash animation */
 /* clash: simple 3-column layout — left cards | VS | right cards */
-.T-clash{position:absolute;inset:0;z-index:9;display:flex;align-items:center;pointer-events:none;padding:8px}
-.T-clash-side{flex:1;display:flex;flex-direction:column;gap:4px}
-.T-clash-card{background:var(--bg-surface);border-radius:6px;border:2px solid;overflow:hidden}
-.T-clash-center{display:flex;align-items:center;justify-content:center;padding:0 6px}
-.T-clash-vs{font-family:'Rajdhani';font-size:14px;color:#fff;background:rgba(200,160,48,.95);padding:8px 12px;border-radius:8px;box-shadow:0 0 24px rgba(200,160,48,.7),0 0 50px rgba(200,160,48,.3);letter-spacing:3px;line-height:1}
 /* torch points big popup */
 @keyframes T-torch-pop{0%{opacity:1;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-50%) scale(0.8) translateY(-30px)}}
 .T-torch-big{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);z-index:9999;font-family:'Rajdhani';font-size:28px;pointer-events:none;animation:T-torch-pop 1.5s ease-out forwards;text-shadow:0 0 20px currentColor}
@@ -242,14 +240,14 @@ const CSS = `
 
 /* drive summary */
 .T-drv{padding:10px 14px;text-align:center}
-.T-drv-hdr{font-family:'Rajdhani';font-size:7px;letter-spacing:1px;margin-bottom:4px}
+.T-drv-hdr{font-family:'Rajdhani';font-size:10px;letter-spacing:1px;margin-bottom:4px}
 .T-drv-stat{font-family:'Rajdhani';font-size:9px;color:#554f80}
 
 /* 2-min transformation */
 /* 2-minute drill — full urgency transformation */
 .T-urgent .T-strip{border-bottom-color:#e03050;box-shadow:inset 0 0 30px rgba(224,48,80,.1)}
-.T-urgent .T-sb{border-bottom-color:#e03050}
-.T-urgent .T-sb-sit{background:rgba(224,48,80,.08)}
+.T-urgent .T-sb{box-shadow:0 0 20px rgba(224,48,80,0.15)}
+.T-urgent .T-sb-led{background:linear-gradient(90deg,#e03050,#ff6060,#e03050,#ff6060,#e03050);background-size:200% 100%;animation:urgentLed 1.5s linear infinite}
 @keyframes T-breathe{0%,100%{background-color:#0A0804}50%{background-color:#140008}}
 .T-urgent .T-panel{animation:T-breathe 2s ease-in-out infinite;border-top-color:#e0305066}
 .T-urgent .T-narr{border-top-color:#e0305044;background:#0a0008}
@@ -259,32 +257,27 @@ const CSS = `
 @keyframes T-coin{0%{transform:rotateY(0)}100%{transform:rotateY(1080deg)}}
 
 /* Card Clash / Reveal Animation */
-@keyframes T-clash-slideL{0%{transform:translateX(-120%) scale(0.8)}100%{transform:translateX(0) scale(1)}}
-@keyframes T-clash-slideR{0%{transform:translateX(120%) scale(0.8)}100%{transform:translateX(0) scale(1)}}
-@keyframes T-clash-flip{0%{transform:rotateY(180deg)}100%{transform:rotateY(0deg)}}
 @keyframes T-clash-shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-8px)}30%{transform:translateX(8px)}45%{transform:translateX(-5px)}60%{transform:translateX(5px)}75%{transform:translateX(-2px)}}
+.T-redzone .CT-snap-btn{background:linear-gradient(180deg,#e03050 0%,#8B0020 100%)!important;box-shadow:0 4px 16px rgba(224,48,80,0.3)!important}
 @keyframes T-clash-flash{0%{opacity:0.6}100%{opacity:0}}
 @keyframes T-clash-yds{0%{transform:scale(0.3);opacity:0}50%{transform:scale(1.2);opacity:1}75%{transform:scale(0.95)}100%{transform:scale(1);opacity:1}}
 @keyframes T-clash-spark{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(0)}}
-@keyframes T-clash-settle{0%{transform:scale(1.15)}40%{transform:scale(0.95)}100%{transform:scale(1)}}
 /* Card deal: slide in face-down then flip to face-up */
 @keyframes T-deal-slide{0%{transform:translateX(100px);opacity:0}100%{transform:translateX(0);opacity:1}}
 @keyframes T-deal-flip{0%{transform:rotateY(180deg)}100%{transform:rotateY(0deg)}}
 .T-card-deal{perspective:600px}
 .T-card-deal .T-card-back{position:absolute;inset:0;z-index:2;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px}
 .T-card-deal .T-card-face{width:100%;height:100%}
-@keyframes T-clash-glow{0%,100%{box-shadow:0 0 8px currentColor}50%{box-shadow:0 0 20px currentColor}}
 @keyframes T-micro-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-2px)} 50%{transform:translateX(2px)} 75%{transform:translateX(-1px)} }
 .T-2min-active { animation: T-2min-pulse 2s ease-in-out infinite; }
 @keyframes T-2min-pulse { 0%,100% { box-shadow: inset 0 0 0 0 transparent; } 50% { box-shadow: inset 0 0 30px rgba(255,0,64,0.08); } }
 @keyframes T-clock-critical { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
 @keyframes T-snap-pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+@keyframes coinGlow{0%,100%{box-shadow:0 0 20px rgba(235,176,16,0.3)}50%{box-shadow:0 0 40px rgba(235,176,16,0.5),0 0 60px rgba(255,69,17,0.2)}}
+@keyframes pulseHint{0%,100%{opacity:0.5}50%{opacity:1}}
+@keyframes floatCard{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 .T-clash-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;pointer-events:auto}
 .T-clash-dim{position:absolute;inset:0;background:#0A0804;transition:opacity 0.3s}
-.T-clash-cards{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:12px;perspective:800px}
-.T-clash-card-wrap{border-radius:10px;overflow:hidden;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s,box-shadow 0.3s;transform-style:preserve-3d;max-width:calc(50% - 24px);flex:1}
-.T-clash-card-off{background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.15);padding:12px 16px;text-align:center;min-width:100px}
-.T-clash-card-def{background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.15);padding:12px 16px;text-align:center;min-width:100px}
 .T-clash-result{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:6px}
 .T-clash-yds{font-family:'Teko';font-weight:700;font-size:64px;line-height:1;text-shadow:0 0 24px currentColor;animation:T-clash-yds 0.6s cubic-bezier(0.22,1.3,0.36,1) both}
 .T-clash-label{font-family:'Rajdhani';font-weight:700;font-size:14px;letter-spacing:1px;opacity:0.8}
@@ -325,8 +318,8 @@ function getRisk(id) { return HIGH_RISK_IDS.indexOf(id)>=0?'high':MED_RISK_IDS.i
 
 /* Build a placed play card for the field strip — uses shared buildPlayV1 */
 function mkPlayCardEl(play) {
-  var cat = {SHORT:'SHORT',QUICK:'QUICK',DEEP:'DEEP',RUN:'RUN',SCREEN:'SCREEN',OPTION:'OPTION',
-    BLITZ:'BLITZ',ZONE:'ZONE',PRESSURE:'PRESSURE',HYBRID:'HYBRID'}[play.playType||play.cardType] || 'RUN';
+  var cat = {SHORT:'SHORT',DEEP:'DEEP',RUN:'RUN',SCREEN:'SCREEN',OPTION:'OPTION',
+    BLITZ:'BLITZ',ZONE:'ZONE',TRAP:'TRAP'}[play.playType||play.cardType] || 'RUN';
   return buildPlayV1({
     name: play.name,
     playType: cat,
@@ -416,6 +409,9 @@ export function buildGameplay() {
   var _cpuFullRoster = getFullRoster(GS.opponent || 'wolves');
   var _humanSTDeck = createSTDeck(_humanFullRoster);
   var _cpuSTDeck = createSTDeck(_cpuFullRoster);
+
+  // Track new drive state for card deal animation
+  var _isNewDrive = true; // first draw is always a new drive
 
   // Hand management state — initialized per side on first drawPanel
   var _offHandState = null;
@@ -585,6 +581,10 @@ export function buildGameplay() {
   var cDefStats = {}; // { name: { pos, tkl, pbu, int, sack } }
   // Per-player game stats for card display (keyed by player id)
   var _playerGameStats = {}; // { id: { yds, rec, recYds, rushAtt, rushYds, passAtt, passComp, passYds, tkl, pbu, int, sack, td } }
+  var _hotStreak = 0; // consecutive positive plays (user offense)
+  // Timer registry — all setTimeout calls tracked for cleanup on screen exit
+  var _timers = [];
+  function _setTimeout(fn, delay) { var id = setTimeout(fn, delay); _timers.push(id); return id; }
   // CPU roster for QB lookup
   var cpuOffRoster = getOffenseRoster(oppId);
 
@@ -760,31 +760,6 @@ export function buildGameplay() {
   }
 
   // Win probability model
-  function calcWinProbability(gs) {
-    var s = gs.getSummary();
-    var scoreDiff = s.ctScore - s.irScore; // positive = human leads
-    var timeLeft = s.twoMinActive ? s.clockSeconds / 120 : (40 - s.playsUsed) / 40; // 0-1
-    var fieldPos = s.possession === 'CT' ? s.ballPosition / 100 : (100 - s.ballPosition) / 100; // 0-1 towards scoring
-
-    // Base probability from score
-    var base = 50 + scoreDiff * 3; // each point = 3% swing
-
-    // Field position bonus (only matters if you have the ball)
-    var isUserPoss = s.possession === 'CT';
-    if (isUserPoss) base += fieldPos * 8; // deep in opponent territory = +8%
-    else base -= fieldPos * 5; // opponent deep in your territory = -5%
-
-    // Time factor: leads become more certain as time runs out
-    var timeCertainty = 1 + (1 - timeLeft) * 0.5; // 1.0 early, 1.5 late
-    base = 50 + (base - 50) * timeCertainty;
-
-    // Down and distance (3rd/4th and long = worse for offense)
-    if (isUserPoss && s.down >= 3 && s.distance >= 8) base -= 3;
-    if (!isUserPoss && s.down >= 3 && s.distance >= 8) base += 3;
-
-    return Math.max(1, Math.min(99, Math.round(base)));
-  }
-
   // Scorebug cached elements — built once by initBug(), updated by drawBug()
   var _bugEls = {};
   var _prevDown = 0;
@@ -796,122 +771,61 @@ export function buildGameplay() {
   function initBug() {
     const ct = hTeam, ir = oTeam;
 
-    // ── Row ──
+    // ── Top LED bar ──
+    const ledTop = document.createElement('div'); ledTop.className = 'T-sb-led';
+    bug.appendChild(ledTop);
+
+    // ── Score row (3-column grid) ──
     const row = document.createElement('div'); row.className = 'T-sb-row';
 
-    // CT icon (static — badge never changes mid-game)
-    const ctIcon = document.createElement('div'); ctIcon.className = 'T-sb-icon';
-    ctIcon.innerHTML = renderTeamBadge(GS.team, 44);
-    row.appendChild(ctIcon);
-
-    // CT side
-    const ctSide = document.createElement('div'); ctSide.className = 'T-sb-side';
+    // Home panel (left)
+    const ctPanel = document.createElement('div'); ctPanel.className = 'T-sb-panel T-sb-panel-home';
     const ctNameEl = document.createElement('div'); ctNameEl.className = 'T-sb-name';
     ctNameEl.style.color = ct.accent;
-    ctNameEl.style.fontSize = (ct.name.length > 8 ? 14 : ct.name.length > 5 ? 17 : 20) + 'px';
-    ctNameEl.textContent = ct.name;
-    const ctScoreRow = document.createElement('div'); ctScoreRow.className = 'T-sb-score-row';
-    const ctArrowEl = document.createElement('span'); ctArrowEl.className = 'T-sb-pos-arrow T-sb-pos-arrow-l'; ctArrowEl.textContent = '\u25B6';
-    const ctScoreEl = document.createElement('span'); ctScoreEl.className = 'T-sb-pts';
-    ctScoreRow.appendChild(ctArrowEl);
-    ctScoreRow.appendChild(ctScoreEl);
-    ctSide.appendChild(ctNameEl);
-    ctSide.appendChild(ctScoreRow);
-    row.appendChild(ctSide);
+    ctNameEl.textContent = ct.name.toUpperCase();
+    const ctScoreEl = document.createElement('div'); ctScoreEl.className = 'T-sb-score';
+    const ctDotEl = document.createElement('div'); ctDotEl.className = 'T-sb-poss-dot';
+    ctPanel.appendChild(ctNameEl);
+    ctPanel.appendChild(ctScoreEl);
+    ctPanel.appendChild(ctDotEl);
+    row.appendChild(ctPanel);
 
-    // Center
+    // Center panel
     const center = document.createElement('div'); center.className = 'T-sb-center';
     const halfEl = document.createElement('div'); halfEl.className = 'T-sb-half';
     const snapEl = document.createElement('div'); snapEl.className = 'T-sb-snap';
-    const clockEl = document.createElement('div'); clockEl.className = 'T-sb-countdown';
+    const clockEl = document.createElement('div'); clockEl.className = 'T-sb-clock';
+    const clockLabel = document.createElement('div'); clockLabel.className = 'T-sb-clock-label';
+    clockLabel.textContent = '2-MIN DRILL';
+    const dividerEl = document.createElement('div'); dividerEl.className = 'T-sb-divider';
+    const downEl = document.createElement('div'); downEl.className = 'T-sb-down';
+    const ballEl = document.createElement('div'); ballEl.className = 'T-sb-ball';
     center.appendChild(halfEl);
     center.appendChild(snapEl);
     center.appendChild(clockEl);
+    center.appendChild(clockLabel);
+    center.appendChild(dividerEl);
+    center.appendChild(downEl);
+    center.appendChild(ballEl);
     row.appendChild(center);
 
-    // IR side
-    const irSide = document.createElement('div'); irSide.className = 'T-sb-side';
+    // Away panel (right)
+    const irPanel = document.createElement('div'); irPanel.className = 'T-sb-panel T-sb-panel-away';
     const irNameEl = document.createElement('div'); irNameEl.className = 'T-sb-name';
     irNameEl.style.color = ir.accent;
-    irNameEl.style.fontSize = (ir.name.length > 8 ? 14 : ir.name.length > 5 ? 17 : 20) + 'px';
-    irNameEl.textContent = ir.name;
-    const irScoreRow = document.createElement('div'); irScoreRow.className = 'T-sb-score-row';
-    const irArrowEl = document.createElement('span'); irArrowEl.className = 'T-sb-pos-arrow T-sb-pos-arrow-r'; irArrowEl.textContent = '\u25C0';
-    const irScoreEl = document.createElement('span'); irScoreEl.className = 'T-sb-pts';
-    irScoreRow.appendChild(irArrowEl);
-    irScoreRow.appendChild(irScoreEl);
-    irSide.appendChild(irNameEl);
-    irSide.appendChild(irScoreRow);
-    row.appendChild(irSide);
-
-    // IR icon (static)
-    const irIcon = document.createElement('div'); irIcon.className = 'T-sb-icon';
-    irIcon.innerHTML = renderTeamBadge(GS.opponent, 44);
-    row.appendChild(irIcon);
+    irNameEl.textContent = ir.name.toUpperCase();
+    const irScoreEl = document.createElement('div'); irScoreEl.className = 'T-sb-score';
+    const irDotEl = document.createElement('div'); irDotEl.className = 'T-sb-poss-dot';
+    irPanel.appendChild(irNameEl);
+    irPanel.appendChild(irScoreEl);
+    irPanel.appendChild(irDotEl);
+    row.appendChild(irPanel);
 
     bug.appendChild(row);
 
-    // ── Situation bar ──
-    const sit = document.createElement('div'); sit.className = 'T-sb-sit';
-    const downEl = document.createElement('div'); downEl.className = 'T-sb-sit-down';
-    downEl.style.fontFamily = "'Teko'"; downEl.style.fontSize = '16px';
-    downEl.style.fontWeight = '700'; downEl.style.letterSpacing = '1px';
-    const sitDiv = document.createElement('div'); sitDiv.className = 'T-sb-sit-div';
-    const ballEl = document.createElement('div'); ballEl.className = 'T-sb-sit-ball';
-    ballEl.style.fontFamily = "'Teko'"; ballEl.style.fontSize = '15px';
-    ballEl.style.fontWeight = '700'; ballEl.style.color = '#e8e6ff';
-    ballEl.style.opacity = '1'; ballEl.style.letterSpacing = '1px';
-    const ballOnText = document.createTextNode('BALL ON ');
-    const ballPosEl = document.createElement('span');
-    ballEl.appendChild(ballOnText);
-    ballEl.appendChild(ballPosEl);
-    sit.appendChild(downEl);
-    sit.appendChild(sitDiv);
-    sit.appendChild(ballEl);
-    bug.appendChild(sit);
-
-    // Mini field position bar
-    var fieldBar = document.createElement('div');
-    fieldBar.style.cssText = 'position:relative;height:6px;background:#1a1a1a;border-radius:3px;margin:2px 8px 0;overflow:hidden;display:none;';
-
-    // Left endzone (user)
-    var ezLeft = document.createElement('div');
-    ezLeft.style.cssText = 'position:absolute;left:0;top:0;bottom:0;width:7%;background:' + hTeam.accent + '30;border-radius:3px 0 0 3px;';
-    fieldBar.appendChild(ezLeft);
-
-    // Right endzone (opponent)
-    var ezRight = document.createElement('div');
-    ezRight.style.cssText = 'position:absolute;right:0;top:0;bottom:0;width:7%;background:' + oTeam.accent + '30;border-radius:0 3px 3px 0;';
-    fieldBar.appendChild(ezRight);
-
-    // 50-yard line marker
-    var midLine = document.createElement('div');
-    midLine.style.cssText = 'position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,0.15);';
-    fieldBar.appendChild(midLine);
-
-    // Ball position dot
-    var ballDot = document.createElement('div');
-    ballDot.style.cssText = 'position:absolute;top:50%;width:8px;height:8px;border-radius:50%;transform:translate(-50%,-50%);transition:left 0.4s ease-out;z-index:1;';
-    fieldBar.appendChild(ballDot);
-
-    // First down marker
-    var fdMarker = document.createElement('div');
-    fdMarker.style.cssText = 'position:absolute;top:0;bottom:0;width:2px;background:#EBB01080;transform:translateX(-50%);transition:left 0.4s ease-out;';
-    fieldBar.appendChild(fdMarker);
-
-    bug.appendChild(fieldBar);
-
-    // Win probability
-    var wpRow = document.createElement('div');
-    wpRow.style.cssText = 'display:none;justify-content:space-between;align-items:center;padding:0 8px;height:14px;';
-    var wpLabel = document.createElement('div');
-    wpLabel.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:9px;color:#555;letter-spacing:1px;";
-    wpLabel.textContent = 'WIN PROB';
-    var wpValue = document.createElement('div');
-    wpValue.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:11px;letter-spacing:0.5px;transition:color 0.3s;";
-    wpRow.appendChild(wpLabel);
-    wpRow.appendChild(wpValue);
-    bug.appendChild(wpRow);
+    // ── Bottom LED bar ──
+    const ledBot = document.createElement('div'); ledBot.className = 'T-sb-led';
+    bug.appendChild(ledBot);
 
     // Play clock bar (shows plays remaining in half)
     var playClockBar = document.createElement('div');
@@ -923,12 +837,10 @@ export function buildGameplay() {
 
     // Cache every mutable element reference
     _bugEls = {
-      ctSide, ctNameEl, ctArrowEl, ctScoreEl,
-      irSide, irNameEl, irArrowEl, irScoreEl,
-      halfEl, snapEl, clockEl,
-      downEl, ballPosEl,
-      ballDot, fdMarker,
-      wpValue,
+      ledTop, ledBot,
+      ctPanel, ctNameEl, ctScoreEl, ctDotEl,
+      irPanel, irNameEl, irScoreEl, irDotEl,
+      halfEl, snapEl, clockEl, clockLabel, dividerEl, downEl, ballEl,
       playClockFill,
     };
   }
@@ -947,7 +859,12 @@ export function buildGameplay() {
     const ctHasBall = s.possession === 'CT';
     const possTeam = ctHasBall ? ct : ir;
 
-    // Scores
+    // ── LED bars (dynamic team color gradient) ──
+    var ledGrad = 'linear-gradient(90deg, ' + ct.accent + ', #EBB010, ' + ir.accent + ')';
+    _bugEls.ledTop.style.background = ledGrad;
+    _bugEls.ledBot.style.background = ledGrad;
+
+    // ── Scores ──
     _bugEls.ctScoreEl.textContent = s.ctScore;
     _bugEls.irScoreEl.textContent = s.irScore;
 
@@ -963,52 +880,76 @@ export function buildGameplay() {
     _prevHScore = hScore;
     _prevCScore = cScore;
 
-    // Score glow classes
-    _bugEls.ctScoreEl.className = 'T-sb-pts' + (ctHasBall ? ' T-sb-pts-glow' : '');
-    _bugEls.irScoreEl.className = 'T-sb-pts' + (!ctHasBall ? ' T-sb-pts-glow' : '');
+    // ── Possession dot ──
+    if (ctHasBall) {
+      _bugEls.ctDotEl.style.background = '#00ff44';
+      _bugEls.ctDotEl.style.boxShadow = '0 0 4px #00ff44';
+      _bugEls.irDotEl.style.background = 'transparent';
+      _bugEls.irDotEl.style.boxShadow = 'none';
+    } else {
+      _bugEls.irDotEl.style.background = '#00ff44';
+      _bugEls.irDotEl.style.boxShadow = '0 0 4px #00ff44';
+      _bugEls.ctDotEl.style.background = 'transparent';
+      _bugEls.ctDotEl.style.boxShadow = 'none';
+    }
 
-    // Side glow
-    _bugEls.ctSide.className = 'T-sb-side' + (ctHasBall ? ' T-sb-side-glow' : '');
-    _bugEls.irSide.className = 'T-sb-side' + (!ctHasBall ? ' T-sb-side-glow' : '');
+    // ── Panel tint (possessing team gets subtle background) ──
+    var ctColor = ct.accent;
+    var irColor = ir.accent;
+    if (ctHasBall) {
+      _bugEls.ctPanel.style.background = 'linear-gradient(180deg,' + ctColor + '18,' + ctColor + '08)';
+      _bugEls.ctScoreEl.style.textShadow = '0 0 12px ' + ctColor + '60';
+      _bugEls.ctNameEl.style.textShadow = '0 0 8px ' + ctColor + '40';
+      _bugEls.ctNameEl.style.opacity = '1';
+      _bugEls.irPanel.style.background = 'transparent';
+      _bugEls.irScoreEl.style.textShadow = '';
+      _bugEls.irNameEl.style.textShadow = '';
+      _bugEls.irNameEl.style.opacity = '0.6';
+    } else {
+      _bugEls.irPanel.style.background = 'linear-gradient(180deg,' + irColor + '18,' + irColor + '08)';
+      _bugEls.irScoreEl.style.textShadow = '0 0 12px ' + irColor + '60';
+      _bugEls.irNameEl.style.textShadow = '0 0 8px ' + irColor + '40';
+      _bugEls.irNameEl.style.opacity = '1';
+      _bugEls.ctPanel.style.background = 'transparent';
+      _bugEls.ctScoreEl.style.textShadow = '';
+      _bugEls.ctNameEl.style.textShadow = '';
+      _bugEls.ctNameEl.style.opacity = '0.6';
+    }
 
-    // Team name text-shadow (glow follows possession)
-    _bugEls.ctNameEl.style.textShadow = ctHasBall ? '0 0 12px ' + ct.accent : '';
-    _bugEls.irNameEl.style.textShadow = !ctHasBall ? '0 0 12px ' + ir.accent : '';
-
-    // Possession arrows — hide the inactive one
-    _bugEls.ctArrowEl.style.display = ctHasBall ? '' : 'none';
-    _bugEls.irArrowEl.style.display = !ctHasBall ? '' : 'none';
-
-    // Half label + snap counter + clock
-    const halfName = s.twoMinActive ? '2-MINUTE DRILL' : (s.half === 1 ? 'FIRST HALF' : 'SECOND HALF');
-    _bugEls.halfEl.textContent = halfName;
-    _bugEls.halfEl.style.color = s.twoMinActive ? '#e03050' : '';
-    _bugEls.snapEl.textContent = s.playsUsed + '/' + (gs.playsPerHalf || 20);
-    _bugEls.snapEl.style.display = s.twoMinActive ? 'none' : '';
-    _bugEls.clockEl.textContent = fmtClock(Math.max(0, s.clockSeconds));
-    _bugEls.clockEl.className = s.twoMinActive ? 'T-sb-countdown T-sb-countdown-live' : 'T-sb-countdown';
+    // ── Center panel: normal vs 2-min mode ──
     if (s.twoMinActive) {
-      var clockColor = s.clockSeconds > 60 ? '#fff' : s.clockSeconds > 30 ? '#EBB010' : '#ff0040';
+      // 2-min mode: show clock + label, hide half/snap
+      _bugEls.halfEl.style.display = 'none';
+      _bugEls.snapEl.style.display = 'none';
+      _bugEls.clockEl.style.display = '';
+      _bugEls.clockLabel.style.display = '';
+      _bugEls.clockEl.textContent = fmtClock(Math.max(0, s.clockSeconds));
+      var clockColor = s.clockSeconds > 60 ? '#e03050' : s.clockSeconds > 30 ? '#EBB010' : '#ff0040';
       _bugEls.clockEl.style.color = clockColor;
       if (s.clockSeconds <= 10 && s.clockSeconds > 0) {
-        _bugEls.clockEl.style.animation = 'T-clock-critical 0.5s ease-in-out infinite';
+        _bugEls.clockEl.style.animation = 'clockPulse 0.5s ease-in-out infinite';
       } else if (s.clockSeconds <= 30) {
-        _bugEls.clockEl.style.animation = 'T-clock-critical 1s ease-in-out infinite';
+        _bugEls.clockEl.style.animation = 'clockPulse 1s ease-in-out infinite';
       } else {
         _bugEls.clockEl.style.animation = '';
       }
     } else {
-      _bugEls.clockEl.style.color = '';
-      _bugEls.clockEl.style.animation = '';
+      // Normal mode: show half/snap, hide clock
+      _bugEls.halfEl.style.display = '';
+      _bugEls.snapEl.style.display = '';
+      _bugEls.clockEl.style.display = 'none';
+      _bugEls.clockLabel.style.display = 'none';
+      _bugEls.halfEl.textContent = s.half === 1 ? 'FIRST HALF' : 'SECOND HALF';
+      _bugEls.snapEl.textContent = s.playsUsed + '/' + (gs.playsPerHalf || 20);
     }
 
-    // Down & distance
+    // ── Down & distance ──
     const distStr = conversionMode ? 'GOAL' : distLabel(s.distance, s.yardsToEndzone);
     var newDown = s.down;
     var newDist = s.distance;
     var downChanged = newDown !== _prevDown || newDist !== _prevDist;
     _bugEls.downEl.textContent = dn + ' & ' + distStr;
-    _bugEls.downEl.style.color = possTeam.accent;
+    _bugEls.downEl.style.color = s.twoMinActive ? '#e03050' : '#FF6B00';
     if (downChanged && _prevDown > 0) {
       if (newDown === 1 && _prevDown > 1) {
         // Fresh set of downs — bigger animation + gold flash
@@ -1019,7 +960,7 @@ export function buildGameplay() {
             { x: 0, opacity: 1, scale: 1, duration: 0.35, ease: 'back.out(2)' }
           );
           _bugEls.downEl.style.color = '#EBB010';
-          setTimeout(function() { _bugEls.downEl.style.color = possTeam.accent; }, 600);
+          _setTimeout(function() { _bugEls.downEl.style.color = s.twoMinActive ? '#e03050' : '#FF6B00'; }, 600);
         } catch(e) {}
       } else {
         // Normal down change — slide in from right with scale pop
@@ -1035,16 +976,15 @@ export function buildGameplay() {
     _prevDown = newDown;
     _prevDist = newDist;
 
-    // Ball position
+    // ── Ball position ──
     const ydsToEz = s.yardsToEndzone;
     const ballPos = ydsToEz === 50 ? '50' : ydsToEz < 50 ? 'OPP ' + ydsToEz : 'OWN ' + (100 - ydsToEz);
     var ballPosChanged = ballPos !== _prevBallPos;
-    _bugEls.ballPosEl.textContent = ballPos;
-    _bugEls.ballPosEl.style.color = possTeam.accent;
-    if (ballPosChanged && _prevBallPos >= 0) {
+    _bugEls.ballEl.textContent = 'BALL ON ' + ballPos;
+    if (ballPosChanged && _prevBallPos !== -1) {
       try {
-        gsap.killTweensOf(_bugEls.ballPosEl);
-        gsap.fromTo(_bugEls.ballPosEl,
+        gsap.killTweensOf(_bugEls.ballEl);
+        gsap.fromTo(_bugEls.ballEl,
           { y: 5, opacity: 0 },
           { y: 0, opacity: 1, duration: 0.2, ease: 'power2.out' }
         );
@@ -1053,42 +993,12 @@ export function buildGameplay() {
     _prevBallPos = ballPos;
 
     // Red zone label
-    if (_bugEls.ballPosEl && gs.possession === hAbbr && s.yardsToEndzone <= 20) {
-      _bugEls.ballPosEl.style.color = '#ff0040';
-      _bugEls.ballPosEl.style.textShadow = '0 0 8px rgba(255,0,64,0.4)';
-    } else if (_bugEls.ballPosEl) {
-      _bugEls.ballPosEl.style.color = possTeam.accent;
-      _bugEls.ballPosEl.style.textShadow = '';
-    }
-
-    // Update mini field bar
-    if (_bugEls.ballDot) {
-      // ballPosition is 0-100 where 0 = CT endzone, 100 = IR endzone
-      var ballPct = 7 + s.ballPosition * 0.86; // Same mapping as field strip
-      var possColor = s.possession === 'CT' ? hTeam.accent : oTeam.accent;
-      _bugEls.ballDot.style.left = ballPct + '%';
-      _bugEls.ballDot.style.background = possColor;
-      _bugEls.ballDot.style.boxShadow = '0 0 6px ' + possColor;
-
-      // Direction arrow on ball dot
-      var arrowChar = s.possession === 'CT' ? '\u25B6' : '\u25C0';
-      _bugEls.ballDot.textContent = arrowChar;
-      _bugEls.ballDot.style.fontSize = '6px';
-      _bugEls.ballDot.style.lineHeight = '8px';
-      _bugEls.ballDot.style.textAlign = 'center';
-      _bugEls.ballDot.style.color = '#000';
-
-      // First down marker
-      var fdPos = s.possession === 'CT' ? s.ballPosition + s.distance : s.ballPosition - s.distance;
-      var fdPct = 7 + Math.max(0, Math.min(100, fdPos)) * 0.86;
-      _bugEls.fdMarker.style.left = fdPct + '%';
-    }
-
-    // Win probability update
-    if (_bugEls.wpValue) {
-      var wp = calcWinProbability(gs);
-      _bugEls.wpValue.textContent = wp + '%';
-      _bugEls.wpValue.style.color = wp >= 65 ? '#00ff44' : wp >= 45 ? '#EBB010' : '#ff0040';
+    if (gs.possession === hAbbr && s.yardsToEndzone <= 20) {
+      _bugEls.ballEl.style.color = '#ff0040';
+      _bugEls.ballEl.style.textShadow = '0 0 8px rgba(255,0,64,0.4)';
+    } else {
+      _bugEls.ballEl.style.color = '#666';
+      _bugEls.ballEl.style.textShadow = '';
     }
 
     // Play clock bar update
@@ -1132,7 +1042,7 @@ export function buildGameplay() {
       statHint.textContent = 'TAP SCOREBOARD FOR GAME STATS';
       statHint.onclick = function() { bug.click(); };
       bug.appendChild(statHint);
-      setTimeout(function() {
+      _setTimeout(function() {
         if (statHint.parentNode) {
           try { gsap.to(statHint, { opacity: 0, duration: 0.3, onComplete: function() { statHint.remove(); } }); }
           catch(e) { statHint.remove(); }
@@ -1165,7 +1075,7 @@ export function buildGameplay() {
     };
     var parent = anchor.parentNode;
     if (parent) { parent.style.position = 'relative'; parent.appendChild(tip); }
-    setTimeout(function() {
+    _setTimeout(function() {
       if (tip.parentNode) {
         try { gsap.to(tip, { opacity: 0, y: -4, duration: 0.2, onComplete: function() { tip.remove(); } }); }
         catch(err) { tip.remove(); }
@@ -1173,28 +1083,45 @@ export function buildGameplay() {
     }, 8000);
   }
 
-  // ── TORCH POINTS BANNER ──
+  // ── TORCH POINTS BANNER (built once, updated in place) ──
   const torchBanner = document.createElement('div'); torchBanner.className = 'T-torch-banner'; el.appendChild(torchBanner);
-  var torchBannerPtsEl = null;
-  var _torchDisplayFrozen = false;  // true while waiting for points animation
+  var _torchDisplayFrozen = false;
   var _torchFrozenValue = 0;
-  function drawTorchBanner() {
-    var hTorch = hAbbr === 'CT' ? gs.getSummary().ctTorchPts : gs.getSummary().irTorchPts;
-    var displayVal = _torchDisplayFrozen ? _torchFrozenValue : hTorch;
-    // If frozen or animating, just update the number — don't rebuild DOM (preserves animation elements)
-    if (torchBannerPtsEl && _torchDisplayFrozen) {
-      torchBannerPtsEl.textContent = displayVal;
-      return;
-    }
-    var flameSvg = '<svg class="T-torch-banner-flame" viewBox="0 0 44 44" fill="none"><defs><linearGradient id="tbf" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#EBB010"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#tbf)"/></svg>';
-    var cardCount = torchInventory.length;
-    var cardsBtn = cardCount > 0 ? '<button style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:\'Teko\';font-weight:700;font-size:11px;letter-spacing:1px;padding:3px 8px;border-radius:4px;border:1px solid ' + hTeam.accent + '88;background:rgba(255,69,17,0.06);color:' + hTeam.accent + ';cursor:pointer;text-shadow:0 0 6px ' + hTeam.accent + '40;box-shadow:0 0 8px ' + hTeam.accent + '20;animation:T-torch-ember 2s ease-in-out infinite;" id="torch-cards-btn">' + cardCount + ' CARD' + (cardCount > 1 ? 'S' : '') + '</button>' : '';
-    torchBanner.style.position = 'relative';
-    torchBanner.innerHTML = flameSvg +
+  var _prevCardCount = -1;
+  // Build once
+  var _tbFlameSvg = '<svg class="T-torch-banner-flame" viewBox="0 0 44 56" width="20" height="26" fill="#FF4511"><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z"/></svg>';
+  torchBanner.innerHTML =
+    '<div class="T-torch-banner-border"></div>' +
+    '<div class="T-torch-banner-content">' +
+      '<div style="position:absolute;inset:0;opacity:0.03;pointer-events:none;background:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.5) 2px,rgba(255,255,255,0.5) 3px);"></div>' +
+      _tbFlameSvg +
       '<div class="T-torch-banner-label">TORCH</div>' +
-      '<div class="T-torch-banner-pts" style="text-shadow:0 0 12px ' + hTeam.accent + ';">' + displayVal + '</div>' +
-      cardsBtn;
-    torchBannerPtsEl = torchBanner.querySelector('.T-torch-banner-pts');
+      '<div class="T-torch-banner-sep"></div>' +
+      '<div class="T-torch-banner-pts">0</div>' +
+      _tbFlameSvg +
+      '<span id="torch-cards-btn" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:\'Teko\';font-weight:700;font-size:11px;letter-spacing:1px;padding:3px 8px;border-radius:4px;border:1px solid ' + hTeam.accent + '88;background:rgba(255,69,17,0.06);color:' + hTeam.accent + ';cursor:pointer;text-shadow:0 0 6px ' + hTeam.accent + '40;box-shadow:0 0 8px ' + hTeam.accent + '20;"></span>' +
+    '</div>' +
+    '<div class="T-torch-banner-border"></div>';
+  var torchBannerPtsEl = torchBanner.querySelector('.T-torch-banner-pts');
+  var _torchCardsBtn = torchBanner.querySelector('#torch-cards-btn');
+
+  function drawTorchBanner() {
+    var _s = gs.getSummary();
+    var hTorch = hAbbr === 'CT' ? _s.ctTorchPts : _s.irTorchPts;
+    var displayVal = _torchDisplayFrozen ? _torchFrozenValue : hTorch;
+    // Update points text only
+    if (torchBannerPtsEl) torchBannerPtsEl.textContent = displayVal;
+    // Update cards button only when count changes
+    var cardCount = torchInventory.length;
+    if (cardCount !== _prevCardCount) {
+      _prevCardCount = cardCount;
+      if (cardCount > 0) {
+        _torchCardsBtn.textContent = cardCount + ' CARD' + (cardCount > 1 ? 'S' : '');
+        _torchCardsBtn.style.display = '';
+      } else {
+        _torchCardsBtn.style.display = 'none';
+      }
+    }
   }
   drawTorchBanner();
 
@@ -1210,7 +1137,8 @@ export function buildGameplay() {
     trayOv.appendChild(trayBd);
     var tray = document.createElement('div');
     tray.style.cssText = 'position:relative;z-index:1;background:#141008;border-top:2px solid #EBB010;border-radius:12px 12px 0 0;padding:14px 12px 20px;';
-    var hTorch = hAbbr === 'CT' ? gs.getSummary().ctTorchPts : gs.getSummary().irTorchPts;
+    var _s = gs.getSummary();
+    var hTorch = hAbbr === 'CT' ? _s.ctTorchPts : _s.irTorchPts;
     tray.innerHTML = "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;\"><div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;letter-spacing:2px;\">YOUR TORCH CARDS</div><div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:#00ff44;\">" + hTorch + " PTS</div></div>";
     var row = document.createElement('div');
     row.style.cssText = 'display:flex;gap:10px;justify-content:center;';
@@ -1228,7 +1156,8 @@ export function buildGameplay() {
   function animateTorchBannerPts(earned) {
     if (!torchBannerPtsEl || _torchAnimating) return;
     _torchAnimating = true;
-    var hTorch = hAbbr === 'CT' ? gs.getSummary().ctTorchPts : gs.getSummary().irTorchPts;
+    var _s = gs.getSummary();
+    var hTorch = hAbbr === 'CT' ? _s.ctTorchPts : _s.irTorchPts;
     var startVal = hTorch - earned;
     var endVal = hTorch;
 
@@ -1262,21 +1191,28 @@ export function buildGameplay() {
   const strip = document.createElement('div'); strip.className = 'T-strip';
   stripWrap.appendChild(strip);
 
-  // LOS + FD lines on stripWrap (not strip — survives innerHTML)
-  // Full-width lines so they're unmissable
+  // Gutter-based LOS + FD indicator system (right 17% of strip)
+  var _gutterBg = document.createElement('div');
+  _gutterBg.style.cssText = 'position:absolute;top:0;bottom:0;left:83%;right:0;background:rgba(0,0,0,0.2);border-left:1px solid rgba(255,255,255,0.03);z-index:1;pointer-events:none;';
+  // 5 evenly-spaced yard lines in the gutter
+  for (var _gi = 1; _gi <= 5; _gi++) {
+    var _yl = document.createElement('div');
+    _yl.style.cssText = 'position:absolute;left:4px;right:0;height:1px;background:rgba(255,255,255,0.05);top:' + (_gi * (100/6)) + '%;';
+    _gutterBg.appendChild(_yl);
+  }
+  stripWrap.appendChild(_gutterBg);
   var _losLine = document.createElement('div');
-  _losLine.style.cssText = 'position:absolute;left:0;right:0;height:3px;border-radius:1px;z-index:8;pointer-events:none;';
+  _losLine.style.cssText = 'position:absolute;left:83%;right:0;height:2.5px;z-index:12;pointer-events:none;';
   stripWrap.appendChild(_losLine);
   var _fdLine = document.createElement('div');
-  _fdLine.style.cssText = 'position:absolute;left:0;right:0;height:3px;background:#EBB010;box-shadow:0 0 6px rgba(235,176,16,0.5);border-radius:1px;z-index:8;pointer-events:none;';
+  _fdLine.style.cssText = 'position:absolute;left:83%;right:0;height:2.5px;z-index:12;pointer-events:none;';
   stripWrap.appendChild(_fdLine);
-  var _ballYardLabel = document.createElement('div');
-  _ballYardLabel.style.cssText = "position:absolute;z-index:9;pointer-events:none;font-family:'Rajdhani';font-weight:700;font-size:11px;letter-spacing:0.5px;text-shadow:0 1px 4px rgba(0,0,0,0.9),0 0 8px rgba(0,0,0,0.9);white-space:nowrap;transform:translateY(-50%);";
-  stripWrap.appendChild(_ballYardLabel);
-  var _fdLabel = document.createElement('div');
-  _fdLabel.style.cssText = "position:absolute;z-index:9;pointer-events:none;font-family:'Rajdhani';font-weight:700;font-size:11px;color:#EBB010;letter-spacing:0.5px;text-shadow:0 1px 4px rgba(0,0,0,0.9),0 0 8px rgba(0,0,0,0.9);white-space:nowrap;transform:translateY(-50%);";
-  _fdLabel.textContent = '1ST';
-  stripWrap.appendChild(_fdLabel);
+  var _zoneFill = document.createElement('div');
+  _zoneFill.style.cssText = 'position:absolute;left:83%;right:0;z-index:11;pointer-events:none;display:none;';
+  stripWrap.appendChild(_zoneFill);
+  var _pillWrap = document.createElement('div');
+  _pillWrap.style.cssText = 'position:absolute;top:0;bottom:0;right:3px;z-index:13;pointer-events:none;';
+  stripWrap.appendChild(_pillWrap);
 
   // Canvas field renderer — layered behind card drop zones
   var _fieldAnimator = null;
@@ -1291,21 +1227,7 @@ export function buildGameplay() {
     _fieldCanvas.style.cssText = 'position:absolute;inset:0;z-index:0;width:100%;height:100%;border-radius:inherit;';
     strip.insertBefore(_fieldCanvas, strip.firstChild);
   }
-  // Weather particles — sibling of strip, not child (never destroyed by strip.innerHTML)
-  if (weatherId !== 'clear') {
-    var wxLayer = document.createElement('div');
-    wxLayer.style.cssText = 'position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden;';
-    if (weatherId === 'snow') {
-      for (var wi = 0; wi < 20; wi++) wxLayer.innerHTML += '<div style="position:absolute;width:' + (3 + Math.random() * 3) + 'px;height:' + (3 + Math.random() * 3) + 'px;background:#fff;border-radius:50%;opacity:0.5;left:' + (Math.random() * 100) + '%;animation:T-snow-fall ' + (2.5 + Math.random() * 2.5) + 's linear ' + (Math.random() * 3) + 's infinite;"></div>';
-    } else if (weatherId === 'rain') {
-      for (var ri = 0; ri < 25; ri++) wxLayer.innerHTML += '<div style="position:absolute;width:1px;height:' + (8 + Math.random() * 10) + 'px;background:rgba(100,160,255,0.35);left:' + (Math.random() * 100) + '%;animation:T-rain-fall ' + (0.4 + Math.random() * 0.3) + 's linear ' + (Math.random() * 1) + 's infinite;"></div>';
-    } else if (weatherId === 'heat') {
-      wxLayer.innerHTML = '<div style="position:absolute;inset:0;background:linear-gradient(0deg,rgba(255,100,0,0.05),transparent 40%);animation:T-heat-shimmer 3s ease-in-out infinite;"></div>';
-    } else if (weatherId === 'wind') {
-      for (var wdi = 0; wdi < 6; wdi++) wxLayer.innerHTML += '<div style="position:absolute;width:' + (20 + Math.random() * 25) + 'px;height:1px;background:rgba(255,255,255,0.08);top:' + (Math.random() * 100) + '%;left:' + (Math.random() * 100) + '%;animation:T-rain-fall ' + (0.8 + Math.random() * 0.5) + 's linear ' + (Math.random() * 2) + 's infinite;transform:rotate(-15deg);"></div>';
-    }
-    stripWrap.appendChild(wxLayer);
-  }
+  // Weather particle effects removed — field stays clean
   // Weather ambient audio (Web Audio API — no files needed)
   var _weatherAudioCtx = null;
   var _weatherNodes = [];
@@ -1428,58 +1350,88 @@ export function buildGameplay() {
     var _h = strip.clientHeight || 136;
     var _ypx = _h / _visYards;
 
-    // LOS line
+    // LOS + FD lines — gutter only (right 17%)
     var _losPx = ((_byrd - _topYard) * _ypx) - 1;
-    _losLine.style.top = _losPx + 'px';
-    _losLine.style.left = '90%';
-    _losLine.style.right = '0';
-    _losLine.style.background = pc;
-    _losLine.style.boxShadow = '0 0 6px ' + pc;
-
-    // CT offense drives DOWN canvas (higher yard = lower pixel). Behind = above (lower px).
-    var _offDrivesDown = (gs.possession === 'CT');
-
-    // First down line — half width
     var _fdYard = _byrd + (isOff ? s.distance : -s.distance);
     var _fdPx = ((_fdYard - _topYard) * _ypx) - 1;
-    if (_fdPx >= -3 && _fdPx <= _h + 3) {
+    var _fdVisible = _fdPx >= -3 && _fdPx <= _h + 3;
+    var _gap = Math.abs(_fdPx - _losPx);
+    var _mode = _gap < 8 ? 'merged' : _gap < 18 ? 'stacked' : 'separated';
+
+    // Color rules
+    var _isRedZone = ydsToEz <= 20 && gs.possession === hAbbr;
+    var _losColor = _isRedZone ? '#ff0040' : '#4DA6FF';
+    var _fdColor = (ydsToEz <= 10) ? '#ff0040' : '#EBB010';
+    var _yardDisplay = ydsToEz <= 5 ? 'GL' : ydsToEz === 50 ? '50' : ydsToEz <= 50 ? ydsToEz : (100 - ydsToEz);
+    var _fdText = ydsToEz <= 10 ? 'TD' : '1ST';
+
+    // LOS line
+    _losLine.style.top = _losPx + 'px';
+    _losLine.style.background = _losColor;
+    _losLine.style.boxShadow = '0 0 10px ' + _losColor + '66';
+
+    // FD line
+    if (_fdVisible && _mode !== 'merged') {
       _fdLine.style.top = _fdPx + 'px';
-      _fdLine.style.left = '90%';
-      _fdLine.style.right = '0';
+      _fdLine.style.background = _fdColor;
+      _fdLine.style.boxShadow = '0 0 8px ' + _fdColor + '55';
       _fdLine.style.display = '';
-      // Label — "TD" in goal-to-go, "1ST" otherwise
-      _fdLabel.textContent = ydsToEz <= 10 ? 'TD' : '1ST';
-      _fdLabel.style.color = ydsToEz <= 10 ? '#ff0040' : '#EBB010';
-      _fdLabel.style.top = (_fdPx + 1) + 'px';
-      _fdLabel.style.right = '10.5%';
-      _fdLabel.style.display = '';
     } else {
       _fdLine.style.display = 'none';
-      _fdLabel.style.display = 'none';
     }
 
-    // Yard label — BEHIND the LOS (on the offense's own side)
-    var _yardDisplay = ydsToEz <= 10 ? 'GL' : ydsToEz === 50 ? '50' : ydsToEz <= 50 ? ydsToEz : (100 - ydsToEz);
-    var _caret = _offDrivesDown ? '\u25BE' : '\u25B4';
-    // Yard label — left of the LOS line, vertically centered
-    _ballYardLabel.style.top = (_losPx + 1) + 'px';
-    _ballYardLabel.style.right = '10.5%';
-    _ballYardLabel.style.color = pc;
-    _ballYardLabel.textContent = _yardDisplay + _caret;
-
-    // Red zone: intensify
-    if (ydsToEz <= 20 && gs.possession === hAbbr) {
-      _losLine.style.background = '#ff0040';
-      _losLine.style.boxShadow = '0 0 12px #ff0040, 0 0 24px rgba(255,0,64,0.6)';
-      _ballYardLabel.style.color = '#ff0040';
+    // Zone fill between lines
+    if (_fdVisible && _mode !== 'merged') {
+      var _zTop = Math.min(_losPx, _fdPx);
+      var _zBot = Math.max(_losPx, _fdPx);
+      _zoneFill.style.top = _zTop + 'px';
+      _zoneFill.style.height = (_zBot - _zTop) + 'px';
+      _zoneFill.style.background = _fdColor + '0a';
+      _zoneFill.style.display = '';
+    } else {
+      _zoneFill.style.display = 'none';
     }
 
-    // Red zone intensity glow
-    var isInRedZone = gs.possession === hAbbr && ydsToEz <= 20;
+    // Pill labels
+    var _losPillColor = _losColor;
+    var _losPillTextColor = '#fff';
+    var _fdPillColor = _fdColor;
+    var _fdPillTextColor = _fdColor === '#ff0040' ? '#fff' : '#000';
+    var _pillStyle = "font-family:'Oswald';font-weight:700;font-size:{FS}px;letter-spacing:0.5px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,0.5);padding:1px {PD}px;line-height:1.2;";
+
+    if (_mode === 'separated' && _fdVisible) {
+      // Individual pills above each line
+      _pillWrap.innerHTML =
+        '<div style="position:absolute;right:0;top:' + _losPx + 'px;transform:translateY(calc(-100% - 3px));' + _pillStyle.replace('{FS}','9').replace('{PD}','6') + 'color:' + _losPillTextColor + ';background:' + _losPillColor + ';border-radius:3px;">' + _yardDisplay + '</div>' +
+        '<div style="position:absolute;right:0;top:' + _fdPx + 'px;transform:translateY(calc(-100% - 3px));' + _pillStyle.replace('{FS}','9').replace('{PD}','6') + 'color:' + _fdPillTextColor + ';background:' + _fdPillColor + ';border-radius:3px;">' + _fdText + '</div>';
+    } else if (_mode === 'stacked' && _fdVisible) {
+      // Stacked pills between the two lines
+      var _mid = (_losPx + _fdPx) / 2;
+      _pillWrap.innerHTML =
+        '<div style="position:absolute;right:0;top:' + _mid + 'px;transform:translateY(-50%);display:flex;flex-direction:column;">' +
+          '<div style="' + _pillStyle.replace('{FS}','8').replace('{PD}','4') + 'color:' + _losPillTextColor + ';background:' + _losPillColor + ';border-radius:3px 3px 0 0;">' + _yardDisplay + '</div>' +
+          '<div style="' + _pillStyle.replace('{FS}','8').replace('{PD}','4') + 'color:' + _fdPillTextColor + ';background:' + _fdPillColor + ';border-radius:0 0 3px 3px;">' + _fdText + '</div>' +
+        '</div>';
+    } else {
+      // Merged — stacked pills at LOS
+      _pillWrap.innerHTML =
+        '<div style="position:absolute;right:0;top:' + _losPx + 'px;transform:translateY(-50%);display:flex;flex-direction:column;">' +
+          '<div style="' + _pillStyle.replace('{FS}','8').replace('{PD}','4') + 'color:' + _losPillTextColor + ';background:' + _losPillColor + ';border-radius:3px 3px 0 0;">' + _yardDisplay + '</div>' +
+          (_fdVisible ? '<div style="' + _pillStyle.replace('{FS}','8').replace('{PD}','4') + 'color:' + _fdPillTextColor + ';background:' + _fdPillColor + ';border-radius:0 0 3px 3px;">' + _fdText + '</div>' : '') +
+        '</div>';
+    }
+
+    // Red zone tint + glow
+    var isInRedZone = _isRedZone;
     if (isInRedZone) {
-      stripWrap.style.boxShadow = 'inset 0 0 20px rgba(255,0,64,0.1), inset 0 0 40px rgba(255,0,64,0.05)';
+      stripWrap.style.boxShadow = 'inset 0 0 20px rgba(255,0,64,0.05)';
+      strip.style.background = 'rgba(255,0,64,0.03)';
+      // Red zone: SNAP button shifts to red gradient
+      el.classList.add('T-redzone');
     } else {
       stripWrap.style.boxShadow = '';
+      strip.style.background = '';
+      el.classList.remove('T-redzone');
     }
 
     // Subtle possession tint on field strip border
@@ -1593,7 +1545,7 @@ export function buildGameplay() {
         playSlot.appendChild(playEl);
         try {
           gsap.from(playSlot, { y: 40, scale: 0.8, opacity: 0, duration: 0.35, ease: 'power2.out' });
-          setTimeout(function() { SND.cardThud(); }, 300);
+          _setTimeout(function() { SND.cardThud(); }, 300);
         } catch(e) {}
       }
     }
@@ -1619,26 +1571,30 @@ export function buildGameplay() {
         // Add player game stats to placed card
         var _pStats = selP.id ? _playerGameStats[selP.id] : null;
         if (_pStats) {
-          var _sp = [];
-          if (_pStats.passComp || _pStats.passAtt) _sp.push((_pStats.passComp||0)+'/'+(_pStats.passAtt||0)+', '+(_pStats.passYds||0)+'y');
-          if (_pStats.rec) _sp.push(_pStats.rec+'rec '+(_pStats.recYds||0)+'y');
-          if (_pStats.rushAtt) _sp.push(_pStats.rushAtt+'car '+(_pStats.rushYds||0)+'y');
-          if (_pStats.td) _sp.push(_pStats.td+'TD');
-          if (_pStats.tkl) _sp.push(_pStats.tkl+'tkl');
-          if (_pStats.sack) _sp.push(_pStats.sack+'sck');
-          if (_pStats.int) _sp.push(_pStats.int+'INT');
-          if (_pStats.pbu) _sp.push(_pStats.pbu+'PBU');
-          if (_sp.length > 0) {
-            playerSlot.style.position = 'relative';
-            var _statBar = document.createElement('div');
-            _statBar.style.cssText = "position:absolute;bottom:0;left:0;right:0;z-index:10;background:linear-gradient(180deg,transparent," + hTeam.accent + "22);border-top:1px solid " + hTeam.accent + "44;padding:3px 4px 2px;border-radius:0 0 6px 6px;";
-            _statBar.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:" + hTeam.accent + ";text-align:center;letter-spacing:0.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 0 4px " + hTeam.accent + "40;\">" + _sp.join(' \u00b7 ') + "</div>";
-            playerSlot.appendChild(_statBar);
+          // Compact stat format for field card
+          var _d = '<span style="opacity:0.55">', _e = '</span>';
+          var _parts = [];
+          if (_pStats.passComp || _pStats.passAtt) _parts.push((_pStats.passComp||0)+'/'+(_pStats.passAtt||0)+' '+(_pStats.passYds||0)+' '+_d+'YD'+_e);
+          else if (_pStats.rec) _parts.push((_pStats.recYds||0)+' '+_d+'YD'+_e);
+          else if (_pStats.rushAtt) _parts.push(_pStats.rushAtt+' '+_d+'CAR'+_e+' '+(_pStats.rushYds||0)+' '+_d+'YD'+_e);
+          var _counts = [];
+          if (_pStats.td) _counts.push(_pStats.td+' '+_d+'TD'+_e);
+          if (_pStats.rec) _counts.push(_pStats.rec+' '+_d+'REC'+_e);
+          if (_pStats.tkl) _counts.push(_pStats.tkl+' '+_d+'TKL'+_e);
+          if (_pStats.sack) _counts.push(_pStats.sack+' '+_d+'SCK'+_e);
+          if (_pStats.int) _counts.push(_pStats.int+' '+_d+'INT'+_e);
+          if (_pStats.pbu) _counts.push(_pStats.pbu+' '+_d+'PBU'+_e);
+          _parts = _parts.concat(_counts.slice(0, 2));
+          if (_parts.length > 0) {
+            var _statsBarEl = playerEl.querySelector('.player-stats-bar');
+            if (_statsBarEl) {
+              _statsBarEl.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:#fff;text-align:center;letter-spacing:0.3px;white-space:nowrap;line-height:1;\">" + _parts.join(' ') + "</div>";
+            }
           }
         }
         try {
           gsap.from(playerSlot, { y: 40, scale: 0.8, opacity: 0, duration: 0.35, ease: 'power2.out' });
-          setTimeout(function() { SND.cardThud(); }, 300);
+          _setTimeout(function() { SND.cardThud(); }, 300);
         } catch(e) {}
       }
     }
@@ -1681,12 +1637,35 @@ export function buildGameplay() {
   const narr = document.createElement('div'); narr.className = 'T-narr'; narr.style.display = 'none';
   el.appendChild(narr);
 
-  function setNarr(a, b) {
+  function setNarr(a, b, opts) {
     driveCommLine1 = a || '';
     driveCommLine2 = b || '';
-    // Also update narr for backward compat (used in play-by-play narration path)
-    narr.innerHTML = '<div class="T-pbp"><div class="T-pbp-line T-pbp-live">' + a + '</div>' +
-      (b ? '<div class="T-pbp-sub">' + b + '</div>' : '') + '</div>';
+    opts = opts || {};
+    var bc = opts.biasColor || '#EBB010';
+
+    var html = '<div class="T-narr" style="border-left:3px solid ' + bc + ';background:linear-gradient(90deg,' + bc + '08,transparent 30%);border-radius:0 6px 6px 0;padding:10px 12px;margin:4px 0;">';
+    html += '<div style="font-family:\'Rajdhani\';font-weight:700;font-size:14px;color:#fff;line-height:1.3;">' + (a || '') + '</div>';
+    if (b) html += '<div style="font-family:\'Rajdhani\';font-weight:600;font-size:12px;color:rgba(255,255,255,0.45);line-height:1.25;margin-top:3px;">' + b + '</div>';
+    // Badge row
+    if (opts.yards !== undefined || opts.event) {
+      html += '<div style="display:flex;align-items:center;gap:6px;margin-top:6px;">';
+      if (opts.yards !== undefined) {
+        var yBg = opts.yards > 0 ? '#00ff44' : opts.yards < 0 ? '#ff0040' : '#888';
+        var yTxt = opts.yards > 0 ? '#000' : '#fff';
+        var yLabel = opts.yards > 0 ? '+' + opts.yards + ' YDS' : opts.yards < 0 ? opts.yards + ' YDS' : 'NO GAIN';
+        html += '<div style="font-family:\'Oswald\';font-weight:700;font-size:8px;padding:1px 5px;border-radius:3px;letter-spacing:0.5px;color:' + yTxt + ';background:' + yBg + ';">' + yLabel + '</div>';
+      }
+      if (opts.event) {
+        html += '<div style="font-family:\'Rajdhani\';font-weight:700;font-size:9px;color:' + bc + ';letter-spacing:1px;">' + opts.event + '</div>';
+      }
+      if (opts.playName || opts.playerName) {
+        var attr = [opts.playName, opts.playerName].filter(Boolean).join(' \u2192 ');
+        html += '<div style="margin-left:auto;font-family:\'Rajdhani\';font-size:9px;color:#444;">' + attr + '</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+    narr.innerHTML = html;
     drawDriveSummary();
   }
 
@@ -1758,9 +1737,9 @@ export function buildGameplay() {
     var defStatColor = (isHumanBall ? oTeam : hTeam).accent || '#FF6B00';
     // Compact single-line stat bar: OFF stats (team color) | DEF stat (team color)
     var offParts = [];
-    if (offPA > 0) offParts.push((offQB || 'QB') + ' ' + offPC + '/' + offPA + ', ' + offPY + 'y');
-    if (offRC > 0) offParts.push((offWR || 'WR') + ' ' + offRC + 'rec ' + offRCY + 'y');
-    else if (offRA > 0) offParts.push((offRB || 'RB') + ' ' + offRA + 'car ' + offRY + 'y');
+    if (offPA > 0) offParts.push((offQB || 'QB') + ' ' + offPC + '/' + offPA + ', ' + offPY + ' YD');
+    if (offRC > 0) offParts.push((offWR || 'WR') + ' ' + offRC + ' REC ' + offRCY + ' YD');
+    else if (offRA > 0) offParts.push((offRB || 'RB') + ' ' + offRA + ' CAR ' + offRY + ' YD');
 
     var defPart = '';
     var bestDef = null, bestDefName = '';
@@ -1774,10 +1753,10 @@ export function buildGameplay() {
       });
       if (bestDef && bestScore > 0) {
         var dp = [];
-        if (bestDef.tkl > 0) dp.push(bestDef.tkl + 'tkl');
-        if (bestDef.pbu > 0) dp.push(bestDef.pbu + 'PBU');
-        if (bestDef.int > 0) dp.push(bestDef.int + 'INT');
-        if (bestDef.sack > 0) dp.push(bestDef.sack + 'sck');
+        if (bestDef.tkl > 0) dp.push(bestDef.tkl + ' TKL');
+        if (bestDef.pbu > 0) dp.push(bestDef.pbu + ' PBU');
+        if (bestDef.int > 0) dp.push(bestDef.int + ' INT');
+        if (bestDef.sack > 0) dp.push(bestDef.sack + ' SCK');
         defPart = bestDefName + ' ' + dp.join(' ');
       }
     }
@@ -1785,7 +1764,7 @@ export function buildGameplay() {
     if (offParts.length > 0 || defPart) {
       var offTeamLabel = (isHumanBall ? hTeam : oTeam).name;
       var defTeamLabel = (isHumanBall ? oTeam : hTeam).name;
-      html += '<div class="T-drive-stats" style="font-family:\'Rajdhani\';font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;gap:6px;flex-wrap:nowrap">';
+      html += '<div class="T-drive-stats" style="font-family:\'Rajdhani\';font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;gap:6px;flex-wrap:nowrap">';
       if (offParts.length > 0) {
         html += '<span style="color:' + offStatColor + '">' + offParts.join(' · ') + '</span>';
       }
@@ -1842,53 +1821,6 @@ export function buildGameplay() {
     return 'OWN ' + (100 - yds);
   }
 
-  function showClashOnField(res) {
-    SND.hit();
-    var clash = document.createElement('div'); clash.className = 'T-clash';
-    var isUserOnOff = (res._preSnap ? res._preSnap.possession === hAbbr : gs.possession === hAbbr);
-
-    // Build a compact card element matching the game's card style
-    function clashCard(name, sub, color, faceUp) {
-      var card = document.createElement('div');
-      card.style.cssText = 'flex:1;max-width:42%;border-radius:8px;overflow:hidden;border:2px solid ' + color + ';background:#0A0804;padding:8px 10px;transition:transform 0.4s;';
-      if (!faceUp) {
-        // Face-down card — colored back, flips after 400ms
-        card.style.background = 'radial-gradient(ellipse at 50% 40%,' + color + '44,' + color + '11)';
-        card.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:" + color + ";letter-spacing:1px;text-align:center;opacity:0.5;\">?</div>";
-        setTimeout(function() {
-          card.style.transform = 'rotateY(90deg)';
-          setTimeout(function() {
-            card.style.background = '#0A0804';
-            card.innerHTML = "<div style=\"font-family:'Teko';font-size:16px;font-weight:700;color:#fff;line-height:1.1;\">" + name + "</div>" +
-              "<div style=\"font-family:'Rajdhani';font-size:10px;font-weight:700;color:" + color + ";margin-top:2px;letter-spacing:0.5px;\">" + sub + "</div>";
-            card.style.transform = 'rotateY(0)';
-          }, 200);
-        }, 400);
-      } else {
-        card.innerHTML = "<div style=\"font-family:'Teko';font-size:16px;font-weight:700;color:#fff;line-height:1.1;\">" + name + "</div>" +
-          "<div style=\"font-family:'Rajdhani';font-size:10px;font-weight:700;color:" + color + ";margin-top:2px;letter-spacing:0.5px;\">" + sub + "</div>";
-      }
-      return card;
-    }
-
-    // User's card (always face-up) on left, AI's card (flips) on right
-    var userPlayName = isUserOnOff ? res.offPlay.name : res.defPlay.name;
-    var userPlaySub = isUserOnOff ? (res.offPlay.playType || '') : (res.defPlay.cardType || '');
-    var userColor = hTeam.accent || '#EBB010';
-    var aiPlayName = isUserOnOff ? res.defPlay.name : res.offPlay.name;
-    var aiPlaySub = isUserOnOff ? (res.defPlay.cardType || '') : (res.offPlay.playType || '');
-    var aiColor = oTeam.accent || '#e03050';
-
-    var userCard = clashCard(userPlayName, userPlaySub, userColor, true);
-    var vsEl = document.createElement('div');
-    vsEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:16px;color:#555;display:flex;align-items:center;padding:0 6px;";
-    vsEl.textContent = 'VS';
-    var aiCard = clashCard(aiPlayName, aiPlaySub, aiColor, false);
-
-    clash.style.cssText += 'display:flex;align-items:stretch;gap:0;padding:4px 8px;';
-    clash.append(userCard, vsEl, aiCard);
-    strip.appendChild(clash);
-  }
 
 
   /** Animate torch points flying from commentary to scoreboard, then roll up the total */
@@ -1921,7 +1853,7 @@ export function buildGameplay() {
     });
 
     // After fly arrives, roll the number up or down
-    setTimeout(function() {
+    _setTimeout(function() {
       fly.remove();
       var oldTotal = parseInt(torchTarget.textContent.replace(/[^\-\d]/g, '')) || 0;
       var newTotal = oldTotal + pts;
@@ -1942,7 +1874,7 @@ export function buildGameplay() {
         torchTarget.style.transform = 'scale(1.15)';
         torchTarget.style.textShadow = '0 0 8px ' + pulseColor;
         torchTarget.style.color = pulseColor;
-        setTimeout(function() {
+        _setTimeout(function() {
           torchTarget.style.transform = 'scale(1)';
           torchTarget.style.textShadow = '';
           torchTarget.style.color = '#c8a030';
@@ -1955,7 +1887,7 @@ export function buildGameplay() {
   function shakeScreen(frames = 4) {
     el.classList.add('T-shaking');
     el.style.animationDuration = (frames * 0.1) + 's';
-    setTimeout(function() { el.classList.remove('T-shaking'); }, frames * 100);
+    _setTimeout(function() { el.classList.remove('T-shaking'); }, frames * 100);
   }
 
   /** Color flash overlay on the field */
@@ -1968,7 +1900,7 @@ export function buildGameplay() {
       flash.style.animation = 'T-flash-green ' + (duration/1000) + 's ease-out forwards';
     }
     strip.appendChild(flash);
-    setTimeout(function() { flash.remove(); }, duration);
+    _setTimeout(function() { flash.remove(); }, duration);
   }
 
   /** Impact burst on the field */
@@ -1978,42 +1910,169 @@ export function buildGameplay() {
     imp.style.background = color;
     imp.style.boxShadow = '0 0 30px ' + color;
     strip.appendChild(imp);
-    setTimeout(function() { imp.remove(); }, 400);
+    _setTimeout(function() { imp.remove(); }, 400);
   }
 
-  /** Footballs raining from top of screen */
-  function rainFootballs(amount = 12) {
-    for (var i = 0; i < amount; i++) {
-      var fb = document.createElement('div');
-      fb.className = 'T-rain';
-      fb.textContent = 'T';
-      fb.style.left = (5 + Math.random() * 90) + '%';
-      fb.style.top = '-20px';
-      fb.style.animationDelay = (Math.random() * 1.5) + 's';
-      fb.style.animationDuration = (1.5 + Math.random() * 1) + 's';
-      fb.style.fontSize = (12 + Math.floor(Math.random() * 14)) + 'px';
-      el.appendChild(fb);
-      (function(f) { setTimeout(function() { f.remove(); }, 3500); })(fb);
+  /** Flame badge CONTINUE button — shared across overlays */
+  function _flameBadgeContinue(text, onTap) {
+    var FLAME = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
+    var btn = document.createElement('button');
+    btn.style.cssText = "width:80%;max-width:300px;padding:0;border:none;border-radius:6px;background:linear-gradient(180deg,#EBB010,#FF4511);display:flex;align-items:stretch;overflow:hidden;cursor:pointer;box-shadow:0 4px 16px rgba(255,69,17,0.3),0 0 20px rgba(235,176,16,0.15);margin-top:16px;";
+    btn.innerHTML =
+      '<div style="background:rgba(0,0,0,0.2);padding:10px 12px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(0,0,0,0.15);">' +
+        "<svg viewBox='0 0 44 56' width='14' height='18' fill='#fff'><path d='" + FLAME + "'/></svg>" +
+      '</div>' +
+      "<div style=\"flex:1;padding:12px;font-family:'Teko';font-weight:700;font-size:18px;color:#fff;letter-spacing:4px;text-align:center;text-shadow:0 2px 4px rgba(0,0,0,0.3);line-height:1;\">" + (text || 'CONTINUE') + '</div>';
+    btn.onclick = function(e) { e.stopPropagation(); if (onTap) onTap(); };
+    return btn;
+  }
+
+  /** Show AI torch card usage announcement */
+  function showAITorchCardUsed(cardName) {
+    var _atcOv = document.createElement('div');
+    _atcOv.style.cssText = "position:fixed;top:15%;left:50%;transform:translateX(-50%);z-index:660;text-align:center;pointer-events:none;opacity:0;";
+    _atcOv.innerHTML =
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#ff0040;letter-spacing:2px;margin-bottom:2px;\">OPPONENT USED</div>" +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#ff0040;letter-spacing:3px;text-shadow:0 0 12px rgba(255,0,64,0.5);\">" + (cardName || '').toUpperCase() + "</div>";
+    el.appendChild(_atcOv);
+    try {
+      gsap.to(_atcOv, { opacity: 1, duration: 0.2 });
+      gsap.to(_atcOv, { opacity: 0, y: -10, duration: 0.3, delay: 1.5, onComplete: function() { _atcOv.remove(); } });
+    } catch(e) { setTimeout(function() { _atcOv.remove(); }, 2000); }
+    if (navigator.vibrate) try { navigator.vibrate([30, 20, 50]); } catch(e) {}
+  }
+
+  /** Stat milestone toast */
+  function _checkMilestone(playerId) {
+    var s = _playerGameStats[playerId];
+    if (!s) return;
+    var roster = getOffenseRoster(GS.team).concat(getDefenseRoster(GS.team));
+    var player = roster.find(function(p) { return p.id === playerId; });
+    if (!player) return;
+    var name = player.firstName || player.name.split(' ')[0];
+    var milestone = null;
+    if (s.rushYds && s.rushYds >= 100 && !s._rush100) { s._rush100 = true; milestone = name + ': 100 RUSHING YARDS'; }
+    else if (s.passYds && s.passYds >= 200 && !s._pass200) { s._pass200 = true; milestone = name + ': 200 PASSING YARDS'; }
+    else if (s.recYds && s.recYds >= 100 && !s._rec100) { s._rec100 = true; milestone = name + ': 100 RECEIVING YARDS'; }
+    else if (s.td && s.td >= 2 && !s._td2) { s._td2 = true; milestone = name + ': 2 TOUCHDOWNS'; }
+    else if (s.td && s.td >= 3 && !s._td3) { s._td3 = true; milestone = name + ': 3 TOUCHDOWNS'; }
+    if (milestone) {
+      var _msToast = document.createElement('div');
+      _msToast.style.cssText = "position:fixed;bottom:18%;left:50%;transform:translateX(-50%);z-index:660;padding:6px 14px;background:rgba(10,8,4,0.9);border:1px solid #EBB01044;border-radius:6px;pointer-events:none;opacity:0;white-space:nowrap;";
+      _msToast.innerHTML = "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#EBB010;letter-spacing:2px;text-align:center;\">" + milestone + "</div>";
+      el.appendChild(_msToast);
+      try {
+        gsap.to(_msToast, { opacity: 1, y: -5, duration: 0.3, ease: 'back.out(1.5)' });
+        gsap.to(_msToast, { opacity: 0, y: -15, duration: 0.4, delay: 2.0, onComplete: function() { _msToast.remove(); } });
+        SND.chime();
+      } catch(e) { setTimeout(function() { _msToast.remove(); }, 2500); }
     }
   }
 
-  /** Big text slam on field */
-  function slamText(text, color, duration = 1200) {
-    var crack = document.createElement('div');
-    crack.className = 'T-crack';
-    crack.innerHTML = '<div class="T-crack-text" style="color:' + color + '">' + text + '</div>';
-    strip.appendChild(crack);
-    setTimeout(function() {
-      crack.style.transition = 'opacity .4s';
-      crack.style.opacity = '0';
-      setTimeout(function() { crack.remove(); }, 400);
-    }, duration);
+
+  /** Stacked flex column result on field strip */
+  function showFieldResult(heroText, heroColor, opts) {
+    opts = opts || {};
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;inset:0;z-index:15;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;gap:4px;';
+
+    // Hero text
+    var hero = document.createElement('div');
+    if (opts.chromeGradient) {
+      hero.style.cssText = "font-family:'Teko';font-weight:900;font-size:" + (opts.heroSize || 56) + "px;letter-spacing:3px;line-height:1;background:" + opts.chromeGradient + ";-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 24px " + heroColor + "99) drop-shadow(0 6px 12px rgba(0,0,0,0.9));opacity:0;transform:scale(0.3);";
+    } else {
+      hero.style.cssText = "font-family:'Teko';font-weight:900;font-size:" + (opts.heroSize || 56) + "px;color:" + heroColor + ";letter-spacing:3px;line-height:1;text-shadow:0 0 20px " + heroColor + "60,0 2px 6px rgba(0,0,0,0.8);opacity:0;transform:scale(0.3);";
+    }
+    hero.textContent = heroText;
+    container.appendChild(hero);
+
+    // Context label
+    if (opts.contextText) {
+      var ctx = document.createElement('div');
+      ctx.style.cssText = "font-family:'Oswald';font-weight:700;font-size:12px;color:" + (opts.contextColor || heroColor) + ";letter-spacing:3px;text-shadow:0 2px 4px rgba(0,0,0,0.8);opacity:0;transform:translateY(8px);";
+      ctx.textContent = opts.contextText;
+      container.appendChild(ctx);
+    }
+
+    // Divider
+    if (opts.showDivider) {
+      var div = document.createElement('div');
+      div.style.cssText = "width:60px;height:1px;background:linear-gradient(90deg,transparent," + heroColor + "44,transparent);transform:scaleX(0);margin:4px 0;";
+      container.appendChild(div);
+    }
+
+    // Commentary
+    if (opts.commentary) {
+      var comm = document.createElement('div');
+      comm.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:12px;color:rgba(255,255,255,0.6);text-shadow:0 2px 4px rgba(0,0,0,0.8);max-width:280px;text-align:center;opacity:0;transform:translateY(6px);";
+      comm.textContent = opts.commentary;
+      container.appendChild(comm);
+    }
+
+    // TORCH points
+    if (opts.torchPts && opts.torchPts > 0) {
+      var pts = document.createElement('div');
+      pts.style.cssText = "display:flex;align-items:center;gap:4px;opacity:0;transform:translateY(10px) scale(0.8);";
+      pts.innerHTML = "<svg viewBox='0 0 44 56' width='14' height='18' fill='#EBB010'><path d='M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z'/></svg>" +
+        "<span style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;text-shadow:0 0 8px rgba(235,176,16,0.4);letter-spacing:1px;\">+" + opts.torchPts + "</span>";
+      container.appendChild(pts);
+    }
+
+    // Down update
+    if (opts.downText) {
+      var dn = document.createElement('div');
+      dn.style.cssText = "font-family:'Teko';font-weight:700;font-size:16px;color:" + (opts.downColor || '#FF6B00') + ";letter-spacing:2px;opacity:0;transform:translateY(6px);margin-top:2px;";
+      dn.textContent = opts.downText;
+      container.appendChild(dn);
+    }
+
+    strip.appendChild(container);
+
+    // GSAP stagger animation
+    try {
+      var children = container.children;
+      var delays = [0, 0.15, 0.25, 0.35, 0.5, 0.6];
+      for (var i = 0; i < children.length; i++) {
+        var child = children[i];
+        var d = delays[i] || (0.6 + i * 0.1);
+        if (i === 0) { // Hero — scale bounce
+          gsap.to(child, { opacity: 1, scale: 1, duration: 0.25, delay: d, ease: 'back.out(2.5)' });
+        } else if (child.style.transform.indexOf('scaleX') >= 0) { // Divider
+          gsap.to(child, { scaleX: 1, duration: 0.3, delay: d, ease: 'power2.out' });
+        } else { // Everything else — slide up
+          gsap.to(child, { opacity: 1, y: 0, scale: 1, duration: 0.2, delay: d, ease: 'power2.out' });
+        }
+      }
+    } catch(e) {
+      // Fallback: show everything immediately
+      for (var j = 0; j < container.children.length; j++) {
+        container.children[j].style.opacity = '1';
+        container.children[j].style.transform = 'none';
+      }
+    }
+
+    // Effects
+    if (opts.effects) {
+      if (opts.effects.flash) flashField(opts.effects.flash);
+      if (opts.effects.shake) shakeScreen(opts.effects.shakeAmt || 4);
+      if (opts.effects.burst) impactBurst(opts.effects.burst);
+    }
+
+    // Cleanup
+    var dur = opts.duration || 1800;
+    _setTimeout(function() {
+      try {
+        gsap.to(container, { opacity: 0, duration: 0.4, onComplete: function() { container.remove(); } });
+      } catch(e) { container.remove(); }
+    }, dur);
+
+    return container;
   }
 
-  /** 5-Tier Celebration System */
+  /** 5-Tier Celebration System — effects only (flash, shake, burst, sound, bg fade) */
   function triggerCelebration(tier, r, isDef) {
     if (tier === 1) return;
-    
+
     if (tier === 2) {
       SND.hit();
       flashField(isDef ? 'rgba(48,192,224,0.4)' : 'rgba(61,245,138,0.4)', 400);
@@ -2030,12 +2089,12 @@ export function buildGameplay() {
 
     if (tier >= 4) {
       var tDuration = tier === 5 ? 4500 : 3000;
-      
+
       if (tier === 5) {
         var bgFade = document.createElement('div');
         bgFade.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:90;transition:opacity 0.5s;pointer-events:none;';
         el.appendChild(bgFade);
-        setTimeout(function() { bgFade.style.opacity = '0'; setTimeout(function() { bgFade.remove(); }, 500); }, tDuration - 1000);
+        _setTimeout(function() { bgFade.style.opacity = '0'; setTimeout(function() { bgFade.remove(); }, 500); }, tDuration - 1000);
       }
 
       if (r.isTouchdown) {
@@ -2043,34 +2102,28 @@ export function buildGameplay() {
         shakeScreen(6);
         var tColor = isDef ? '#ff0040' : '#00ff44';
         flashField(tColor + '88', 800);
-        setTimeout(function() { flashField(tColor + '88', 800); }, 400);
-        rainFootballs(tier === 5 ? 24 : 16);
-        slamText('TOUCHDOWN', tColor, tDuration - 400);
+        _setTimeout(function() { flashField(tColor + '88', 800); }, 400);
       } else if (r.isInterception) {
         var intGood = isDef;
         SND.turnover();
         shakeScreen(intGood ? 8 : 5);
         flashField(intGood ? 'rgba(0,255,68,0.5)' : 'rgba(224,48,80,0.6)', 800);
         impactBurst(intGood ? 'rgba(0,255,68,0.6)' : 'rgba(224,48,80,0.8)');
-        slamText(intGood ? 'PICKED OFF!' : 'INTERCEPTED', intGood ? '#00ff44' : '#ff0040', tDuration - 400);
       } else if (r.isFumbleLost) {
         var fumGood = isDef;
         SND.turnover();
         shakeScreen(fumGood ? 7 : 4);
         flashField(fumGood ? 'rgba(0,255,68,0.5)' : 'rgba(224,96,32,0.6)', 800);
         if (fumGood) impactBurst('rgba(0,255,68,0.6)');
-        slamText(fumGood ? 'FUMBLE RECOVERY!' : 'FUMBLE LOST', fumGood ? '#00ff44' : '#e06020', tDuration - 400);
       } else if (r.isSack) {
         SND.sack();
         shakeScreen(8);
         flashField('rgba(224,48,80,0.5)', 600);
         impactBurst('rgba(255,255,255,0.6)');
-        slamText('SACKED', '#ff0040', tDuration - 400);
-      } else { 
+      } else {
         SND.turnover();
         shakeScreen(6);
         flashField('rgba(48,192,224,0.6)', 800);
-        slamText('DENIED', '#FF6B00', tDuration - 400);
       }
     }
   }
@@ -2183,6 +2236,22 @@ export function buildGameplay() {
     if (phase === 'busy') { panel.className = 'T-panel T-panel-hidden'; return; }
     panel.className = 'T-panel ' + (isOff ? 'T-panel-off' : 'T-panel-def');
 
+    // Panel header — side-of-ball branded
+    var panelHdr = document.createElement('div');
+    var _sideColor = isOff ? '#00ff44' : '#4DA6FF';
+    var _sideLabel = isOff ? 'YOUR OFFENSE' : 'YOUR DEFENSE';
+    var _phasePill = '';
+    if (phase === 'play') _phasePill = "<span style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#EBB010;letter-spacing:1px;padding:2px 6px;border-radius:3px;border:1px solid #EBB01033;\">SELECT PLAY</span>";
+    else if (phase === 'player') _phasePill = "<span style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#4DA6FF;letter-spacing:1px;padding:2px 6px;border-radius:3px;border:1px solid #4DA6FF33;\">SELECT PLAYER</span>";
+    else if (phase === 'torch') _phasePill = "<span style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#FF4511;letter-spacing:1px;padding:2px 6px;border-radius:3px;border:1px solid #FF451133;\">TORCH CARD</span>";
+    else if (selPl && selP) _phasePill = "<span style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#00ff44;letter-spacing:1px;padding:2px 6px;border-radius:3px;border:1px solid #00ff4444;background:#00ff4410;\">READY</span>";
+    panelHdr.style.cssText = 'display:flex;align-items:center;padding:8px 12px;background:linear-gradient(90deg,' + _sideColor + '08,transparent 40%);border-top:2px solid ' + _sideColor + '44;border-bottom:1px solid #1a1a1a;flex-shrink:0;';
+    panelHdr.innerHTML =
+      '<div style="width:12px;height:2px;background:' + _sideColor + ';border-radius:1px;margin-right:8px;"></div>' +
+      "<div style=\"font-family:'Oswald';font-weight:700;font-size:12px;color:" + _sideColor + ";letter-spacing:3px;flex:1;\">" + _sideLabel + '</div>' +
+      _phasePill;
+    panel.appendChild(panelHdr);
+
     // 2min check + close game crowd
     if (gs.twoMinActive && !prev2min) { prev2min = true; _lastPlayFlashed = true; el.classList.add('T-urgent'); el.classList.add('T-2min-active'); show2MinWarn(); start2MinClock(); }
     if (gs.twoMinActive && Math.abs(gs.ctScore - gs.irScore) <= 7) {
@@ -2206,19 +2275,19 @@ export function buildGameplay() {
     var is4thPastMid = gs.down === 4 && isOff && gs.canSpecialTeams() && !conversionMode && !_fourthDownDecided;
     if (is4thPastMid && phase === 'play') {
       var fourthBar = document.createElement('div');
-      fourthBar.style.cssText = "display:flex;gap:6px;padding:6px 8px;flex-shrink:0;background:rgba(255,255,255,0.03);border-bottom:1px solid #2a2a2a;";
-
-      // Context label
-      var ctxLabel = document.createElement('div');
       var ydsToEz = gs.yardsToEndzone();
-      ctxLabel.style.cssText = "font-family:'Teko';font-weight:700;font-size:14px;color:#e03050;letter-spacing:2px;width:100%;text-align:center;margin-bottom:4px;";
-      ctxLabel.textContent = '4TH & ' + (ydsToEz <= 10 ? 'GOAL' : gs.distance) + ' AT OPP ' + ydsToEz;
-      fourthBar.insertBefore(ctxLabel, fourthBar.firstChild);
-      fourthBar.style.cssText = "display:flex;flex-direction:column;gap:6px;padding:8px 12px;flex-shrink:0;background:rgba(224,48,80,0.06);border-bottom:2px solid #e0305044;";
+      fourthBar.style.cssText = "display:flex;flex-direction:column;gap:6px;padding:10px 12px;flex-shrink:0;border-top:2px solid #e0305044;animation:urgentPulse 2s ease-in-out infinite;";
+
+      // Header
+      var fourthHdr = document.createElement('div');
+      fourthHdr.style.cssText = 'text-align:center;margin-bottom:4px;';
+      fourthHdr.innerHTML =
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:16px;color:#e03050;letter-spacing:3px;\">4TH DOWN DECISION</div>" +
+        "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:10px;color:#888;margin-top:2px;\">4th & " + (ydsToEz <= 10 ? 'Goal' : gs.distance) + " at " + (ydsToEz <= 50 ? 'OPP ' + ydsToEz : 'OWN ' + (100 - ydsToEz)) + "</div>";
+      fourthBar.appendChild(fourthHdr);
 
       var goForIt = document.createElement('button');
-      goForIt.className = 'btn-blitz';
-      goForIt.style.cssText = "width:100%;font-size:14px;padding:12px;background:" + hTeam.accent + ";color:#fff;border-color:" + hTeam.accent + ";font-family:'Teko';font-weight:700;letter-spacing:3px;";
+      goForIt.style.cssText = "width:100%;padding:14px;border-radius:6px;border:none;cursor:pointer;margin-bottom:2px;background:linear-gradient(180deg," + hTeam.accent + "," + hTeam.accent + "88);box-shadow:0 4px 12px " + hTeam.accent + "33;font-family:'Teko';font-weight:700;font-size:22px;color:#fff;letter-spacing:4px;text-shadow:0 2px 4px rgba(0,0,0,0.3);";
       goForIt.textContent = 'GO FOR IT';
       goForIt.onclick = function() {
         SND.click();
@@ -2229,8 +2298,7 @@ export function buildGameplay() {
       var puntBtn = document.createElement('button');
       var stRow = document.createElement('div');
       stRow.style.cssText = 'display:flex;gap:6px;';
-      puntBtn.className = 'btn-blitz';
-      puntBtn.style.cssText = "flex:1;font-size:13px;padding:10px;background:#141008;color:#4DA6FF;border-color:#4DA6FF;font-family:'Teko';font-weight:700;letter-spacing:2px;";
+      puntBtn.style.cssText = "flex:1;padding:10px;border-radius:6px;text-align:center;cursor:pointer;border:1.5px solid #4DA6FF44;background:linear-gradient(180deg,#4DA6FF08,transparent);font-family:'Teko';font-weight:700;font-size:16px;color:#4DA6FF;letter-spacing:2px;";
       puntBtn.textContent = 'PUNT';
       puntBtn.onclick = function() {
         SND.snap();
@@ -2265,12 +2333,11 @@ export function buildGameplay() {
       };
 
       var fgBtn = document.createElement('button');
-      fgBtn.className = 'btn-blitz';
       var _hasCannonLeg = torchInventory.some(function(c) { return c.id === 'cannon_leg'; });
       var _hasRinger = torchInventory.some(function(c) { return c.id === 'ringer'; });
       if (gs.canAttemptFG(_hasCannonLeg)) {
         var fgDist = ydsToEz + 17;
-        fgBtn.style.cssText = "flex:1;font-size:13px;padding:10px;background:#141008;color:#EBB010;border-color:#EBB010;font-family:'Teko';font-weight:700;letter-spacing:2px;";
+        fgBtn.style.cssText = "flex:1;padding:10px;border-radius:6px;text-align:center;cursor:pointer;border:1.5px solid #EBB01044;background:linear-gradient(180deg,#EBB01008,transparent);font-family:'Teko';font-weight:700;font-size:16px;color:#EBB010;letter-spacing:2px;";
         fgBtn.textContent = 'FG (' + fgDist + 'yd)' + (_hasCannonLeg ? ' +10' : '');
         fgBtn.onclick = function() {
           SND.snap();
@@ -2328,7 +2395,7 @@ export function buildGameplay() {
           });
         };
       } else {
-        fgBtn.style.cssText = "flex:1;font-size:11px;padding:10px;background:#0a0a0a;color:#444;border-color:#333;cursor:not-allowed;font-family:'Teko';letter-spacing:1px;";
+        fgBtn.style.cssText = "flex:1;padding:10px;border-radius:6px;text-align:center;border:1.5px solid #1a1a1a;background:transparent;font-family:'Teko';font-weight:700;font-size:14px;color:#333;letter-spacing:1px;cursor:not-allowed;";
         fgBtn.textContent = 'OUT OF RANGE';
         fgBtn.disabled = true;
       }
@@ -2394,6 +2461,7 @@ export function buildGameplay() {
       distance: gs.distance,
       yardsToEndzone: gs.yardsToEndzone(),
       playerGameStats: _playerGameStats,
+      isNewDrive: _isNewDrive,
       onTogglePBP: function() {
         _pbpVisible = !_pbpVisible;
         driveSummaryEl.style.display = _pbpVisible ? '' : 'none';
@@ -2474,8 +2542,8 @@ export function buildGameplay() {
               "<div style=\"font-family:'Rajdhani';font-size:12px;color:#888;margin-top:2px;\">" + (oppFeatured.trait || '') + "</div>";
             el.appendChild(revealOv);
             try { gsap.to(revealOv, { opacity: 1, duration: 0.2 }); } catch(e) { revealOv.style.opacity = '1'; }
-            setTimeout(function() { try { gsap.to(revealOv, { opacity: 0, duration: 0.3, onComplete: function() { if (revealOv.parentNode) revealOv.remove(); } }); } catch(e) { if (revealOv.parentNode) revealOv.remove(); } }, 2000);
-            setTimeout(function() { if (revealOv.parentNode) revealOv.remove(); }, 2500);
+            _setTimeout(function() { try { gsap.to(revealOv, { opacity: 0, duration: 0.3, onComplete: function() { if (revealOv.parentNode) revealOv.remove(); } }); } catch(e) { if (revealOv.parentNode) revealOv.remove(); } }, 2000);
+            _setTimeout(function() { if (revealOv.parentNode) revealOv.remove(); }, 2500);
           }
         }
 
@@ -2494,7 +2562,7 @@ export function buildGameplay() {
         selP = null; selPl = null; phase = 'play';
         drawBug(); drawField(); drawDriveSummary();
         // Brief splash like any other play
-        slamText('SPIKE', '#EBB010', 800);
+        showFieldResult('SPIKE', '#EBB010', { heroSize: 44, contextText: 'CLOCK STOPPED', contextColor: '#EBB010', duration: 1000 });
         setNarr('Ball spiked. Clock stopped.', fmtClock(Math.max(0, gs.clockSeconds)) + ' left');
         if (!checkEnd()) drawPanel();
       },
@@ -2504,11 +2572,13 @@ export function buildGameplay() {
         driveSummaryLog.push({ down: gs.down - 1, dist: gs.distance, playName: 'KNEEL — clock running', yards: 0, isUserOff: true });
         selP = null; selPl = null; phase = 'play';
         drawBug(); drawField(); drawDriveSummary();
+        showFieldResult('KNEEL', '#888', { heroSize: 40, contextText: 'CLOCK RUNNING', contextColor: '#666', duration: 800 });
         setNarr('QB kneels.', fmtClock(Math.max(0, gs.clockSeconds)) + ' left');
         if (!checkEnd()) drawPanel();
       } : null,
     });
     panel.appendChild(trayEl);
+    _isNewDrive = false; // consume the flag after rendering
 
     // Torch card tutorial — disabled, will revisit
     if (false) {
@@ -2528,7 +2598,7 @@ export function buildGameplay() {
         "<button class='btn-blitz' style='margin-top:20px;font-size:16px;padding:14px 40px;background:#141008;color:" + hTeam.accent + ";border-color:" + hTeam.accent + ";letter-spacing:3px;'>GOT IT</button>";
       torchTutOv.querySelector('button').onclick = function() {
         torchTutOv.style.opacity = '0';
-        setTimeout(function() { torchTutOv.remove(); }, 300);
+        _setTimeout(function() { torchTutOv.remove(); }, 300);
       };
       el.appendChild(torchTutOv);
       requestAnimationFrame(function() { torchTutOv.style.opacity = '1'; });
@@ -2628,8 +2698,8 @@ export function buildGameplay() {
         }
       } catch(e) {}
       var tcDur = tcTier === 'GOLD' ? 1800 : tcTier === 'SILVER' ? 1200 : 800;
-      setTimeout(function() { try { gsap.to(tcOv, { opacity: 0, duration: 0.25, onComplete: function() { if (tcOv.parentNode) tcOv.remove(); } }); } catch(e) { if (tcOv.parentNode) tcOv.remove(); } }, tcDur);
-      setTimeout(function() { if (tcOv.parentNode) tcOv.remove(); }, tcDur + 500);
+      _setTimeout(function() { try { gsap.to(tcOv, { opacity: 0, duration: 0.25, onComplete: function() { if (tcOv.parentNode) tcOv.remove(); } }); } catch(e) { if (tcOv.parentNode) tcOv.remove(); } }, tcDur);
+      _setTimeout(function() { if (tcOv.parentNode) tcOv.remove(); }, tcDur + 500);
     }
 
     // Pre-snap TORCH card effects
@@ -2741,6 +2811,7 @@ export function buildGameplay() {
       ? gs.executeSnap(selPl, selP, null, null, offCard, defCard, _devForceResult)
       : gs.executeSnap(null, null, selPl, selP, offCard, defCard, _devForceResult);
 
+    if (res) res._torchUsedThisSnap = !!(offCard || defCard);
     _scoutActive = false; // Reset card effect after snap
 
     // Apply combo bonus
@@ -2759,7 +2830,7 @@ export function buildGameplay() {
         gsap.to(comboOv, { opacity: 0, y: -20, duration: 0.4, delay: 1.5 });
         SND.bigPlay();
       } catch(e) {}
-      setTimeout(function() { if (comboOv.parentNode) comboOv.remove(); }, 2500);
+      _setTimeout(function() { if (comboOv.parentNode) comboOv.remove(); }, 2500);
       _activeDriveCombo = null;
     }
 
@@ -2962,6 +3033,7 @@ export function buildGameplay() {
     }
     var _offId = res.featuredOff ? res.featuredOff.id : null;
     var _defId = res.featuredDef ? res.featuredDef.id : null;
+
     if (isPassPlay) {
       if (_offId && res.featuredOff.pos === 'QB') { _addStat(_offId, 'passAtt'); if (r.isComplete) { _addStat(_offId, 'passComp'); _addStat(_offId, 'passYds', r.yards); } }
       if (_offId && res.featuredOff.pos !== 'QB' && r.isComplete) { _addStat(_offId, 'rec'); _addStat(_offId, 'recYds', r.yards); }
@@ -2973,6 +3045,10 @@ export function buildGameplay() {
     if (r.isInterception && _defId) _addStat(_defId, 'int');
     if (r.isIncomplete && _defId) _addStat(_defId, 'pbu');
     if (!r.isTouchdown && !r.isSack && !r.isInterception && !r.isIncomplete && _defId) _addStat(_defId, 'tkl');
+
+    // Stat milestone checks (only for user's team)
+    if (isOff && _offId) _checkMilestone(_offId);
+    if (!isOff && _defId) _checkMilestone(_defId);
 
     driveSummaryLog.push({
       down: preSnap.down, dist: preSnap.distance, ydsToEz: preSnap.yardsToEndzone,
@@ -3101,18 +3177,18 @@ export function buildGameplay() {
       resultText = r.isComplete ? 'GOOD!' : 'NO GOOD';
     } else if (isUserOff) {
       resultColor = isTD ? '#EBB010' : isGoodForUser ? '#00ff44' : isBadForUser ? '#ff0040' : r.yards > 0 ? '#c8a030' : '#aaa';
-      resultText = isTD ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTED' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : r.isSafety ? 'SAFETY' : yardText(r.yards).toUpperCase();
+      resultText = isTD ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTED' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : r.isSafety ? 'SAFETY' : r.yards === 0 ? 'NO GAIN' : yardTextShort(r.yards);
     } else {
       // User on defense — show opponent gains as bad, stops as good
       if (isTD) { resultColor = '#ff0040'; resultText = 'TOUCHDOWN'; }
-      else if (r.isSack) { resultColor = '#00ff44'; resultText = Math.abs(r.yards) > 0 ? 'SACKED! Loss of ' + Math.abs(r.yards) : 'SACKED!'; }
+      else if (r.isSack) { resultColor = '#00ff44'; resultText = 'SACKED!'; }
       else if (r.isInterception) { resultColor = '#00ff44'; resultText = 'PICKED OFF!'; }
       else if (r.isFumbleLost) { resultColor = '#00ff44'; resultText = 'FUMBLE!'; }
       else if (r.isIncomplete) { resultColor = '#00ff44'; resultText = 'INCOMPLETE'; }
       else if (r.isSafety) { resultColor = '#00ff44'; resultText = 'SAFETY!'; }
-      else if (r.yards <= 0) { resultColor = '#00ff44'; resultText = r.yards < 0 ? 'STUFFED! Loss of ' + Math.abs(r.yards) : 'STUFFED! NO GAIN'; }
-      else if (r.yards <= 3) { resultColor = '#c8a030'; resultText = 'Gain of ' + r.yards; }
-      else { resultColor = '#ff0040'; resultText = 'Gain of ' + r.yards; }
+      else if (r.yards <= 0) { resultColor = '#00ff44'; resultText = 'STUFFED!'; }
+      else if (r.yards <= 3) { resultColor = '#c8a030'; resultText = '+' + r.yards; }
+      else { resultColor = '#ff0040'; resultText = '+' + r.yards; }
     }
     var flashColor = isGoodForUser ? '#00ff44' : isBadForUser ? '#ff0040' : 'transparent';
 
@@ -3147,17 +3223,31 @@ export function buildGameplay() {
     overlay.appendChild(blackout);
     requestAnimationFrame(function() { blackout.style.opacity = tier === 1 ? '0.6' : tier === 2 ? '0.8' : '0.95'; });
 
-    setTimeout(function() {
+    _setTimeout(function() {
       if (skipped) { doSettle(); return; }
 
       // ── PHASE 3: RESULT SLAM — result text slams in, screen shake, particles ──
-      blackout.style.opacity = '0'; // dim handles full coverage, blackout fades out
+      blackout.style.opacity = '0';
+
+      // Torch card activation flash — brief orange glow when a torch card was used
+      if (res._torchUsedThisSnap) {
+        var _tcFlash = document.createElement('div');
+        _tcFlash.style.cssText = 'position:absolute;inset:0;background:rgba(235,176,16,0.15);z-index:2;pointer-events:none;';
+        overlay.appendChild(_tcFlash);
+        try { gsap.to(_tcFlash, { opacity: 0, duration: 0.4, delay: 0.15, onComplete: function() { _tcFlash.remove(); } }); } catch(e) { _tcFlash.remove(); }
+      }
+
+      // Hit-stop: brief frozen moment before impact (tier 2+)
+      if (tier >= 2) {
+        dim.style.opacity = tier === 3 ? '0.85' : '0.7';
+        _setTimeout(function() { dim.style.opacity = '0.5'; }, tier === 3 ? 150 : 80);
+      }
 
       // Screen shake
       if (shakeAmt > 0) {
         var shakeAnim = tier === 1 ? 'T-micro-shake 0.15s ease-out' : 'T-clash-shake ' + (tier === 3 ? '0.4s' : '0.2s') + ' ease-out';
         el.style.animation = shakeAnim;
-        setTimeout(function() { el.style.animation = ''; }, tier === 1 ? 180 : tier === 3 ? 450 : 250);
+        _setTimeout(function() { el.style.animation = ''; }, tier === 1 ? 180 : tier === 3 ? 450 : 250);
       }
 
       // Flash
@@ -3166,7 +3256,7 @@ export function buildGameplay() {
         flash.className = 'T-clash-flash';
         flash.style.background = flashColor;
         overlay.appendChild(flash);
-        setTimeout(function() { flash.remove(); }, 300);
+        _setTimeout(function() { flash.remove(); }, 300);
       }
 
       // Particles
@@ -3187,7 +3277,7 @@ export function buildGameplay() {
         // Harder shake (override tier)
         try {
           el.style.animation = 'T-clash-shake 0.5s ease-out';
-          setTimeout(function() { el.style.animation = ''; }, 550);
+          _setTimeout(function() { el.style.animation = ''; }, 550);
         } catch(e) {}
         // Red vignette flash
         var sackVig = document.createElement('div');
@@ -3200,16 +3290,13 @@ export function buildGameplay() {
         // Heavy haptic
         if (navigator.vibrate) try { navigator.vibrate([60, 30, 80]); } catch(e) {}
       }
-      // Sack celebration when user is on defense
-      if (r.isSack && !isUserOff) {
-        var sackCeleb = document.createElement('div');
-        sackCeleb.style.cssText = "position:absolute;top:18%;left:50%;transform:translateX(-50%);z-index:15;font-family:'Teko';font-weight:700;font-size:22px;color:#00ff44;letter-spacing:3px;text-shadow:0 0 16px rgba(0,255,68,0.5);opacity:0;pointer-events:none;";
-        sackCeleb.textContent = 'SACKED!';
-        overlay.appendChild(sackCeleb);
+      // Turnover gut punch — screen recoils
+      if ((r.isInterception || r.isFumbleLost) && isUserOff) {
         try {
-          gsap.to(sackCeleb, { opacity: 1, y: -5, duration: 0.3, ease: 'back.out(1.5)' });
-          gsap.to(sackCeleb, { opacity: 0, y: -15, duration: 0.4, delay: 1.0 });
+          gsap.to(el, { scaleY: 0.97, duration: 0.04 });
+          gsap.to(el, { scaleY: 1, duration: 0.15, delay: 0.04, ease: 'elastic.out(1, 0.5)' });
         } catch(e) {}
+        if (navigator.vibrate) try { navigator.vibrate([40, 20, 60]); } catch(e) {}
       }
 
       // Sound — crowd spikes on big plays, holds, then settles
@@ -3221,77 +3308,12 @@ export function buildGameplay() {
       else if (r.isIncomplete) { SND.incomp(); }
       else { tier === 1 && r.yards > 0 ? SND.hit() : SND.snap(); }
 
-      // ── PHASE 4: CARD REVEAL (0.8s) — cards flip in to show matchup ──
-      var cardRevealDelay = tier === 1 ? 100 : tier === 2 ? 300 : 500;
-      setTimeout(function() {
+      // ── PHASE 4: SETTLE — proceed to result display ──
+      var settleDelay = tier === 1 ? 100 : tier === 2 ? 300 : 500;
+      _setTimeout(function() {
         if (skipped) { doSettle(); return; }
-
-        var cardsEl = document.createElement('div');
-        cardsEl.className = 'T-clash-cards';
-        var slideMs = tier === 1 ? 250 : tier === 2 ? 350 : 500;
-
-        var offTeamColor = (prevPoss === hAbbr) ? hTeam.accent : oTeam.accent;
-        var defTeamColor = (prevPoss === hAbbr) ? oTeam.accent : hTeam.accent;
-
-        var _offPlayName = (res.offPlay && res.offPlay.name) || '—';
-        var _offFeatName = (res.featuredOff && res.featuredOff.name) || '—';
-        var _offFeatPos  = (res.featuredOff && res.featuredOff.pos)  || '';
-        var _defPlayName = (res.defPlay && res.defPlay.name) || '—';
-        var _defFeatName = (res.featuredDef && res.featuredDef.name) || '—';
-        var _defFeatPos  = (res.featuredDef && res.featuredDef.pos)  || '';
-
-        var _offTeamName = (prevPoss === hAbbr ? hTeam : oTeam).name;
-        var _defTeamName = (prevPoss === hAbbr ? oTeam : hTeam).name;
-
-        // Offense card
-        var offCardEl = document.createElement('div');
-        offCardEl.className = 'T-clash-card-wrap T-clash-card-off';
-        offCardEl.style.cssText = 'animation:T-clash-slideL ' + slideMs + 'ms cubic-bezier(0.22,1.3,0.36,1) both;transform:scale(' + cardScale + ');border-color:' + offTeamColor + '66;background:' + offTeamColor + '12;';
-        offCardEl.innerHTML =
-          "<div style=\"font-family:'Rajdhani';font-size:9px;font-weight:700;color:" + offTeamColor + ";letter-spacing:2px;margin-bottom:4px;\">" + _offTeamName.toUpperCase() + "</div>" +
-          "<div style=\"font-family:'Teko';font-size:20px;color:#fff;line-height:1;letter-spacing:1px\">" + _offPlayName + '</div>' +
-          "<div style=\"font-family:'Rajdhani';font-size:11px;color:" + offTeamColor + ";margin-top:4px\">" + _offFeatName + ' \u00b7 ' + _offFeatPos + '</div>';
-
-        // VS divider
-        var vsEl = document.createElement('div');
-        vsEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:16px;color:#555;letter-spacing:2px;flex-shrink:0;";
-        vsEl.textContent = 'VS';
-
-        // Defense card
-        var defCardEl = document.createElement('div');
-        defCardEl.className = 'T-clash-card-wrap T-clash-card-def';
-        defCardEl.style.cssText = 'animation:T-clash-slideR ' + slideMs + 'ms cubic-bezier(0.22,1.3,0.36,1) both;transform:scale(' + cardScale + ');border-color:' + defTeamColor + '66;background:' + defTeamColor + '12;';
-        defCardEl.innerHTML =
-          "<div style=\"font-family:'Rajdhani';font-size:9px;font-weight:700;color:" + defTeamColor + ";letter-spacing:2px;margin-bottom:4px;\">" + _defTeamName.toUpperCase() + "</div>" +
-          "<div style=\"font-family:'Teko';font-size:20px;color:#fff;line-height:1;letter-spacing:1px\">" + _defPlayName + '</div>' +
-          "<div style=\"font-family:'Rajdhani';font-size:11px;color:" + defTeamColor + ";margin-top:4px\">" + _defFeatName + ' \u00b7 ' + _defFeatPos + '</div>';
-
-        cardsEl.appendChild(offCardEl);
-        cardsEl.appendChild(vsEl);
-        cardsEl.appendChild(defCardEl);
-        overlay.appendChild(cardsEl);
-
-        // User card glow after brief settle
-        setTimeout(function() {
-          if (skipped) { doSettle(); return; }
-          var userCard = isUserOff ? offCardEl : defCardEl;
-          var oppCard = isUserOff ? defCardEl : offCardEl;
-        if (isGoodForUser) {
-          userCard.style.boxShadow = '0 0 16px #00ff44';
-          userCard.style.animation = 'T-clash-glow 1s ease-in-out infinite';
-          oppCard.style.opacity = '0.5';
-          oppCard.style.transform = 'scale(0.9)';
-        } else if (isBadForUser) {
-          oppCard.style.boxShadow = '0 0 16px #ff0040';
-          oppCard.style.animation = 'T-clash-glow 1s ease-in-out infinite';
-          userCard.style.opacity = '0.5';
-          userCard.style.transform = 'scale(0.9)';
-        }
-        // Cards settle with overshoot
-        cardsEl.style.animation = 'T-clash-settle 0.4s cubic-bezier(0.34,1.56,0.64,1) both';
         doSettle();
-        }, hitstopMs); // settle delay after card reveal
-      }, cardRevealDelay); // card reveal after result slam
+      }, settleDelay);
     }, blackoutMs); // result slam after blackout
 
     // ── POST-PLAY 4-BEAT DISPLAY (Phase 6) ──
@@ -3333,6 +3355,10 @@ export function buildGameplay() {
       var holdMultiplier = isGoodForUser ? 1.5 : isBadForUser ? 0.9 : 1.0;
       var totalDur = Math.round((level === 3 ? 6000 : level === 2 ? 4500 : 3200) * holdMultiplier * getSpeedMultiplier());
 
+      // Enforce minimum display times per result type
+      if (r.isIncomplete && totalDur > 1500) totalDur = 1500;
+      if (r.yards === 0 && !r.isSack && !r.isIncomplete && totalDur > 1800) totalDur = 1800;
+
       // Detect game-winning/go-ahead score
       var preSnapScore = res._preSnap;
       var wasTrailing = false;
@@ -3350,88 +3376,133 @@ export function buildGameplay() {
 
       // ── TD CELEBRATION — separate flow for touchdowns ──
       if (isTD && isUserOff && !res._isConversion) {
-        // USER SCORES — "The Moment"
+        // USER SCORES — 4-beat cinematic
         totalDur = 5500;
         var teamAccent = hTeam.accent || '#EBB010';
 
-        // Full dark overlay behind everything
+        // ── Beat 1: Impact (0-0.3s) ──
         var tdDim = document.createElement('div');
-        tdDim.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.8);z-index:8;';
+        tdDim.style.cssText = 'position:absolute;inset:0;background:#0A0804;opacity:0.75;z-index:8;';
         overlay.appendChild(tdDim);
 
-        // White flash
         var tdFlash = document.createElement('div');
-        tdFlash.style.cssText = 'position:absolute;inset:0;background:#fff;z-index:12;opacity:0.9;transition:opacity 0.2s;';
+        tdFlash.style.cssText = 'position:absolute;inset:0;background:rgba(0,255,68,0.35);z-index:12;pointer-events:none;';
         overlay.appendChild(tdFlash);
-        setTimeout(function() { tdFlash.style.opacity = '0'; }, 150);
-        setTimeout(function() { tdFlash.remove(); }, 400);
+        try { gsap.to(tdFlash, { opacity: 0, duration: 0.3, onComplete: function() { tdFlash.remove(); } }); } catch(e) { tdFlash.remove(); }
+
+        shakeScreen(7);
+
+        var accentTop = document.createElement('div');
+        accentTop.style.cssText = 'position:absolute;top:0;left:0;right:0;height:4px;background:' + teamAccent + ';z-index:13;opacity:0;';
+        var accentBot = document.createElement('div');
+        accentBot.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:4px;background:' + teamAccent + ';z-index:13;opacity:0;';
+        overlay.appendChild(accentTop); overlay.appendChild(accentBot);
+        try { gsap.to([accentTop, accentBot], { opacity: 1, duration: 0.15 }); } catch(e) { accentTop.style.opacity='1'; accentBot.style.opacity='1'; }
+
+        // Radial particle ring burst (Rocket League style)
+        for (var _pi = 0; _pi < 40; _pi++) {
+          var _part = document.createElement('div');
+          var _angle = (_pi / 40) * 360;
+          var _dist = 120 + Math.random() * 80;
+          var _pSz = 2 + Math.random() * 3;
+          var _pColor = [teamAccent, '#00ff44', '#EBB010', '#fff', '#FF4511'][_pi % 5];
+          _part.style.cssText = 'position:absolute;top:50%;left:50%;width:' + _pSz + 'px;height:' + _pSz + 'px;border-radius:50%;background:' + _pColor + ';z-index:14;pointer-events:none;opacity:0;';
+          overlay.appendChild(_part);
+          try {
+            gsap.to(_part, {
+              x: Math.cos(_angle * Math.PI / 180) * _dist,
+              y: Math.sin(_angle * Math.PI / 180) * _dist,
+              opacity: 1, duration: 0.15, delay: 0.1
+            });
+            gsap.to(_part, {
+              opacity: 0, scale: 0, duration: 0.4, delay: 0.3,
+              onComplete: function() { if (_part.parentNode) _part.remove(); }
+            });
+          } catch(e) { _part.remove(); }
+        }
 
         // Haptic
         if (navigator.vibrate) try { navigator.vibrate([30, 50, 80]); } catch(e) {}
 
-        // Team logo pulsing behind text — low opacity for contrast
-        var logoBg = document.createElement('div');
-        logoBg.style.cssText = 'position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);z-index:9;opacity:0.06;animation:T-flame-pulse 1.5s ease-in-out infinite;';
-        logoBg.innerHTML = renderTeamBadge(GS.team, 180);
-        overlay.appendChild(logoBg);
-
-        // Dark vignette behind text for contrast
-        var tdVignette = document.createElement('div');
-        tdVignette.style.cssText = 'position:absolute;inset:0;z-index:9;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0.5) 0%,transparent 60%);pointer-events:none;';
-        overlay.appendChild(tdVignette);
-
-        // Result wrap — centered, above logo
+        // ── Beat 2: Reveal (0.3-0.9s) ──
         var resultWrap = document.createElement('div');
         resultWrap.className = 'T-clash-result';
-        resultWrap.style.cssText = 'z-index:10;gap:8px;';
-        resultWrap.style.opacity = '0';
-
-        // "TOUCHDOWN" — auto-sized with strong contrast
-        var tdTextEl = document.createElement('div');
-        tdTextEl.style.cssText = "font-family:'Teko';font-weight:700;color:" + teamAccent + ";letter-spacing:6px;text-shadow:0 0 40px " + teamAccent + "80,0 0 80px " + teamAccent + "40,0 2px 0 rgba(0,0,0,0.9),0 0 20px rgba(0,0,0,0.8);-webkit-text-stroke:1px rgba(0,0,0,0.3);animation:T-clash-yds 0.5s cubic-bezier(0.34,1.56,0.64,1) both;white-space:nowrap;font-size:72px;";
-        tdTextEl.textContent = 'TOUCHDOWN';
-        resultWrap.appendChild(tdTextEl);
+        resultWrap.style.cssText = 'z-index:10;gap:6px;';
         overlay.appendChild(resultWrap);
 
-        // Auto-size TOUCHDOWN text to fit container
+        // Team name
+        var teamNameEl = document.createElement('div');
+        teamNameEl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:18px;color:" + teamAccent + ";letter-spacing:6px;text-shadow:0 0 16px " + teamAccent + "66;opacity:0;transform:translateY(8px);";
+        teamNameEl.textContent = hTeam.name.toUpperCase();
+        resultWrap.appendChild(teamNameEl);
+        try { gsap.to(teamNameEl, { opacity: 1, y: 0, duration: 0.2, delay: 0.3, ease: 'power2.out' }); } catch(e) { teamNameEl.style.opacity='1'; }
+
+        // "TOUCHDOWN" — chrome green gradient
+        var tdTextEl = document.createElement('div');
+        tdTextEl.style.cssText = "font-family:'Teko';font-weight:900;font-size:56px;letter-spacing:3px;line-height:1;background:linear-gradient(180deg,#fff 0%,#00ff44 30%,#fff 50%,#00ff44 70%,#fff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 24px rgba(0,255,68,0.6)) drop-shadow(0 0 48px rgba(0,255,68,0.3)) drop-shadow(0 6px 12px rgba(0,0,0,0.9));opacity:0;transform:scale(0.3);white-space:nowrap;";
+        tdTextEl.textContent = 'TOUCHDOWN';
+        resultWrap.appendChild(tdTextEl);
+        try { gsap.to(tdTextEl, { opacity: 1, scale: 1, duration: 0.25, delay: 0.35, ease: 'back.out(2.5)' }); } catch(e) { tdTextEl.style.opacity='1'; tdTextEl.style.transform='scale(1)'; }
+
+        // Auto-size to fit
         requestAnimationFrame(function() {
-          resultWrap.style.opacity = '1'; resultWrap.style.transition = 'opacity 0.2s';
           var maxW = (overlay.offsetWidth || 375) - 40;
-          var fs = 72;
+          var fs = 56;
           while (tdTextEl.scrollWidth > maxW && fs > 28) { fs -= 2; tdTextEl.style.fontSize = fs + 'px'; }
         });
 
-        // Team name slides up — below TOUCHDOWN with gap
-        setTimeout(function() {
-          var teamLine = document.createElement('div');
-          teamLine.style.cssText = "font-family:'Teko';font-weight:700;font-size:24px;color:" + teamAccent + ";letter-spacing:4px;text-shadow:0 0 16px " + teamAccent + "40,0 2px 0 rgba(0,0,0,0.9);opacity:0;transform:translateY(10px);transition:opacity 0.3s,transform 0.3s;";
-          teamLine.textContent = hTeam.name.toUpperCase() + '!';
-          resultWrap.appendChild(teamLine);
-          requestAnimationFrame(function() { teamLine.style.opacity = '1'; teamLine.style.transform = 'translateY(0)'; });
-        }, 500);
+        // Second green flash on text slam
+        _setTimeout(function() {
+          var flash2 = document.createElement('div');
+          flash2.style.cssText = 'position:absolute;inset:0;background:rgba(0,255,68,0.2);z-index:12;pointer-events:none;';
+          overlay.appendChild(flash2);
+          try { gsap.to(flash2, { opacity: 0, duration: 0.2, onComplete: function() { flash2.remove(); } }); } catch(e) { flash2.remove(); }
+        }, 350);
 
-        // Confetti — 50 particles in team colors
-        var celeb = TEAM_CELEBRATION[GS.team] || TEAM_CELEBRATION.sentinels;
-        setTimeout(function() {
-          if (!overlay.parentNode) return; // screen exited
-          for (var ci = 0; ci < 50; ci++) {
-            var conf = document.createElement('div');
-            var confX = 5 + Math.random() * 90;
-            var confSize = 2 + Math.random() * 6;
-            var confDur = 2000 + Math.random() * 2000;
-            var confDelay = Math.random() * 600;
-            var confDrift = (Math.random() - 0.5) * 80;
-            var confRot = 360 + Math.random() * 1080;
-            var confColor = celeb.colors[ci % celeb.colors.length];
-            conf.style.cssText = 'position:absolute;top:-10px;left:' + confX + '%;width:' + confSize + 'px;height:' + confSize + 'px;background:' + confColor + ';border-radius:1px;opacity:0.9;z-index:11;--drift:' + confDrift + 'px;--rot:' + confRot + 'deg;animation:T-td-confetti ' + confDur + 'ms ease-in ' + confDelay + 'ms both;';
-            overlay.appendChild(conf);
-            conf.addEventListener('animationend', function() { if (conf.parentNode) conf.remove(); }, { once: true });
-          }
-        }, 300);
+        // Radial glow expanding behind
+        var glow = document.createElement('div');
+        glow.style.cssText = 'position:absolute;top:50%;left:50%;width:0;height:0;border-radius:50%;background:radial-gradient(circle,rgba(0,255,68,0.15),transparent 70%);z-index:9;transform:translate(-50%,-50%);pointer-events:none;';
+        overlay.appendChild(glow);
+        try { gsap.to(glow, { width: 700, height: 700, duration: 0.8, delay: 0.3, ease: 'power2.out' }); } catch(e) {}
+
+        // ── Beat 3: Context (0.9-1.5s) ──
+        _setTimeout(function() {
+          if (!overlay.parentNode) return;
+          // Gradient divider
+          var divider = document.createElement('div');
+          divider.style.cssText = "width:60px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,255,68,0.27),transparent);transform:scaleX(0);margin:4px 0;";
+          resultWrap.appendChild(divider);
+          try { gsap.to(divider, { scaleX: 1, duration: 0.3, ease: 'power2.out' }); } catch(e) { divider.style.transform='scaleX(1)'; }
+
+          // Commentary
+          var gameCtx = gs.getSummary();
+          gameCtx.preSnapPossession = prevPoss;
+          var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
+          setNarr(comm.line1, comm.line2 || '');
+
+          var commEl = document.createElement('div');
+          commEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:12px;color:rgba(255,255,255,0.6);text-shadow:0 2px 4px rgba(0,0,0,0.8);max-width:280px;text-align:center;opacity:0;transform:translateY(6px);";
+          commEl.textContent = comm.line1;
+          resultWrap.appendChild(commEl);
+          try { gsap.to(commEl, { opacity: 1, y: 0, duration: 0.25, ease: 'power2.out' }); } catch(e) { commEl.style.opacity='1'; }
+
+          // Score update
+          var hS = hAbbr === 'CT' ? gs.ctScore : gs.irScore;
+          var oS = hAbbr === 'CT' ? gs.irScore : gs.ctScore;
+          var scoreEl = document.createElement('div');
+          scoreEl.style.cssText = "display:flex;align-items:baseline;gap:8px;margin-top:6px;opacity:0;";
+          scoreEl.innerHTML =
+            "<span style=\"font-family:'Teko';font-weight:900;font-size:28px;color:#fff;text-shadow:0 0 12px " + teamAccent + "66;\">" + hTeam.name + " " + hS + "</span>" +
+            "<span style=\"font-family:'Rajdhani';font-weight:600;font-size:14px;color:#555;\">\u2014</span>" +
+            "<span style=\"font-family:'Teko';font-weight:700;font-size:20px;color:rgba(255,255,255,0.4);\">" + oS + " " + oTeam.name + "</span>";
+          resultWrap.appendChild(scoreEl);
+          try { gsap.to(scoreEl, { opacity: 1, duration: 0.3, delay: 0.15, ease: 'power2.out' }); } catch(e) { scoreEl.style.opacity='1'; }
+        }, 900);
 
         // Team phrase
-        setTimeout(function() {
-          if (!overlay.parentNode) return; // screen exited
+        var celeb = TEAM_CELEBRATION[GS.team] || TEAM_CELEBRATION.sentinels;
+        _setTimeout(function() {
+          if (!overlay.parentNode) return;
           var phraseEl = document.createElement('div');
           phraseEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:" + teamAccent + ";letter-spacing:2px;opacity:0;text-shadow:0 0 12px " + teamAccent + "40;";
           phraseEl.textContent = celeb.phrases[Math.floor(Math.random() * celeb.phrases.length)];
@@ -3439,17 +3510,64 @@ export function buildGameplay() {
           try { gsap.to(phraseEl, { opacity: 1, duration: 0.3 }); } catch(e) { phraseEl.style.opacity = '1'; }
         }, 1000);
 
+        // ── Beat 4: Reward (1.5-2.5s) — TORCH cascade ──
+        var cascadeWrap = document.createElement('div');
+        cascadeWrap.style.cssText = 'position:absolute;bottom:22%;left:50%;transform:translateX(-50%);z-index:11;text-align:center;pointer-events:none;';
+        overlay.appendChild(cascadeWrap);
+
+        var cascadeItems = [{ label: 'TD', pts: 6, delay: 1500 }];
+        var bonusPts = Math.max(0, (res._torchEarned || 0) - 6);
+        if (bonusPts > 0) cascadeItems.push({ label: 'BONUS', pts: bonusPts, delay: 1900 });
+
+        cascadeItems.forEach(function(item) {
+          _setTimeout(function() {
+            var line = document.createElement('div');
+            line.style.cssText = "display:flex;align-items:center;gap:4px;justify-content:center;opacity:0;transform:translateY(10px) scale(0.8);";
+            line.innerHTML = "<svg viewBox='0 0 44 56' width='14' height='18' fill='#EBB010'><path d='M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z'/></svg>" +
+              "<span style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;text-shadow:0 0 8px rgba(235,176,16,0.4);\">" + item.label + " +" + item.pts + "</span>";
+            cascadeWrap.appendChild(line);
+            try { gsap.to(line, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: 'back.out(1.5)' }); } catch(e) { line.style.opacity='1'; line.style.transform='none'; }
+            try { SND.chime(); } catch(e) {}
+          }, item.delay);
+        });
+
+        // Confetti — 3 waves of 12 particles
+        function spawnTdConfetti(ov, tAccent, count, delay) {
+          var colors = ['#00ff44', '#EBB010', '#FF4511', '#fff', tAccent];
+          _setTimeout(function() {
+            if (!ov.parentNode) return;
+            for (var i = 0; i < count; i++) {
+              var c = document.createElement('div');
+              var x = 5 + Math.random() * 90;
+              var sz = 3 + Math.random() * 5;
+              var dur = 1800 + Math.random() * 1500;
+              var drift = (Math.random() - 0.5) * 80;
+              var rot = 360 + Math.random() * 1080;
+              var col = colors[i % colors.length];
+              c.style.cssText = 'position:absolute;top:-10px;left:' + x + '%;width:' + sz + 'px;height:' + sz + 'px;background:' + col + ';border-radius:1px;opacity:0.9;z-index:11;--drift:' + drift + 'px;--rot:' + rot + 'deg;animation:T-td-confetti ' + dur + 'ms ease-in both;';
+              ov.appendChild(c);
+              c.addEventListener('animationend', function() { if (c.parentNode) c.remove(); }, { once: true });
+            }
+          }, delay);
+        }
+        spawnTdConfetti(overlay, teamAccent, 12, 200);
+        spawnTdConfetti(overlay, teamAccent, 12, 800);
+        spawnTdConfetti(overlay, teamAccent, 12, 1400);
+
         // ── CLUTCH CELEBRATION — go-ahead score in 2nd half or 2-minute drill ──
         if (isClutch) {
-          // Extended hold time
-          totalDur = 6000; // was 4500
+          totalDur = 6000;
 
-          // "GO-AHEAD SCORE" banner
-          setTimeout(function() {
+          _setTimeout(function() {
             var clutchEl = document.createElement('div');
             clutchEl.style.cssText = "position:absolute;top:12%;left:50%;transform:translateX(-50%);z-index:13;font-family:'Teko';font-weight:700;font-size:20px;letter-spacing:4px;opacity:0;white-space:nowrap;pointer-events:none;" +
               "color:#00ff44;text-shadow:0 0 20px rgba(0,255,68,0.6);";
-            clutchEl.textContent = gs.twoMinActive ? 'CLUTCH DRIVE!' : 'GO-AHEAD SCORE!';
+            var _clutchText = gs.twoMinActive ? 'CLUTCH DRIVE!' : 'GO-AHEAD SCORE!';
+            if (preSnapScore) {
+              var _trailingBy = oppScorePre - userScorePre;
+              if (_trailingBy >= 14 && isGoAhead) _clutchText = 'COMEBACK!';
+            }
+            clutchEl.textContent = _clutchText;
             overlay.appendChild(clutchEl);
             try {
               gsap.to(clutchEl, { opacity: 1, y: -5, duration: 0.4, ease: 'back.out(1.5)' });
@@ -3458,7 +3576,7 @@ export function buildGameplay() {
           }, 1000);
 
           // Extra confetti burst (30 more green particles)
-          setTimeout(function() {
+          _setTimeout(function() {
             for (var ci2 = 0; ci2 < 30; ci2++) {
               (function() {
                 var conf2 = document.createElement('div');
@@ -3473,56 +3591,14 @@ export function buildGameplay() {
             }
           }, 1200);
 
-          // Triple haptic
           if (navigator.vibrate) try { navigator.vibrate([40, 60, 80, 60, 120]); } catch(e) {}
         }
-
-        // Commentary at 800ms
-        setTimeout(function() {
-          if (!overlay.parentNode) return; // screen exited
-          var gameCtx = gs.getSummary();
-          gameCtx.preSnapPossession = prevPoss;
-          var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
-          setNarr(comm.line1, comm.line2 || '');
-          var tdTeamObj = prevPoss === hAbbr ? hTeam : oTeam;
-          var labelEl = document.createElement('div');
-          labelEl.style.cssText = "color:" + tdTeamObj.accent + ";opacity:0;transition:opacity 0.4s;margin-top:20px;font-family:'Rajdhani';font-size:13px;font-weight:600;line-height:1.3;text-align:center;max-width:260px;padding:6px 10px;background:rgba(0,0,0,0.5);border-radius:6px;text-shadow:0 1px 4px rgba(0,0,0,0.9);";
-          labelEl.textContent = comm.line1;
-          resultWrap.appendChild(labelEl);
-          requestAnimationFrame(function() { labelEl.style.opacity = '1'; });
-        }, 800);
-
-        // ── SCORING CASCADE — Balatro-style point stack ──
-        var cascadeWrap = document.createElement('div');
-        cascadeWrap.style.cssText = 'position:absolute;bottom:25%;left:50%;transform:translateX(-50%);z-index:11;text-align:center;pointer-events:none;';
-        overlay.appendChild(cascadeWrap);
-
-        var cascadeItems = [
-          { label: 'TOUCHDOWN', pts: 6, delay: 900 },
-        ];
-        var bonusPts = Math.max(0, (res._torchEarned || 0) - 6);
-        if (bonusPts > 0) {
-          cascadeItems.push({ label: 'BONUS', pts: bonusPts, delay: 1300 });
-        }
-
-        cascadeItems.forEach(function(item) {
-          setTimeout(function() {
-            var line = document.createElement('div');
-            line.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;opacity:0;transform:translateY(10px);display:block;line-height:1.4;";
-            line.textContent = item.label + '  +' + item.pts;
-            cascadeWrap.appendChild(line);
-            try {
-              gsap.to(line, { opacity: 1, y: 0, duration: 0.25, ease: 'back.out(1.5)' });
-              SND.chime();
-            } catch(e) { line.style.opacity = '1'; line.style.transform = 'translateY(0)'; }
-          }, item.delay);
-        });
 
         // First-ever TD explainer (one-time, teaches economy)
         var _firstTdExplained = localStorage.getItem('torch_first_td_done');
         if (!_firstTdExplained) {
           localStorage.setItem('torch_first_td_done', '1');
-          setTimeout(function() {
+          _setTimeout(function() {
             if (!overlay.parentNode) return;
             var explainer = document.createElement('div');
             explainer.style.cssText = "position:absolute;bottom:12%;left:50%;transform:translateX(-50%);z-index:14;text-align:center;max-width:300px;padding:12px 16px;background:rgba(0,0,0,0.85);border:1px solid #EBB01044;border-radius:8px;opacity:0;pointer-events:none;";
@@ -3540,8 +3616,8 @@ export function buildGameplay() {
 
         drawBug(); drawField();
 
-      } else if (isTD && (!isUserOff || res._isConversion)) {
-        // OPPONENT SCORES or CONVERSION — muted, but still readable
+      } else if (isTD && !isUserOff && !res._isConversion) {
+        // OPPONENT SCORES — muted, top-positioned
         totalDur = 2800;
         var oppTdWrap = document.createElement('div');
         oppTdWrap.className = 'T-clash-result';
@@ -3552,7 +3628,97 @@ export function buildGameplay() {
         overlay.appendChild(oppTdWrap);
         requestAnimationFrame(function() { oppTdWrap.style.opacity = '1'; oppTdWrap.style.transition = 'opacity 0.25s'; });
 
-        setTimeout(function() {
+        _setTimeout(function() {
+          var gameCtx = gs.getSummary();
+          gameCtx.preSnapPossession = prevPoss;
+          var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
+          setNarr(comm.line1, '');
+        }, 400);
+
+        drawBug(); drawField();
+
+      } else if (res._isConversion) {
+        // ── CONVERSION RESULT ──
+        var convIsGood = r.isComplete || r.isTouchdown;
+        var _convPreSnap = res._preSnap || {};
+        var convIs3pt = _convPreSnap.distance === 10 || _convPreSnap.yardsToEndzone === 10;
+        var convLabel = convIs3pt ? '3-POINT' : '2-POINT';
+        var convPts = convIs3pt ? 3 : 2;
+
+        if (convIsGood) {
+          totalDur = 3500;
+          // GOOD! — chrome green gradient
+          var convWrap = document.createElement('div');
+          convWrap.className = 'T-clash-result';
+          convWrap.style.cssText = 'z-index:10;gap:6px;';
+          overlay.appendChild(convWrap);
+
+          var convTypeEl = document.createElement('div');
+          convTypeEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:10px;color:#888;letter-spacing:3px;opacity:0;transform:translateY(8px);";
+          convTypeEl.textContent = convLabel + ' CONVERSION';
+          convWrap.appendChild(convTypeEl);
+          try { gsap.to(convTypeEl, { opacity: 1, y: 0, duration: 0.2, delay: 0.1 }); } catch(e) { convTypeEl.style.opacity='1'; }
+
+          var convHero = document.createElement('div');
+          convHero.style.cssText = "font-family:'Teko';font-weight:900;font-size:56px;letter-spacing:3px;line-height:1;background:linear-gradient(180deg,#fff 0%,#00ff44 30%,#fff 50%,#00ff44 70%,#fff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 24px rgba(0,255,68,0.6)) drop-shadow(0 6px 12px rgba(0,0,0,0.9));opacity:0;transform:scale(0.3);";
+          convHero.textContent = 'GOOD!';
+          convWrap.appendChild(convHero);
+          try { gsap.to(convHero, { opacity: 1, scale: 1, duration: 0.25, delay: 0.15, ease: 'back.out(2.5)' }); } catch(e) { convHero.style.opacity='1'; convHero.style.transform='scale(1)'; }
+
+          var convPtsEl = document.createElement('div');
+          convPtsEl.style.cssText = "display:flex;align-items:center;gap:4px;opacity:0;transform:translateY(10px) scale(0.8);margin-top:4px;";
+          convPtsEl.innerHTML = "<svg viewBox='0 0 44 56' width='14' height='18' fill='#EBB010'><path d='M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z'/></svg>" +
+            "<span style=\"font-family:'Teko';font-weight:700;font-size:22px;color:#EBB010;text-shadow:0 0 8px rgba(235,176,16,0.4);letter-spacing:1px;\">+" + convPts + "</span>";
+          convWrap.appendChild(convPtsEl);
+          try { gsap.to(convPtsEl, { opacity: 1, y: 0, scale: 1, duration: 0.3, delay: 0.4, ease: 'back.out(1.5)' }); } catch(e) { convPtsEl.style.opacity='1'; convPtsEl.style.transform='none'; }
+
+          flashField('rgba(0,255,68,0.3)', 400);
+          shakeScreen(3);
+
+          // Confetti — 1 wave of 12
+          var convColors = ['#00ff44', '#EBB010', '#FF4511', '#fff'];
+          _setTimeout(function() {
+            if (!overlay.parentNode) return;
+            for (var ci = 0; ci < 12; ci++) {
+              var c = document.createElement('div');
+              var x = 5 + Math.random() * 90;
+              var sz = 3 + Math.random() * 5;
+              var dur = 1800 + Math.random() * 1500;
+              var drift = (Math.random() - 0.5) * 80;
+              var rot = 360 + Math.random() * 1080;
+              c.style.cssText = 'position:absolute;top:-10px;left:' + x + '%;width:' + sz + 'px;height:' + sz + 'px;background:' + convColors[ci % convColors.length] + ';border-radius:1px;opacity:0.9;z-index:11;--drift:' + drift + 'px;--rot:' + rot + 'deg;animation:T-td-confetti ' + dur + 'ms ease-in both;';
+              overlay.appendChild(c);
+              c.addEventListener('animationend', function() { if (c.parentNode) c.remove(); }, { once: true });
+            }
+          }, 200);
+
+          var resultWrap = convWrap;
+        } else {
+          totalDur = 2200;
+          // NO GOOD
+          var convWrap2 = document.createElement('div');
+          convWrap2.className = 'T-clash-result';
+          convWrap2.style.cssText = 'z-index:10;gap:6px;';
+          overlay.appendChild(convWrap2);
+
+          var convTypeEl2 = document.createElement('div');
+          convTypeEl2.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:10px;color:#888;letter-spacing:3px;opacity:0;transform:translateY(8px);";
+          convTypeEl2.textContent = convLabel + ' CONVERSION';
+          convWrap2.appendChild(convTypeEl2);
+          try { gsap.to(convTypeEl2, { opacity: 1, y: 0, duration: 0.2, delay: 0.1 }); } catch(e) { convTypeEl2.style.opacity='1'; }
+
+          var convHero2 = document.createElement('div');
+          convHero2.style.cssText = "font-family:'Teko';font-weight:900;font-size:56px;color:#ff0040;letter-spacing:3px;line-height:1;text-shadow:0 0 20px rgba(255,0,64,0.4),0 2px 6px rgba(0,0,0,0.8);opacity:0;transform:scale(0.3);";
+          convHero2.textContent = 'NO GOOD';
+          convWrap2.appendChild(convHero2);
+          try { gsap.to(convHero2, { opacity: 1, scale: 1, duration: 0.25, delay: 0.15, ease: 'back.out(2.5)' }); } catch(e) { convHero2.style.opacity='1'; convHero2.style.transform='scale(1)'; }
+
+          flashField('rgba(255,0,64,0.3)', 400);
+
+          var resultWrap = convWrap2;
+        }
+
+        _setTimeout(function() {
           var gameCtx = gs.getSummary();
           gameCtx.preSnapPossession = prevPoss;
           var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
@@ -3563,103 +3729,171 @@ export function buildGameplay() {
 
       } else {
         // ── NON-TD: Normal result display ──
-
-        // Quick yard flash (before the full result display)
-        if (!isTD && !r.isInterception && !r.isFumbleLost && !r.isIncomplete && r.yards !== 0) {
-          var yardFlash = document.createElement('div');
-          var yardSign = r.yards > 0 ? '+' : '';
-          yardFlash.style.cssText = "position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);z-index:14;font-family:'Teko';font-weight:700;font-size:48px;color:" + (r.yards > 0 ? '#00ff44' : '#ff0040') + ";text-shadow:0 0 20px " + (r.yards > 0 ? 'rgba(0,255,68,0.5)' : 'rgba(255,0,64,0.5)') + ";opacity:0;pointer-events:none;";
-          yardFlash.textContent = yardSign + r.yards;
-          overlay.appendChild(yardFlash);
-          try {
-            gsap.to(yardFlash, { opacity: 1, scale: 1, duration: 0.2, ease: 'back.out(2)' });
-            gsap.from(yardFlash, { scale: 1.5, duration: 0.2, ease: 'back.out(2)' });
-            gsap.to(yardFlash, { opacity: 0, y: -20, duration: 0.3, delay: 0.6 });
-          } catch(e) {}
-        }
+        // Single flex column container — all elements flow vertically, no absolute overlap
 
         var nonTdWrap = document.createElement('div');
-        nonTdWrap.className = 'T-clash-result';
-        if (resultPos) nonTdWrap.style.cssText = resultPos;
-        nonTdWrap.style.opacity = '0';
-        // Result text + play description + situation
-        var _preS = res._preSnap || preSnap;
-        var _preDn = ['','1st','2nd','3rd','4th'][_preS.down] || '';
-        var _preDist = _preS.yardsToEndzone <= 10 ? 'GL' : _preS.distance;
-        var _prePos = _preS.yardsToEndzone <= 50 ? 'OPP ' + _preS.yardsToEndzone : 'OWN ' + (100 - _preS.yardsToEndzone);
-        nonTdWrap.innerHTML =
-          "<div style=\"font-family:'Rajdhani';font-size:13px;font-weight:600;color:rgba(255,255,255,0.55);letter-spacing:1px;margin-top:10px;margin-bottom:6px;text-align:center;\">" + _preDn + ' & ' + _preDist + ' \u00b7 ' + _prePos + "</div>" +
-          '<div class="T-clash-yds" style="color:' + resultColor + ';font-size:' + ydsFontSize + ';' + resultGlow + resultAnim + '">' + resultText + '</div>';
-        overlay.appendChild(nonTdWrap);
-        var resultWrap = nonTdWrap; // alias for code below that appends to resultWrap
-        requestAnimationFrame(function() {
-          nonTdWrap.style.opacity = '1';
-          nonTdWrap.style.transition = 'opacity 0.3s';
-        });
+        nonTdWrap.style.cssText = 'position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;max-width:90%;';
 
-        drawBug(); drawField();
+        // Hero text
+        var heroEl = document.createElement('div');
+        heroEl.style.cssText = "font-family:'Teko';font-weight:900;font-size:" + ydsFontSize + ";color:" + resultColor + ";letter-spacing:3px;line-height:1;text-shadow:0 0 20px " + resultColor + "60,0 2px 6px rgba(0,0,0,0.8);opacity:0;transform:scale(0.3);text-align:center;";
+        heroEl.textContent = resultText;
+        nonTdWrap.appendChild(heroEl);
 
-        // ── TURNOVER DRAMA ──
+        // Safety gets chrome red gradient like TD gets chrome green
+        if (r.isSafety) {
+          heroEl.style.background = 'linear-gradient(180deg,#fff 0%,#ff0040 30%,#fff 50%,#ff0040 70%,#fff 100%)';
+          heroEl.style.webkitBackgroundClip = 'text';
+          heroEl.style.webkitTextFillColor = 'transparent';
+          heroEl.style.backgroundClip = 'text';
+          heroEl.style.filter = 'drop-shadow(0 0 16px rgba(255,0,64,0.5))';
+        }
+
+        // Context label (below hero)
+        var ctxLabel = document.createElement('div');
+        ctxLabel.style.cssText = "font-family:'Oswald';font-weight:700;font-size:12px;letter-spacing:3px;text-shadow:0 2px 4px rgba(0,0,0,0.8);opacity:0;transform:translateY(8px);";
+        if (r.isSack) {
+          // Hero: "SACK" or "SACKED!" — context adds the yardage detail
+          ctxLabel.textContent = r.yards !== 0 ? 'LOSS OF ' + Math.abs(r.yards) : '';
+          ctxLabel.style.color = resultColor;
+        } else if (r.isSafety) {
+          ctxLabel.textContent = '+2 POINTS';
+          ctxLabel.style.color = '#ff0040';
+        } else if (r.isInterception || r.isFumbleLost) {
+          // Hero: "INTERCEPTED"/"PICKED OFF!"/"FUMBLE!" — turnover sub below handles the rest
+          ctxLabel.textContent = '';
+        } else if (r.isIncomplete) {
+          // Hero: "INCOMPLETE" — implies no gain, no need to say it
+          ctxLabel.textContent = '';
+        } else if (r.yards === 0 && !isUserOff) {
+          // Hero: "STUFFED!" on defense — no context needed (same word)
+          ctxLabel.textContent = '';
+        } else if (r.yards === 0) {
+          // Hero: "NO GAIN" on offense — add "STUFFED" for flavor
+          ctxLabel.textContent = 'STUFFED';
+          ctxLabel.style.color = '#FF6B00';
+        } else if (r.yards > 0 && gotFirstDown) {
+          ctxLabel.textContent = 'FIRST DOWN';
+          ctxLabel.style.color = '#EBB010';
+        } else {
+          // Hero already shows "+X" or "-X" — no context needed
+          ctxLabel.textContent = '';
+        }
+        if (ctxLabel.textContent) nonTdWrap.appendChild(ctxLabel);
+
+        // Gradient divider after hero+context
+        var divider = document.createElement('div');
+        divider.style.cssText = "width:60px;height:1px;background:linear-gradient(90deg,transparent," + resultColor + "44,transparent);margin:6px 0;transform:scaleX(0);";
+        nonTdWrap.appendChild(divider);
+
+        // Turnover sub-label (inside the flow, not absolute)
         if ((r.isInterception || r.isFumbleLost) && !res._isConversion) {
-          var isUserTurnover = isUserOff; // User was on offense = bad for user
-          var turnoverColor = isUserTurnover ? '#ff0040' : '#00ff44';
-          var turnoverLabel = r.isInterception ? 'INTERCEPTED' : 'FUMBLE LOST';
+          var turnoverSub = document.createElement('div');
+          var isUserTurnover = isUserOff;
+          turnoverSub.style.cssText = "font-family:'Teko';font-weight:700;font-size:18px;letter-spacing:3px;text-shadow:0 0 12px " + (isUserTurnover ? 'rgba(255,0,64,0.4)' : 'rgba(0,255,68,0.4)') + ";opacity:0;transform:translateY(6px);margin-top:4px;";
+          turnoverSub.style.color = isUserTurnover ? '#ff0040' : '#00ff44';
+          turnoverSub.textContent = isUserTurnover ? 'Possession lost.' : 'YOUR BALL!';
+          nonTdWrap.appendChild(turnoverSub);
+        }
 
-          // Screen edge vignette (red for user turnover, green for forced)
+        // Radial glow for big plays (tier >= 2)
+        if (tier >= 2 && !r.isIncomplete) {
+          var glow = document.createElement('div');
+          glow.style.cssText = 'position:absolute;top:50%;left:50%;width:0;height:0;border-radius:50%;background:radial-gradient(circle,' + resultColor + '20,transparent 70%);z-index:0;transform:translate(-50%,-50%);pointer-events:none;';
+          overlay.appendChild(glow);
+          try { gsap.to(glow, { width: 400, height: 400, duration: 0.6, ease: 'power2.out' }); } catch(e) {}
+        }
+
+        overlay.appendChild(nonTdWrap);
+        var resultWrap = nonTdWrap;
+
+        // GSAP stagger — sequential delays
+        try {
+          gsap.to(heroEl, { opacity: 1, scale: 1, duration: 0.25, delay: 0, ease: 'back.out(2.5)' });
+          var _d2 = 0.15;
+          if (ctxLabel.textContent) { gsap.to(ctxLabel, { opacity: 1, y: 0, duration: 0.2, delay: _d2, ease: 'power2.out' }); _d2 += 0.15; }
+          gsap.to(divider, { scaleX: 1, duration: 0.3, delay: _d2, ease: 'power2.out' }); _d2 += 0.1;
+          if (turnoverSub) { gsap.to(turnoverSub, { opacity: 1, y: 0, duration: 0.25, delay: _d2, ease: 'back.out(1.5)' }); }
+        } catch(e) {
+          heroEl.style.opacity = '1'; heroEl.style.transform = 'scale(1)';
+          if (ctxLabel.textContent) { ctxLabel.style.opacity = '1'; ctxLabel.style.transform = 'none'; }
+          divider.style.transform = 'scaleX(1)';
+          if (turnoverSub) { turnoverSub.style.opacity = '1'; turnoverSub.style.transform = 'none'; }
+        }
+
+        // Turnover vignette (this is a background effect, absolute is fine)
+        if ((r.isInterception || r.isFumbleLost) && !res._isConversion) {
+          var turnoverColor = isUserTurnover ? '#ff0040' : '#00ff44';
           var vignetteEl = document.createElement('div');
-          vignetteEl.style.cssText = 'position:absolute;inset:0;z-index:6;pointer-events:none;' +
+          vignetteEl.style.cssText = 'position:absolute;inset:0;z-index:1;pointer-events:none;' +
             'background:radial-gradient(ellipse at center, transparent 40%, ' + turnoverColor + '20 100%);opacity:0;';
           overlay.appendChild(vignetteEl);
           try { gsap.to(vignetteEl, { opacity: 1, duration: 0.3 }); } catch(e) { vignetteEl.style.opacity = '1'; }
-
-          if (!isUserTurnover) {
-            // User FORCED the turnover — celebration flash
-            var forceEl = document.createElement('div');
-            forceEl.style.cssText = "position:absolute;bottom:20%;left:50%;transform:translateX(-50%);z-index:12;font-family:'Teko';font-weight:700;font-size:20px;color:#00ff44;letter-spacing:3px;text-shadow:0 0 16px rgba(0,255,68,0.6);opacity:0;white-space:nowrap;pointer-events:none;";
-            forceEl.textContent = 'YOUR BALL!';
-            overlay.appendChild(forceEl);
-            try {
-              gsap.to(forceEl, { opacity: 1, y: -5, duration: 0.4, delay: 0.6, ease: 'back.out(1.5)' });
-              gsap.to(forceEl, { opacity: 0, duration: 0.3, delay: 2.0 });
-            } catch(e) {}
-          } else {
-            // User LOST the ball — grief moment
-            var lostEl = document.createElement('div');
-            lostEl.style.cssText = "position:absolute;bottom:20%;left:50%;transform:translateX(-50%);z-index:12;font-family:'Rajdhani';font-weight:700;font-size:14px;color:#ff0040;letter-spacing:2px;opacity:0;pointer-events:none;";
-            lostEl.textContent = 'Possession lost.';
-            overlay.appendChild(lostEl);
-            try {
-              gsap.to(lostEl, { opacity: 0.7, duration: 0.5, delay: 0.8 });
-              gsap.to(lostEl, { opacity: 0, duration: 0.3, delay: 2.0 });
-            } catch(e) {}
-          }
         }
+
+        drawBug(); drawField();
       }
 
-      // ── GAME OVER WATERMARK ──
+      // ── GAME OVER — dramatic freeze for close games ──
       if (gs.gameOver && !res._isConversion) {
+        var _margin = Math.abs(gs.ctScore - gs.irScore);
+        // Close game (within 7 pts): extend hold for drama
+        if (_margin <= 7) totalDur = Math.max(totalDur, 6000);
         var goEl = document.createElement('div');
         goEl.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-15deg);z-index:3;font-family:'Teko';font-weight:700;font-size:64px;color:rgba(255,255,255,0.04);letter-spacing:8px;pointer-events:none;white-space:nowrap;";
         goEl.textContent = 'GAME OVER';
         overlay.appendChild(goEl);
       }
 
-      // ── FIRST DOWN CELEBRATION OVERLAY ──
-      if (res.gotFirstDown && !isTD && !r.isInterception && !r.isFumbleLost && isUserOff) {
-        var fdEl = document.createElement('div');
-        fdEl.style.cssText = "position:relative;z-index:15;font-family:'Teko';font-weight:700;font-size:22px;color:#EBB010;letter-spacing:4px;text-shadow:0 0 16px rgba(235,176,16,0.5);opacity:0;white-space:nowrap;pointer-events:none;margin-top:4px;";
-        fdEl.textContent = 'FIRST DOWN';
-        overlay.appendChild(fdEl);
+      // First down gold bar slide-in
+      if (res.gotFirstDown && !isTD && !r.isInterception && !r.isFumbleLost) {
+        var _fdBar = document.createElement('div');
+        _fdBar.style.cssText = 'position:absolute;top:48%;left:0;width:100%;height:3px;background:linear-gradient(90deg,#EBB010,#EBB01000);z-index:14;pointer-events:none;transform:translateX(-100%);';
+        overlay.appendChild(_fdBar);
         try {
-          gsap.to(fdEl, { opacity: 1, y: -5, duration: 0.3, delay: 0.1, ease: 'back.out(1.5)' });
-          gsap.to(fdEl, { opacity: 0, y: -15, duration: 0.4, delay: 1.2, ease: 'power2.in' });
-        } catch(e) { fdEl.style.opacity = '1'; }
-        // Chain move sound
+          gsap.to(_fdBar, { x: '0%', duration: 0.4, ease: 'power2.out', delay: 0.05 });
+          gsap.to(_fdBar, { opacity: 0, duration: 0.3, delay: 0.8, onComplete: function() { _fdBar.remove(); } });
+        } catch(e) { _fdBar.remove(); }
+      }
+
+      // First down chain chime — escalates with consecutive first downs in a drive
+      if (res.gotFirstDown && !isTD && !r.isInterception && !r.isFumbleLost && isUserOff) {
+        var _fdCount = driveFirstDowns || 1;
         try { SND.chime(); } catch(e) {}
+        flashField('rgba(0,255,68,0.2)', 300);
+        if (navigator.vibrate) try { navigator.vibrate([20, 10, 20]); } catch(e) {}
+        // 3rd+ first down: gold flash
+        if (_fdCount >= 3) flashField('rgba(235,176,16,0.15)', 400);
+        // 5th+ first down: mini confetti burst
+        if (_fdCount >= 5) {
+          var _fdCols = ['#00ff44', '#EBB010', '#fff'];
+          for (var _fi = 0; _fi < 8; _fi++) {
+            var _fc = document.createElement('div');
+            _fc.style.cssText = 'position:absolute;top:-10px;left:' + (20 + Math.random() * 60) + '%;width:' + (2 + Math.random() * 3) + 'px;height:' + (2 + Math.random() * 3) + 'px;background:' + _fdCols[_fi % 3] + ';border-radius:1px;opacity:0.9;z-index:11;pointer-events:none;';
+            overlay.appendChild(_fc);
+            try { gsap.to(_fc, { y: 200, rotation: 360 + Math.random() * 720, opacity: 0, duration: 1.5 + Math.random(), ease: 'power1.in', delay: Math.random() * 0.3, onComplete: function() { if (_fc.parentNode) _fc.remove(); } }); } catch(e) { _fc.remove(); }
+          }
+        }
+      }
+
+      // Hot streak tracking
+      if (isUserOff && !res._isConversion) {
+        if (isGoodForUser) { _hotStreak++; } else if (isBadForUser) { _hotStreak = 0; }
+        // "ON FIRE" toast at 5-streak
+        if (_hotStreak === 5) {
+          var _fireToast = document.createElement('div');
+          _fireToast.style.cssText = "position:fixed;top:12%;left:50%;transform:translateX(-50%);z-index:660;font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;letter-spacing:4px;text-shadow:0 0 16px rgba(235,176,16,0.6);pointer-events:none;opacity:0;";
+          _fireToast.textContent = 'ON FIRE';
+          el.appendChild(_fireToast);
+          try {
+            gsap.to(_fireToast, { opacity: 1, y: -5, duration: 0.3, ease: 'back.out(1.5)' });
+            gsap.to(_fireToast, { opacity: 0, y: -15, duration: 0.4, delay: 1.5, onComplete: function() { _fireToast.remove(); } });
+          } catch(e) { setTimeout(function() { _fireToast.remove(); }, 2000); }
+        }
       }
 
       // ── BEAT 2: CONTEXT (800ms-2s) — first down, down & distance, commentary (non-TD only) ──
-      setTimeout(function() {
+      _setTimeout(function() {
         if (isTD) return; // TD has its own commentary flow above
         if (!overlay.parentNode) return; // screen exited
 
@@ -3671,9 +3905,10 @@ export function buildGameplay() {
           var dnPossTeam = newS.possession === 'CT' ? hTeam : oTeam;
           var dnColor = dnPossTeam.accent;
           var dnEl = document.createElement('div');
-          dnEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:" + dnColor + ";letter-spacing:3px;margin-top:6px;opacity:0.9;";
+          dnEl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:10px;color:" + dnColor + ";letter-spacing:2px;margin-top:6px;opacity:0;transform:translateY(6px);";
           dnEl.textContent = dnText;
           resultWrap.appendChild(dnEl);
+          try { gsap.to(dnEl, { opacity: 1, y: 0, duration: 0.2, delay: 0.1, ease: 'power2.out' }); } catch(e) { dnEl.style.opacity = '1'; }
         }
 
         // Commentary
@@ -3690,6 +3925,25 @@ export function buildGameplay() {
           commLine2 = comm.line2 || ctx || '';
         }
         setNarr(commLine1, commLine2);
+
+        // Commentary text on the result overlay (not just narr)
+        if (commLine1 && !res._isConversion) {
+          var commEl = document.createElement('div');
+          commEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:11px;color:rgba(255,255,255,0.6);text-shadow:0 2px 4px rgba(0,0,0,0.8);max-width:260px;text-align:center;margin-top:4px;opacity:0;transform:translateY(6px);";
+          commEl.textContent = commLine1;
+          resultWrap.appendChild(commEl);
+          try { gsap.to(commEl, { opacity: 1, y: 0, duration: 0.25, delay: 0.15, ease: 'power2.out' }); } catch(e) { commEl.style.opacity = '1'; }
+        }
+
+        // TORCH points on the result overlay
+        if (res._torchEarned && res._torchEarned > 0 && !res._isConversion) {
+          var FLAME = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
+          var tpEl = document.createElement('div');
+          tpEl.style.cssText = "display:flex;align-items:center;gap:4px;justify-content:center;margin-top:6px;opacity:0;transform:translateY(10px) scale(0.8);";
+          tpEl.innerHTML = "<svg viewBox='0 0 44 56' width='12' height='16' fill='#EBB010'><path d='" + FLAME + "'/></svg><span style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;text-shadow:0 0 8px rgba(235,176,16,0.4);letter-spacing:1px;\">+" + res._torchEarned + "</span>";
+          resultWrap.appendChild(tpEl);
+          try { gsap.to(tpEl, { opacity: 1, y: 0, scale: 1, duration: 0.3, delay: 0.3, ease: 'back.out(1.5)' }); } catch(e) { tpEl.style.opacity = '1'; tpEl.style.transform = 'none'; }
+        }
 
         // TORCH points earned — color-coded breakdown below commentary
         if (res._torchSources && res._torchSources.length > 0) {
@@ -3727,7 +3981,7 @@ export function buildGameplay() {
         labelEl.style.cssText = "color:#e8e6ff;opacity:0;transition:opacity 0.3s;margin-top:8px;font-family:'Rajdhani';font-size:15px;font-weight:700;line-height:1.3;text-align:center;max-width:280px;";
         labelEl.textContent = commLine1;
         resultWrap.appendChild(labelEl);
-        setTimeout(function() { labelEl.style.opacity = '1'; }, 100);
+        _setTimeout(function() { labelEl.style.opacity = '1'; }, 100);
 
         // Matchup reveal — show both featured players
         if (res.featuredOff && res.featuredDef && !res._isConversion) {
@@ -3740,13 +3994,13 @@ export function buildGameplay() {
             "<div style=\"font-family:'Teko';font-size:14px;color:#555;align-self:center;\">vs</div>" +
             "<div style='text-align:center;'><div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:" + defColor + ";letter-spacing:1px;\">" + res.featuredDef.pos + "</div><div style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:#fff;\">" + res.featuredDef.name + "</div></div>";
           resultWrap.appendChild(matchEl);
-          setTimeout(function() { matchEl.style.opacity = '1'; }, 200);
+          _setTimeout(function() { matchEl.style.opacity = '1'; }, 200);
         }
 
       }, 800);
 
       // ── BEAT 3: REWARD (2-3.5s) — TORCH points + combos ──
-      setTimeout(function() {
+      _setTimeout(function() {
         if (!overlay.parentNode) return; // screen exited
         // Combo flash
         if (res._combos && res._combos.length > 0) {
@@ -3759,11 +4013,13 @@ export function buildGameplay() {
       }, 2000);
 
       // ── BEAT 4: READY (cleanup + proceed) ──
-      setTimeout(function() {
-        if (!overlay.parentNode) return; // screen exited before animation completed
-        overlay.style.opacity = '0';
-        overlay.style.transition = 'opacity 0.4s';
-        setTimeout(function() { overlay.remove(); }, 400);
+      _setTimeout(function() {
+        // Clean up overlay (may already be removed if screen exited)
+        if (overlay.parentNode) {
+          overlay.style.opacity = '0';
+          overlay.style.transition = 'opacity 0.4s';
+          _setTimeout(function() { if (overlay.parentNode) overlay.remove(); }, 400);
+        }
 
         // TORCH points — ALL increases go through the sequential flyer animation
         var finalTotal = hAbbr === 'CT' ? gs.getSummary().ctTorchPts : gs.getSummary().irTorchPts;
@@ -3865,7 +4121,7 @@ export function buildGameplay() {
           _reactiveOv.querySelector('#reactive-yes').onclick = function() { resolveReactive(true); };
           _reactiveOv.querySelector('#reactive-no').onclick = function() { resolveReactive(false); };
           // Safety timeout (8s)
-          setTimeout(function() { if (!_reactiveResolved) resolveReactive(false); }, 8000);
+          _setTimeout(function() { if (!_reactiveResolved) resolveReactive(false); }, 8000);
 
           // Wrap the rest of the post-play flow in a continuation
           function continueAfterReactive() {
@@ -3977,6 +4233,8 @@ export function buildGameplay() {
     // On possession change, redeal the hand for the new drive
     if (gs.possession !== _lastPossession) {
       _lastPossession = gs.possession;
+      _isNewDrive = true;
+      _hotStreak = 0; // Reset hot streak on possession change
       var newHs = getHandState();
       handRedeal(newHs);
       resetDriveDiscards(newHs);
@@ -4000,20 +4258,57 @@ export function buildGameplay() {
       var aiDec = gs.ai4thDownDecision();
       if (aiDec === 'punt') {
         phase = 'busy';
+        // Three-and-out celebration (3 or fewer opponent plays → punt)
+        if (driveSnaps.length <= 3) {
+          var _3aoEl = document.createElement('div');
+          _3aoEl.style.cssText = "position:fixed;top:30%;left:50%;transform:translateX(-50%);z-index:660;font-family:'Teko';font-weight:700;font-size:24px;color:#4DA6FF;letter-spacing:4px;text-shadow:0 0 20px rgba(77,166,255,0.5);pointer-events:none;opacity:0;white-space:nowrap;";
+          _3aoEl.textContent = 'THREE AND OUT';
+          el.appendChild(_3aoEl);
+          try {
+            gsap.to(_3aoEl, { opacity: 1, y: -5, duration: 0.3, ease: 'back.out(1.5)' });
+            gsap.to(_3aoEl, { opacity: 0, y: -20, duration: 0.4, delay: 1.5, onComplete: function() { _3aoEl.remove(); } });
+            SND.bigPlay();
+          } catch(e) { setTimeout(function() { _3aoEl.remove(); }, 2000); }
+          if (navigator.vibrate) try { navigator.vibrate([20, 10, 30]); } catch(e) {}
+        }
         // BLOCKED KICK: auto-consume from inventory if available
         var _bkPuntIdx = torchInventory.findIndex(function(c) { return c.id === 'blocked_kick'; });
         var _bkPuntOpts = {};
         if (_bkPuntIdx >= 0) { _bkPuntOpts.blockedKick = true; consumeTorchCard('blocked_kick'); torchCardToast('BLOCKED KICK', 'Chance to block the punt'); }
-        showSpecialTeamsResult(oTeam.name + ' ELECT TO PUNT', '#4DA6FF', function() {
-          var aiPunter = aiPickST(_cpuSTDeck, 'kickPower', gs.difficulty);
-          if (aiPunter) burnPlayer(_cpuSTDeck, aiPunter, 'punter', 'AI punt');
-          var puntResult = gs.punt(aiPunter, _bkPuntOpts);
-          var puntColor = puntResult.blocked ? '#00ff44' : '#4DA6FF';
-          showSpecialTeamsResult(puntResult.label, puntColor, function() {
-            driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
-            showPossCut('punt', function() { if (!checkEnd()) nextSnap(); });
-          });
+        // AI punt announcement overlay
+        var puntOv = document.createElement('div');
+        puntOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(10,8,4,0.92);opacity:0;transition:opacity 0.3s;pointer-events:auto;';
+        var _pBarT = document.createElement('div');
+        _pBarT.style.cssText = 'position:absolute;top:0;left:0;right:0;height:3px;background:' + (oTeam.accent || '#4DA6FF') + ';';
+        var _pBarB = document.createElement('div');
+        _pBarB.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:3px;background:' + (oTeam.accent || '#4DA6FF') + ';';
+        puntOv.appendChild(_pBarT); puntOv.appendChild(_pBarB);
+        puntOv.innerHTML += '<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%,' + (oTeam.colors ? oTeam.colors.primary : oTeam.accent) + '15,transparent 60%);pointer-events:none;"></div>';
+        var _pLabel = document.createElement('div');
+        _pLabel.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:10px;color:#888;letter-spacing:3px;z-index:1;";
+        _pLabel.textContent = '4TH DOWN';
+        puntOv.appendChild(_pLabel);
+        var _pTitle = document.createElement('div');
+        _pTitle.style.cssText = "font-family:'Oswald';font-weight:700;font-size:22px;color:" + (oTeam.accent || '#4DA6FF') + ";letter-spacing:4px;text-shadow:0 0 16px " + (oTeam.accent || '#4DA6FF') + "40;z-index:1;";
+        _pTitle.textContent = oTeam.name.toUpperCase() + ' PUNT';
+        puntOv.appendChild(_pTitle);
+        var _pBtn = _flameBadgeContinue('CONTINUE', function() {
+          puntOv.style.opacity = '0';
+          _setTimeout(function() {
+            if (puntOv.parentNode) puntOv.remove();
+            var aiPunter = aiPickST(_cpuSTDeck, 'kickPower', gs.difficulty);
+            if (aiPunter) burnPlayer(_cpuSTDeck, aiPunter, 'punter', 'AI punt');
+            var puntResult = gs.punt(aiPunter, _bkPuntOpts);
+            var puntColor = puntResult.blocked ? '#00ff44' : '#4DA6FF';
+            showSpecialTeamsResult(puntResult.label, puntColor, function() {
+              driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
+              showPossCut('punt', function() { if (!checkEnd()) nextSnap(); });
+            });
+          }, 250);
         });
+        puntOv.appendChild(_pBtn);
+        el.appendChild(puntOv);
+        requestAnimationFrame(function() { puntOv.style.opacity = '1'; });
         return;
       }
       if (aiDec === 'field_goal') {
@@ -4026,18 +4321,42 @@ export function buildGameplay() {
         var _bkFgIdx = torchInventory.findIndex(function(c) { return c.id === 'blocked_kick'; });
         if (_bkFgIdx >= 0) { _aiFgOpts.blockedKick = true; consumeTorchCard('blocked_kick'); torchCardToast('BLOCKED KICK', 'Chance to block the kick'); }
         var _iceLabel = _aiFgOpts.iceTheKicker ? 'ICE THE KICKER! ' : '';
-        showSpecialTeamsResult(_iceLabel + oTeam.name + ' ATTEMPT A ' + fgDist3 + '-YARD FIELD GOAL', '#EBB010', function() {
-          var aiKicker = aiPickST(_cpuSTDeck, 'kickAccuracy', gs.difficulty);
-          if (aiKicker) burnPlayer(_cpuSTDeck, aiKicker, 'kicker', 'AI FG');
-          SND.kickThud();
-          var fgResult = gs.attemptFieldGoal(aiKicker, _aiFgOpts);
-          var fgColor = fgResult.made ? '#ff0040' : '#00ff44';
-          var fgLabel = fgResult.blocked ? 'BLOCKED!' : (fgResult.made ? 'IT\'S GOOD! +3' : 'NO GOOD!');
-          showSpecialTeamsResult(fgLabel, fgColor, function() {
-            driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
-            showPossCut(fgResult.made ? 'score' : 'missed_fg', function() { if (!checkEnd()) nextSnap(); });
-          });
+        // AI FG announcement overlay
+        var fgOv = document.createElement('div');
+        fgOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(10,8,4,0.92);opacity:0;transition:opacity 0.3s;pointer-events:auto;';
+        var _fBarT = document.createElement('div');
+        _fBarT.style.cssText = 'position:absolute;top:0;left:0;right:0;height:3px;background:#EBB010;';
+        var _fBarB = document.createElement('div');
+        _fBarB.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:3px;background:#EBB010;';
+        fgOv.appendChild(_fBarT); fgOv.appendChild(_fBarB);
+        fgOv.innerHTML += '<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%,' + (oTeam.colors ? oTeam.colors.primary : oTeam.accent) + '15,transparent 60%);pointer-events:none;"></div>';
+        var _fLabel = document.createElement('div');
+        _fLabel.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:10px;color:#888;letter-spacing:3px;z-index:1;";
+        _fLabel.textContent = '4TH DOWN';
+        fgOv.appendChild(_fLabel);
+        var _fTitle = document.createElement('div');
+        _fTitle.style.cssText = "font-family:'Oswald';font-weight:700;font-size:22px;color:#EBB010;letter-spacing:4px;text-shadow:0 0 16px #EBB01040;z-index:1;";
+        _fTitle.textContent = _iceLabel + fgDist3 + '-YARD FIELD GOAL';
+        fgOv.appendChild(_fTitle);
+        var _fBtn = _flameBadgeContinue('CONTINUE', function() {
+          fgOv.style.opacity = '0';
+          _setTimeout(function() {
+            if (fgOv.parentNode) fgOv.remove();
+            var aiKicker = aiPickST(_cpuSTDeck, 'kickAccuracy', gs.difficulty);
+            if (aiKicker) burnPlayer(_cpuSTDeck, aiKicker, 'kicker', 'AI FG');
+            SND.kickThud();
+            var fgResult = gs.attemptFieldGoal(aiKicker, _aiFgOpts);
+            var fgColor = fgResult.made ? '#ff0040' : '#00ff44';
+            var fgLabel = fgResult.blocked ? 'BLOCKED!' : (fgResult.made ? 'IT\'S GOOD! +3' : 'NO GOOD!');
+            showSpecialTeamsResult(fgLabel, fgColor, function() {
+              driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
+              showPossCut(fgResult.made ? 'score' : 'missed_fg', function() { if (!checkEnd()) nextSnap(); });
+            });
+          }, 250);
         });
+        fgOv.appendChild(_fBtn);
+        el.appendChild(fgOv);
+        requestAnimationFrame(function() { fgOv.style.opacity = '1'; });
         return;
       }
       if (aiDec === 'go_for_it') {
@@ -4047,7 +4366,7 @@ export function buildGameplay() {
         goFlash.textContent = oTeam.name + ' GO FOR IT!';
         el.appendChild(goFlash);
         requestAnimationFrame(function() { goFlash.style.opacity = '1'; });
-        setTimeout(function() { goFlash.style.opacity = '0'; setTimeout(function() { goFlash.remove(); }, 200); }, 1200);
+        _setTimeout(function() { goFlash.style.opacity = '0'; setTimeout(function() { goFlash.remove(); }, 200); }, 1200);
       }
     }
 
@@ -4107,90 +4426,60 @@ export function buildGameplay() {
     if (s.down && s.distance) nextCtx = fmtDownDist(s.down, s.distance, s.yardsToEndzone);
     var fieldPos = s.yardsToEndzone ? (s.yardsToEndzone <= 50 ? 'OPP ' + s.yardsToEndzone : 'OWN ' + (100 - s.yardsToEndzone)) : '';
 
-    // Sizes based on sentiment
-    var userBadgeSize = isGoodForUser ? 90 : 50;
-    var oppBadgeSize = isGoodForUser ? 50 : 60;
-    var userScoreStyle = isGoodForUser ? "font-size:28px;color:#fff;" : "font-size:22px;color:#777;";
-    var oppScoreStyle = isGoodForUser ? "font-size:22px;color:#777;" : "font-size:28px;color:#fff;";
-    var titleColor = isGoodForUser ? newPossTeam.accent : '#888';
-    var titleSize = isGoodForUser ? '28px' : '20px';
-    var bgGrad = isGoodForUser
-      ? 'background:radial-gradient(ellipse at 50% 40%,' + newPossTeam.colors.primary + '18 0%,transparent 70%),#0A0804;'
-      : 'background:#0A0804;';
-
-    // Push possession change to ticker
-    pushTicker(newPossTeam.name.toUpperCase() + ' BALL — ' + nextCtx + (fieldPos ? ' at ' + fieldPos : ''), newPossTeam.accent);
-
     // Build overlay
     var ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:0;transition:opacity .3s;pointer-events:auto;background:#0A0804;';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0;transition:opacity .3s;pointer-events:auto;background:rgba(10,8,4,0.9);';
 
-    // Background radial glow in possessing team's color
+    // Team color accent bars top and bottom
+    var barTop = document.createElement('div');
+    barTop.style.cssText = 'position:absolute;top:0;left:0;right:0;height:3px;background:' + newPossTeam.accent + ';z-index:2;';
+    var barBot = document.createElement('div');
+    barBot.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:3px;background:' + newPossTeam.accent + ';z-index:2;';
+    ov.appendChild(barTop); ov.appendChild(barBot);
+
+    // Background radial glow
     var bgGlow = document.createElement('div');
-    bgGlow.style.cssText = 'position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%,' + newPossTeam.colors.primary + '20 0%,transparent 60%);pointer-events:none;';
+    bgGlow.style.cssText = 'position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%,' + (newPossTeam.colors ? newPossTeam.colors.primary : newPossTeam.accent) + '18 0%,transparent 60%);pointer-events:none;';
     ov.appendChild(bgGlow);
 
-    // Title — big and clear at top
-    var titleEl = document.createElement('div');
-    titleEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:" + (isGoodForUser ? '32px' : '24px') + ";color:" + titleColor + ";letter-spacing:5px;text-align:center;z-index:1;";
-    if (isGoodForUser) titleEl.style.textShadow = '0 0 24px ' + newPossTeam.accent + '60';
-    titleEl.textContent = title;
-    ov.appendChild(titleEl);
+    // Event label (small)
+    var evLabel = document.createElement('div');
+    evLabel.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:10px;color:#888;letter-spacing:3px;z-index:1;opacity:0;transform:translateY(8px);";
+    var evText = 'CHANGE OF POSSESSION';
+    if (ev === 'interception' || ev === 'fumble_lost') evText = 'TURNOVER';
+    else if (ev === 'turnover_on_downs') evText = 'TURNOVER ON DOWNS';
+    else if (ev === 'punt') evText = 'PUNT';
+    else if (ev === 'score' || ev === 'touchdown') evText = 'NEW DRIVE';
+    else if (ev === 'missed_fg') evText = 'MISSED FIELD GOAL';
+    evLabel.textContent = evText;
+    ov.appendChild(evLabel);
 
-    // Subtitle
-    var subEl = document.createElement('div');
-    subEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:14px;color:" + (isGoodForUser ? '#ccc' : '#666') + ";letter-spacing:2px;margin-top:4px;z-index:1;";
-    subEl.textContent = subtitle;
-    ov.appendChild(subEl);
+    // Score display
+    var hS = hAbbr === 'CT' ? s.ctScore : s.irScore;
+    var oS = hAbbr === 'CT' ? s.irScore : s.ctScore;
+    var scoreEl = document.createElement('div');
+    scoreEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:22px;color:#666;letter-spacing:2px;z-index:1;opacity:0;";
+    scoreEl.textContent = hS + ' \u2014 ' + oS;
+    ov.appendChild(scoreEl);
 
-    // Score bar — broadcast style with team names
-    var hScore = s.ctScore, oScore = s.irScore;
-    var scoreBar = document.createElement('div');
-    scoreBar.style.cssText = 'display:flex;align-items:center;gap:16px;margin-top:24px;z-index:1;padding:16px 24px;background:rgba(255,255,255,0.02);border-radius:12px;border:1px solid rgba(255,255,255,0.04);';
-    scoreBar.innerHTML =
-      '<div style="text-align:center;min-width:80px;">' +
-        renderTeamBadge(GS.team, 56) +
-        "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:" + hTeam.accent + ";letter-spacing:2px;margin-top:4px;\">" + hTeam.name + '</div>' +
-        "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:" + (isYourBall ? '#fff' : '#555') + ";line-height:1;\">" + hScore + '</div>' +
-      '</div>' +
-      '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">' +
-        "<div style=\"width:40px;height:1px;background:rgba(255,255,255,0.1);\"></div>" +
-        "<div style=\"font-family:'Rajdhani';font-size:10px;color:#444;letter-spacing:2px;\">VS</div>" +
-        "<div style=\"width:40px;height:1px;background:rgba(255,255,255,0.1);\"></div>" +
-      '</div>' +
-      '<div style="text-align:center;min-width:80px;">' +
-        renderTeamBadge(GS.opponent, 56) +
-        "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:" + oTeam.accent + ";letter-spacing:2px;margin-top:4px;\">" + oTeam.name + '</div>' +
-        "<div style=\"font-family:'Teko';font-weight:700;font-size:32px;color:" + (!isYourBall ? '#fff' : '#555') + ";line-height:1;\">" + oScore + '</div>' +
-      '</div>';
-    ov.appendChild(scoreBar);
+    // Team name — big hero
+    var teamNameEl = document.createElement('div');
+    teamNameEl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:26px;color:" + newPossTeam.accent + ";letter-spacing:5px;text-shadow:0 0 20px " + newPossTeam.accent + "50;z-index:1;opacity:0;transform:scale(0.3);";
+    teamNameEl.textContent = newPossTeam.name.toUpperCase() + ' BALL';
+    ov.appendChild(teamNameEl);
 
-    // Next situation + field position
+    // Field position
     if (fieldPos) {
-      var ctxWrap = document.createElement('div');
-      ctxWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:20px;width:85%;max-width:300px;z-index:1;';
-
-      // Mini field bar
-      var fieldBar = document.createElement('div');
-      fieldBar.style.cssText = 'width:100%;height:8px;background:#1a1a1a;border-radius:4px;position:relative;overflow:hidden;';
-      var ballPct = s.possession === 'CT' ? s.ballPosition : 100 - s.ballPosition;
-      var ballDot = document.createElement('div');
-      ballDot.style.cssText = 'position:absolute;top:0;bottom:0;left:' + ballPct + '%;width:10px;transform:translateX(-50%);background:' + newPossTeam.accent + ';border-radius:4px;box-shadow:0 0 8px ' + newPossTeam.accent + ';';
-      fieldBar.appendChild(ballDot);
-      ctxWrap.appendChild(fieldBar);
-
-      var ctxEl = document.createElement('div');
-      ctxEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:16px;color:" + newPossTeam.accent + ";letter-spacing:2px;";
-      ctxEl.textContent = nextCtx + ' \u2022 ' + fieldPos;
-      ctxWrap.appendChild(ctxEl);
-
-      ov.appendChild(ctxWrap);
+      var posEl = document.createElement('div');
+      posEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:13px;color:rgba(255,255,255,0.5);z-index:1;opacity:0;transform:translateY(6px);";
+      posEl.textContent = 'Ball at the ' + fieldPos.replace('OWN ', '').replace('OPP ', '');
+      ov.appendChild(posEl);
     }
 
     // Continue button
     var contBtn = document.createElement('button');
     contBtn.className = 'btn-blitz';
-    contBtn.style.cssText = "font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;margin-top:24px;z-index:1;";
+    contBtn.style.cssText = "font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;margin-top:16px;z-index:1;opacity:0;transform:translateY(10px);";
     contBtn.textContent = 'CONTINUE';
     ov.appendChild(contBtn);
 
@@ -4198,39 +4487,59 @@ export function buildGameplay() {
     if (isGoodForUser) { try { SND.chime(); } catch(e) {} }
     else { try { SND.snap(); } catch(e) {} }
 
-    // Tap to advance (button or overlay)
+    // Animate in
     var dismissed = false;
-    function dismiss() {
-      if (dismissed) return;
-      dismissed = true;
-      ov.style.opacity = '0';
-      setTimeout(function() { if (ov.parentNode) ov.remove(); done(); }, 300);
-    }
+    function dismiss() { if (dismissed) return; dismissed = true; ov.style.opacity = '0'; setTimeout(function() { if (ov.parentNode) ov.remove(); done(); }, 300); }
     contBtn.onclick = function(e) { e.stopPropagation(); dismiss(); };
     ov.onclick = dismiss;
     el.appendChild(ov);
-    requestAnimationFrame(function() { ov.style.opacity = '1'; });
+    requestAnimationFrame(function() {
+      ov.style.opacity = '1';
+      try {
+        gsap.to(evLabel, { opacity: 1, y: 0, duration: 0.2, delay: 0.1 });
+        gsap.to(scoreEl, { opacity: 1, duration: 0.2, delay: 0.2 });
+        gsap.to(teamNameEl, { opacity: 1, scale: 1, duration: 0.25, delay: 0.25, ease: 'back.out(2.5)' });
+        if (fieldPos) gsap.to(posEl, { opacity: 1, y: 0, duration: 0.2, delay: 0.4 });
+        gsap.to(contBtn, { opacity: 1, y: 0, duration: 0.2, delay: 0.5 });
+      } catch(e) { evLabel.style.opacity='1';scoreEl.style.opacity='1';teamNameEl.style.opacity='1';teamNameEl.style.transform='scale(1)';contBtn.style.opacity='1'; }
+    });
+
+    // Push ticker
+    pushTicker(newPossTeam.name.toUpperCase() + ' BALL \u2014 ' + nextCtx + (fieldPos ? ' at ' + fieldPos : ''), newPossTeam.accent);
   }
 
   // ── DRIVE SUMMARY ──
   function showDrive(log, poss, done) {
     if (log.length < 2) { done(); return; }
-    const yds = log.reduce((s,r) => s + (r.result.yards||0), 0);
-    const td = log.some(r => r.result.isTouchdown);
-    const to = log.some(r => r.result.isInterception || r.result.isFumbleLost);
-    const dt = poss==='CT' ? hTeam : oTeam;
+    var yds = log.reduce(function(s,r) { return s + (r.result ? r.result.yards || 0 : r.yards || 0); }, 0);
+    var td = log.some(function(r) { return r.result ? r.result.isTouchdown : r.isTD; });
+    var to = log.some(function(r) { return r.result ? (r.result.isInterception || r.result.isFumbleLost) : (r.isInt || r.isFumble); });
+    var dt = poss === 'CT' ? hTeam : oTeam;
 
-    panel.innerHTML = '';
-    const d = document.createElement('div'); d.className = 'T-drv';
-    d.style.cssText = 'opacity:0;transition:opacity .3s';
-    d.innerHTML =
-      `<div class="T-drv-hdr" style="color:${dt.accent}">${dt.abbr} DRIVE \u2014 ${log.length} PLAYS, ${yds} YDS</div>`+
-      (td ? '<div class="T-drv-stat" style="color:#00ff44">TOUCHDOWN</div>' : '')+
-      (to ? '<div class="T-drv-stat" style="color:#ff0040">TURNOVER</div>' : '')+
-      (!td && !to ? '<div class="T-drv-stat">Drive over.</div>' : '');
-    panel.appendChild(d);
-    requestAnimationFrame(() => d.style.opacity='1');
-    setTimeout(done, 1800);
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(10,8,4,0.9);opacity:0;transition:opacity 0.3s;pointer-events:auto;cursor:pointer;';
+
+    var label = document.createElement('div');
+    label.style.cssText = "font-family:'Oswald';font-weight:700;font-size:12px;color:#FF6B00;letter-spacing:3px;";
+    label.textContent = 'DRIVE SUMMARY';
+    ov.appendChild(label);
+
+    var statsEl = document.createElement('div');
+    statsEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:14px;color:#ccc;letter-spacing:1px;";
+    statsEl.textContent = log.length + ' PLAYS \u00b7 ' + Math.abs(yds) + ' YARDS';
+    ov.appendChild(statsEl);
+
+    var resultLabel = document.createElement('div');
+    var resColor = td ? '#00ff44' : to ? '#ff0040' : '#888';
+    var resText = td ? 'TOUCHDOWN' : to ? 'TURNOVER' : 'DRIVE OVER';
+    resultLabel.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:" + resColor + ";letter-spacing:2px;";
+    resultLabel.textContent = resText;
+    ov.appendChild(resultLabel);
+
+    ov.onclick = function() { ov.style.opacity = '0'; setTimeout(function() { if (ov.parentNode) ov.remove(); done(); }, 300); };
+    el.appendChild(ov);
+    requestAnimationFrame(function() { ov.style.opacity = '1'; });
+    _setTimeout(function() { if (ov.parentNode) { ov.style.opacity = '0'; setTimeout(function() { if (ov.parentNode) ov.remove(); done(); }, 300); } }, 2000);
   }
 
   // ── CONVERSION ──
@@ -4249,43 +4558,53 @@ export function buildGameplay() {
     panel.className = 'T-panel T-panel-off';
     panel.innerHTML = '';
     var scoringTeamObj = team === hAbbr ? hTeam : oTeam;
+    var scAccent = scoringTeamObj.accent || '#EBB010';
+
+    // TD header
     var inst = document.createElement('div');
-    inst.style.cssText = "text-align:center;padding:8px 0 4px;";
+    inst.style.cssText = "text-align:center;padding:12px 0 8px;background:radial-gradient(ellipse at 50% 100%," + scAccent + "08,transparent 70%);";
     inst.innerHTML =
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + scoringTeamObj.accent + ";letter-spacing:4px;text-shadow:0 0 16px " + scoringTeamObj.accent + "40;\">TOUCHDOWN!</div>" +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:14px;color:#999;letter-spacing:3px;margin-top:4px;\">CHOOSE CONVERSION</div>";
+      "<div style=\"font-family:'Teko';font-weight:900;font-size:24px;color:" + scAccent + ";letter-spacing:4px;text-shadow:0 0 16px " + scAccent + "40;\">TOUCHDOWN!</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:11px;color:#888;letter-spacing:3px;margin-top:2px;\">CHOOSE CONVERSION</div>";
     panel.appendChild(inst);
 
+    // Three conversion cards
     var w = document.createElement('div');
-    w.style.cssText = 'display:flex;flex-direction:column;gap:8px;padding:8px;';
+    w.style.cssText = 'display:flex;gap:6px;padding:8px 10px 14px;';
 
-    [{id:'xp',lbl:'EXTRA POINT',sub:'+1 (automatic)',col:'#00ff44'},
-     {id:'2pt',lbl:'2-POINT CONVERSION',sub:'+2 from the 5 yard line',col:'#c8a030'},
-     {id:'3pt',lbl:'3-POINT CONVERSION',sub:'+3 from the 10 yard line',col:'#e03050'}].forEach(function(c) {
-      var b = document.createElement('button');
-      b.className = 'btn-blitz';
-      b.style.cssText = "background:transparent;color:" + c.col + ";border-color:" + c.col + ";font-family:'Teko';font-size:18px;letter-spacing:2px;padding:14px 16px;box-shadow:4px 4px 0 " + c.col + "44, 6px 6px 0 #000;";
-      b.innerHTML = c.lbl + "<br><span style=\"font-family:'Rajdhani';font-size:12px;font-weight:600;color:" + c.col + "88;letter-spacing:1px;\">" + c.sub + '</span>';
-      b.onclick = function() {
+    var convOptions = [
+      { id: 'xp', pts: '+1', label: 'EXTRA POINT', desc: 'Automatic', risk: 'SAFE', color: '#00ff44' },
+      { id: '2pt', pts: '+2', label: '2-POINT', desc: 'From the 5 yd line', risk: 'BALANCED', color: '#EBB010' },
+      { id: '3pt', pts: '+3', label: '3-POINT', desc: 'From the 10 yd line', risk: 'RISKY', color: '#e03050' },
+    ];
+
+    convOptions.forEach(function(c) {
+      var card = document.createElement('div');
+      card.style.cssText = "flex:1;border-radius:6px;padding:12px 6px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;border:1.5px solid " + c.color + "44;background:linear-gradient(170deg," + c.color + "10,#0a0804 60%);";
+      card.innerHTML =
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + c.color + ";line-height:0.85;\">" + c.pts + "</div>" +
+        "<div style=\"font-family:'Oswald';font-weight:700;font-size:9px;color:" + c.color + ";letter-spacing:1px;\">" + c.label + "</div>" +
+        "<div style=\"font-family:'Rajdhani';font-size:9px;color:#555;margin-top:2px;\">" + c.desc + "</div>" +
+        "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:" + c.color + ";letter-spacing:1px;padding:2px 6px;border:1px solid " + c.color + "33;border-radius:3px;margin-top:4px;\">" + c.risk + "</div>";
+
+      card.onclick = function() {
         SND.snap();
         if (c.id === 'xp') {
           gs.handleConversion('xp'); drawBug();
           setNarr('Extra point is GOOD!', '+1 point');
           showPossCut('score', function() { showDrive(driveSnaps, team, function() { driveSnaps=[]; drivePlayHistory=[]; resetDriveSummary(); if(!checkEnd()) nextSnap(); }); });
         } else {
-          // Enter card selection for 2pt/3pt conversion
           conversionMode = { choice: c.id, team: team };
-          // Set ball position to conversion yard line so scoreboard shows correctly
           var convYards = c.id === '2pt' ? 5 : 10;
           gs.ballPosition = gs.possession === 'CT' ? (100 - convYards) : convYards;
           gs.down = 1;
           gs.distance = convYards;
-          setNarr(c.lbl + ' attempt', 'Select your play, player, and snap');
+          setNarr(c.label + ' attempt', 'Select your play, player, and snap');
           phase = 'play';
           drawBug(); drawField(); drawPanel();
         }
       };
-      w.appendChild(b);
+      w.appendChild(card);
     });
     panel.appendChild(w);
   }
@@ -4374,31 +4693,54 @@ export function buildGameplay() {
     var prevPossConv = cm.team;
     run3BeatSnap(fakeRes, prevPossConv, false, false);
     // Safety: reset phase if still busy after max animation time
-    setTimeout(function() { if (phase === 'busy') { phase = 'play'; drawBug(); drawField(); drawPanel(); } }, 8000);
+    _setTimeout(function() { if (phase === 'busy') { phase = 'play'; drawBug(); drawField(); drawPanel(); } }, 8000);
   }
 
   // ── 2-MIN WARNING (dramatic overlay) ──
   function show2MinWarn() {
     SND.whistle();
-    shakeScreen();
+    shakeScreen(4);
     flashField('rgba(224,48,80,.3)');
 
-    // Red flash pulse on edges
-    var edgePulse = document.createElement('div');
-    edgePulse.style.cssText = 'position:fixed;inset:0;z-index:599;border:4px solid #e03050;opacity:0.8;pointer-events:none;animation:T-flash-green 0.6s ease-out;';
-    edgePulse.style.borderColor = '#e03050';
-    el.appendChild(edgePulse);
-    setTimeout(function() { edgePulse.remove(); }, 600);
-
     var ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);opacity:0;transition:opacity .25s;pointer-events:auto;cursor:pointer;';
-    ov.innerHTML =
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:36px;color:#e03050;letter-spacing:4px;text-shadow:0 0 30px rgba(224,48,80,0.5);animation:T-clash-yds 0.4s cubic-bezier(0.34,1.56,0.64,1) both;text-align:center;white-space:nowrap;\">2-MINUTE WARNING</div>" +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:14px;color:#888;letter-spacing:2px;margin-top:8px;text-align:center;\">The clock is live. Every second counts.</div>";
-    ov.onclick = function() { ov.style.opacity = '0'; setTimeout(function() { ov.remove(); }, 250); };
+    ov.style.cssText = 'position:fixed;inset:0;z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:rgba(10,8,4,0.92);opacity:0;transition:opacity .25s;pointer-events:auto;cursor:pointer;';
+
+    // Red accent bars
+    var barT = document.createElement('div');
+    barT.style.cssText = 'position:absolute;top:0;left:0;right:0;height:3px;background:#e03050;';
+    var barB = document.createElement('div');
+    barB.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:3px;background:#e03050;';
+    ov.appendChild(barT); ov.appendChild(barB);
+
+    // "2-MINUTE"
+    var hero = document.createElement('div');
+    hero.style.cssText = "font-family:'Teko';font-weight:900;font-size:52px;color:#e03050;letter-spacing:4px;text-shadow:0 0 30px rgba(224,48,80,0.5);opacity:0;transform:scale(0.3);";
+    hero.textContent = '2-MINUTE';
+    ov.appendChild(hero);
+
+    // "WARNING"
+    var sub = document.createElement('div');
+    sub.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:#e03050;letter-spacing:6px;opacity:0;transform:translateY(8px);";
+    sub.textContent = 'WARNING';
+    ov.appendChild(sub);
+
+    // Description
+    var desc = document.createElement('div');
+    desc.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:12px;color:#888;letter-spacing:2px;margin-top:8px;opacity:0;";
+    desc.textContent = 'Clock stops at 2:00';
+    ov.appendChild(desc);
+
+    ov.onclick = function() { ov.style.opacity = '0'; setTimeout(function() { if (ov.parentNode) ov.remove(); }, 250); };
     el.appendChild(ov);
-    requestAnimationFrame(function() { ov.style.opacity = '1'; });
-    setTimeout(function() { if (ov.parentNode) { ov.style.opacity = '0'; setTimeout(function() { ov.remove(); }, 250); } }, 2000);
+    requestAnimationFrame(function() {
+      ov.style.opacity = '1';
+      try {
+        gsap.to(hero, { opacity: 1, scale: 1, duration: 0.25, ease: 'back.out(2.5)' });
+        gsap.to(sub, { opacity: 0.8, y: 0, duration: 0.2, delay: 0.15 });
+        gsap.to(desc, { opacity: 1, duration: 0.2, delay: 0.3 });
+      } catch(e) { hero.style.opacity='1';hero.style.transform='scale(1)'; sub.style.opacity='0.8'; desc.style.opacity='1'; }
+    });
+    _setTimeout(function() { if (ov.parentNode) { ov.style.opacity = '0'; setTimeout(function() { if (ov.parentNode) ov.remove(); }, 250); } }, 2500);
   }
 
   // ── COIN TOSS OVERLAY ──
@@ -4426,7 +4768,7 @@ export function buildGameplay() {
 
     // Phase 1: Tap to flip — 3D coin with team logos on each side
     var tossTitle = document.createElement('div');
-    tossTitle.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:4px;margin-bottom:16px;";
+    tossTitle.style.cssText = "font-family:'Teko';font-weight:900;font-size:28px;letter-spacing:4px;margin-bottom:16px;background:linear-gradient(180deg,#FFD060,#EBB010,#8B4A1F,#EBB010);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 12px rgba(235,176,16,0.5)) drop-shadow(0 6px 12px rgba(0,0,0,0.9));";
     tossTitle.textContent = 'COIN TOSS';
     ov.appendChild(tossTitle);
 
@@ -4436,17 +4778,20 @@ export function buildGameplay() {
     coinInner.style.cssText = 'width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 1.5s cubic-bezier(0.22,1,0.36,1);';
     // Front: user's team
     var coinFront = document.createElement('div');
-    coinFront.style.cssText = 'position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,#EBB010,#B8860B);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;box-shadow:0 0 30px rgba(235,176,16,0.4);';
+    coinFront.style.cssText = 'position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,#EBB010,#B8860B);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;animation:coinGlow 3s ease-in-out infinite;';
     coinFront.innerHTML = renderTeamBadge(GS.team, 70);
     // Back: opponent's team
     var coinBack = document.createElement('div');
-    coinBack.style.cssText = 'position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,#B8860B,#EBB010);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;transform:rotateY(180deg);box-shadow:0 0 30px rgba(235,176,16,0.4);';
+    coinBack.style.cssText = 'position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,#B8860B,#EBB010);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;transform:rotateY(180deg);animation:coinGlow 3s ease-in-out infinite;';
     coinBack.innerHTML = renderTeamBadge(GS.opponent, 70);
     coinInner.appendChild(coinFront);
     coinInner.appendChild(coinBack);
     coin.appendChild(coinInner);
+    var coinEdge = document.createElement('div');
+    coinEdge.style.cssText = 'position:absolute;inset:-3px;border-radius:50%;border:1px solid rgba(255,215,0,0.15);pointer-events:none;';
+    coin.appendChild(coinEdge);
     var label = document.createElement('div');
-    label.style.cssText = "font-family:'Teko';font-weight:700;font-size:22px;color:#EBB010;letter-spacing:3px;margin-top:8px;";
+    label.style.cssText = "font-family:'Teko';font-weight:700;font-size:22px;color:#EBB010;letter-spacing:3px;margin-top:8px;animation:pulseHint 1.5s ease-in-out infinite;";
     label.textContent = 'TAP TO FLIP';
     ov.appendChild(coin);
     ov.appendChild(label);
@@ -4459,7 +4804,7 @@ export function buildGameplay() {
       label.textContent = '';
       SND.flip();
 
-      setTimeout(function() {
+      _setTimeout(function() {
         // Phase 2: Result + Choice
         ov.innerHTML = '';
         ov.style.background = '#0A0804';
@@ -4479,35 +4824,40 @@ export function buildGameplay() {
 
         if (humanWins) {
           // Human chooses: Torch Card or Receive
+          var FLAME = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
           var choiceWrap = document.createElement('div');
-          choiceWrap.style.cssText = 'display:flex;flex-direction:column;gap:14px;width:100%;max-width:320px;margin-top:20px;z-index:1;';
+          choiceWrap.style.cssText = 'display:flex;flex-direction:column;gap:14px;width:100%;max-width:320px;margin-top:20px;z-index:1;padding:0 16px;';
 
-          var cardBtn = document.createElement('button');
-          cardBtn.className = 'btn-blitz';
-          cardBtn.style.cssText = "width:100%;padding:16px;background:rgba(235,176,16,0.06);color:#EBB010;border:2px solid #EBB01066;text-align:left;border-radius:10px;";
-          cardBtn.innerHTML =
-            "<div style=\"display:flex;align-items:center;gap:10px;\">" +
-              "<svg viewBox='0 0 44 44' width='28' height='30' fill='none'><defs><linearGradient id='tcb1' x1='22' y1='40' x2='22' y2='0'><stop offset='0%' stop-color='#FF4511'/><stop offset='100%' stop-color='#EBB010'/></linearGradient></defs><path d='M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z' fill='url(#tcb1)'/></svg>" +
-              "<div><div style=\"font-family:'Teko';font-size:20px;letter-spacing:2px;\">DRAW A FREE TORCH CARD</div><div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:2px;\">Pick 1 of 3 mystery cards \u2014 but you kick off</div></div>" +
-            "</div>";
-          cardBtn.onclick = function() { showFaceDownCards(ov, offers, true, onDone); };
+          var cardOpt = document.createElement('div');
+          cardOpt.style.cssText = 'width:100%;border-radius:8px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;border:1.5px solid #EBB01044;background:linear-gradient(135deg,#FF451108,#EBB01008,transparent);';
+          cardOpt.innerHTML =
+            '<div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#FF451115,#EBB01015);border:1px solid #EBB01033;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+              "<svg viewBox='0 0 44 56' width='20' height='26' fill='#EBB010'><path d='" + FLAME + "'/></svg>" +
+            '</div>' +
+            '<div style="flex:1;">' +
+              "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;letter-spacing:2px;\">FREE TORCH CARD</div>" +
+              "<div style=\"font-family:'Rajdhani';font-size:11px;color:#888;\">Pick 1 of 3 mystery cards \u2014 but you kick off</div>" +
+            '</div>';
+          cardOpt.onclick = function() { showFaceDownCards(ov, offers, true, onDone); };
 
-          var recBtn = document.createElement('button');
-          recBtn.className = 'btn-blitz';
-          recBtn.style.cssText = "width:100%;padding:16px;background:rgba(0,255,68,0.04);color:#00ff44;border:2px solid #00ff4444;text-align:left;border-radius:10px;";
-          recBtn.innerHTML =
-            "<div style=\"display:flex;align-items:center;gap:10px;\">" +
-              "<svg viewBox='0 0 100 100' width='28' height='28' fill='none' style='filter:drop-shadow(0 0 4px rgba(0,255,68,0.4));'><defs><linearGradient id='rcvFb' x1='15' y1='15' x2='85' y2='85' gradientUnits='userSpaceOnUse'><stop offset='0%' stop-color='#00ff44'/><stop offset='100%' stop-color='#00aa22'/></linearGradient></defs><g transform='translate(50,50) rotate(-45) scale(0.22) translate(-256,-256)'><path fill='url(#rcvFb)' d='M247.5 25.4c-13.5 3.3-26.4 7.2-38.6 11.7C142.9 61.6 96.7 103.6 66 153.6C47.8 183.4 35.1 215.9 26.9 249L264.5 486.6c13.5-3.3 26.4-7.2 38.6-11.7c66-24.5 112.2-66.5 142.9-116.5c18.3-29.8 30.9-62.3 39.1-95.3L247.5 25.4zM495.2 205.3c6.1-56.8 1.4-112.2-7.7-156.4c-2.7-12.9-13-22.9-26.1-25.1c-58.2-9.7-109.9-12-155.6-7.9L495.2 205.3zM206.1 496L16.8 306.7c-6.1 56.8-1.4 112.2 7.7 156.4c2.7 12.9 13 22.9 26.1 25.1c58.2 9.7 109.9 12 155.6 7.9z'/><path fill='#fff' d='M260.7 164.7c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6z'/></g></svg>" +
-              "<div><div style=\"font-family:'Teko';font-size:20px;letter-spacing:2px;\">RECEIVE THE KICK</div><div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:2px;\">Start with the ball \u2014 no free card until halftime</div></div>" +
-            "</div>";
-          recBtn.onclick = function() {
+          var recvOpt = document.createElement('div');
+          recvOpt.style.cssText = 'width:100%;border-radius:8px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;border:1.5px solid #00ff4444;background:linear-gradient(135deg,#00ff4408,transparent);';
+          recvOpt.innerHTML =
+            '<div style="width:44px;height:44px;border-radius:8px;background:#00ff4408;border:1px solid #00ff4433;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+              '<svg viewBox="0 0 24 24" width="20" height="20" fill="#00ff44"><ellipse cx="12" cy="12" rx="10" ry="7" transform="rotate(-45 12 12)" stroke="#00ff44" stroke-width="1.5" fill="none"/><line x1="8" y1="8" x2="16" y2="16" stroke="#00ff44" stroke-width="1" opacity="0.5"/><line x1="10" y1="10" x2="14" y2="14" stroke="#00ff44" stroke-width="0.8" opacity="0.3"/></svg>' +
+            '</div>' +
+            '<div style="flex:1;">' +
+              "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#00ff44;letter-spacing:2px;\">RECEIVE THE KICK</div>" +
+              "<div style=\"font-family:'Rajdhani';font-size:11px;color:#888;\">Start with the ball \u2014 no free card until halftime</div>" +
+            '</div>';
+          recvOpt.onclick = function() {
             SND.snap();
             ov.style.opacity = '0';
-            setTimeout(function() { ov.remove(); onDone({ chose: 'receive' }); }, 250);
+            _setTimeout(function() { ov.remove(); onDone({ chose: 'receive' }); }, 250);
           };
 
-          choiceWrap.appendChild(cardBtn);
-          choiceWrap.appendChild(recBtn);
+          choiceWrap.appendChild(cardOpt);
+          choiceWrap.appendChild(recvOpt);
           ov.appendChild(choiceWrap);
         } else {
           // CPU won — AI chooses
@@ -4540,18 +4890,15 @@ export function buildGameplay() {
             "<div style=\"font-family:'Teko';font-weight:700;font-size:24px;color:#EBB010;letter-spacing:3px;text-shadow:0 0 16px rgba(235,176,16,0.3);\">" + (aiTakesCard ? 'YOU RECEIVE THE KICK' : 'YOU DRAW A FREE TORCH CARD') + "</div>";
           ov.appendChild(youGetMsg);
 
-          var contBtn = document.createElement('button');
-          contBtn.className = 'btn-blitz';
-          contBtn.style.cssText = "margin-top:24px;font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;z-index:1;";
-          contBtn.textContent = 'CONTINUE';
-          contBtn.onclick = function() {
+          var contBtn = _flameBadgeContinue('CONTINUE', function() {
             contBtn.onclick = null;
             if (!aiTakesCard) {
               showFaceDownCards(ov, offers, false, onDone);
             } else {
               showAICardPick(ov, offers, onDone);
             }
-          };
+          });
+          contBtn.style.zIndex = '1';
           ov.appendChild(contBtn);
         }
       }, 1600);
@@ -4562,13 +4909,6 @@ export function buildGameplay() {
   function showFaceDownCards(ov, offers, humanKicks, onDone) {
     ov.innerHTML = '';
     ov.style.cssText += 'background:radial-gradient(ellipse at 50% 30%,rgba(235,176,16,0.06) 0%,transparent 60%),rgba(10,8,4,0.95);';
-
-    // Flame icon
-    var flameSvg = '<svg viewBox="0 0 44 44" width="36" height="40" fill="none" style="filter:drop-shadow(0 0 12px rgba(235,176,16,0.5));"><defs><linearGradient id="fdc" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#EBB010"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#fdc)"/></svg>';
-    var flameEl = document.createElement('div');
-    flameEl.style.cssText = 'text-align:center;margin-bottom:8px;';
-    flameEl.innerHTML = flameSvg;
-    ov.appendChild(flameEl);
 
     var title = document.createElement('div');
     title.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:5px;text-align:center;text-shadow:0 0 20px rgba(235,176,16,0.4);";
@@ -4581,50 +4921,72 @@ export function buildGameplay() {
     ov.appendChild(subtitle);
 
     var tapHint = document.createElement('div');
-    tapHint.style.cssText = "font-family:'Rajdhani';font-size:11px;font-weight:700;color:#EBB01088;text-align:center;margin-top:12px;letter-spacing:2px;animation:T-snap-pulse 1.2s ease-in-out infinite;";
+    tapHint.style.cssText = "font-family:'Rajdhani';font-size:11px;font-weight:700;color:#EBB01088;text-align:center;margin-top:12px;letter-spacing:2px;";
     tapHint.textContent = 'TAP A CARD TO REVEAL';
     ov.appendChild(tapHint);
 
     var cardRow = document.createElement('div');
     cardRow.style.cssText = 'display:flex;gap:14px;justify-content:center;margin-top:16px;';
 
+    var cardWraps = [];
     offers.forEach(function(card, idx) {
       var wrap = document.createElement('div');
-      wrap.style.cssText = 'width:100px;height:140px;border-radius:10px;background:linear-gradient(180deg,#1a1208 0%,#0E0A04 100%);border:2px solid #EBB01044;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:all 0.4s;opacity:0;transform:translateY(30px) scale(0.9);box-shadow:0 4px 20px rgba(0,0,0,0.6),0 0 12px rgba(235,176,16,0.08);';
-      wrap.innerHTML =
-        '<svg viewBox="0 0 44 44" width="24" height="26" fill="none" style="opacity:0.3;"><defs><linearGradient id="fdm' + idx + '" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="#EBB010"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#fdm' + idx + ')"/></svg>' +
-        "<div style=\"font-family:'Teko';font-size:32px;color:#EBB01033;line-height:1;\">?</div>";
-      setTimeout(function() { wrap.style.opacity = '1'; wrap.style.transform = 'translateY(0) scale(1)'; }, 400 + idx * 180);
+      wrap.style.cssText = 'cursor:pointer;opacity:0;transform:translateY(30px);transition:opacity 0.3s,transform 0.3s;animation:floatCard 3s ease-in-out infinite;animation-delay:' + (idx * 0.4) + 's;';
+      var backCard = buildHomeCard('torch', 95, 133);
+      wrap.appendChild(backCard);
+      wrap._card = card;
+      wrap._idx = idx;
+
+      // Stagger entrance
+      _setTimeout(function() { wrap.style.opacity = '1'; wrap.style.transform = 'translateY(0)'; }, 400 + idx * 150);
 
       wrap.onclick = function() {
-        cardRow.querySelectorAll('div').forEach(function(c) { c.onclick = null; });
-        SND.snap();
+        // Disable all cards
+        cardWraps.forEach(function(w) { w.onclick = null; w.style.cursor = 'default'; });
+        tapHint.style.display = 'none';
 
-        // Fade non-selected
-        cardRow.querySelectorAll('div').forEach(function(c) {
-          if (c !== wrap) { c.style.opacity = '0.15'; c.style.transform = 'scale(0.9)'; }
+        // Dim non-selected
+        cardWraps.forEach(function(w) {
+          if (w !== wrap) {
+            try { gsap.to(w, { opacity: 0.15, scale: 0.9, duration: 0.3 }); } catch(e) { w.style.opacity = '0.15'; }
+          }
         });
 
-        // Flip animation: shrink → swap content → expand
-        wrap.style.transform = 'scale(0.8) rotateY(90deg)';
-        wrap.style.borderColor = '#EBB010';
+        // Flip the selected card: center on screen → scaleX squeeze → swap content → expand
+        var isDramatic = card.tier === 'GOLD';
+        var flipDur = isDramatic ? 0.18 : 0.12;
+        try {
+          // Calculate delta to center the card on screen
+          var cardRect = wrap.getBoundingClientRect();
+          var centerX = window.innerWidth / 2 - cardRect.left - cardRect.width / 2;
+          var centerY = window.innerHeight * 0.4 - cardRect.top - cardRect.height / 2;
 
-        setTimeout(function() {
-          // Replace with revealed card
+          var tl = gsap.timeline();
+          // Move to center + scale up
+          tl.to(wrap, { x: centerX, y: centerY, scale: 1.15, duration: 0.35, ease: 'power2.out' });
+          // Then flip
+          tl.to(wrap, { scaleX: 0, duration: flipDur, ease: 'power2.in' });
+          tl.call(function() {
+            wrap.innerHTML = '';
+            wrap.style.background = 'transparent';
+            var revealed = buildTorchCard(card, 100, 140);
+            wrap.appendChild(revealed);
+            if (isDramatic) { try { SND.flip(); } catch(e) {} }
+            else { try { SND.cardSnap(); } catch(e) {} }
+          });
+          tl.to(wrap, { scaleX: 1, duration: flipDur, ease: 'power2.out' });
+          tl.to(wrap, { scale: 1.1, duration: 0.15, ease: 'back.out(2)' });
+          if (isDramatic) {
+            tl.fromTo(wrap, { boxShadow: '0 0 0 rgba(235,176,16,0)' }, { boxShadow: '0 0 30px rgba(235,176,16,0.6)', duration: 0.2, yoyo: true, repeat: 1 }, '-=0.15');
+          }
+        } catch(e) {
           wrap.innerHTML = '';
-          wrap.style.width = '120px';
-          wrap.style.height = '168px';
-          wrap.style.background = 'transparent';
-          wrap.style.border = 'none';
-          wrap.style.boxShadow = '0 0 30px rgba(235,176,16,0.4)';
-          var revealed = buildTorchCard(card, 120, 168);
-          wrap.appendChild(revealed);
-          wrap.style.transform = 'scale(1.08) rotateY(0deg)';
-        }, 300);
+          wrap.appendChild(buildTorchCard(card, 100, 140));
+        }
 
         // Show card name + effect below
-        setTimeout(function() {
-          var tierColors = { GOLD: '#EBB010', SILVER: '#C0C0C0', BRONZE: '#CD7F32' };
+        _setTimeout(function() {
+          var tierColors = { GOLD: '#EBB010', SILVER: '#C0C0C0', BRONZE: '#B87333' };
           var tierCol = tierColors[card.tier] || '#EBB010';
           var info = document.createElement('div');
           info.style.cssText = 'text-align:center;margin-top:16px;opacity:0;transform:translateY(10px);transition:opacity 0.4s,transform 0.4s;';
@@ -4634,37 +4996,36 @@ export function buildGameplay() {
             "<div style=\"font-family:'Rajdhani';font-size:13px;color:#ccc;margin-top:4px;max-width:260px;line-height:1.4;\">" + card.effect + "</div>";
           ov.appendChild(info);
           requestAnimationFrame(function() { info.style.opacity = '1'; info.style.transform = 'translateY(0)'; });
-        }, 600);
+        }, 700);
 
-        // Award card to human
+        // Award card
         if (gs.humanTorchCards.length < 3) gs.humanTorchCards.push(card.id);
         var cardObj = TORCH_CARDS.find(function(tc) { return tc.id === card.id; });
         if (cardObj) torchInventory.push(cardObj);
         if (GS.season) GS.season.torchCards = torchInventory.slice();
 
-        // Hold for 3 seconds so player can read, then continue
-        var continueBtn = document.createElement('button');
-        continueBtn.className = 'btn-blitz';
-        continueBtn.style.cssText = "width:80%;max-width:280px;font-size:14px;background:linear-gradient(180deg,#EBB010,#FF4511);border-color:#FF4511;color:#000;letter-spacing:3px;margin-top:20px;opacity:0;transition:opacity 0.3s;";
-        continueBtn.textContent = 'CONTINUE';
-        continueBtn.onclick = function() {
+        // Continue button
+        var dismissFn = function() {
           ov.style.opacity = '0';
-          setTimeout(function() {
+          _setTimeout(function() {
             ov.remove();
             onDone({ chose: humanKicks ? 'card' : 'card_cpu_receives', card: card });
           }, 250);
         };
+        var continueBtn = _flameBadgeContinue('CONTINUE', dismissFn);
+        continueBtn.style.opacity = '0';
+        continueBtn.style.transition = 'opacity 0.3s';
         ov.appendChild(continueBtn);
-        setTimeout(function() { continueBtn.style.opacity = '1'; }, 1500);
+        _setTimeout(function() { continueBtn.style.opacity = '1'; }, 1500);
       };
       cardRow.appendChild(wrap);
+      cardWraps.push(wrap);
     });
     ov.appendChild(cardRow);
   }
 
-  // AI picks a face-down card — same visual as human but auto-selects
+  // AI picks a face-down card — shows card backs, auto-selects one, flips to reveal
   function showAICardPick(ov, offers, onDone) {
-    // Reset overlay completely
     ov.innerHTML = '';
     ov.onclick = null;
     ov.style.cssText = 'position:fixed;inset:0;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#0A0804;pointer-events:auto;';
@@ -4672,7 +5033,6 @@ export function buildGameplay() {
     var pickIdx = Math.floor(Math.random() * offers.length);
     var pickedCard = offers[pickIdx];
 
-    // Badge + title
     var badge = document.createElement('div');
     badge.innerHTML = renderTeamBadge(GS.opponent, 48);
     ov.appendChild(badge);
@@ -4682,80 +5042,69 @@ export function buildGameplay() {
     title.textContent = oTeam.name + ' ARE CHOOSING...';
     ov.appendChild(title);
 
-    // 3 face-down cards
+    // 3 proper card backs
     var cardRow = document.createElement('div');
     cardRow.style.cssText = 'display:flex;gap:14px;justify-content:center;margin-top:16px;';
+    var aiWraps = [];
     offers.forEach(function(card, idx) {
       var w = document.createElement('div');
-      w.style.cssText = 'width:100px;height:140px;border-radius:10px;background:linear-gradient(180deg,#1a1208,#0E0A04);border:2px solid ' + oTeam.accent + '33;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.5);';
-      w.innerHTML = "<div style=\"font-family:'Teko';font-size:36px;color:" + oTeam.accent + "44;\">?</div>";
+      w.appendChild(buildHomeCard('torch', 95, 133));
       cardRow.appendChild(w);
+      aiWraps.push(w);
     });
     ov.appendChild(cardRow);
 
-    // After 1.5s: fade non-selected, flip selected, show reveal
-    setTimeout(function() {
+    // After 1.5s: fade non-selected, flip selected
+    _setTimeout(function() {
       if (!ov.parentNode) return;
-      var cards = cardRow.children;
 
-      // Fade non-selected
-      for (var i = 0; i < cards.length; i++) {
+      // Dim non-selected
+      aiWraps.forEach(function(w, i) {
         if (i !== pickIdx) {
-          cards[i].style.transition = 'opacity 0.3s';
-          cards[i].style.opacity = '0.15';
+          try { gsap.to(w, { opacity: 0.15, duration: 0.3 }); } catch(e) { w.style.opacity = '0.15'; }
         }
+      });
+
+      // Flip selected with scaleX
+      var picked = aiWraps[pickIdx];
+      try {
+        var tl = gsap.timeline();
+        tl.to(picked, { y: -6, scale: 1.05, duration: 0.15, ease: 'power2.out' });
+        tl.to(picked, { scaleX: 0, duration: 0.12, ease: 'power2.in' });
+        tl.call(function() {
+          picked.innerHTML = '';
+          picked.appendChild(buildTorchCard(pickedCard, 100, 140));
+          try { SND.cardSnap(); } catch(e) {}
+          title.textContent = oTeam.name + ' DREW:';
+        });
+        tl.to(picked, { scaleX: 1, duration: 0.12, ease: 'power2.out' });
+        tl.to(picked, { y: 0, scale: 1, duration: 0.2, ease: 'back.out(2)' });
+      } catch(e) {
+        picked.innerHTML = '';
+        picked.appendChild(buildTorchCard(pickedCard, 100, 140));
+        title.textContent = oTeam.name + ' DREW:';
       }
 
-      // Flip selected card
-      var picked = cards[pickIdx];
-      picked.style.transition = 'transform 0.3s, border-color 0.3s';
-      picked.style.transform = 'scale(0.85) rotateY(90deg)';
-      picked.style.borderColor = oTeam.accent;
+      // Always show card info + CONTINUE button after flip (independent of GSAP)
+      gs.cpuTorchCards.push(pickedCard.id);
 
-      setTimeout(function() {
+      _setTimeout(function() {
         if (!ov.parentNode) return;
-        // Replace with revealed card
-        picked.innerHTML = '';
-        picked.style.width = '120px';
-        picked.style.height = '168px';
-        picked.style.background = 'transparent';
-        picked.style.border = 'none';
-        picked.style.boxShadow = '0 0 24px ' + oTeam.accent + '44';
-        var revealed = buildTorchCard(pickedCard, 120, 168);
-        picked.appendChild(revealed);
-        picked.style.transform = 'scale(1.05) rotateY(0deg)';
-        try { SND.snap(); } catch(e) {}
-
-        // Update title
-        title.textContent = oTeam.name + ' DREW:';
-
-        // Card info below
-        var tierColors = { GOLD: '#EBB010', SILVER: '#C0C0C0', BRONZE: '#CD7F32' };
-        var tierCol = tierColors[pickedCard.tier] || '#EBB010';
         var info = document.createElement('div');
         info.style.cssText = 'text-align:center;margin-top:8px;max-width:260px;';
         info.innerHTML =
-          "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:" + tierCol + ";letter-spacing:2px;\">" + pickedCard.tier + "</div>" +
-          "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#fff;letter-spacing:2px;margin-top:2px;\">" + pickedCard.name + "</div>" +
+          "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#fff;letter-spacing:2px;\">" + pickedCard.name + "</div>" +
           "<div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:4px;line-height:1.3;\">" + pickedCard.effect + "</div>";
         ov.appendChild(info);
 
-        // Give AI the card
-        gs.cpuTorchCards.push(pickedCard.id);
-
-        // Continue button — visible immediately
-        var btn = document.createElement('button');
-        btn.className = 'btn-blitz';
-        btn.style.cssText = "font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;margin-top:16px;";
-        btn.textContent = 'CONTINUE';
-        btn.onclick = function() {
+        var btn = _flameBadgeContinue('CONTINUE', function() {
           btn.onclick = null;
           ov.style.transition = 'opacity 0.25s';
           ov.style.opacity = '0';
-          setTimeout(function() { if (ov.parentNode) ov.remove(); onDone({ chose: 'receive' }); }, 250);
-        };
+          _setTimeout(function() { if (ov.parentNode) ov.remove(); onDone({ chose: 'receive' }); }, 250);
+        });
         ov.appendChild(btn);
-      }, 350);
+      }, 800); // 800ms = enough time for flip animation to complete
     }, 1500);
   }
 
@@ -4764,62 +5113,146 @@ export function buildGameplay() {
     var stOv = document.createElement('div');
     var _stFired = false;
     function _stDone() { if (_stFired) return; _stFired = true; if (stOv.parentNode) stOv.remove(); if (onDone) onDone(); }
-    stOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.92);opacity:0;transition:opacity 0.3s;pointer-events:auto;';
-    stOv.innerHTML =
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + color + ";letter-spacing:4px;text-align:center;max-width:320px;text-shadow:0 0 20px " + color + "40;\">" + text + "</div>" +
-      "<button class='btn-blitz' style=\"margin-top:20px;font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;\">CONTINUE</button>";
-    stOv.querySelector('button').onclick = function(e) { e.stopPropagation(); stOv.style.opacity = '0'; setTimeout(_stDone, 200); };
+    stOv.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(10,8,4,0.92);opacity:0;transition:opacity 0.3s;pointer-events:auto;';
+
+    // Title label
+    var label = document.createElement('div');
+    label.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:10px;color:#888;letter-spacing:3px;text-transform:uppercase;opacity:0;transform:translateY(8px);";
+    label.textContent = text.indexOf('PUNT') >= 0 ? 'PUNT' : text.indexOf('FG') >= 0 || text.indexOf('FIELD GOAL') >= 0 || text.indexOf('GOOD') >= 0 || text.indexOf('NO GOOD') >= 0 || text.indexOf('MISSED') >= 0 ? 'FIELD GOAL' : 'SPECIAL TEAMS';
+    stOv.appendChild(label);
+
+    // Result text
+    var resultEl = document.createElement('div');
+    resultEl.style.cssText = "font-family:'Teko';font-weight:900;font-size:48px;color:" + color + ";letter-spacing:4px;text-align:center;max-width:320px;text-shadow:0 0 20px " + color + "40,0 2px 6px rgba(0,0,0,0.8);opacity:0;transform:scale(0.3);";
+    resultEl.textContent = text;
+    stOv.appendChild(resultEl);
+
+    // Gradient divider
+    var divider = document.createElement('div');
+    divider.style.cssText = "width:60px;height:1px;background:linear-gradient(90deg,transparent," + color + "44,transparent);transform:scaleX(0);margin:4px 0;";
+    stOv.appendChild(divider);
+
+    // Continue button
+    var contBtn = _flameBadgeContinue('CONTINUE', function() { stOv.style.opacity = '0'; setTimeout(_stDone, 200); });
+    contBtn.style.opacity = '0';
+    contBtn.style.transform = 'translateY(10px)';
+    stOv.appendChild(contBtn);
+
     stOv.onclick = function() { stOv.style.opacity = '0'; setTimeout(_stDone, 200); };
     el.appendChild(stOv);
-    requestAnimationFrame(function() { stOv.style.opacity = '1'; });
+    requestAnimationFrame(function() {
+      stOv.style.opacity = '1';
+      try {
+        gsap.to(label, { opacity: 1, y: 0, duration: 0.2, delay: 0.1 });
+        gsap.to(resultEl, { opacity: 1, scale: 1, duration: 0.25, delay: 0.15, ease: 'back.out(2.5)' });
+        gsap.to(divider, { scaleX: 1, duration: 0.3, delay: 0.3, ease: 'power2.out' });
+        gsap.to(contBtn, { opacity: 1, y: 0, duration: 0.2, delay: 0.4 });
+      } catch(e) { label.style.opacity='1'; resultEl.style.opacity='1'; resultEl.style.transform='scale(1)'; divider.style.transform='scaleX(1)'; contBtn.style.opacity='1'; }
+    });
   }
 
   // Brief kickoff result overlay
   function showKickoffResult(resultText, onDone) {
-    // Determine receiving team
     var recTeam = gs.possession === hAbbr ? hTeam : oTeam;
     var recColor = recTeam.accent || '#EBB010';
     var kov = document.createElement('div');
     var _kovFired = false;
     function _kovDone() { if (_kovFired) return; _kovFired = true; if (kov.parentNode) kov.remove(); if (onDone) onDone(); }
-    kov.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#0A0804;opacity:0;transition:opacity 0.3s;pointer-events:auto;';
-    // Background glow
-    kov.innerHTML =
-      "<div style=\"position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%," + recTeam.colors.primary + "12 0%,transparent 60%);pointer-events:none;\"></div>" +
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:24px;color:#666;letter-spacing:5px;z-index:1;\">KICKOFF</div>" +
-      "<div style=\"z-index:1;margin-top:4px;\">" + renderTeamBadge(recTeam.id, 64) + "</div>" +
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + recColor + ";letter-spacing:3px;text-shadow:0 0 16px " + recColor + "40;z-index:1;\">" + recTeam.name + " RECEIVE</div>" +
-      "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:16px;color:#ccc;z-index:1;\">" + resultText + "</div>" +
-      "<button class='btn-blitz' style=\"margin-top:16px;font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;z-index:1;\">CONTINUE</button>";
-    kov.querySelector('button').onclick = function(e) { e.stopPropagation(); kov.style.opacity = '0'; setTimeout(_kovDone, 200); };
+    kov.style.cssText = 'position:fixed;inset:0;z-index:650;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(10,8,4,0.85);opacity:0;transition:opacity 0.3s;pointer-events:auto;';
+
+    // Background radial glow
+    var bgGlow = document.createElement('div');
+    bgGlow.style.cssText = 'position:absolute;inset:0;background:radial-gradient(ellipse at 50% 35%,' + (recTeam.colors ? recTeam.colors.primary : recColor) + '15 0%,transparent 60%);pointer-events:none;';
+    kov.appendChild(bgGlow);
+
+    // "KICKOFF" label
+    var label = document.createElement('div');
+    label.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:10px;color:#666;letter-spacing:3px;z-index:1;opacity:0;transform:translateY(8px);";
+    label.textContent = 'KICKOFF';
+    kov.appendChild(label);
+
+    // Team name
+    var teamEl = document.createElement('div');
+    teamEl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:22px;color:" + recColor + ";letter-spacing:4px;text-shadow:0 0 16px " + recColor + "40;z-index:1;opacity:0;transform:scale(0.3);";
+    teamEl.textContent = recTeam.name.toUpperCase() + ' RECEIVE';
+    kov.appendChild(teamEl);
+
+    // Result text
+    var resEl = document.createElement('div');
+    resEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:13px;color:#ccc;z-index:1;opacity:0;transform:translateY(6px);";
+    resEl.textContent = resultText;
+    kov.appendChild(resEl);
+
+    // Continue button
+    var contBtn = _flameBadgeContinue('CONTINUE', function() { kov.style.opacity = '0'; setTimeout(_kovDone, 200); });
+    contBtn.style.zIndex = '1';
+    contBtn.style.opacity = '0';
+    contBtn.style.transform = 'translateY(10px)';
+    kov.appendChild(contBtn);
+
+    kov.onclick = function() { kov.style.opacity = '0'; setTimeout(_kovDone, 200); };
     el.appendChild(kov);
-    requestAnimationFrame(function() { kov.style.opacity = '1'; });
+    requestAnimationFrame(function() {
+      kov.style.opacity = '1';
+      try {
+        gsap.to(label, { opacity: 1, y: 0, duration: 0.2, delay: 0.1 });
+        gsap.to(teamEl, { opacity: 1, scale: 1, duration: 0.25, delay: 0.2, ease: 'back.out(2.5)' });
+        gsap.to(resEl, { opacity: 1, y: 0, duration: 0.2, delay: 0.35 });
+        gsap.to(contBtn, { opacity: 1, y: 0, duration: 0.2, delay: 0.45 });
+      } catch(e) { label.style.opacity='1';teamEl.style.opacity='1';teamEl.style.transform='scale(1)';resEl.style.opacity='1';contBtn.style.opacity='1'; }
+    });
   }
 
   // ── TRANSITIONS ──
   function showHalfEnd(isGameEnd, onDone) {
     var ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0);pointer-events:auto;';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(10,8,4,0);pointer-events:auto;';
     el.appendChild(ov);
 
     try { gsap.to(ov, { backgroundColor: 'rgba(10,8,4,0.92)', duration: 0.4 }); } catch(e) { ov.style.background = 'rgba(10,8,4,0.92)'; }
 
-    var label = isGameEnd ? 'FINAL' : 'END OF HALF';
+    // Gold accent bars
+    var barT = document.createElement('div');
+    barT.style.cssText = 'position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#8B4A1F,#EBB010,#FFD060,#EBB010,#8B4A1F);z-index:2;opacity:0;';
+    var barB = document.createElement('div');
+    barB.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#8B4A1F,#EBB010,#FFD060,#EBB010,#8B4A1F);z-index:2;opacity:0;';
+    ov.appendChild(barT); ov.appendChild(barB);
+
+    var label = isGameEnd ? 'FINAL' : 'HALFTIME';
+
+    // Determine chrome gradient — game end uses result color, halftime uses gold
+    var hScoreCheck = hAbbr === 'CT' ? gs.ctScore : gs.irScore;
+    var cScoreCheck = hAbbr === 'CT' ? gs.irScore : gs.ctScore;
+    var heroSize = isGameEnd ? 48 : 40;
+    var chromeGrad, chromeShadow;
+    if (isGameEnd && hScoreCheck > cScoreCheck) {
+      chromeGrad = 'linear-gradient(180deg,#66FF88,#00ff44,#008822,#00ff44)';
+      chromeShadow = 'rgba(0,255,68,0.5)';
+    } else if (isGameEnd && hScoreCheck < cScoreCheck) {
+      chromeGrad = 'linear-gradient(180deg,#FF6680,#ff0040,#880022,#ff0040)';
+      chromeShadow = 'rgba(255,0,64,0.5)';
+    } else {
+      chromeGrad = 'linear-gradient(180deg,#FFD060,#EBB010,#8B4A1F,#EBB010)';
+      chromeShadow = 'rgba(235,176,16,0.5)';
+    }
+
+    // Hero text with metallic chrome
     var textEl = document.createElement('div');
-    textEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:4px;opacity:0;text-shadow:0 0 20px rgba(235,176,16,0.3);";
+    textEl.style.cssText = "font-family:'Teko';font-weight:900;font-size:" + heroSize + "px;letter-spacing:4px;line-height:1;background:" + chromeGrad + ";-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 12px " + chromeShadow + ") drop-shadow(0 6px 12px rgba(0,0,0,0.9));opacity:0;transform:scale(0.3);z-index:1;";
     textEl.textContent = label;
     ov.appendChild(textEl);
 
-    var scoreEl = document.createElement('div');
-    scoreEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:24px;color:#fff;opacity:0;margin-top:8px;";
+    // Score: "BOARS 21 · SERPENTS 14"
     var hScore = hAbbr === 'CT' ? gs.ctScore : gs.irScore;
     var cScore = hAbbr === 'CT' ? gs.irScore : gs.ctScore;
-    scoreEl.textContent = hScore + ' - ' + cScore;
+    var scoreEl = document.createElement('div');
+    scoreEl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:16px;color:rgba(255,255,255,0.7);letter-spacing:3px;z-index:1;opacity:0;margin-top:4px;";
+    scoreEl.textContent = hTeam.name.toUpperCase() + ' ' + hScore + ' \u00b7 ' + oTeam.name.toUpperCase() + ' ' + cScore;
     ov.appendChild(scoreEl);
 
     var contBtn = document.createElement('button');
     contBtn.className = 'btn-blitz';
-    contBtn.style.cssText = "font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;margin-top:20px;opacity:0;";
+    contBtn.style.cssText = "font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;margin-top:20px;opacity:0;z-index:1;transform:translateY(10px);";
     contBtn.textContent = 'CONTINUE';
     ov.appendChild(contBtn);
 
@@ -4834,11 +5267,11 @@ export function buildGameplay() {
     ov.onclick = dismiss;
 
     try {
-      gsap.to(textEl, { opacity: 1, duration: 0.3, delay: 0.3, ease: 'back.out(1.5)' });
-      gsap.from(textEl, { scale: 1.3, duration: 0.3, delay: 0.3, ease: 'back.out(1.5)' });
-      gsap.to(scoreEl, { opacity: 1, duration: 0.25, delay: 0.6 });
-      gsap.to(contBtn, { opacity: 1, duration: 0.25, delay: 0.8 });
-    } catch(e) { textEl.style.opacity = '1'; scoreEl.style.opacity = '1'; contBtn.style.opacity = '1'; }
+      gsap.to([barT, barB], { opacity: 1, duration: 0.3, delay: 0.2 });
+      gsap.to(textEl, { opacity: 1, scale: 1, duration: 0.3, delay: 0.3, ease: 'back.out(2.5)' });
+      gsap.to(scoreEl, { opacity: 1, duration: 0.25, delay: 0.5 });
+      gsap.to(contBtn, { opacity: 1, y: 0, duration: 0.25, delay: 0.7 });
+    } catch(e) { textEl.style.opacity = '1'; textEl.style.transform = 'scale(1)'; scoreEl.style.opacity = '1'; contBtn.style.opacity = '1'; barT.style.opacity = '1'; barB.style.opacity = '1'; }
   }
 
   function checkEnd() {
@@ -4904,7 +5337,7 @@ export function buildGameplay() {
             "<button class='btn-blitz' style='margin-top:20px;font-size:16px;padding:14px 40px;background:#141008;color:" + hTeam.accent + ";border-color:" + hTeam.accent + ";letter-spacing:3px;'>GOT IT</button>";
           torchTutOv.querySelector('button').onclick = function() {
             torchTutOv.style.opacity = '0';
-            setTimeout(function() {
+            _setTimeout(function() {
               torchTutOv.remove();
               phase = 'play';
               panel.style.display = '';
@@ -5073,6 +5506,7 @@ export function buildGameplay() {
     document.removeEventListener('touchend', endDrag);
     if (twoMinTimer) { clearInterval(twoMinTimer); twoMinTimer = null; }
     if (_tickerAnim) { try { _tickerAnim.kill(); } catch(e) {} _tickerAnim = null; }
+    _timers.forEach(clearTimeout); _timers.length = 0;
     try { gsap.killTweensOf(el.querySelectorAll('*')); } catch(e) {}
     stopWeatherAudio();
   };

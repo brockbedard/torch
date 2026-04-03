@@ -132,13 +132,11 @@ export function injectDevPanel(el, gs, callbacks) {
 
   // ── GAME FLOW ──
   html += section('GAME FLOW');
-  html += btn('View Roster', 'dev-roster', '#4DA6FF');
-  html += btn('Replay Coin Toss', 'dev-coin-toss', '#EBB010');
   html += btn('Force Kickoff', 'dev-kickoff', '#EBB010');
-  html += btn('Jump to Halftime', 'dev-halftime', '#FF6B00');
-  html += btn('Jump to 2-Min Drill', 'dev-2min', '#e03050');
-  html += btn('Jump to 4th Down (past 50)', 'dev-4th-past50', '#EBB010');
-  html += btn('Jump to 4th Down (own territory)', 'dev-4th-own', '#888');
+  html += btn('Force 2-Min Drill', 'dev-2min', '#e03050');
+  html += btn('4th Down (past 50)', 'dev-4th-past50', '#EBB010');
+  html += btn('4th Down (own territory)', 'dev-4th-own', '#888');
+  html += btn('Flip Possession', 'dev-flip', '#EBB010');
   html += btn('Force End Game', 'dev-endgame', '#e03050');
 
   // ── FORCE RESULT ──
@@ -154,30 +152,31 @@ export function injectDevPanel(el, gs, callbacks) {
   html += btnInline('Conv FAIL', 'dev-force-conv-fail', '#e03050');
   html += '</div>';
 
-  // ── BIAS TEST ──
-  html += section('BIAS TEST');
+  // ── POSSESSION ──
+  html += section('POSSESSION');
   html += btn('Poss Change (good)', 'dev-poss-good', '#3df58a');
   html += btn('Poss Change (bad)', 'dev-poss-bad', '#e03050');
-  html += btn('Flip Possession', 'dev-flip', '#EBB010');
 
-  // ── SEASON & FLOW ──
-  html += section('SEASON & FLOW');
-  html += btn('Jump to Season Recap', 'dev-season-recap', '#4DA6FF');
-  html += btn('Set Game 2/3 (currentGame+1)', 'dev-set-game', '#EBB010');
-  html += btn('Trigger Daily Drive', 'dev-daily-drive', '#3df58a');
+  // ── SCORE ──
+  html += section('SCORE');
+  html += '<div style="display:flex;gap:3px;">';
+  html += btnInline('21-14', 'dev-score-2114', '#3df58a');
+  html += btnInline('7-21', 'dev-score-0721', '#FF6B00');
+  html += btnInline('Game Over', 'dev-force-gameover', '#e03050');
+  html += '</div>';
 
   // ── MOMENTUM & HEAT ──
   html += section('MOMENTUM & HEAT');
-  html += btn('Max Momentum (P1 off)', 'dev-max-momentum', '#3df58a');
-  html += btn('Max Heat (P1 off)', 'dev-max-heat', '#e03050');
-  html += btn('Reset All Heat', 'dev-reset-heat', '#555');
+  html += '<div style="display:flex;gap:3px;">';
+  html += btnInline('Max Mom', 'dev-max-momentum', '#3df58a');
+  html += btnInline('Max Heat', 'dev-max-heat', '#e03050');
+  html += btnInline('Reset Heat', 'dev-reset-heat', '#555');
+  html += '</div>';
 
-  // ── SCORE SHORTCUTS ──
-  html += section('SCORE SHORTCUTS');
-  html += btn('Force 2-Min Drill', 'dev-force-2min', '#e03050');
-  html += btn('Set Score 21-14 (leading)', 'dev-score-2114', '#3df58a');
-  html += btn('Set Score 7-21 (trailing)', 'dev-score-0721', '#FF6B00');
-  html += btn('Force Game Over', 'dev-force-gameover', '#e03050');
+  // ── NAVIGATION ──
+  html += section('NAVIGATION');
+  html += btn('Season Recap', 'dev-season-recap', '#4DA6FF');
+  html += btn('Advance Season (+1 game)', 'dev-set-game', '#EBB010');
 
   // ── AUDIO DEBUG ──
   html += section('AUDIO');
@@ -261,18 +260,9 @@ export function injectDevPanel(el, gs, callbacks) {
       });
     }
 
-    if (id === 'dev-roster') {
-      setGs(function(s) { return Object.assign({}, s, { screen: 'roster' }); });
-    }
-    if (id === 'dev-coin-toss' && callbacks.showCoinToss) callbacks.showCoinToss();
     if (id === 'dev-kickoff' && callbacks.showKickoff) callbacks.showKickoff();
-    if (id === 'dev-halftime') {
-      gs.needsHalftime = true;
-      gs.half = 1;
-      setGs(function(s) { return Object.assign({}, s, { screen: 'halftime' }); });
-    }
     if (id === 'dev-2min') {
-      gs.playsUsed = gs.playsPerHalf;
+      gs.playsUsed = gs.playsPerHalf || 20;
       gs.twoMinActive = true;
       gs.clockSeconds = 120;
       if (callbacks.refresh) callbacks.refresh();
@@ -363,10 +353,6 @@ export function injectDevPanel(el, gs, callbacks) {
         });
       }
     }
-    if (id === 'dev-daily-drive') {
-      setGs(function(s) { return Object.assign({}, s, { screen: 'dailyDrive' }); });
-    }
-
     // ── MOMENTUM & HEAT ──
     if (id === 'dev-max-momentum') {
       if (callbacks.maxMomentumP1) {
@@ -400,13 +386,7 @@ export function injectDevPanel(el, gs, callbacks) {
       }
     }
 
-    // ── SCORE SHORTCUTS ──
-    if (id === 'dev-force-2min') {
-      gs.twoMinActive = true;
-      gs.clockSeconds = 60;
-      gs.playsUsed = 19;
-      if (callbacks.refresh) callbacks.refresh();
-    }
+    // ── SCORE ──
     if (id === 'dev-score-2114') {
       if (callbacks.applyState) callbacks.applyState({ ctScore: 21, irScore: 14 });
       else { gs.ctScore = 21; gs.irScore = 14; if (callbacks.refresh) callbacks.refresh(); }
