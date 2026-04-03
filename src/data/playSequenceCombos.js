@@ -7,7 +7,7 @@
 export var PLAY_COMBOS = [
   {
     id: 'setup',
-    name: 'SETUP!',
+    name: 'PLAY ACTION!',
     description: 'Run-run-play action sequence',
     // Pattern: last 2 plays were RUN/OPTION type, current play is PLAY-ACTION
     check: function(history, currentCat) {
@@ -26,7 +26,7 @@ export var PLAY_COMBOS = [
     description: 'Three consecutive short passes',
     check: function(history, currentCat) {
       if (history.length < 2) return false;
-      var isShort = currentCat === 'SHORT PASS' || currentCat === 'SHORT' || currentCat === 'QUICK PASS' || currentCat === 'QUICK';
+      var isShort = currentCat === 'SHORT PASS' || currentCat === 'SHORT';
       var prev1Short = isShortPass(history[history.length - 1]);
       var prev2Short = isShortPass(history[history.length - 2]);
       return isShort && prev1Short && prev2Short;
@@ -85,7 +85,7 @@ function isRunType(entry) {
 
 function isShortPass(entry) {
   var cat = entry.cat || entry.category || '';
-  return cat === 'SHORT PASS' || cat === 'SHORT' || cat === 'QUICK PASS' || cat === 'QUICK';
+  return cat === 'SHORT PASS' || cat === 'SHORT';
 }
 
 // Check all combos against current play and history

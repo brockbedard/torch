@@ -5,6 +5,7 @@
  * team helmets, flame pip ratings.
  */
 
+import { gsap } from 'gsap';
 import { TEAMS } from '../../data/teams.js';
 import { renderTorchCardIcon, TORCH_CARD_ICONS } from '../../data/torchCardIcons.js';
 import { CATEGORY_COLORS, TIER_COLORS } from '../../data/torchCards.js';
@@ -26,140 +27,127 @@ export function injectCardStyles() {
   document.head.appendChild(s);
 }
 
-// ====== CARD BACK CONFIGS ======
-var CARD_CONFIGS = {
-  offense: {accent:'#7ACC00',bg:'#96CC50',bgEdge:'#4A6A20',label:'OFFENSE',spotColor:'rgba(122,204,0,0.25)',
-    art:'<svg viewBox="0 0 448 512" width="48" height="52">'
-      +'<defs><linearGradient id="bG_o{U}" x1="100" y1="450" x2="350" y2="50"><stop offset="0%" stop-color="#90E040"/><stop offset="100%" stop-color="#D4FF80"/></linearGradient></defs>'
-      +'<path fill="url(#bG_o{U})" stroke="#7ACC00" stroke-width="8" d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288l111.5 0L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-16.6-20.7-30-20.7l-111.5 0L349.4 44.6z"/></svg>'},
-  torch: {accent:'#FF4511',bg:'#E88050',bgEdge:'#904028',label:'TORCH',spotColor:'rgba(255,69,17,0.25)',
-    art:'<svg viewBox="0 -2 44 56" fill="none" width="48" height="52" style="overflow:visible;">'
-      +'<defs><linearGradient id="nG_t{U}" x1="22" y1="50" x2="22" y2="0"><stop offset="0%" stop-color="#FF6A30"/><stop offset="100%" stop-color="#FFD060"/></linearGradient>'
-      +'<linearGradient id="nI_t{U}" x1="22" y1="44" x2="22" y2="8"><stop offset="0%" stop-color="#FFAA44"/><stop offset="100%" stop-color="#FFFBE6"/></linearGradient></defs>'
-      +'<path d="M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z" fill="url(#nG_t{U})" stroke="#FF4511" stroke-width="1.5"/>'
-      +'<path d="M22 12C22 12 13 24 12 32C11 40 15 46 19 49C19 49 16 41 19 32C20 28 21 25 22 20C23 25 24 28 25 32C28 41 25 49 25 49C29 46 33 40 32 32C31 24 22 12 22 12Z" fill="url(#nI_t{U})" opacity="0.7"/></svg>'},
-  defense: {accent:'#4DA6FF',bg:'#6AAAEE',bgEdge:'#385890',label:'DEFENSE',spotColor:'rgba(77,166,255,0.2)',
-    art:'<svg viewBox="0 0 512 512" width="48" height="52">'
-      +'<defs><linearGradient id="sG_d{U}" x1="256" y1="512" x2="256" y2="0"><stop offset="0%" stop-color="#3080D0"/><stop offset="100%" stop-color="#A0D4FF"/></linearGradient></defs>'
-      +'<path fill="url(#sG_d{U})" stroke="#4DA6FF" stroke-width="8" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8l0 378.1C394 378 431.1 230.1 432 141.4L256 66.8z"/></svg>'},
-};
+// ====== CARD BACK — Unified TORCH Brand Design ======
 
-// Unique ID counter to avoid SVG gradient ID collisions
 var _uid = 0;
+export var FLAME_PATH = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
 
-// ====== CARD BACK ======
-// Builds a card back with vivid background, texture, border, shimmer, torch premium treatment.
-// Returns outer wrapper div. For torch, includes gold double frame.
+// Inject card back keyframes once
+var _cardBackStylesInjected = false;
+function injectCardBackStyles() {
+  if (_cardBackStylesInjected) return;
+  _cardBackStylesInjected = true;
+  var s = document.createElement('style');
+  s.textContent =
+    '@keyframes emblemGlow{0%,100%{filter:drop-shadow(0 0 4px rgba(255,255,255,0.1))}50%{filter:drop-shadow(0 0 8px rgba(255,255,255,0.3))}}' +
+    '@keyframes breathe{0%,100%{opacity:0.12}50%{opacity:0.25}}' +
+    '@keyframes spark{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(-30px) translateX(5px)}}';
+  document.head.appendChild(s);
+}
+
+function cornerPip(accent, size, top, left, right, bottom) {
+  var style = 'position:absolute;';
+  if (top !== null) style += 'top:' + top + ';';
+  if (bottom !== null) style += 'bottom:' + bottom + ';';
+  if (left !== null) style += 'left:' + left + ';';
+  if (right !== null) style += 'right:' + right + ';';
+  return '<div style="' + style + '"><svg viewBox="0 0 44 56" width="' + size + '" fill="' + accent + '"><path d="' + FLAME_PATH + '"/></svg></div>';
+}
+
 export function buildHomeCard(type, w, h) {
-  var d = CARD_CONFIGS[type];
-  if (!d) return document.createElement('div');
-  var uid = _uid++;
+  injectCardBackStyles();
+  injectShimmer(); // reuse from player card
   var isTorch = type === 'torch';
+  var isOff = type === 'offense';
   var sc = w / 100;
-  var bw = Math.max(2, Math.round((isTorch ? 4 : 3) * sc));
-  var npH = Math.max(12, Math.round((isTorch ? 28 : 24) * sc));
 
-  // Wrapper — TORCH gets gold double frame
+  var accent = isTorch ? '#FF4511' : isOff ? '#44dd66' : '#4DA6FF';
+  var label = isOff ? 'OFFENSE' : type === 'defense' ? 'DEFENSE' : null;
+
+  // Outer wrapper — TORCH gets gold frame
   var outer = document.createElement('div');
   if (isTorch) {
-    var framePad = Math.max(2, Math.round(4 * sc));
-    outer.style.cssText = 'position:relative;width:'+(w+framePad*2)+'px;height:'+(h+framePad*2)+'px;border-radius:'+Math.round(12*sc)+'px;background:linear-gradient(135deg,#EBB010,#fff,#EBB010);padding:'+framePad+'px;box-shadow:0 0 '+Math.round(20*sc)+'px rgba(235,176,16,0.4),0 4px 16px rgba(0,0,0,0.5);';
+    var fp = Math.max(2, Math.round(4 * sc));
+    outer.style.cssText = 'position:relative;width:' + (w + fp * 2) + 'px;height:' + (h + fp * 2) + 'px;border-radius:' + Math.round(12 * sc) + 'px;background:linear-gradient(135deg,#EBB010,#fff,#EBB010);padding:' + fp + 'px;box-shadow:0 0 ' + Math.round(20 * sc) + 'px rgba(235,176,16,0.35),0 4px 16px rgba(0,0,0,0.5);';
   } else {
-    outer.style.cssText = 'position:relative;width:'+w+'px;height:'+h+'px;';
+    outer.style.cssText = 'position:relative;width:' + w + 'px;height:' + h + 'px;';
   }
 
-  // Card
+  // Card inner
   var card = document.createElement('div');
   card.className = 'torch-card-inner';
-  card.style.cssText = 'position:absolute;width:'+w+'px;height:'+h+'px;border-radius:8px;'
-    +'background:'+d.bgEdge+';background-image:radial-gradient(ellipse at 50% 40%,'+d.bg+' 0%,'+d.bgEdge+' 100%);'
-    +'display:flex;flex-direction:column;align-items:center;justify-content:center;'
-    +'box-shadow:0 2px 4px rgba(0,0,0,0.4),'+(isTorch?'0 16px 40px rgba(0,0,0,0.4)':'0 8px 20px rgba(0,0,0,0.25)')+';'
-    +'overflow:hidden;';
+  var bg = isTorch
+    ? 'linear-gradient(170deg,#FF451130 0%,#EBB01010 25%,#0a0804 50%,#FF45110a 100%)'
+    : 'linear-gradient(170deg,' + accent + '18 0%,#0a0804 50%,' + accent + '0a 100%)';
+  var shadow = isTorch
+    ? '0 0 24px rgba(255,69,17,0.2),0 4px 16px rgba(0,0,0,0.5)'
+    : '0 4px 16px rgba(0,0,0,0.5)';
+  card.style.cssText = 'position:absolute;width:' + w + 'px;height:' + h + 'px;border-radius:8px;border:2px solid ' + accent + (isTorch ? '66' : '44') + ';background:' + bg + ';box-shadow:' + shadow + ';overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;';
 
-  // TORCH: breathing glow
+  // Breathing glow (torch only)
   if (isTorch) {
     var glow = document.createElement('div');
-    glow.style.cssText = 'position:absolute;inset:-8px;border-radius:16px;background:#FF4511;filter:blur(12px);opacity:0.15;z-index:-2;pointer-events:none;animation:torchGlow 3s ease-in-out infinite;';
+    glow.style.cssText = 'position:absolute;inset:-6px;border-radius:14px;background:#FF4511;filter:blur(10px);opacity:0.12;z-index:-1;pointer-events:none;animation:breathe 3s ease-in-out infinite;';
     card.appendChild(glow);
   }
 
-  // Subtle diagonal texture
-  var texture = document.createElement('div');
-  texture.style.cssText = 'position:absolute;inset:0;border-radius:8px;opacity:0.04;pointer-events:none;z-index:1;background:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,0.5) 3px,rgba(255,255,255,0.5) 4px);';
-  card.appendChild(texture);
-  // Bevel
-  var bevel = document.createElement('div');
-  bevel.style.cssText = 'position:absolute;inset:0;border-radius:8px;box-shadow:inset 1px 1px 3px rgba(255,255,255,0.06),inset -1px -1px 3px rgba(0,0,0,0.3);pointer-events:none;z-index:7;';
-  card.appendChild(bevel);
+  // Corner flame pips
+  var pipSz = Math.round((isTorch ? 18 : 15) * sc);
+  var pipOp = isTorch ? '0.08' : '0.05';
+  var pipsHtml =
+    '<div style="position:absolute;inset:0;pointer-events:none;opacity:' + pipOp + ';">' +
+    cornerPip(accent, pipSz, '6px', '7px', null, null) +
+    cornerPip(accent, pipSz, '6px', null, '7px', null) +
+    cornerPip(accent, pipSz, null, '7px', null, '6px') +
+    cornerPip(accent, pipSz, null, null, '7px', '6px') +
+    '</div>';
+  var pipsEl = document.createElement('div');
+  pipsEl.innerHTML = pipsHtml;
+  card.appendChild(pipsEl.firstChild);
 
-  // Gradient border
-  var border = document.createElement('div');
-  border.style.cssText = 'position:absolute;inset:-'+bw+'px;border-radius:'+(8+bw)+'px;background:linear-gradient(135deg,'+d.accent+',rgba(255,255,255,0.4),'+d.accent+');z-index:-1;';
-  card.appendChild(border);
+  // Center flame emblem
+  var embW = Math.round((isTorch ? 70 : 32) * sc);
+  var embH = Math.round((isTorch ? 80 : 38) * sc);
+  var embOp = isTorch ? '0.85' : '0.6';
+  var embGlow = isTorch ? 'drop-shadow(0 0 12px #FF451188)' : 'drop-shadow(0 0 8px ' + accent + '55)';
+  var emblem = document.createElement('div');
+  emblem.style.cssText = 'z-index:2;animation:emblemGlow 3s ease-in-out infinite;';
+  emblem.innerHTML = '<svg viewBox="0 0 44 56" width="' + embW + '" height="' + embH + '" fill="' + accent + '" style="opacity:' + embOp + ';filter:' + embGlow + ';"><path d="' + FLAME_PATH + '"/></svg>';
+  card.appendChild(emblem);
 
-  // Inner margin — inset shadow for depth
-  var margin = document.createElement('div');
-  margin.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:'+npH+'px;border-radius:'+Math.round(8*sc)+'px '+Math.round(8*sc)+'px 0 0;box-shadow:inset 0 0 '+Math.round(8*sc)+'px rgba(0,0,0,0.2);pointer-events:none;z-index:4;';
-  card.appendChild(margin);
-
-  // Spotlight — centered in art area (above nameplate)
-  var artCenterY = (h - npH) / 2;
-  var spot = document.createElement('div');
-  var spotSz = Math.round(80 * sc);
-  spot.style.cssText = 'position:absolute;top:'+artCenterY+'px;left:50%;transform:translate(-50%,-50%);width:'+spotSz+'px;height:'+spotSz+'px;border-radius:50%;background:radial-gradient(circle,'+d.spotColor+',transparent 70%);z-index:2;pointer-events:none;';
-  card.appendChild(spot);
-
-  // Divider
-  var div = document.createElement('div');
-  div.style.cssText = 'position:absolute;bottom:'+npH+'px;left:15%;right:15%;height:1px;background:'+d.accent+'22;z-index:5;';
-  card.appendChild(div);
-
-  // Art icon — scaled
-  var artW = Math.round((isTorch ? 60 : 48) * sc);
-  var artH = Math.round((isTorch ? 65 : 52) * sc);
-  var artWrap = document.createElement('div');
-  artWrap.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:'+npH+'px;display:flex;align-items:center;justify-content:center;z-index:3;';
-  var artSvg = d.art.replace(/\{U\}/g, uid);
-  var scaledArt = artSvg.replace(/width="\d+"/, 'width="'+artW+'"').replace(/height="\d+"/, 'height="'+artH+'"');
+  // "TORCH" text
+  var torchText = document.createElement('div');
   if (isTorch) {
-    scaledArt = scaledArt.replace('stroke="#FF4511" stroke-width="1.5"','stroke="#FF4511" stroke-width="1.5" style="animation:flameSway 2.5s ease-in-out infinite;transform-origin:50% 100%;"');
-  }
-  artWrap.innerHTML = scaledArt;
-  card.appendChild(artWrap);
-
-  // Nameplate
-  var np = document.createElement('div');
-  var npRad = Math.round(6 * sc);
-  np.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:'+npH+'px;background:'+d.accent+(isTorch?'ee':'dd')+';display:flex;align-items:center;justify-content:center;z-index:5;border-radius:0 0 '+npRad+'px '+npRad+'px;';
-  var npT = document.createElement('div');
-  var npFs = isTorch ? Math.max(10, Math.round(22 * sc)) : Math.max(8, Math.round(16 * sc));
-  var npLs = isTorch ? Math.max(2, Math.round(4 * sc)) : Math.max(1, Math.round(3 * sc));
-  if (isTorch) {
-    npT.style.cssText = "font-family:'Teko';font-weight:700;font-size:"+npFs+"px;color:#09081A;letter-spacing:"+npLs+"px;transform:skewX(-8deg);";
+    torchText.style.cssText = "font-family:'Teko';font-weight:700;font-size:" + Math.round(16 * sc) + "px;letter-spacing:4px;margin-top:-4px;opacity:0.7;z-index:2;background:linear-gradient(180deg,#FFD060,#FF4511);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;";
   } else {
-    npT.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:"+npFs+"px;color:#000;letter-spacing:"+npLs+"px;";
+    torchText.style.cssText = "font-family:'Teko';font-weight:700;font-size:" + Math.round(14 * sc) + "px;color:" + accent + ";letter-spacing:4px;margin-top:4px;opacity:0.4;z-index:2;";
   }
-  npT.textContent = d.label;
-  np.appendChild(npT);
-  card.appendChild(np);
+  torchText.textContent = 'TORCH';
+  card.appendChild(torchText);
 
-  // Shimmer
+  // Type label (offense/defense only)
+  if (label) {
+    var typeLabel = document.createElement('div');
+    typeLabel.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:" + Math.round(8 * sc) + "px;color:" + accent + ";letter-spacing:1.5px;opacity:0.3;z-index:2;margin-top:1px;";
+    typeLabel.textContent = label;
+    card.appendChild(typeLabel);
+  }
+
+  // Shimmer sweep
+  var shimColor1 = isTorch ? 'rgba(255,180,80,0.1)' : 'rgba(255,255,255,0.06)';
+  var shimColor2 = isTorch ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.03)';
+  var shimDur = isTorch ? '4' : '5';
   var shim = document.createElement('div');
-  if (isTorch) {
-    shim.style.cssText = 'position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 35%,rgba(255,180,80,0.12) 48%,rgba(255,255,255,0.08) 52%,transparent 65%);animation:torchShimmer 4.5s ease-in-out infinite;pointer-events:none;z-index:8;';
-  } else {
-    shim.style.cssText = 'position:absolute;inset:0;border-radius:8px;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);animation:cardShimmer 6s ease-in-out infinite;pointer-events:none;z-index:8;';
-  }
+  shim.style.cssText = 'position:absolute;inset:0;border-radius:6px;pointer-events:none;z-index:8;background:linear-gradient(105deg,transparent 35%,' + shimColor1 + ' 48%,' + shimColor2 + ' 52%,transparent 65%);background-size:200px 100%;animation:cardShimmer ' + shimDur + 's ease-in-out infinite;';
   card.appendChild(shim);
 
-  // TORCH: ember sparks
+  // Ember sparks (torch only)
   if (isTorch) {
-    [-12,8,-6,14,-10].forEach(function(drift) {
+    for (var si = 0; si < 5; si++) {
       var spark = document.createElement('div');
-      spark.style.cssText = 'position:absolute;top:10px;left:'+(25+Math.random()*50)+'%;width:'+(1.5+Math.random()*1.5)+'px;height:'+(1.5+Math.random()*1.5)+'px;border-radius:50%;background:#FF8C00;z-index:9;pointer-events:none;opacity:0;animation:torchSpark '+(1.2+Math.random()*1.5)+'s '+(Math.random()*3)+'s ease-out infinite;--sx:'+drift+'px;';
+      spark.style.cssText = 'position:absolute;top:15px;left:' + (20 + Math.random() * 60) + '%;width:2px;height:2px;border-radius:50%;background:#FF8C00;z-index:9;pointer-events:none;opacity:0;animation:spark ' + (1.2 + Math.random() * 1.5) + 's ' + (Math.random() * 3) + 's ease-out infinite;';
       card.appendChild(spark);
-    });
+    }
   }
 
   outer.appendChild(card);
@@ -226,41 +214,113 @@ var POS_COLORS = {
   EDGE:'#ff4444', NB:'#6688ff'
 };
 
+// Side-of-ball colors
+var OFF_POSITIONS = ['QB','WR','SLOT','RB','FB','SB','TE','OL'];
+var SIDE_COLORS = { offense: '#00ff44', defense: '#4DA6FF' };
+function getSideColor(pos) { return OFF_POSITIONS.indexOf(pos) >= 0 ? SIDE_COLORS.offense : SIDE_COLORS.defense; }
+
+// Trait synergy colors
+var SYNERGY_COLORS = {
+  'TRUCK STICK':'#FF6B00','POWER BACK':'#FF6B00','ROAD GRADER':'#FF6B00',
+  'BRICK WALL':'#FF6B00','ANCHOR':'#FF6B00','TACKLER':'#FF6B00',
+  'RUN STUFFER':'#FF6B00','RUN SUPPORT':'#FF6B00','ENFORCER':'#FF6B00',
+  'INTERIOR BULL':'#FF6B00',
+  'BURNER':'#00ff44','ELUSIVE':'#00ff44','YAC BEAST':'#00ff44',
+  'ESCAPE ARTIST':'#00ff44','EDGE SPEED':'#00ff44','PASS RUSHER':'#00ff44',
+  'BLITZ SPECIALIST':'#00ff44',
+  'ROUTE IQ':'#4488ff','SURE HANDS':'#4488ff','CONTESTED CATCH':'#4488ff',
+  'PASS CATCHER':'#4488ff','MISMATCH':'#4488ff','QUICK RELEASE':'#4488ff',
+  'DEEP BALL':'#4488ff','PLAY ACTION PRO':'#4488ff',
+  'SHUTDOWN':'#9955cc','PRESS CORNER':'#9955cc','ZONE READER':'#9955cc',
+  'BALL HAWK':'#9955cc','CENTERFIELDER':'#9955cc','COVERAGE LB':'#9955cc',
+};
+
+// Inject shimmer keyframe once
+var _shimmerInjected = false;
+function injectShimmer() {
+  if (_shimmerInjected) return;
+  _shimmerInjected = true;
+  var s = document.createElement('style');
+  s.textContent =
+    '@keyframes cardShimmer{0%,100%{background-position:-200px 0}50%{background-position:200px 0}}' +
+    '@keyframes goldPulse{0%,100%{box-shadow:0 0 8px #FFB80033,0 4px 12px rgba(0,0,0,0.5)}50%{box-shadow:0 0 20px #FFB80055,0 0 36px #FFB80022,0 4px 12px rgba(0,0,0,0.5)}}' +
+    '@keyframes silverShimmer{0%,100%{box-shadow:0 0 6px rgba(192,192,192,0.15),0 4px 12px rgba(0,0,0,0.5)}50%{box-shadow:0 0 14px rgba(192,192,192,0.3),0 4px 12px rgba(0,0,0,0.5)}}' +
+    '@keyframes tcShimmer{0%,100%{background-position:-150px 0}50%{background-position:150px 0}}';
+  document.head.appendChild(s);
+}
+
 export function buildMaddenPlayer(p, w, h) {
+  injectShimmer();
   var stars = p.stars || (p.isStar ? 4 : 3);
   var trait = p.trait || '';
   var teamColor = p.teamColor || '#FF4511';
-  var posColor = POS_COLORS[p.pos] || '#aaa';
+  var sideColor = getSideColor(p.pos);
+  var traitColor = SYNERGY_COLORS[trait] || '#aaa';
   var fullPos = POS_NAMES[p.pos] || p.pos;
   var card = document.createElement('div');
 
-  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;border-top:3px solid '+posColor+';border-left:1px solid #2a2a2a;border-right:1px solid #2a2a2a;border-bottom:1px solid #2a2a2a;background:linear-gradient(180deg,'+teamColor+'14 0%,#0a0906 60%);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.5);display:flex;flex-direction:column;position:relative;';
+  // Container
+  var borderStyle, bgStyle, shadowStyle;
+  if (p.isStar) {
+    borderStyle = '2px solid #EBB010';
+    bgStyle = 'linear-gradient(170deg,#EBB01025 0%,#EBB01012 20%,' + teamColor + '10 45%,#0a0804 75%)';
+    shadowStyle = '0 0 8px rgba(235,176,16,0.4),0 0 24px rgba(235,176,16,0.2),0 0 48px rgba(235,176,16,0.1),0 2px 8px rgba(0,0,0,0.5)';
+  } else {
+    borderStyle = '1.5px solid ' + teamColor + '66';
+    bgStyle = 'linear-gradient(170deg,' + teamColor + '30 0%,' + teamColor + '12 35%,#0a0804 75%)';
+    shadowStyle = '0 2px 8px rgba(0,0,0,0.5)';
+  }
+  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;border:'+borderStyle+';border-top:2px solid '+sideColor+';background:'+bgStyle+';overflow:hidden;box-shadow:'+shadowStyle+';display:flex;flex-direction:column;position:relative;';
 
-  // Star pips (using team color)
-  var pips = renderFlamePips(stars, 5, teamColor, 7);
+  // Shimmer overlay
+  var shimmer = document.createElement('div');
+  shimmer.style.cssText = 'position:absolute;inset:0;border-radius:8px;pointer-events:none;z-index:10;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,0.06) 48%,rgba(255,255,255,0.02) 52%,transparent 65%);background-size:200px 100%;animation:cardShimmer 4s ease-in-out infinite;';
+  card.appendChild(shimmer);
 
-  // Content
-  var nameFs = p.name.length > 8 ? 13 : 16;
-  card.innerHTML = 
-    '<div style="padding:8px;display:flex;flex-direction:column;flex:1;min-height:0;">' +
-      // Header row: Position and Number
-      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;">' +
-        '<div style="font-family:\'Teko\';font-weight:900;font-size:20px;color:'+posColor+';line-height:1;">'+fullPos+'</div>' +
-        '<div style="font-family:\'Teko\';font-weight:700;font-size:18px;color:'+teamColor+';line-height:1;">#'+(p.num||'')+'</div>' +
-      '</div>' +
-      // Stars row
-      '<div style="display:flex;gap:1px;opacity:0.8;margin-bottom:6px;">'+pips+'</div>' +
-      // Player name
-      '<div style="font-family:\'Teko\';font-weight:700;font-size:'+nameFs+'px;color:#fff;letter-spacing:0.5px;line-height:1;margin-bottom:4px;">'+p.name+'</div>' +
-      // Position color accent line
-      '<div style="height:1px;background:linear-gradient(90deg,'+posColor+'66,transparent);margin-bottom:4px;flex-shrink:0;"></div>' +
-      // Trait / Ability (moved up, no longer at bottom)
-      '<div>' +
-        (trait ? '<div style="display:inline-block;padding:1px 4px;background:'+posColor+'11;border:1px solid '+posColor+'33;border-radius:2px;font-family:\'Rajdhani\';font-size:8px;font-weight:700;color:'+posColor+';letter-spacing:0.5px;text-transform:uppercase;">'+trait+'</div>' : '') +
-        // Ability text fallback
-        (p.ability && !trait ? '<div style="font-family:\'Rajdhani\';font-size:8.5px;color:rgba(255,255,255,0.4);line-height:1.2;">'+p.ability+'</div>' : '') +
-      '</div>' +
-    '</div>';
+  // Header row: position + number
+  var header = document.createElement('div');
+  header.style.cssText = 'display:flex;justify-content:space-between;align-items:baseline;padding:5px 7px 0;flex-shrink:0;';
+  header.innerHTML =
+    "<div style=\"font-family:'Oswald',sans-serif;font-weight:700;font-size:14px;color:" + sideColor + ";line-height:1;\">" + fullPos + "</div>" +
+    "<div style=\"font-family:'Teko',sans-serif;font-weight:700;font-size:24px;line-height:0.85;background:linear-gradient(180deg,#fff 0%," + teamColor + " 40%,#fff 80%," + teamColor + " 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;\">#" + (p.num || '') + "</div>";
+  card.appendChild(header);
+
+  // Center group: name + stars + trait
+  var center = document.createElement('div');
+  center.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 5px 10px;gap:4px;';
+
+  // Name (auto-shrink)
+  var nameLen = (p.name || '').length;
+  var nameFs = nameLen > 9 ? 11 : nameLen > 7 ? 12 : 14;
+  var nameEl = document.createElement('div');
+  nameEl.style.cssText = "font-family:'Oswald',sans-serif;font-weight:700;font-size:" + nameFs + "px;color:#fff;line-height:1;letter-spacing:0.5px;text-transform:uppercase;white-space:nowrap;";
+  nameEl.textContent = p.name || '';
+  center.appendChild(nameEl);
+
+  // Stars (flame pips with outline empties)
+  var pipsEl = document.createElement('div');
+  pipsEl.style.cssText = 'display:flex;gap:2px;';
+  pipsEl.innerHTML = renderFlamePips(stars, 5, '#EBB010', 8);
+  center.appendChild(pipsEl);
+
+  // Trait badge
+  if (trait) {
+    var traitLen = trait.length;
+    var traitFs = traitLen > 14 ? 9 : traitLen > 10 ? 10 : 11;
+    var traitEl = document.createElement('div');
+    traitEl.style.cssText = "border-radius:2px;padding:2px 5px;display:flex;align-items:center;justify-content:center;white-space:nowrap;background:" + traitColor + "14;border:1px solid " + traitColor + "33;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:" + traitFs + "px;color:" + traitColor + ";letter-spacing:0.5px;line-height:1;";
+    traitEl.textContent = trait;
+    center.appendChild(traitEl);
+  }
+
+  card.appendChild(center);
+
+  // Stats bar (always renders)
+  var statsBar = document.createElement('div');
+  statsBar.style.cssText = 'background:linear-gradient(90deg,' + teamColor + 'cc,' + teamColor + '88);border-top:1px solid ' + teamColor + ';padding:6px 5px;flex-shrink:0;border-radius:0 0 6px 6px;min-height:24px;';
+  statsBar.className = 'player-stats-bar';
+  card.appendChild(statsBar);
+
   return card;
 }
 
@@ -276,155 +336,193 @@ export function renderFlamePips(filled, total, filledColor, size) {
   var h = Math.round(size * 1.3);
   var html = '';
   for (var i = 0; i < total; i++) {
-    var color = i < filled ? filledColor : '#333';
-    html += '<svg viewBox="0 0 12 16" width="' + size + '" height="' + h + '" style="margin-right:1px;"><path d="' + FLAME_PIP_PATH + '" fill="' + color + '"/></svg>';
+    if (i < filled) {
+      html += '<svg viewBox="0 0 12 16" width="' + size + '" height="' + h + '" style="margin-right:1px;"><path d="' + FLAME_PIP_PATH + '" fill="' + filledColor + '"/></svg>';
+    } else {
+      html += '<svg viewBox="0 0 12 16" width="' + size + '" height="' + h + '" style="margin-right:1px;opacity:0.4;"><path d="' + FLAME_PIP_PATH + '" fill="none" stroke="' + filledColor + '" stroke-width="1.2"/></svg>';
+    }
   }
   return html;
 }
 
-// ====== PLAY CARD — Style 2 (Type-Colored, Top Stripe + Type Pill) ======
+// ====== PLAY CARD — Redesigned with accent color system ======
 
-// Type color configs: bg, border, accent
-var TYPE_COLORS = {
-  DEEP:     { bg: '#0a1230', border: '#2255cc', accent: '#4488ff' },
-  SHORT:    { bg: '#0a2010', border: '#22aa44', accent: '#44dd66' },
-  QUICK:    { bg: '#1a1a05', border: '#aa8822', accent: '#ddbb44' },
-  SCREEN:   { bg: '#1a1205', border: '#cc8800', accent: '#ffaa22' },
-  RUN:      { bg: '#1a0f0a', border: '#8B4513', accent: '#c4733b' },
-  ZONE:     { bg: '#0a1225', border: '#2266aa', accent: '#4499dd' },
-  BLITZ:    { bg: '#200a0a', border: '#aa2222', accent: '#dd4444' },
-  HYBRID:   { bg: '#150a20', border: '#7733aa', accent: '#9955cc' },
-  PRESSURE: { bg: '#1a0f0a', border: '#aa5522', accent: '#cc7744' },
+var PLAY_COLORS = {
+  offPass: '#44dd66', offRun: '#FF4511',
+  defZone: '#4DA6FF', defBlitz: '#FF4466', defTrap: '#AA66DD',
 };
 
-// Risk pip colors
-var RISK_PIP_COLORS = ['#00ff44', '#EBB010', '#ff0040']; // 1=green, 2=orange, 3=red
+// Inject edge sweep keyframe once
+var _edgeSweepInjected = false;
+function injectEdgeSweep() {
+  if (_edgeSweepInjected) return;
+  _edgeSweepInjected = true;
+  var s = document.createElement('style');
+  s.textContent = '@keyframes edgeSweep{0%{background-position:-100% 0}100%{background-position:200% 0}}';
+  document.head.appendChild(s);
+}
+
+function getPlayAccent(typeKey, isRun) {
+  var defMap = { ZONE: PLAY_COLORS.defZone, BLITZ: PLAY_COLORS.defBlitz, TRAP: PLAY_COLORS.defTrap };
+  if (defMap[typeKey]) return defMap[typeKey];
+  return isRun ? PLAY_COLORS.offRun : PLAY_COLORS.offPass;
+}
 
 export function buildPlayV1(p, w, h) {
+  injectEdgeSweep();
   var card = document.createElement('div');
-  // Resolve type colors
-  var typeKey = p.playType || p.cat || 'RUN';
-  // Normalize: "SHORT PASS" → "SHORT", "DEEP PASS" → "DEEP", etc.
+  var typeKey = p.playType || p.cardType || p.cat || 'RUN';
   if (typeKey.indexOf(' ') >= 0) typeKey = typeKey.split(' ')[0];
-  var tc = TYPE_COLORS[typeKey] || TYPE_COLORS['RUN'];
-  var isRunCard = p.isRun === true;
-  var borderW = isRunCard ? 3 : 2;
+  var isRun = p.isRun === true;
+  var accent = getPlayAccent(typeKey, isRun);
+  var sub = p.sub || (isRun ? 'RUN' : 'PASS');
+  var strength = p.strength || '';
+  var riskWord = p.risk === 'high' ? 'RISKY' : p.risk === 'med' ? 'BALANCED' : 'SAFE';
+  var riskColor = p.risk === 'high' ? '#ff0040' : p.risk === 'med' ? '#EBB010' : '#00ff44';
 
-  // Background pattern: diagonal lines for pass, horizontal for run
-  var bgPattern = isRunCard
-    ? 'repeating-linear-gradient(0deg,transparent,transparent 6px,rgba(255,255,255,0.03) 6px,rgba(255,255,255,0.03) 7px)'
-    : 'repeating-linear-gradient(135deg,transparent,transparent 4px,rgba(255,255,255,0.03) 4px,rgba(255,255,255,0.03) 5px)';
-  var stripeStyle = isRunCard
-    ? 'background:' + tc.accent + ';'
-    : 'background:linear-gradient(90deg,' + tc.accent + ',' + tc.border + ');';
-
-  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;border:'+borderW+'px solid '+tc.border+';background:'+tc.bg+';background-image:'+bgPattern+';overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.5);display:flex;flex-direction:column;';
-
-  // Risk: convert string to number (1-3)
-  var riskNum = p.risk === 'high' ? 3 : p.risk === 'med' ? 2 : typeof p.risk === 'number' ? p.risk : 1;
-  var riskPips = '';
-  for (var ri = 0; ri < 3; ri++) {
-    var pipColor = ri < riskNum ? RISK_PIP_COLORS[riskNum - 1] : 'rgba(255,255,255,0.08)';
-    riskPips += '<svg viewBox="0 0 12 16" width="8" height="11" style="margin-right:1px;"><path d="'+FLAME_PIP_PATH+'" fill="'+pipColor+'"/></svg>';
-  }
-
-  // Name font size — auto-shrink for long names
-  var nameFs = p.name.length > 18 ? 9 : p.name.length > 14 ? 10 : p.name.length > 10 ? 11 : 13;
+  // Container
+  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:8px;border:1.5px solid '+accent+'55;background:linear-gradient(170deg,'+accent+'30 0%,'+accent+'12 35%,#0a0804 75%);overflow:hidden;box-shadow:0 0 12px '+accent+'18,0 2px 8px rgba(0,0,0,0.5);display:flex;flex-direction:column;';
 
   card.innerHTML =
-    // 1. Color stripe
-    '<div style="height:3px;flex-shrink:0;'+stripeStyle+'"></div>' +
-    // 2. Header: Play name + type pill on same row
-    '<div style="display:flex;align-items:baseline;gap:4px;padding:5px 5px 2px;">' +
-      "<div style=\"flex:1;min-width:0;font-family:'Teko';font-weight:700;font-size:"+nameFs+"px;color:#fff;letter-spacing:0.5px;line-height:1.1;word-wrap:break-word;overflow-wrap:break-word;\">"+p.name+'</div>' +
-      '<div style="flex-shrink:0;padding:1px 3px;border-radius:2px;background:'+tc.accent+'22;border:1px solid '+tc.accent+'44;">' +
-        "<div style=\"font-family:'Teko';font-weight:700;font-size:8px;color:"+tc.accent+";letter-spacing:1px;line-height:1;\">"+typeKey+'</div></div>' +
+    // 1. Top accent edge with light sweep
+    '<div style="height:2px;flex-shrink:0;background:'+accent+'88;position:relative;overflow:hidden;">' +
+      '<div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent 30%,#fff 50%,transparent 70%);background-size:200% 100%;animation:edgeSweep 2.5s ease-in-out infinite;opacity:0.4;"></div>' +
     '</div>' +
-    // 3. Description — line-clamped to prevent cutoff
-    "<div style=\"padding:0 5px;font-family:'Rajdhani';font-size:8.5px;color:rgba(255,255,255,0.45);line-height:1.25;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;\">" +
-      (p.flavor ? '<span style="color:#EBB010;font-style:italic;">"'+p.flavor+'"</span> ' : '') + 
-      (p.desc || '') + 
+    // 2. Type banner (compact)
+    '<div style="background:linear-gradient(180deg,'+accent+'28,'+accent+'10);border-bottom:1px solid '+accent+'33;padding:3px 0;text-align:center;flex-shrink:0;">' +
+      "<div style=\"font-family:'Oswald',sans-serif;font-weight:700;font-size:10px;letter-spacing:2.5px;line-height:1;background:linear-gradient(180deg,#fff 0%,"+accent+" 50%,#fff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;\">" + typeKey + "</div>" +
     '</div>' +
-    // 4. Footer bar: RISK + pips
-    '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 5px;background:rgba(0,0,0,0.3);border-top:1px solid '+tc.accent+'22;flex-shrink:0;">' +
-      "<div style=\"font-family:'Teko';font-size:8px;color:#555;letter-spacing:1px;\">RISK</div>" +
-      '<div style="display:flex;align-items:center;">'+riskPips+'</div></div>';
+    // 3. Center group — play name (flex:1, fills remaining space)
+    '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 4px;overflow:hidden;min-height:0;">' +
+      "<div style=\"font-family:'Oswald',sans-serif;font-weight:700;font-size:12px;color:#fff;text-align:center;line-height:1.15;letter-spacing:0.5px;text-transform:uppercase;\">" + (p.name || '') + "</div>" +
+      (strength ? "<div style=\"font-family:'Rajdhani',sans-serif;font-weight:600;font-size:7px;color:"+accent+";opacity:0.6;letter-spacing:0.3px;line-height:1;margin-top:2px;white-space:nowrap;text-transform:uppercase;\">" + strength + "</div>" : '') +
+    '</div>' +
+    // 4. Secondary badge (above divider)
+    '<div style="display:flex;justify-content:center;padding:2px 5px 4px;flex-shrink:0;">' +
+      '<div style="background:'+accent+'14;border:1px solid '+accent+'33;border-radius:2px;padding:1px 6px;">' +
+        "<div style=\"font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:700;color:"+accent+";letter-spacing:1px;line-height:1;\">" + sub + "</div>" +
+      '</div>' +
+    '</div>' +
+    // 5. Risk footer (below divider)
+    '<div style="border-top:1px solid '+accent+'33;padding:4px 6px;flex-shrink:0;border-radius:0 0 6px 6px;text-align:center;background:rgba(0,0,0,0.3);">' +
+      "<div style=\"font-family:'Rajdhani',sans-serif;font-weight:700;font-size:9px;color:"+riskColor+";letter-spacing:1px;line-height:1;\">" + riskWord + "</div>" +
+    '</div>';
   return card;
 }
 
 // ====== TORCH CARD — Icon + Category Colors ======
 
 export function buildTorchCard(tc, w, h) {
+  injectShimmer();
   w = w || 100;
   h = h || 140;
-  var bc = (TIER_COLORS && TIER_COLORS[tc.tier]) || '#B0C4D4';
   var catColor = (tc.category && CATEGORY_COLORS && CATEGORY_COLORS[tc.category]) || '#EBB010';
   var isReactive = tc.type === 'reactive';
   var isGold = tc.tier === 'GOLD';
   var isSilver = tc.tier === 'SILVER';
 
+  // Tier-driven config
+  var tierAccent, borderW, borderCol, bgGrad, cardAnim, shimmerColor, shimmerDur, tierLabelStyle, iconSize, nameColor, effectColor, footerBg, footerBorder, shadowStyle;
+  if (isGold) {
+    tierAccent = '#EBB010';
+    borderW = '1px'; borderCol = '#EBB01044';
+    bgGrad = 'linear-gradient(170deg,#EBB01020,' + catColor + '10,#0a0804 55%)';
+    cardAnim = 'goldPulse 3s ease-in-out infinite';
+    shimmerColor = 'rgba(255,200,80,0.1)'; shimmerDur = '3s';
+    tierLabelStyle = "font-family:'Oswald';font-weight:700;font-size:9px;letter-spacing:3px;background:linear-gradient(180deg,#FFD060,#EBB010,#8B4A1F);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;";
+    iconSize = 26; nameColor = '#fff'; effectColor = '#ddd';
+    footerBg = 'rgba(0,0,0,0.4)'; footerBorder = '1px solid #EBB01022';
+    shadowStyle = '';
+  } else if (isSilver) {
+    tierAccent = '#C0C0C0';
+    borderW = '1.5px'; borderCol = '#C0C0C044';
+    bgGrad = 'linear-gradient(170deg,#C0C0C012,' + catColor + '08,#0a0804 55%)';
+    cardAnim = 'silverShimmer 3s ease-in-out infinite';
+    shimmerColor = 'rgba(192,192,192,0.06)'; shimmerDur = '4s';
+    tierLabelStyle = "font-family:'Oswald';font-weight:700;font-size:9px;letter-spacing:2px;color:#C0C0C0;opacity:0.6;";
+    iconSize = 22; nameColor = '#fff'; effectColor = '#bbb';
+    footerBg = 'rgba(0,0,0,0.3)'; footerBorder = '1px solid #C0C0C015';
+    shadowStyle = '0 4px 12px rgba(0,0,0,0.5)';
+  } else {
+    tierAccent = '#B87333';
+    borderW = '1.5px'; borderCol = '#B8733333';
+    bgGrad = 'linear-gradient(170deg,#B8733310,#0a0804 50%)';
+    cardAnim = ''; shimmerColor = ''; shimmerDur = '';
+    tierLabelStyle = "font-family:'Oswald';font-weight:700;font-size:9px;letter-spacing:2px;color:#B87333;opacity:0.5;";
+    iconSize = 20; nameColor = '#ddd'; effectColor = '#aaa';
+    footerBg = 'rgba(0,0,0,0.25)'; footerBorder = '1px solid #B8733318';
+    shadowStyle = '0 4px 12px rgba(0,0,0,0.5)';
+  }
+
+  // Gold gets an outer double frame
+  var outer;
+  if (isGold) {
+    outer = document.createElement('div');
+    outer.style.cssText = 'width:' + (w + 6) + 'px;height:' + (h + 6) + 'px;border-radius:9px;background:linear-gradient(135deg,#EBB010,#fff,#EBB010);padding:3px;box-shadow:0 0 20px rgba(235,176,16,0.3),0 4px 12px rgba(0,0,0,0.5);position:relative;';
+  }
+
+  // Inner card
   var card = document.createElement('div');
-  var borderStyle = isReactive ? '2px dashed ' + bc : '2px solid ' + bc;
-  var glowStyle = isGold ? '0 0 12px ' + bc + '44,0 4px 16px rgba(0,0,0,0.5)' : '0 4px 16px rgba(0,0,0,0.5)';
-  if (isSilver) glowStyle = '0 0 8px rgba(192,192,192,0.2),' + glowStyle;
+  var bStyle = isReactive ? borderW + ' dashed ' + borderCol : borderW + ' solid ' + borderCol;
+  card.style.cssText = 'width:' + w + 'px;height:' + h + 'px;border-radius:6px;border:' + bStyle + ';background:' + bgGrad + ';position:relative;overflow:hidden;display:flex;flex-direction:column;' + (shadowStyle ? 'box-shadow:' + shadowStyle + ';' : '') + (cardAnim ? 'animation:' + cardAnim + ';' : '');
 
-  card.style.cssText = 'width:'+w+'px;height:'+h+'px;border-radius:7px;border:'+borderStyle+';background:radial-gradient(ellipse at 50% 30%,'+catColor+'0d,#0A0804 70%),#0A0804;position:relative;box-shadow:'+glowStyle+';display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;';
+  // Shimmer overlay (gold + silver only)
+  if (shimmerColor) {
+    var shimmer = document.createElement('div');
+    shimmer.style.cssText = 'position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 35%,' + shimmerColor + ' 48%,transparent 65%);background-size:300px 100%;animation:tcShimmer ' + shimmerDur + ' ease-in-out infinite;border-radius:5px;';
+    card.appendChild(shimmer);
+  }
 
-  // Gold shimmer animation
-  if (isGold) card.style.animation = 'T-pulse 3s ease-in-out infinite';
-  // Silver shimmer
-  if (isSilver) card.style.animation = 'T-shimmer 3s ease-in-out infinite';
-
-  var iconSize = Math.max(20, Math.round(h * 0.28));
-  var nameFs = Math.max(9, Math.min(13, Math.round(w * 0.13)));
-  var effectFs = Math.max(6, Math.min(8, Math.round(w * 0.08)));
-  var tierFs = Math.max(6, Math.min(8, Math.round(w * 0.07)));
-
-  // Tier label
+  // Tier label (pinned top)
   var tierEl = document.createElement('div');
-  tierEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:"+tierFs+"px;color:"+bc+";letter-spacing:2px;text-align:center;padding:3px 0 0;opacity:0.7;";
+  tierEl.style.cssText = tierLabelStyle + "text-align:center;padding:4px 0 0;flex-shrink:0;position:relative;z-index:1;";
   tierEl.textContent = tc.tier;
   card.appendChild(tierEl);
 
-  // Icon (from torchCardIcons.js, colored by category)
-  var iconWrap = document.createElement('div');
-  iconWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;height:'+Math.round(h*0.35)+'px;flex-shrink:0;';
+  // Icon + name zone (flex:1, centered)
+  var centerZone = document.createElement('div');
+  centerZone.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;position:relative;z-index:1;gap:2px;';
+
   if (tc.iconKey && TORCH_CARD_ICONS[tc.iconKey]) {
     var iconSvg = renderTorchCardIcon(tc.iconKey, iconSize, catColor);
     if (iconSvg) {
-      iconSvg.style.filter = 'drop-shadow(0 0 6px ' + catColor + '44)';
-      iconWrap.appendChild(iconSvg);
+      iconSvg.style.filter = 'drop-shadow(0 0 ' + (isGold ? '12' : '8') + 'px ' + catColor + (isGold ? '66' : '55') + ')';
+      centerZone.appendChild(iconSvg);
     }
   }
-  card.appendChild(iconWrap);
 
-  // Name
+  var nameLen = (tc.name || '').length;
+  var nameFs = nameLen >= 13 ? 10 : nameLen >= 10 ? 11 : 13;
   var nameEl = document.createElement('div');
-  nameEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:"+nameFs+"px;color:#fff;text-align:center;letter-spacing:0.5px;line-height:1.1;padding:0 4px;overflow:hidden;text-overflow:ellipsis;max-width:100%;";
+  nameEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:" + nameFs + "px;color:" + nameColor + ";text-align:center;letter-spacing:0.5px;line-height:1;padding:0 4px;" + (isGold ? "text-shadow:0 0 8px rgba(235,176,16,0.3);" : "");
   nameEl.textContent = tc.name;
-  card.appendChild(nameEl);
+  centerZone.appendChild(nameEl);
 
-  // Effect text
+  card.appendChild(centerZone);
+
+  // Effect footer (pinned bottom)
+  var footer = document.createElement('div');
+  footer.style.cssText = 'flex-shrink:0;background:' + footerBg + ';border-top:' + footerBorder + ';padding:5px 7px;border-radius:0 0 4px 4px;position:relative;z-index:1;';
   var effectEl = document.createElement('div');
-  effectEl.style.cssText = "font-family:'Rajdhani';font-size:"+effectFs+"px;color:#999;text-align:center;padding:1px 4px;line-height:1.15;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:100%;";
+  effectEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:8px;color:" + effectColor + ";text-align:center;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;";
   effectEl.textContent = tc.effect;
-  card.appendChild(effectEl);
+  footer.appendChild(effectEl);
+  card.appendChild(footer);
 
   // Reactive label
   if (isReactive) {
     var reactLabel = document.createElement('div');
-    reactLabel.style.cssText = "position:absolute;top:2px;right:3px;font-family:'Rajdhani';font-weight:700;font-size:5px;color:#4488FF;letter-spacing:1px;opacity:0.8;";
+    reactLabel.style.cssText = "position:absolute;top:3px;right:4px;font-family:'Rajdhani';font-weight:700;font-size:6px;color:#4488FF;letter-spacing:1px;opacity:0.8;z-index:2;";
     reactLabel.textContent = 'REACTIVE';
     card.appendChild(reactLabel);
   }
 
-  // Bottom tier bar
-  var bottom = document.createElement('div');
-  bottom.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:2px;background:'+bc+';opacity:0.5;border-radius:0 0 5px 5px;';
-  card.appendChild(bottom);
+  // Attach to outer frame or return card directly
+  var root = outer || card;
+  if (outer) outer.appendChild(card);
 
-  // v0.23: Balatro-style details
-  attachDetailListeners(card, {
+  // Tooltip
+  attachDetailListeners(root, {
     title: tc.name,
     text: tc.effect,
     keywords: [
@@ -433,5 +531,38 @@ export function buildTorchCard(tc, w, h) {
     ]
   });
 
-  return card;
+  return root;
+}
+
+/** Flip-to-reveal a torch card from card back to face. Uses 2D scaleX flip. */
+export function flipRevealTorchCard(cardData, container, w, h, options) {
+  options = options || {};
+  var delay = options.delay || 0;
+  var dramatic = options.dramatic !== undefined ? options.dramatic : cardData.tier === 'GOLD';
+
+  var slot = document.createElement('div');
+  slot.style.cssText = 'display:inline-block;';
+
+  var backEl = buildHomeCard('torch', w, h);
+  var frontEl = buildTorchCard(cardData, w, h);
+  frontEl.style.display = 'none';
+
+  slot.appendChild(backEl);
+  slot.appendChild(frontEl);
+  container.appendChild(slot);
+
+  var flipDur = dramatic ? 0.18 : 0.12;
+
+  var tl = gsap.timeline({ delay: delay });
+  tl.to(slot, { y: -6, scale: 1.05, duration: 0.15, ease: 'power2.out' });
+  tl.to(slot, { scaleX: 0, duration: flipDur, ease: 'power2.in' });
+  tl.call(function() { backEl.style.display = 'none'; frontEl.style.display = ''; });
+  tl.to(slot, { scaleX: 1, duration: flipDur, ease: 'power2.out' });
+  tl.to(slot, { y: 0, scale: 1, duration: 0.2, ease: 'back.out(2)' });
+
+  if (dramatic) {
+    tl.fromTo(slot, { boxShadow: '0 0 0 rgba(235,176,16,0)' }, { boxShadow: '0 0 30px rgba(235,176,16,0.6)', duration: 0.2, yoyo: true, repeat: 1 }, '-=0.3');
+  }
+
+  return { el: slot, timeline: tl };
 }
