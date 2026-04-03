@@ -5117,50 +5117,35 @@ export function buildGameplay() {
         var isDramatic = card.tier === 'GOLD';
         var flipDur = isDramatic ? 0.18 : 0.12;
 
-        // Kill CSS animations/transitions so they don't fight GSAP
+        // Simple flip: scaleX squeeze → swap content → expand. No center animation.
         wrap.style.animation = 'none';
-        wrap.style.transition = 'none';
-        gsap.set(wrap, { clearProps: 'all' }); // Clear any GSAP-managed props
-        wrap.style.animation = 'none'; // Re-set after clearProps
-        wrap.style.transition = 'none';
-        wrap.style.position = 'relative';
-        wrap.style.willChange = 'transform';
-        void wrap.offsetHeight; // Force layout flush
 
         try {
-          var cardRect = wrap.getBoundingClientRect();
-          var centerX = (window.innerWidth / 2) - cardRect.left - (cardRect.width / 2);
-          var centerY = (window.innerHeight * 0.38) - cardRect.top - (cardRect.height / 2);
-
-          var tl = gsap.timeline();
-          // Move to center + scale up
-          tl.to(wrap, { x: centerX, y: centerY, scale: 1.2, duration: 0.4, ease: 'power2.inOut', zIndex: 10 });
-          // Then flip
-          tl.to(wrap, { scaleX: 0, duration: flipDur, ease: 'power2.in' });
-          tl.call(function() {
-            wrap.innerHTML = '';
-            wrap.style.background = 'transparent';
-            wrap.style.animation = 'none'; // Stop float animation
-            var revealed = buildTorchCard(card, 120, 168);
-            wrap.appendChild(revealed);
-            // Tiered sounds: Gold = ignite (flame whoosh), Silver = dramatic flip, Bronze = standard flip
-            if (card.tier === 'GOLD') { try { SND.ignite(); } catch(e) {} }
-            else if (card.tier === 'SILVER') { try { SND.flipDramatic(); } catch(e) {} }
-            else { try { SND.flip(); } catch(e) {} }
-          });
-          tl.to(wrap, { scaleX: 1, duration: flipDur, ease: 'power2.out' });
-          tl.to(wrap, { scale: 1.05, duration: 0.2, ease: 'back.out(2)' });
-          // Gold glow burst
-          if (isDramatic) {
-            tl.fromTo(wrap, { boxShadow: '0 0 0 rgba(235,176,16,0)' }, { boxShadow: '0 0 40px rgba(235,176,16,0.7)', duration: 0.3, yoyo: true, repeat: 1 }, '-=0.2');
-          }
-          // Silver shimmer
-          if (card.tier === 'SILVER') {
-            tl.fromTo(wrap, { boxShadow: '0 0 0 rgba(192,192,192,0)' }, { boxShadow: '0 0 24px rgba(192,192,192,0.4)', duration: 0.2, yoyo: true, repeat: 1 }, '-=0.2');
-          }
+          // Lift + squeeze
+          gsap.to(wrap, { y: -10, scale: 1.1, duration: 0.2, ease: 'power2.out', onComplete: function() {
+            // Squeeze to line
+            gsap.to(wrap, { scaleX: 0, duration: isDramatic ? 0.18 : 0.12, ease: 'power2.in', onComplete: function() {
+              // Swap content
+              wrap.innerHTML = '';
+              var revealed = buildTorchCard(card, 120, 168);
+              wrap.appendChild(revealed);
+              // Sound
+              if (card.tier === 'GOLD') { try { SND.ignite(); } catch(e2) {} }
+              else if (card.tier === 'SILVER') { try { SND.flipDramatic(); } catch(e2) {} }
+              else { try { SND.flip(); } catch(e2) {} }
+              // Expand back
+              gsap.to(wrap, { scaleX: 1, duration: isDramatic ? 0.18 : 0.12, ease: 'power2.out', onComplete: function() {
+                gsap.to(wrap, { y: 0, scale: 1, duration: 0.2, ease: 'back.out(2)' });
+                // Glow burst
+                if (isDramatic) {
+                  gsap.fromTo(wrap, { boxShadow: '0 0 0 rgba(235,176,16,0)' }, { boxShadow: '0 0 40px rgba(235,176,16,0.7)', duration: 0.3, yoyo: true, repeat: 1 });
+                }
+              }});
+            }});
+          }});
         } catch(e) {
           wrap.innerHTML = '';
-          wrap.appendChild(buildTorchCard(card, 100, 140));
+          wrap.appendChild(buildTorchCard(card, 120, 168));
         }
 
         // Show card name + effect below
