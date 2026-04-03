@@ -138,7 +138,7 @@ export function showSTSelect(parent, opts) {
     row.addEventListener('touchstart', function() { gsap.to(row, { scale: 0.97, duration: 0.08 }); }, { passive: true });
     row.addEventListener('touchend', function() { gsap.to(row, { scale: 1, duration: 0.08 }); }, { passive: true });
     row.onclick = function() {
-      SND.select(); Haptic.cardSelect();
+      SND.cardThud(); Haptic.cardSelect();
       gsap.to(row, { background: 'rgba(235,176,16,0.15)', duration: 0.15 });
       gsap.to(row, { background: 'transparent', duration: 0.3, delay: 0.15 });
       setTimeout(function() {

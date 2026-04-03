@@ -511,7 +511,7 @@ export function buildEndGame() {
   playBtn.style.cssText = "width:100%;padding:16px;border-radius:6px;border:none;font-family:'Teko';font-weight:700;font-size:24px;letter-spacing:6px;color:" + ctaColor + ";background:" + ctaGrad + ";cursor:pointer;opacity:0;";
   playBtn.textContent = ctaText;
   playBtn.onclick = function() {
-    SND.snap();
+    SND.click();
     if (seasonComplete) {
       setGs(function(s) {
         return Object.assign({}, s, {

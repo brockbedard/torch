@@ -161,8 +161,8 @@ export function buildPregame() {
   }); });
 
   // ── SOUNDS ──
-  SND.click();
-  setTimeout(function() { try { SND.hit(); } catch(e) {} }, isFast ? 300 : 700);
+  SND.whooshIn();
+  setTimeout(function() { try { SND.whooshIn(); } catch(e) {} }, isFast ? 300 : 700);
 
   // ── TAP TO CONTINUE ──
   var skipped = false;

@@ -1471,7 +1471,7 @@ export function buildGameplay() {
         } else {
           playSlot.style.cursor = 'pointer';
           playSlot.onclick = function() {
-            SND.select();
+            SND.cardThud();
             try { gsap.to(playSlot, { y: -30, opacity: 0, scale: 0.85, duration: 0.2, ease: 'power2.in', onComplete: function() {
               selPl = null; phase = 'play'; drawField(); drawPanel();
             }}); } catch(e) { selPl = null; phase = 'play'; drawField(); drawPanel(); }
@@ -1496,7 +1496,7 @@ export function buildGameplay() {
         } else {
           playerSlot.style.cursor = 'pointer';
           playerSlot.onclick = function() {
-            SND.select();
+            SND.cardThud();
             try { gsap.to(playerSlot, { y: -30, opacity: 0, scale: 0.85, duration: 0.2, ease: 'power2.in', onComplete: function() {
               selP = null; phase = 'play'; drawField(); drawPanel();
             }}); } catch(e) { selP = null; phase = 'play'; drawField(); drawPanel(); }
@@ -1541,7 +1541,7 @@ export function buildGameplay() {
       if (torchSlot) {
         torchSlot.style.cursor = 'pointer';
         torchSlot.onclick = function() {
-          SND.select();
+          SND.cardThud();
           try { gsap.to(torchSlot, { y: -30, opacity: 0, scale: 0.85, duration: 0.2, ease: 'power2.in', onComplete: function() {
             var tcObj = TORCH_CARDS.find(function(c) { return c.id === selTorch; });
             if (selectedPreSnap || tcObj) { torchInventory.push(selectedPreSnap || tcObj); if (GS.season) GS.season.torchCards = torchInventory.slice(); }
@@ -2144,7 +2144,9 @@ export function buildGameplay() {
       }
 
       if (r.isTouchdown) {
-        SND.td();
+        try { SND.anvilImpact(); } catch(e) {}
+        setTimeout(function() { try { SND.td(); } catch(e) {} }, 100);
+        if (tier === 5) { setTimeout(function() { try { SND.horn(); } catch(e) {} }, 400); }
         shakeScreen(6);
         var tColor = isDef ? '#ff0040' : '#00ff44';
         flashField(tColor + '88', 800);
@@ -2791,7 +2793,7 @@ export function buildGameplay() {
           gsap.from(tcVisual, { y: -30, duration: 0.5, ease: 'back.out(2.5)' });
           // Gold shimmer pulse
           gsap.to(tcVisual, { boxShadow: '0 0 80px ' + tcTierCol + 'aa, 0 0 120px ' + tcTierCol + '44', duration: 0.3, delay: 0.4, yoyo: true, repeat: 1 });
-          SND.flip();
+          SND.ignite();
           if (navigator.vibrate) try { navigator.vibrate([30, 50, 80]); } catch(e) {}
         } else if (tcTier === 'SILVER') {
           gsap.to(tcOv, { opacity: 1, duration: 0.15 });
@@ -3322,7 +3324,7 @@ export function buildGameplay() {
     document.body.appendChild(overlay);
 
     // ── PHASE 1: COMMIT (0.2s) — screen dims, snap sound ──
-    SND.cardSnap();
+    SND.snap();
 
     // ── PHASE 2: BLACKOUT (tier-scaled tension) — field animates underneath ──
     var blackoutMs = Math.round((tier === 1 ? 200 : tier === 2 ? 400 : 700) * _speedMult);
@@ -3410,7 +3412,8 @@ export function buildGameplay() {
       else if (isGoodForUser && tier >= 2) { SND.bigPlay(); AudioStateManager.setState('big_moment'); AudioStateManager.holdThenSettle(2000, _settleState); }
       else if (isBadForUser) { SND.turnover(); AudioStateManager.setState('turnover'); AudioStateManager.holdThenSettle(3000, _settleState); }
       else if (r.isIncomplete) { SND.incomp(); }
-      else { tier === 1 && r.yards > 0 ? SND.hit() : SND.snap(); }
+      else if (tier === 1 && r.yards > 0) { SND.hit(); }
+      // Zero or negative yards = no sound (silence for nothing plays)
 
       // ── PHASE 4: SETTLE — proceed to result display ──
       var settleDelay = tier === 1 ? 100 : tier === 2 ? 300 : 500;
@@ -4599,7 +4602,7 @@ export function buildGameplay() {
 
     // Sound
     if (isGoodForUser) { try { SND.chime(); } catch(e) {} }
-    else { try { SND.snap(); } catch(e) {} }
+    else { try { SND.whooshIn(); } catch(e) {} }
 
     // Animate in
     var dismissed = false;
@@ -4702,7 +4705,7 @@ export function buildGameplay() {
         "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:" + c.color + ";letter-spacing:1px;padding:2px 6px;border:1px solid " + c.color + "33;border-radius:3px;margin-top:4px;\">" + c.risk + "</div>";
 
       card.onclick = function() {
-        SND.snap();
+        SND.click();
         if (c.id === 'xp') {
           gs.handleConversion('xp'); drawBug();
           setNarr('Extra point is GOOD!', '+1 point');
@@ -4813,6 +4816,7 @@ export function buildGameplay() {
   // ── 2-MIN WARNING (dramatic overlay) ──
   function show2MinWarn() {
     SND.whistle();
+    setTimeout(function() { try { SND.horn(); } catch(e) {} }, 300);
     shakeScreen(4);
     flashField('rgba(224,48,80,.3)');
 
@@ -4931,7 +4935,7 @@ export function buildGameplay() {
       var rotations = humanWins ? 1800 : 1980; // 1800 = 5 full turns (front), 1980 = 5.5 turns (back)
       coinInner.style.transform = 'rotateY(' + rotations + 'deg)';
       label.textContent = '';
-      SND.flip();
+      SND.coinFlip();
 
       setTimeout(function() {
         // Phase 2: Result + Choice

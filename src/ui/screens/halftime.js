@@ -209,7 +209,7 @@ export function buildHalftime() {
         confirmBtn.style.cssText = "padding:12px 32px;border:none;border-radius:6px;background:linear-gradient(180deg,#00ff44,#00aa22);font-family:'Teko';font-weight:700;font-size:16px;color:#000;letter-spacing:2px;cursor:pointer;";
         confirmBtn.textContent = 'CONFIRM';
         confirmBtn.onclick = function() {
-          SND.snap();
+          SND.shimmer();
           confirmOv.remove();
           gs.humanTorchCards.push(card.id);
           gs.ctTorchPts -= card.cost;
