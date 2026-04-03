@@ -1717,7 +1717,7 @@ export function buildGameplay() {
 
     // Commentary text
     if (driveCommLine1) {
-      html += '<div class="T-drive-comm"><span style="color:' + driveColor + ';">Last Play: </span>' + driveCommLine1 + '</div>';
+      html += '<div class="T-drive-comm">' + driveCommLine1 + '</div>';
       // Show yards + next down & distance instead of commentary sub-line
       if (driveSummaryLog.length > 0) {
         var _lastEntry = driveSummaryLog[driveSummaryLog.length - 1];
@@ -4323,7 +4323,6 @@ export function buildGameplay() {
               var _FLNP = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
               tapNextBtn.style.cssText = "width:100%;padding:0;border:none;border-radius:6px;background:linear-gradient(180deg,#EBB010,#FF4511);display:flex;align-items:stretch;overflow:hidden;cursor:pointer;box-shadow:0 4px 16px rgba(255,69,17,0.3);";
               tapNextBtn.innerHTML = '<div style="background:rgba(0,0,0,0.2);padding:12px 14px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(0,0,0,0.15);"><svg viewBox=\'0 0 44 56\' width=\'14\' height=\'18\' fill=\'#fff\'><path d=\'' + _FLNP + '\'/></svg></div><div style="flex:1;padding:14px;font-family:\'Teko\';font-weight:700;font-size:20px;color:#fff;letter-spacing:6px;text-align:center;line-height:1;">NEXT PLAY</div>';
-              tapNextBtn.textContent = 'NEXT PLAY';
               var tapDismissed = false;
               tapNextBtn.onclick = function() {
                 if (tapDismissed) return;
@@ -5118,12 +5117,17 @@ export function buildGameplay() {
         var isDramatic = card.tier === 'GOLD';
         var flipDur = isDramatic ? 0.18 : 0.12;
 
-        // Kill CSS float animation so it doesn't fight GSAP
+        // Kill CSS animations/transitions so they don't fight GSAP
         wrap.style.animation = 'none';
         wrap.style.transition = 'none';
+        gsap.set(wrap, { clearProps: 'all' }); // Clear any GSAP-managed props
+        wrap.style.animation = 'none'; // Re-set after clearProps
+        wrap.style.transition = 'none';
+        wrap.style.position = 'relative';
+        wrap.style.willChange = 'transform';
+        void wrap.offsetHeight; // Force layout flush
 
         try {
-          // Calculate delta to center the card on screen
           var cardRect = wrap.getBoundingClientRect();
           var centerX = (window.innerWidth / 2) - cardRect.left - (cardRect.width / 2);
           var centerY = (window.innerHeight * 0.38) - cardRect.top - (cardRect.height / 2);
