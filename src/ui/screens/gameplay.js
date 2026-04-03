@@ -68,7 +68,7 @@ const CSS = `
 .T-sb-center{padding:6px 14px;background:#0a0a0a;min-width:80px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .T-sb-half{font-family:'Rajdhani';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:2px;line-height:1}
 .T-sb-snap{font-family:'Teko';font-weight:700;font-size:18px;color:#aaa;line-height:1;margin-top:2px;animation:segFlicker 5s ease-in-out 2.3s infinite}
-.T-sb-divider{width:40px;height:1px;background:#333;margin:4px 0}
+.T-sb-divider{display:none}
 .T-sb-down{font-family:'Oswald',sans-serif;font-weight:700;font-size:11px;color:#FF6B00;letter-spacing:1px;line-height:1}
 .T-sb-ball{font-family:'Rajdhani';font-weight:600;font-size:10px;color:#888;letter-spacing:0.5px;margin-top:1px}
 .T-sb-clock{font-family:'Teko';font-weight:900;font-size:28px;line-height:1}
@@ -4058,7 +4058,18 @@ export function buildGameplay() {
           commLine1 = comm.line1;
           commLine2 = comm.line2 || ctx || '';
         }
-        setNarr(commLine1, commLine2);
+        // Build commentary opts for the badge row
+        var _narrBias = isGoodForUser ? '#00ff44' : isBadForUser ? '#ff0040' : '#EBB010';
+        var _narrEvent = r.isTouchdown ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTION' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : res.gotFirstDown ? 'FIRST DOWN' : null;
+        var _narrPlay = res.offPlay ? res.offPlay.name : null;
+        var _narrPlayer = res.featuredOff ? res.featuredOff.name : null;
+        setNarr(commLine1, commLine2, {
+          biasColor: _narrBias,
+          yards: r.yards,
+          event: _narrEvent,
+          playName: _narrPlay,
+          playerName: _narrPlayer
+        });
 
         // Commentary text on the result overlay (not just narr)
         if (commLine1 && !res._isConversion) {
@@ -4309,8 +4320,9 @@ export function buildGameplay() {
               tapNextWrap.id = 'T-next-play-wrap';
               tapNextWrap.style.cssText = 'padding:12px 16px;flex-shrink:0;';
               var tapNextBtn = document.createElement('button');
-              tapNextBtn.className = 'btn-blitz';
-              tapNextBtn.style.cssText = "width:100%;font-size:16px;padding:14px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;animation:T-snap-pulse 1.2s ease-in-out infinite;";
+              var _FLNP = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
+              tapNextBtn.style.cssText = "width:100%;padding:0;border:none;border-radius:6px;background:linear-gradient(180deg,#EBB010,#FF4511);display:flex;align-items:stretch;overflow:hidden;cursor:pointer;box-shadow:0 4px 16px rgba(255,69,17,0.3);";
+              tapNextBtn.innerHTML = '<div style="background:rgba(0,0,0,0.2);padding:12px 14px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(0,0,0,0.15);"><svg viewBox=\'0 0 44 56\' width=\'14\' height=\'18\' fill=\'#fff\'><path d=\'' + _FLNP + '\'/></svg></div><div style="flex:1;padding:14px;font-family:\'Teko\';font-weight:700;font-size:20px;color:#fff;letter-spacing:6px;text-align:center;line-height:1;">NEXT PLAY</div>';
               tapNextBtn.textContent = 'NEXT PLAY';
               var tapDismissed = false;
               tapNextBtn.onclick = function() {
@@ -4611,11 +4623,9 @@ export function buildGameplay() {
       ov.appendChild(posEl);
     }
 
-    // Continue button
-    var contBtn = document.createElement('button');
-    contBtn.className = 'btn-blitz';
-    contBtn.style.cssText = "font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;margin-top:16px;z-index:1;opacity:0;transform:translateY(10px);";
-    contBtn.textContent = 'CONTINUE';
+    // Continue button (flame badge)
+    var contBtn = _flameBadgeContinue('CONTINUE', null);
+    contBtn.style.cssText += 'margin-top:16px;z-index:1;opacity:0;transform:translateY(10px);';
     ov.appendChild(contBtn);
 
     // Sound
@@ -5432,10 +5442,8 @@ export function buildGameplay() {
     scoreEl.textContent = hTeam.name.toUpperCase() + ' ' + hScore + ' \u00b7 ' + oTeam.name.toUpperCase() + ' ' + cScore;
     ov.appendChild(scoreEl);
 
-    var contBtn = document.createElement('button');
-    contBtn.className = 'btn-blitz';
-    contBtn.style.cssText = "font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;margin-top:20px;opacity:0;z-index:1;transform:translateY(10px);";
-    contBtn.textContent = 'CONTINUE';
+    var contBtn = _flameBadgeContinue('CONTINUE', null);
+    contBtn.style.cssText += 'margin-top:20px;opacity:0;z-index:1;transform:translateY(10px);';
     ov.appendChild(contBtn);
 
     var dismissed = false;
