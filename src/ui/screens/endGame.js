@@ -252,9 +252,9 @@ export function buildEndGame() {
   var cpuScore = gs.irScore;
   var humanWon = humanScore > cpuScore;
   var tied = humanScore === cpuScore;
-  var humanTorch = gs.ctTorchPts;
-  var winBonus = humanWon ? 20 : 0;
-  var totalEarned = humanTorch + winBonus;
+  var humanTorch = gs.ctTorchPts; // Already includes win bonus from engine
+  var winBonus = 0; // Win bonus already applied in gameState._endGame()
+  var totalEarned = humanTorch;
 
   // Persist
   var season = GS.season || { torchCards: [], carryoverPoints: 0, opponents: [], currentGame: 0, results: [] };

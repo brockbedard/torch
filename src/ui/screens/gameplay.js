@@ -653,8 +653,8 @@ export function buildGameplay() {
   }
 
   function spendTorchPoints(amount) {
-    if (hAbbr === 'CT') gs.ctTorchPts -= amount;
-    else gs.irTorchPts -= amount;
+    if (hAbbr === 'CT') gs.ctTorchPts = Math.max(0, gs.ctTorchPts - amount);
+    else gs.irTorchPts = Math.max(0, gs.irTorchPts - amount);
   }
 
   // Trigger shop after a big moment
@@ -2983,10 +2983,10 @@ export function buildGameplay() {
       var _comboPts = Math.max(0, Math.floor(isOff ? (_r.offComboPts || 0) : (_r.defComboPts || 0)));
       var _bonusPts = 0;
       if (isOff) {
-        if (_r.isTouchdown) _bonusPts += 50;
-        if (res.gotFirstDown) _bonusPts += 10;
+        if (_r.isTouchdown) _bonusPts += 15;
+        if (res.gotFirstDown) _bonusPts += 2;
       } else {
-        if (_r.isSafety) _bonusPts += 30;
+        if (_r.isSafety) _bonusPts += 10;
       }
       // Clamp combo+bonus so they don't exceed the total
       if (_comboPts + _bonusPts > torchEarned) {
