@@ -1016,11 +1016,12 @@ export function buildGameplay() {
 
     drawTorchBanner();
 
-    // Onboarding: down & distance explanation
-    if (snapCount === 3 && shouldShowHint('torch_hint_down_distance')) {
+    // Onboarding: down & distance explanation (fire once at snap 3)
+    if (snapCount === 3 && !_onboardingActive && shouldShowHint('torch_hint_down_distance')) {
+      localStorage.setItem('torch_hint_down_distance', '1'); // Mark immediately to prevent re-queuing
       setTimeout(function() {
         var downEl = _bugEls.downEl;
-        if (downEl) showOnboardingBubble(downEl, 'That\'s your down and distance. Get 10 yards in 4 plays for a first down.', 'torch_hint_down_distance', { autoDismiss: 3000 });
+        if (downEl) showOnboardingBubble(downEl, 'That\'s your down and distance. Get 10 yards in 4 plays for a first down.', null, { autoDismiss: 3000 });
       }, 800);
     }
 
@@ -1870,15 +1871,14 @@ export function buildGameplay() {
     if (storageKey && !shouldShowHint(storageKey)) return null;
     _onboardingActive = true;
 
-    // Spotlight overlay
+    // Spotlight overlay — pointer-events:none so taps pass through to the target
     var overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.6);';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.6);pointer-events:auto;';
 
-    // Lift target above overlay
+    // Store original styles
     var origZ = targetEl.style.zIndex;
     var origPos = targetEl.style.position;
-    targetEl.style.zIndex = '801';
-    if (!origPos || origPos === 'static') targetEl.style.position = 'relative';
+    var origPE = targetEl.style.pointerEvents;
 
     // Bubble
     var bubble = document.createElement('div');
@@ -1918,7 +1918,8 @@ export function buildGameplay() {
       _onboardingActive = false;
       if (storageKey) localStorage.setItem(storageKey, '1');
       targetEl.style.zIndex = origZ || '';
-      if (!origPos || origPos === 'static') targetEl.style.position = origPos || '';
+      targetEl.style.position = origPos || '';
+      targetEl.style.pointerEvents = origPE || '';
       try {
         gsap.to(bubble, { opacity: 0, duration: 0.15, onComplete: function() { if (bubble.parentNode) bubble.remove(); } });
       } catch(e) { if (bubble.parentNode) bubble.remove(); }
@@ -2634,44 +2635,56 @@ export function buildGameplay() {
     _isNewDrive = false; // consume the flag after rendering
 
     // ── ONBOARDING HINTS ──
-    if (!_onboardingSkipped && !_onboardingActive) {
+    // Delay varies by hint to account for cooldown from previous hint dismissal
+    if (!_onboardingSkipped) {
+      var _hintDelay = _onboardingCooldown ? 600 : 400;
       setTimeout(function() {
+        if (_onboardingActive || _onboardingSkipped) return;
+        // Re-read current state (drawPanel may have been called again)
+        var _curPhase = phase;
+        var _curSelPl = selPl;
+        var _curSelP = selP;
+
         // S1: Pick a play (first snap, offense)
-        if (snapCount === 0 && isOff && phase === 'play' && !selPl && shouldShowHint('torch_hint_pick_play')) {
-          var playRow = trayEl.querySelector('.CT-row');
-          if (playRow) showOnboardingBubble(playRow, 'Pick a play to call it.', 'torch_hint_pick_play');
+        if (snapCount === 0 && isOff && _curPhase === 'play' && !_curSelPl && shouldShowHint('torch_hint_pick_play')) {
+          var _pr = panel.querySelector('.CT-row');
+          if (_pr) showOnboardingBubble(_pr, 'Pick a play to call it.', 'torch_hint_pick_play');
         }
         // S3: Pick a player (first snap, offense, play selected)
-        else if (snapCount === 0 && isOff && phase === 'player' && selPl && !selP && shouldShowHint('torch_hint_pick_player')) {
-          var rows = trayEl.querySelectorAll('.CT-row');
-          var playerRow = rows.length > 1 ? rows[1] : rows[0];
-          if (playerRow) showOnboardingBubble(playerRow, 'Now pick your star player.', 'torch_hint_pick_player');
+        else if (snapCount === 0 && isOff && _curPhase === 'player' && _curSelPl && !_curSelP && shouldShowHint('torch_hint_pick_player')) {
+          var _rows = panel.querySelectorAll('.CT-row');
+          var _plRow = _rows.length > 1 ? _rows[1] : _rows[0];
+          if (_plRow) showOnboardingBubble(_plRow, 'Now pick your star player.', 'torch_hint_pick_player');
         }
         // S5: Snap button ready (first snap, both selected)
-        else if (snapCount === 0 && isOff && selPl && selP && phase !== 'torch' && shouldShowHint('torch_hint_snap')) {
-          var snapBtnEl = trayEl.querySelector('.CT-snap-btn');
-          if (snapBtnEl) showOnboardingBubble(snapBtnEl, "Hit SNAP to run the play. Let's see what happens!", 'torch_hint_snap');
+        else if (snapCount === 0 && isOff && _curSelPl && _curSelP && shouldShowHint('torch_hint_snap')) {
+          var _sb = panel.querySelector('.CT-snap-btn');
+          if (_sb) showOnboardingBubble(_sb, "Hit SNAP to run the play. Let's see what happens!", 'torch_hint_snap');
         }
         // D1: First defense
-        else if (!isOff && shouldShowHint('torch_hint_defense')) {
-          var defRow = trayEl.querySelector('.CT-row');
-          if (defRow) showOnboardingBubble(defRow, 'Other team has the ball now. Pick a defensive play to stop them.', 'torch_hint_defense');
+        else if (!isOff && _curPhase === 'play' && shouldShowHint('torch_hint_defense')) {
+          var _dr = panel.querySelector('.CT-row');
+          if (_dr) showOnboardingBubble(_dr, 'Other team has the ball now. Pick a defensive play to stop them.', 'torch_hint_defense');
         }
-        // TC1: Torch cards (after snap 4, has cards)
-        else if (snapCount >= 4 && torchInventory.length > 0 && phase === 'torch' && shouldShowHint('torch_hint_torch_card')) {
-          var torchRow = trayEl.querySelector('.CT-torch-row') || trayEl.querySelector('.CT-row');
-          if (torchRow) showOnboardingBubble(torchRow, 'Got a torch card? Tap here for a bonus this snap. Totally optional.', 'torch_hint_torch_card');
+        // TC1: Torch cards (after snap 4, has cards, in torch phase)
+        else if (snapCount >= 4 && torchInventory.length > 0 && _curPhase === 'torch' && shouldShowHint('torch_hint_torch_card')) {
+          var _tr = panel.querySelector('.CT-row');
+          if (_tr) showOnboardingBubble(_tr, 'Got a torch card? Tap here for a bonus this snap. Totally optional.', 'torch_hint_torch_card');
         }
-      }, 400);
+      }, _hintDelay);
 
-      // S6: Idle fallback (8s without action)
-      if (phase === 'play' && !selPl && !_onboardingSkipped) {
+      // S6: Idle fallback (8s without action during play selection)
+      if (phase === 'play' && !selPl) {
         if (_idleTimer) clearTimeout(_idleTimer);
         _idleTimer = setTimeout(function() {
           if (phase === 'play' && !selPl && !_onboardingActive && !_onboardingSkipped) {
-            showOnboardingBubble(trayEl, "Pick a play — any play works, you'll get the hang of it.", null);
+            var _ir = panel.querySelector('.CT-row');
+            if (_ir) showOnboardingBubble(_ir, "Pick a play — any play works, you'll get the hang of it.", null);
           }
         }, 8000);
+      } else if (_idleTimer) {
+        clearTimeout(_idleTimer);
+        _idleTimer = null;
       }
     }
 
