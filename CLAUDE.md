@@ -4,7 +4,7 @@
 TORCH Football is a mobile card game (Balatro meets college football). 4 fictional college teams with distinct offensive schemes. Single-game format — each session is one game, TORCH points persist across games. Card-based play selection, personnel system with stars/traits, special teams burn deck, and TORCH points (score = wallet). Built with Vite + vanilla JS + GSAP, deployed on Vercel.
 
 ## Version
-**v0.30.2 "Polish & Onboarding"** — Learn-by-doing onboarding system (15 contextual hints, first game only). Torch card face redesign (tier-driven icons, scaled proportionally, 3-line effect text). Torch store redesigned (one-tap purchase, no confirm step). Torch card descriptions rewritten for clarity. Sound placement audit (tiered TD layering, ignite on torch activation, coinFlip on toss). TORCH points economy fix (win bonus double-count, display breakdown mismatches). Result overlay text scaled up for mobile. Commentary broadcast cards with badge row. Pregame cards fixed (content-sized, no stretch). Coin toss screen polished (shimmer, team glow, football SVG). Face-down card flip fixed (nested callbacks). PRIME TIME buffed, SCOUT TEAM visual reveal added. Flame badge buttons throughout.
+**v0.30.3 "Commentary Fix"** — Full commentary audit: OL/DL filtered from AI featured player selection, only QBs throw passes (QB name resolved from roster), consistent name attribution across all templates (qbName/receiverName/rusherName). Includes all v0.30.2 features: onboarding system, torch card redesign, store redesign, sound audit, economy fixes, UI polish.
 
 ## Environments & Deployment
 
