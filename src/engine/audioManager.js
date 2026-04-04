@@ -189,7 +189,7 @@ var AudioManager = {
     // SFX pools — Crowd reactions (one-shots)
     loadPool('crowdCheer', ['/audio/sfx/crowd_cheer_01.wav'], { volume: 0.7 });
     loadPool('crowdGroan', ['/audio/sfx/crowd_groan_01.wav'], { volume: 0.6 });
-    loadPool('tdEruption', ['/audio/crowd/td_eruption_01.wav','/audio/crowd/td_eruption_02.wav'], { volume: 0.8 });
+    loadPool('tdEruption', ['/audio/crowd/Stadium_crowd_celebr_#3-1775233609710.wav','/audio/crowd/Outdoor_American_foo_#2-1775233465681.wav','/audio/crowd/Outdoor_American_foo_#3-1775233456755.wav'], { volume: 0.85 });
     loadPool('bigPlayCrowd', ['/audio/crowd/big_play_01.wav','/audio/crowd/big_play_02.wav'], { volume: 0.7 });
     loadPool('groan', ['/audio/crowd/groan_01.wav','/audio/crowd/groan_02.wav'], { volume: 0.6 });
     loadPool('victoryCrowd', ['/audio/crowd/victory_crowd_01.wav'], { volume: 0.7 });

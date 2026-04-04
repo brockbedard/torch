@@ -129,7 +129,8 @@ export function buildHalftime() {
     btn.onclick = function() {
       SND.snap();
       selectedAdj = adj.id;
-      setGs(function(s) { return Object.assign({}, s, { halftimeAdjustment: adj.id }); });
+      // Persist without re-render — button states updated inline below
+      GS.halftimeAdjustment = adj.id;
       // Re-render button states
       Array.from(adjBtns.children).forEach(function(child, i) {
         var a = ADJUSTMENTS[i];
@@ -213,7 +214,26 @@ export function buildHalftime() {
           confirmOv.remove();
           gs.humanTorchCards.push(card.id);
           gs.ctTorchPts -= card.cost;
-          setGs(function(s) { return Object.assign({}, s, { screen: 'halftime' }); });
+          humanPts = gs.ctTorchPts;
+          // Update points display in header without full rebuild
+          var ptsSpan = shopHdr.querySelector('span');
+          if (ptsSpan) ptsSpan.textContent = humanPts;
+          // Grey out this card slot (already bought)
+          cardSlot.style.opacity = '0.2';
+          cardSlot.style.pointerEvents = 'none';
+          cardSlot.style.cursor = 'default';
+          // Disable other cards player can no longer afford
+          Array.from(offersRow.children).forEach(function(slot) {
+            var costEl = slot.querySelector("[style*='font-size:12px']");
+            if (costEl) {
+              var cost = parseInt(costEl.textContent, 10);
+              if (cost > humanPts) {
+                slot.style.opacity = '0.4';
+                slot.style.cursor = 'not-allowed';
+                slot.onclick = null;
+              }
+            }
+          });
         };
         var cancelBtn = document.createElement('button');
         cancelBtn.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:12px;color:#666;background:transparent;border:none;padding:10px 20px;cursor:pointer;letter-spacing:1px;";

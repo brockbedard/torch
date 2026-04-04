@@ -44,6 +44,14 @@ export function getPlayHistoryBonus(history, currentPlay) {
   // PA specific bonus (stacks with generic run->pass)
   if (currentIsPA && consecRuns >= 2) bonus += 4;
 
+  // Short pass momentum (3 consecutive short/screen passes → +2)
+  let consecShort = 0;
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i] === 'SHORT' || history[i] === 'SCREEN') consecShort++;
+    else break;
+  }
+  if ((currentPlay.playType === 'SHORT' || currentPlay.playType === 'SCREEN') && consecShort >= 2) bonus += 2;
+
   // Repeat play penalty (checks playType, not specific play)
   if (history.length >= 1 && history[history.length - 1] === currentPlay.playType) {
     if (history.length >= 2 && history[history.length - 2] === currentPlay.playType) {
