@@ -139,6 +139,27 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   var momentumBonus = getMomentumBonus(offMomentum);
   mean += momentumBonus;
 
+  // Card combo bonus (passed from UI via context)
+  if (context.cardComboBonus) {
+    mean += context.cardComboBonus.yards || 0;
+    if (context.cardComboBonus.torchMultiplier) {
+      result.torchMultiplier = (result.torchMultiplier || 1) * context.cardComboBonus.torchMultiplier;
+    }
+    result.cardComboFired = true;
+  }
+
+  // Star heat check bonus (hot star featured on this snap)
+  if (context.starHotBonus) {
+    mean += context.starHotBonus;
+  }
+
+  // Hot Read: screen called against blitz defense
+  var defCat = defPlay.cat || defPlay.cardType || '';
+  if (offPlay.playType === 'SCREEN' && (defCat === 'BLITZ' || defCat === 'PRESS COVERAGE')) {
+    mean += 5;
+    result.hotReadFired = true;
+  }
+
   // Red zone compression
   const rz = applyRedZone(yardsToEndzone, mean, variance, offPlay);
   mean = rz.mean;

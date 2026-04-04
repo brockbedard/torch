@@ -202,7 +202,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
         var tdPassPool = [
           'TOUCHDOWN ' + possTeam.toUpperCase() + '!! ' + qbName + ' ' + pick(PASS_VERBS) + ' a DIME — ' + yards + '-yard STRIKE!',
           'HE\'S IN!! ' + receiverName + ' ' + pick(CATCH_VERBS_SOLO) + ' ' + pick(ROUTE_MODS) + ' — TOUCHDOWN!!',
-          possTeam.toUpperCase() + ' SCORES!! ' + yards + ' yards through the air! WHAT A THROW!',
+          possTeam.toUpperCase() + ' SCORE!! ' + yards + ' yards through the air! WHAT A THROW!',
           'BALL GAME! ' + receiverName + ' ' + pick(CATCH_VERBS_SOLO) + ' and walks in! TOUCHDOWN!',
           'TOUCHDOWN!! ' + receiverName + ' was wide open and ' + qbName + ' FOUND HIM! ' + yards + ' yards!',
           possTeam.toUpperCase() + ' IN THE END ZONE! ' + yards + '-yard strike! NOTHING THEY COULD DO!',

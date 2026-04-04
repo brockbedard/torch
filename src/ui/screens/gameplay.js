@@ -27,6 +27,8 @@ import { aiSelectPlay, aiSelectPlayer } from '../../engine/aiOpponent.js';
 import { showSTSelect } from '../components/stSelect.js';
 import { createFieldAnimator } from '../field/fieldAnimator.js';
 import { checkCardCombo } from '../../engine/cardCombos.js';
+import { getMomentumMultiplier } from '../../engine/momentumSystem.js';
+import { Haptic } from '../../engine/haptics.js';
 
 // Team-specific TD celebration config
 var TEAM_CELEBRATION = {
@@ -533,7 +535,7 @@ export function buildGameplay() {
       // Heartbeat below 15 seconds + haptic pulse
       if (gs.clockSeconds <= 15 && gs.clockSeconds > 0) {
         SND.click();
-        try { if (navigator.vibrate) navigator.vibrate(gs.clockSeconds <= 5 ? [50, 50, 50] : [40]); } catch(e) {}
+        if (gs.clockSeconds <= 5) Haptic.sack(); else Haptic.hit();
       }
       // Time expired — end the half (but not during a PAT)
       if (gs.clockSeconds <= 0) {
@@ -564,24 +566,27 @@ export function buildGameplay() {
   var driveFirstDowns = 0;
   var driveCommLine1 = '', driveCommLine2 = '';
 
-  // Game-wide stat accumulators (persist across drives)
+  // Game-wide stat accumulators (persist across drives AND halftime)
+  // Restore from snapshot if resuming after halftime
+  var _ss = GS._gameplayStats || null;
   // Human offense stats
-  var hOffPassAtt = 0, hOffPassComp = 0, hOffPassYds = 0;
-  var hOffRushAtt = 0, hOffRushYds = 0;
-  var hOffRecYds = 0, hOffRec = 0;
-  var hOffQBName = '', hOffRBName = '', hOffWRName = '';
+  var hOffPassAtt = _ss ? _ss.hOffPassAtt : 0, hOffPassComp = _ss ? _ss.hOffPassComp : 0, hOffPassYds = _ss ? _ss.hOffPassYds : 0;
+  var hOffRushAtt = _ss ? _ss.hOffRushAtt : 0, hOffRushYds = _ss ? _ss.hOffRushYds : 0;
+  var hOffRecYds = _ss ? _ss.hOffRecYds : 0, hOffRec = _ss ? _ss.hOffRec : 0;
+  var hOffQBName = _ss ? _ss.hOffQBName : '', hOffRBName = _ss ? _ss.hOffRBName : '', hOffWRName = _ss ? _ss.hOffWRName : '';
   // Human defense stats (tracking human's defensive players)
-  var hDefStats = {}; // { name: { pos, tkl, pbu, int, sack } }
+  var hDefStats = _ss ? _ss.hDefStats : {}; // { name: { pos, tkl, pbu, int, sack } }
   // CPU offense stats
-  var cOffPassAtt = 0, cOffPassComp = 0, cOffPassYds = 0;
-  var cOffRushAtt = 0, cOffRushYds = 0;
-  var cOffRecYds = 0, cOffRec = 0;
-  var cOffQBName = '', cOffRBName = '', cOffWRName = '';
+  var cOffPassAtt = _ss ? _ss.cOffPassAtt : 0, cOffPassComp = _ss ? _ss.cOffPassComp : 0, cOffPassYds = _ss ? _ss.cOffPassYds : 0;
+  var cOffRushAtt = _ss ? _ss.cOffRushAtt : 0, cOffRushYds = _ss ? _ss.cOffRushYds : 0;
+  var cOffRecYds = _ss ? _ss.cOffRecYds : 0, cOffRec = _ss ? _ss.cOffRec : 0;
+  var cOffQBName = _ss ? _ss.cOffQBName : '', cOffRBName = _ss ? _ss.cOffRBName : '', cOffWRName = _ss ? _ss.cOffWRName : '';
   // CPU defense stats (tracking CPU's defensive players)
-  var cDefStats = {}; // { name: { pos, tkl, pbu, int, sack } }
+  var cDefStats = _ss ? _ss.cDefStats : {}; // { name: { pos, tkl, pbu, int, sack } }
   // Per-player game stats for card display (keyed by player id)
-  var _playerGameStats = {}; // { id: { yds, rec, recYds, rushAtt, rushYds, passAtt, passComp, passYds, tkl, pbu, int, sack, td } }
+  var _playerGameStats = _ss ? _ss._playerGameStats : {}; // { id: { yds, rec, recYds, rushAtt, rushYds, passAtt, passComp, passYds, tkl, pbu, int, sack, td } }
   var _hotStreak = 0; // consecutive positive plays (user offense)
+  GS._gameplayStats = null; // Clear after restoring
   // CPU roster for QB lookup
   var cpuOffRoster = getOffenseRoster(oppId);
 
@@ -1982,7 +1987,7 @@ export function buildGameplay() {
       gsap.to(_atcOv, { opacity: 1, duration: 0.2 });
       gsap.to(_atcOv, { opacity: 0, y: -10, duration: 0.3, delay: 1.5, onComplete: function() { _atcOv.remove(); } });
     } catch(e) { setTimeout(function() { _atcOv.remove(); }, 2000); }
-    if (navigator.vibrate) try { navigator.vibrate([30, 20, 50]); } catch(e) {}
+    Haptic.cardSelect();
   }
 
   /** Stat milestone toast */
@@ -2814,13 +2819,13 @@ export function buildGameplay() {
           // Gold shimmer pulse
           gsap.to(tcVisual, { boxShadow: '0 0 80px ' + tcTierCol + 'aa, 0 0 120px ' + tcTierCol + '44', duration: 0.3, delay: 0.4, yoyo: true, repeat: 1 });
           SND.ignite();
-          if (navigator.vibrate) try { navigator.vibrate([30, 50, 80]); } catch(e) {}
+          Haptic.bigPlay();
         } else if (tcTier === 'SILVER') {
           gsap.to(tcOv, { opacity: 1, duration: 0.15 });
           gsap.from(tcVisual, { scale: 0.4, rotation: -6, duration: 0.4, ease: 'back.out(2)' });
           gsap.to(tcVisual, { boxShadow: '0 0 50px ' + tcTierCol + '88', duration: 0.2, delay: 0.3, yoyo: true, repeat: 1 });
           SND.cardSnap();
-          if (navigator.vibrate) try { navigator.vibrate([20, 30]); } catch(e) {}
+          Haptic.cardSelect();
         } else {
           gsap.to(tcOv, { opacity: 1, duration: 0.12 });
           gsap.from(tcVisual, { scale: 0.5, rotation: -3, duration: 0.3, ease: 'back.out(1.7)' });
@@ -2856,7 +2861,7 @@ export function buildGameplay() {
         hs.maxPlayDiscards++;
         hs.maxPlayerDiscards++;
         torchCardToast('FRESH LEGS', 'Extra discard granted!');
-        try { navigator.vibrate(30); } catch(e) {}
+        Haptic.cardTap();
         SND.cardDeal();
       }
     }
@@ -2871,7 +2876,7 @@ export function buildGameplay() {
     if (selTorchId === 'scout_report') {
       _scoutActive = true;
       torchCardToast('SCOUT REPORT', 'Full roster revealed!');
-      try { navigator.vibrate(15); } catch(e) {}
+      Haptic.cardSelect();
     }
 
     // TIMEOUT: add 30 seconds to 2-minute drill clock
@@ -2937,20 +2942,24 @@ export function buildGameplay() {
         }
       };
     }
+    // Build extras for engine: card combo bonus + star heat check
+    var _snapExtras = {};
+    if (_activeDriveCombo) {
+      _snapExtras.cardComboBonus = _activeDriveCombo.bonus;
+    }
+    if (isOff && offStarHot && selP && offStar && selP.id === offStar.id) {
+      _snapExtras.starHotBonus = 2;
+    }
+
     const res = isOff
-      ? gs.executeSnap(selPl, selP, null, null, offCard, defCard, _devForceResult)
-      : gs.executeSnap(null, null, selPl, selP, offCard, defCard, _devForceResult);
+      ? gs.executeSnap(selPl, selP, null, null, offCard, defCard, _devForceResult, _snapExtras)
+      : gs.executeSnap(null, null, selPl, selP, offCard, defCard, _devForceResult, _snapExtras);
 
     if (res) res._torchUsedThisSnap = !!(offCard || defCard);
     _scoutActive = false; // Reset card effect after snap
 
-    // Apply combo bonus
+    // Show card combo notification (yards already applied by engine)
     if (_activeDriveCombo && res && res.result) {
-      res.result.yards += _activeDriveCombo.bonus.yards || 0;
-      if (_activeDriveCombo.bonus.torchMultiplier) {
-        res.result.torchMultiplier = (res.result.torchMultiplier || 1) * _activeDriveCombo.bonus.torchMultiplier;
-      }
-      // Show combo notification (pointer-events:none overlay)
       var comboOv = document.createElement('div');
       comboOv.style.cssText = "position:fixed;top:8%;left:50%;transform:translateX(-50%);z-index:660;font-family:'Teko';font-weight:700;font-size:18px;color:#00ff44;letter-spacing:3px;text-shadow:0 0 16px rgba(0,255,68,0.6);pointer-events:none;opacity:0;white-space:nowrap;";
       comboOv.textContent = _activeDriveCombo.name + '!';
@@ -2966,12 +2975,23 @@ export function buildGameplay() {
 
     var postTorchPts = getTorchPoints();
     var torchEarned = postTorchPts - preTorchPts;
-    // 12TH MAN doubles TORCH points
+    // TORCH card multiplier (12TH MAN, card combos)
     if (res && res.result && res.result.torchMultiplier && res.result.torchMultiplier > 1) {
       var bonus = torchEarned * (res.result.torchMultiplier - 1);
       if (gs.possession === 'CT') gs.ctTorchPts += bonus;
       else gs.irTorchPts += bonus;
       torchEarned *= res.result.torchMultiplier;
+    }
+    // Momentum TORCH multiplier (1.1x at momentum 5)
+    if (res && res.featuredOff && torchEarned > 0) {
+      var _momLevel = (gs.offMomentumMap && res.featuredOff.id) ? (gs.offMomentumMap[res.featuredOff.id] || 0) : 0;
+      var _momMult = getMomentumMultiplier(_momLevel);
+      if (_momMult > 1) {
+        var momBonus = Math.round(torchEarned * (_momMult - 1));
+        if (gs.possession === 'CT') gs.ctTorchPts += momBonus;
+        else gs.irTorchPts += momBonus;
+        torchEarned += momBonus;
+      }
     }
     if (res) res._torchEarned = torchEarned;
 
@@ -3038,21 +3058,21 @@ export function buildGameplay() {
       }
     }
 
-    // Check play sequence combos
+    // Check play sequence combos (notification only — yard bonuses handled by engine)
     var playCat = playedPlay ? (playedPlay.cat || playedPlay.playType || 'RUN') : 'RUN';
     var lastDefCat = res.defPlay ? (res.defPlay.cat || res.defPlay.cardType || '') : '';
     var firedCombos = checkPlayCombos(drivePlayHistory, playCat, lastDefCat, playedPlay ? playedPlay.id : null);
     drivePlayHistory.push({ cat: playCat, playId: playedPlay ? playedPlay.id : null });
 
-    // Apply combo yard bonuses
-    var comboBonus = 0;
+    // Combo names for UI flash (yards already applied by engine pipeline)
     var comboNames = [];
-    if (firedCombos.length > 0 && res && res.result) {
-      firedCombos.forEach(function(combo) {
-        comboBonus += combo.yardBonus;
-        comboNames.push(combo.name);
-      });
-      res.result.yards += comboBonus;
+    if (firedCombos.length > 0) {
+      firedCombos.forEach(function(combo) { comboNames.push(combo.name); });
+      res._combos = comboNames;
+    }
+    // Hot Read fired inside engine — surface for UI
+    if (res && res.result && res.result.hotReadFired) {
+      comboNames.push('HOT READ');
       res._combos = comboNames;
     }
 
@@ -3397,7 +3417,7 @@ export function buildGameplay() {
       }
 
       // Haptic
-      if (navigator.vibrate) try { navigator.vibrate(tier === 3 ? 100 : tier === 2 ? 50 : 12); } catch(e) {}
+      if (tier === 3) Haptic.bigPlay(); else if (tier === 2) Haptic.hit(); else Haptic.cardTap();
 
       // Sack brutality — extra shake + red vignette when user QB gets sacked
       if (r.isSack && isUserOff) {
@@ -3415,7 +3435,7 @@ export function buildGameplay() {
           gsap.to(sackVig, { opacity: 0, duration: 0.6, delay: 0.3, onComplete: function() { sackVig.remove(); } });
         } catch(e) {}
         // Heavy haptic
-        if (navigator.vibrate) try { navigator.vibrate([60, 30, 80]); } catch(e) {}
+        Haptic.sack();
       }
       // Turnover gut punch — screen recoils
       if ((r.isInterception || r.isFumbleLost) && isUserOff) {
@@ -3423,7 +3443,7 @@ export function buildGameplay() {
           gsap.to(el, { scaleY: 0.97, duration: 0.04 });
           gsap.to(el, { scaleY: 1, duration: 0.15, delay: 0.04, ease: 'elastic.out(1, 0.5)' });
         } catch(e) {}
-        if (navigator.vibrate) try { navigator.vibrate([40, 20, 60]); } catch(e) {}
+        Haptic.turnover();
       }
 
       // Sound — crowd spikes on big plays, holds, then settles
@@ -3549,7 +3569,7 @@ export function buildGameplay() {
         }
 
         // Haptic
-        if (navigator.vibrate) try { navigator.vibrate([30, 50, 80]); } catch(e) {}
+        Haptic.touchdown();
 
         // ── Beat 2: Reveal (0.3-0.9s) ──
         var resultWrap = document.createElement('div');
@@ -3718,7 +3738,7 @@ export function buildGameplay() {
             }
           }, 1200);
 
-          if (navigator.vibrate) try { navigator.vibrate([40, 60, 80, 60, 120]); } catch(e) {}
+          Haptic.touchdown();
         }
 
         // First-ever TD explainer (one-time, teaches economy)
@@ -3996,7 +4016,7 @@ export function buildGameplay() {
         var _fdCount = driveFirstDowns || 1;
         try { SND.chime(); } catch(e) {}
         flashField('rgba(0,255,68,0.2)', 300);
-        if (navigator.vibrate) try { navigator.vibrate([20, 10, 20]); } catch(e) {}
+        Haptic.cardTap();
         // 3rd+ first down: gold flash
         if (_fdCount >= 3) flashField('rgba(235,176,16,0.15)', 400);
         // 5th+ first down: mini confetti burst
@@ -4416,7 +4436,7 @@ export function buildGameplay() {
             gsap.to(_3aoEl, { opacity: 0, y: -20, duration: 0.4, delay: 1.5, onComplete: function() { _3aoEl.remove(); } });
             SND.bigPlay();
           } catch(e) { setTimeout(function() { _3aoEl.remove(); }, 2000); }
-          if (navigator.vibrate) try { navigator.vibrate([20, 10, 30]); } catch(e) {}
+          Haptic.cardSelect();
         }
         // BLOCKED KICK: auto-consume from inventory if available
         var _bkPuntIdx = torchInventory.findIndex(function(c) { return c.id === 'blocked_kick'; });
@@ -5463,6 +5483,20 @@ export function buildGameplay() {
     }
     if (gs.needsHalftime) {
       SND.whistle();
+      // Persist stat accumulators across halftime rebuild
+      GS._gameplayStats = {
+        hOffPassAtt: hOffPassAtt, hOffPassComp: hOffPassComp, hOffPassYds: hOffPassYds,
+        hOffRushAtt: hOffRushAtt, hOffRushYds: hOffRushYds,
+        hOffRecYds: hOffRecYds, hOffRec: hOffRec,
+        hOffQBName: hOffQBName, hOffRBName: hOffRBName, hOffWRName: hOffWRName,
+        hDefStats: hDefStats,
+        cOffPassAtt: cOffPassAtt, cOffPassComp: cOffPassComp, cOffPassYds: cOffPassYds,
+        cOffRushAtt: cOffRushAtt, cOffRushYds: cOffRushYds,
+        cOffRecYds: cOffRecYds, cOffRec: cOffRec,
+        cOffQBName: cOffQBName, cOffRBName: cOffRBName, cOffWRName: cOffWRName,
+        cDefStats: cDefStats,
+        _playerGameStats: _playerGameStats,
+      };
       showHalfEnd(false, function() { setGs(s => ({...s, screen:'halftime'})); });
       return true;
     }

@@ -477,7 +477,7 @@ export class GameState {
    * @param {string} [defCard] - Defensive Torch Card ID
    * @returns {object} { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent }
    */
-  executeSnap(offPlay, featuredOff, defPlay, featuredDef, offCard, defCard, _devForceResult) {
+  executeSnap(offPlay, featuredOff, defPlay, featuredDef, offCard, defCard, _devForceResult, extras) {
     if (this.gameOver) return null;
 
     const sides = this.getCurrentSides();
@@ -587,6 +587,8 @@ export class GameState {
       defHeatMap: this.defHeatMap,
       offMomentumMap: this.offMomentumMap,
       halftimeAdjustment: this.halftimeAdjustment,
+      cardComboBonus: extras && extras.cardComboBonus || null,
+      starHotBonus: extras && extras.starHotBonus || 0,
     };
 
     const result = resolveSnap(offPlay, defPlay, featuredOff, featuredDef,
