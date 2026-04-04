@@ -132,8 +132,13 @@ function scorePlayer(p, play, isOffense) {
 }
 
 export function aiSelectPlayer(roster, play, difficulty, isOffense, heatMap) {
-  let available = roster.slice(0, 4).filter(p => !p.injured);
+  // Filter out OL/DL — linemen don't carry, catch, or cover
+  let available = roster.slice(0, 4).filter(p => !p.injured && p.pos !== 'OL' && p.pos !== 'DL');
   if (available.length === 0) {
+    available = roster.filter(p => !p.injured && p.pos !== 'OL' && p.pos !== 'DL');
+  }
+  if (available.length === 0) {
+    // Last resort: use anyone available (shouldn't happen with 7-player rosters)
     available = roster.filter(p => !p.injured);
   }
   if (available.length === 0) return roster.find(p => !p.injured) || roster[0]; // prefer non-injured
