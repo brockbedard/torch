@@ -36,17 +36,19 @@ function formatPlayerStats(s) {
 
 var _cssInjected = false;
 var TRAY_CSS = `
-.CT-wrap{display:flex;flex-direction:column;flex-shrink:0;background:#0E0A04;border-top:2px solid #FF6B0033;position:relative;z-index:1;padding-bottom:env(safe-area-inset-bottom,0px)}
+.CT-wrap{display:flex;flex-direction:column;flex-shrink:0;background:#0E0A04;border-top:2px solid #FF6B0033;position:relative;z-index:1;padding-bottom:env(safe-area-inset-bottom,0px);transition:background-color 0.3s}
+.CT-wrap-def{background:#04060A}
 .CT-header{display:flex;align-items:center;justify-content:center;gap:8px;padding:3px 8px 1px;flex-shrink:0}
 .CT-side{font-family:'Teko';font-weight:700;font-size:18px;letter-spacing:3px}
 .CT-disc-toggle{font-family:'Rajdhani';font-weight:700;font-size:10px;letter-spacing:1px;padding:10px 14px;border-radius:4px;border:1px solid #555;background:transparent;color:#aaa;cursor:pointer}
-.CT-disc-toggle-used{color:#333;border-color:#1a1a1a;cursor:default;opacity:0.4}
+.CT-disc-toggle-used{color:#333;border-color:rgba(255,255,255,0.06);cursor:default;opacity:0.4}
 .CT-disc-toggle-active{background:rgba(235,176,16,0.1);border-color:#EBB010;animation:T-pulse 1.5s infinite}
 @keyframes T-snap-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
 .CT-row{display:flex;gap:3px;padding:2px 3px;flex-shrink:0}
 .CT-row::-webkit-scrollbar{display:none}
-.CT-row-label{font-family:'Rajdhani';font-weight:700;font-size:9px;letter-spacing:1px;padding:0 6px;color:#555;flex-shrink:0}
-.CT-card{flex:1 1 80px;min-width:80px;height:120px;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;position:relative;cursor:pointer;border:2px solid transparent;will-change:transform}
+.CT-row-label{height:2px;margin:2px 6px;border-radius:1px;opacity:0.4;flex-shrink:0}
+.CT-row-label-text{font-family:'Rajdhani';font-weight:700;font-size:9px;letter-spacing:1px;padding:0 6px;color:#555;flex-shrink:0}
+.CT-card{flex:1 1 80px;min-width:80px;height:120px;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;position:relative;cursor:pointer;border:2px solid transparent;will-change:transform;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:box-shadow 0.15s}
 .CT-card-disabled{opacity:0.35;pointer-events:none}
 .CT-snap-bar{display:flex;gap:6px;padding:4px 8px;align-items:center;flex-shrink:0}
 .CT-snap-btn{flex:1;display:flex;align-items:stretch;overflow:hidden;padding:0;border:none;border-radius:6px;background:linear-gradient(180deg,#EBB010 0%,#FF4511 100%);box-shadow:0 4px 16px rgba(255,69,17,0.3),0 0 20px rgba(235,176,16,0.15);cursor:pointer}
@@ -267,7 +269,7 @@ function attachTouchFeedback(card) {
 export function renderCardTray(opts) {
   injectCSS();
   var wrap = document.createElement('div');
-  wrap.className = 'CT-wrap';
+  wrap.className = 'CT-wrap' + (opts.isOffense === false ? ' CT-wrap-def' : '');
 
   if (opts.phase === 'busy') { wrap.style.display = 'none'; return wrap; }
 
@@ -291,7 +293,7 @@ export function renderCardTray(opts) {
   var sideLabel = document.createElement('div');
   sideLabel.className = 'CT-side';
   sideLabel.style.color = opts.team.accent || '#FF6B00';
-  sideLabel.textContent = opts.team.name + (opts.isOffense ? ' OFFENSE' : ' DEFENSE');
+  sideLabel.textContent = opts.team.name;
   sideLabel.style.flex = '1';
   header.appendChild(sideLabel);
 
@@ -310,7 +312,7 @@ export function renderCardTray(opts) {
   if (torchPhase) {
     var torchSlots = (opts.torchCards || []).filter(function(c) { return c.type === 'pre-snap'; }).slice(0, 3);
     var torchLabel = document.createElement('div');
-    torchLabel.className = 'CT-row-label';
+    torchLabel.className = 'CT-row-label-text';
     torchLabel.style.color = '#EBB010';
     torchLabel.textContent = torchSlots.length > 0 ? 'TORCH CARD \u2014 TAP TO PLAY OR SKIP' : 'NO PLAYABLE TORCH CARDS \u2014 TAP SKIP';
     wrap.appendChild(torchLabel);
@@ -374,8 +376,8 @@ export function renderCardTray(opts) {
   // ── PLAY ROW ──
   var playLabel = document.createElement('div');
   playLabel.className = 'CT-row-label';
-  playLabel.textContent = 'PLAYS';
-  if (opts.tutorialStep === 2 || opts.tutorialStep === 3) { playLabel.style.opacity = '0.2'; }
+  playLabel.style.background = opts.isOffense !== false ? '#00ff44' : '#4DA6FF';
+  if (opts.tutorialStep === 2 || opts.tutorialStep === 3) { playLabel.style.opacity = '0.1'; }
   wrap.appendChild(playLabel);
 
   var playRow = document.createElement('div');
@@ -431,7 +433,7 @@ export function renderCardTray(opts) {
       if (opts.yardsToEndzone <= 5 && (pt === 'RUN' || play.isRun)) isStrong = true;
     }
     if (isStrong && !opts.selectedPlay) {
-      c.style.boxShadow = '0 0 10px rgba(235,176,16,0.35), 0 0 3px rgba(235,176,16,0.2)';
+      c.style.boxShadow = '0 4px 12px rgba(0,0,0,0.4), 0 0 12px rgba(235,176,16,0.25)';
       c.style.borderColor = '#EBB01066';
     }
 
@@ -468,8 +470,8 @@ export function renderCardTray(opts) {
   // ── PLAYER ROW ──
   var playerLabel = document.createElement('div');
   playerLabel.className = 'CT-row-label';
-  playerLabel.textContent = 'PLAYERS';
-  if (opts.tutorialStep === 1 || opts.tutorialStep === 3) { playerLabel.style.opacity = '0.2'; }
+  playerLabel.style.background = '#4DA6FF';
+  if (opts.tutorialStep === 1 || opts.tutorialStep === 3) { playerLabel.style.opacity = '0.1'; }
   wrap.appendChild(playerLabel);
 
   var playerRow = document.createElement('div');
@@ -615,11 +617,11 @@ export function renderCardTray(opts) {
 
   // ── DISCARD BANNER (shown at top when in discard mode) ──
   var discBanner = document.createElement('div');
-  discBanner.style.cssText = "display:none;align-items:center;padding:8px 12px;background:linear-gradient(90deg,#FF451110,transparent 40%);border-bottom:1px solid #1a1a1a;flex-shrink:0;";
+  discBanner.style.cssText = "display:none;align-items:center;padding:8px 12px;background:linear-gradient(90deg,#FF451110,transparent 40%);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;";
   var _flameP = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
   discBanner.innerHTML =
     "<svg viewBox='0 0 44 56' width='10' height='13' fill='#FF4511' style='opacity:0.6;margin-right:8px;flex-shrink:0;'><path d='" + _flameP + "'/></svg>" +
-    "<div style=\"font-family:'Oswald';font-weight:700;font-size:11px;color:#FF4511;letter-spacing:3px;flex:1;\">DISCARD</div>" +
+    "<div style=\"font-family:'Oswald';font-weight:700;font-size:10px;color:#FF4511;letter-spacing:3px;flex:1;\">DISCARD</div>" +
     "<div id='disc-hint' style=\"font-family:'Rajdhani';font-weight:600;font-size:9px;color:#888;\">Tap to mark</div>";
   wrap.insertBefore(discBanner, wrap.firstChild.nextSibling); // After header
 

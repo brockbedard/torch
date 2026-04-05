@@ -58,20 +58,21 @@ const CSS = `
 .T{height:100%;display:flex;flex-direction:column;background:#0A0804;overflow:hidden;position:relative;font-family:'Barlow Condensed',sans-serif;padding-top:env(safe-area-inset-top,0px)}
 
 /* scoreboard — jumbotron */
-.T-sb{background:#080808;overflow:hidden;flex-shrink:0;z-index:60;margin-bottom:6px}
-.T-sb-led{height:2px}
+.T-sb{background:#141008;overflow:hidden;flex-shrink:0;z-index:60;margin-bottom:6px;box-shadow:0 2px 8px rgba(0,0,0,0.3);transition:opacity 0.2s}
+.T-sb-dim{opacity:0.7}
+.T-sb-led{height:2px;position:relative;z-index:1}
 .T-sb-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch}
 .T-sb-panel{padding:8px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.T-sb-panel-home{border-right:1px solid #1a1a1a}
-.T-sb-panel-away{border-left:1px solid #1a1a1a}
+.T-sb-panel-home{border-right:1px solid rgba(255,255,255,0.08)}
+.T-sb-panel-away{border-left:1px solid rgba(255,255,255,0.08)}
 .T-sb-name{font-family:'Oswald',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;line-height:1;white-space:nowrap}
 .T-sb-score{font-family:'Teko';font-weight:900;font-size:42px;line-height:0.9;color:#fff;transition:transform 0.2s;animation:segFlicker 4s ease-in-out infinite}
 .T-sb-poss-dot{width:4px;height:4px;border-radius:50%;margin-top:3px}
 .T-sb-center{padding:6px 14px;background:#0a0a0a;min-width:80px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.T-sb-half{font-family:'Rajdhani';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:2px;line-height:1}
+.T-sb-half{font-family:'Rajdhani';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:2px;line-height:1;background:rgba(235,176,16,0.06);border:1px solid rgba(235,176,16,0.12);border-radius:4px;padding:2px 8px}
 .T-sb-snap{font-family:'Teko';font-weight:700;font-size:18px;color:#aaa;line-height:1;margin-top:2px;animation:segFlicker 5s ease-in-out 2.3s infinite}
 .T-sb-divider{display:none}
-.T-sb-down{font-family:'Oswald',sans-serif;font-weight:700;font-size:11px;color:#FF6B00;letter-spacing:1px;line-height:1}
+.T-sb-down{font-family:'Oswald',sans-serif;font-weight:700;font-size:13px;color:#FF6B00;letter-spacing:1px;line-height:1}
 .T-sb-ball{font-family:'Rajdhani';font-weight:600;font-size:10px;color:#888;letter-spacing:0.5px;margin-top:1px}
 .T-sb-clock{font-family:'Teko';font-weight:900;font-size:28px;line-height:1}
 .T-sb-clock-label{font-family:'Rajdhani';font-weight:700;font-size:9px;color:#e03050;letter-spacing:2px;opacity:0.7}
@@ -81,7 +82,7 @@ const CSS = `
 @keyframes urgentPulse{0%,100%{border-color:#e0305044;background:rgba(224,48,80,0.03)}50%{border-color:#e0305088;background:rgba(224,48,80,0.06)}}
 
 /* TORCH points banner */
-.T-torch-banner{flex-shrink:0;display:flex;flex-direction:column}
+.T-torch-banner{flex-shrink:0;display:flex;flex-direction:column;box-shadow:0 4px 12px rgba(78,50,23,0.3)}
 .T-torch-banner-border{height:2px;background:linear-gradient(90deg,#8B4A1F,#EBB010,#FFD060,#EBB010,#8B4A1F);background-size:200% 100%;animation:borderFlow 3s linear infinite}
 @keyframes borderFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 .T-torch-banner-content{background:linear-gradient(180deg,#1a1208 0%,#0a0804 40%,#0a0804 60%,#1a1208 100%);padding:8px 14px;display:flex;align-items:center;justify-content:center;gap:8px;position:relative}
@@ -100,9 +101,9 @@ const CSS = `
 .T-drive-hdr-r{font-family:'Rajdhani';font-size:12px;font-weight:600;color:#aaa;line-height:1}
 .T-drive-hdr-r span{color:#fff}
 .T-drive-row{display:flex;align-items:center;gap:4px;padding:3px 0;font-size:12px;transition:opacity .3s}
-.T-drive-row-dd{font-family:'Teko';font-size:11px;color:#5a5a5a;min-width:52px;flex-shrink:0}
-.T-drive-row-play{font-family:'Rajdhani';font-size:12px;color:#fff;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.T-drive-row-res{font-family:'Teko';font-weight:700;font-size:14px;min-width:40px;text-align:right;flex-shrink:0}
+.T-drive-row-dd{font-family:'Teko';font-size:11px;color:#888;min-width:52px;flex-shrink:0}
+.T-drive-row-play{font-family:'Rajdhani';font-size:12px;color:#bbb;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.T-drive-row-res{font-family:'Teko';font-weight:700;font-size:15px;min-width:40px;text-align:right;flex-shrink:0}
 .T-drive-stats{border-top:1px solid #2a2a2a;margin-top:10px;padding-top:8px;display:flex;gap:20px}
 .T-drive-stat{font-family:'Rajdhani';font-size:13px;font-weight:600;color:#fff}
 .T-drive-comm{margin-top:8px;font-family:'Rajdhani';font-size:13px;font-weight:700;color:#e8e6ff;line-height:1.3;letter-spacing:.3px}
@@ -110,7 +111,7 @@ const CSS = `
 .T-drive-idle{font-family:'Rajdhani';font-size:11px;color:#666;letter-spacing:.5px;margin-top:8px}
 
 /* field strip — Tecmo Bowl inspired */
-.T-strip{height:136px;flex-shrink:0;position:relative;background:#050a08;overflow:hidden;border-bottom:1px solid #1E1610}
+.T-strip{height:136px;flex-shrink:0;position:relative;background:#050a08;overflow:hidden;border-bottom:1px solid #1E1610;box-shadow:inset 0 8px 16px rgba(0,0,0,0.4),inset 0 -8px 16px rgba(0,0,0,0.4)}
 .T-field-turf{display:none}
 .T-yard{display:none}
 .T-yard-5{display:none}
@@ -279,7 +280,7 @@ const CSS = `
 @keyframes pulseHint{0%,100%{opacity:0.5}50%{opacity:1}}
 @keyframes floatCard{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 .T-clash-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;pointer-events:auto}
-.T-clash-dim{position:absolute;inset:0;background:#0A0804;transition:opacity 0.3s}
+.T-clash-dim{position:absolute;inset:0;background:rgba(10,8,4,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:opacity 0.3s}
 .T-clash-result{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:6px}
 .T-clash-yds{font-family:'Teko';font-weight:700;font-size:64px;line-height:1;text-shadow:0 0 24px currentColor;animation:T-clash-yds 0.6s cubic-bezier(0.22,1.3,0.36,1) both}
 .T-clash-label{font-family:'Rajdhani';font-weight:700;font-size:14px;letter-spacing:1px;opacity:0.8}
@@ -861,10 +862,12 @@ export function buildGameplay() {
     const ctHasBall = s.possession === 'CT';
     const possTeam = ctHasBall ? ct : ir;
 
-    // ── LED bars (dynamic team color gradient) ──
+    // ── LED bars (dynamic team color gradient + downward glow) ──
     var ledGrad = 'linear-gradient(90deg, ' + ct.accent + ', #EBB010, ' + ir.accent + ')';
     _bugEls.ledTop.style.background = ledGrad;
+    _bugEls.ledTop.style.boxShadow = '0 4px 12px ' + possTeam.accent + '33';
     _bugEls.ledBot.style.background = ledGrad;
+    _bugEls.ledBot.style.boxShadow = '0 -4px 12px ' + possTeam.accent + '33';
 
     // ── Scores ──
     _bugEls.ctScoreEl.textContent = s.ctScore;
@@ -874,10 +877,16 @@ export function buildGameplay() {
     var hScore = s.ctScore;
     var cScore = s.irScore;
     if (hScore !== _prevHScore && _prevHScore >= 0) {
-      try { gsap.fromTo(_bugEls.ctScoreEl, { scale: 1.3, color: '#00ff44' }, { scale: 1, color: '#fff', duration: 0.4, ease: 'back.out(1.5)' }); } catch(e) {}
+      try {
+        gsap.fromTo(_bugEls.ctScoreEl, { scale: 1.15, color: '#00ff44' }, { scale: 1, color: '#fff', duration: 0.3, ease: 'back.out(2)' });
+        gsap.fromTo(_bugEls.ctScoreEl, { textShadow: '0 0 16px rgba(0,255,68,0.6)' }, { textShadow: '0 0 0px rgba(0,255,68,0)', duration: 0.5 });
+      } catch(e) {}
     }
     if (cScore !== _prevCScore && _prevCScore >= 0) {
-      try { gsap.fromTo(_bugEls.irScoreEl, { scale: 1.3, color: '#ff0040' }, { scale: 1, color: '#fff', duration: 0.4, ease: 'back.out(1.5)' }); } catch(e) {}
+      try {
+        gsap.fromTo(_bugEls.irScoreEl, { scale: 1.15, color: '#ff0040' }, { scale: 1, color: '#fff', duration: 0.3, ease: 'back.out(2)' });
+        gsap.fromTo(_bugEls.irScoreEl, { textShadow: '0 0 16px rgba(255,0,64,0.6)' }, { textShadow: '0 0 0px rgba(255,0,64,0)', duration: 0.5 });
+      } catch(e) {}
     }
     _prevHScore = hScore;
     _prevCScore = cScore;
@@ -1887,7 +1896,7 @@ export function buildGameplay() {
 
     // Bubble
     var bubble = document.createElement('div');
-    bubble.style.cssText = "position:fixed;z-index:802;max-width:260px;background:rgba(10,8,4,0.95);border:1px solid #1a1a1a;border-left:3px solid #FF4511;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.6);font-family:'Rajdhani';font-weight:600;font-size:13px;color:#fff;line-height:1.3;pointer-events:none;";
+    bubble.style.cssText = "position:fixed;z-index:802;max-width:260px;background:rgba(10,8,4,0.95);border:1px solid rgba(255,255,255,0.08);border-left:3px solid #FF4511;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.6);font-family:'Rajdhani';font-weight:600;font-size:13px;color:#fff;line-height:1.3;pointer-events:none;";
     bubble.textContent = text;
 
     // Position bubble near target
@@ -2272,6 +2281,9 @@ export function buildGameplay() {
   // ── RENDER PANEL ──
   function drawPanel() {
     panel.innerHTML = '';
+    // Dim scorebug during selection, restore during snap
+    if (phase === 'busy') bug.classList.remove('T-sb-dim');
+    else bug.classList.add('T-sb-dim');
     const isOff = gs.possession === hAbbr;
     const sides = gs.getCurrentSides();
     // Filter out OL/DL — only show skill position players, then take 4
@@ -2289,20 +2301,29 @@ export function buildGameplay() {
     if (phase === 'busy') { panel.className = 'T-panel T-panel-hidden'; return; }
     panel.className = 'T-panel ' + (isOff ? 'T-panel-off' : 'T-panel-def');
 
-    // Panel header — side-of-ball branded
+    // Panel header — slot status indicator
     var panelHdr = document.createElement('div');
     var _sideColor = isOff ? '#00ff44' : '#4DA6FF';
-    var _sideLabel = isOff ? 'YOUR OFFENSE' : 'YOUR DEFENSE';
-    var _phasePill = '';
-    if (phase === 'play') _phasePill = "<span style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#EBB010;letter-spacing:1px;padding:2px 6px;border-radius:3px;border:1px solid #EBB01033;\">SELECT PLAY</span>";
-    else if (phase === 'player') _phasePill = "<span style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#4DA6FF;letter-spacing:1px;padding:2px 6px;border-radius:3px;border:1px solid #4DA6FF33;\">SELECT PLAYER</span>";
-    else if (phase === 'torch') _phasePill = "<span style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#FF4511;letter-spacing:1px;padding:2px 6px;border-radius:3px;border:1px solid #FF451133;\">TORCH CARD</span>";
-    else if (selPl && selP) _phasePill = "<span style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#00ff44;letter-spacing:1px;padding:2px 6px;border-radius:3px;border:1px solid #00ff4444;background:#00ff4410;\">READY</span>";
-    panelHdr.style.cssText = 'display:flex;align-items:center;padding:8px 12px;background:linear-gradient(90deg,' + _sideColor + '08,transparent 40%);border-top:2px solid ' + _sideColor + '44;border-bottom:1px solid #1a1a1a;flex-shrink:0;';
+
+    // Build slot indicator pills
+    var _slotPlay = selPl
+      ? "background:rgba(0,255,68,0.08);border:1px solid rgba(0,255,68,0.2);color:rgba(0,255,68,0.6);"
+      : "background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.15);";
+    var _slotPlayer = selP
+      ? "background:rgba(77,166,255,0.08);border:1px solid rgba(77,166,255,0.2);color:rgba(77,166,255,0.6);"
+      : "background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.15);";
+    var _slotTorch = selectedPreSnap
+      ? "background:rgba(255,69,17,0.08);border:1px solid rgba(255,69,17,0.2);color:rgba(255,69,17,0.6);"
+      : "background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.15);";
+    var _slotStyle = "display:inline-flex;align-items:center;padding:3px 10px;border-radius:4px;font-family:'Rajdhani';font-weight:700;font-size:8px;letter-spacing:1.5px;";
+
+    panelHdr.style.cssText = 'display:flex;align-items:center;justify-content:center;padding:6px 12px;background:linear-gradient(90deg,' + _sideColor + '04,transparent 40%);border-top:2px solid ' + _sideColor + '44;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;position:relative;';
     panelHdr.innerHTML =
-      '<div style="width:12px;height:2px;background:' + _sideColor + ';border-radius:1px;margin-right:8px;"></div>' +
-      "<div style=\"font-family:'Oswald';font-weight:700;font-size:12px;color:" + _sideColor + ";letter-spacing:3px;flex:1;\">" + _sideLabel + '</div>' +
-      _phasePill;
+      '<div style="display:flex;align-items:center;gap:6px;">' +
+        '<div style="' + _slotStyle + _slotPlay + '">PLAY</div>' +
+        '<div style="' + _slotStyle + _slotPlayer + '">PLAYER</div>' +
+        '<div style="' + _slotStyle + _slotTorch + '">TORCH</div>' +
+      '</div>';
     panel.appendChild(panelHdr);
 
     // 2min check + close game crowd
@@ -2488,7 +2509,7 @@ export function buildGameplay() {
     var hint = FEATURES.smartHighlights ? getSituationalHint(gs) : null;
     if (hint && phase === 'play' && !selPl) {
       var hintEl = document.createElement('div');
-      hintEl.style.cssText = "text-align:center;padding:3px 8px;font-family:'Rajdhani';font-weight:700;font-size:10px;color:" + hint.color + ";letter-spacing:1px;opacity:0.5;";
+      hintEl.style.cssText = "text-align:center;padding:3px 10px;font-family:'Rajdhani';font-weight:700;font-size:10px;color:" + hint.color + ";letter-spacing:1px;opacity:0.6;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:4px;display:inline-block;margin:0 auto;";
       hintEl.textContent = hint.text;
       panel.appendChild(hintEl);
     }
@@ -4407,6 +4428,17 @@ export function buildGameplay() {
       resetDriveDiscards(newHs);
       _driveHeat = 0; drawDriveHeat();
       _driveCardsUsed = [];
+      // Crossfade the card tray on possession change
+      try {
+        var trayEl = panel.querySelector('.CT-wrap');
+        if (trayEl) {
+          gsap.to(trayEl, { opacity: 0, y: 4, duration: 0.15, onComplete: function() {
+            drawPanel();
+            var newTray = panel.querySelector('.CT-wrap');
+            if (newTray) { newTray.style.opacity = '0'; newTray.style.transform = 'translateY(4px)'; gsap.to(newTray, { opacity: 1, y: 0, duration: 0.2, ease: 'power2.out' }); }
+          }});
+        }
+      } catch(e) {}
     }
     phase = 'play';
     selP = null; selPl = null; selTorch = null; selectedPreSnap = null;

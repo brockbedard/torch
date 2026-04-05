@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TORCH — Slot Status Indicator Mockup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&family=Oswald:wght@500;600;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0A0804;
+    color: #f0ece4;
+    font-family: 'Rajdhani', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    gap: 40px;
+  }
+  h2 { font-family: 'Teko'; font-weight: 700; font-size: 18px; letter-spacing: 3px; color: #EBB010; }
+  .label { font-family: 'Rajdhani'; font-size: 10px; color: #555; letter-spacing: 1px; margin-bottom: 6px; }
+  .phone {
+    width: 375px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0A0804;
+  }
+
+  /* Panel header — where the indicator lives */
+  .panel-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    gap: 16px;
+    position: relative;
+  }
+  .panel-hdr-off { border-top: 2px solid #00ff44; background: linear-gradient(90deg, rgba(0,255,68,0.04), transparent 40%); }
+  .panel-hdr-def { border-top: 2px solid #4DA6FF; background: linear-gradient(90deg, rgba(77,166,255,0.04), transparent 40%); }
+
+  /* Slot indicator strip */
+  .slots {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .slot {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-family: 'Rajdhani';
+    font-weight: 700;
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    transition: all 0.2s;
+  }
+  .slot-empty {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.15);
+  }
+  .slot-filled-play {
+    background: rgba(0,255,68,0.08);
+    border: 1px solid rgba(0,255,68,0.2);
+    color: rgba(0,255,68,0.6);
+  }
+  .slot-filled-player {
+    background: rgba(77,166,255,0.08);
+    border: 1px solid rgba(77,166,255,0.2);
+    color: rgba(77,166,255,0.6);
+  }
+  .slot-filled-torch {
+    background: rgba(255,69,17,0.08);
+    border: 1px solid rgba(255,69,17,0.2);
+    color: rgba(255,69,17,0.6);
+  }
+
+  /* Dot variant (minimal) */
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    transition: all 0.2s;
+  }
+  .dot-empty { background: rgba(255,255,255,0.08); }
+  .dot-play { background: #00ff44; box-shadow: 0 0 6px rgba(0,255,68,0.3); }
+  .dot-player { background: #4DA6FF; box-shadow: 0 0 6px rgba(77,166,255,0.3); }
+  .dot-torch { background: #FF4511; box-shadow: 0 0 6px rgba(255,69,17,0.3); }
+
+  /* Pip variant (bars) */
+  .pip {
+    width: 24px;
+    height: 3px;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .pip-empty { background: rgba(255,255,255,0.06); }
+  .pip-play { background: #00ff44; box-shadow: 0 0 8px rgba(0,255,68,0.2); }
+  .pip-player { background: #4DA6FF; box-shadow: 0 0 8px rgba(77,166,255,0.2); }
+  .pip-torch { background: #FF4511; box-shadow: 0 0 8px rgba(255,69,17,0.2); }
+
+  /* Discard (right side) */
+  .discard-btn {
+    position: absolute;
+    right: 12px;
+    font-family: 'Rajdhani';
+    font-weight: 700;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: #888;
+    padding: 3px 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    cursor: pointer;
+    background: transparent;
+  }
+
+  /* Card tray header (simplified) */
+  .tray-hdr {
+    display: flex;
+    align-items: center;
+    padding: 3px 8px 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,107,0,0.04), transparent);
+  }
+  .tray-team {
+    font-family: 'Teko';
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 3px;
+    flex: 1;
+  }
+
+  /* Color bars replacing PLAYS/PLAYERS labels */
+  .color-bar {
+    height: 2px;
+    margin: 2px 6px;
+    border-radius: 1px;
+    opacity: 0.4;
+  }
+
+  /* Fake card row */
+  .card-row {
+    display: flex;
+    gap: 3px;
+    padding: 2px 6px;
+  }
+  .card {
+    flex: 1;
+    height: 90px;
+    border-radius: 6px;
+    border: 1.5px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.02);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Rajdhani';
+    font-size: 8px;
+    color: #333;
+    letter-spacing: 0.5px;
+  }
+
+  /* Snap button */
+  .snap-btn {
+    display: flex;
+    align-items: center;
+    margin: 4px 6px 8px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: none;
+    cursor: pointer;
+  }
+  .snap-active { background: linear-gradient(180deg, #EBB010, #FF4511); box-shadow: 0 4px 12px rgba(78,50,23,0.4); }
+  .snap-inactive { background: linear-gradient(180deg, #EBB010, #FF4511); opacity: 0.35; }
+  .snap-badge { background: rgba(0,0,0,0.2); padding: 10px 12px; border-right: 1px solid rgba(0,0,0,0.15); }
+  .snap-badge svg { display: block; }
+  .snap-text { flex: 1; padding: 10px; font-family: 'Teko'; font-weight: 700; font-size: 18px; color: #fff; letter-spacing: 5px; text-align: center; }
+
+  .section { margin-bottom: 12px; }
+  .divider { height: 1px; background: rgba(255,255,255,0.04); margin: 24px 0; width: 375px; }
+  .note { font-size: 11px; color: #555; max-width: 375px; line-height: 1.4; padding: 0 8px; }
+</style>
+</head>
+<body>
+
+<h2>SLOT STATUS INDICATOR — MOCKUP</h2>
+
+<!-- ======== OPTION A: Labeled Pills ======== -->
+<div class="section">
+  <div class="label">OPTION A — LABELED PILLS</div>
+</div>
+
+<!-- State 1: Nothing selected (offense) -->
+<div class="phone">
+  <div class="label" style="padding:6px 8px;color:#333;">Nothing selected — offense</div>
+  <div class="panel-hdr panel-hdr-off">
+    <div class="slots">
+      <div class="slot slot-empty">PLAY</div>
+      <div class="slot slot-empty">PLAYER</div>
+      <div class="slot slot-empty">TORCH</div>
+    </div>
+    <div class="discard-btn">DISCARD</div>
+  </div>
+  <div class="tray-hdr"><div class="tray-team" style="color:#00ff44;">SERPENTS</div></div>
+  <div class="color-bar" style="background:#00ff44;"></div>
+  <div class="card-row">
+    <div class="card">SLANT</div><div class="card">MESH</div><div class="card">DRAW</div><div class="card">DEEP POST</div>
+  </div>
+  <div class="color-bar" style="background:#4DA6FF;"></div>
+  <div class="card-row">
+    <div class="card">QB</div><div class="card">WR</div><div class="card">RB</div><div class="card">TE</div>
+  </div>
+  <div class="snap-btn snap-inactive"><div class="snap-badge"><svg viewBox="0 0 44 56" width="14" height="18" fill="#fff"><path d="M22 0C22 0 44 18 44 35C44 47 34 56 22 56C10 56 0 47 0 35C0 18 22 0 22 0Z"/></svg></div><div class="snap-text">SNAP</div></div>
+</div>
+
+<!-- State 2: Play selected -->
+<div class="phone" style="margin-top:16px;">
+  <div class="label" style="padding:6px 8px;color:#333;">Play selected, player empty</div>
+  <div class="panel-hdr panel-hdr-off">
+    <div class="slots">
+      <div class="slot slot-filled-play">PLAY</div>
+      <div class="slot slot-empty">PLAYER</div>
+      <div class="slot slot-empty">TORCH</div>
+    </div>
+    <div class="discard-btn">DISCARD</div>
+  </div>
+  <div class="tray-hdr"><div class="tray-team" style="color:#00ff44;">SERPENTS</div></div>
+  <div class="color-bar" style="background:#00ff44;"></div>
+  <div class="card-row">
+    <div class="card" style="opacity:0.3;">SLANT</div><div class="card">MESH</div><div class="card">DRAW</div><div class="card">DEEP POST</div>
+  </div>
+  <div class="color-bar" style="background:#4DA6FF;"></div>
+  <div class="card-row">
+    <div class="card">QB</div><div class="card">WR</div><div class="card">RB</div><div class="card">TE</div>
+  </div>
+  <div class="snap-btn snap-inactive"><div class="snap-badge"><svg viewBox="0 0 44 56" width="14" height="18" fill="#fff"><path d="M22 0C22 0 44 18 44 35C44 47 34 56 22 56C10 56 0 47 0 35C0 18 22 0 22 0Z"/></svg></div><div class="snap-text">SNAP</div></div>
+</div>
+
+<!-- State 3: Both selected — ready -->
+<div class="phone" style="margin-top:16px;">
+  <div class="label" style="padding:6px 8px;color:#333;">Both selected — SNAP active</div>
+  <div class="panel-hdr panel-hdr-off">
+    <div class="slots">
+      <div class="slot slot-filled-play">PLAY</div>
+      <div class="slot slot-filled-player">PLAYER</div>
+      <div class="slot slot-empty">TORCH</div>
+    </div>
+    <div class="discard-btn">DISCARD</div>
+  </div>
+  <div class="tray-hdr"><div class="tray-team" style="color:#00ff44;">SERPENTS</div></div>
+  <div class="color-bar" style="background:#00ff44;"></div>
+  <div class="card-row">
+    <div class="card" style="opacity:0.3;">SLANT</div><div class="card">MESH</div><div class="card">DRAW</div><div class="card">DEEP POST</div>
+  </div>
+  <div class="color-bar" style="background:#4DA6FF;"></div>
+  <div class="card-row">
+    <div class="card">QB</div><div class="card" style="opacity:0.3;">WR</div><div class="card">RB</div><div class="card">TE</div>
+  </div>
+  <div class="snap-btn snap-active"><div class="snap-badge"><svg viewBox="0 0 44 56" width="14" height="18" fill="#fff"><path d="M22 0C22 0 44 18 44 35C44 47 34 56 22 56C10 56 0 47 0 35C0 18 22 0 22 0Z"/></svg></div><div class="snap-text">SNAP</div></div>
+</div>
+
+<!-- State 4: All three filled -->
+<div class="phone" style="margin-top:16px;">
+  <div class="label" style="padding:6px 8px;color:#333;">All three filled — torch card added</div>
+  <div class="panel-hdr panel-hdr-off">
+    <div class="slots">
+      <div class="slot slot-filled-play">PLAY</div>
+      <div class="slot slot-filled-player">PLAYER</div>
+      <div class="slot slot-filled-torch">TORCH</div>
+    </div>
+    <div class="discard-btn">DISCARD</div>
+  </div>
+  <div class="tray-hdr"><div class="tray-team" style="color:#00ff44;">SERPENTS</div></div>
+  <div class="color-bar" style="background:#00ff44;"></div>
+  <div class="card-row">
+    <div class="card" style="opacity:0.3;">SLANT</div><div class="card">MESH</div><div class="card">DRAW</div><div class="card">DEEP POST</div>
+  </div>
+  <div class="color-bar" style="background:#4DA6FF;"></div>
+  <div class="card-row">
+    <div class="card">QB</div><div class="card" style="opacity:0.3;">WR</div><div class="card">RB</div><div class="card">TE</div>
+  </div>
+  <div class="snap-btn snap-active"><div class="snap-badge"><svg viewBox="0 0 44 56" width="14" height="18" fill="#fff"><path d="M22 0C22 0 44 18 44 35C44 47 34 56 22 56C10 56 0 47 0 35C0 18 22 0 22 0Z"/></svg></div><div class="snap-text">SNAP</div></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ======== OPTION B: Dots Only (minimal) ======== -->
+<div class="section">
+  <div class="label">OPTION B — DOTS ONLY (MINIMAL)</div>
+</div>
+
+<div class="phone">
+  <div class="label" style="padding:6px 8px;color:#333;">Nothing selected</div>
+  <div class="panel-hdr panel-hdr-def">
+    <div class="slots" style="gap:8px;">
+      <div class="dot dot-empty"></div>
+      <div class="dot dot-empty"></div>
+      <div class="dot dot-empty"></div>
+    </div>
+    <div class="discard-btn">DISCARD</div>
+  </div>
+  <div class="tray-hdr"><div class="tray-team" style="color:#4DA6FF;">SERPENTS</div></div>
+  <div class="color-bar" style="background:#4DA6FF;"></div>
+  <div class="card-row">
+    <div class="card">COVER 3</div><div class="card">MAN FREE</div><div class="card">BLITZ</div><div class="card">ZONE</div>
+  </div>
+  <div class="color-bar" style="background:#4DA6FF;opacity:0.2;"></div>
+  <div class="card-row">
+    <div class="card">CB</div><div class="card">S</div><div class="card">LB</div><div class="card">CB</div>
+  </div>
+  <div class="snap-btn snap-inactive"><div class="snap-badge"><svg viewBox="0 0 44 56" width="14" height="18" fill="#fff"><path d="M22 0C22 0 44 18 44 35C44 47 34 56 22 56C10 56 0 47 0 35C0 18 22 0 22 0Z"/></svg></div><div class="snap-text">SNAP</div></div>
+</div>
+
+<div class="phone" style="margin-top:16px;">
+  <div class="label" style="padding:6px 8px;color:#333;">Play + player selected — defense</div>
+  <div class="panel-hdr panel-hdr-def">
+    <div class="slots" style="gap:8px;">
+      <div class="dot dot-play"></div>
+      <div class="dot dot-player"></div>
+      <div class="dot dot-empty"></div>
+    </div>
+    <div class="discard-btn">DISCARD</div>
+  </div>
+  <div class="tray-hdr"><div class="tray-team" style="color:#4DA6FF;">SERPENTS</div></div>
+  <div class="color-bar" style="background:#4DA6FF;"></div>
+  <div class="card-row">
+    <div class="card" style="opacity:0.3;">COVER 3</div><div class="card">MAN FREE</div><div class="card">BLITZ</div><div class="card">ZONE</div>
+  </div>
+  <div class="color-bar" style="background:#4DA6FF;opacity:0.2;"></div>
+  <div class="card-row">
+    <div class="card">CB</div><div class="card" style="opacity:0.3;">S</div><div class="card">LB</div><div class="card">CB</div>
+  </div>
+  <div class="snap-btn snap-active"><div class="snap-badge"><svg viewBox="0 0 44 56" width="14" height="18" fill="#fff"><path d="M22 0C22 0 44 18 44 35C44 47 34 56 22 56C10 56 0 47 0 35C0 18 22 0 22 0Z"/></svg></div><div class="snap-text">SNAP</div></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ======== OPTION C: Pips (bars) ======== -->
+<div class="section">
+  <div class="label">OPTION C — PIPS (BARS)</div>
+</div>
+
+<div class="phone">
+  <div class="label" style="padding:6px 8px;color:#333;">Play selected only — offense</div>
+  <div class="panel-hdr panel-hdr-off">
+    <div class="slots" style="gap:4px;">
+      <div class="pip pip-play"></div>
+      <div class="pip pip-empty"></div>
+      <div class="pip pip-empty"></div>
+    </div>
+    <div class="discard-btn">DISCARD</div>
+  </div>
+  <div class="tray-hdr"><div class="tray-team" style="color:#00ff44;">BOARS</div></div>
+  <div class="color-bar" style="background:#00ff44;"></div>
+  <div class="card-row">
+    <div class="card" style="opacity:0.3;">POWER</div><div class="card">DIVE</div><div class="card">SWEEP</div><div class="card">PA POST</div>
+  </div>
+  <div class="color-bar" style="background:#4DA6FF;"></div>
+  <div class="card-row">
+    <div class="card">RB</div><div class="card">QB</div><div class="card">WR</div><div class="card">TE</div>
+  </div>
+  <div class="snap-btn snap-inactive"><div class="snap-badge"><svg viewBox="0 0 44 56" width="14" height="18" fill="#fff"><path d="M22 0C22 0 44 18 44 35C44 47 34 56 22 56C10 56 0 47 0 35C0 18 22 0 22 0Z"/></svg></div><div class="snap-text">SNAP</div></div>
+</div>
+
+<div class="divider"></div>
+<div class="note">
+  <strong>How it works:</strong> Each slot represents a card type (play, player, torch). Dims when empty, lights up in its color when filled. No text instructions — the SNAP button becoming active is the "ready" signal. Works regardless of selection order. Torch slot stays dim if no torch card is used (optional slot).
+</div>
+
+<div style="height:40px;"></div>
+</body>
+</html>

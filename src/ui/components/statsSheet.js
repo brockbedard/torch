@@ -40,7 +40,7 @@ export function showStatsSheet(parentEl, stats) {
   ];
 
   var rowsHtml = rows.map(function(r, i) {
-    var border = i < rows.length - 1 ? 'border-bottom:1px solid #1a1a1a;' : '';
+    var border = i < rows.length - 1 ? 'border-bottom:1px solid rgba(255,255,255,0.08);' : '';
     return "<div style=\"display:flex;align-items:center;" + border + "padding:8px 0;\">" +
       "<div style=\"font-family:'Rajdhani';font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;width:70px;flex-shrink:0;\">" + r.label + "</div>" +
       "<div style=\"font-family:'Rajdhani';font-size:13px;font-weight:700;color:#eee;flex:1;text-align:center;\">" + r.human + "</div>" +

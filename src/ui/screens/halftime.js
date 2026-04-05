@@ -52,7 +52,7 @@ export function buildHalftime() {
 
   // ── SCORE PANEL — jumbotron ──
   var scorePanel = document.createElement('div');
-  scorePanel.style.cssText = 'display:flex;align-items:center;width:100%;max-width:340px;border-radius:8px;background:linear-gradient(180deg,#0e0a06,#080604);border:1px solid #1a1a1a;overflow:hidden;';
+  scorePanel.style.cssText = 'display:flex;align-items:center;width:100%;max-width:340px;border-radius:8px;background:linear-gradient(180deg,#0e0a06,#080604);border:1px solid rgba(255,255,255,0.08);overflow:hidden;';
 
   // Home team side
   scorePanel.innerHTML =
@@ -62,9 +62,9 @@ export function buildHalftime() {
       "<div style=\"font-family:'Teko';font-weight:700;font-size:36px;color:#fff;line-height:0.9;\">" + humanScore + '</div>' +
     '</div>' +
     '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 6px;">' +
-      '<div style="width:1px;height:20px;background:#1a1a1a;"></div>' +
+      '<div style="width:1px;height:20px;background:rgba(255,255,255,0.08);"></div>' +
       "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#333;letter-spacing:2px;\">HALF</div>" +
-      '<div style="width:1px;height:20px;background:#1a1a1a;"></div>' +
+      '<div style="width:1px;height:20px;background:rgba(255,255,255,0.08);"></div>' +
     '</div>' +
     '<div style="flex:1;padding:10px 8px;text-align:center;background:linear-gradient(180deg,' + oppColor + '08,transparent);">' +
       '<div style="display:flex;justify-content:center;">' + renderTeamBadge(GS.opponent, 32) + '</div>' +
@@ -81,10 +81,10 @@ export function buildHalftime() {
     { label: 'TURNOVERS', yours: st.ctTurnovers || 0, theirs: st.irTurnovers || 0 },
   ];
   var statStrip = document.createElement('div');
-  statStrip.style.cssText = 'display:flex;width:100%;max-width:340px;border-radius:6px;border:1px solid #1a1a1a;overflow:hidden;';
+  statStrip.style.cssText = 'display:flex;width:100%;max-width:340px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);overflow:hidden;';
   stats.forEach(function(s, i) {
     var cell = document.createElement('div');
-    cell.style.cssText = 'flex:1;padding:6px 4px;text-align:center;' + (i < stats.length - 1 ? 'border-right:1px solid #1a1a1a;' : '');
+    cell.style.cssText = 'flex:1;padding:6px 4px;text-align:center;' + (i < stats.length - 1 ? 'border-right:1px solid rgba(255,255,255,0.08);' : '');
     cell.innerHTML =
       "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:7px;color:#555;letter-spacing:1px;\">" + s.label + '</div>' +
       "<div style=\"font-family:'Teko';font-weight:700;font-size:16px;line-height:1;margin-top:2px;\">" +
@@ -116,16 +116,18 @@ export function buildHalftime() {
     var btn = document.createElement('div');
     var isSel = selectedAdj === adj.id;
     btn.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;cursor:pointer;transition:all 0.15s;' +
-      (isSel ? 'border:1.5px solid ' + adj.color + '66;background:' + adj.color + '08;box-shadow:0 0 12px ' + adj.color + '22;' : 'border:1.5px solid #1a1a1a;background:rgba(255,255,255,0.01);');
+      (isSel ? 'border:1.5px solid ' + adj.color + '66;background:' + adj.color + '08;box-shadow:0 0 12px ' + adj.color + '22,inset 0 0 16px ' + adj.color + '15;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);' : 'border:1.5px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.01);');
 
     btn.innerHTML =
       '<div style="width:3px;height:32px;border-radius:2px;background:' + adj.color + ';opacity:' + (isSel ? '1' : '0.3') + ';flex-shrink:0;"></div>' +
       '<div style="flex:1;">' +
-        "<div style=\"font-family:'Teko';font-weight:700;font-size:15px;color:" + (isSel ? adj.color : '#888') + ";letter-spacing:2px;\">" + adj.label + '</div>' +
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:16px;color:" + (isSel ? adj.color : '#888') + ";letter-spacing:2px;\">" + adj.label + '</div>' +
         "<div style=\"font-family:'Rajdhani';font-size:10px;color:" + (isSel ? '#bbb' : '#555') + ";line-height:1.3;\">" + adj.desc + '</div>' +
       '</div>' +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:" + (isSel ? adj.color : '#444') + ";max-width:80px;text-align:right;letter-spacing:0.3px;\">" + adj.effect + '</div>';
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:" + (isSel ? adj.color : '#444') + ";max-width:80px;text-align:right;letter-spacing:0.3px;\">" + adj.effect + '</div>';
 
+    btn.addEventListener('touchstart', function() { try { gsap.to(btn, { scale: 0.96, duration: 0.08 }); } catch(e) {} }, { passive: true });
+    btn.addEventListener('touchend', function() { try { gsap.to(btn, { scale: 1, duration: 0.15, ease: 'back.out(2)' }); } catch(e) {} }, { passive: true });
     btn.onclick = function() {
       SND.snap();
       selectedAdj = adj.id;
@@ -135,9 +137,11 @@ export function buildHalftime() {
       Array.from(adjBtns.children).forEach(function(child, i) {
         var a = ADJUSTMENTS[i];
         var sel = a.id === adj.id;
-        child.style.border = '1.5px solid ' + (sel ? a.color + '66' : '#1a1a1a');
+        child.style.border = '1.5px solid ' + (sel ? a.color + '66' : 'rgba(255,255,255,0.06)');
         child.style.background = sel ? a.color + '08' : 'rgba(255,255,255,0.01)';
-        child.style.boxShadow = sel ? '0 0 12px ' + a.color + '22' : 'none';
+        child.style.boxShadow = sel ? '0 0 12px ' + a.color + '22,inset 0 0 16px ' + a.color + '15' : 'none';
+        child.style.backdropFilter = sel ? 'blur(4px)' : 'none';
+        child.style.webkitBackdropFilter = sel ? 'blur(4px)' : 'none';
         var indicator = child.children[0];
         var infoDiv = child.children[1];
         var effectDiv = child.children[2];
@@ -201,7 +205,7 @@ export function buildHalftime() {
       cardSlot.onclick = function() {
         SND.click();
         var confirmOv = document.createElement('div');
-        confirmOv.style.cssText = 'position:fixed;inset:0;z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(10,8,4,0.92);pointer-events:auto;';
+        confirmOv.style.cssText = 'position:fixed;inset:0;z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(10,8,4,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);pointer-events:auto;';
         confirmOv.innerHTML =
           "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:" + tc + ";letter-spacing:3px;\">" + card.name + '</div>' +
           "<div style=\"font-family:'Rajdhani';font-size:13px;color:#999;text-align:center;max-width:260px;line-height:1.3;\">" + card.effect + '</div>' +
@@ -256,7 +260,7 @@ export function buildHalftime() {
         var htOv = document.createElement('div');
         htOv.style.cssText = 'position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.5);';
         var htBub = document.createElement('div');
-        htBub.style.cssText = "position:fixed;z-index:802;max-width:260px;background:rgba(10,8,4,0.95);border:1px solid #1a1a1a;border-left:3px solid #FF4511;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.6);font-family:'Rajdhani';font-weight:600;font-size:13px;color:#fff;line-height:1.3;";
+        htBub.style.cssText = "position:fixed;z-index:802;max-width:260px;background:rgba(10,8,4,0.95);border:1px solid rgba(255,255,255,0.08);border-left:3px solid #FF4511;border-radius:8px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.6);font-family:'Rajdhani';font-weight:600;font-size:13px;color:#fff;line-height:1.3;";
         htBub.textContent = 'Spend your TORCH points on new cards. These last the rest of the game.';
         // Position near the shop
         requestAnimationFrame(function() {

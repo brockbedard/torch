@@ -72,7 +72,7 @@ export function buildFlameBadgeButton(label, onClick, opts) {
   opts = opts || {};
   var btn = document.createElement('button');
   var bgGrad = opts.urgent ? 'linear-gradient(180deg,#e03050 0%,#8B0020 100%)' : 'linear-gradient(180deg,#EBB010 0%,#FF4511 100%)';
-  var shadowColor = opts.urgent ? 'rgba(224,48,80,0.3)' : 'rgba(255,69,17,0.3)';
+  var shadowColor = opts.urgent ? 'rgba(224,48,80,0.3)' : 'rgba(78,50,23,0.4)';
   btn.style.cssText = 'padding:0;border:none;border-radius:6px;background:' + bgGrad + ';display:flex;align-items:stretch;overflow:hidden;cursor:pointer;box-shadow:0 4px 16px ' + shadowColor + ',0 0 20px rgba(235,176,16,0.15);' + (opts.width ? 'width:' + opts.width + ';' : 'width:100%;') + (opts.breathe !== false ? 'animation:breatheGlow 2.5s ease-in-out infinite;' : '');
 
   var badge = document.createElement('div');

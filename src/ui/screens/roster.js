@@ -52,14 +52,14 @@ export function buildRoster() {
   function renderTabs() {
     var yActive = activeTab === 'yours';
     yourTab.style.cssText = 'flex:1;padding:8px;border-radius:6px;text-align:center;cursor:pointer;' +
-      (yActive ? 'background:linear-gradient(180deg,' + teamColor + '18,' + teamColor + '08);border:1.5px solid ' + teamColor + '66;' : 'background:rgba(255,255,255,0.02);border:1.5px solid #1a1a1a;opacity:0.5;');
+      (yActive ? 'background:linear-gradient(180deg,' + teamColor + '18,' + teamColor + '08);border:1.5px solid ' + teamColor + '66;' : 'background:rgba(255,255,255,0.02);border:1.5px solid rgba(255,255,255,0.06);opacity:0.5;');
     yourTab.innerHTML =
       "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:" + teamColor + ";letter-spacing:2px;\">" + team.name.toUpperCase() + "</div>" +
       "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:8px;color:" + (yActive ? teamColor + '88' : '#555') + ";letter-spacing:1px;\">YOUR TEAM</div>";
 
     var oActive = activeTab === 'opp';
     oppTab.style.cssText = 'flex:1;padding:8px;border-radius:6px;text-align:center;cursor:pointer;' +
-      (oActive ? 'background:linear-gradient(180deg,' + oppColor + '18,' + oppColor + '08);border:1.5px solid ' + oppColor + '66;' : 'background:rgba(255,255,255,0.02);border:1.5px solid #1a1a1a;opacity:0.5;');
+      (oActive ? 'background:linear-gradient(180deg,' + oppColor + '18,' + oppColor + '08);border:1.5px solid ' + oppColor + '66;' : 'background:rgba(255,255,255,0.02);border:1.5px solid rgba(255,255,255,0.06);opacity:0.5;');
     oppTab.innerHTML =
       "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:" + oppColor + ";letter-spacing:2px;\">" + opp.name.toUpperCase() + "</div>" +
       "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:8px;color:" + (oActive ? oppColor + '88' : '#555') + ";letter-spacing:1px;\">OPPONENT</div>";

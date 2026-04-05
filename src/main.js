@@ -35,6 +35,27 @@ import { buildTeamCreator } from './ui/screens/teamCreator.js';
 const root = document.getElementById('root');
 
 var _transitioning = false;
+var _prevScreen = null;
+
+// Screen order for directional transitions (forward = slide left, backward = slide right)
+var SCREEN_ORDER = ['home', 'teamSelect', 'roster', 'pregame', 'gameplay', 'halftime', 'gameplay2', 'end_game', 'seasonRecap'];
+
+function getScreenKey(gs) {
+  if (!gs) return 'home';
+  return gs.screen || 'home';
+}
+
+function getDirection(from, to) {
+  // Special cases: returning to home is always "back"
+  if (to === 'home' || !to) return 'back';
+  if (!from) return 'forward';
+  // settings/dailyDrive are lateral — use fade
+  if (from === 'settings' || to === 'settings' || from === 'dailyDrive' || to === 'dailyDrive') return 'fade';
+  var fi = SCREEN_ORDER.indexOf(from);
+  var ti = SCREEN_ORDER.indexOf(to);
+  if (fi < 0 || ti < 0) return 'fade';
+  return ti > fi ? 'forward' : 'back';
+}
 
 function render() {
   // Crowd audio managed by AudioStateManager.setState() per screen — don't kill it here
@@ -42,6 +63,7 @@ function render() {
   root.classList.remove('gp-2min');
   try { screen.orientation.lock('portrait').catch(function() {}); } catch (e) {}
   let content;
+  var currentScreen = getScreenKey(GS);
 
   // Dev-only routes — gated behind localStorage torch_dev flag
   // Enable via URL: ?dev (auto-sets flag) or console: localStorage.setItem('torch_dev','1')
@@ -79,28 +101,45 @@ function render() {
     root.appendChild(content);
     content.style.opacity = '1';
     root.scrollTop = 0;
+    _prevScreen = currentScreen;
     return;
   }
 
-  // Crossfade transition
+  // Directional transition
   _transitioning = true;
+  var dir = getDirection(_prevScreen, currentScreen);
   var oldContent = root.children[0];
+
+  // Exit animation for old content
+  var exitTransform = 'none';
+  if (dir === 'forward') exitTransform = 'translateX(-8%)';
+  else if (dir === 'back') exitTransform = 'translateX(8%)';
+
   if (oldContent) {
-    oldContent.style.transition = 'opacity 0.15s';
+    oldContent.style.transition = 'opacity 0.15s, transform 0.15s cubic-bezier(0.32,0,0.67,0)';
     oldContent.style.opacity = '0';
+    if (exitTransform !== 'none') oldContent.style.transform = exitTransform;
   }
+
+  // Enter animation for new content
+  var enterFrom = 'none';
+  if (dir === 'forward') enterFrom = 'translateX(8%)';
+  else if (dir === 'back') enterFrom = 'translateX(-8%)';
 
   setTimeout(function() {
     if (root.children[0] && root.children[0]._cleanup) try { root.children[0]._cleanup(); } catch(e) {}
     root.innerHTML = '';
     content.style.opacity = '0';
-    content.style.transition = 'opacity 0.2s';
+    if (enterFrom !== 'none') content.style.transform = enterFrom;
+    content.style.transition = 'opacity 0.2s, transform 0.2s cubic-bezier(0.33,1,0.68,1)';
     root.appendChild(content);
     root.scrollTop = 0;
-    // Force reflow then fade in
+    // Force reflow then animate in
     requestAnimationFrame(function() {
       content.style.opacity = '1';
+      content.style.transform = 'none';
       _transitioning = false;
+      _prevScreen = currentScreen;
     });
   }, 150); // Match the fade-out duration
 }

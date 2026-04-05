@@ -73,7 +73,7 @@ export function buildSeasonRecap() {
     var resultText = r.tied ? 'TIE' : r.won ? 'WIN' : 'LOSS';
 
     var row = document.createElement('div');
-    row.style.cssText = "display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.02);border:1px solid #1a1a1a;border-radius:6px;opacity:0;";
+    row.style.cssText = "display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:6px;opacity:0;";
     row.className = 'sr-game-row';
     row.innerHTML =
       "<div style='flex-shrink:0;'>" + renderTeamBadge(rowOppId, 28) + "</div>" +

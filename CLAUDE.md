@@ -4,7 +4,7 @@
 TORCH Football is a mobile card game (Balatro meets college football). 4 fictional college teams with distinct offensive schemes. Single-game format — each session is one game, TORCH points persist across games. Card-based play selection, personnel system with stars/traits, special teams burn deck, and TORCH points (score = wallet). Built with Vite + vanilla JS + GSAP, deployed on Vercel.
 
 ## Version
-**v0.31.0 "Engine Sync"** — Closed engine/UI gaps: momentum TORCH multiplier wired (1.1x at momentum 5), card combo and play sequence bonuses routed through engine pipeline (red zone compression, soft cap, TD check), star heat check feeds +2 yard bonus into snaps, haptics centralized via Haptic module (13 patterns replacing inline navigator.vibrate calls), stats persist across halftime, halftime screen no longer rebuilds on adjustment/purchase, "SCORES" grammar fix, TD celebration audio upgraded to longer crowd celebration samples.
+**v0.32.0 "Visual Polish"** — Design system formalization + 25 visual refinements from design.md audit. Design tokens (typography scale, color/surface system, animation vocabulary) added to style.css. Visual: warm text (#f0ece4), semi-transparent borders, backdrop blur overlays, multi-layer card shadows, field strip vignette, scorebug elevation + LED glow cast, frosted result overlay, ghost pill badges, warm gold shadows, score micro-animation, directional screen transitions, card tray offense/defense color shift, possession crossfade. Gameplay: slot status indicator replaces phase pills, row labels replaced with color bars, tray header shortened to team name, scorebug dims during selection.
 
 ## Environments & Deployment
 
@@ -253,15 +253,79 @@ node --input-type=module -e "import { runGameSim } from './src/tests/gameSimTest
 ```
 
 ## Design System
+
+### Colors & Surfaces
 ```css
---bg: #0A0804;         /* Scorched black background */
---torch: #FF4511;      /* Brand, CTA */
---a-gold: #EBB010;     /* Warm Gold — titles, highlights */
---l-green: #00ff44;    /* Success, good for user */
---p-red: #ff0040;      /* Danger, bad for user */
+/* 4 elevation levels */
+--bg: #0A0804;           /* Deepest canvas */
+--bg-surface: #141008;   /* Cards, panels */
+--bg-raised: #1E1610;    /* Elevated elements */
+--bg-overlay: #281E14;   /* Modals, sheets */
+
+/* Accent colors */
+--torch: #FF4511;        /* Brand, CTA */
+--a-gold: #EBB010;       /* Warm Gold — titles, highlights */
+--l-green: #00ff44;      /* Success, good for user */
+--p-red: #ff0040;        /* Danger, bad for user */
+--cyan: #4DA6FF;         /* Defense, info */
+
+/* Text hierarchy */
+--text-primary: #ffffff;    --text-secondary: #bbbbbb;
+--text-muted: #888888;      --text-faint: #555555;
+
+/* Overlays */
+--overlay-heavy: rgba(10,8,4,0.95);   /* Modals, confirms */
+--overlay-medium: rgba(10,8,4,0.88);  /* Sheets, drawers */
+--overlay-light: rgba(0,0,0,0.5);     /* Scrims, backdrops */
+--overlay-subtle: rgba(0,0,0,0.3);    /* Hover states */
+
+/* Borders */
+--border-subtle: rgba(255,255,255,0.04);
+--border-default: rgba(255,255,255,0.08);
+--border-strong: rgba(255,255,255,0.15);
+
+/* Shadows */
+--shadow-card: 0 2px 8px rgba(0,0,0,0.3);
+--shadow-elevated: 0 8px 24px rgba(0,0,0,0.5);
+--shadow-dramatic: 0 12px 40px rgba(0,0,0,0.7);
+
+/* Radius: 3 stops only */
+--radius-sm: 4px;  --radius-md: 6px;  --radius-lg: 8px;
 ```
-Fonts: Teko (display), Rajdhani (UI/labels), Barlow Condensed (body).
 No emoji in UI. No blue outside defense card backs.
+
+### Typography
+Fonts: Teko (`--font-display`), Rajdhani (`--font-ui`), Barlow Condensed (`--font-body`), Oswald (`--font-label`).
+
+| Role | Class | Font | Size | Weight | Spacing | Use |
+|------|-------|------|------|--------|---------|-----|
+| Hero | `.t-hero` | Teko | 56px | 900 | 6px | Home title, gameplay drama |
+| Display | `.t-display` | Teko | 36px | 700 | 3px | Section headers, scores |
+| Title | `.t-title` | Teko | 24px | 700 | 2px | Screen/modal titles |
+| Heading | `.t-heading` | Teko | 18px | 700 | 2px | Card headers, large labels |
+| Body | `.t-body` | Rajdhani | 14px | 600 | 1px | Primary content |
+| Label | `.t-label` | Rajdhani | 11px | 700 | 1px | UI labels, buttons |
+| Caption | `.t-caption` | Rajdhani | 9px | 700 | 0.5px | Micro labels, badges |
+| Scheme | `.t-scheme` | Oswald | 11px | 700 | 2px | Team scheme labels |
+
+New code should use these classes or variables. Existing inline styles stay until touched for other reasons.
+
+### Animation Tokens
+```css
+/* Durations */
+--dur-instant: 0.1s;    /* Button feedback */
+--dur-fast: 0.2s;       /* State changes */
+--dur-normal: 0.3s;     /* Overlays, card moves */
+--dur-slow: 0.5s;       /* Celebrations, entrances */
+--dur-dramatic: 0.8s;   /* Hero moments, reveals */
+
+/* CSS easing (GSAP equivalents) */
+--ease-out: cubic-bezier(0.33, 1, 0.68, 1);       /* power2.out — entrances */
+--ease-in: cubic-bezier(0.32, 0, 0.67, 0);         /* power2.in — exits */
+--ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);  /* back.out(1.5) — cards */
+--ease-snap: cubic-bezier(0.22, 1, 0.36, 1);       /* power3.out — snappy */
+```
+GSAP easing vocabulary: `power2.out` (entrances), `power2.in` (exits), `back.out(1.5)` (cards/deal), `back.out(2.5)` (celebrations), `elastic.out` (rare, TD only).
 
 ## Personnel System (v0.27.0)
 
