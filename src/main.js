@@ -82,7 +82,7 @@ function render() {
       case 'dailyDrive': content = buildDailyDrive(); break;
       case 'roster': content = buildRoster(); break;
       case 'pregame': content = buildPregame(); break;
-      case 'gameplay': content = buildGameplay(); break;
+      case 'gameplay': try { content = buildGameplay(); } catch(e) { console.error('[TORCH] Gameplay build error:', e); } break;
       case 'halftime': content = buildHalftime(); break;
       case 'end_game': content = buildEndGame(); break;
       case 'seasonRecap': content = buildSeasonRecap(); break;
@@ -92,7 +92,7 @@ function render() {
     }
   }
 
-  if (!content) return;
+  if (!content) { console.warn('[TORCH] No content for screen:', currentScreen); _transitioning = false; return; }
 
   // First render or mid-transition: swap immediately
   if (root.children.length === 0 || _transitioning) {
@@ -141,6 +141,8 @@ function render() {
       _transitioning = false;
       _prevScreen = currentScreen;
     });
+    // Safety: ensure transitioning flag always resets
+    setTimeout(function() { _transitioning = false; _prevScreen = currentScreen; }, 500);
   }, 150); // Match the fade-out duration
 }
 

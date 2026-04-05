@@ -4,6 +4,7 @@
  * Fresh visual language — no reuse from prior versions.
  */
 
+import { gsap } from 'gsap';
 import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam, getOtherTeam, fmtClock, getOffCards, getDefCards, getDrawWeight, getSpeedMultiplier, FEATURES } from '../../state.js';
 import { GameState } from '../../engine/gameState.js';
@@ -63,10 +64,10 @@ const CSS = `
 .T-sb-led{height:2px;position:relative;z-index:1}
 .T-sb-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch}
 .T-sb-panel{padding:8px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.T-sb-panel-home{border-right:1px solid rgba(255,255,255,0.08)}
-.T-sb-panel-away{border-left:1px solid rgba(255,255,255,0.08)}
+.T-sb-panel-home{border-right:none;box-shadow:1px 0 0 rgba(255,255,255,0.06)}
+.T-sb-panel-away{border-left:none;box-shadow:-1px 0 0 rgba(255,255,255,0.06)}
 .T-sb-name{font-family:'Oswald',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;line-height:1;white-space:nowrap}
-.T-sb-score{font-family:'Teko';font-weight:900;font-size:42px;line-height:0.9;color:#fff;transition:transform 0.2s;animation:segFlicker 4s ease-in-out infinite}
+.T-sb-score{font-family:'Teko';font-weight:500;font-size:44px;line-height:0.9;color:#f0ece4;transition:transform 0.2s;animation:segFlicker 4s ease-in-out infinite}
 .T-sb-poss-dot{width:4px;height:4px;border-radius:50%;margin-top:3px}
 .T-sb-center{padding:6px 14px;background:#0a0a0a;min-width:80px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .T-sb-half{font-family:'Rajdhani';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:2px;line-height:1;background:rgba(235,176,16,0.06);border:1px solid rgba(235,176,16,0.12);border-radius:4px;padding:2px 8px}
@@ -127,7 +128,8 @@ const CSS = `
 .T-midfield-logo{display:none}
 .T-hash{display:none}
 /* placed cards on field — centered vertically */
-.T-placed{position:absolute;top:50%;transform:translateY(-50%);height:120px;z-index:8;border-radius:6px;overflow:hidden;background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);border:2px solid #00ff44;box-shadow:0 0 12px rgba(0,255,68,.2),0 3px 10px rgba(0,0,0,0.5);display:flex;flex-direction:column}
+.T-placed{position:absolute;top:50%;transform:translateY(-50%);height:120px;z-index:8;border-radius:6px;overflow:hidden;background:radial-gradient(ellipse at 50% 25%,#141008,#0A0804);border:2px solid #00ff44;box-shadow:0 0 12px rgba(0,255,68,.2),0 3px 10px rgba(0,0,0,0.5);display:flex;flex-direction:column;animation:T-placed-pulse 2s ease-in-out infinite}
+@keyframes T-placed-pulse{0%,100%{box-shadow:0 0 8px rgba(0,255,68,.15),0 3px 10px rgba(0,0,0,0.5)}50%{box-shadow:0 0 16px rgba(0,255,68,.25),0 3px 10px rgba(0,0,0,0.5)}}
 .T-placed-play{left:2%;width:26%}
 .T-placed-player{left:30%;width:26%}
 .T-placed-torch{left:58%;width:24%}
@@ -280,7 +282,7 @@ const CSS = `
 @keyframes pulseHint{0%,100%{opacity:0.5}50%{opacity:1}}
 @keyframes floatCard{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 .T-clash-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;pointer-events:auto}
-.T-clash-dim{position:absolute;inset:0;background:rgba(10,8,4,0.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:opacity 0.3s}
+.T-clash-dim{position:absolute;inset:0;background:rgba(10,8,4,0.75);backdrop-filter:blur(8px) saturate(160%);-webkit-backdrop-filter:blur(8px) saturate(160%);transition:opacity 0.3s}
 .T-clash-result{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;gap:6px}
 .T-clash-yds{font-family:'Teko';font-weight:700;font-size:64px;line-height:1;text-shadow:0 0 24px currentColor;animation:T-clash-yds 0.6s cubic-bezier(0.22,1.3,0.36,1) both}
 .T-clash-label{font-family:'Rajdhani';font-weight:700;font-size:14px;letter-spacing:1px;opacity:0.8}
@@ -451,6 +453,7 @@ export function buildGameplay() {
   var _driveHeat = 0; // 0-120 momentum bar
   var _driveCardsUsed = []; // torch card IDs used this drive
   var _activeDriveCombo = null; // combo triggered this snap, applied post-executeSnap
+  var _torchFanfareCount = 0; // scales fanfare duration on repeat usage
 
   // ── LAYER 6: Ambient mood — subtle brightness/vignette based on user momentum ──
   var _moodHistory = []; // last 4 plays: +1 good, -1 bad, 0 neutral
@@ -831,12 +834,7 @@ export function buildGameplay() {
     bug.appendChild(ledBot);
 
     // Play clock bar (shows plays remaining in half)
-    var playClockBar = document.createElement('div');
-    playClockBar.style.cssText = 'position:relative;height:1px;background:#0a0a0a;margin:1px 8px 0;border-radius:2px;overflow:hidden;';
-    var playClockFill = document.createElement('div');
-    playClockFill.style.cssText = 'height:100%;border-radius:2px;transition:width 0.4s ease-out;background:#EBB010;';
-    playClockBar.appendChild(playClockFill);
-    bug.appendChild(playClockBar);
+    // Play clock bar removed — visual clutter below scorebug
 
     // Cache every mutable element reference
     _bugEls = {
@@ -844,7 +842,7 @@ export function buildGameplay() {
       ctPanel, ctNameEl, ctScoreEl, ctDotEl,
       irPanel, irNameEl, irScoreEl, irDotEl,
       halfEl, snapEl, clockEl, clockLabel, dividerEl, downEl, ballEl,
-      playClockFill,
+      playClockFill: null,
     };
   }
 
@@ -869,24 +867,18 @@ export function buildGameplay() {
     _bugEls.ledBot.style.background = ledGrad;
     _bugEls.ledBot.style.boxShadow = '0 -4px 12px ' + possTeam.accent + '33';
 
-    // ── Scores ──
-    _bugEls.ctScoreEl.textContent = s.ctScore;
-    _bugEls.irScoreEl.textContent = s.irScore;
-
-    // Score flash on change
+    // ── Scores (slide-up animation on change) ──
     var hScore = s.ctScore;
     var cScore = s.irScore;
     if (hScore !== _prevHScore && _prevHScore >= 0) {
-      try {
-        gsap.fromTo(_bugEls.ctScoreEl, { scale: 1.15, color: '#00ff44' }, { scale: 1, color: '#fff', duration: 0.3, ease: 'back.out(2)' });
-        gsap.fromTo(_bugEls.ctScoreEl, { textShadow: '0 0 16px rgba(0,255,68,0.6)' }, { textShadow: '0 0 0px rgba(0,255,68,0)', duration: 0.5 });
-      } catch(e) {}
+      _animScoreChange(_bugEls.ctScoreEl, hScore, ct.accent || '#00ff44');
+    } else {
+      _bugEls.ctScoreEl.textContent = hScore;
     }
     if (cScore !== _prevCScore && _prevCScore >= 0) {
-      try {
-        gsap.fromTo(_bugEls.irScoreEl, { scale: 1.15, color: '#ff0040' }, { scale: 1, color: '#fff', duration: 0.3, ease: 'back.out(2)' });
-        gsap.fromTo(_bugEls.irScoreEl, { textShadow: '0 0 16px rgba(255,0,64,0.6)' }, { textShadow: '0 0 0px rgba(255,0,64,0)', duration: 0.5 });
-      } catch(e) {}
+      _animScoreChange(_bugEls.irScoreEl, cScore, ir.accent || '#ff0040');
+    } else {
+      _bugEls.irScoreEl.textContent = cScore;
     }
     _prevHScore = hScore;
     _prevCScore = cScore;
@@ -974,12 +966,12 @@ export function buildGameplay() {
           setTimeout(function() { _bugEls.downEl.style.color = s.twoMinActive ? '#e03050' : '#FF6B00'; }, 600);
         } catch(e) {}
       } else {
-        // Normal down change — slide in from right with scale pop
+        // Normal down change — crossfade: old fades down, new fades up
         try {
           gsap.killTweensOf(_bugEls.downEl);
           gsap.fromTo(_bugEls.downEl,
-            { x: 15, opacity: 0, scale: 1.15 },
-            { x: 0, opacity: 1, scale: 1, duration: 0.25, ease: 'back.out(1.5)' }
+            { y: -4, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.2, ease: 'power2.out' }
           );
         } catch(e) {}
       }
@@ -1843,6 +1835,46 @@ export function buildGameplay() {
   }
 
   /** Color flash overlay on the field */
+  /** Score change: old slides up/fades, new slides up with bounce + team flash + particles */
+  function _animScoreChange(scoreEl, newScore, teamColor) {
+    try {
+      var container = scoreEl.parentElement;
+      container.style.position = 'relative';
+      container.style.overflow = 'hidden';
+      // Clone old score for exit
+      var exitEl = scoreEl.cloneNode(true);
+      exitEl.style.position = 'absolute';
+      exitEl.style.left = '0'; exitEl.style.right = '0';
+      exitEl.style.top = '0';
+      container.appendChild(exitEl);
+      // Set new score below
+      scoreEl.textContent = newScore;
+      gsap.set(scoreEl, { y: 30, opacity: 0 });
+      // Exit: old slides up
+      gsap.to(exitEl, { y: -25, opacity: 0, duration: 0.25, ease: 'power2.in', onComplete: function() { exitEl.remove(); } });
+      // Enter: new slides up with bounce
+      gsap.to(scoreEl, { y: 0, opacity: 1, duration: 0.4, ease: 'back.out(2)', delay: 0.08 });
+      // Team-colored neon flash behind score
+      var flash = document.createElement('div');
+      flash.style.cssText = 'position:absolute;inset:-4px;border-radius:4px;background:' + teamColor + ';opacity:0;pointer-events:none;z-index:-1;';
+      container.appendChild(flash);
+      gsap.to(flash, { opacity: 0.25, duration: 0.1, delay: 0.15, ease: 'power1.out', onComplete: function() { gsap.to(flash, { opacity: 0, duration: 0.6, onComplete: function() { flash.remove(); } }); } });
+      // Gold spark particles
+      var rect = scoreEl.getBoundingClientRect();
+      var cx = rect.left + rect.width / 2;
+      var cy = rect.top + rect.height / 2;
+      for (var si = 0; si < 8; si++) {
+        var sp = document.createElement('div');
+        var spSz = 2 + Math.random() * 3;
+        var spAngle = (Math.PI * 2 / 8) * si + (Math.random() * 0.5);
+        var spDist = 15 + Math.random() * 25;
+        sp.style.cssText = 'position:fixed;left:' + cx + 'px;top:' + cy + 'px;width:' + spSz + 'px;height:' + spSz + 'px;border-radius:50%;background:' + teamColor + ';pointer-events:none;z-index:1000;mix-blend-mode:screen;';
+        document.body.appendChild(sp);
+        gsap.to(sp, { x: Math.cos(spAngle) * spDist, y: Math.sin(spAngle) * spDist - 10, opacity: 0, duration: 0.5 + Math.random() * 0.3, ease: 'power2.out', onComplete: function() { sp.remove(); } });
+      }
+    } catch(e) { scoreEl.textContent = newScore; }
+  }
+
   function flashField(color, duration = 600) {
     var flash = document.createElement('div');
     flash.className = 'T-flash';
@@ -1853,6 +1885,22 @@ export function buildGameplay() {
     }
     strip.appendChild(flash);
     setTimeout(function() { flash.remove(); }, duration);
+  }
+
+  /** Radial pulse at ball position on the field strip */
+  function fieldPulseAtBall(color) {
+    var yPct = 50; // default center — LOS is roughly centered in viewport
+    try {
+      var stripH = strip.offsetHeight || 136;
+      var losEl = strip.querySelector('.T-los-line');
+      if (losEl) yPct = Math.round((parseFloat(losEl.style.top) / stripH) * 100);
+    } catch(e) {}
+    var pulse = document.createElement('div');
+    pulse.style.cssText = 'position:absolute;left:50%;top:' + yPct + '%;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,' + color + ',' + color.replace(/[\d.]+\)$/, '0)') + ');pointer-events:none;z-index:12;opacity:0.8;';
+    strip.appendChild(pulse);
+    try {
+      gsap.to(pulse, { width: 120, height: 120, opacity: 0, duration: 0.3, ease: 'power2.out', onComplete: function() { pulse.remove(); } });
+    } catch(e) { setTimeout(function() { pulse.remove(); }, 350); }
   }
 
   /** Impact burst on the field */
@@ -2853,7 +2901,9 @@ export function buildGameplay() {
           SND.cardSnap();
         }
       } catch(e) {}
-      var tcDur = tcTier === 'GOLD' ? 1800 : tcTier === 'SILVER' ? 1200 : 800;
+      var tcBaseDur = tcTier === 'GOLD' ? 1800 : tcTier === 'SILVER' ? 1200 : 800;
+      var tcDur = _torchFanfareCount > 0 ? Math.round(tcBaseDur * 0.5) : tcBaseDur;
+      _torchFanfareCount++;
       setTimeout(function() { try { gsap.to(tcOv, { opacity: 0, duration: 0.25, onComplete: function() { if (tcOv.parentNode) tcOv.remove(); } }); } catch(e) { if (tcOv.parentNode) tcOv.remove(); } }, tcDur);
       setTimeout(function() { if (tcOv.parentNode) tcOv.remove(); }, tcDur + 500);
     }
@@ -3254,7 +3304,17 @@ export function buildGameplay() {
     selTorch = null;
     // Don't redraw field or panel — cards stay placed during result animation
     phase = 'busy';
-    panel.className = 'T-panel T-panel-hidden';
+    // Quick tier estimate for panel visibility during result
+    var _r = res.result;
+    var _quickTier = (_r.isTouchdown || _r.isInterception || _r.isFumbleLost) ? 3 : (_r.isSack || _r.yards >= 15 || _r.yards <= -3) ? 2 : 1;
+    // Tier 1 plays: show card tray at reduced opacity so player can plan ahead
+    if (_quickTier <= 1) {
+      panel.className = 'T-panel';
+      panel.style.opacity = '0.3';
+      panel.style.pointerEvents = 'none';
+    } else {
+      panel.className = 'T-panel T-panel-hidden';
+    }
     driveSummaryEl.style.display = ''; // Show PBP during snap result
     res._preSnap = preSnap;
 
@@ -3336,7 +3396,7 @@ export function buildGameplay() {
     var dimLevel = tier === 1 ? 0.2 : tier === 2 ? 0.4 : 0.7;
     var particleCount = tier === 1 ? 0 : tier === 2 ? 15 : 35;
     var cardScale = tier === 1 ? 1.0 : tier === 2 ? 1.1 : 1.25;
-    var aftermathDur = isTD ? 5000 : tier === 3 ? 3500 : tier === 2 ? 2500 : 1800;
+    var aftermathDur = isTD ? 5000 : tier === 3 ? 3500 : tier === 2 ? 2500 : 1200;
     var _speedMult = getSpeedMultiplier();
     anticipationMs = Math.round(anticipationMs * _speedMult);
     hitstopMs = Math.round(hitstopMs * _speedMult);
@@ -3383,13 +3443,25 @@ export function buildGameplay() {
     dim.className = 'T-clash-dim';
     dim.style.opacity = '1';
     overlay.appendChild(dim);
+    // 2-minute drill: persistent clock on result overlay
+    if (gs.twoMinActive) {
+      var _ovClock = document.createElement('div');
+      _ovClock.style.cssText = "position:absolute;top:12px;right:12px;z-index:10;font-family:'Teko';font-weight:700;font-size:22px;color:#e03050;letter-spacing:1px;text-shadow:0 0 10px rgba(224,48,80,0.5);padding:4px 10px;background:rgba(0,0,0,0.5);border:1px solid rgba(224,48,80,0.3);border-radius:4px;pointer-events:none;";
+      _ovClock.textContent = fmtClock(Math.max(0, gs.clockSeconds));
+      overlay.appendChild(_ovClock);
+      // Update clock on overlay if it ticks during result
+      var _ovClockInt = setInterval(function() {
+        if (!overlay.parentNode) { clearInterval(_ovClockInt); return; }
+        _ovClock.textContent = fmtClock(Math.max(0, gs.clockSeconds));
+      }, 500);
+    }
     document.body.appendChild(overlay);
 
     // ── PHASE 1: COMMIT (0.2s) — screen dims, snap sound ──
     SND.snap();
 
     // ── PHASE 2: BLACKOUT (tier-scaled tension) — field animates underneath ──
-    var blackoutMs = Math.round((tier === 1 ? 200 : tier === 2 ? 400 : 700) * _speedMult);
+    var blackoutMs = Math.round((tier === 1 ? 50 : tier === 2 ? 400 : 700) * _speedMult);
     var blackout = document.createElement('div');
     blackout.style.cssText = 'position:absolute;inset:0;background:#000;z-index:1;opacity:0;transition:opacity ' + (blackoutMs * 0.4) + 'ms;';
     overlay.appendChild(blackout);
@@ -3397,6 +3469,21 @@ export function buildGameplay() {
 
     setTimeout(function() {
       if (skipped) { doSettle(); return; }
+
+      // ── HITSTOP — brief freeze before result visuals (sound fires first) ──
+      var _hitstopMs = tier <= 1 ? 0 : tier === 2 ? 40 : isTD ? 80 : 65;
+      if (_hitstopMs > 0) {
+        try { gsap.set(el, { scale: 1.02 }); } catch(e) {}
+        if (tier >= 3) {
+          var _hsFlash = document.createElement('div');
+          _hsFlash.style.cssText = 'position:fixed;inset:0;background:#fff;opacity:0.12;z-index:999;pointer-events:none;';
+          document.body.appendChild(_hsFlash);
+          setTimeout(function() { _hsFlash.remove(); }, _hitstopMs);
+        }
+      }
+
+      setTimeout(function() {
+      if (_hitstopMs > 0) { try { gsap.to(el, { scale: 1, duration: 0.15, ease: 'power2.out' }); } catch(e) {} }
 
       // ── PHASE 3: RESULT SLAM — result text slams in, screen shake, particles ──
       blackout.style.opacity = '0';
@@ -3477,12 +3564,22 @@ export function buildGameplay() {
       else if (tier === 1 && r.yards > 0) { SND.hit(); }
       // Zero or negative yards = no sound (silence for nothing plays)
 
+      // Ambient particle intensity boost
+      if (tier >= 3 && isGoodForUser) _boostParticles(true);
+      else if (tier >= 3 && isBadForUser) _boostParticles(false);
+
+      // Field pulse at ball position
+      if (isTD) fieldPulseAtBall('rgba(235,176,16,0.4)');
+      else if (r.isInterception || r.isFumbleLost) fieldPulseAtBall('rgba(255,36,36,0.4)');
+      else if (isGoodForUser && tier >= 2) fieldPulseAtBall('rgba(0,255,68,0.3)');
+
       // ── PHASE 4: SETTLE — proceed to result display ──
       var settleDelay = tier === 1 ? 100 : tier === 2 ? 300 : 500;
       setTimeout(function() {
         if (skipped) { doSettle(); return; }
         doSettle();
       }, settleDelay);
+      }, _hitstopMs); // hitstop delay
     }, blackoutMs); // result slam after blackout
 
     // ── POST-PLAY 4-BEAT DISPLAY (Phase 6) ──
@@ -3782,7 +3879,8 @@ export function buildGameplay() {
           }, 3000);
         }
 
-        drawBug(); drawField();
+        // drawBug deferred — score updates after overlay clears
+        drawField();
 
       } else if (isTD && !isUserOff && !res._isConversion) {
         // OPPONENT SCORES — muted, top-positioned
@@ -3803,7 +3901,8 @@ export function buildGameplay() {
           setNarr(comm.line1, '');
         }, 400);
 
-        drawBug(); drawField();
+        // drawBug deferred — score updates after overlay clears
+        drawField();
 
       } else if (res._isConversion) {
         // ── CONVERSION RESULT ──
@@ -3893,7 +3992,8 @@ export function buildGameplay() {
           setNarr(comm.line1, '');
         }, 400);
 
-        drawBug(); drawField();
+        // drawBug deferred — score updates after overlay clears
+        drawField();
 
       } else {
         // ── NON-TD: Normal result display ──
@@ -3999,7 +4099,8 @@ export function buildGameplay() {
           try { gsap.to(vignetteEl, { opacity: 1, duration: 0.3 }); } catch(e) { vignetteEl.style.opacity = '1'; }
         }
 
-        drawBug(); drawField();
+        // drawBug deferred — score updates after overlay clears
+        drawField();
       }
 
       // Onboarding: first result explanation
@@ -4021,16 +4122,7 @@ export function buildGameplay() {
         overlay.appendChild(goEl);
       }
 
-      // First down gold bar slide-in
-      if (res.gotFirstDown && !isTD && !r.isInterception && !r.isFumbleLost) {
-        var _fdBar = document.createElement('div');
-        _fdBar.style.cssText = 'position:absolute;top:48%;left:0;width:100%;height:3px;background:linear-gradient(90deg,#EBB010,#EBB01000);z-index:14;pointer-events:none;transform:translateX(-100%);';
-        overlay.appendChild(_fdBar);
-        try {
-          gsap.to(_fdBar, { x: '0%', duration: 0.4, ease: 'power2.out', delay: 0.05 });
-          gsap.to(_fdBar, { opacity: 0, duration: 0.3, delay: 0.8, onComplete: function() { _fdBar.remove(); } });
-        } catch(e) { _fdBar.remove(); }
-      }
+      // First down gold bar removed — distracting on frosted overlay
 
       // First down chain chime — escalates with consecutive first downs in a drive
       if (res.gotFirstDown && !isTD && !r.isInterception && !r.isFumbleLost && isUserOff) {
@@ -4122,14 +4214,35 @@ export function buildGameplay() {
           try { gsap.to(commEl, { opacity: 1, y: 0, duration: 0.25, delay: 0.15, ease: 'power2.out' }); } catch(e) { commEl.style.opacity = '1'; }
         }
 
-        // TORCH points on the result overlay
-        if (res._torchEarned && res._torchEarned > 0 && !res._isConversion) {
+        // TORCH points on the result overlay — only show on user-positive plays
+        var _showTorchOnOverlay = res._torchEarned && res._torchEarned > 0 && !res._isConversion && isGoodForUser;
+        if (_showTorchOnOverlay) {
           var FLAME = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
           var tpEl = document.createElement('div');
-          tpEl.style.cssText = "display:flex;align-items:center;gap:4px;justify-content:center;margin-top:6px;opacity:0;transform:translateY(10px) scale(0.8);";
-          tpEl.innerHTML = "<svg viewBox='0 0 44 56' width='14' height='18' fill='#EBB010'><path d='" + FLAME + "'/></svg><span style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;text-shadow:0 0 8px rgba(235,176,16,0.4);letter-spacing:1px;\">+" + res._torchEarned + "</span>";
+          tpEl.style.cssText = "display:flex;align-items:center;gap:6px;justify-content:center;margin-top:10px;opacity:0;transform:translateY(14px) scale(0.6);padding:6px 16px;background:rgba(235,176,16,0.06);border:1px solid rgba(235,176,16,0.15);border-radius:6px;";
+          tpEl.innerHTML = "<svg viewBox='0 0 44 56' width='18' height='23' fill='#EBB010' style='filter:drop-shadow(0 0 6px rgba(235,176,16,0.5));'><path d='" + FLAME + "'/></svg><span style=\"font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;text-shadow:0 0 12px rgba(235,176,16,0.5);letter-spacing:2px;\">+" + res._torchEarned + "</span><span style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:rgba(235,176,16,0.5);letter-spacing:2px;\">TORCH</span>";
           resultWrap.appendChild(tpEl);
-          try { gsap.to(tpEl, { opacity: 1, y: 0, scale: 1, duration: 0.3, delay: 0.3, ease: 'back.out(1.5)' }); } catch(e) { tpEl.style.opacity = '1'; tpEl.style.transform = 'none'; }
+          try {
+            gsap.to(tpEl, { opacity: 1, y: 0, scale: 1, duration: 0.4, delay: 0.3, ease: 'back.out(2.5)' });
+            // Glow pulse after landing
+            gsap.to(tpEl, { boxShadow: '0 0 20px rgba(235,176,16,0.3)', duration: 0.3, delay: 0.7, yoyo: true, repeat: 1 });
+            // Gold sparks from flame icon
+            setTimeout(function() {
+              try {
+                var tpRect = tpEl.getBoundingClientRect();
+                var tcx = tpRect.left + 18;
+                var tcy = tpRect.top + tpRect.height / 2;
+                for (var _tsi = 0; _tsi < 6; _tsi++) {
+                  var _tsp = document.createElement('div');
+                  var _tsAngle = (Math.PI * 2 / 6) * _tsi + Math.random() * 0.5;
+                  var _tsDist = 12 + Math.random() * 18;
+                  _tsp.style.cssText = 'position:fixed;left:' + tcx + 'px;top:' + tcy + 'px;width:3px;height:3px;border-radius:50%;background:#EBB010;pointer-events:none;z-index:300;';
+                  document.body.appendChild(_tsp);
+                  gsap.to(_tsp, { x: Math.cos(_tsAngle) * _tsDist, y: Math.sin(_tsAngle) * _tsDist - 8, opacity: 0, duration: 0.4 + Math.random() * 0.2, ease: 'power2.out', onComplete: function() { _tsp.remove(); } });
+                }
+              } catch(e2) {}
+            }, 500);
+          } catch(e) { tpEl.style.opacity = '1'; tpEl.style.transform = 'none'; }
         }
 
         // TORCH points earned — color-coded breakdown below commentary
@@ -4202,7 +4315,8 @@ export function buildGameplay() {
       // ── BEAT 4: READY (cleanup + proceed) ──
       // Uses raw setTimeout — this timer MUST fire to continue the game
       setTimeout(function() {
-        // Clean up overlay from document.body
+        // Clean up overlay from document.body — score updates NOW (not during overlay)
+        drawBug();
         if (overlay.parentNode) {
           overlay.style.opacity = '0';
           overlay.style.transition = 'opacity 0.4s';
@@ -4346,45 +4460,20 @@ export function buildGameplay() {
             showPossCut(res.gameEvent, function() { showDrive(driveSnaps, prevPoss, function() { driveSnaps=[]; drivePlayHistory=[]; resetDriveSummary(); if(!checkEnd()) nextSnap(); }); });
           } else {
             if (!checkEnd()) {
-              // Post-play view: cards stay placed on field, add NEXT PLAY button
-              driveSummaryEl.style.display = ''; // Always show PBP during post-play
+              // Auto-advance: animate placed cards off, then go to next snap
               drawBug(); drawDriveSummary();
-              panel.style.display = 'none';
-
-              // Hide the torch drop zone on the field (not relevant post-play)
-              var _torchDrop = strip.querySelector('.T-drop-torch');
-              if (_torchDrop) _torchDrop.style.display = 'none';
-
-              // NEXT PLAY button below everything (remove any existing one first)
-              var _existingNext = el.querySelector('#T-next-play-wrap');
-              if (_existingNext) _existingNext.remove();
-              var tapNextWrap = document.createElement('div');
-              tapNextWrap.id = 'T-next-play-wrap';
-              tapNextWrap.style.cssText = 'padding:12px 16px;flex-shrink:0;';
-              var tapNextBtn = document.createElement('button');
-              var _FLNP = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
-              tapNextBtn.style.cssText = "width:100%;padding:0;border:none;border-radius:6px;background:linear-gradient(180deg,#EBB010,#FF4511);display:flex;align-items:stretch;overflow:hidden;cursor:pointer;box-shadow:0 4px 16px rgba(255,69,17,0.3);";
-              tapNextBtn.innerHTML = '<div style="background:rgba(0,0,0,0.2);padding:12px 14px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(0,0,0,0.15);"><svg viewBox=\'0 0 44 56\' width=\'14\' height=\'18\' fill=\'#fff\'><path d=\'' + _FLNP + '\'/></svg></div><div style="flex:1;padding:14px;font-family:\'Teko\';font-weight:700;font-size:20px;color:#fff;letter-spacing:6px;text-align:center;line-height:1;">NEXT PLAY</div>';
-              var tapDismissed = false;
-              tapNextBtn.onclick = function() {
-                if (tapDismissed) return;
-                tapDismissed = true;
-                // Animate placed cards off the field
+              setTimeout(function() {
                 var placedCards = strip.querySelectorAll('.T-placed');
                 try {
                   gsap.to(placedCards, { y: -40, opacity: 0, scale: 0.8, duration: 0.25, stagger: 0.05, ease: 'power2.in', onComplete: function() {
                     selP = null; selPl = null;
-                    tapNextWrap.remove();
                     nextSnap();
                   }});
                 } catch(e) {
                   selP = null; selPl = null;
-                  tapNextWrap.remove();
                   nextSnap();
                 }
-              };
-              tapNextWrap.appendChild(tapNextBtn);
-              el.appendChild(tapNextWrap);
+              }, 300); // 300ms delay before auto-advance
             }
           }
         }
@@ -4444,6 +4533,8 @@ export function buildGameplay() {
     selP = null; selPl = null; selTorch = null; selectedPreSnap = null;
     _fourthDownDecided = false;
     panel.style.display = '';
+    panel.style.opacity = '1';
+    panel.style.pointerEvents = '';
     // Hide PBP unless user toggled it on
     if (!_pbpVisible) driveSummaryEl.style.display = 'none';
     // Don't force-reset crowd here — holdThenSettle handles it after big plays.
@@ -4628,6 +4719,14 @@ export function buildGameplay() {
     // Build overlay
     var ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0;transition:opacity .3s;pointer-events:auto;background:rgba(10,8,4,0.9);';
+
+    // 2-minute drill: clock on possession overlay
+    if (gs.twoMinActive) {
+      var _pcClock = document.createElement('div');
+      _pcClock.style.cssText = "position:absolute;top:12px;right:12px;z-index:10;font-family:'Teko';font-weight:700;font-size:22px;color:#e03050;letter-spacing:1px;text-shadow:0 0 10px rgba(224,48,80,0.5);padding:4px 10px;background:rgba(0,0,0,0.5);border:1px solid rgba(224,48,80,0.3);border-radius:4px;pointer-events:none;";
+      _pcClock.textContent = fmtClock(Math.max(0, gs.clockSeconds));
+      ov.appendChild(_pcClock);
+    }
 
     // Team color accent bars top and bottom
     var barTop = document.createElement('div');
@@ -5535,8 +5634,36 @@ export function buildGameplay() {
     return false;
   }
 
+  // ── BROADCAST POLISH: AMBIENT SYSTEMS ──
+
+  // A. Ambient gold particle drift
+  var _ambientParticles = [];
+  var _ambientContainer = null;
+  function _boostParticles() {} // no-op — ambient particles removed
+
+  // B. Shimmer sweep helper for gold UI elements
+  var _shimmerEls = [];
+  function _addShimmer(target) {
+    if (!target) return;
+    var sh = document.createElement('div');
+    sh.style.cssText = 'position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(235,176,16,0.08) 45%,rgba(255,255,255,0.12) 50%,rgba(235,176,16,0.08) 55%,transparent 70%);background-size:200% 100%;pointer-events:none;border-radius:inherit;';
+    target.style.position = 'relative';
+    target.style.overflow = 'hidden';
+    target.appendChild(sh);
+    _shimmerEls.push(sh);
+    function sweep() {
+      gsap.fromTo(sh, { backgroundPosition: '200% 0' }, { backgroundPosition: '-200% 0', duration: 1.2, ease: 'power1.inOut', delay: 5 + Math.random() * 3, onComplete: sweep });
+    }
+    sweep();
+  }
+
   // ── INIT ──
   drawBug(); drawField();
+  // Apply shimmer to gold elements after they exist
+  setTimeout(function() {
+    var _tbContent = el.querySelector('.T-torch-banner-content');
+    if (_tbContent) _addShimmer(_tbContent);
+  }, 500);
   if (gs.twoMinActive) { prev2min = true; el.classList.add('T-urgent'); el.classList.add('T-2min-active'); }
 
   // First load: coin toss → kickoff → play
@@ -5752,6 +5879,8 @@ export function buildGameplay() {
     document.removeEventListener('touchend', endDrag);
     if (twoMinTimer) { clearInterval(twoMinTimer); twoMinTimer = null; }
     if (_tickerAnim) { try { _tickerAnim.kill(); } catch(e) {} _tickerAnim = null; }
+    // Kill ambient tweens
+    try { _shimmerEls.forEach(function(s) { gsap.killTweensOf(s); }); } catch(e) {}
     // Remove any lingering clash overlays from document.body
     document.querySelectorAll('.T-clash-overlay').forEach(function(ov) { ov.remove(); });
     try { gsap.killTweensOf(el.querySelectorAll('*')); } catch(e) {}

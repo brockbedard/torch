@@ -36,7 +36,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
   overlay.style.cssText = 'position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:auto;';
 
   var backdrop = document.createElement('div');
-  backdrop.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);';
+  backdrop.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(12px) saturate(160%);-webkit-backdrop-filter:blur(12px) saturate(160%);';
   backdrop.onclick = function() { closeShop(); };
   overlay.appendChild(backdrop);
 
