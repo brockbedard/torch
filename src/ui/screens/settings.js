@@ -67,7 +67,7 @@ export function buildSettings() {
 
   // Progress bar
   var progBar = document.createElement('div');
-  progBar.style.cssText = 'height:4px;background:#1a1a1a;border-radius:2px;margin-bottom:12px;overflow:hidden;';
+  progBar.style.cssText = 'height:4px;background:rgba(255,255,255,0.08);border-radius:2px;margin-bottom:12px;overflow:hidden;';
   var progFill = document.createElement('div');
   var pct = prog.total > 0 ? Math.round(prog.unlocked / prog.total * 100) : 0;
   progFill.style.cssText = 'height:100%;background:#EBB010;border-radius:2px;width:' + pct + '%;transition:width 0.5s;';
@@ -80,7 +80,7 @@ export function buildSettings() {
   allAch.forEach(function(ach) {
     var isUnlocked = unlockedIds.indexOf(ach.id) >= 0;
     var row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid #1a1a1a;' + (isUnlocked ? '' : 'opacity:0.35;');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid rgba(255,255,255,0.08);' + (isUnlocked ? '' : 'opacity:0.35;');
     row.innerHTML =
       "<div style='font-size:16px;flex-shrink:0;width:24px;text-align:center;'>" + (isUnlocked ? ach.icon : '🔒') + "</div>" +
       "<div style='flex:1;min-width:0;'>" +
@@ -182,7 +182,7 @@ export function buildSettings() {
 
 function createSection(title) {
   var sec = document.createElement('div');
-  sec.style.cssText = 'margin-bottom:16px;background:rgba(255,255,255,0.02);border:1px solid #1a1a1a;border-radius:8px;padding:12px;';
+  sec.style.cssText = 'margin-bottom:16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;';
   var hdr = document.createElement('div');
   hdr.style.cssText = "font-family:'Teko';font-weight:700;font-size:14px;color:#FF4511;letter-spacing:2px;margin-bottom:8px;";
   hdr.textContent = title;

@@ -371,8 +371,8 @@ export function buildEndGame() {
 
   // Score
   var scoreEl = document.createElement('div');
-  scoreEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:60px;color:#fff;line-height:0.85;letter-spacing:3px;margin-top:6px;text-shadow:0 0 12px " + resultColor + "22;opacity:0;";
-  scoreEl.innerHTML = humanScore + " <span style=\"color:#333;font-size:34px;\">\u2014</span> " + cpuScore;
+  scoreEl.style.cssText = "font-family:'Teko';font-weight:900;font-size:60px;color:#fff;line-height:0.85;letter-spacing:5px;margin-top:6px;text-shadow:0 0 20px " + resultColor + "44,0 4px 12px rgba(0,0,0,0.8);opacity:0;";
+  scoreEl.innerHTML = humanScore + " <span style=\"color:#333;font-size:40px;text-shadow:0 0 20px " + resultColor + "44,0 4px 12px rgba(0,0,0,0.8);\">\u2014</span> " + cpuScore;
   content.appendChild(scoreEl);
 
   // Teams row

@@ -154,8 +154,10 @@ export function buildTeamSelect() {
       if (selectedTeamId && selectedTeamId !== tid) return;
       panel.style.borderColor = accent + '66';
       panel.style.boxShadow = '0 0 16px ' + accent + '22, 0 2px 12px rgba(0,0,0,0.4)';
+      try { gsap.to(panel, { scale: 0.96, duration: 0.08 }); } catch(e) {}
     }, { passive: true });
     panel.addEventListener('touchend', function() {
+      try { gsap.to(panel, { scale: 1, duration: 0.15, ease: 'back.out(2)' }); } catch(e) {}
       if (selectedTeamId === tid) return; // keep highlight
       panel.style.borderColor = accent + '33';
       panel.style.boxShadow = '0 2px 12px rgba(0,0,0,0.4)';
@@ -174,13 +176,15 @@ export function buildTeamSelect() {
         var pa = pt.accent || pt.colors.primary;
         if (ptid === tid) {
           p.style.border = '2px solid ' + pa;
-          p.style.boxShadow = '0 0 20px ' + pa + '33';
-          p.style.background = 'linear-gradient(90deg,' + pa + '25,#0a0804 60%)';
+          p.style.boxShadow = '0 8px 24px rgba(0,0,0,0.5),0 0 20px ' + pa + '33';
+          p.style.background = 'linear-gradient(90deg,' + pa + '30,#0a0804 70%)';
           p.style.opacity = '1';
           p.style.filter = '';
+          try { gsap.fromTo(p, { scale: 1 }, { scale: 1.02, duration: 0.15, yoyo: true, repeat: 1, ease: 'power2.out' }); } catch(e) {}
         } else {
           p.style.opacity = '0.4';
-          p.style.filter = 'grayscale(0.3)';
+          p.style.filter = '';
+          p.style.boxShadow = '0 2px 12px rgba(0,0,0,0.4)';
         }
       });
 

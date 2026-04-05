@@ -36,13 +36,18 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
   overlay.style.cssText = 'position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;justify-content:flex-end;pointer-events:auto;';
 
   var backdrop = document.createElement('div');
-  backdrop.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.5);';
+  backdrop.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.4);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);';
   backdrop.onclick = function() { closeShop(); };
   overlay.appendChild(backdrop);
 
   // Sheet
   var sheet = document.createElement('div');
-  sheet.style.cssText = "position:relative;z-index:1;background:#0E0A04;border-top:2px solid #EBB010;border-radius:12px 12px 0 0;padding:14px 14px 20px;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.22,1.3,0.36,1);";
+  sheet.style.cssText = "position:relative;z-index:1;background:linear-gradient(180deg,#1E1610,#141008);border-top:2px solid #EBB010;border-radius:12px 12px 0 0;padding:14px 14px 20px;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.22,1.3,0.36,1);";
+
+  // Handle indicator
+  var handle = document.createElement('div');
+  handle.style.cssText = 'width:32px;height:3px;border-radius:2px;background:rgba(255,255,255,0.15);margin:0 auto 10px;';
+  sheet.appendChild(handle);
 
   // Header: TORCH STORE + points
   var hdr = document.createElement('div');
@@ -50,7 +55,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
   hdr.innerHTML =
     '<div style="display:flex;align-items:center;gap:6px;">' +
       "<svg viewBox='0 0 44 56' width='12' height='16' fill='#EBB010' style='opacity:0.6;'><path d='" + FLAME_PATH + "'/></svg>" +
-      "<div style=\"font-family:'Oswald';font-weight:700;font-size:12px;color:#EBB010;letter-spacing:3px;\">TORCH STORE</div>" +
+      "<div style=\"font-family:'Oswald';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:3px;\">TORCH STORE</div>" +
     '</div>' +
     '<div style="display:flex;align-items:center;gap:4px;">' +
       "<svg viewBox='0 0 44 56' width='10' height='13' fill='#EBB010'><path d='" + FLAME_PATH + "'/></svg>" +
@@ -64,7 +69,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
   invRow.style.cssText = 'display:flex;gap:4px;margin-bottom:12px;';
   for (var s = 0; s < 3; s++) {
     var dot = document.createElement('div');
-    dot.style.cssText = 'flex:1;height:3px;border-radius:2px;background:' + (inventory[s] ? '#EBB010' : '#1a1a1a') + ';';
+    dot.style.cssText = 'flex:1;height:3px;border-radius:2px;background:' + (inventory[s] ? '#EBB010' : 'rgba(255,255,255,0.06)') + ';';
     invRow.appendChild(dot);
   }
   sheet.appendChild(invRow);
@@ -200,7 +205,7 @@ function showSwapUI(sheet, overlay, inventory, newCard, pts, onBuy, closeShop) {
   sheet.style.padding = '14px 14px 20px';
 
   var title = document.createElement('div');
-  title.style.cssText = "font-family:'Oswald';font-weight:700;font-size:11px;color:#ff0040;letter-spacing:3px;text-align:center;margin-bottom:10px;";
+  title.style.cssText = "font-family:'Oswald';font-weight:700;font-size:10px;color:#ff0040;letter-spacing:3px;text-align:center;margin-bottom:10px;";
   title.textContent = 'DROP A CARD TO MAKE ROOM';
   sheet.appendChild(title);
 

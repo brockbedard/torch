@@ -68,7 +68,7 @@ export function buildHomeCard(type, w, h) {
   var outer = document.createElement('div');
   if (isTorch) {
     var fp = Math.max(2, Math.round(4 * sc));
-    outer.style.cssText = 'position:relative;width:' + (w + fp * 2) + 'px;height:' + (h + fp * 2) + 'px;border-radius:' + Math.round(12 * sc) + 'px;background:linear-gradient(135deg,#EBB010,#fff,#EBB010);padding:' + fp + 'px;box-shadow:0 0 ' + Math.round(20 * sc) + 'px rgba(235,176,16,0.35),0 4px 16px rgba(0,0,0,0.5);';
+    outer.style.cssText = 'position:relative;width:' + (w + fp * 2) + 'px;height:' + (h + fp * 2) + 'px;border-radius:' + Math.round(12 * sc) + 'px;background:linear-gradient(135deg,#EBB010,#fff,#EBB010);padding:' + fp + 'px;box-shadow:0 0 ' + Math.round(20 * sc) + 'px rgba(235,176,16,0.35),0 2px 6px rgba(0,0,0,0.4),0 8px 20px rgba(20,16,8,0.5);';
   } else {
     outer.style.cssText = 'position:relative;width:' + w + 'px;height:' + h + 'px;';
   }
@@ -80,8 +80,8 @@ export function buildHomeCard(type, w, h) {
     ? 'linear-gradient(170deg,#FF451130 0%,#EBB01010 25%,#0a0804 50%,#FF45110a 100%)'
     : 'linear-gradient(170deg,' + accent + '18 0%,#0a0804 50%,' + accent + '0a 100%)';
   var shadow = isTorch
-    ? '0 0 24px rgba(255,69,17,0.2),0 4px 16px rgba(0,0,0,0.5)'
-    : '0 4px 16px rgba(0,0,0,0.5)';
+    ? '0 0 24px rgba(255,69,17,0.2),0 2px 6px rgba(0,0,0,0.4),0 8px 20px rgba(20,16,8,0.5)'
+    : '0 2px 6px rgba(0,0,0,0.4),0 8px 20px rgba(20,16,8,0.5)';
   card.style.cssText = 'position:absolute;width:' + w + 'px;height:' + h + 'px;border-radius:8px;border:2px solid ' + accent + (isTorch ? '66' : '44') + ';background:' + bg + ';box-shadow:' + shadow + ';overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;';
 
   // Breathing glow (torch only)

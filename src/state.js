@@ -11,8 +11,8 @@ import { STAGS_OFF_PLAYS, STAGS_DEF_PLAYS } from './data/stagsPlays.js';
 import { SERPENTS_OFF_PLAYS, SERPENTS_DEF_PLAYS } from './data/serpentsPlays.js';
 import { getOffenseRoster, getDefenseRoster } from './data/players.js';
 
-export var VERSION = '0.31.0';
-export var VERSION_NAME = 'Engine Sync';
+export var VERSION = '0.32.0';
+export var VERSION_NAME = 'Visual Polish';
 
 export var GAME_SPEED = { current: 'normal' }; // 'normal', 'fast', 'turbo'
 export function setGameSpeed(speed) { GAME_SPEED.current = speed; localStorage.setItem('torch_speed', speed); }

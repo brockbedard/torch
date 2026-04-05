@@ -62,7 +62,7 @@ export function showSTSelect(parent, opts) {
   var ctx = ST_CONTEXT[opts.stType || 'fg'] || ST_CONTEXT.fg;
 
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;z-index:800;display:flex;flex-direction:column;background:rgba(0,0,0,0.95);opacity:0;overflow-y:auto;padding:16px;padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom));';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:800;display:flex;flex-direction:column;background:rgba(10,8,4,0.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;overflow-y:auto;padding:16px;padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom));';
 
   // Title block
   var hdr = document.createElement('div');
@@ -105,7 +105,7 @@ export function showSTSelect(parent, opts) {
 
   sorted.forEach(function(p) {
     var row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:12px 12px;border-bottom:1px solid #1a1a1a;cursor:pointer;border-radius:4px;opacity:0;';
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:12px 12px;border-bottom:1px solid rgba(255,255,255,0.08);cursor:pointer;border-radius:4px;opacity:0;';
 
     var fullName = (p.firstName ? p.firstName + ' ' : '') + p.name;
     var nameBlock = document.createElement('div');
