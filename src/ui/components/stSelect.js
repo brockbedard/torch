@@ -62,7 +62,7 @@ export function showSTSelect(parent, opts) {
   var ctx = ST_CONTEXT[opts.stType || 'fg'] || ST_CONTEXT.fg;
 
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;z-index:800;display:flex;flex-direction:column;background:rgba(10,8,4,0.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;overflow-y:auto;padding:16px;padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom));';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:800;display:flex;flex-direction:column;background:rgba(10,8,4,0.88);backdrop-filter:blur(12px) saturate(160%);-webkit-backdrop-filter:blur(12px) saturate(160%);opacity:0;overflow-y:auto;padding:16px;padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom));';
 
   // Title block
   var hdr = document.createElement('div');

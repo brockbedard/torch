@@ -88,6 +88,12 @@ function animateDeal(cards, startDelay, slow) {
     duration: slow ? 0.4 : 0.3, stagger: stag, ease: 'back.out(1.7)',
     delay: startDelay || 0,
     onStart: function() { try { SND.cardSnap(); } catch(e) {} },
+    onComplete: function() {
+      // Card breathing — barely-perceptible scale oscillation at staggered rates
+      cards.forEach(function(c) {
+        gsap.to(c, { scale: 1.015, duration: 2.5 + Math.random() * 1.5, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+      });
+    },
   });
 }
 
@@ -103,6 +109,10 @@ function fullSlamDeal(cardEls, wrapEl, onComplete) {
   var tl = gsap.timeline({
     onComplete: function() {
       wrapEl.style.pointerEvents = '';
+      // Card breathing after deal
+      cardEls.forEach(function(c) {
+        gsap.to(c, { scale: 1.015, duration: 2.5 + Math.random() * 1.5, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+      });
       if (onComplete) onComplete();
     }
   });
@@ -745,13 +755,16 @@ export function renderCardTray(opts) {
   snapBtn.addEventListener('touchstart', function() {
     if (snapBtn.disabled) return;
     gsap.to(snapBtn, { scale: 0.97, duration: 0.08 });
+    snapBtn.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.3)';
   }, { passive: true });
   snapBtn.addEventListener('touchend', function() {
     if (snapBtn.disabled) return;
     gsap.to(snapBtn, { scale: 1, duration: 0.15, ease: 'back.out(2)' });
+    snapBtn.style.boxShadow = '';
   }, { passive: true });
   snapBtn.addEventListener('touchcancel', function() {
     gsap.to(snapBtn, { scale: 1, duration: 0.15 });
+    snapBtn.style.boxShadow = '';
   }, { passive: true });
   snapBar.appendChild(snapBtn);
 

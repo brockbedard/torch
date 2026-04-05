@@ -205,7 +205,7 @@ export function buildHalftime() {
       cardSlot.onclick = function() {
         SND.click();
         var confirmOv = document.createElement('div');
-        confirmOv.style.cssText = 'position:fixed;inset:0;z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(10,8,4,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);pointer-events:auto;';
+        confirmOv.style.cssText = 'position:fixed;inset:0;z-index:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(10,8,4,0.85);backdrop-filter:blur(12px) saturate(160%);-webkit-backdrop-filter:blur(12px) saturate(160%);pointer-events:auto;';
         confirmOv.innerHTML =
           "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:" + tc + ";letter-spacing:3px;\">" + card.name + '</div>' +
           "<div style=\"font-family:'Rajdhani';font-size:13px;color:#999;text-align:center;max-width:260px;line-height:1.3;\">" + card.effect + '</div>' +
