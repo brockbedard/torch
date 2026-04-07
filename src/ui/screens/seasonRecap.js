@@ -123,7 +123,7 @@ export function buildSeasonRecap() {
     // Lost championship — new season
     btn.style.background = team.accent;
     btn.textContent = 'NEW SEASON';
-    btn.onclick = function() { SND.snap(); startNewSeason(); };
+    btn.onclick = function() { if (SND.snap) SND.snap(); else if (SND.click) SND.click(); startNewSeason(); };
   } else if (madeChampionship) {
     // Play championship game
     btn.style.background = '#EBB010';
@@ -143,7 +143,7 @@ export function buildSeasonRecap() {
     // Didn't make championship — new season
     btn.style.background = team.accent;
     btn.textContent = 'NEW SEASON';
-    btn.onclick = function() { SND.snap(); startNewSeason(); };
+    btn.onclick = function() { if (SND.snap) SND.snap(); else if (SND.click) SND.click(); startNewSeason(); };
   }
   botZone.appendChild(btn);
   el.appendChild(botZone);

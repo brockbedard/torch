@@ -173,9 +173,9 @@ export class GameState {
     var newPoss = this.possession === 'CT' ? 'IR' : 'CT';
     var ballPos;
     if (ownYardLine === -1) {
-      // Kick return TD — award 6 points to receiving team, then do a normal flip
-      if (newPoss === 'CT') this.ctScore += 6;
-      else this.irScore += 6;
+      // Kick return TD — award 7 points (TD + automatic XP) to receiving team, then do a normal flip
+      if (newPoss === 'CT') this.ctScore += 7;
+      else this.irScore += 7;
       // Flip possession so the team that just scored (current this.possession) kicks off again.
       // Do NOT set this.possession before calling kickoffFlip — flipPossession inside will handle it.
       // Pass opts so HOUSE CALL etc. are not lost on the follow-up kick.
@@ -382,40 +382,83 @@ export class GameState {
     return this.canSpecialTeams() && (this.yardsToEndzone() + 17) <= maxRange;
   }
 
+  /** AI Conversion Decision after TD */
+  aiConversionDecision() {
+    // Current score is AFTER the 6-pt TD was added, but BEFORE conversion.
+    // scoreDiff: positive = CPU is trailing, negative = CPU is leading.
+    const scoreDiff = this.possession === 'CT' ? this.irScore - this.ctScore : this.ctScore - this.irScore;
+    const isLate = this.half === 2 && (this.twoMinActive || this.playsUsed > 20);
+
+    // ─── AGGRESSIVE MODE (3-POINT) ───
+    // Go for 3 if trailing by 9+ late (try to make it one possession)
+    if (isLate && scoreDiff >= 9) return '3pt';
+    // Small chance for HARD difficulty to just be aggressive
+    if (this.difficulty === 'HARD' && Math.random() < 0.1) return '3pt';
+
+    // ─── BALANCED MODE (2-POINT) ───
+    // Standard chart situations:
+    // Trailing by 2: go for 2 to tie
+    if (scoreDiff === 2) return '2pt';
+    // Trailing by 5: go for 2 to make it a FG game (3 pts)
+    if (scoreDiff === 5) return '2pt';
+    // Trailing by 10: go for 2 to make it an 8-pt game
+    if (scoreDiff === 10) return '2pt';
+    
+    // Leading by 1: go for 2 to make it a 3-pt lead
+    if (isLate && scoreDiff === -1) return '2pt';
+    // Leading by 5: go for 2 to make it a 7-pt lead
+    if (isLate && scoreDiff === -5) return '2pt';
+
+    // Random variety for higher difficulties
+    if (this.difficulty === 'HARD' && Math.random() < 0.15) return '2pt';
+    if (this.difficulty === 'MEDIUM' && Math.random() < 0.05) return '2pt';
+
+    // Default: Extra Point
+    return 'xp';
+  }
+
   /** AI 4th down decision */
   ai4thDownDecision() {
     var dist = this.distance;
     var ydsToEz = this.yardsToEndzone();
     var scoreDiff = this.possession === 'CT' ? this.ctScore - this.irScore : this.irScore - this.ctScore;
     var desperate = scoreDiff <= -14 && this.twoMinActive;
-    var aggMod = { EASY: -15, MEDIUM: 0, HARD: 15 }[this.difficulty] || 0;
-
-    // Must go for it in own territory
-    if (!this.canSpecialTeams()) return 'go_for_it';
-
-    // Always go for it: short yardage, desperate, or inside the 5
-    if (dist <= 3) return 'go_for_it';
-    if (desperate) return 'go_for_it';
-    if (ydsToEz <= 5) return 'go_for_it';
-
-    // FG range decisions — kick any 4th & 4+ inside FG range
-    if (this.canAttemptFG() && dist >= 4) {
-      if (Math.random() * 100 < 80 + aggMod) return 'field_goal';
-    }
-
-    // Medium distance (4-5 yards outside FG range)
-    if (dist >= 4 && dist <= 5) {
-      if (Math.random() * 100 < 65 + aggMod) return 'go_for_it';
+    var aggressive = this.difficulty === 'HARD';
+    
+    // ─── 1. OWN TERRITORY (More than 50 yds to EZ) ───
+    if (ydsToEz > 50) {
+      if (desperate) return 'go_for_it';
+      if (dist === 1 && aggressive && Math.random() < 0.4) return 'go_for_it';
       return 'punt';
     }
 
-    // Long distance (6+), outside FG range
-    if (dist >= 6 && !this.canAttemptFG()) {
-      if (Math.random() * 100 < 80 - aggMod) return 'punt';
-      return 'go_for_it';
+    // ─── 2. MIDFIELD / FRINGE (35-50 yds to EZ) ───
+    if (ydsToEz > 35) {
+      if (desperate) return 'go_for_it';
+      if (dist <= 2) return 'go_for_it';
+      if (dist <= 5 && aggressive && Math.random() < 0.5) return 'go_for_it';
+      return 'punt';
     }
 
-    return 'go_for_it';
+    // ─── 3. FIELD GOAL RANGE (Inside 35 yds to EZ) ───
+    // Check if we have CANNON LEG for range boost
+    const sides = this.getCurrentSides();
+    const inv = sides.offenseIsHuman ? this.humanTorchCards : this.cpuTorchCards;
+    const hasCannon = inv.indexOf('cannon_leg') >= 0;
+
+    if (this.canAttemptFG(hasCannon)) {
+      if (desperate) return 'go_for_it';
+      // Inside the 5: more likely to go for TD
+      if (ydsToEz <= 5 && dist <= 3) return 'go_for_it';
+      // Short yardage in FG range: go for the throat on HARD
+      if (dist <= 2 && aggressive && Math.random() < 0.6) return 'go_for_it';
+      
+      return 'field_goal';
+    }
+
+    // ─── 4. NO MAN'S LAND (Too close to punt, too far for FG) ───
+    if (desperate || dist <= 5 || aggressive) return 'go_for_it';
+    return 'punt';
   }
 
   /** Flip possession after score/turnover/failed 4th */
@@ -659,6 +702,7 @@ export class GameState {
 
     if (result.isInterception) {
       const returnYds = calcReturnYards(featuredDef);
+      const defTeam = this.possession === 'CT' ? 'IR' : 'CT';
       if (this.possession === 'CT') {
         this.stats.ctTurnovers++;
         let newPos = this.ballPosition - returnYds;
@@ -684,10 +728,18 @@ export class GameState {
       }
       const offPts = calcOffenseTorchPoints(result, false);
       const defPts = calcDefenseTorchPoints(result, false);
-      this._awardTorchPts(offPts, defPts);
       
-      // AI Shop trigger for turnovers (if human is CT, IR gets a chance)
-      if (this.humanTeam === 'CT') this._triggerAiShop('turnover');
+      // Points awarded to respective teams BEFORE pos flip or accounting for it
+      if (this.possession === 'CT') {
+        this.ctTorchPts += offPts;
+        this.irTorchPts += Math.ceil(defPts * 1.2); // IR boost
+      } else {
+        this.irTorchPts += Math.ceil(offPts * 1.2); // IR boost
+        this.ctTorchPts += defPts;
+      }
+      
+      // Shop trigger for turnovers (defensive team forced it)
+      this._triggerShop(this.humanTeam === defTeam, 'turnover');
 
       this._checkHalfEnd();
       this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown, offCard: offCard || null });
@@ -695,6 +747,7 @@ export class GameState {
     }
 
     if (result.isFumbleLost) {
+      const defTeam = this.possession === 'CT' ? 'IR' : 'CT';
       if (this.possession === 'CT') {
         this.stats.ctTurnovers++;
         const fumbleSpot = this.ballPosition + Math.floor(result.yards * (0.3 + Math.random() * 0.5));
@@ -724,10 +777,18 @@ export class GameState {
       }
       const offPts = calcOffenseTorchPoints(result, false);
       const defPts = calcDefenseTorchPoints(result, false);
-      this._awardTorchPts(offPts, defPts);
       
-      // AI Shop trigger for turnovers (if human is CT, IR gets a chance)
-      if (this.humanTeam === 'CT') this._triggerAiShop('turnover');
+      // Points awarded to respective teams BEFORE pos flip or accounting for it
+      if (this.possession === 'CT') {
+        this.ctTorchPts += offPts;
+        this.irTorchPts += Math.ceil(defPts * 1.2); // IR boost
+      } else {
+        this.irTorchPts += Math.ceil(offPts * 1.2); // IR boost
+        this.ctTorchPts += defPts;
+      }
+      
+      // Shop trigger for turnovers (defensive team forced it)
+      this._triggerShop(this.humanTeam === defTeam, 'turnover');
 
       this._checkHalfEnd();
       this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown, offCard: offCard || null });
@@ -744,6 +805,25 @@ export class GameState {
     // Advance ball
     this.advanceBall(result.yards);
 
+    // Safety Check: ball in own endzone after non-turnover play
+    if (this.possession === 'CT' && this.ballPosition <= 0) {
+      this.irScore += 2;
+      this.stats.safeties++;
+      gameEvent = 'safety';
+      this.flipPossession(20); // Free kick from the 20 (modeled as flip to 20)
+      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: 'SAFETY! CT tackled in endzone.', event: 'safety', yards: result.yards });
+      this._checkHalfEnd();
+      return { result, offPlay, defPlay, featuredOff, featuredDef, gotFirstDown, gameEvent };
+    } else if (this.possession === 'IR' && this.ballPosition >= 100) {
+      this.ctScore += 2;
+      this.stats.safeties++;
+      gameEvent = 'safety';
+      this.flipPossession(80); // Free kick from the 20 (80 from IR perspective)
+      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: 'SAFETY! IR tackled in endzone.', event: 'safety', yards: result.yards });
+      this._checkHalfEnd();
+      return { result, offPlay, defPlay, featuredOff, featuredDef, gotFirstDown, gameEvent };
+    }
+
     // Touchdown
     if (result.isTouchdown) {
       const scoringTeam = this.possession;
@@ -759,12 +839,27 @@ export class GameState {
 
       const offPts = calcOffenseTorchPoints(result, false);
       const defPts = calcDefenseTorchPoints(result, false);
-      this._awardTorchPts(offPts, defPts);
+      
+      // Points awarded to respective teams BEFORE pos flip or accounting for it
+      if (this.possession === 'CT') {
+        this.ctTorchPts += offPts;
+        this.irTorchPts += Math.ceil(defPts * 1.2); // IR boost
+      } else {
+        this.irTorchPts += Math.ceil(offPts * 1.2); // IR boost
+        this.ctTorchPts += defPts;
+      }
 
-      // AI Shop trigger for touchdown (if human is CT, scoring IR gets a chance)
-      if (this.humanTeam === 'CT' && scoringTeam === 'IR') this._triggerAiShop('touchdown');
+      // Shop trigger for touchdown (scoring team)
+      this._triggerShop(this.humanTeam === scoringTeam, 'touchdown');
 
       gameEvent = 'touchdown';
+      
+      // BUG FIX: Ensure ball is positioned exactly at the goal line for the upcoming conversion attempt,
+      // and reset down/distance so the conversion isn't played on (e.g.) 4th and Goal.
+      this.ballPosition = scoringTeam === 'CT' ? 100 : 0;
+      this.down = 1;
+      this.distance = 10;
+
       this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown, offCard: offCard || null });
       // Possession flip will happen in handleConversion, but we should ensure ball resets to 50 there too.
       // However, if it's a turnover TD, it's already handled.
@@ -800,8 +895,9 @@ export class GameState {
       if (this.down > 4) {
         if (this.drivePlays <= 4) this.stats.threeAndOuts++;
         gameEvent = 'turnover_on_downs';
-        // AI shop trigger for turnover on downs stop
-        if (this.humanTeam === 'CT' && this.possession === 'CT') this._triggerAiShop('fourthDownStop');
+        // Shop trigger for turnover on downs stop (defensive team)
+        const defTeam = this.possession === 'CT' ? 'IR' : 'CT';
+        this._triggerShop(this.humanTeam === defTeam, 'fourthDownStop');
         this.flipPossession(this.ballPosition);
       }
     }
@@ -862,8 +958,18 @@ export class GameState {
     if (!this.twoMinActive) return null;
     this.clockSeconds -= 30;
     this.totalPlays++;
-    // Note: kneel is only callable during twoMinActive so playsUsed is intentionally not incremented.
+    this.down++; // Kneel costs a down
+    if (!this.twoMinActive) this.playsUsed++; // Fallback for consistency
+    
     healInjuries([this.ctOffRoster, this.ctDefRoster, this.irOffRoster, this.irDefRoster]);
+    
+    if (this.down > 4) {
+      this.flipPossession(this.ballPosition);
+      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: 'KNEEL', defPlay: '-', result: 'Ball turned over on downs after kneel.', event: 'turnover_on_downs' });
+      this._checkHalfEnd();
+      return { event: 'turnover_on_downs', description: 'Ball turned over on downs after kneel.' };
+    }
+
     this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: 'KNEEL', defPlay: '-', result: 'Quarterback kneels. Clock running.', event: 'kneel' });
     this._checkHalfEnd();
     return { event: 'kneel', description: 'Quarterback kneels. Clock running.' };
@@ -874,14 +980,18 @@ export class GameState {
    * @param {'xp'|'2pt'|'3pt'} choice
    * @param {object} [offPlay] - For 2pt/3pt, the play used
    * @param {object} [featuredOff] - Featured player for conversion
+   * @param {object} [defPlay] - Defensive selection
+   * @param {object} [featuredDef] - Defensive player selection
    * @returns {object} { success, points, result }
    */
-  handleConversion(choice, offPlay, featuredOff) {
+  handleConversion(choice, offPlay, featuredOff, defPlay, featuredDef) {
     const scoringTeam = this.possession;
 
     if (choice === 'xp') {
       if (scoringTeam === 'CT') this.ctScore += 1;
       else this.irScore += 1;
+      // BUG FIX: Reset ball position to 50 for the kickoff resolution
+      this.ballPosition = 50;
       this.kickoffFlip();
       this._checkHalfEnd();
       return { success: true, points: 1 };
@@ -894,8 +1004,8 @@ export class GameState {
 
     if (!offPlay) offPlay = aiSelectPlay(sides.offHand, 'offense', this.difficulty, situation);
     if (!featuredOff) featuredOff = aiSelectPlayer(sides.offPlayers, offPlay, this.difficulty, true);
-    const defPlay = aiSelectPlay(sides.defHand, 'defense', this.difficulty, situation);
-    const featuredDef = aiSelectPlayer(sides.defPlayers, defPlay, this.difficulty, false);
+    if (!defPlay) defPlay = aiSelectPlay(sides.defHand, 'defense', this.difficulty, situation);
+    if (!featuredDef) featuredDef = aiSelectPlayer(sides.defPlayers, defPlay, this.difficulty, false);
 
     const context = {
       playHistory: [], yardsToEndzone: fromYardLine,
@@ -920,6 +1030,9 @@ export class GameState {
       else this.irScore += points;
     }
 
+    // BUG FIX: Ensure ball position is reset to 50 for the kickoff flip, unless it's an onside recovery
+    this.ballPosition = 50;
+
     // ONSIDE KICK: 35% chance to recover at midfield instead of flipping possession
     var onsideRecovery = false;
     var scoringInv = scoringTeam === this.humanTeam ? this.humanTorchCards : this.cpuTorchCards;
@@ -936,16 +1049,20 @@ export class GameState {
         this.drivePlayHistory = [];
       }
     }
+    
+    // CRITICAL BUG FIX: Ensure possession flips after a 2pt/3pt conversion
     if (!onsideRecovery) {
       this.kickoffFlip();
     }
+    
     this._checkHalfEnd();
     return { success, points: success ? points : 0, result, onsideRecovery };
   }
 
   /** Halftime Booster Shop — port of halftime_booster logic from sim */
   halftimeShop() {
-    this._triggerAiShop('halftime');
+    this._triggerShop(true, 'halftime');
+    this._triggerShop(false, 'halftime');
   }
 
   /** Award TORCH points to the correct teams */
@@ -963,17 +1080,27 @@ export class GameState {
     }
   }
 
-  /** AI Shop trigger — CPU buys cards based on situation */
-  _triggerAiShop(trigger) {
+  /** Shop trigger — buys cards based on situation for the specified side */
+  _triggerShop(isHuman, trigger) {
     if (this.difficulty === 'EASY' || this.difficulty === 'RANDOM') return;
-    if (this.cpuTorchCards.length >= 3) return;
+    
+    const inv = isHuman ? this.humanTorchCards : this.cpuTorchCards;
+    if (inv.length >= 3) return;
 
+    const pts = isHuman ? this.ctTorchPts : this.irTorchPts;
     const offers = getBoosterOffers(trigger);
-    const bought = aiBuyTorchCard(offers, this.irTorchPts, this.cpuTorchCards, this.difficulty);
+    const bought = aiBuyTorchCard(offers, pts, inv, this.difficulty);
+    
     if (bought) {
-      this.cpuTorchCards.push(bought.id);
-      this.irTorchPts -= bought.cost;
+      inv.push(bought.id);
+      if (isHuman) this.ctTorchPts -= bought.cost;
+      else this.irTorchPts -= bought.cost;
     }
+  }
+
+  /** AI Shop trigger — CPU buys cards based on situation (compatibility wrapper) */
+  _triggerAiShop(trigger) {
+    this._triggerShop(false, trigger);
   }
 
   /** Check if the half should end */
@@ -986,11 +1113,21 @@ export class GameState {
       if (this.half === 1) {
         this.needsHalftime = true;
       } else {
-        this._endGame();
+        // OVERTIME CHECK
+        if (this.ctScore === this.irScore) {
+          this.half++; // Enter OT (Half 3, 4, etc)
+          this.playsUsed = 0;
+          this.twoMinActive = false;
+          this.clockSeconds = 120;
+          // In OT, possession flip occurs like a new half
+          this.kickoffFlip();
+        } else {
+          this._endGame();
+        }
       }
     }
-    // Hard cap total plays to prevent infinite loops
-    if (this.totalPlays > 150) {
+    // Hard cap total plays to prevent infinite loops (expanded for OT)
+    if (this.totalPlays > 200) {
       this._endGame();
     }
   }

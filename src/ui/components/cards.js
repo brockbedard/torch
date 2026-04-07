@@ -249,7 +249,7 @@ function injectShimmer() {
   document.head.appendChild(s);
 }
 
-export function buildMaddenPlayer(p, w, h) {
+export function buildMaddenPlayer(p, w, h, isHot) {
   injectShimmer();
   var stars = p.stars || (p.isStar ? 4 : 3);
   var trait = p.trait || '';
@@ -299,8 +299,12 @@ export function buildMaddenPlayer(p, w, h) {
 
   // Stars (flame pips with outline empties)
   var pipsEl = document.createElement('div');
-  pipsEl.style.cssText = 'display:flex;gap:2px;';
-  pipsEl.innerHTML = renderFlamePips(stars, 5, '#EBB010', 8);
+  pipsEl.style.cssText = 'display:flex;gap:2px;align-items:center;';
+  var pipsHtml = renderFlamePips(stars, 5, '#EBB010', 8);
+  if (isHot) {
+    pipsHtml += '<svg viewBox="0 0 12 16" width="10" height="13" style="margin-left:4px;filter:drop-shadow(0 0 4px #FF4511);animation:breathe 1.5s ease-in-out infinite;"><path d="' + FLAME_PIP_PATH + '" fill="#FF4511"/></svg>';
+  }
+  pipsEl.innerHTML = pipsHtml;
   center.appendChild(pipsEl);
 
   // Trait badge

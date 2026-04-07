@@ -82,8 +82,8 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   const covVar = cov.var || 0;
   const covInt = cov.int || 0;
 
-  // ── BASE MEAN (55% bump — increased to reduce shutouts and low scoring) ──
-  let mean = offPlay.mean * 1.55 + covMean;
+  // ── BASE MEAN (25% bump — reduced from 55% to fix inflated yardage) ──
+  let mean = offPlay.mean * 1.25 + covMean;
   let variance = Math.max(1, offPlay.variance * 0.90 + covVar);
 
   // Defensive card effects
@@ -171,10 +171,10 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   variance += trailingVarBoost;
 
   // ── DIFFICULTY YARD BONUS ──
-  // Easy: +1.0 (was +1.5), with rubber-band: +0 if ahead by 21+
+  // Easy: +0.6 (was +1.0), with rubber-band: +0 if ahead by 21+
   // Medium: +1 human offense, -0.5 AI offense — nudge toward 40-55% win rate
   if (difficulty === 'EASY' && offenseIsHuman) {
-    mean += (scoreDiff <= -21) ? 0 : 1.0;
+    mean += (scoreDiff <= -21) ? 0 : 0.6;
   } else if (difficulty === 'MEDIUM' && offenseIsHuman) {
     mean += 1;
   } else if (difficulty === 'MEDIUM' && !offenseIsHuman) {
@@ -200,7 +200,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     if (defPlay.passMeanMod < 0 && defPlay.sackRateBonus >= 0.03) sackRate += 0.03;
     if (yardsToEndzone <= 20) sackRate += 0.02;
     if (yardsToEndzone <= 10) sackRate += 0.02;
-    sackRate += 0.03; // Global bump
+    sackRate += 0.01; // Global bump reduced from 0.03
     if (coachBadge === 'IRON_CURTAIN') sackRate += 0.03;
     if (difficulty === 'EASY' && offenseIsHuman) sackRate *= 0.4;
 
@@ -211,87 +211,84 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
       result.isSack = true;
       result.yards = -(4 + Math.floor(Math.random() * 7));
       result.description = `SACK! ${featuredOff.name} goes down.`;
-      return result;
-    }
+    } else {
+      // ── INT CHECK ──
+      let intRate = offPlay.intRate + covInt + defPlay.intRateBonus + ovrMods.intMod;
+      intRate += 0.005; // Global bump
+      if (defPlay.id === 'ir_robber' && (offPlay.id === 'mesh' || offPlay.id === 'slant' || offPlay.id === 'shallow_cross')) intRate += 0.04;
+      if (defPlay.id === 'ir_mod' && (offPlay.id === 'four_verts' || offPlay.id === 'go_route')) intRate += 0.03;
+      if (featuredDef.badge === 'EYE' && (offPlay.id === 'pa_flat' || offPlay.id === 'pa_post' || offPlay.playType === 'OPTION')) intRate += 0.02;
+      // Halftime adjustment: aggressive +5% INT risk, conservative -50%
+      if (adj === 'aggressive' && offenseIsHuman) intRate += 0.05;
+      else if (adj === 'conservative' && offenseIsHuman) intRate *= 0.5;
+      intRate = Math.max(0, Math.min(0.20, intRate));
 
-    // ── COMPLETION CHECK ──
-    let compRate = offPlay.completionRate + ovrMods.compMod + defPlay.passCompMod;
-
-    // Play-type completion boost
-    var pt = offPlay.playType;
-    if (pt === 'SHORT') compRate += 0.10;
-    else if (pt === 'SCREEN') compRate += 0.12;
-
-    if (covMean <= -2) compRate -= 0.08;
-    else if (covMean <= -1) compRate -= 0.04;
-    if (yardsToEndzone <= 10) compRate -= 0.05;
-    // Rain completionMod applied post-resolution in gameplay.js
-    if (momentum > 75) compRate -= 0.05;
-    if (difficulty === 'EASY' && offenseIsHuman) compRate += 0.10; // was 0.15
-
-    compRate = Math.max(0.40, Math.min(0.95, compRate)); // Floor: even worst matchups complete 40%
-
-    if (Math.random() > compRate) {
-      result.isIncomplete = true;
-      result.yards = 0;
-      result.description = `Incomplete. ${featuredOff.name}'s target can't come up with it.`;
-      return result;
-    }
-
-    // ── COMPLETE — ROLL YARDS ──
-    result.isComplete = true;
-    let rawYards = gaussRandom(mean, variance * 0.5);
-
-    // Big play chance (3.5% on completions)
-    if (Math.random() < 0.035) {
-      var bigMult = 1.4 + Math.random() * 0.5;
-      rawYards = mean * bigMult;
-      result.description = `EXPLOSIVE! ${featuredOff.name} breaks free for extra yards!`;
-    }
-
-    // Soft cap: diminishing returns above 20 yards
-    if (rawYards > 20) rawYards = 20 + (rawYards - 20) * 0.5;
-
-    // Covered floor
-    if (covMean <= -2 && rawYards < 2) rawYards = 1 + Math.random() * 3;
-
-    result.yards = Math.max(-5, Math.min(Math.round(rawYards), maxYards));
-
-    if (coachBadge === 'SPEED_DEMON' && result.yards >= 15) {
-      result.yards = Math.min(result.yards + 2, maxYards);
-    }
-
-    // ── INT CHECK ──
-    let intRate = offPlay.intRate + covInt + defPlay.intRateBonus + ovrMods.intMod;
-    intRate -= 0.005;
-    if (defPlay.id === 'ir_robber' && (offPlay.id === 'mesh' || offPlay.id === 'slant' || offPlay.id === 'shallow_cross')) intRate += 0.04;
-    if (defPlay.id === 'ir_mod' && (offPlay.id === 'four_verts' || offPlay.id === 'go_route')) intRate += 0.03;
-    if (featuredDef.badge === 'EYE' && (offPlay.id === 'pa_flat' || offPlay.id === 'pa_post' || offPlay.playType === 'OPTION')) intRate += 0.02;
-    // Halftime adjustment: aggressive +5% INT risk, conservative -50%
-    if (adj === 'aggressive' && offenseIsHuman) intRate += 0.05;
-    else if (adj === 'conservative' && offenseIsHuman) intRate *= 0.5;
-    intRate = Math.max(0, Math.min(0.20, intRate));
-
-    if (Math.random() < intRate) {
-      result.isInterception = true;
-      result.isComplete = false;
-      result.yards = 0;
-      result.description = `INTERCEPTED! ${featuredDef.name} jumps the route!`;
-      return result;
-    }
-
-    // Fumble after catch
-    let fumbleRate = offPlay.fumbleRate;
-    fumbleRate += (context.fumbleRateMod || 0);  // Snow/rain fumble mod from conditions
-    if (adj === 'aggressive' && offenseIsHuman) fumbleRate += 0.03;
-    else if (adj === 'conservative' && offenseIsHuman) fumbleRate *= 0.5;
-    if (Math.random() < fumbleRate) {
-      result.isFumble = true;
-      result.isFumbleLost = Math.random() < 0.5;
-      if (result.isFumbleLost) {
-        result.description = `FUMBLE! ${featuredOff.name} coughs it up! Defense recovers!`;
+      if (Math.random() < intRate) {
+        result.isInterception = true;
+        result.isComplete = false;
+        result.yards = 0;
+        result.description = `INTERCEPTED! ${featuredDef.name} jumps the route!`;
       } else {
-        result.description = `Fumble by ${featuredOff.name} but offense recovers!`;
+        // ── COMPLETION CHECK ──
+        let compRate = offPlay.completionRate + ovrMods.compMod + defPlay.passCompMod;
+
+        // Play-type completion boost
+        var pt = offPlay.playType;
+        if (pt === 'SHORT') compRate += 0.10;
+        else if (pt === 'SCREEN') compRate += 0.12;
+
+        if (covMean <= -2) compRate -= 0.08;
+        else if (covMean <= -1) compRate -= 0.04;
+        if (yardsToEndzone <= 10) compRate -= 0.05;
+        // Rain completionMod applied post-resolution in gameplay.js
+        if (momentum > 75) compRate -= 0.05;
+        if (difficulty === 'EASY' && offenseIsHuman) compRate += 0.10;
+
+        compRate = Math.max(0.40, Math.min(0.95, compRate));
+
+        if (Math.random() > compRate) {
+          result.isIncomplete = true;
+          result.yards = 0;
+          result.description = `Incomplete. ${featuredOff.name}'s target can't come up with it.`;
+        } else {
+          // ── COMPLETE — ROLL YARDS ──
+          result.isComplete = true;
+          let rawYards = gaussRandom(mean, variance * 0.5);
+
+          // Big play chance (3.5% on completions)
+          if (Math.random() < 0.035) {
+            var bigMult = 1.4 + Math.random() * 0.5;
+            rawYards = mean * bigMult;
+            result.description = `EXPLOSIVE! ${featuredOff.name} breaks free for extra yards!`;
+          }
+
+          // Soft cap: diminishing returns above 20 yards
+          if (rawYards > 20) rawYards = 20 + (rawYards - 20) * 0.5;
+
+          // Covered floor
+          if (covMean <= -2 && rawYards < 2) rawYards = 1 + Math.random() * 3;
+
+          result.yards = Math.max(-5, Math.min(Math.round(rawYards), maxYards));
+
+          if (coachBadge === 'SPEED_DEMON' && result.yards >= 15) {
+            result.yards = Math.min(result.yards + 2, maxYards);
+          }
+
+          // Fumble after catch
+          let fumbleRate = offPlay.fumbleRate;
+          fumbleRate += (context.fumbleRateMod || 0);  // Snow/rain fumble mod from conditions
+          if (adj === 'aggressive' && offenseIsHuman) fumbleRate += 0.03;
+          else if (adj === 'conservative' && offenseIsHuman) fumbleRate *= 0.5;
+          if (Math.random() < fumbleRate) {
+            result.isFumble = true;
+            result.isFumbleLost = Math.random() < 0.5;
+            if (result.isFumbleLost) {
+              result.description = `FUMBLE! ${featuredOff.name} coughs it up! Defense recovers!`;
+            } else {
+              result.description = `Fumble by ${featuredOff.name} but offense recovers!`;
+            }
+          }
+        }
       }
     }
   }
@@ -326,44 +323,43 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
           result.description = `STUFFED AND STRIPPED! ${featuredOff.name} loses it!`;
         }
       }
-      return result;
-    }
+    } else {
+      // ── ROLL YARDS (no completion check — runs always "connect") ──
+      let rawYards = gaussRandom(mean, variance * 0.5);
 
-    // ── ROLL YARDS (no completion check — runs always "connect") ──
-    let rawYards = gaussRandom(mean, variance * 0.5);
+      // Big play chance on runs (2.5%)
+      if (Math.random() < 0.025) {
+        var runBigMult = 1.3 + Math.random() * 0.4;
+        rawYards = mean * runBigMult;
+        result.description = `${featuredOff.name} breaks a tackle and keeps going!`;
+      }
 
-    // Big play chance on runs (2.5%)
-    if (Math.random() < 0.025) {
-      var runBigMult = 1.3 + Math.random() * 0.4;
-      rawYards = mean * runBigMult;
-      result.description = `${featuredOff.name} breaks a tackle and keeps going!`;
-    }
+      // Soft cap: diminishing returns above 20 yards
+      if (rawYards > 20) rawYards = 20 + (rawYards - 20) * 0.5;
 
-    // Soft cap: diminishing returns above 20 yards
-    if (rawYards > 20) rawYards = 20 + (rawYards - 20) * 0.5;
+      // Covered floor for runs
+      if (covMean <= -2 && rawYards < 2) rawYards = 1 + Math.random() * 2;
 
-    // Covered floor for runs
-    if (covMean <= -2 && rawYards < 2) rawYards = 1 + Math.random() * 2;
+      result.yards = Math.max(-5, Math.min(Math.round(rawYards), maxYards));
 
-    result.yards = Math.max(-5, Math.min(Math.round(rawYards), maxYards));
+      if (coachBadge === 'SPEED_DEMON' && result.yards >= 15) {
+        result.yards = Math.min(result.yards + 2, maxYards);
+      }
 
-    if (coachBadge === 'SPEED_DEMON' && result.yards >= 15) {
-      result.yards = Math.min(result.yards + 2, maxYards);
-    }
+      // No safeties in v1 — ball capped at 1-yard line in gameState.advanceBall()
 
-    // No safeties in v1 — ball capped at 1-yard line in gameState.advanceBall()
-
-    // Run fumble
-    var runFumbleRate = offPlay.fumbleRate + 0.005;
-    if (adj === 'aggressive' && offenseIsHuman) runFumbleRate += 0.03;
-    else if (adj === 'conservative' && offenseIsHuman) runFumbleRate *= 0.5;
-    if (Math.random() < runFumbleRate) {
-      result.isFumble = true;
-      result.isFumbleLost = Math.random() < 0.5;
-      if (result.isFumbleLost) {
-        result.description = `FUMBLE! Ball on the ground! Defense has it!`;
-      } else {
-        result.description = `Fumble but ${featuredOff.name} falls on it.`;
+      // Run fumble
+      var runFumbleRate = offPlay.fumbleRate + 0.005;
+      if (adj === 'aggressive' && offenseIsHuman) runFumbleRate += 0.03;
+      else if (adj === 'conservative' && offenseIsHuman) runFumbleRate *= 0.5;
+      if (Math.random() < runFumbleRate) {
+        result.isFumble = true;
+        result.isFumbleLost = Math.random() < 0.5;
+        if (result.isFumbleLost) {
+          result.description = `FUMBLE! Ball on the ground! Defense has it!`;
+        } else {
+          result.description = `Fumble but ${featuredOff.name} falls on it.`;
+        }
       }
     }
   }
@@ -383,7 +379,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
         result.description = `Pass broken up — close call!`;
       }
     } else if (!offenseIsHuman && result.yards > 0) {
-      result.yards = Math.max(1, Math.floor(result.yards * 0.85)); // Easy: AI 15% yard reduction
+      result.yards = Math.max(1, Math.floor(result.yards * 0.90)); // Easy: AI 10% yard reduction
     }
   }
 
