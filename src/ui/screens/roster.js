@@ -140,7 +140,7 @@ export function buildRoster() {
   btnWrap.style.cssText = 'flex-shrink:0;padding:8px 14px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom,0px));position:relative;z-index:25;';
 
   var startBtn = buildFlameBadgeButton('START GAME', function() {
-    SND.snap();
+    if (SND.snap) SND.snap(); else if (SND.click) SND.click();
     setGs(function(s) { return Object.assign({}, s, { screen: 'gameplay' }); });
   });
 

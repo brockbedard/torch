@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TORCH — Consistency & Alignment Audit</title>
+
+<!-- PROJECT FONTS -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700;900&family=Rajdhani:wght@500;600;700&family=Barlow+Condensed:wght@400;600;700&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="/src/style.css">
+
+<style>
+  body {
+    background: #0A0804;
+    color: #f0ece4;
+    padding: 40px 20px;
+    display: flex; flex-direction: column; align-items: center;
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+
+  .audit-container {
+    width: 100%; max-width: 900px;
+    display: flex; flex-direction: column; gap: 80px;
+  }
+
+  .audit-section {
+    display: flex; flex-direction: column; gap: 20px;
+  }
+
+  .section-title {
+    font-family: 'Teko'; font-size: 28px; letter-spacing: 3px; color: #EBB010;
+    border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
+  }
+
+  .comparison-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+  }
+
+  .box-label {
+    font-family: 'Rajdhani'; font-size: 11px; font-weight: 700; color: #888;
+    text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 15px;
+  }
+
+  .demo-area {
+    background: rgba(255,255,255,0.02);
+    border: 1px dashed rgba(255,255,255,0.1);
+    padding: 30px; border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+
+  /* --- SPECIFIC TWEAK OVERRIDES --- */
+  
+  /* Tweak 1: Header Alignment */
+  .header-classic { width: 100%; height: 50px; background: #141008; border-bottom: 2px solid #EBB010; display: flex; align-items: center; padding: 0 16px; }
+  .header-classic .btn { font-family: 'Rajdhani'; font-size: 11px; color: #555; }
+  .header-classic .title { font-family: 'Teko'; font-size: 26px; color: #EBB010; flex: 1; text-align: center; }
+
+  .header-tweaked { 
+    width: 100%; height: 64px; /* Slightly taller for modern spacing */
+    background: rgba(10,8,4,0.95); border-bottom: 1px solid rgba(255,255,255,0.08); 
+    display: flex; align-items: center; padding: 0 20px; 
+  }
+  .header-tweaked .btn { font-family: 'Oswald'; font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #EBB010; opacity: 0.6; cursor: pointer; }
+  .header-tweaked .title { font-family: 'Teko'; font-size: 24px; letter-spacing: 4px; color: #fff; flex: 1; text-align: center; padding-right: 40px; /* Offset for button */ }
+
+</style>
+</head>
+<body>
+
+  <h1 style="font-family:'Teko'; font-size:48px; letter-spacing:8px; color:#EBB010; margin-bottom:5px;">CONSISTENCY AUDIT</h1>
+  <p style="font-family:'Rajdhani'; font-size:14px; color:#666; letter-spacing:2px; margin-bottom:60px;">SURGICAL ALIGNMENT TWEAKS (v0.34 PROPOSAL)</p>
+
+  <div class="audit-container">
+
+    <!-- 1. HEADERS & NAVIGATION -->
+    <section class="audit-section">
+      <h2 class="section-title">01. HEADER & NAVIGATION</h2>
+      <div class="comparison-row">
+        <div class="column">
+          <div class="box-label">CURRENT (VARYING HEIGHTS / FONTS)</div>
+          <div class="demo-area">
+            <div class="header-classic">
+              <div class="btn">← BACK</div>
+              <div class="title">TEAM SELECT</div>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="box-label">TWEAKED (STANDARDIZED 64PX GRID)</div>
+          <div class="demo-area">
+            <div class="header-tweaked">
+              <div class="btn">← BACK</div>
+              <div class="title">TEAM SELECT</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. RADIUS & PADDING -->
+    <section class="audit-section">
+      <h2 class="section-title">02. PANEL RADIUS & PADDING</h2>
+      <div class="comparison-row">
+        <div class="column">
+          <div class="box-label">CURRENT (MIXED RADII & TIGHT PADDING)</div>
+          <div class="demo-area">
+            <div style="background:#141008; border:1px solid #EBB01044; border-radius:6px; padding:12px; width:280px;">
+              <div style="font-family:'Teko'; font-size:22px; color:#EBB010; margin-bottom:5px;">GAME STATS</div>
+              <div style="font-family:'Rajdhani'; font-size:13px; color:#888;">Marcus Henderson: 242 YDS</div>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="box-label">TWEAKED (UNIFIED 8PX RADIUS / 16PX PADDING)</div>
+          <div class="demo-area">
+            <div style="background:#141008; border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:16px; width:280px;">
+              <div style="font-family:'Teko'; font-size:20px; letter-spacing:2px; color:#fff; margin-bottom:8px;">GAME STATS</div>
+              <div style="font-family:'Rajdhani'; font-size:12px; font-weight:600; color:rgba(255,255,255,0.5); border-top:1px solid rgba(255,255,255,0.05); padding-top:8px;">MARCUS HENDERSON: 242 YDS</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. TYPOGRAPHY HIERARCHY -->
+    <section class="audit-section">
+      <h2 class="section-title">03. TYPOGRAPHY HIERARCHY</h2>
+      <div class="comparison-row">
+        <div class="column">
+          <div class="box-label">CURRENT (SOMETIMES OVER-USING TEKO)</div>
+          <div class="demo-area">
+            <div style="text-align:center;">
+              <div style="font-family:'Teko'; font-size:16px; color:#fff;">QUICK RELEASE</div>
+              <div style="font-family:'Teko'; font-size:12px; color:#EBB010;">5 STARS</div>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="box-label">TWEAKED (RAJDHANI FOR BODY / OSWALD FOR LABELS)</div>
+          <div class="demo-area">
+            <div style="text-align:center;">
+              <div style="font-family:'Oswald'; font-size:11px; font-weight:700; color:#fff; letter-spacing:2px; margin-bottom:4px;">QUICK RELEASE</div>
+              <div style="font-family:'Rajdhani'; font-size:10px; font-weight:700; color:#EBB010; letter-spacing:1px;">★★★★★</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <section style="margin-top:100px; text-align:center; opacity:0.3; font-family:'Rajdhani'; font-size:10px; letter-spacing:2px;">
+    END OF AUDIT • STANDALONE RESEARCH PREVIEW
+  </section>
+
+</body>
+</html>

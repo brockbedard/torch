@@ -56,13 +56,27 @@ export const SND = {
   exploit:    safe(function() { AudioManager.play('jackpot', { volume: 0.5 }); }),
   shimmer:    safe(function() { AudioManager.play('shimmer', { volume: 0.4 }); }),
 
+  // Pitch-shifted combo pop — pass step index (0,1,2...) for ascending semitones.
+  // Used for Balatro-style synergy chain stings on snap reveal.
+  pop: function(step) {
+    try {
+      var s = step || 0;
+      AudioManager.play('ping', {
+        pitch: Math.pow(1.05946, s),  // +1 semitone per step (12-TET)
+        pitchRange: 0,
+        volume: 0.45 + Math.min(s, 6) * 0.04,  // Slight volume rise w/ chain
+        volRange: 0
+      });
+    } catch(e) {}
+  },
+
   // === KICKS ===
   kickThud:   safe(function() { AudioManager.play('kick', { volume: 0.6 }); }),
   kickGood:   safe(function() { AudioManager.play('bigPlayCrowd', { volume: 0.6 }); }),
   kickMiss:   safe(function() { AudioManager.play('groan', { volume: 0.5 }); }),
 
   // === WHISTLES ===
-  whistle:    safe(function() { AudioManager.play('whistle', { volume: 0.5 }); }),
+  whistle:    safe(function() { AudioManager.play('whistle', { volume: 0.05 }); }),
 
   // === CINEMATIC ===
   ignite:     safe(function() { AudioManager.playExact('ignite', { volume: 0.6 }); }),

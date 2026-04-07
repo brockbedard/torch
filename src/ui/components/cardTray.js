@@ -6,6 +6,7 @@
 
 import { gsap } from 'gsap';
 import { buildPlayV1, buildMaddenPlayer, buildTorchCard, buildHomeCard } from './cards.js';
+import { renderTorchCardIcon } from '../../data/torchCardIcons.js';
 import { SND } from '../../engine/sound.js';
 import { Haptic } from '../../engine/haptics.js';
 
@@ -54,6 +55,21 @@ var TRAY_CSS = `
 .CT-snap-btn{flex:1;display:flex;align-items:stretch;overflow:hidden;padding:0;border:none;border-radius:6px;background:linear-gradient(180deg,#EBB010 0%,#FF4511 100%);box-shadow:0 4px 16px rgba(255,69,17,0.3),0 0 20px rgba(235,176,16,0.15);cursor:pointer}
 .CT-snap-btn:disabled{opacity:0.4;pointer-events:none;box-shadow:none}
 .CT-snap-btn.CT-snap-urgent{background:linear-gradient(180deg,#e03050 0%,#8B0020 100%);box-shadow:0 4px 16px rgba(224,48,80,0.3),0 0 20px rgba(224,48,80,0.15)}
+.CT-snap-aura{animation:T-aura-pulse 2s infinite;box-shadow:0 0 20px #EBB010, 0 0 40px rgba(235,176,16,0.4) !important}
+@keyframes T-aura-pulse{0%,100%{box-shadow:0 0 20px #EBB010, 0 0 40px rgba(235,176,16,0.4)}50%{box-shadow:0 0 30px #fff, 0 0 60px rgba(235,176,16,0.6)}}
+.CT-hot-badge{position:absolute;top:3px;right:3px;z-index:5;display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle,#FF4511 0%,#8B0020 80%);box-shadow:0 0 8px rgba(255,69,17,0.65),0 0 14px rgba(255,69,17,0.35);pointer-events:none;animation:T-hot-pulse 1.6s ease-in-out infinite}
+.CT-hot-badge.CT-hot-max{background:radial-gradient(circle,#FFD060 0%,#EBB010 60%,#8B4A1F 100%);box-shadow:0 0 12px rgba(235,176,16,0.85),0 0 22px rgba(255,200,80,0.55),0 0 32px rgba(235,176,16,0.3);animation:T-hot-max-breathe 1.2s ease-in-out infinite}
+@keyframes T-hot-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes T-hot-max-breathe{0%,100%{transform:scale(1) rotate(-2deg);filter:brightness(1)}50%{transform:scale(1.18) rotate(2deg);filter:brightness(1.3)}}
+.CT-snap-pressure{animation:T-snap-heartbeat 1.4s ease-in-out infinite;will-change:transform,box-shadow}
+@keyframes T-snap-heartbeat{
+  0%,40%,100%{transform:scale(1);box-shadow:0 4px 16px rgba(255,0,64,0.35),0 0 24px rgba(255,0,64,0.25)}
+  6%{transform:scale(1.055);box-shadow:0 4px 22px rgba(255,0,64,0.7),0 0 38px rgba(255,0,64,0.5)}
+  14%{transform:scale(1);box-shadow:0 4px 16px rgba(255,0,64,0.35),0 0 24px rgba(255,0,64,0.25)}
+  22%{transform:scale(1.045);box-shadow:0 4px 20px rgba(255,0,64,0.6),0 0 34px rgba(255,0,64,0.4)}
+  32%{transform:scale(1);box-shadow:0 4px 16px rgba(255,0,64,0.35),0 0 24px rgba(255,0,64,0.25)}
+}
+@keyframes chevronPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.9)}}
 .CT-disc-bar{display:flex;gap:6px;padding:4px 8px;align-items:center;flex-shrink:0}
 .CT-disc-confirm{flex:1;font-family:'Teko';font-weight:700;font-size:14px;letter-spacing:2px;padding:8px;border-radius:6px;border:2px solid #EBB010;background:rgba(235,176,16,0.1);color:#EBB010;cursor:pointer}
 .CT-disc-cancel{font-family:'Rajdhani';font-weight:700;font-size:10px;padding:8px 12px;border-radius:6px;border:1px solid #333;background:transparent;color:#888;cursor:pointer}
@@ -506,7 +522,7 @@ export function renderCardTray(opts) {
 
     var isHot = (opts.isOffense && opts.offStar && p.id === opts.offStar.id && opts.offStarHot) ||
                 (!opts.isOffense && opts.defStar && p.id === opts.defStar.id && opts.defStarHot);
-    var playerCard = buildMaddenPlayer({ name: p.name, pos: p.pos, ovr: p.ovr, num: p.num || '', badge: p.badge, isStar: p.isStar, ability: p.ability || '', stars: p.stars, trait: p.trait, teamColor: opts.team.colors ? opts.team.colors.primary : (opts.team.accent || '#FF4511'), teamId: opts.teamId }, null, 120);
+    var playerCard = buildMaddenPlayer({ name: p.name, pos: p.pos, ovr: p.ovr, num: p.num || '', badge: p.badge, isStar: p.isStar, ability: p.ability || '', stars: p.stars, trait: p.trait, teamColor: opts.team.colors ? opts.team.colors.primary : (opts.team.accent || '#FF4511'), teamId: opts.teamId }, null, 120, isHot);
     playerCard.style.width = '100%'; playerCard.style.height = '100%';
     var c = document.createElement('div');
     c.className = 'CT-card';
@@ -539,15 +555,13 @@ export function renderCardTray(opts) {
     }
     var momentum = (opts.momentumMap && p.id) ? (opts.momentumMap[p.id] || 0) : 0;
     if (momentum >= 3) {
-      var pipWrap = document.createElement('div');
-      pipWrap.style.cssText = 'position:absolute;top:2px;right:2px;display:flex;gap:1px;z-index:4;';
-      for (var mi = 0; mi < momentum; mi++) {
-        var pip = document.createElement('div');
-        pip.style.cssText = 'width:4px;height:4px;border-radius:50%;background:' + (mi >= 4 ? '#e03050' : mi >= 3 ? '#EBB010' : '#555') + ';';
-        pipWrap.appendChild(pip);
-      }
+      var hotBadge = document.createElement('div');
+      hotBadge.className = 'CT-hot-badge' + (momentum >= 5 ? ' CT-hot-max' : '');
+      var iconColor = momentum >= 5 ? '#fff' : '#fff';
+      var hotIcon = renderTorchCardIcon('onFire', 14, iconColor);
+      if (hotIcon) hotBadge.appendChild(hotIcon);
       c.style.position = 'relative';
-      c.appendChild(pipWrap);
+      c.appendChild(hotBadge);
     }
     // Heat/fatigue indicator
     var heat = (opts.heatMap && p.id) ? (opts.heatMap[p.id] || 0) : 0;
@@ -721,7 +735,7 @@ export function renderCardTray(opts) {
   var snapBar = document.createElement('div');
   snapBar.className = 'CT-snap-bar';
   var snapBtn = document.createElement('button');
-  snapBtn.className = 'CT-snap-btn' + (opts.is2Min ? ' CT-snap-urgent' : '');
+  snapBtn.className = 'CT-snap-btn' + (opts.is2Min ? ' CT-snap-urgent' : '') + (opts.is4thDownGo ? ' CT-snap-aura' : '') + (opts.pressureBeat ? ' CT-snap-pressure' : '');
   // Flame badge left + text right
   var flamePath = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
   var snapBadge = document.createElement('div');

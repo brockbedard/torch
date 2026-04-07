@@ -1,4 +1,4 @@
-import { setGs, VERSION, GAME_SPEED, setGameSpeed } from '../../state.js';
+import { setGs, VERSION } from '../../state.js';
 import { getAllAchievements, getUnlockedIds, getProgress } from '../../engine/achievements.js';
 import AudioStateManager from '../../engine/audioManager.js';
 import { getRecentGames, getFormString } from '../../engine/gameHistory.js';
@@ -31,31 +31,6 @@ export function buildSettings() {
   });
   audioSection.appendChild(muteRow);
   el.appendChild(audioSection);
-
-  // ── GAME SPEED SECTION ──
-  var speedSection = createSection('GAME SPEED');
-  var speedRow = document.createElement('div');
-  speedRow.style.cssText = 'display:flex;gap:8px;padding:8px 0;';
-  ['normal', 'fast', 'turbo'].forEach(function(speed) {
-    var btn = document.createElement('button');
-    var isSel = GAME_SPEED.current === speed;
-    btn.style.cssText = "flex:1;font-family:'Rajdhani';font-weight:700;font-size:11px;letter-spacing:1px;padding:8px;border-radius:4px;cursor:pointer;border:1px solid " +
-      (isSel ? '#EBB010' : '#333') + ";background:" + (isSel ? '#EBB010' : 'transparent') + ";color:" + (isSel ? '#000' : '#666') + ";";
-    btn.textContent = speed.toUpperCase();
-    btn.onclick = function() {
-      setGameSpeed(speed);
-      speedRow.querySelectorAll('button').forEach(function(b, i) {
-        var s = ['normal', 'fast', 'turbo'][i];
-        var sel = s === speed;
-        b.style.borderColor = sel ? '#EBB010' : '#333';
-        b.style.background = sel ? '#EBB010' : 'transparent';
-        b.style.color = sel ? '#000' : '#666';
-      });
-    };
-    speedRow.appendChild(btn);
-  });
-  speedSection.appendChild(speedRow);
-  el.appendChild(speedSection);
 
   // ── ACHIEVEMENTS SECTION ──
   var achSection = createSection('ACHIEVEMENTS');

@@ -11,18 +11,16 @@ import { STAGS_OFF_PLAYS, STAGS_DEF_PLAYS } from './data/stagsPlays.js';
 import { SERPENTS_OFF_PLAYS, SERPENTS_DEF_PLAYS } from './data/serpentsPlays.js';
 import { getOffenseRoster, getDefenseRoster } from './data/players.js';
 
-export var VERSION = '0.33.0';
-export var VERSION_NAME = 'Broadcast Polish';
+export var VERSION = '0.35.0';
+export var VERSION_NAME = 'Moments of Joy';
 
-export var GAME_SPEED = { current: 'normal' }; // 'normal', 'fast', 'turbo'
-export function setGameSpeed(speed) { GAME_SPEED.current = speed; localStorage.setItem('torch_speed', speed); }
-export function getSpeedMultiplier() {
-  if (GAME_SPEED.current === 'fast') return 0.6;
-  if (GAME_SPEED.current === 'turbo') return 0.3;
-  return 1.0;
-}
-// Load saved preference (guard for Node/test environments)
-try { var _savedSpeed = localStorage.getItem('torch_speed'); if (_savedSpeed) GAME_SPEED.current = _savedSpeed; } catch(e) {}
+// Game speed is locked to normal — multiplier always 1.0.
+// Stub export kept so call sites don't need refactoring.
+export var GAME_SPEED = { current: 'normal' };
+export function setGameSpeed() {}
+export function getSpeedMultiplier() { return 1.0; }
+// Clear any stale saved preference from before speed was locked
+try { localStorage.removeItem('torch_speed'); } catch(e) {}
 
 // Feature flags — toggle individual features for testing
 export var FEATURES = {

@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TORCH Football — Moments of Joy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+:root {
+  --bg: #0A0804;
+  --bg-surface: #141008;
+  --bg-raised: #1E1610;
+  --bg-overlay: #281E14;
+  --torch: #FF4511;
+  --a-gold: #EBB010;
+  --l-green: #00ff44;
+  --p-red: #ff0040;
+  --cyan: #4DA6FF;
+  --text-primary: #ffffff;
+  --text-secondary: #bbbbbb;
+  --text-muted: #777777;
+  --border-default: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.15);
+  --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: 'Rajdhani', sans-serif;
+  min-height: 100vh;
+  padding-bottom: 64px;
+  overflow-x: hidden;
+}
+
+/* ─── Header ─── */
+.page-header {
+  text-align: center;
+  padding: 48px 24px 36px;
+  background: linear-gradient(180deg, #1c0a02 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border-default);
+  position: relative;
+  overflow: hidden;
+}
+.page-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255,69,17,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+.brand {
+  font-family: 'Teko', sans-serif;
+  font-size: 52px;
+  font-weight: 900;
+  letter-spacing: 10px;
+  color: var(--torch);
+  line-height: 1;
+  text-shadow: 0 0 40px rgba(255,69,17,0.5);
+}
+.brand span {
+  color: var(--a-gold);
+}
+.subtitle {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+.subtitle em {
+  color: var(--a-gold);
+  font-style: normal;
+}
+.header-note {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.5;
+}
+
+/* ─── Features grid ─── */
+.features {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.feature {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.feature-header {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.feature-num {
+  background: var(--torch);
+  color: white;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Teko', sans-serif;
+  font-size: 13px; font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.feature-name {
+  font-family: 'Teko', sans-serif;
+  font-size: 17px; font-weight: 700; letter-spacing: 1px;
+  color: var(--a-gold);
+  line-height: 1.1;
+}
+.feature-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.4;
+  letter-spacing: 0.3px;
+}
+.feature-demo {
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ─── Buttons ─── */
+.btn {
+  border: none;
+  padding: 9px 22px;
+  font-family: 'Teko', sans-serif;
+  font-size: 16px; font-weight: 700; letter-spacing: 2px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: transform 0.08s, opacity 0.08s;
+  user-select: none;
+}
+.btn:active { transform: scale(0.96); opacity: 0.85; }
+.btn-torch { background: var(--torch); color: white; }
+.btn-green { background: var(--l-green); color: #0A0804; }
+.btn-gold { background: var(--a-gold); color: #0A0804; }
+.btn-red { background: var(--p-red); color: white; }
+.btn-outline {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-strong);
+}
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+/* ─── Feature 1: Synergy Chain ─── */
+.chain-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  min-height: 44px;
+}
+.chain-badge {
+  opacity: 0;
+  transform: scale(0);
+  font-family: 'Teko', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--a-gold);
+  color: #0A0804;
+  white-space: nowrap;
+}
+.chain-badge.b2 { background: #e8a020; }
+.chain-badge.b3 { background: #d4820a; }
+.chain-badge.b4 { background: var(--torch); color: white; }
+
+.chain-pts {
+  opacity: 0;
+  font-family: 'Teko', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--a-gold);
+  letter-spacing: 1px;
+}
+
+/* ─── Feature 2: Glow Tell ─── */
+.shop-card {
+  width: 120px;
+  background: var(--bg-raised);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-default);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+.shop-card-face {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.shop-card-cover {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  transition: opacity 0.4s;
+}
+.shop-card-cover-pattern {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255,69,17,0.06),
+    rgba(255,69,17,0.06) 2px,
+    transparent 2px,
+    transparent 8px
+  );
+}
+.shop-card-cover svg {
+  opacity: 0.3;
+}
+.shop-card-tier {
+  font-family: 'Teko', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--a-gold);
+  text-transform: uppercase;
+}
+.shop-card-name {
+  font-family: 'Teko', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 1px;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+.shop-card-cost {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--a-gold);
+}
+.shop-card-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  max-width: 200px;
+  line-height: 1.4;
+}
+
+/* ─── Feature 3: Walkout TD ─── */
+.td-stage {
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 160px;
+}
+.td-overlay {
+  text-align: center;
+}
+.td-word {
+  font-family: 'Teko', sans-serif;
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: var(--l-green);
+  line-height: 1;
+  text-shadow: 0 0 30px rgba(0,255,68,0.5);
+  opacity: 0;
+}
+.td-pts {
+  font-family: 'Teko', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--a-gold);
+  letter-spacing: 2px;
+  opacity: 0;
+}
+.walkout-card {
+  opacity: 0;
+  transform: translateY(60px) scale(0.85);
+  width: 100px;
+  background: var(--bg-raised);
+  border: 2px solid var(--a-gold);
+  border-radius: var(--radius-lg);
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 8px 32px rgba(235,176,16,0.3);
+}
+.walkout-pos {
+  font-family: 'Teko', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--a-gold);
+}
+.walkout-name {
+  font-family: 'Teko', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  text-align: center;
+  line-height: 1.1;
+  letter-spacing: 1px;
+}
+.walkout-stars {
+  color: var(--a-gold);
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+.walkout-label {
+  font-family: 'Teko', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--l-green);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ─── Feature 4: Shame Card ─── */
+.shame-stage {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 140px;
+}
+.shame-card {
+  width: 100px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  transition: filter 0.4s;
+}
+.shame-card.active {
+  filter: saturate(0.1) brightness(0.65);
+}
+.shame-verdict {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  pointer-events: none;
+}
+.shame-label {
+  font-family: 'Teko', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--p-red);
+  text-shadow: 0 2px 8px rgba(255,0,64,0.6);
+  transform: rotate(-8deg);
+  opacity: 0;
+  border: 2px solid var(--p-red);
+  padding: 2px 8px;
+  background: rgba(255,0,64,0.12);
+  white-space: nowrap;
+}
+.shame-player-pos {
+  font-family: 'Teko', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  color: var(--cyan);
+}
+.shame-player-name {
+  font-family: 'Teko', sans-serif;
+  font-size: 14px; font-weight: 700;
+  color: white;
+  text-align: center;
+  line-height: 1.1;
+}
+.shame-player-stars {
+  color: var(--a-gold);
+  font-size: 11px;
+}
+.shame-icon-wrap {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ─── Feature 5: Hitstop / Sack ─── */
+.hitstop-stage {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 150px;
+}
+.sack-card {
+  width: 100px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.sack-word {
+  font-family: 'Teko', sans-serif;
+  font-size: 32px; font-weight: 900; letter-spacing: 3px;
+  color: var(--p-red);
+  opacity: 0;
+  text-shadow: 0 0 20px rgba(255,0,64,0.5);
+}
+.sack-yards {
+  font-family: 'Teko', sans-serif;
+  font-size: 14px; font-weight: 700;
+  color: var(--text-muted);
+  opacity: 0;
+}
+
+/* ─── Feature 6: Pressure Heartbeat ─── */
+.snap-stage {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  min-height: 140px;
+}
+.down-dist {
+  font-family: 'Teko', sans-serif;
+  font-size: 14px; font-weight: 700; letter-spacing: 2px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.pressure-label {
+  font-family: 'Teko', sans-serif;
+  font-size: 11px; font-weight: 700; letter-spacing: 3px;
+  color: var(--torch);
+  opacity: 0;
+  text-transform: uppercase;
+  text-align: center;
+}
+.snap-btn-wrap {
+  position: relative;
+}
+.snap-btn {
+  background: var(--torch);
+  color: white;
+  border: none;
+  width: 100px; height: 42px;
+  font-family: 'Teko', sans-serif;
+  font-size: 20px; font-weight: 700; letter-spacing: 3px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+  transition: transform 0.08s, box-shadow 0.08s;
+  user-select: none;
+}
+.snap-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.4);
+}
+.snap-btn.pressure-beat {
+  animation: heartbeat-scale 0.9s ease-in-out infinite;
+}
+@keyframes heartbeat-scale {
+  0%, 100% { transform: scale(1); box-shadow: 0 4px 0 rgba(0,0,0,0.4), 0 0 0 0 rgba(255,69,17,0); }
+  15% { transform: scale(1.06); box-shadow: 0 4px 0 rgba(0,0,0,0.4), 0 0 0 8px rgba(255,69,17,0.3); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.04); box-shadow: 0 4px 0 rgba(0,0,0,0.4), 0 0 0 5px rgba(255,69,17,0.2); }
+  60% { transform: scale(1); box-shadow: 0 4px 0 rgba(0,0,0,0.4), 0 0 0 0 rgba(255,69,17,0); }
+}
+.snap-ring {
+  position: absolute;
+  inset: -2px;
+  border-radius: calc(var(--radius-md) + 2px);
+  border: 2px solid var(--torch);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ─── Feature 7: Momentum ─── */
+.momentum-stage {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 160px;
+}
+.player-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  position: relative;
+}
+.player-info {
+  flex: 1;
+}
+.player-row-name {
+  font-family: 'Teko', sans-serif;
+  font-size: 15px; font-weight: 700; letter-spacing: 0.5px;
+  color: white;
+  line-height: 1;
+}
+.player-row-pos {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+  color: var(--text-muted);
+}
+.momentum-bar-wrap {
+  width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+.momentum-pips {
+  display: flex;
+  gap: 3px;
+}
+.pip {
+  width: 12px; height: 12px;
+  border-radius: 2px;
+  background: var(--border-default);
+  border: 1px solid var(--border-strong);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.pip.filled {
+  background: var(--a-gold);
+  box-shadow: 0 0 6px rgba(235,176,16,0.5);
+}
+.pip.hot {
+  background: var(--torch);
+  box-shadow: 0 0 6px rgba(255,69,17,0.6);
+}
+.hot-badge {
+  font-family: 'Teko', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  color: var(--torch);
+  background: rgba(255,69,17,0.15);
+  border: 1px solid rgba(255,69,17,0.4);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transform: translateY(-4px);
+}
+.hot-badge.visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.spike-anim {
+  position: absolute;
+  right: 10px; top: -18px;
+  font-family: 'Teko', sans-serif;
+  font-size: 16px; font-weight: 900; letter-spacing: 1px;
+  color: var(--a-gold);
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* ─── Feature 8: Big Play Icons ─── */
+.bigplay-stage {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.bigplay-grid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.bigplay-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transform: scale(0.7);
+  cursor: pointer;
+}
+.bigplay-item:active .icon-circle { transform: scale(0.92); }
+.icon-circle {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+}
+.icon-circle.green { background: rgba(0,255,68,0.12); border: 1.5px solid rgba(0,255,68,0.35); }
+.icon-circle.gold  { background: rgba(235,176,16,0.12); border: 1.5px solid rgba(235,176,16,0.35); }
+.icon-circle.red   { background: rgba(255,0,64,0.12); border: 1.5px solid rgba(255,0,64,0.35); }
+.icon-circle.cyan  { background: rgba(77,166,255,0.12); border: 1.5px solid rgba(77,166,255,0.35); }
+.icon-circle.orange { background: rgba(255,69,17,0.12); border: 1.5px solid rgba(255,69,17,0.35); }
+.bigplay-label {
+  font-family: 'Teko', sans-serif;
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ─── Keyframes ─── */
+@keyframes T-rot-shake {
+  0%, 100% { transform: rotate(0deg) translate(0,0); }
+  10% { transform: rotate(-5deg) translate(-3px,0); }
+  20% { transform: rotate(6deg) translate(3px,-1px); }
+  30% { transform: rotate(-5deg) translate(-3px,0); }
+  40% { transform: rotate(5deg) translate(3px,1px); }
+  50% { transform: rotate(-3deg) translate(-2px,0); }
+  60% { transform: rotate(3deg) translate(2px,0); }
+  75% { transform: rotate(-1deg) translate(-1px,0); }
+  88% { transform: rotate(1deg); }
+}
+@keyframes badge-pop {
+  0% { transform: scale(0) rotate(-15deg); opacity: 0; }
+  60% { transform: scale(1.18) rotate(3deg); opacity: 1; }
+  80% { transform: scale(0.94) rotate(-1deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes pts-pop {
+  0% { transform: scale(0.6) translateY(8px); opacity: 0; }
+  60% { transform: scale(1.08) translateY(-2px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+@keyframes float-up {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-28px); opacity: 0; }
+}
+@keyframes shame-stamp {
+  0% { transform: scale(2) rotate(-12deg); opacity: 0; }
+  50% { transform: scale(0.92) rotate(-7deg); opacity: 1; }
+  70% { transform: scale(1.04) rotate(-9deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-8deg); opacity: 1; }
+}
+@keyframes td-slam {
+  0% { transform: scale(0.3) translateY(-20px); opacity: 0; }
+  60% { transform: scale(1.08) translateY(2px); opacity: 1; }
+  80% { transform: scale(0.96); }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+@keyframes hitstop-freeze {
+  0%, 100% { filter: brightness(1) contrast(1); }
+  50% { filter: brightness(1.4) contrast(1.2) saturate(0); }
+}
+@keyframes glow-pulse-card {
+  0%, 100% { box-shadow: 0 0 8px var(--a-gold), 0 0 20px rgba(235,176,16,0.3); border-color: var(--a-gold); }
+  50% { box-shadow: 0 0 20px var(--a-gold), 0 0 50px rgba(235,176,16,0.6), 0 0 90px rgba(235,176,16,0.15); border-color: var(--a-gold); }
+}
+@keyframes shimmer-sweep {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+@keyframes walkout-fly {
+  0% { opacity: 0; transform: translateY(60px) scale(0.8); }
+  60% { transform: translateY(-6px) scale(1.03); opacity: 1; }
+  80% { transform: translateY(3px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ═══════════════════════════════════════════════════ HEADER -->
+<div class="page-header">
+  <div class="brand">TORCH<span>.</span></div>
+  <div class="subtitle">MOMENTS OF <em>JOY</em> &mdash; STAKEHOLDER PREVIEW</div>
+  <div class="header-note">8 game-feel systems built this sprint. Tap each demo to see it in action.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ FEATURES -->
+<div class="features">
+
+  <!-- ─── 1: Synergy Chain Combo Pops ─── -->
+  <div class="feature">
+    <div class="feature-header">
+      <div class="feature-num">1</div>
+      <div>
+        <div class="feature-name">SYNERGY CHAIN COMBO POPS</div>
+        <div class="feature-desc">When multiple synergies fire on one snap, each badge pops in with a pitch-shifted audio cue — MATCHUP, TEMPO, HOT READ, CARD COMBO</div>
+      </div>
+    </div>
+    <div class="feature-demo">
+      <div class="chain-row" id="chain-row">
+        <div class="chain-badge" id="cb-0">MATCHUP</div>
+        <div class="chain-badge b2" id="cb-1">TEMPO</div>
+        <div class="chain-badge b3" id="cb-2">HOT READ</div>
+        <div class="chain-badge b4" id="cb-3">CARD COMBO</div>
+      </div>
+      <div class="chain-pts" id="chain-pts">+4 COMBO</div>
+      <button class="btn btn-torch" onclick="demoChain()">FIRE COMBO</button>
+    </div>
+  </div>
+
+  <!-- ─── 2: Glow Tell ─── -->
+  <div class="feature">
+    <div class="feature-header">
+      <div class="feature-num">2</div>
+      <div>
+        <div class="feature-name">GLOW TELL</div>
+        <div class="feature-desc">Cards in the shop pulse with a golden glow — but only reveal after you tap once. Prevents impulsive buys on reactive cards.</div>
+      </div>
+    </div>
+    <div class="feature-demo">
+      <div style="display:flex; gap:14px; align-items:flex-start;">
+        <div>
+          <div class="shop-card" id="glow-card" onclick="demoGlow()">
+            <div class="shop-card-face">
+              <div class="shop-card-tier">GOLD</div>
+              <svg width="36" height="36" viewBox="0 0 512 512" fill="var(--a-gold)">
+                <path d="M256 16C123.5 16 16 123.5 16 256s107.5 240 240 240 240-107.5 240-240S388.5 16 256 16zm0 48c106.1 0 192 85.9 192 192S362.1 448 256 448 64 362.1 64 256 149.9 64 256 64zm0 32c-88.3 0-160 71.7-160 160s71.7 160 160 160 160-71.7 160-160S344.3 96 256 96zm-16 48h32v96h-32zm0 112h32v32h-32z"/>
+              </svg>
+              <div class="shop-card-name">SCOUT TEAM</div>
+              <div class="shop-card-cost">180 pts</div>
+            </div>
+            <div class="shop-card-cover" id="glow-cover">
+              <div class="shop-card-cover-pattern">
+                <svg width="28" height="28" viewBox="0 0 512 512" fill="rgba(235,176,16,0.5)">
+                  <path d="M256 48L32 176v32h448v-32L256 48zM32 224v256h96V336h256v144h96V224H32zm128 128v96h-32v-96h32zm64 0v96h-32v-96h32zm64 0v96h-32v-96h32z"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div style="text-align:center; margin-top:6px; font-size:10px; color:var(--text-muted); letter-spacing:1px;">TAP TO REVEAL</div>
+        </div>
+        <div class="shop-card-note" style="text-align:left; max-width:160px;">
+          Face-down cards glow to signal importance. Tap once to reveal — then tap again to buy. Prevents misclicks on reactive cards.
+        </div>
+      </div>
+      <button class="btn btn-outline" onclick="resetGlow()">RESET</button>
+    </div>
+  </div>
+
+  <!-- ─── 3: Walkout TD ─── -->
+  <div class="feature">
+    <div class="feature-header">
+      <div class="feature-num">3</div>
+      <div>
+        <div class="feature-name">WALKOUT TD CARD</div>
+        <div class="feature-desc">After a touchdown, your featured player's card flies in from below — identity, ownership, celebration.</div>
+      </div>
+    </div>
+    <div class="feature-demo">
+      <div class="td-stage" id="td-stage">
+        <div class="td-overlay">
+          <div class="td-word" id="td-word">TOUCHDOWN</div>
+          <div class="td-pts" id="td-pts">+6 PTS &nbsp; +15 TORCH</div>
+        </div>
+        <div class="walkout-card" id="walkout-card">
+          <div class="walkout-pos">WR</div>
+          <svg width="32" height="32" viewBox="0 0 512 512" fill="var(--torch)" id="walkout-svg">
+            <!-- onFire path injected by JS -->
+          </svg>
+          <div class="walkout-name">D. WHITFIELD</div>
+          <div class="walkout-stars">★★★★★</div>
+          <div class="walkout-label">SCORER</div>
+        </div>
+      </div>
+      <button class="btn btn-green" onclick="demoTD()">TOUCHDOWN</button>
+    </div>
+  </div>
+
+  <!-- ─── 4: Shame Card ─── -->
+  <div class="feature">
+    <div class="feature-header">
+      <div class="feature-num">4</div>
+      <div>
+        <div class="feature-name">SHAME CARD</div>
+        <div class="feature-desc">On INT or fumble, your featured player's card desaturates and gets stamped with a verdict label — visceral accountability.</div>
+      </div>
+    </div>
+    <div class="feature-demo">
+      <div class="shame-stage">
+        <div class="shame-card" id="shame-card">
+          <div class="shame-player-pos">QB</div>
+          <div class="shame-icon-wrap" id="shame-icon-wrap">
+            <svg width="28" height="28" viewBox="0 0 512 512" fill="var(--l-green)">
+              <path d="M256 48C141.1 48 48 141.1 48 256s93.1 208 208 208 208-93.1 208-208S370.9 48 256 48zm-32 288l-80-80 28.3-28.3L224 279.4l115.7-115.7 28.3 28.3-144 144z"/>
+            </svg>
+          </div>
+          <div class="shame-player-name">M. RIVERS</div>
+          <div class="shame-player-stars">★★★★</div>
+          <div class="shame-verdict" id="shame-verdict">
+            <div class="shame-label" id="shame-label">PICKED</div>
+          </div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-red" onclick="demoShame('PICKED')">INT</button>
+        <button class="btn btn-red" onclick="demoShame('FUMBLED')">FUMBLE</button>
+        <button class="btn btn-outline" onclick="resetShame()">RESET</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 5: Hitstop 2.0 ─── -->
+  <div class="feature">
+    <div class="feature-header">
+      <div class="feature-num">5</div>
+      <div>
+        <div class="feature-name">HITSTOP 2.0 — SACK</div>
+        <div class="feature-desc">Sacks get a rotational screen shake, bass drop audio, and heavy-impact haptics. The screen briefly freezes then slams the result.</div>
+      </div>
+    </div>
+    <div class="feature-demo">
+      <div class="hitstop-stage" id="hitstop-stage">
+        <div class="sack-card" id="sack-card">
+          <div class="shame-player-pos">QB</div>
+          <svg width="28" height="28" viewBox="0 0 512 512" fill="var(--p-red)" id="sack-icon">
+            <!-- ironWall path injected by JS -->
+          </svg>
+          <div class="shame-player-name">M. RIVERS</div>
+          <div class="shame-player-stars">★★★★</div>
+        </div>
+        <div class="sack-word" id="sack-word">SACK</div>
+        <div class="sack-yards" id="sack-yards">-7 YDS</div>
+      </div>
+      <button class="btn btn-red" onclick="demoSack()">SACK</button>
+    </div>
+  </div>
+
+  <!-- ─── 6: Pressure Heartbeat ─── -->
+  <div class="feature">
+    <div class="feature-header">
+      <div class="feature-num">6</div>
+      <div>
+        <div class="feature-name">PRESSURE HEARTBEAT</div>
+        <div class="feature-desc">On 4th down, late in the game, or in the red zone — the SNAP button pulses with a double-thump heartbeat and the screen edge glows red.</div>
+      </div>
+    </div>
+    <div class="feature-demo">
+      <div class="snap-stage">
+        <div class="down-dist" id="down-dist">4TH &amp; 3 &nbsp;|&nbsp; OPP 12 &nbsp;|&nbsp; Q4 1:47</div>
+        <div class="pressure-label" id="pressure-label">PRESSURE SNAP</div>
+        <div class="snap-btn-wrap">
+          <button class="snap-btn" id="snap-btn" onclick="demoSnap()">SNAP</button>
+          <div class="snap-ring" id="snap-ring"></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-torch" onclick="togglePressure(true)">ENABLE PRESSURE</button>
+        <button class="btn btn-outline" onclick="togglePressure(false)">DISABLE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 7: Player Momentum Boosts ─── -->
+  <div class="feature">
+    <div class="feature-header">
+      <div class="feature-num">7</div>
+      <div>
+        <div class="feature-name">PLAYER MOMENTUM BOOSTS</div>
+        <div class="feature-desc">Big plays spike momentum in real time — TDs +2, INTs +3, sacks +2. HOT badge appears at level 4+. Crashes on mistakes.</div>
+      </div>
+    </div>
+    <div class="feature-demo">
+      <div class="momentum-stage" id="momentum-stage">
+        <!-- Rows inserted by JS -->
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-green" onclick="spikeMomentum(0,2,'TD')">TD SCORER +2</button>
+        <button class="btn btn-red" onclick="spikeMomentum(1,3,'INT')">DEF INT +3</button>
+        <button class="btn btn-outline" onclick="resetMomentum()">RESET</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 8: Big Play Interface ─── -->
+  <div class="feature">
+    <div class="feature-header">
+      <div class="feature-num">8</div>
+      <div>
+        <div class="feature-name">BIG PLAY INTERFACE</div>
+        <div class="feature-desc">Game-icons.net SVGs (CC BY 3.0) replace text labels for touchdowns, INTs, fumbles, sacks, and dominant performances. Tap to preview.</div>
+      </div>
+    </div>
+    <div class="feature-demo">
+      <div class="bigplay-grid" id="bigplay-grid">
+        <div class="bigplay-item" id="bp-0" onclick="bigPlayPop(0)">
+          <div class="icon-circle green">
+            <svg width="28" height="28" viewBox="0 0 512 512" fill="var(--l-green)" id="bp-svg-0"></svg>
+          </div>
+          <div class="bigplay-label">TOUCHDOWN</div>
+        </div>
+        <div class="bigplay-item" id="bp-1" onclick="bigPlayPop(1)">
+          <div class="icon-circle cyan">
+            <svg width="28" height="28" viewBox="0 0 512 512" fill="var(--cyan)" id="bp-svg-1"></svg>
+          </div>
+          <div class="bigplay-label">INT</div>
+        </div>
+        <div class="bigplay-item" id="bp-2" onclick="bigPlayPop(2)">
+          <div class="icon-circle orange">
+            <svg width="28" height="28" viewBox="0 0 512 512" fill="var(--torch)" id="bp-svg-2"></svg>
+          </div>
+          <div class="bigplay-label">FUMBLE</div>
+        </div>
+        <div class="bigplay-item" id="bp-3" onclick="bigPlayPop(3)">
+          <div class="icon-circle red">
+            <svg width="28" height="28" viewBox="0 0 512 512" fill="var(--p-red)" id="bp-svg-3"></svg>
+          </div>
+          <div class="bigplay-label">SACK</div>
+        </div>
+        <div class="bigplay-item" id="bp-4" onclick="bigPlayPop(4)">
+          <div class="icon-circle gold">
+            <svg width="28" height="28" viewBox="0 0 512 512" fill="var(--a-gold)" id="bp-svg-4"></svg>
+          </div>
+          <div class="bigplay-label">DOMINANCE</div>
+        </div>
+      </div>
+      <button class="btn btn-torch" onclick="showAllBigPlay()">SHOW ALL</button>
+    </div>
+  </div>
+
+</div><!-- /features -->
+
+<!-- ═══════════════════════════════════════════════════ SCRIPTS -->
+<script>
+
+// ─── SVG Paths (game-icons.net, CC BY 3.0) ───
+const ICONS = {
+  onFire: 'M108.28 18.78c-1.2 6.05 1.1 13.32 9.095 19.876 15.883 13.01 36.716-3.12 27.875-19.875h-36.97zm174.564 0c13.572 15.575 25.36 48.026 21.687 77.22-3.915 31.118-22.083 59.048-73.624 67.094v.094a37.068 37.068 0 0 0-5.812 1.343c4.17.89 8.657 2.86 13.344 6.22 24.482 17.577 3.918 55.804-26.125 36.47-8.196-5.266-12.213-12.31-13.032-19.19-4.615 11.776-2.376 25.68 12.47 37.126 42.122 32.48 76.872-19.863 48.844-50.437 35.076-12.994 54.042-38.53 60.594-65.97 17.85 2.145 40.616 8.678 58.156 22.22 19.867 15.337 34.025 38.73 29.844 79.25l-.032.405v.406c-.43 27.1 3.257 52.267 13.906 77.314-.175-.088-.355-.164-.53-.25 10.834 28.695-4.215 77.915-32.094 76.375a47.369 47.369 0 0 1-4.625-.47c10.87-3.895 19.736-14.11 20.187-31.47.57-21.935-30.486-31.816-48.688-21.28 1.853-10.077 5.738-19.852 11.125-27.53a60.126 60.126 0 0 0 6.188-7.095c.204.627.43 1.27.72 1.906 9.98 22.058 34.89 7.416 25.186-11.405-4.35-8.457-11.074-10.648-16.686-9.03 3.504-11.767 3.415-24.225.406-35.72-3.952-15.098-13.013-28.82-26.625-37.03-7.976-4.812-17.48-7.51-27.844-7.44a61.5 61.5 0 0 0-2.092.064c-5.57.233-11.385 1.277-17.313 3.186-5.246.927-10.17 3.588-14.03 8.438-23.005 28.896 14.76 74.018 41.967 39.687 8.61-10.862 8.926-21.705 4.813-30.374a35.115 35.115 0 0 1 4.844 2.438c8.787 5.3 15.35 14.822 18.217 25.78 2.87 10.96 1.946 23.044-3.312 33.126-4.384 8.406-11.626 15.654-23.28 20.28-1.272.41-2.53.853-3.783 1.314 18.878 44.79-9.97 58.624-46.03 37.156-6.794 10.808-11.198 22.857-13.25 35.47 9.883-4.887 23.666-6.502 41.687-2.595 28.884 6.263 33.747 41 18.75 61.906.643-2.984 1.033-6.202 1.124-9.686.48-18.44-18.605-29.432-37-29.156-17.28.258-33.966 10.457-33.28 33.75.14 4.844 1.124 9.19 2.748 13.03-4.827-1.217-9.4-2.263-13.593-3.312-20.567-5.145-33.424-9.23-50.25-42.22-11.65-22.837-13.746-44.61-9.657-62.717.35-1.55.75-3.07 1.187-4.564.887-2.386 2.22-4.867 4.063-7.437 14.096-19.637 44.76-3.16 29.25 20.936-1.586 2.468-3.375 4.467-5.282 6.03 10.913-.16 22-6.1 29.69-20.56 13.784-25.93-8.35-51.58-31.5-51.688-1.84-.01-3.696.173-5.532.5-3.696-10.15-11.607-14.724-19.125-14.657-11.395.103-21.84 10.833-15.063 28.814 1.5 3.97 3.765 6.996 6.438 9.187-15.838 24.13-20.18 58.28-6.22 93.376-28.655 4.51-48 1-62.25-6.375-16.074-8.32-26.524-22.114-35.718-38.124-9.194-16.01-16.705-33.956-27.813-48.97-9.438-12.754-22.502-23.363-40.28-26.686v19c10.905 2.694 18.18 9.218 25.28 18.813 9.153 12.37 16.656 29.85 26.594 47.156 9.94 17.305 22.74 34.724 43.376 45.405 19.365 10.023 44.896 13.558 79.28 7.28 17.85 31.407 38.335 40.456 59 45.626 20.14 5.04 40.485 7.83 68.376 28.97 1.97 1.66 3.995 3.258 6.032 4.78.594.49 1.18.965 1.78 1.47l.095-.094c44.505 32.063 102.997 31.564 138.467-3.906 38.87-38.87 35.765-105.384-6.187-150.844-26.624-35.576-33.77-66.875-33.156-105.562h-.03c4.428-45.38-13.045-76.668-37.033-95.188-21.172-16.346-46.585-23.457-67-25.875 1.496-26.37-5.78-52.345-17.717-71.5h-23.22zM88.438 52.688c-3.178 0-6.483.374-9.907 1.188-5.71 1.356-10.715 4.073-15 7.75-.027.024-.064.038-.093.063-2.25 1.463-4.222 3.494-5.75 6.093-.033.058-.092.1-.124.157-2.415 4.2-3.617 9.88-2.907 17.063 2.628 26.407 40.834 27.546 39.313-3.875-.388-8.14-3.673-14.105-8.19-17.813 15.426 4.92 26.523 22.082 16.72 48.063-10.34 27.408-41.76 29.372-55.47 12.313 5.018 20.444 20.162 35.828 46.44 29.656 14.73-3.46 24.825-11.138 31-20.78.233 17.556-5.215 34.5-14.782 47.967-18.347 25.828-50.26 39.48-90.782 19.126v20.375c40.907 16.38 78.436 3.814 100.875-22.155 19.068 10 28.71 30.633 27.782 48.344-.462 8.83-3.42 16.56-8.75 22.25 1.273-11.394-3.145-22.947-14.906-28.064-35.92-15.636-71.766 35.453-29.125 53.906 2.805 1.213 5.5 2.042 8.095 2.563v.03c.085.01.165.024.25.033 3.398.657 6.63.743 9.625.375 14.957-.285 27.384-4.945 36.375-12.844 10.904-9.582 16.36-23.27 17.094-37.283 1.275-24.38-11.26-50.987-35.69-64.78 6.762-12.177 10.956-25.986 12.157-40.313a45.402 45.402 0 0 0 15.97 5.656c12.77 1.955 25.603-1.35 36.312-7.844 10.708-6.493 19.516-16.308 23.75-28.437 3.2-9.173 3.47-19.695-.032-30.064-3.167-14.78-14.114-27.622-29.438-27.625-2.21 0-4.495.248-6.875.814-30.3 7.19-32.07 68.89 1.625 70.062-7.1 3.967-15.24 5.71-22.53 4.594-7.578-1.16-14.436-4.948-20.095-13.906-2.58-13.888-8.185-27.66-17.25-40.344-7.554-12.997-20.047-22.31-35.688-22.313zm157.156 57.75c-4.71.03-9.694 2.802-13.156 9.532-9.705 18.82 15.205 33.46 25.187 11.405 5.02-11.105-3.04-20.995-12.03-20.938zm48.437 145.5c-19.927.602-18.62 25.754-.717 27.532 24.093 2.383 23.874-26.494 2.718-27.5a24.556 24.556 0 0 0-2-.032z',
+  pickSix: 'M243.512 23.29c-27.105 18.337-53.533 32.92-82.274 45.337-2.843 17.364-3.948 34.497-4.05 51.584 28.913 15.41 56.096 32.85 83.33 49.634l7.045 4.344-3.432 7.482c-12.12 26.572-24.33 47.087-46.245 70.3l-5.184 5.512-6.46-3.904c-32.974-19.974-74.472-38.724-113.373-53.95l6.826-17.374c36.79 14.4 75.11 32.32 108.153 51.504 15.396-17.198 25.326-33.354 34.713-52.89-43.44-26.91-86.13-53.51-134.69-70.632-23.012 20.357-37.705 45.243-51.942 70.74 8.324 25.495 6.596 53.376-6.596 77.46 48.58-.593 97.994 2.23 150.666 10.26l5.658.837 1.787 5.44c8.85 26.46 11.79 54.41 8.325 83.588l-.987 8.432-8.466-.187c-40.508-.864-80.175-2.138-118.17.234 1.634 15.94-2.31 30.972-7.724 45.025 13.427 28.54 27.38 55.8 48.29 79.39 41.27-19.05 73.564-31.288 115.93-42.85-3.407-13.72-6.918-26.36-11.097-33.62-5.122-8.9-10.207-13.057-17.85-15.256-15.284-4.4-44.533 2.293-92.894 19.454l-6.243-17.594c48.907-17.354 79.702-26.894 104.283-19.82 9.133 2.628 16.884 8.004 23.066 15.46 14.487-7.627 28.415-16.79 42.053-26.996 12.34-45.92 37.29-81.42 66.626-112.107-7.226-13.52-13.208-27.204-20.563-40.613l-3.394-6.168 5-4.965c23.275-23.13 47.34-40.157 71.87-52.487l8.395 16.716c-20.952 10.53-41.503 25.913-61.795 45.152 12.41 23.91 22.263 45.5 39.457 64.826 37.488-27.124 74.943-51.39 116.84-74.938-13.96-30.473-31.345-58.357-56.286-79.462-32.2 13.38-62.527 17.39-92.61 12.29-14.223 13.25-30.094 22.23-48.756 23.337-29.017 1.722-60.74-15.74-99.174-57.672l6.858-6.295.017-.028.006.006 6.88-6.314c36.702 40.043 63.74 52.87 84.32 51.65 18.514-1.1 35.03-14.95 51.684-35.406-28.827-31.81-64.174-59.94-97.822-84.465zM39.324 277.884c-6.06.022-12.104.098-18.142.223 1.673 26.288 5.512 51.288 14.052 73.732 45.88-5.82 93.308-4.96 141.15-3.87 1.518-21.27-.253-41.69-6.058-61.212-45.528-6.565-88.59-9.03-131.002-8.873z',
+  truckStick: 'M151.22 61.008c-45.151 7.449-99.44 35.085-131.642 54.097V297.21c5.34 7.523 13.07 12.906 24.904 17.07 5.308 1.868 11.417 3.433 18.221 4.783-21.112-27.026-26.391-50.921-21.297-79.236l17.715 3.192c-6.724 34.584 13.695 64.344 34.152 77.013l7.15 4.37 2.407 3.814c9.482 17.063 28.034 25.752 51.426 41.152l9.723 6.403-8.645 7.798c-9.834 8.873-17.062 16.44-18.367 26.559l-1.592 12.342-24.098-11.545c-11.192 12.316-20.47 25.593-27.652 40.025 10.977 6.704 36.525 19.136 49.105 16.346 32.21-21.813 59.517-67.5 71.09-97.953-6.484-24.65-21.778-46.56-40.277-70.047l-4.1-5.205c4.853-7.592 11.429-14.973 18.084-19.31 26.259-20.873 35.437-38.189 37.44-53.362.675-21.155-6.159-35.841-14.106-53.04l16.34-7.55c9.207 20.935 17.712 44.638 15.611 62.947-1.68 12.732-7.198 25.876-17.857 39.399 9.34-1.382 16.555-2.574 25.883-4.121l.262 10.343c.44 17.375 1.668 24.569 15.748 49.57l1.554 2.763-8.457 51.103c7.432 10.524 20.33 11.513 30.994 10.781 25.144-26.855 42.492-57.16 57.1-89.058-8.896-1.83-15.986-6.023-20.451-11.895-5.026-6.609-6.408-14.801-5.057-22.137 2.702-14.67 16.832-27.65 34.66-25.044l-.304-.04c4.278.478 8.63.829 13.035 1.09-42.222-45.878-38.747-104.57-74.713-138.82-37.98-22.166-89.34-36.372-133.988-36.701zm299.657 133.017c-25.974 8.19-52.938 16.89-80.334 23.028a3126.23 3126.23 0 0 1 8.764 18.293c29.023-10.805 51.564-25.555 71.57-41.32zm19.978 55.053c-40.912 3.884-85.203 8.795-125.962 4.25l-.153-.017-.152-.022c-8.297-1.213-13.24 4.437-14.356 10.494-.557 3.029-.034 5.724 1.684 7.983 1.688 2.22 4.886 4.52 11.58 5.46 52.566 1.922 92.792-11.677 127.36-28.148zm-163.32 43.738c4.068-.076 9.831 6.07 9.94 9.87.123 4.33-4.278 13.351-12.106 22.978-2.335-8.081-8.27-32.478 2.166-32.848zm-13.96 64.67-19.882 19.58s-2.011-12.095 1.621-16.068c6.037-2.969 12.016-3.867 18.26-3.512zm-44.636 38.348-11.55 35.494s-12.831-12.815-20.018-10.535c-12.026 3.815-17.207 33.71-17.207 33.71l-23.176-9.13s3.691 28.627 14.748 34.416c15.559 8.145 51.621-10.535 51.621-10.535s1.372 21.203 9.483 23.176c15.088 3.669 35.467-30.2 35.467-30.2s36.32 34.765 51.972 23.88c14.938-10.39 2.14-52.38-4.103-54.432-7.744-2.546-16.676 17.888-16.676 17.888s-10.826-24.025-22.063-27.017c-9.81-2.613-28.445 10.885-28.445 10.885l5.393-31.528c-3.305-.031-6.567-.272-9.77-.781l-10.37 29.932 4.347-31.245c-3.373-.936-6.912-2.436-9.653-3.978zM84.4 398.047c-11.613 11.065-20.069 23.628-27.237 37.137 3.725 1.954 7.425 4.1 11.086 6.3 7.066-13.88 15.86-26.738 26.148-38.648z',
+  ironWall: 'm494 18.02-101 .103V119h101zm-119 .12-238 .247V119h238zm-256 .266L18 18.51V119h101zM18 137v110h229V137zm247 0v110h229V137zM18 265v110h101V265zm119 0v110h238V265zm256 0v110h101V265zM18 393v100.98l229-.236V393zm247 0v100.727l229-.237V393z',
+  dominance: 'm92.406 13.02-.164 156.353c3.064.507 6.208 1.38 9.39 2.627 36.496 14.306 74.214 22.435 111.864 25.473l43.402-60.416 42.317 58.906c36.808-4.127 72.566-12.502 105.967-24.09 3.754-1.302 7.368-2.18 10.818-2.6l1.523-156.252-75.82 95.552-34.084-95.55-53.724 103.74-53.722-103.74-35.442 95.55-72.32-95.55h-.006zm164.492 156.07-28.636 39.86 28.634 39.86 28.637-39.86-28.635-39.86zM86.762 187.55c-2.173-.08-3.84.274-5.012.762-2.345.977-3.173 2.19-3.496 4.196-.645 4.01 2.825 14.35 23.03 21.36 41.7 14.468 84.262 23.748 126.778 26.833l-17.75-24.704c-38.773-3.285-77.69-11.775-115.5-26.596-3.197-1.253-5.877-1.77-8.05-1.85zm333.275.19c-2.156.052-5.048.512-8.728 1.79-33.582 11.65-69.487 20.215-106.523 24.646l-19.264 26.818c40.427-2.602 80.433-11.287 119.22-26.96 15.913-6.43 21.46-17.81 21.36-22.362-.052-2.276-.278-2.566-1.753-3.274-.738-.353-2.157-.71-4.313-.658zm-18.117 47.438c-42.5 15.87-86.26 23.856-130.262 25.117l-14.76 20.547-14.878-20.71c-44.985-1.745-89.98-10.23-133.905-24.306-12.78 28.51-18.94 61.14-19.603 93.44 37.52 17.497 62.135 39.817 75.556 64.63C177 417.8 179.282 443.62 174.184 467.98c7.72 5.007 16.126 9.144 24.98 12.432l5.557-47.89 18.563 2.154-5.935 51.156c9.57 2.21 19.443 3.53 29.377 3.982v-54.67h18.69v54.49c9.903-.638 19.705-2.128 29.155-4.484l-5.857-50.474 18.564-2.155 5.436 46.852c8.747-3.422 17.004-7.643 24.506-12.69-5.758-24.413-3.77-49.666 9.01-72.988 13.28-24.234 37.718-46 74.803-64.29-.62-33.526-6.687-66.122-19.113-94.23zm-266.733 47.006c34.602.23 68.407 12.236 101.358 36.867-46.604 33.147-129.794 34.372-108.29-36.755 2.315-.09 4.626-.127 6.933-.11zm242.825 0c2.307-.016 4.617.022 6.93.11 21.506 71.128-61.684 69.903-108.288 36.757 32.95-24.63 66.756-36.637 101.358-36.866zM255.164 332.14c11.77 21.725 19.193 43.452 25.367 65.178h-50.737c4.57-21.726 13.77-43.45 25.37-65.18z'
+};
+
+// Inject SVG paths
+document.getElementById('walkout-svg').setAttribute('d', ICONS.onFire);
+document.getElementById('sack-icon').setAttribute('d', ICONS.ironWall);
+document.getElementById('bp-svg-0').setAttribute('d', ICONS.onFire);
+document.getElementById('bp-svg-1').setAttribute('d', ICONS.pickSix);
+document.getElementById('bp-svg-2').setAttribute('d', ICONS.truckStick);
+document.getElementById('bp-svg-3').setAttribute('d', ICONS.ironWall);
+document.getElementById('bp-svg-4').setAttribute('d', ICONS.dominance);
+// Shame card: use pickSix for INT
+document.getElementById('shame-icon-wrap').querySelector('svg').setAttribute('d', ICONS.pickSix);
+document.getElementById('shame-icon-wrap').querySelector('svg').setAttribute('fill', 'var(--cyan)');
+
+// ─── Audio Context ───
+let _ctx = null;
+function getCtx() {
+  if (!_ctx) _ctx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_ctx.state === 'suspended') _ctx.resume();
+  return _ctx;
+}
+
+function beep(freq, duration, type='sine', gain=0.3, delay=0) {
+  try {
+    const ctx = getCtx();
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+    g.gain.setValueAtTime(0, ctx.currentTime + delay);
+    g.gain.linearRampToValueAtTime(gain, ctx.currentTime + delay + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+    osc.start(ctx.currentTime + delay);
+    osc.stop(ctx.currentTime + delay + duration + 0.01);
+  } catch(e) {}
+}
+
+function bassDrop() {
+  try {
+    const ctx = getCtx();
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(80, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(35, ctx.currentTime + 0.3);
+    g.gain.setValueAtTime(0.6, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.55);
+  } catch(e) {}
+}
+
+function chime(step) {
+  // 12-TET pitch shifting: base 440 * 1.05946^step
+  const freq = 440 * Math.pow(1.05946, step);
+  beep(freq, 0.15, 'triangle', 0.25);
+}
+
+function triumphChord() {
+  [0, 4, 7, 12].forEach((s, i) => {
+    setTimeout(() => chime(s + 12), i * 40);
+  });
+}
+
+// ─── Feature 1: Synergy Chain ───
+let _chainRunning = false;
+function demoChain() {
+  if (_chainRunning) return;
+  _chainRunning = true;
+
+  const badges = ['cb-0','cb-1','cb-2','cb-3'];
+  const pts = document.getElementById('chain-pts');
+  const steps = [0, 3, 6, 10];
+
+  // Reset
+  badges.forEach(id => {
+    const el = document.getElementById(id);
+    gsap.set(el, { opacity: 0, scale: 0, rotation: 0 });
+  });
+  gsap.set(pts, { opacity: 0, scale: 0.5 });
+
+  badges.forEach((id, i) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      chime(steps[i]);
+      el.style.animation = 'badge-pop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards';
+      gsap.to(el, { opacity: 1, scale: 1, rotation: 0, duration: 0.35, ease: 'back.out(2)' });
+    }, i * 280);
+  });
+
+  setTimeout(() => {
+    gsap.to(pts, { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(2)' });
+    chime(15);
+    setTimeout(() => {
+      gsap.to(pts, { opacity: 0, y: -20, duration: 0.4, delay: 1.2, ease: 'power2.in' });
+      setTimeout(() => {
+        badges.forEach(id => {
+          gsap.to(document.getElementById(id), { opacity: 0, scale: 0, duration: 0.2, ease: 'power2.in' });
+        });
+        gsap.set(pts, { y: 0 });
+        setTimeout(() => { _chainRunning = false; }, 300);
+      }, 1800);
+    }, 100);
+  }, badges.length * 280 + 120);
+}
+
+// ─── Feature 2: Glow Tell ───
+let _glowState = 'covered'; // covered | glowing | revealed
+let _glowInterval = null;
+
+function demoGlow() {
+  if (_glowState === 'covered') {
+    _glowState = 'glowing';
+    const card = document.getElementById('glow-card');
+    card.style.animation = 'glow-pulse-card 1.2s ease-in-out infinite';
+    beep(660, 0.2, 'triangle', 0.2);
+  } else if (_glowState === 'glowing') {
+    _glowState = 'revealed';
+    const card = document.getElementById('glow-card');
+    const cover = document.getElementById('glow-cover');
+    card.style.animation = '';
+    card.style.boxShadow = '0 0 20px var(--a-gold)';
+    card.style.borderColor = 'var(--a-gold)';
+
+    // Shimmer reveal
+    gsap.to(cover, { opacity: 0, duration: 0.5, ease: 'power2.out', onComplete: () => {
+      cover.style.pointerEvents = 'none';
+    }});
+
+    // Add shimmer
+    const shimmer = document.createElement('div');
+    shimmer.style.cssText = `
+      position:absolute; top:0; left:-100%; width:50%; height:100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      pointer-events: none; border-radius: var(--radius-lg);
+    `;
+    card.appendChild(shimmer);
+    gsap.to(shimmer, { left: '200%', duration: 0.6, ease: 'power2.out', onComplete: () => {
+      shimmer.remove();
+    }});
+
+    triumphChord();
+  }
+}
+
+function resetGlow() {
+  _glowState = 'covered';
+  const card = document.getElementById('glow-card');
+  const cover = document.getElementById('glow-cover');
+  card.style.animation = '';
+  card.style.boxShadow = '';
+  card.style.borderColor = '';
+  gsap.set(cover, { opacity: 1 });
+  cover.style.pointerEvents = 'auto';
+}
+
+// ─── Feature 3: Walkout TD ───
+let _tdRunning = false;
+function demoTD() {
+  if (_tdRunning) return;
+  _tdRunning = true;
+
+  const word = document.getElementById('td-word');
+  const pts = document.getElementById('td-pts');
+  const card = document.getElementById('walkout-card');
+
+  gsap.set([word, pts, card], { opacity: 0, y: 0, scale: 1 });
+  gsap.set(card, { y: 60, scale: 0.85 });
+
+  // Beat 1: TOUCHDOWN slams in
+  beep(880, 0.12, 'square', 0.3);
+  beep(1100, 0.2, 'triangle', 0.2, 0.08);
+  gsap.to(word, { opacity: 1, duration: 0.05 });
+  gsap.from(word, { scale: 0.4, duration: 0.45, ease: 'back.out(2.5)' });
+
+  // Beat 2: pts
+  setTimeout(() => {
+    chime(7);
+    gsap.to(pts, { opacity: 1, duration: 0.3, ease: 'power2.out' });
+  }, 600);
+
+  // Beat 3: Walkout card flies in
+  setTimeout(() => {
+    triumphChord();
+    gsap.to(card, {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      duration: 0.55,
+      ease: 'back.out(1.8)'
+    });
+  }, 2000);
+
+  setTimeout(() => {
+    gsap.to([word, pts, card], { opacity: 0, duration: 0.4, ease: 'power2.in' });
+    gsap.set(card, { y: 60, scale: 0.85, delay: 0.4 });
+    setTimeout(() => { _tdRunning = false; }, 600);
+  }, 5000);
+}
+
+// ─── Feature 4: Shame Card ───
+let _shameActive = false;
+function demoShame(verdict) {
+  const card = document.getElementById('shame-card');
+  const label = document.getElementById('shame-label');
+
+  label.textContent = verdict;
+  card.classList.add('active');
+
+  label.style.opacity = '0';
+  label.style.transform = 'scale(2) rotate(-12deg)';
+  label.style.transition = '';
+
+  beep(200, 0.3, 'sawtooth', 0.25);
+  beep(150, 0.4, 'sine', 0.15, 0.15);
+
+  // Stamp animation
+  setTimeout(() => {
+    label.style.transition = 'opacity 0.15s, transform 0.4s cubic-bezier(0.34,1.1,0.64,1)';
+    label.style.opacity = '1';
+    label.style.transform = 'scale(1) rotate(-8deg)';
+  }, 80);
+
+  _shameActive = true;
+}
+
+function resetShame() {
+  const card = document.getElementById('shame-card');
+  const label = document.getElementById('shame-label');
+  card.classList.remove('active');
+  label.style.opacity = '0';
+  label.style.transform = 'scale(2) rotate(-12deg)';
+  _shameActive = false;
+}
+
+// ─── Feature 5: Hitstop 2.0 ───
+let _sackRunning = false;
+function demoSack() {
+  if (_sackRunning) return;
+  _sackRunning = true;
+
+  const stage = document.getElementById('hitstop-stage');
+  const card = document.getElementById('sack-card');
+  const word = document.getElementById('sack-word');
+  const yards = document.getElementById('sack-yards');
+
+  gsap.set([word, yards], { opacity: 0 });
+
+  // Hitstop flash
+  bassDrop();
+  beep(120, 0.25, 'sawtooth', 0.3, 0.05);
+
+  // Screen freeze effect
+  stage.style.filter = 'brightness(1.5) contrast(1.3) saturate(0)';
+  setTimeout(() => { stage.style.filter = ''; }, 120);
+
+  // Rotational shake on card
+  card.style.animation = 'T-rot-shake 0.55s ease-out forwards';
+  setTimeout(() => { card.style.animation = ''; }, 600);
+
+  // SACK word slams in
+  setTimeout(() => {
+    beep(300, 0.1, 'square', 0.2);
+    gsap.to(word, { opacity: 1, duration: 0.05 });
+    gsap.from(word, { scale: 1.8, duration: 0.3, ease: 'power3.out' });
+    setTimeout(() => {
+      gsap.to(yards, { opacity: 1, duration: 0.25, ease: 'power2.out' });
+    }, 200);
+  }, 180);
+
+  setTimeout(() => {
+    gsap.to([word, yards], { opacity: 0, duration: 0.3, ease: 'power2.in' });
+    setTimeout(() => { _sackRunning = false; }, 400);
+  }, 2200);
+}
+
+// ─── Feature 6: Pressure Heartbeat ───
+let _pressureOn = false;
+let _snapFired = false;
+
+function togglePressure(on) {
+  _pressureOn = on;
+  const btn = document.getElementById('snap-btn');
+  const label = document.getElementById('pressure-label');
+
+  if (on) {
+    btn.classList.add('pressure-beat');
+    gsap.to(label, { opacity: 1, duration: 0.3 });
+    // Heartbeat audio loop
+    startHeartbeat();
+  } else {
+    btn.classList.remove('pressure-beat');
+    gsap.to(label, { opacity: 0, duration: 0.2 });
+    stopHeartbeat();
+  }
+}
+
+let _hbTimer = null;
+function startHeartbeat() {
+  stopHeartbeat();
+  function beat() {
+    if (!_pressureOn) return;
+    beep(60, 0.08, 'sine', 0.3);
+    setTimeout(() => {
+      if (!_pressureOn) return;
+      beep(55, 0.1, 'sine', 0.25);
+    }, 120);
+    _hbTimer = setTimeout(beat, 900);
+  }
+  beat();
+}
+function stopHeartbeat() {
+  if (_hbTimer) { clearTimeout(_hbTimer); _hbTimer = null; }
+}
+
+function demoSnap() {
+  beep(440, 0.15, 'square', 0.35);
+  beep(550, 0.2, 'triangle', 0.2, 0.08);
+  if (_pressureOn) {
+    stopHeartbeat();
+    togglePressure(false);
+    // Quick snap result flash
+    const btn = document.getElementById('snap-btn');
+    btn.style.background = 'var(--l-green)';
+    setTimeout(() => { btn.style.background = ''; }, 400);
+  }
+}
+
+// ─── Feature 7: Momentum ───
+const PLAYERS = [
+  { name: 'D. WHITFIELD', pos: 'WR', id: 'mom-0', momentum: 0 },
+  { name: 'J. CARTER', pos: 'LB', id: 'mom-1', momentum: 0 },
+];
+
+function buildMomentumStage() {
+  const stage = document.getElementById('momentum-stage');
+  stage.innerHTML = '';
+  PLAYERS.forEach((p) => {
+    const row = document.createElement('div');
+    row.className = 'player-row';
+    row.id = p.id;
+    row.innerHTML = `
+      <div class="player-info">
+        <div class="player-row-name">${p.name}</div>
+        <div class="player-row-pos">${p.pos}</div>
+      </div>
+      <div class="momentum-bar-wrap">
+        <div class="hot-badge" id="${p.id}-hot">HOT</div>
+        <div class="momentum-pips" id="${p.id}-pips">
+          ${[0,1,2,3,4].map(i => `<div class="pip" id="${p.id}-pip-${i}"></div>`).join('')}
+        </div>
+      </div>
+      <div class="spike-anim" id="${p.id}-spike"></div>
+    `;
+    stage.appendChild(row);
+  });
+}
+buildMomentumStage();
+
+function spikeMomentum(playerIdx, amount, label) {
+  const p = PLAYERS[playerIdx];
+  const prev = p.momentum;
+  p.momentum = Math.min(5, p.momentum + amount);
+
+  // Update pips
+  for (let i = 0; i < 5; i++) {
+    const pip = document.getElementById(`${p.id}-pip-${i}`);
+    if (i < p.momentum) {
+      pip.classList.add(p.momentum >= 4 ? 'hot' : 'filled');
+      pip.classList.remove(p.momentum >= 4 ? 'filled' : 'hot');
+    } else {
+      pip.classList.remove('filled', 'hot');
+    }
+  }
+
+  // HOT badge
+  const hotBadge = document.getElementById(`${p.id}-hot`);
+  if (p.momentum >= 4) {
+    hotBadge.classList.add('visible');
+    beep(880, 0.12, 'triangle', 0.2);
+  } else {
+    hotBadge.classList.remove('visible');
+  }
+
+  // Spike float anim
+  const spike = document.getElementById(`${p.id}-spike`);
+  spike.textContent = `+${amount} ${label}`;
+  spike.style.color = playerIdx === 0 ? 'var(--l-green)' : 'var(--cyan)';
+  gsap.fromTo(spike,
+    { opacity: 1, y: 0 },
+    { opacity: 0, y: -24, duration: 0.9, ease: 'power2.out' }
+  );
+
+  chime(playerIdx === 0 ? 12 : 7);
+}
+
+function resetMomentum() {
+  PLAYERS.forEach(p => { p.momentum = 0; });
+  buildMomentumStage();
+}
+
+// ─── Feature 8: Big Play Icons ───
+function showAllBigPlay() {
+  const items = document.querySelectorAll('.bigplay-item');
+  items.forEach((item, i) => {
+    gsap.to(item, {
+      opacity: 1,
+      scale: 1,
+      duration: 0.4,
+      delay: i * 0.12,
+      ease: 'back.out(2)'
+    });
+    setTimeout(() => chime(i * 2 + 7), i * 120);
+  });
+}
+
+function bigPlayPop(idx) {
+  const item = document.getElementById(`bp-${idx}`);
+  const circle = item.querySelector('.icon-circle');
+  gsap.to(circle, { scale: 1.2, duration: 0.1, ease: 'power2.out',
+    onComplete: () => gsap.to(circle, { scale: 1, duration: 0.3, ease: 'back.out(2)' })
+  });
+  chime(idx * 3 + 7);
+}
+
+// Init: show all bigplay icons already visible
+document.querySelectorAll('.bigplay-item').forEach(item => {
+  gsap.set(item, { opacity: 1, scale: 1 });
+});
+
+// Prevent double-tap zoom on mobile
+document.addEventListener('touchend', e => { e.preventDefault(); }, { passive: false });
+
+</script>
+</body>
+</html>

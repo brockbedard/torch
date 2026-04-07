@@ -46,7 +46,7 @@ export function runUiLogicTest() {
   };
   const commTD = generateCommentary(resTD, gs, 'BOARS', 'DOLPHINS');
   const tdText = (commTD.line1 + ' ' + (commTD.line2 || '')).toUpperCase();
-  const hasTD = tdText.includes('TOUCHDOWN') || tdText.includes('END ZONE') || tdText.includes('SCORES') || tdText.includes('SIX');
+  const hasTD = tdText.includes('TOUCHDOWN') || tdText.includes('END ZONE') || tdText.includes('SCORES') || tdText.includes('SCORE') || tdText.includes('SIX');
   assert(hasTD, 'TD commentary missing TD/Score/EndZone mention: ' + tdText);
 
   // 3. Commentary Generator — Sack

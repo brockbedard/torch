@@ -34,4 +34,10 @@ export var Haptic = {
   // UI
   buttonTap: function() { vib(5); },
   error: function() { vib([30, 20, 30, 20, 30]); },
+
+  // Pressure / climax (Hitstop 2.0 + Heartbeat)
+  // Double-thump like a heartbeat — fires pre-snap on high-pressure downs.
+  heartbeat: function() { vib([80, 120, 110]); },
+  // Heavy impact — sub-bass companion for sacks + brutal hits.
+  bigHit: function() { vib([60, 20, 90, 20, 60]); },
 };

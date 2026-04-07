@@ -1,7 +1,7 @@
 # TORCH Football — Project Status
 
-**Last Updated:** 2026-03-29 (end of session 2)
-**Updated By:** Claude Code session
+**Last Updated:** 2026-04-07
+**Updated By:** Claude
 
 ---
 
@@ -9,144 +9,53 @@
 
 TORCH Football is a mobile card game (Balatro meets college football). 4 fictional college teams, card-based play selection, TORCH points economy (score = wallet). Built with Vite + vanilla JS + GSAP + Howler.js. Solo dev (Brock), 17 days in development.
 
-**Production (main):** v0.28.0 — Stable, playable, 24 cards, basic game loop. Live at torch.football.
-**Preview (dev remote):** Same as prod. Not updated with dev changes yet.
-**Local Dev (dev branch):** 43 commits ahead of prod. Massive feature expansion. NOT released.
+**Production (main):** v0.35.0 — Moments of Joy shipped.
+**Preview (dev remote):** v0.35.0
+**Local Dev (dev branch):** Synced with main.
 **Field Animation (src/ui/field/):** Isolated project, iterating independently. NOT merged into game.
 
 ---
 
-## What's In Production (v0.28.0)
+## What's In Production (v0.35.0)
 
-- 4 teams (Boars, Dolphins, Spectres, Serpents) with distinct playbooks (10 OFF + 10 DEF each)
-- 24 torch cards (12 were disabled/unimplemented)
-- 56 players with stars, traits, ST ratings
-- 8-card hand management (4 plays + 4 players)
-- Special teams burn deck
-- Personnel system (4-layer modifier)
-- AI opponent (Easy/Medium/Hard)
-- Howler.js audio (15 SFX pools, 3-tier crowd)
-- End game replay loop (MVP card, open loop, PLAY AGAIN)
-- Per-team win-loss records
-- Coin toss with face-down card pick
-- 2-minute drill with clock management
-- DOM field strip (not canvas)
-- 699 smoke test assertions
+### v0.35.0 "Moments of Joy"
+- **Synergy Chain Combo Pops**: MATCHUP, TEMPO, HOT READ, CARD COMBO badges pop in sequence on Beat 3 with pitch-shifted 12-TET audio cues (ascending semitone steps per badge).
+- **Glow Tell**: Shop cards are face-down by default; tap once to trigger a gold glow pulse, tap again to shimmer-reveal. Prevents impulsive buys on reactive cards.
+- **Walkout TD Card**: After a touchdown, the featured player's card flies in from below at 2.5s post-snap (after text/cascade reads). Pure CSS transitions, speed-multiplier-independent.
+- **Shame Card**: On INT or fumble, the featured player's card desaturates and receives a rotated verdict stamp (PICKED / FUMBLED). Visceral accountability.
+- **Hitstop 2.0 — Sack**: Sacks trigger rotational screen shake (T-rot-shake), bass drop audio, and heavy-impact haptic (`Haptic.bigHit`). Screen briefly freezes before result.
+- **Pressure Heartbeat**: On 4th down / red zone / late-game pressure snaps, the SNAP button pulses with a double-thump heartbeat animation and audio. `isPressureSnap()` detection.
+- **Player Momentum Boosts**: Big plays spike/crash momentum in real time — TD +2, INT +3, fumble lost +3, sack +2. HOT badge appears at level 4+. `spikeMomentum()` / `crashMomentum()` wired in gameState.js.
+- **Big Play Interface**: game-icons.net SVG paths (CC BY 3.0) used for all event badges — onFire (TD), pickSix (INT), truckStick (fumble), ironWall (sack), dominance (momentum). Replaces text labels.
+- **Game Speed Locked**: Speed multiplier locked to 1.0. Settings speed section removed. `localStorage.removeItem('torch_speed')` clears stale values.
+- **Stakeholder Demo**: `joy-demo.html` — standalone interactive HTML page demonstrating all 8 features. No server required.
 
----
+### v0.34.0 "Football Integrity"
+- **Core Logic Audit & Fixes**: Fixed "multiple TD" bug via explicit state reset after scoring. Implemented Safeties (2pts + free kick from 20). Added Overtime support (simplified matching possessions). Updated `kneel()` to correctly cost a down. Fixed kickoff return TDs to award 7 points (auto-XP) for consistency.
+- **TORCH Points Integrity**: Fixed bug where offense gained points on turnovers; defense is now correctly credited.
+- **Animation Synchronization**: Scoreboard and TORCH Banner updates are now deferred until the post-play result overlay is fully dismissed, ensuring all animations are visible. Implemented a "fly up" animation for TORCH points from the result screen to the banner.
+- **UI Refinements**:
+  - **Opponent TD Overlay**: Redesigned for more dramatic impact (red flash, screen shake, larger text).
+  - **Gameplay Spacing**: Increased vertical "breathing room" between all major gameplay elements (scoreboard, banner, field, card tray) based on the 8px design system.
+  - **Pregame Screen**: Reworked for better composition and readability. Increased spacing between team cards, improved contrast and font sizes on bottom info bar.
+  - **Coin Toss Screen**: Removed "COIN TOSS" label, redesigned choice buttons to be text-only, and adjusted layout to ensure all text fits on one line.
+  - **Scoreboard Polish**: Reduced down/distance font size for better balance. Updated OT labels to "OVERTIME", "2ND OVERTIME", etc.
 
-## What's On Local Dev (Unreleased)
-
-### New Systems (7 engine modules)
-- **Momentum Chains** — Per-player momentum (0-5), bonus yards at 3+
-- **Card Combos** — 5 discoverable pairs trigger bonus effects
-- **Achievements** — 19 persistent achievements (first win through national champion)
-- **Rival Streaks** — Win streaks + head-to-head records per team
-- **Game History** — Last 50 games logged with form string (W/D/L)
-- **Career Stats** — Cumulative totals across all games
-- **Haptic Feedback** — 18 vibration patterns for all interactions
-
-### New Screens (3)
-- **Season Recap** — 3-game season results, championship path, confetti
-- **Settings** — Audio toggle, game speed, achievements gallery, career stats, game history, reset
-- **Stats Sheet** — Tap scorebug for live game stats overlay
-
-### Major Features
-- **Conference Season Mode** — 3 regular games → championship if 2+ wins → National Champion
-- **Daily Drive** — Seeded daily challenge, emoji share grid, streak tracking
-- **Halftime Strategic Decision** — Aggressive (+2 yds, +5% INT) / Balanced / Conservative (-1 yd, -50% INT)
-- **25 Torch Cards** — All 12 previously disabled cards now wired. Added TIMEOUT card.
-- **Reactive Card Prompts** — SURE HANDS and CHALLENGE FLAG show USE IT / SAVE IT decision modal
-- **Audible Mechanic** — Change play at the line + see DEF TENDENCY hint
-- **Game Speed Settings** — Normal / Fast (0.6x) / Turbo (0.3x) animation speed
-- **Mid-Game Save/Resume** — Auto-saves to localStorage, RESUME GAME on home screen
-- **Team-Specific AI** — Each team's AI plays to their scheme identity
-
-### Game Feel (Snap Reveal + Celebrations)
-- **Option D Snap Reveal** — Commit → blackout → result slam → card reveal (tier-scaled)
-- **Drive Heat Bar** — 0-120 momentum indicator at bottom of screen
-- **Scoring Cascade** — Balatro-style point stacking on TDs (+6 TOUCHDOWN, +N BONUS)
-- **Turnover Drama** — Red/green vignette + "YOUR BALL!" / "Possession lost."
-- **Clutch Drive Detection** — Go-ahead TDs in 2nd half get enhanced celebration
-- **Sack Brutality** — Hard shake + red flash (offense) or green "SACKED!" (defense)
-- **Red Zone Intensity** — Field glow + "RED ZONE" flash on entry
-- **First Down Celebration** — Gold banner + chime
-- **End-of-Half Drama** — "FINAL" / "END OF HALF" overlay with whistle + score
-- **Possession Change Swoosh** — Team-colored wipe + badge flash
-- **Team-Specific TD Celebrations** — Unique confetti colors + catchphrases per team
-- **Victory/Defeat Fanfare** — Ascending chimes (win) or somber thud (loss)
-- **Newspaper Headlines** — "BOARS SURVIVE SERPENTS IN 24-21 THRILLER"
-
-### Commentary Overhaul
-- Dynamic narrative across game (hot streaks, comeback arcs, shutout watch)
-- Player-trait matchup lines ("The blazing Martinez finds the end zone!")
-- 30+ new templates, grammar fixes, cooldown system fix
-
-### UI Polish
-- Canvas field renderer wired (replaces DOM strip) — BUT field animation polish is separate project
-- Mini field position map in scorebug (hidden by default, decluttered)
-- Animated down & distance transitions
-- Play-by-play ESPN ticker
-- Win probability meter (hidden by default, decluttered)
-- Smart card highlighting ("STRONG" labels on situationally good plays)
-- Heat/fatigue badges on player cards (WARM/TIRED)
-- Momentum pips on player cards
-- Card tray: 10px lift, 40ms deal stagger, shadow depth
-- Shop: first-visit tooltip, NEW badges, swap-cancel fix
-- Safe area insets (iPhone notch/Dynamic Island)
-- Color standardized (#00ff44 green, #ff0040 red)
-- Scorebug optimized (DOM created once, cached refs)
-- Screen crossfade transitions (150ms out / 200ms in)
-
-### Hidden Features
-- **Custom Team Creator** — Engine + screen built, not wired to UI. Access via console.
-
-### Onboarding
-- 3-step visual tutorial (glow highlights on play → player → SNAP)
-- Situational hints on ALL games (not just repeat players)
-- Post-first-TD economy explainer ("YOUR SCORE IS YOUR WALLET")
-- First-shop tooltip
-- Discard discovery tooltip (game 2)
-- Streamlined flow: team select → pregame (roster screen removed from main flow)
-- Pregame scouting report (opponent scheme, star players, matchup type)
-
-### Balance
-- Base mean multiplier 1.35→1.55 (more scoring)
-- Variance tightened 1.15→0.90 (less random)
-- Big play chance 7%→3.5% with soft cap above 20 yards
-- Medium difficulty: +1 human / -0.5 AI yard adjustment
-- Easy: toned down (sack cancel 30%, INT cancel 25%)
-- Card prices rebalanced (BLOCKED KICK 50→150, HOUSE CALL 50→175, etc.)
-- Boars run plays buffed
-- AI card buying improved (buys high-impact, not cheapest)
-
-### Testing & Dev Tools
-- **810 smoke test assertions** (14 test sections)
-- **1000-game simulation** (reports win rates, tie rates, scoring, card usage)
-- **Feature flags** — 15 toggleable flags in dev panel
-- **Dev panel shortcuts** — Give specific cards, max momentum/heat, force scores, jump to screens
-- **Testing guide** — docs/TESTING-GUIDE.md
-- **Privacy policy + Terms** — public/privacy.html, public/terms.html
-- **PWA assets** — Full manifest, OG meta tags, maskable icons, offline service worker
-
-### Bug Fixes (Since Prod)
-- Play card text no longer truncates with ... (pushed to prod as hotfix)
-- doSettle double-fire race condition
-- ST result / kickoff result double-fire
-- offCard/defCard variable shadowing DOM elements
-- IRON MAN/TIMEOUT refunded when conditions not met
-- Save/resume actually restores engine state
-- Swap cancel no longer freezes game
-- Stale index when auto-consuming ICE THE KICKER + BLOCKED KICK together
-- Personnel report reveal blocks SNAP button during display
-- Auto-consumed ST cards now show toast notification
-- Commentary CATCH_VERBS grammar fix
-- Cooldown system TD keys were randomized (now stable)
-- 481 lines dead code removed from gameplay.js
+### Previously Unreleased
+- **New Systems (7 engine modules)**: Momentum Chains, Card Combos, Achievements, Rival Streaks, Game History, Career Stats, Haptic Feedback.
+- **New Screens (3)**: Season Recap, Settings, Stats Sheet.
+- **Major Features**: Conference Season Mode, Daily Drive, Halftime Strategic Decision, 25 Torch Cards (all wired), Reactive Card Prompts, Audible Mechanic, Game Speed Settings, Mid-Game Save/Resume, Team-Specific AI.
+- **Game Feel**: Option D Snap Reveal, Drive Heat Bar, Scoring Cascade, Turnover Drama, Clutch Drive Detection, Sack Brutality, Red Zone Intensity, First Down Celebration, End-of-Half Drama, Possession Change Swoosh, Team-Specific TD Celebrations, Victory/Defeat Fanfare, Newspaper Headlines.
+- **Commentary Overhaul**: Dynamic narrative, player-trait matchup lines, 30+ new templates.
+- **UI Polish**: Canvas field renderer, animated down/distance, ESPN ticker, smart card highlighting, heat/fatigue badges, momentum pips, screen crossfades.
+- **Onboarding**: 3-step visual tutorial, situational hints, post-TD economy explainer.
+- **Balance**: Higher scoring, tighter variance, rebalanced card prices, AI card buying logic.
+- **Testing & Dev Tools**: 810+ smoke tests, 1000-game sim, feature flags, dev panel.
 
 ---
 
 ## Field Animation Project (Isolated)
+
 
 **Location:** `src/ui/field/` (4 files only)
 **Test:** `http://localhost:5174/src/ui/field/test.html`

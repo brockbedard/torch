@@ -30,6 +30,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
 
   var _pts = points;
   var _purchased = false;
+  var _revealed = false;  // Glow Tell — buy locked until cards reveal
 
   // Overlay
   var overlay = document.createElement('div');
@@ -78,6 +79,8 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
   var offersRow = document.createElement('div');
   offersRow.style.cssText = 'display:flex;gap:8px;justify-content:center;';
 
+  var _glowItems = [];  // {cardEl, cover, tier} for reveal timeline
+
   offers.forEach(function(card, idx) {
     var canAfford = _pts >= card.cost;
     var isFull = inventory.length >= 3;
@@ -90,7 +93,22 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
     var cardEl = buildTorchCard(card, 95, 133);
     cardEl.style.cursor = canAfford ? 'pointer' : 'default';
     cardEl.style.opacity = canAfford ? '1' : '0.4';
+    cardEl.style.position = 'relative';
     wrap.appendChild(cardEl);
+
+    // ── GLOW TELL: face-down cover + tier-tinted pulsing glow ──
+    var tierColor = card.tier === 'GOLD' ? '#EBB010' : (card.tier === 'SILVER' ? '#C0C0C0' : '#B87333');
+    var cover = document.createElement('div');
+    cover.style.cssText =
+      'position:absolute;inset:0;border-radius:6px;' +
+      'background:linear-gradient(135deg,#1a1208,#0a0804 70%);' +
+      'border:1.5px solid ' + tierColor + '55;' +
+      'display:flex;align-items:center;justify-content:center;' +
+      'z-index:10;pointer-events:none;will-change:opacity,transform;';
+    cover.innerHTML =
+      "<svg viewBox='0 0 44 56' width='32' height='40' fill='" + tierColor + "' style='opacity:0.45;'><path d='" + FLAME_PATH + "'/></svg>";
+    cardEl.appendChild(cover);
+    _glowItems.push({ cardEl: cardEl, cover: cover, tier: card.tier, color: tierColor });
 
     // Cost
     var costEl = document.createElement('div');
@@ -111,7 +129,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
     // Tap to buy (direct — no confirm step)
     if (canAfford) {
       cardEl.onclick = function() {
-        if (_purchased) return;
+        if (_purchased || !_revealed) return;
         _purchased = true;
         SND.shimmer(); Haptic.shopBuy();
 
@@ -174,6 +192,49 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
     offersRow.appendChild(wrap);
   });
   sheet.appendChild(offersRow);
+
+  // ── GLOW TELL REVEAL — anticipation, then flip ──
+  // Each card pulses with tier-tinted glow, then the cover fades away.
+  // Bronze = dim, Silver = bright, Gold = radiant. Audio sting pitched by tier.
+  try {
+    _glowItems.forEach(function(g, i) {
+      var glowMax;
+      if (g.tier === 'GOLD')        glowMax = '0 0 32px 6px ' + g.color + 'cc, 0 4px 14px rgba(0,0,0,0.6)';
+      else if (g.tier === 'SILVER') glowMax = '0 0 18px 3px ' + g.color + '88, 0 4px 12px rgba(0,0,0,0.5)';
+      else                          glowMax = '0 0 10px 1px ' + g.color + '55, 0 4px 12px rgba(0,0,0,0.5)';
+      var glowMin = '0 0 0px 0px ' + g.color + '00, 0 4px 12px rgba(0,0,0,0.5)';
+
+      var startDelay = 0.55 + i * 0.10;  // After wrap fade-in (0.2s + idx*0.12)
+      var tl = gsap.timeline({ delay: startDelay });
+
+      // Pulse: ramp → ease → ramp again (gold pulses harder)
+      tl.fromTo(g.cardEl,
+          { boxShadow: glowMin },
+          { boxShadow: glowMax, duration: 0.45, ease: 'sine.out',
+            onStart: function() {
+              // Audio tell — pitch encodes rarity
+              var step = g.tier === 'GOLD' ? 7 : (g.tier === 'SILVER' ? 3 : 0);
+              SND.pop(step);
+            }
+          })
+        .to(g.cardEl, { boxShadow: glowMin, duration: 0.35, ease: 'sine.in' })
+        .to(g.cardEl, { boxShadow: glowMax, duration: 0.35, ease: 'sine.out' })
+        // Flip away the cover
+        .to(g.cover, { opacity: 0, scale: 1.18, duration: 0.32, ease: 'power2.out',
+            onStart: function() { SND.flip(); }
+          }, '+=0.05')
+        .set(g.cover, { display: 'none' })
+        // Settle glow back to a quiet baseline so the face reads cleanly
+        .to(g.cardEl, { boxShadow: glowMin, duration: 0.5, ease: 'sine.inOut' });
+    });
+    // Unlock buying once the longest tail completes
+    var unlockAt = 550 + (_glowItems.length - 1) * 100 + 1900;
+    setTimeout(function() { _revealed = true; }, unlockAt);
+  } catch(e) {
+    // Animation failed → unlock immediately so the shop remains usable
+    _glowItems.forEach(function(g) { if (g.cover && g.cover.parentNode) g.cover.parentNode.removeChild(g.cover); });
+    _revealed = true;
+  }
 
   // Pass button
   var passBtn = document.createElement('div');

@@ -161,8 +161,8 @@ var AudioManager = {
     loadPool('catch', ['/audio/sfx/catch_01.wav'], { volume: 0.5 });
     loadPool('kick', ['/audio/sfx/kick_01.wav'], { volume: 0.6 });
     loadPool('kickThud', ['/audio/sfx/kick_thud_01.wav'], { volume: 0.6 });
-    loadPool('whistle', ['/audio/sfx/whistle_01.wav','/audio/sfx/whistle_short_01.wav'], { volume: 0.5 });
-    loadPool('whistleLong', ['/audio/sfx/whistle_long_01.wav'], { volume: 0.5 });
+    loadPool('whistle', ['/audio/sfx/whistle_01.wav','/audio/sfx/whistle_short_01.wav'], { volume: 0.05 });
+    loadPool('whistleLong', ['/audio/sfx/whistle_long_01.wav'], { volume: 0.05 });
 
     // SFX pools — Impacts
     loadPool('hitComposite', ['/audio/sfx/hit_composite_01.wav','/audio/sfx/hit_composite_02.wav','/audio/sfx/hit_composite_03.wav','/audio/sfx/hit_composite_04.wav'], { volume: 0.7 });
@@ -201,6 +201,18 @@ var AudioManager = {
 
     _initialized = true;
     console.log('[Audio] AudioManager initialized successfully');
+
+    // Tab visibility / Window closing safety
+    window.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        Howler.mute(true);
+      } else if (!_muted) {
+        Howler.mute(false);
+      }
+    });
+    window.addEventListener('pagehide', function() {
+      Howler.stop();
+    });
 
     // Trigger a silent sound to finalize unlock
     try {

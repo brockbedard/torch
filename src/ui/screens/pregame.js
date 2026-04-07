@@ -71,7 +71,7 @@ export function buildPregame() {
 
   // ── 2. CARDS AREA ──
   var cardsArea = document.createElement('div');
-  cardsArea.style.cssText = 'flex:1;display:flex;flex-direction:column;justify-content:center;padding:8px 14px;gap:12px;min-height:0;';
+  cardsArea.style.cssText = 'flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 14px;gap:32px;min-height:0;';
 
   // ── 3. AWAY TEAM CARD ──
   var awayCard = buildTeamCard(awayTeam, awayId, awayColor, 'away');
@@ -79,12 +79,12 @@ export function buildPregame() {
 
   // ── 4. VS ROW ──
   var vsRow = document.createElement('div');
-  vsRow.style.cssText = 'flex-shrink:0;display:flex;align-items:center;padding:0 4px;';
+  vsRow.style.cssText = 'flex-shrink:0;display:flex;align-items:center;padding:0 4px;margin:8px 0;';
 
   var vsLineL = document.createElement('div');
   vsLineL.style.cssText = 'flex:1;height:2px;background:linear-gradient(90deg,' + awayColor + '44,#EBB010);';
   var vsText = document.createElement('div');
-  vsText.style.cssText = "padding:0 12px;font-family:'Teko';font-weight:900;font-size:36px;letter-spacing:6px;line-height:1;background:linear-gradient(180deg,#FFD060 0%,#EBB010 30%,#8B4A1F 60%,#EBB010 80%,#FFD060 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:vsGlow 2.5s ease-in-out infinite;";
+  vsText.style.cssText = "padding:0 16px;font-family:'Teko';font-weight:900;font-size:36px;letter-spacing:8px;line-height:1;background:linear-gradient(180deg,#FFD060 0%,#EBB010 30%,#8B4A1F 60%,#EBB010 80%,#FFD060 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:vsGlow 2.5s ease-in-out infinite;";
   vsText.textContent = 'VS';
   var vsLineR = document.createElement('div');
   vsLineR.style.cssText = 'flex:1;height:2px;background:linear-gradient(270deg,' + homeColor + '44,#EBB010);';
@@ -102,25 +102,25 @@ export function buildPregame() {
 
   // ── 6. BOTTOM INFO BAR ──
   var bottomBar = document.createElement('div');
-  bottomBar.style.cssText = 'flex-shrink:0;padding:4px 14px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:6px;';
+  bottomBar.style.cssText = 'flex-shrink:0;padding:12px 14px 20px;padding-bottom:max(24px,env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:10px;';
 
   // Matchup + conditions row
   var infoRow = document.createElement('div');
-  infoRow.style.cssText = 'display:flex;align-items:center;gap:8px;';
+  infoRow.style.cssText = 'display:flex;align-items:center;gap:12px;';
 
   var matchupEl = document.createElement('span');
-  matchupEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:10px;color:" + matchupColor + ";letter-spacing:1.5px;";
+  matchupEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:13px;color:" + matchupColor + ";letter-spacing:2px;text-shadow:0 0 10px " + matchupColor + "44;";
   matchupEl.textContent = matchupLabel;
   infoRow.appendChild(matchupEl);
 
   var infoDivider = document.createElement('span');
-  infoDivider.style.cssText = 'width:1px;height:10px;background:#333;';
+  infoDivider.style.cssText = 'width:1px;height:12px;background:#444;';
   infoRow.appendChild(infoDivider);
 
   var wxTemp = WEATHER_TEMP[conditions.weather] || '72\u00b0';
   var fieldSurface = FIELD_LABEL[conditions.field] || 'TURF';
   var condEl = document.createElement('span');
-  condEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:10px;color:#555;";
+  condEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:12px;color:#aaa;letter-spacing:1px;";
   condEl.textContent = wxTemp + ' \u00b7 ' + fieldSurface;
   infoRow.appendChild(condEl);
 
@@ -128,7 +128,7 @@ export function buildPregame() {
 
   // Tap hint
   var tapHint = document.createElement('div');
-  tapHint.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:9px;color:#EBB01044;letter-spacing:3px;animation:breathe 2s ease-in-out infinite;";
+  tapHint.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:11px;color:#EBB01066;letter-spacing:4px;animation:breathe 2s ease-in-out infinite;";
   tapHint.textContent = 'TAP TO CONTINUE';
   bottomBar.appendChild(tapHint);
 
@@ -167,7 +167,7 @@ export function buildPregame() {
   // ── TAP TO CONTINUE ──
   var skipped = false;
   var canSkip = false;
-  setTimeout(function() { canSkip = true; }, isFast ? 1500 : 3500);
+  setTimeout(function() { canSkip = true; }, isFast ? 1200 : 2500);
   function skip() {
     if (skipped || !canSkip) return;
     skipped = true;
@@ -181,7 +181,7 @@ export function buildPregame() {
   el.onclick = skip;
 
   // Auto-advance
-  setTimeout(function() { if (!skipped) skip(); }, isFast ? 3500 : 8000);
+  setTimeout(function() { if (!skipped) skip(); }, isFast ? 4000 : 6000);
 
   return el;
 }
@@ -190,37 +190,37 @@ export function buildPregame() {
 function buildTeamCard(tm, tmId, accent, side) {
   var isHome = side === 'home';
   var card = document.createElement('div');
-  card.style.cssText = 'border-radius:8px;border:1.5px solid ' + accent + '44;overflow:hidden;position:relative;display:flex;align-items:center;padding:20px;' +
-    'background:linear-gradient(170deg,' + accent + '18,' + accent + '08,#0a0804 60%);flex-shrink:0;';
+  card.style.cssText = 'border-radius:8px;border:1.5px solid ' + accent + '66;overflow:hidden;position:relative;display:flex;align-items:center;padding:24px;' +
+    'background:linear-gradient(170deg,' + accent + '22,' + accent + '08,#0a0804 70%);flex-shrink:0;';
 
   // Left accent edge (both cards)
   var edge = document.createElement('div');
-  edge.style.cssText = 'position:absolute;left:0;top:0;bottom:0;width:3px;background:' + accent + ';';
+  edge.style.cssText = 'position:absolute;left:0;top:0;bottom:0;width:4px;background:' + accent + ';';
   card.appendChild(edge);
 
   // Shimmer
   var shimmer = document.createElement('div');
-  shimmer.style.cssText = 'position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 30%,' + accent + '06 48%,transparent 70%);background-size:200px 100%;animation:shimmer 5s ease-in-out infinite;';
+  shimmer.style.cssText = 'position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 30%,' + accent + '08 48%,transparent 70%);background-size:200px 100%;animation:shimmer 5s ease-in-out infinite;';
   card.appendChild(shimmer);
 
   // Badge (left, vertically centered)
   var badgeWrap = document.createElement('div');
-  badgeWrap.style.cssText = 'flex-shrink:0;position:relative;z-index:1;filter:drop-shadow(0 6px 16px rgba(0,0,0,0.6)) drop-shadow(0 0 20px ' + accent + '33);';
-  badgeWrap.innerHTML = renderTeamBadge(tmId, 72);
+  badgeWrap.style.cssText = 'flex-shrink:0;position:relative;z-index:1;filter:drop-shadow(0 8px 24px rgba(0,0,0,0.7)) drop-shadow(0 0 20px ' + accent + '44);';
+  badgeWrap.innerHTML = renderTeamBadge(tmId, 80);
   card.appendChild(badgeWrap);
 
   // Info column (right of badge)
   var info = document.createElement('div');
-  info.style.cssText = 'flex:1;min-width:0;position:relative;z-index:1;margin-left:16px;';
+  info.style.cssText = 'flex:1;min-width:0;position:relative;z-index:1;margin-left:20px;';
 
   var schoolName = (tm.school || '').toUpperCase();
   var label = document.createElement('div');
-  label.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:9px;color:rgba(255,255,255,0.25);letter-spacing:3px;";
+  label.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:3px;";
   label.textContent = (isHome ? 'HOME' : 'AWAY') + ' \u00b7 ' + schoolName;
   info.appendChild(label);
 
   var nameEl = document.createElement('div');
-  nameEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:34px;color:#fff;letter-spacing:3px;line-height:0.85;text-shadow:0 2px 8px rgba(0,0,0,0.8);";
+  nameEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:38px;color:#fff;letter-spacing:3px;line-height:0.9;text-shadow:0 2px 12px rgba(0,0,0,0.9);";
   nameEl.textContent = tm.name;
   info.appendChild(nameEl);
 
@@ -230,32 +230,43 @@ function buildTeamCard(tm, tmId, accent, side) {
 
   // Scheme label
   var schemeEl = document.createElement('div');
-  schemeEl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:10px;color:" + accent + ";letter-spacing:1.5px;margin-top:4px;";
+  schemeEl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:11px;color:" + accent + ";letter-spacing:1.5px;margin-top:4px;";
   schemeEl.textContent = schemeStr;
   info.appendChild(schemeEl);
 
   // Vibe description (separate line, wraps naturally)
   if (vibeStr) {
     var vibeEl = document.createElement('div');
-    vibeEl.style.cssText = "font-family:'Rajdhani';font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;line-height:1.3;";
+    vibeEl.style.cssText = "font-family:'Rajdhani';font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.3;";
     vibeEl.textContent = vibeStr;
     info.appendChild(vibeEl);
   }
 
   // Ratings row
   var ratingsRow = document.createElement('div');
-  ratingsRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:6px;';
+  ratingsRow.style.cssText = 'display:flex;align-items:center;gap:12px;margin-top:8px;';
   ratingsRow.innerHTML =
     '<div style="display:flex;align-items:center;gap:4px;">' +
-      "<span style=\"font-family:'Rajdhani';font-weight:600;font-size:9px;color:#888;letter-spacing:1px;\">OFF</span>" +
-      renderFlamePips(tm.ratings.offense, 5, '#00ff44', 9) +
+      "<span style=\"font-family:'Rajdhani';font-weight:600;font-size:10px;color:#aaa;letter-spacing:1px;\">OFF</span>" +
+      renderFlamePips(tm.ratings.offense, 5, '#00ff44', 10) +
     '</div>' +
     '<div style="display:flex;align-items:center;gap:4px;">' +
-      "<span style=\"font-family:'Rajdhani';font-weight:600;font-size:9px;color:#888;letter-spacing:1px;\">DEF</span>" +
-      renderFlamePips(tm.ratings.defense, 5, '#4DA6FF', 9) +
+      "<span style=\"font-family:'Rajdhani';font-weight:600;font-size:10px;color:#aaa;letter-spacing:1px;\">DEF</span>" +
+      renderFlamePips(tm.ratings.defense, 5, '#4DA6FF', 10) +
     '</div>';
   info.appendChild(ratingsRow);
 
   card.appendChild(info);
+
+  // Sub-element entrance animation
+  badgeWrap.style.opacity = '0'; badgeWrap.style.transform = 'scale(0.8)';
+  info.style.opacity = '0'; info.style.transform = 'translateX(10px)';
+  requestAnimationFrame(function() {
+    try {
+      gsap.to(badgeWrap, { opacity: 1, scale: 1, duration: 0.4, delay: 0.2, ease: 'back.out(1.5)' });
+      gsap.to(info, { opacity: 1, x: 0, duration: 0.4, delay: 0.35, ease: 'power2.out' });
+    } catch(e) { badgeWrap.style.opacity='1'; badgeWrap.style.transform=''; info.style.opacity='1'; info.style.transform=''; }
+  });
+
   return card;
 }

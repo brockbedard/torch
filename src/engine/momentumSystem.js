@@ -72,3 +72,25 @@ export function decayMomentum(momentumMap) {
     if (momentumMap[id] > 0) momentumMap[id] = Math.max(0, momentumMap[id] - 2);
   }
 }
+
+/**
+ * Spike a player's momentum after a big play (TD, INT, sack, forced fumble, etc.).
+ * Adds amount on top of whatever updateMomentum already produced this snap, capped at 5.
+ */
+export function spikeMomentum(playerId, amount, momentumMap) {
+  if (!playerId || !momentumMap || !amount) return 0;
+  var current = momentumMap[playerId] || 0;
+  current = Math.min(5, current + amount);
+  momentumMap[playerId] = current;
+  return current;
+}
+
+/**
+ * Crash a player's momentum after a costly mistake (INT, lost fumble).
+ * Forces to 0 — they're "off" for the next snap.
+ */
+export function crashMomentum(playerId, momentumMap) {
+  if (!playerId || !momentumMap) return 0;
+  momentumMap[playerId] = 0;
+  return 0;
+}
