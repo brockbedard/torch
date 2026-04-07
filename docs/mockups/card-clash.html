@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TORCH — Card Clash Mockup (Live)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&family=Oswald:wght@500;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0A0804; color: #f0ece4; font-family: 'Rajdhani', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; gap: 20px; }
+  h2 { font-family: 'Teko'; font-weight: 700; font-size: 18px; letter-spacing: 3px; color: #EBB010; }
+  .label { font-size: 10px; color: #555; letter-spacing: 1px; margin-bottom: 4px; }
+  .note { font-size: 11px; color: #555; max-width: 375px; line-height: 1.4; padding: 0 8px; }
+
+  .phone {
+    width: 375px; height: 340px;
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+    overflow: hidden; background: #0A0804; position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .clash-dim {
+    position: absolute; inset: 0;
+    background: rgba(10,8,4,0.75);
+    backdrop-filter: blur(8px) saturate(160%);
+    -webkit-backdrop-filter: blur(8px) saturate(160%);
+  }
+
+  .clash-wrap {
+    position: relative; z-index: 2;
+    display: flex; align-items: center; gap: 0;
+  }
+
+  .clash-slot {
+    width: 72px; height: 108px;
+    border-radius: 6px; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+
+  .clash-slot > * { width: 100% !important; height: 100% !important; }
+
+  .clash-vs {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: radial-gradient(circle, #1a1208, #0A0804);
+    border: 1.5px solid rgba(235,176,16,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Teko'; font-weight: 700; font-size: 12px; color: #EBB010;
+    z-index: 3; margin: 0 -6px;
+    box-shadow: 0 0 12px rgba(235,176,16,0.2);
+  }
+
+  .clash-result {
+    position: absolute; z-index: 5; text-align: center;
+  }
+  .clash-result-yds {
+    font-family: 'Teko'; font-weight: 900; line-height: 0.9;
+  }
+  .clash-result-desc {
+    font-family: 'Rajdhani'; font-weight: 600; font-size: 11px;
+    color: rgba(255,255,255,0.4); margin-top: 4px;
+  }
+
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .btn {
+    padding: 8px 16px; border: none; border-radius: 6px;
+    background: linear-gradient(180deg, #EBB010, #FF4511);
+    font-family: 'Teko'; font-weight: 700; font-size: 14px;
+    color: #fff; letter-spacing: 2px; cursor: pointer;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-red { background: linear-gradient(180deg, #e03050, #8B0020); }
+  .btn-blue { background: linear-gradient(180deg, #4DA6FF, #2266aa); }
+
+  .spark {
+    position: absolute; border-radius: 50%; z-index: 4; pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<h2>CARD CLASH — LIVE CARDS FROM GAME</h2>
+
+<div class="phone" id="demo">
+  <div class="clash-dim" id="dim" style="opacity:0;"></div>
+  <div class="clash-wrap" id="wrap">
+    <div class="clash-slot" id="offSlot" style="opacity:0;transform:translateX(-60px);"></div>
+    <div class="clash-vs" id="vs" style="opacity:0;transform:scale(0.3);">VS</div>
+    <div class="clash-slot" id="defSlot" style="opacity:0;transform:translateX(60px);"></div>
+  </div>
+  <div class="clash-result" id="result" style="opacity:0;transform:scale(0.3);">
+    <div class="clash-result-yds" id="resultYds"></div>
+    <div class="clash-result-desc" id="resultDesc"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn" onclick="runDemo('good')">BIG GAIN (+18)</button>
+  <button class="btn btn-red" onclick="runDemo('bad')">SACKED (-4)</button>
+  <button class="btn btn-blue" onclick="runDemo('routine')">SHORT GAIN (+3)</button>
+</div>
+
+<div class="note" style="margin-top:12px;">
+  <strong>These are the actual card components from the game</strong> rendered at 72x108px.
+  The animation replaces the black screen during the blackout phase — no added time.
+</div>
+
+<script type="module">
+  import { buildPlayV1, buildMaddenPlayer } from '../../src/ui/components/cards.js';
+
+  // Sample plays
+  var plays = [
+    { name: 'GO ROUTE', playType: 'DEEP', isRun: false, risk: 'high', cat: 'DEEP', sub: 'PASS' },
+    { name: 'POWER', playType: 'RUN', isRun: true, risk: 'low', cat: 'RUN', sub: 'RUN' },
+    { name: 'SLANT', playType: 'SHORT', isRun: false, risk: 'low', cat: 'SHORT', sub: 'PASS' },
+    { name: 'MESH', playType: 'SHORT', isRun: false, risk: 'med', cat: 'SHORT', sub: 'PASS' },
+  ];
+
+  var defPlays = [
+    { name: 'PRESS MAN', playType: 'ZONE', isRun: false, risk: 'high', cat: 'ZONE', sub: 'MAN', cardType: 'ZONE' },
+    { name: 'COVER 3', playType: 'ZONE', isRun: false, risk: 'low', cat: 'ZONE', sub: 'ZONE', cardType: 'ZONE' },
+    { name: 'A-GAP MUG', playType: 'BLITZ', isRun: false, risk: 'high', cat: 'BLITZ', sub: 'BLITZ', cardType: 'BLITZ' },
+  ];
+
+  function randomPlay() { return plays[Math.floor(Math.random() * plays.length)]; }
+  function randomDef() { return defPlays[Math.floor(Math.random() * defPlays.length)]; }
+
+  function buildCards() {
+    var offSlot = document.getElementById('offSlot');
+    var defSlot = document.getElementById('defSlot');
+    offSlot.innerHTML = '';
+    defSlot.innerHTML = '';
+
+    var offCard = buildPlayV1(randomPlay(), 72, 108);
+    offCard.style.width = '100%';
+    offCard.style.height = '100%';
+    offSlot.appendChild(offCard);
+
+    var defCard = buildPlayV1(randomDef(), 72, 108);
+    defCard.style.width = '100%';
+    defCard.style.height = '100%';
+    defSlot.appendChild(defCard);
+  }
+
+  var results = {
+    good: { yds: '+18', desc: 'FIRST DOWN', color: '#00ff44', size: '52px' },
+    bad: { yds: '-4', desc: 'SACKED', color: '#ff0040', size: '48px' },
+    routine: { yds: '+3', desc: '2ND & 7', color: '#f0ece4', size: '36px' },
+  };
+
+  var running = false;
+
+  window.runDemo = function(type) {
+    if (running) return;
+    running = true;
+    var r = results[type];
+
+    // Reset
+    var dim = document.getElementById('dim');
+    var offSlot = document.getElementById('offSlot');
+    var defSlot = document.getElementById('defSlot');
+    var vs = document.getElementById('vs');
+    var result = document.getElementById('result');
+    var ydsEl = document.getElementById('resultYds');
+    var descEl = document.getElementById('resultDesc');
+
+    buildCards();
+
+    dim.style.transition = 'none';
+    dim.style.opacity = '0';
+    offSlot.style.transition = 'none';
+    offSlot.style.opacity = '0';
+    offSlot.style.transform = 'translateX(-60px)';
+    defSlot.style.transition = 'none';
+    defSlot.style.opacity = '0';
+    defSlot.style.transform = 'translateX(60px)';
+    vs.style.transition = 'none';
+    vs.style.opacity = '0';
+    vs.style.transform = 'scale(0.3)';
+    result.style.transition = 'none';
+    result.style.opacity = '0';
+    result.style.transform = 'scale(0.3)';
+    ydsEl.style.color = r.color;
+    ydsEl.style.fontSize = r.size;
+    ydsEl.style.textShadow = '0 0 24px ' + r.color + '66';
+    ydsEl.textContent = r.yds;
+    descEl.textContent = r.desc;
+
+    void dim.offsetWidth;
+
+    // Phase 1: Dim
+    dim.style.transition = 'opacity 0.2s';
+    dim.style.opacity = '1';
+
+    // Phase 2: Cards slide in
+    setTimeout(function() {
+      offSlot.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      offSlot.style.opacity = '1';
+      offSlot.style.transform = 'translateX(0)';
+    }, 100);
+
+    setTimeout(function() {
+      defSlot.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      defSlot.style.opacity = '1';
+      defSlot.style.transform = 'translateX(0)';
+    }, 200);
+
+    // Phase 3: VS pops
+    setTimeout(function() {
+      vs.style.transition = 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      vs.style.opacity = '1';
+      vs.style.transform = 'scale(1)';
+    }, 500);
+
+    // Phase 4: Hold then result
+    var holdTime = type === 'routine' ? 700 : type === 'bad' ? 850 : 900;
+
+    setTimeout(function() {
+      // Cards push apart
+      offSlot.style.transition = 'all 0.2s ease-in';
+      offSlot.style.opacity = '0.15';
+      offSlot.style.transform = 'translateX(-40px) scale(0.8)';
+      defSlot.style.transition = 'all 0.2s ease-in';
+      defSlot.style.opacity = '0.15';
+      defSlot.style.transform = 'translateX(40px) scale(0.8)';
+      vs.style.transition = 'all 0.15s ease-in';
+      vs.style.opacity = '0';
+      vs.style.transform = 'scale(0)';
+
+      // Result explodes
+      setTimeout(function() {
+        result.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        result.style.opacity = '1';
+        result.style.transform = 'scale(1)';
+
+        // Sparks
+        var container = document.getElementById('demo');
+        for (var i = 0; i < 8; i++) {
+          var spark = document.createElement('div');
+          spark.className = 'spark';
+          var sz = 2 + Math.random() * 3;
+          var angle = (Math.PI * 2 / 8) * i + Math.random() * 0.3;
+          var dist = 25 + Math.random() * 25;
+          spark.style.width = sz + 'px';
+          spark.style.height = sz + 'px';
+          spark.style.left = '50%';
+          spark.style.top = '50%';
+          spark.style.background = r.color;
+          spark.style.transition = 'all 0.4s ease-out';
+          spark.style.opacity = '0.8';
+          container.appendChild(spark);
+          void spark.offsetWidth;
+          spark.style.transform = 'translate(' + (Math.cos(angle) * dist) + 'px, ' + (Math.sin(angle) * dist) + 'px)';
+          spark.style.opacity = '0';
+          setTimeout(function(s) { s.remove(); }.bind(null, spark), 500);
+        }
+      }, 180);
+    }, holdTime);
+
+    // Cleanup
+    setTimeout(function() {
+      result.style.transition = 'opacity 0.3s';
+      result.style.opacity = '0';
+      dim.style.transition = 'opacity 0.3s';
+      dim.style.opacity = '0';
+      offSlot.style.transition = 'opacity 0.3s';
+      offSlot.style.opacity = '0';
+      defSlot.style.transition = 'opacity 0.3s';
+      defSlot.style.opacity = '0';
+      setTimeout(function() { running = false; }, 400);
+    }, holdTime + 1500);
+  };
+</script>
+
+</body>
+</html>

@@ -62,7 +62,7 @@ export const SND = {
   kickMiss:   safe(function() { AudioManager.play('groan', { volume: 0.5 }); }),
 
   // === WHISTLES ===
-  whistle:    safe(function() { AudioManager.play('whistle', { volume: 0.5 }); }),
+  whistle:    safe(function() { AudioManager.play('whistle', { volume: 0.05 }); }),
 
   // === CINEMATIC ===
   ignite:     safe(function() { AudioManager.playExact('ignite', { volume: 0.6 }); }),

@@ -129,7 +129,7 @@ export function buildHalftime() {
     btn.addEventListener('touchstart', function() { try { gsap.to(btn, { scale: 0.96, duration: 0.08 }); } catch(e) {} }, { passive: true });
     btn.addEventListener('touchend', function() { try { gsap.to(btn, { scale: 1, duration: 0.15, ease: 'back.out(2)' }); } catch(e) {} }, { passive: true });
     btn.onclick = function() {
-      SND.snap();
+      if (SND.snap) SND.snap(); else if (SND.click) SND.click();
       selectedAdj = adj.id;
       // Persist without re-render — button states updated inline below
       GS.halftimeAdjustment = adj.id;
@@ -293,7 +293,7 @@ export function buildHalftime() {
   ctaWrap.style.cssText = 'flex-shrink:0;padding:6px 14px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom,0px));';
 
   var ctaBtn = buildFlameBadgeButton('2ND HALF', function() {
-    SND.snap();
+    if (SND.snap) SND.snap(); else if (SND.click) SND.click();
     gs.startSecondHalf();
     gs.halftimeAdjustment = GS.halftimeAdjustment || 'balanced';
     var humanReceives2nd = !GS.humanReceives;

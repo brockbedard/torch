@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TORCH — Premium Endzone Mockup (Precise Center)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            background: #050a08;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: #EBB010;
+            font-family: 'Rajdhani', sans-serif;
+        }
+        canvas {
+            background: #050a08;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 60px rgba(0,0,0,0.8);
+        }
+        .controls {
+            margin-top: 24px;
+            text-align: center;
+            max-width: 500px;
+        }
+        h1 { font-family: 'Teko'; margin: 0 0 8px; letter-spacing: 4px; font-size: 32px; text-transform: uppercase; }
+        p { color: #888; font-size: 16px; margin: 0; line-height: 1.5; }
+        .feature-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        .feature-item {
+            background: rgba(255,255,255,0.03);
+            padding: 10px 14px;
+            border-radius: 6px;
+            border-left: 3px solid #EBB010;
+        }
+        .feature-label { font-weight: 700; font-size: 14px; color: #EBB010; display: block; margin-bottom: 2px; }
+        .feature-desc { font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+
+    <h1>PREMIUM ENDZONE V3</h1>
+    <p>Clean high-fidelity branding with precise mathematical centering</p>
+    
+    <canvas id="fieldCanvas" width="360" height="500"></canvas>
+
+    <div class="controls">
+        <div class="feature-list">
+            <div class="feature-item">
+                <span class="feature-label">TRUE HORIZONTAL CENTER</span>
+                <span class="feature-desc">Accounting for trailing letter-spacing width</span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-label">CLEAN BOUNDARIES</span>
+                <span class="feature-desc">Technical pips removed for cleaner look</span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-label">NEON GLOW</span>
+                <span class="feature-desc">Additive goal-line boundary lighting</span>
+            </div>
+            <div class="feature-item">
+                <span class="feature-label">HERRINGBONE TURF</span>
+                <span class="feature-desc">Depth pattern restricted to endzone</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('fieldCanvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // Team Data (Sentinels)
+        const team = {
+            name: 'BOARS',
+            primary: '#8B0000',
+            accent: '#C4A265'
+        };
+
+        function hexToRgb(hex) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return [r, g, b];
+        }
+
+        function drawEndZonePremium(c, y, h, team) {
+            const rgb = hexToRgb(team.primary);
+            const acc = hexToRgb(team.accent);
+            
+            // 1. Base Fill (Deep Gradient)
+            const grad = c.createLinearGradient(0, y, 0, y + h);
+            grad.addColorStop(0, `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.08)`);
+            grad.addColorStop(0.5, `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.12)`);
+            grad.addColorStop(1, `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.05)`);
+            c.fillStyle = grad;
+            c.fillRect(0, y, width, h);
+
+            // 2. Herringbone Pattern
+            c.save();
+            c.beginPath();
+            c.rect(0, y, width, h);
+            c.clip();
+            c.strokeStyle = `rgba(${acc[0]}, ${acc[1]}, ${acc[2]}, 0.04)`;
+            c.lineWidth = 15;
+            for (let i = -width; i < width + h; i += 30) {
+                c.beginPath();
+                c.moveTo(0, y + i);
+                c.lineTo(width, y + i + width);
+                c.stroke();
+                c.strokeStyle = `rgba(${acc[0]}, ${acc[1]}, ${acc[2]}, 0.02)`;
+                c.beginPath();
+                c.moveTo(0, y + i + 15);
+                c.lineTo(width, y + i - width + 15);
+                c.stroke();
+            }
+            c.restore();
+
+            // 3. Goal Line Neon Glow
+            const goalY = y + h;
+            const glow = c.createLinearGradient(0, goalY - 20, 0, goalY + 5);
+            glow.addColorStop(0, 'transparent');
+            glow.addColorStop(0.8, `rgba(${acc[0]}, ${acc[1]}, ${acc[2]}, 0.2)`);
+            glow.addColorStop(1, 'transparent');
+            c.fillStyle = glow;
+            c.fillRect(0, goalY - 20, width, 25);
+
+            c.strokeStyle = `rgba(${acc[0]}, ${acc[1]}, ${acc[2]}, 0.5)`;
+            c.lineWidth = 2;
+            c.beginPath();
+            c.moveTo(0, goalY);
+            c.lineTo(width, goalY);
+            c.stroke();
+
+            // 4. Team Typography (Fixed Precise Centering)
+            c.save();
+            const spacing = 12; // Increased for drama
+            const fontSize = 64;
+            c.font = `900 ${fontSize}px 'Teko'`;
+            c.textAlign = 'left'; // Use left align to manually handle centering
+            c.textBaseline = 'middle';
+            c.letterSpacing = spacing + 'px';
+
+            // Vertical offset for Teko baseline
+            const vOffset = 4;
+
+            // Measure the text. Note: letterSpacing adds space AFTER every character.
+            // "BOARS" rendered with 12px letterSpacing will have 12px of empty space at the end.
+            // To center it perfectly, we subtract HALF of that trailing space from the starting X.
+            const metrics = c.measureText(team.name);
+            const textWidth = metrics.width; 
+            // Total visual width = measured width (which includes all spacings) - the last spacing
+            const visualWidth = textWidth - spacing; 
+            
+            const startX = (width - visualWidth) / 2;
+            const centerY = y + h / 2 + vOffset;
+
+            c.translate(startX, centerY);
+
+            // Shadow / Recess
+            c.fillStyle = 'rgba(0,0,0,0.4)';
+            c.fillText(team.name, 2, 2);
+
+            // Inner Glow / Paint
+            c.fillStyle = `rgba(${acc[0]}, ${acc[1]}, ${acc[2]}, 0.15)`;
+            c.fillText(team.name, 0, 0);
+
+            // Technical Stroke
+            c.strokeStyle = `rgba(${acc[0]}, ${acc[1]}, ${acc[2]}, 0.1)`;
+            c.lineWidth = 1;
+            c.strokeText(team.name, 0, 0);
+            
+            c.restore();
+
+            // Debug Center Line (uncomment to verify)
+            /*
+            c.strokeStyle = 'rgba(0,255,255,0.8)';
+            c.lineWidth = 1;
+            c.beginPath();
+            c.moveTo(width/2, 0);
+            c.lineTo(width/2, height);
+            c.stroke();
+            */
+        }
+
+        function render() {
+            ctx.fillStyle = '#050a08';
+            ctx.fillRect(0, 0, width, height);
+            
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            ctx.lineWidth = 1;
+            for(let i=0; i<height; i+=40) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
+            }
+
+            drawEndZonePremium(ctx, 100, 180, team);
+            
+            const serpents = { name: 'SERPENTS', primary: '#2E0854', accent: '#39FF14' };
+            ctx.save();
+            ctx.translate(0, 320);
+            drawEndZonePremium(ctx, 0, 120, serpents);
+            ctx.restore();
+        }
+
+        document.fonts.ready.then(render);
+    </script>
+</body>
+</html>

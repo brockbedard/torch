@@ -657,11 +657,18 @@ export function createFieldRenderer(width, height) {
 
     // Directional arrows
     if (num !== 50) {
-      // In portrait, "points toward own goal" = points UP the screen (toward yard 0)
-      var ptsUp = absYard < 60;
-      var ax = ptsUp ? -CFG.num.arrowOff : CFG.num.arrowOff;
-      var adir = ptsUp ? -1 : 1;
-      if (mirrored) { ax *= -1; adir *= -1; }
+      // Arrows point toward the nearest goal line.
+      // Yard 10 is TOP goal, Yard 110 is BOTTOM goal.
+      var pointsTop = absYard < 60;
+      
+      // Local coordinate system (post-rotation):
+      // mirrored=false (-90 deg): +X points UP, -X points DOWN.
+      // mirrored=true (+90 deg): -X points UP, +X points DOWN.
+      var adir = (!mirrored) ? (pointsTop ? 1 : -1) : (pointsTop ? -1 : 1);
+      
+      // Position arrow on the goal-side of the number
+      var ax = adir * CFG.num.arrowOff;
+      
       c.fillStyle = CFG.num.arrowColor;
       c.beginPath();
       c.moveTo(ax, -CFG.num.arrowSz);
@@ -786,46 +793,24 @@ export function createFieldRenderer(width, height) {
       c.restore();
     }
 
-    // Subtle idle breathing — time-based vertical oscillation, staggered per player
-    var now = performance.now();
-
     // Draw all players
     form.offense.forEach(function(p, i) {
       var px = p.x * fieldW;
       var py = (losYard + p.y - topYard) * YPX;
-      var breathOffset = Math.sin(now / 800 + i * 1.2) * 1.5; // ±1.5px
-      var idlePy = py + breathOffset;
-
-      // QB (index 0) gets a subtle glow pulse for pre-snap anticipation
-      if (i === 0) {
-        var pulseIntensity = 0.6 + Math.sin(now / 600) * 0.15; // 0.45–0.75
-        var qbGlowSprite = getGlowSprite(offRGB, Math.round(DOT_R * 1.5), 0.35);
-        var qbGlowSz = DOT_R * 7;
-        var prevComp2 = c.globalCompositeOperation;
-        c.globalCompositeOperation = 'lighter';
-        c.globalAlpha = pulseIntensity;
-        c.drawImage(qbGlowSprite, px - qbGlowSz / 2, idlePy - qbGlowSz / 2, qbGlowSz, qbGlowSz);
-        c.globalAlpha = 1;
-        c.globalCompositeOperation = prevComp2;
-      }
-
-      drawDot(px, idlePy, offRGB, offGrad);
+      drawDot(px, py, offRGB, offGrad);
     });
 
     form.defense.forEach(function(p, i) {
       var px = p.x * fieldW;
       var py = (losYard + p.y - topYard) * YPX;
-      var breathOffset = Math.sin(now / 800 + (form.offense.length + i) * 1.2) * 1.5;
-      var idlePy = py + breathOffset;
-      drawDot(px, idlePy, defRGB, defGrad);
+      drawDot(px, py, defRGB, defGrad);
     });
 
-    // Ball glow at QB position (follows QB's breath offset — index 0)
+    // Ball glow at QB position
     var qb = form.offense.find(function(p) { return p.pos === 'QB'; });
     if (qb) {
       var bx = qb.x * fieldW;
-      var qbBreathOffset = Math.sin(now / 800) * 1.5; // index 0 offset
-      var by = (losYard + qb.y - topYard) * YPX + qbBreathOffset;
+      var by = (losYard + qb.y - topYard) * YPX;
       c.fillStyle = 'rgba(255,220,140,0.4)';
       c.beginPath();
       c.arc(bx, by, 6, 0, Math.PI * 2);
@@ -840,8 +825,6 @@ export function createFieldRenderer(width, height) {
       var p = d.p;
       var px = p.x * fieldW;
       var py = (d.losY + p.y - topYard) * YPX;
-      var breathOffset = Math.sin(now / 800 + d.idx * 1.2) * 1.5;
-      var idlePy = py + breathOffset;
       var isOffense = d.side === 'off';
 
       c.save();
@@ -849,21 +832,21 @@ export function createFieldRenderer(width, height) {
       c.textAlign = 'center';
       c.textBaseline = 'middle';
 
-      // Dark backing circle — ensures readability on any colored core
+      // Dark backing circle
       c.fillStyle = 'rgba(0,0,0,0.5)';
       c.beginPath();
-      c.arc(px, idlePy, 7, 0, Math.PI * 2);
+      c.arc(px, py, 7, 0, Math.PI * 2);
       c.fill();
 
-      // Number stroke (thicker for better contrast)
+      // Number stroke
       c.strokeStyle = 'rgba(0,0,0,0.9)';
       c.lineWidth = 3;
       c.lineJoin = 'round';
-      c.strokeText(p.num, px, idlePy + 0.5);
+      c.strokeText(p.num, px, py + 0.5);
 
-      // Number fill — warm tint for offense, cool tint for defense
+      // Number fill
       c.fillStyle = isOffense ? 'rgba(255,250,240,0.95)' : 'rgba(240,245,255,0.95)';
-      c.fillText(p.num, px, idlePy + 0.5);
+      c.fillText(p.num, px, py + 0.5);
 
       c.restore();
     });
@@ -991,28 +974,6 @@ export function createFieldRenderer(width, height) {
     }
     if (!state.skipDots) {
       drawPlayerDots(ctx, formation, losYard, topYard, state.offTeam, state.defTeam);
-    }
-
-    // Formation name label (small, unobtrusive)
-    if (state.formation) {
-      var formName = state.formation.replace(/_/g, ' ').toUpperCase();
-      // Map to readable names
-      var FORM_LABELS = {
-        'SHOTGUN DEUCE': 'SHOTGUN 2×2',
-        'TRIPS': 'TRIPS',
-        'TWINS': 'TWINS',
-        'BUNCH': 'BUNCH',
-        'IFORM PISTOL': 'PISTOL',
-        'EMPTY': 'EMPTY',
-      };
-      var label = FORM_LABELS[formName] || formName;
-
-      ctx.save();
-      ctx.font = "700 10px 'Teko'";
-      ctx.fillStyle = 'rgba(255,255,255,0.15)';
-      ctx.textAlign = 'left';
-      ctx.fillText(label, 8, height - 8);
-      ctx.restore();
     }
   }
 

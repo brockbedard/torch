@@ -280,11 +280,11 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       // User's defense got the sack — celebrate!
       var sackPool = [
         'SACK!! ' + defName + ' BURIES the QB' + (Math.abs(yards) > 0 ? ' for a loss of ' + Math.abs(yards) + '!' : '!'),
-        defName + ' GETS THERE!' + (Math.abs(yards) > 0 ? ' Dropped for a ' + Math.abs(yards) + '-yard loss!' : ' NO GAIN!'),
-        'NOWHERE TO THROW! ' + defName + ' ' + pick(TACKLE_VERBS) + '! HUGE play!',
-        'The pocket COLLAPSES! ' + defName + ' brings the HEAT!',
+        defName + ' GETS THERE! SACK!' + (Math.abs(yards) > 0 ? ' Dropped for a ' + Math.abs(yards) + '-yard loss!' : ' NO GAIN!'),
+        'NOWHERE TO THROW! ' + defName + ' ' + pick(TACKLE_VERBS) + '! SACK!',
+        'The pocket COLLAPSES! ' + defName + ' brings the HEAT! SACK!',
         'GOT HIM! ' + defName + ' through the line — SACK!' + (Math.abs(yards) > 0 ? ' Loss of ' + Math.abs(yards) + '!' : ''),
-        'OFF SCHEDULE! ' + defName + ' gets to the QB and TAKES HIM DOWN!',
+        'OFF SCHEDULE! ' + defName + ' gets to the QB and SACKS HIM!',
         'FREE RUNNER! ' + defName + ' unblocked — SACK!! ' + (Math.abs(yards) > 0 ? Math.abs(yards) + '-yard loss!' : ''),
       ];
       if (traitFlavor(def)) {
@@ -292,8 +292,8 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
         sackPool.push(defName + '\'s ' + (def.trait || 'relentless pressure') + ' pays off! SACKED!!');
       }
       if (isPositionMatchupSack) {
-        sackPool.push(defName + ' wins the rep — straight through the blocker! SACK!');
-        sackPool.push('The QB never had a chance. ' + defName + ' was ALREADY THERE!');
+        sackPool.push(defName + ' wins the rep — SACKED straight through the blocker!');
+        sackPool.push('The QB never had a chance. ' + defName + ' was ALREADY THERE! SACK!');
         sackPool.push(defName + ' owned that matchup start to finish. SACK!!');
       }
       line1 = pick(sackPool);
@@ -306,7 +306,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       // User's QB got sacked — flat
       line1 = pick([
         'Sacked. ' + defName + ' gets through.' + (Math.abs(yards) > 0 ? ' Loss of ' + Math.abs(yards) + '.' : ''),
-        defName + ' brings the pressure.' + (Math.abs(yards) > 0 ? ' Loss of ' + Math.abs(yards) + '.' : ' No gain.'),
+        defName + ' brings the pressure. Sacked.' + (Math.abs(yards) > 0 ? ' Loss of ' + Math.abs(yards) + '.' : ' No gain.'),
         'Pressure gets home. Sacked.' + (Math.abs(yards) > 0 ? ' Loss of ' + Math.abs(yards) + '.' : ''),
         defName + ' beats the block.' + (Math.abs(yards) > 0 ? ' Down for a loss of ' + Math.abs(yards) + '.' : ' No gain.'),
       ]);
