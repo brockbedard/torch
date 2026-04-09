@@ -149,15 +149,13 @@ export function buildTeamSelect() {
     shimmer.style.cssText = 'position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,' + accent + '08 48%,transparent 65%);background-size:200px 100%;animation:shimmer 5s ease-in-out infinite;pointer-events:none;';
     panel.appendChild(shimmer);
 
-    // Touch feedback
+    // Touch feedback — border/glow only, no scale (keeps card dimensions fixed)
     panel.addEventListener('touchstart', function() {
       if (selectedTeamId && selectedTeamId !== tid) return;
       panel.style.borderColor = accent + '66';
       panel.style.boxShadow = '0 0 16px ' + accent + '22, 0 2px 12px rgba(0,0,0,0.4)';
-      try { gsap.to(panel, { scale: 0.96, duration: 0.08 }); } catch(e) {}
     }, { passive: true });
     panel.addEventListener('touchend', function() {
-      try { gsap.to(panel, { scale: 1, duration: 0.15, ease: 'back.out(2)' }); } catch(e) {}
       if (selectedTeamId === tid) return; // keep highlight
       panel.style.borderColor = accent + '33';
       panel.style.boxShadow = '0 2px 12px rgba(0,0,0,0.4)';
@@ -180,7 +178,6 @@ export function buildTeamSelect() {
           p.style.background = 'linear-gradient(90deg,' + pa + '30,#0a0804 70%)';
           p.style.opacity = '1';
           p.style.filter = '';
-          try { gsap.fromTo(p, { scale: 1 }, { scale: 1.02, duration: 0.15, yoyo: true, repeat: 1, ease: 'power2.out' }); } catch(e) {}
         } else {
           p.style.opacity = '0.4';
           p.style.filter = '';
