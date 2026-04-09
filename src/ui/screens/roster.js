@@ -206,10 +206,11 @@ function buildRow(p, tm, ac, sideColor) {
         ? "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:8px;color:" + ac + ";font-style:italic;letter-spacing:0.3px;line-height:1.2;margin-top:1px;\">" + p.starTitle + "</div>"
         : '') +
     '</div>' +
-    // Flame star pips
-    '<div style="display:flex;flex-shrink:0;gap:0;">' + renderFlamePips(p.stars || 3, 5, '#EBB010', 7) + '</div>' +
-    // Trait — fits content width, readable on dark background
-    "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:" + (isStar ? ac : '#888') + ";letter-spacing:0.5px;flex-shrink:0;text-align:right;white-space:nowrap;padding-left:4px;min-width:60px;\">" + (p.trait || '\u2014') + "</div>";
+    // Trait — fixed width so text right-aligns consistently across rows
+    "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:" + (isStar ? ac : '#888') + ";letter-spacing:0.5px;flex-shrink:0;text-align:right;white-space:nowrap;width:86px;overflow:hidden;text-overflow:ellipsis;\">" + (p.trait || '\u2014') + "</div>" +
+    // Flame star pips — LAST so they always sit flush against the right edge.
+    // Previously trait was rightmost and its variable width pushed pips around.
+    "<div style=\"display:flex;flex-shrink:0;gap:0;width:40px;justify-content:flex-end;margin-left:6px;\">" + renderFlamePips(p.stars || 3, 5, '#EBB010', 7) + "</div>";
 
   return row;
 }
