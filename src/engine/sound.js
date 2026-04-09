@@ -46,7 +46,7 @@ export const SND = {
   incomp:     safe(function() { AudioManager.play('hitModerate', { volume: 0.4 }); }),
 
   // === CROWD REACTIONS ===
-  td:         safe(function() { AudioManager.playExact('tdEruption', { volume: 0.85 }); }),
+  td:         safe(function() { AudioManager.play('tdEruption', { volume: 0.85 }); }),
   turnover:   safe(function() { AudioManager.play('groan', { volume: 0.6 }); }),
   bigPlay:    safe(function() { AudioManager.play('bigPlayCrowd', { volume: 0.7 }); }),
 
@@ -74,9 +74,26 @@ export const SND = {
   kickThud:   safe(function() { AudioManager.play('kick', { volume: 0.6 }); }),
   kickGood:   safe(function() { AudioManager.play('bigPlayCrowd', { volume: 0.6 }); }),
   kickMiss:   safe(function() { AudioManager.play('groan', { volume: 0.5 }); }),
+  // Metallic clang when the kick hits the upright. Fires before the groan.
+  goalPostClang: safe(function() { AudioManager.play('goalPostClang', { volume: 0.75 }); }),
 
   // === WHISTLES ===
-  whistle:    safe(function() { AudioManager.play('whistle', { volume: 0.05 }); }),
+  whistle:     safe(function() { AudioManager.play('whistle', { volume: 0.05 }); }),
+  whistleLong: safe(function() { AudioManager.playExact('whistleLong', { volume: 0.07 }); }),
+  // End-of-period authoritative whistle. Used for end of half and end of game.
+  whistleEndHalf: safe(function() { AudioManager.play('whistleEndHalf', { volume: 0.5 }); }),
+
+  // === FOOTBALL FOLEY (new) ===
+  chainGang:     safe(function() { AudioManager.play('chainGang', { volume: 0.4 }); }),
+  passWhoosh:    safe(function() { AudioManager.play('passWhoosh', { volume: 0.5 }); }),
+  helmetImpact:  safe(function() { AudioManager.play('helmetImpact', { volume: 0.75 }); }),
+  crowdOoh:      safe(function() { AudioManager.play('crowdOoh', { volume: 0.55 }); }),
+  possessionSwoosh: safe(function() { AudioManager.play('possessionSwoosh', { volume: 0.55 }); }),
+  coinCatch:     safe(function() { AudioManager.play('coinCatch', { volume: 0.55 }); }),
+
+  // === AMBIENT LOOPS ===
+  lockerRoomStart: safe(function() { AudioManager.startAmbient('lockerRoom', 0.35, 800); }),
+  lockerRoomStop:  safe(function() { AudioManager.stopAmbient('lockerRoom', 600); }),
 
   // === CINEMATIC ===
   ignite:     safe(function() { AudioManager.playExact('ignite', { volume: 0.6 }); }),

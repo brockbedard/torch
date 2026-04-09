@@ -55,11 +55,11 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
   hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;';
   hdr.innerHTML =
     '<div style="display:flex;align-items:center;gap:6px;">' +
-      "<svg viewBox='0 0 44 56' width='12' height='16' fill='#EBB010' style='opacity:0.6;'><path d='" + FLAME_PATH + "'/></svg>" +
+      "<svg viewBox='0 0 34 34' width='16' height='16' fill='#EBB010' style='opacity:0.6;'><path d='" + FLAME_PATH + "'/></svg>" +
       "<div style=\"font-family:'Oswald';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:3px;\">TORCH STORE</div>" +
     '</div>' +
     '<div style="display:flex;align-items:center;gap:4px;">' +
-      "<svg viewBox='0 0 44 56' width='10' height='13' fill='#EBB010'><path d='" + FLAME_PATH + "'/></svg>" +
+      "<svg viewBox='0 0 34 34' width='13' height='13' fill='#EBB010'><path d='" + FLAME_PATH + "'/></svg>" +
       "<span id='shop-pts' style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;\">" + _pts + "</span>" +
       "<span style=\"font-family:'Rajdhani';font-weight:600;font-size:9px;color:#EBB01066;letter-spacing:1px;\">PTS</span>" +
     '</div>';
@@ -106,7 +106,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
       'display:flex;align-items:center;justify-content:center;' +
       'z-index:10;pointer-events:none;will-change:opacity,transform;';
     cover.innerHTML =
-      "<svg viewBox='0 0 44 56' width='32' height='40' fill='" + tierColor + "' style='opacity:0.45;'><path d='" + FLAME_PATH + "'/></svg>";
+      "<svg viewBox='0 0 34 34' width='40' height='40' fill='" + tierColor + "' style='opacity:0.45;'><path d='" + FLAME_PATH + "'/></svg>";
     cardEl.appendChild(cover);
     _glowItems.push({ cardEl: cardEl, cover: cover, tier: card.tier, color: tierColor });
 
@@ -114,7 +114,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
     var costEl = document.createElement('div');
     costEl.style.cssText = "display:flex;align-items:center;gap:3px;";
     costEl.innerHTML =
-      "<svg viewBox='0 0 44 56' width='8' height='10' fill='" + (canAfford ? '#EBB010' : '#444') + "'><path d='" + FLAME_PATH + "'/></svg>" +
+      "<svg viewBox='0 0 34 34' width='10' height='10' fill='" + (canAfford ? '#EBB010' : '#444') + "'><path d='" + FLAME_PATH + "'/></svg>" +
       "<span style=\"font-family:'Teko';font-weight:700;font-size:14px;color:" + (canAfford ? '#EBB010' : '#444') + ";letter-spacing:1px;\">" + card.cost + "</span>";
     wrap.appendChild(costEl);
 

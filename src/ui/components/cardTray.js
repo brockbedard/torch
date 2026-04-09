@@ -9,6 +9,7 @@ import { buildPlayV1, buildMaddenPlayer, buildTorchCard, buildHomeCard } from '.
 import { renderTorchCardIcon } from '../../data/torchCardIcons.js';
 import { SND } from '../../engine/sound.js';
 import { Haptic } from '../../engine/haptics.js';
+import { flameIconSVG, flameSilhouetteSVG } from '../../utils/flameIcon.js';
 
 // Compact stat formatter — always fits on one line at 10px on 80px card
 // Uses short labels, drops least important stats if too many
@@ -642,9 +643,12 @@ export function renderCardTray(opts) {
   // ── DISCARD BANNER (shown at top when in discard mode) ──
   var discBanner = document.createElement('div');
   discBanner.style.cssText = "display:none;align-items:center;padding:8px 12px;background:linear-gradient(90deg,#FF451110,transparent 40%);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;";
-  var _flameP = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
+  // Small torch-red flame at 13×13 (square); was 10×13 rectangular.
+  // Silhouette in #FF4511 to match the banner color theme.
   discBanner.innerHTML =
-    "<svg viewBox='0 0 44 56' width='10' height='13' fill='#FF4511' style='opacity:0.6;margin-right:8px;flex-shrink:0;'><path d='" + _flameP + "'/></svg>" +
+    '<span style="display:inline-flex;opacity:0.6;margin-right:8px;flex-shrink:0;">' +
+      flameSilhouetteSVG(13, '#FF4511') +
+    '</span>' +
     "<div style=\"font-family:'Oswald';font-weight:700;font-size:10px;color:#FF4511;letter-spacing:3px;flex:1;\">DISCARD</div>" +
     "<div id='disc-hint' style=\"font-family:'Rajdhani';font-weight:600;font-size:9px;color:#888;\">Tap to mark</div>";
   wrap.insertBefore(discBanner, wrap.firstChild.nextSibling); // After header
@@ -672,7 +676,7 @@ export function renderCardTray(opts) {
 
   var discConfirm = document.createElement('button');
   discConfirm.style.cssText = "flex:1;padding:10px;border-radius:6px;text-align:center;cursor:pointer;border:none;background:linear-gradient(180deg,#FF4511,#FF451188);box-shadow:0 4px 12px rgba(255,69,17,0.3);";
-  discConfirm.innerHTML = "<div style=\"display:flex;align-items:center;justify-content:center;gap:6px;\"><svg viewBox='0 0 44 56' width='10' height='13' fill='#fff'><path d='" + _flameP + "'/></svg><span style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#fff;letter-spacing:2px;\">BURN 0</span></div>";
+  discConfirm.innerHTML = "<div style=\"display:flex;align-items:center;justify-content:center;gap:6px;\">" + flameSilhouetteSVG(13, '#fff') + "<span style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#fff;letter-spacing:2px;\">BURN 0</span></div>";
   discConfirm.onclick = function() {
     var markedEls = [];
     var markedObjs = [];
@@ -736,11 +740,11 @@ export function renderCardTray(opts) {
   snapBar.className = 'CT-snap-bar';
   var snapBtn = document.createElement('button');
   snapBtn.className = 'CT-snap-btn' + (opts.is2Min ? ' CT-snap-urgent' : '') + (opts.is4thDownGo ? ' CT-snap-aura' : '') + (opts.pressureBeat ? ' CT-snap-pressure' : '');
-  // Flame badge left + text right
-  var flamePath = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
+  // Flame badge left + text right — white silhouette on the SNAP button,
+  // matches the buildFlameBadgeButton treatment in brand.js.
   var snapBadge = document.createElement('div');
   snapBadge.style.cssText = 'background:rgba(0,0,0,0.2);padding:12px 14px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(0,0,0,0.15);';
-  snapBadge.innerHTML = "<svg viewBox='0 0 44 56' width='18' height='24' fill='#fff'><path d='" + flamePath + "'/></svg>";
+  snapBadge.innerHTML = flameSilhouetteSVG(24, '#fff');
   var snapText = document.createElement('div');
   snapText.style.cssText = "flex:1;padding:14px;font-family:'Teko';font-weight:700;font-size:24px;color:#fff;letter-spacing:8px;text-align:center;text-shadow:0 2px 4px rgba(0,0,0,0.3);line-height:1;";
   snapText.textContent = opts.isConversion ? 'ATTEMPT' : 'SNAP';

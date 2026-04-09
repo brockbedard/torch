@@ -83,10 +83,21 @@ var FIELD_MODS = function(yds) {
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function coinFlip() { return Math.random() < 0.5; }
-// Sanitize commentary: fix double periods, stray periods before lowercase, double spaces
+// Sanitize commentary:
+//   1. fix double periods
+//   2. strip stray periods before lowercase letters
+//   3. collapse double spaces
+//   4. trim
+//   5. capitalize the first letter of the sentence — catches templates that
+//      start with a variable like `defName` which can resolve to "the defense"
+//      (lowercase) for linemen, resulting in "the defense swats it away."
 function sanitize(s) {
   if (!s) return s;
-  return s.replace(/\.\./g, '.').replace(/\. ([a-z])/g, ' $1').replace(/  +/g, ' ').trim();
+  var out = s.replace(/\.\./g, '.').replace(/\. ([a-z])/g, ' $1').replace(/  +/g, ' ').trim();
+  if (out.length > 0) {
+    out = out.charAt(0).toUpperCase() + out.substring(1);
+  }
+  return out;
 }
 
 // ============================================================
@@ -199,40 +210,44 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
         (off.pos === 'TE' && def.pos === 'S')
       );
       if (isPass) {
+        // Ray Scott principle: noun, noun, outcome. No yardage (hero shows it).
         var tdPassPool = [
-          'TOUCHDOWN ' + possTeam.toUpperCase() + '!! ' + qbName + ' ' + pick(PASS_VERBS) + ' a DIME — ' + yards + '-yard STRIKE!',
-          'HE\'S IN!! ' + receiverName + ' ' + pick(CATCH_VERBS_SOLO) + ' ' + pick(ROUTE_MODS) + ' — TOUCHDOWN!!',
-          possTeam.toUpperCase() + ' SCORE!! ' + yards + ' yards through the air! WHAT A THROW!',
-          'BALL GAME! ' + receiverName + ' ' + pick(CATCH_VERBS_SOLO) + ' and walks in! TOUCHDOWN!',
-          'TOUCHDOWN!! ' + receiverName + ' was wide open and ' + qbName + ' FOUND HIM! ' + yards + ' yards!',
-          possTeam.toUpperCase() + ' IN THE END ZONE! ' + yards + '-yard strike! NOTHING THEY COULD DO!',
+          'TOUCHDOWN ' + possTeam.toUpperCase() + '!',
+          qbName + ' to ' + receiverName + '! Touchdown!',
+          receiverName + '! End zone! Touchdown!',
+          'Found him! ' + receiverName + '! Six!',
+          qbName + ' ' + pick(PASS_VERBS) + ' it. ' + receiverName + '. Touchdown.',
+          possTeam.toUpperCase() + '! ' + receiverName + ' in the end zone!',
+          'Ball game! ' + receiverName + ' walks it in!',
+          receiverName + ' — nobody near him! Touchdown!',
         ];
         if (traitFlavor(off)) {
-          tdPassPool.push('The ' + traitFlavor(off) + ' ' + receiverName + ' finds the end zone! TOUCHDOWN!');
-          tdPassPool.push(receiverName + ' uses that ' + (off.trait || 'talent') + ' to score! TOUCHDOWN ' + possTeam.toUpperCase() + '!');
+          tdPassPool.push('That ' + traitFlavor(off) + ' ' + receiverName + ' finds the end zone!');
+          tdPassPool.push(receiverName + ' shows that ' + (off.trait || 'talent') + '! Touchdown!');
         }
         if (isPositionMatchupTD) {
-          tdPassPool.push(receiverName + ' wins the battle against ' + defName + '! TOUCHDOWN!!');
-          tdPassPool.push(defName + ' had no answer for ' + receiverName + '\'s ' + (off.trait || 'speed') + '. SIX!');
-          tdPassPool.push(receiverName + ' vs ' + defName + ' — and ' + receiverName + ' WINS! TOUCHDOWN!!');
+          tdPassPool.push(receiverName + ' beats ' + defName + ' for six!');
+          tdPassPool.push(defName + ' had no answer for ' + receiverName + '. Touchdown!');
         }
         line1 = pick(tdPassPool);
       } else {
         var tdRunPool = [
-          'TOUCHDOWN ' + possTeam.toUpperCase() + '!! ' + rusherName + ' ' + pick(RUN_VERBS) + ' in from ' + yards + ' out! UNSTOPPABLE!',
-          'HE\'S GONE!! ' + rusherName + ' ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + ' — NOBODY TOUCHES HIM!',
-          rusherName + ' punches it in! ' + yards + '-yard SCORE! ' + possTeam.toUpperCase() + '!',
-          'BULLDOZED IN! ' + rusherName + ' would not be denied! TOUCHDOWN!!',
-          possTeam.toUpperCase() + ' POUNDS IT IN! ' + rusherName + ' from ' + yards + ' out! SIX!!',
+          'TOUCHDOWN ' + possTeam.toUpperCase() + '!',
+          rusherName + ' punches it in! Touchdown!',
+          rusherName + ' crosses the plane. Touchdown.',
+          'Six! ' + rusherName + '!',
+          rusherName + ' ' + pick(['bulldozes', 'powers', 'muscles']) + ' in!',
+          rusherName + ' won\'t be denied! Touchdown!',
+          possTeam.toUpperCase() + '! ' + rusherName + ' in for six!',
+          rusherName + ' finds pay dirt!',
         ];
         if (traitFlavor(off)) {
-          tdRunPool.push('The ' + traitFlavor(off) + ' ' + rusherName + ' crashes in! TOUCHDOWN!');
-          tdRunPool.push(rusherName + ' uses that ' + (off.trait || 'talent') + ' to score! TOUCHDOWN ' + possTeam.toUpperCase() + '!');
+          tdRunPool.push('That ' + traitFlavor(off) + ' ' + rusherName + ' crashes in!');
+          tdRunPool.push(rusherName + ' shows that ' + (off.trait || 'power') + '! Touchdown!');
         }
         if (isPositionMatchupTD) {
-          tdRunPool.push(rusherName + ' wins the battle against ' + defName + '! TOUCHDOWN!!');
-          tdRunPool.push(defName + ' had no answer for ' + rusherName + '\'s ' + (off.trait || 'power') + '. SIX!');
-          tdRunPool.push(rusherName + ' vs ' + defName + ' — and ' + rusherName + ' WINS! TOUCHDOWN!!');
+          tdRunPool.push(rusherName + ' runs through ' + defName + ' for six!');
+          tdRunPool.push(defName + ' had no answer for ' + rusherName + '. Touchdown!');
         }
         line1 = pick(tdRunPool);
       }
@@ -252,19 +267,20 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
         }
       }
     } else {
-      // Opponent scores against user — flat, factual
+      // Opponent scores against user — flat, factual, no yardage filler
       if (isPass) {
         line1 = pick([
-          'The ' + possTeam + ' find the end zone. ' + receiverName + ', ' + yards + '-yard pass.',
-          receiverName + ' catches a ' + yards + '-yard touchdown for the ' + possTeam + '.',
-          'Score for the ' + possTeam + '. ' + yards + ' yards.',
-          'Touchdown pass. ' + yards + ' yards. The ' + possTeam + ' score.',
+          'Touchdown ' + possTeam + '. Caught by ' + receiverName + '.',
+          receiverName + ' finds the end zone.',
+          possTeam + ' score. Pass to ' + receiverName + '.',
+          'Touchdown allowed.',
         ]);
       } else {
         line1 = pick([
-          rusherName + ' runs it in from ' + yards + ' out. The ' + possTeam + ' score.',
-          'The ' + possTeam + ' punch it in. ' + yards + '-yard run.',
-          'Into the end zone. ' + yards + '-yard carry. Touchdown.',
+          rusherName + ' runs it in.',
+          possTeam + ' score. ' + rusherName + '.',
+          'Into the end zone. ' + rusherName + '.',
+          'Touchdown allowed.',
         ]);
       }
       line2 = null; // No celebration for the opponent
@@ -277,38 +293,35 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
   if (r.isSack) {
     var isPositionMatchupSack = off && def && off.pos === 'QB' && (def.pos === 'DE' || def.pos === 'LB' || def.pos === 'DT');
     if (!isHumanOnOff) {
-      // User's defense got the sack — celebrate!
+      // User's defense got the sack — celebrate! Tackler name is the point of a sack.
       var sackPool = [
-        'SACK!! ' + defName + ' BURIES the QB' + (Math.abs(yards) > 0 ? ' for a loss of ' + Math.abs(yards) + '!' : '!'),
-        defName + ' GETS THERE! SACK!' + (Math.abs(yards) > 0 ? ' Dropped for a ' + Math.abs(yards) + '-yard loss!' : ' NO GAIN!'),
-        'NOWHERE TO THROW! ' + defName + ' ' + pick(TACKLE_VERBS) + '! SACK!',
-        'The pocket COLLAPSES! ' + defName + ' brings the HEAT! SACK!',
-        'GOT HIM! ' + defName + ' through the line — SACK!' + (Math.abs(yards) > 0 ? ' Loss of ' + Math.abs(yards) + '!' : ''),
-        'OFF SCHEDULE! ' + defName + ' gets to the QB and SACKS HIM!',
-        'FREE RUNNER! ' + defName + ' unblocked — SACK!! ' + (Math.abs(yards) > 0 ? Math.abs(yards) + '-yard loss!' : ''),
+        'Sack! ' + defName + ' gets home!',
+        defName + ' buries the QB! Sack!',
+        'Nowhere to throw! ' + defName + ' gets there!',
+        'Pocket collapses! ' + defName + ' sacks him!',
+        defName + ' beats the block. Sack!',
+        'Off schedule! ' + defName + ' cleans him up!',
+        defName + ' — free runner! Sack!',
+        'Got him! ' + defName + ' through the line!',
       ];
       if (traitFlavor(def)) {
-        sackPool.push('The ' + traitFlavor(def) + ' ' + defName + ' gets home! SACK!');
-        sackPool.push(defName + '\'s ' + (def.trait || 'relentless pressure') + ' pays off! SACKED!!');
+        sackPool.push('That ' + traitFlavor(def) + ' ' + defName + ' gets home!');
       }
       if (isPositionMatchupSack) {
-        sackPool.push(defName + ' wins the rep — SACKED straight through the blocker!');
-        sackPool.push('The QB never had a chance. ' + defName + ' was ALREADY THERE! SACK!');
-        sackPool.push(defName + ' owned that matchup start to finish. SACK!!');
+        sackPool.push(defName + ' wins the rep. Sack!');
       }
       line1 = pick(sackPool);
-      if (tier >= 3) line2 = 'Drive-killer! Your defense is SWARMING!';
-      // Shutout narrative
+      if (tier >= 3) line2 = 'Drive-killer. Your defense is swarming.';
       if (!line2 && gameState.irScore === 0 && _narrative.snapCount >= 20) {
-        line2 = 'The shutout is still alive. Opponent has been held scoreless all game.';
+        line2 = 'Shutout still alive.';
       }
     } else {
       // User's QB got sacked — flat
       line1 = pick([
-        'Sacked. ' + defName + ' gets through.' + (Math.abs(yards) > 0 ? ' Loss of ' + Math.abs(yards) + '.' : ''),
-        defName + ' brings the pressure. Sacked.' + (Math.abs(yards) > 0 ? ' Loss of ' + Math.abs(yards) + '.' : ' No gain.'),
-        'Pressure gets home. Sacked.' + (Math.abs(yards) > 0 ? ' Loss of ' + Math.abs(yards) + '.' : ''),
-        defName + ' beats the block.' + (Math.abs(yards) > 0 ? ' Down for a loss of ' + Math.abs(yards) + '.' : ' No gain.'),
+        'Sacked by ' + defName + '.',
+        defName + ' gets home. Sacked.',
+        'Pressure gets there. ' + qbName + ' goes down.',
+        defName + ' beats the block. Sacked.',
       ]);
     }
     return { line1: sanitize(line1), line2: sanitize(line2) };
@@ -324,36 +337,31 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
     if (!isHumanOnOff) {
       // User's defense gets the pick — celebrate!
       var intPool = [
-        'INTERCEPTED!! ' + defName + ' JUMPS the route! WHAT A READ!',
-        'PICKED OFF!! ' + defName + ' was sitting on that ALL DAY!',
-        'TURNOVER! ' + defName + ' ' + pick(CATCH_VERBS_SOLO) + '! ' + defTeam + ' ball!',
-      // Note: defTeam here is correct without "the" — used as possessive ("Boars ball")
-        'BAD DECISION! ' + defName + ' makes them PAY! PICKED!',
-        'RIGHT PLACE, RIGHT TIME! ' + defName + ' STEPS IN FRONT! INTERCEPTION!',
-        defName + ' reads it perfectly! PICKED OFF! What a play!',
-        'GIFT WRAPPED! ' + defName + ' takes it away! TURNOVER!!',
+        'Intercepted! ' + defName + ' jumps the route!',
+        'Picked off! Great read by ' + defName + '!',
+        'Turnover! ' + defName + ' steps in front!',
+        defName + ' reads it. Picked off!',
+        'What a play by ' + defName + '! Interception!',
+        defName + ' takes it away. Turnover!',
       ];
       if (traitFlavor(def)) {
-        intPool.push('The ' + traitFlavor(def) + ' ' + defName + ' steps in front! INTERCEPTED!');
-        intPool.push(defName + ' with the ' + (def.trait || 'instincts') + ' pick! INTERCEPTED!');
+        intPool.push('That ' + traitFlavor(def) + ' ' + defName + ' with the pick!');
       }
       if (isPositionMatchupINT && off && off.name) {
-        intPool.push(defName + ' takes it right away from ' + receiverName + '! INTERCEPTION!');
-        intPool.push('Threw it right to ' + defName + '. ' + receiverName + ' never had a chance. PICKED!');
-        intPool.push(defName + ' owned that route. ' + defTeam.toUpperCase() + ' BALL!');
+        intPool.push(defName + ' jumps ' + receiverName + '\'s route. Picked!');
       }
       line1 = pick(intPool);
-      line2 = 'The ' + defTeam + ' take over! Momentum is YOURS!';
+      line2 = defTeam + ' ball. Momentum is yours.';
     } else {
       // User threw a pick — flat, move on
       line1 = pick([
-        'Intercepted. ' + defName + ' picks it off.',
-        'Turnover. ' + defName + ' reads the throw.',
-        'Bad throw. ' + defName + ' comes away with it.',
+        'Intercepted by ' + defName + '.',
+        defName + ' reads the throw. Pick.',
+        'Bad throw. ' + defName + ' has it.',
         defName + ' undercuts the route. Interception.',
-        'Into coverage. ' + defName + ' has it.',
+        'Into coverage. Picked off.',
       ]);
-      line2 = 'The ' + defTeam + ' take over.';
+      line2 = defTeam + ' take over.';
     }
     return { line1: sanitize(line1), line2: sanitize(line2) };
   }
@@ -363,16 +371,18 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
     if (!isHumanOnOff) {
       // User's defense forces fumble — celebrate!
       line1 = pick([
-        'FUMBLE!! ' + defName + ' STRIPS the ball! ' + defTeam + ' RECOVERS!',
-        'STRIPPED! ' + defName + ' forces it loose! TURNOVER!',
-        'BALL\'S OUT! ' + defTeam + ' jump on it! HUGE play by ' + defName + '!',
+        'Fumble! ' + defName + ' strips the ball!',
+        'Stripped! ' + defTeam + ' recover!',
+        'Ball\'s out! ' + defName + ' forces it loose!',
+        defName + ' punches it out! Turnover!',
       ]);
-      line2 = 'Your defense creates the turnover!';
+      line2 = 'Your defense creates the turnover.';
     } else {
       // User fumbled — flat
       line1 = pick([
-        'Fumble. ' + (isPass ? receiverName : rusherName) + ' loses the ball. ' + defTeam + ' recovers.',
-        'Ball comes loose. ' + defTeam + ' have it.',
+        'Fumble. ' + (isPass ? receiverName : rusherName) + ' loses it.',
+        'Ball comes loose. ' + defTeam + ' recover.',
+        (isPass ? receiverName : rusherName) + ' fumbles. Turnover.',
       ]);
       line2 = null;
     }
@@ -388,13 +398,12 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
     if (!isHumanOnOff) {
       // User's defense forces incomplete — positive
       line1 = pick([
-        'Incomplete! ' + defName + ' breaks it up! Great coverage!',
-        defName + ' swats it away! Nothing doing for the ' + possTeam + '.',
-        'Pass broken up! ' + defName + ' was ALL OVER ' + receiverName + '.',
-        'Thrown away. Your defense had everyone covered.',
-        'NOWHERE TO GO! ' + defName + ' locks it down! Incomplete!',
-        defName + ' right there in coverage. Pass falls incomplete.',
-        'Good defense! ' + defName + ' takes away the throw. Incomplete!',
+        'Incomplete! ' + defName + ' breaks it up.',
+        defName + ' swats it away.',
+        'Pass broken up by ' + defName + '.',
+        'Thrown away. Coverage was tight.',
+        defName + ' locks it down. Incomplete.',
+        'Good coverage. Fell incomplete.',
       ]);
     } else {
       // User's pass is incomplete — flat
@@ -402,17 +411,16 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
         line1 = pick([
           'Incomplete. ' + defName + ' breaks it up.',
           'Pass broken up by ' + defName + '.',
-          defName + ' with tight coverage. Falls incomplete.',
-          'Nowhere to throw. ' + defName + ' takes it away.',
+          defName + ' with tight coverage.',
+          'Nowhere to throw. Incomplete.',
         ]);
       } else {
         line1 = pick([
-          'Incomplete. Overthrown, intended for ' + receiverName + '.',
+          'Incomplete. Overthrown.',
           'Dropped by ' + receiverName + '.',
           receiverName + ' can\'t bring it in.',
-          'Thrown away. Nothing was open.',
-          'Off target. Intended for ' + receiverName + '.',
-          receiverName + ' and the QB out of sync.',
+          'Thrown away.',
+          'Off target.',
         ]);
       }
     }
@@ -434,7 +442,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
     } else {
       // User fails on 4th down — flat
       line1 = pick([
-        'Turnover on downs. The ' + defTeam + ' holds.',
+        'Turnover on downs. The ' + defTeam + ' hold.',
         'Comes up short on fourth. ' + defTeam + ' take over.',
         'Short of the marker. Turnover on downs.',
         'Fourth down stop by the ' + defTeam + '. Their ball.',
@@ -445,10 +453,10 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
   }
 
   // ── POSITIVE GAIN ──
-  // Commentary describes the PLAY, not the yards (the floating number shows yards)
+  // Commentary describes the PLAY, not the yards (the floating number shows yards).
+  // Rule: one clause per line on routine plays. No tacked-on tackler suffix — the
+  // yardage on screen already tells you the play ended. Tier 3+ gets bigger energy.
   if (yards > 0) {
-    var tackler = def ? defName : '';
-    var tackleTag = tackler ? ' ' + tackler + ' makes the stop.' : '';
     var isPositionMatchupGain = off && def && (
       (off.pos === 'WR' && def.pos === 'CB') ||
       (off.pos === 'RB' && def.pos === 'LB') ||
@@ -458,80 +466,98 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       if (isPass) {
         if (tier <= 1) {
           line1 = pick([
-            receiverName + ' ' + pick(CATCH_VERBS) + ' a ' + (yards <= 5 ? 'short' : 'nice') + ' pass ' + pick(ROUTE_MODS) + '.' + tackleTag,
-            qbName + ' ' + pick(PASS_VERBS) + ' it to ' + receiverName + ' ' + pick(ROUTE_MODS) + '.' + tackleTag,
-            'Quick throw to ' + receiverName + '. ' + pick(CATCH_VERBS_SOLO) + ' cleanly.' + tackleTag,
+            receiverName + ' ' + pick(ROUTE_MODS) + '.',
+            qbName + ' finds ' + receiverName + '.',
+            'Quick throw to ' + receiverName + '.',
+            receiverName + ' ' + pick(CATCH_VERBS_SOLO) + '.',
+            'Completion to ' + receiverName + '.',
           ]);
         } else if (tier === 2) {
           var t2PassPool = [
-            receiverName + ' ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + '!' + tackleTag,
-            qbName + ' ' + pick(PASS_VERBS) + ' to ' + receiverName + ' — caught!' + tackleTag,
-            'Good throw, good catch. ' + receiverName + ' with the reception ' + pick(ROUTE_MODS) + '.' + tackleTag,
+            receiverName + ' ' + pick(CATCH_VERBS) + ' it ' + pick(ROUTE_MODS) + '!',
+            qbName + ' ' + pick(PASS_VERBS) + ' it to ' + receiverName + '!',
+            'Big grab by ' + receiverName + '!',
+            receiverName + ' gets open — caught!',
           ];
-          if (traitFlavor(off)) t2PassPool.push('That ' + traitFlavor(off) + ' route from ' + receiverName + ' creates the opening!' + tackleTag);
-          if (isPositionMatchupGain) t2PassPool.push(receiverName + ' wins the route against ' + defName + '!' + tackleTag);
+          if (traitFlavor(off)) t2PassPool.push('That ' + traitFlavor(off) + ' ' + receiverName + ' finds space!');
+          if (isPositionMatchupGain) t2PassPool.push(receiverName + ' beats ' + defName + '!');
           line1 = pick(t2PassPool);
           if (res.gotFirstDown) line2 = 'FIRST DOWN! The ' + possTeam + ' move the chains!';
         } else {
           var t3PassPool = [
-            receiverName + ' ' + pick(CATCH_VERBS_SOLO) + ' ' + pick(ROUTE_MODS) + '! WIDE OPEN!',
-            qbName + ' FINDS ' + receiverName + '! BIG CATCH ' + pick(ROUTE_MODS) + '!',
-            'BEAUTIFUL BALL! ' + receiverName + ' ' + pick(CATCH_VERBS_SOLO) + '! Nobody near him!',
+            'Deep ball! ' + receiverName + ' has it!',
+            receiverName + '! Wide open!',
+            qbName + ' finds ' + receiverName + ' downfield!',
+            'Beautiful throw! ' + receiverName + ' — caught!',
+            qbName + ' hits ' + receiverName + ' in stride!',
+            receiverName + ' — nothing but grass!',
           ];
-          if (traitFlavor(off)) t3PassPool.push(receiverName + '\'s ' + (off.trait || 'speed') + ' creates SEPARATION! ' + yards + '-yard gain!');
+          if (traitFlavor(off)) t3PassPool.push(receiverName + '\'s ' + (off.trait || 'speed') + ' creates separation!');
           if (isPositionMatchupGain) {
-            t3PassPool.push(receiverName + ' torches ' + defName + '! NOTHING they could do!');
-            t3PassPool.push(defName + ' had no answer for ' + receiverName + '. BIG gain!');
+            t3PassPool.push(receiverName + ' torches ' + defName + '!');
+            t3PassPool.push(defName + ' had no answer for ' + receiverName + '.');
           }
           line1 = pick(t3PassPool);
-          if (yards >= 20) line2 = 'BIG chunk play! The ' + possTeam + ' are ROLLING!';
-          else if (res.gotFirstDown) line2 = 'Moves the chains on a KEY down!';
+          if (yards >= 20) line2 = 'Chunk play. The ' + possTeam + ' are rolling.';
+          else if (res.gotFirstDown) line2 = 'Big conversion on a key down.';
         }
       } else {
         if (tier <= 1) {
           line1 = pick([
-            rusherName + ' ' + pick(RUN_VERBS) + ' ' + pick(RUN_MODS) + '.' + tackleTag,
-            'Handoff to ' + rusherName + '. Picks up yards ' + pick(RUN_MODS) + '.' + tackleTag,
+            rusherName + ' ' + pick(RUN_MODS) + '.',
+            rusherName + ' ' + pick(RUN_VERBS) + ' forward.',
+            'Handoff to ' + rusherName + '.',
+            rusherName + ' finds a lane.',
+            rusherName + ' grinds it out.',
           ]);
         } else if (tier === 2) {
           var t2RunPool = [
-            rusherName + ' ' + pick(RUN_VERBS) + ' through ' + pick(RUN_MODS) + '!' + tackleTag,
-            rusherName + ' finds daylight ' + pick(RUN_MODS) + '!' + tackleTag,
-            'Nice run! ' + rusherName + ' ' + pick(RUN_VERBS) + ' for the gain.' + tackleTag,
+            rusherName + ' ' + pick(RUN_VERBS) + ' through the line!',
+            rusherName + ' ' + pick(RUN_MODS) + ' — big run!',
+            rusherName + ' breaks free!',
+            rusherName + ' hits the hole hard!',
           ];
-          if (traitFlavor(off)) t2RunPool.push(rusherName + '\'s ' + (off.trait || 'physicality') + ' shows up on this carry!' + tackleTag);
-          if (isPositionMatchupGain) t2RunPool.push(rusherName + ' wins the matchup against ' + defName + '!' + tackleTag);
+          if (traitFlavor(off)) t2RunPool.push('That ' + traitFlavor(off) + ' ' + rusherName + ' finds space!');
+          if (isPositionMatchupGain) t2RunPool.push(rusherName + ' runs through ' + defName + '!');
           line1 = pick(t2RunPool);
           if (res.gotFirstDown) line2 = 'FIRST DOWN! The ' + possTeam + ' keep it moving!';
         } else {
           var t3RunPool = [
-            rusherName + ' ' + pick(RUN_VERBS) + ' through a crease ' + pick(RUN_MODS) + '! HE\'S LOOSE!',
-            rusherName + ' BREAKS FREE! Nobody is going to catch him!',
-            'EXPLOSIVE RUN! ' + rusherName + ' ' + pick(RUN_VERBS) + ' for a HUGE gain!',
+            rusherName + ' breaks free!',
+            rusherName + ' — nothing but grass!',
+            'Explosive run! ' + rusherName + ' is gone!',
+            rusherName + ' hits the second level!',
+            rusherName + ' busts loose ' + pick(RUN_MODS) + '!',
+            rusherName + ' through the line — and he\'s rolling!',
           ];
-          if (traitFlavor(off)) t3RunPool.push(rusherName + '\'s ' + (off.trait || 'explosiveness') + ' on full display! GONE for ' + yards + '!');
+          if (traitFlavor(off)) t3RunPool.push(rusherName + '\'s ' + (off.trait || 'speed') + ' on display!');
           if (isPositionMatchupGain) {
-            t3RunPool.push(rusherName + ' runs RIGHT THROUGH ' + defName + '! Nobody bringing him down!');
-            t3RunPool.push(defName + ' had no answer for ' + rusherName + '. BIG run!');
+            t3RunPool.push(rusherName + ' runs right through ' + defName + '!');
+            t3RunPool.push(defName + ' had no answer for ' + rusherName + '.');
           }
           line1 = pick(t3RunPool);
-          if (yards >= 15) line2 = rusherName + ' is RUNNING WILD out there!';
+          if (yards >= 15) line2 = rusherName + ' is running wild.';
         }
       }
     } else {
-      // Opponent gains against user — flat, no yards in text
+      // Opponent gains against user — flat, terse, one clause max
       if (isPass) {
         line1 = pick([
-          receiverName + ' catches it ' + pick(ROUTE_MODS) + '.' + tackleTag,
-          'Short completion for the ' + possTeam + '.' + tackleTag,
-          'Pass caught ' + pick(ROUTE_MODS) + '.' + tackleTag,
+          'Completion to ' + receiverName + '.',
+          receiverName + ' ' + pick(ROUTE_MODS) + '.',
+          receiverName + ' with the catch.',
+          'Pass complete, ' + receiverName + '.',
+          receiverName + ' finds space.',
         ]);
         if (res.gotFirstDown) line2 = 'First down for the ' + possTeam + '.';
       } else {
         line1 = pick([
-          rusherName + ' ' + pick(['finds a gap','pushes ahead','hits the hole']) + '.' + tackleTag,
-          'Run play. The ' + possTeam + ' pick up yards.' + tackleTag,
-          'Handoff. Gains ground.' + tackleTag,
+          rusherName + ' finds a crease.',
+          rusherName + ' carries.',
+          rusherName + ' ' + pick(RUN_MODS) + '.',
+          'Handoff to ' + rusherName + '.',
+          rusherName + ' through the line.',
+          rusherName + ' fights forward.',
         ]);
         if (res.gotFirstDown) line2 = 'First down for the ' + possTeam + '.';
       }

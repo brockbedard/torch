@@ -10,16 +10,19 @@
  * @returns {number}
  */
 export function calcOffenseTorchPoints(result, gotFirstDown) {
+  // Bad-result plays: offense earns ZERO torch points. Hard return, no
+  // combo bonus trickle-through. This used to let offComboPts leak into
+  // the result below (a sack could earn the sacked team +3 pts from a
+  // stale card-combo bonus), which was why users reported "still getting
+  // points on a sack."
+  if (result.isSack || result.isIncomplete || result.isInterception || result.isFumbleLost) {
+    return 0;
+  }
+
   let pts = 0;
 
   // v0.23: Recalibrated for ~150-250 pts/game
-  if (result.isSack) {
-    pts += 0;
-  } else if (result.isIncomplete) {
-    pts += 0;
-  } else if (result.isInterception || result.isFumbleLost) {
-    pts += 0;
-  } else if (result.yards >= 15) { // Big play
+  if (result.yards >= 15) { // Big play
     pts += 10;
   } else if (result.yards >= 8) {
     pts += 5;

@@ -9,6 +9,8 @@
  * Canvas shows a ~38-55 yard window centered on ball position.
  */
 
+import { FOOTBALL_PATHS, FOOTBALL_COLORS } from '../../utils/footballIcon.js';
+
 // ── FIELD CONFIGURATION (exact values from landscape source) ──
 const CFG = {
   bg: '#050a08',
@@ -22,7 +24,10 @@ const CFG = {
   los: { color: 'rgba(59,130,246,0.85)', w: 3, blur: 10 },
   firstDown: { color: 'rgba(251,191,36,0.85)', w: 3, blur: 10 },
   noise: { opacity: 0.04, count: 600 },
-  flame: { path: 'M22 0C22 0 6 16 4 28C2 40 12 48 18 52C18 52 13 42 18 30C20 24 21 19 22 13C23 19 24 24 26 30C31 42 26 52 26 52C32 48 42 40 40 28C38 16 22 0 22 0Z', color: '#FF4511', alpha: 0.12 },
+  // Flame silhouette (layer 1 of the new 4-layer flame, 34×34 viewBox).
+  // Used at small size with alpha 0.12 as a decorative midfield mark —
+  // the inner layers would be invisible at this scale, so silhouette only.
+  flame: { path: 'M16.77607,32.97235c0,0-8.62259,0.72281-10.90293-5.22241c0,0,0.91624,0.14254,2.18875,0.05089c0,0-2.97258-3.07435-1.99533-7.94048c0,0,0.38685,1.59829,1.49651,2.0971c0,0-0.04076-0.39698-0.08146-1.03833c-0.45648-7.88977,5.29012-10.11692,5.39545-13.621l0.733,1.11979c0,0,2.1378-3.52234-0.04076-6.89196c-0.18323-0.2952,0.12216-0.64129,0.42761-0.48863c2.20907,1.16055,6.60689,3.99059,8.71418,8.98906c0,0,0.67186-1.45575,1.3641-1.64917c-0.07127,0.23412-1.18087,3.88881,1.07909,6.99374c0,0,2.13786,3.36962,1.8019,5.80268c0,0,0.82459-0.7737,1.11979-1.65936C28.07597,19.51426,29.58267,32.59569,16.77607,32.97235z', color: '#FF4511', alpha: 0.12 },
   // Team dot color map (accent colors — visible on dark field)
   teamDotColors: {
     sentinels: [196, 162, 101],  // Boars gold
@@ -30,11 +35,10 @@ const CFG = {
     stags:     [93, 173, 226],   // Spectres ice blue
     serpents:  [57, 255, 20],    // Serpents green
   },
-  football: {
-    bodyPath: 'M247.5 25.4c-13.5 3.3-26.4 7.2-38.6 11.7C142.9 61.6 96.7 103.6 66 153.6C47.8 183.4 35.1 215.9 26.9 249L264.5 486.6c13.5-3.3 26.4-7.2 38.6-11.7c66-24.5 112.2-66.5 142.9-116.5c18.3-29.8 30.9-62.3 39.1-95.3L247.5 25.4zM495.2 205.3c6.1-56.8 1.4-112.2-7.7-156.4c-2.7-12.9-13-22.9-26.1-25.1c-58.2-9.7-109.9-12-155.6-7.9L495.2 205.3zM206.1 496L16.8 306.7c-6.1 56.8-1.4 112.2 7.7 156.4c2.7 12.9 13 22.9 26.1 25.1c58.2 9.7 109.9 12 155.6 7.9z',
-    lacesPath: 'M260.7 164.7c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6z',
-    alpha: 0.13, scale: 0.065
-  },
+  // Football render settings — paths and colors come from FOOTBALL_PATHS/
+  // FOOTBALL_COLORS imported from src/utils/footballIcon.js. Only alpha and
+  // scale are renderer-specific config.
+  football: { alpha: 0.13, scale: 0.065 },
   // Player dot glow colors
   offense: [242, 140, 40],  // Spectres orange
   defense: [59, 165, 93],   // Wolves green
@@ -370,9 +374,18 @@ export function createFieldRenderer(width, height) {
   var hashLeft = 0.442;
   var hashRight = 1 - 0.442;
 
-  // Pre-create Path2D objects
-  var bodyPath = new Path2D(CFG.football.bodyPath);
-  var lacesPath = new Path2D(CFG.football.lacesPath);
+  // Pre-create Path2D objects — done once per renderer instance so the
+  // draw loop doesn't re-parse SVG path strings on every frame.
+  // Football has 9 layers: 2 tip panels, 3 body panels, 3 shadow panels, 1 laces.
+  var fbTipOuterPath = new Path2D(FOOTBALL_PATHS.tipOuter);
+  var fbTipInnerPath = new Path2D(FOOTBALL_PATHS.tipInner);
+  var fbBody1Path = new Path2D(FOOTBALL_PATHS.body1);
+  var fbBody2Path = new Path2D(FOOTBALL_PATHS.body2);
+  var fbBody3Path = new Path2D(FOOTBALL_PATHS.body3);
+  var fbShadow1Path = new Path2D(FOOTBALL_PATHS.shadow1);
+  var fbShadow2Path = new Path2D(FOOTBALL_PATHS.shadow2);
+  var fbShadow3Path = new Path2D(FOOTBALL_PATHS.shadow3);
+  var fbLacesPath = new Path2D(FOOTBALL_PATHS.laces);
   var flamePath = new Path2D(CFG.flame.path);
 
   // ── STATIC LAYER (pre-rendered once per ball position) ──
@@ -529,15 +542,17 @@ export function createFieldRenderer(width, height) {
     });
 
     // 8. Midfield flame (yard 60, static at 12% opacity)
+    // New flame is on a 34×34 viewBox with content center ≈ (17, 17).
+    // Scale 2.85 keeps the rendered size roughly matching the old 1.5×44.
     var midY = yardToY(60);
     if (midY > -40 && midY < height + 40) {
       c.save();
       c.translate(fieldW / 2, midY);
       c.rotate(-Math.PI / 2); // rotate 90° for portrait
       c.globalAlpha = CFG.flame.alpha;
-      var fsc = 1.5;
+      var fsc = 2.85;
       c.scale(fsc, fsc);
-      c.translate(-22, -26);
+      c.translate(-17, -17);
       c.fillStyle = CFG.flame.color;
       c.fill(flamePath);
       c.restore();
@@ -684,18 +699,34 @@ export function createFieldRenderer(width, height) {
     c.translate(cx, cy);
     c.globalAlpha = CFG.football.alpha;
     var sc = CFG.football.scale;
-    // Rotate for portrait: football points up/down instead of left/right
-    c.rotate(Math.PI / 4); // 45° adjustment for portrait
+    // New football SVG is already oriented at 45° (diamond shape — tips at
+    // top-left and bottom-right). No rotation needed; the natural orientation
+    // reads as "football in flight" and looks right for a midfield decoration.
     c.scale(sc, sc);
     c.translate(-256, -256);
-    var grad = c.createLinearGradient(50, 50, 480, 480);
-    grad.addColorStop(0, '#D4893B');
-    grad.addColorStop(0.45, '#B5652B');
-    grad.addColorStop(1, '#8B4A1F');
-    c.fillStyle = grad;
-    c.fill(bodyPath);
-    c.fillStyle = '#FFFBE6';
-    c.fill(lacesPath);
+
+    // Tip panels (near-black leather corners)
+    c.fillStyle = FOOTBALL_COLORS.tipOuter;
+    c.fill(fbTipOuterPath);
+    c.fillStyle = FOOTBALL_COLORS.tipInner;
+    c.fill(fbTipInnerPath);
+
+    // Body panels (saddle brown leather)
+    c.fillStyle = FOOTBALL_COLORS.body;
+    c.fill(fbBody1Path);
+    c.fill(fbBody2Path);
+    c.fill(fbBody3Path);
+
+    // Shadow panels (dark brown depth)
+    c.fillStyle = FOOTBALL_COLORS.shadow;
+    c.fill(fbShadow1Path);
+    c.fill(fbShadow2Path);
+    c.fill(fbShadow3Path);
+
+    // Laces (cream stitching)
+    c.fillStyle = FOOTBALL_COLORS.laces;
+    c.fill(fbLacesPath);
+
     c.restore();
   }
 

@@ -10,6 +10,8 @@ import { setGs, getOffCards, getDefCards, VERSION } from '../../state.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { buildHomeCard } from '../components/cards.js';
 import { FLAME_PATH, buildFlameBadgeButton } from '../components/brand.js';
+import { flameIconSVG } from '../../utils/flameIcon.js';
+import { footballLayersMarkup } from '../../utils/footballIcon.js';
 import AudioStateManager from '../../engine/audioManager.js';
 
 function injectHomeStyles() {
@@ -82,15 +84,21 @@ export function buildHome() {
 
   // Flame icon
   var flameEl = document.createElement('div');
-  flameEl.style.cssText = 'margin-bottom:6px;animation:flameBreath 3s ease-in-out infinite;opacity:0;';
-  flameEl.innerHTML = "<svg viewBox='0 0 44 56' width='28' height='37' fill='none' style='filter:drop-shadow(0 0 12px rgba(255,69,17,0.5));'><defs><linearGradient id='hfg' x1='22' y1='56' x2='22' y2='0'><stop offset='0%' stop-color='#FF4511'/><stop offset='100%' stop-color='#EBB010'/></linearGradient></defs><path d='" + FLAME_PATH + "' fill='url(#hfg)'/></svg>";
+  flameEl.style.cssText = 'margin-bottom:6px;animation:flameBreath 3s ease-in-out infinite;opacity:0;filter:drop-shadow(0 0 12px rgba(255,69,17,0.5));';
+  // Hero flame on the title screen — use the full 4-layer flame.
+  // 37×37 (square) replaces the old 28×37 rectangular flame.
+  flameEl.innerHTML = flameIconSVG(37, 1);
   content.appendChild(flameEl);
 
   // TORCH wordmark with football-O
   var title = document.createElement('h1');
   title.style.cssText = "font-family:'Teko';font-weight:900;font-size:64px;line-height:0.8;color:#EBB010;letter-spacing:8px;text-align:center;z-index:2;animation:titleGlow 4s ease-in-out infinite;position:relative;opacity:0;margin:0;";
   title.textContent = 'T';
-  // Football-O SVG
+  // Football-O SVG — new multi-layer TORCH leather football at its natural
+  // 45° orientation (diamond, tips top-left/bottom-right). The old SVG
+  // rotated a horizontal football by -45° to match; the new one is already
+  // at that angle, so rotation is dropped. Gradient defs removed — the
+  // football has 9 layers of built-in color depth.
   var oSpan = document.createElement('span');
   oSpan.style.cssText = 'display:inline-block;width:0.52em;height:0.72em;vertical-align:top;position:relative;margin:0 3px 0 -2px;overflow:visible;';
   var oSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -98,10 +106,9 @@ export function buildHome() {
   oSvg.setAttribute('fill', 'none');
   oSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
   oSvg.style.cssText = 'width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 5px rgba(255,140,0,0.5));';
-  oSvg.innerHTML = '<defs><linearGradient id="oG" x1="15" y1="15" x2="85" y2="85" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#D4893B"/><stop offset="45%" stop-color="#B5652B"/><stop offset="100%" stop-color="#8B4A1F"/></linearGradient></defs>' +
-    '<g transform="translate(50,50) rotate(-45) scale(0.22) translate(-256,-256)">' +
-    '<path fill="url(#oG)" d="M247.5 25.4c-13.5 3.3-26.4 7.2-38.6 11.7C142.9 61.6 96.7 103.6 66 153.6C47.8 183.4 35.1 215.9 26.9 249L264.5 486.6c13.5-3.3 26.4-7.2 38.6-11.7c66-24.5 112.2-66.5 142.9-116.5c18.3-29.8 30.9-62.3 39.1-95.3L247.5 25.4zM495.2 205.3c6.1-56.8 1.4-112.2-7.7-156.4c-2.7-12.9-13-22.9-26.1-25.1c-58.2-9.7-109.9-12-155.6-7.9L495.2 205.3zM206.1 496L16.8 306.7c-6.1 56.8-1.4 112.2 7.7 156.4c2.7 12.9 13 22.9 26.1 25.1c58.2 9.7 109.9 12 155.6 7.9z"/>' +
-    '<path fill="#FFFBE6" d="M260.7 164.7c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6zm-48 48c6.2-6.2 16.4-6.2 22.6 0l64 64c6.2 6.2 6.2 16.4 0 22.6s-16.4 6.2-22.6 0l-64-64c-6.2-6.2-6.2-16.4 0-22.6z"/>' +
+  oSvg.innerHTML =
+    '<g transform="translate(50,50) scale(0.22) translate(-256,-256)">' +
+    footballLayersMarkup() +
     '</g>';
   oSpan.appendChild(oSvg);
   title.appendChild(oSpan);

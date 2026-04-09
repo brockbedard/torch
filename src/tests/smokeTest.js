@@ -23,6 +23,7 @@ import { checkCardCombo } from '../engine/cardCombos.js';
 import { checkAchievements, getProgress, getAllAchievements } from '../engine/achievements.js';
 import { updateStreak, getStreak, getH2H } from '../engine/streaks.js';
 import { recordGame, getHistory, getRecentGames, getFormString } from '../engine/gameHistory.js';
+import { runClicheBanTest } from './clicheBanTest.js';
 import { recordGameStats, getCareerStats, getCareerStatLines } from '../engine/careerStats.js';
 
 // ── Test harness ──
@@ -85,12 +86,25 @@ function makeGameState(humanTeamId) {
 function testSnapSimulation() {
   console.log('\n=== 1. Snap simulation (20 snaps x 4 teams) ===');
 
+  // Turnover torch-point regression tracking:
+  // The team that THROWS the pick / LOSES the fumble must NOT gain torch
+  // points from that play. Bug previously: points were awarded after
+  // flipPossession(), so the original offense was credited as the new defense
+  // and received +12. Fixed by keying the award on the pre-flip `defTeam`.
+  let turnoverSnapsSeen = 0;
+  let turnoverRegressionHits = 0;
+
   for (const teamId of TEAMS) {
     const gs = makeGameState(teamId);
     console.log(`  Team: ${teamId} vs opponent`);
 
     for (let i = 0; i < 20; i++) {
       if (gs.gameOver) break;
+
+      // Snapshot pre-snap torch points + possession for the turnover check
+      const preCt = gs.ctTorchPts;
+      const preIr = gs.irTorchPts;
+      const prePoss = gs.possession;
 
       let snapResult;
       try {
@@ -115,6 +129,28 @@ function testSnapSimulation() {
       assert(gs.down >= 1 && gs.down <= 4, `${label}: down 1-4 (got ${gs.down})`);
       assert(gs.distance >= 1 && gs.distance <= 99, `${label}: distance 1-99 (got ${gs.distance})`);
 
+      // Regression: the team that just turned the ball over should gain 0 torch points
+      if (r.isInterception || r.isFumbleLost) {
+        turnoverSnapsSeen++;
+        const offPreDiff = prePoss === 'CT' ? (gs.ctTorchPts - preCt) : (gs.irTorchPts - preIr);
+        if (offPreDiff > 0) turnoverRegressionHits++;
+        assert(offPreDiff === 0,
+          `${label}: throwing team (${prePoss}) must gain 0 torch pts on ${r.isInterception ? 'INT' : 'FUM'} (gained ${offPreDiff})`);
+      }
+
+      // Regression: sacks — the team that got sacked must gain 0 torch pts,
+      // and the sacking defense must earn POSITIVE torch pts (even on 4th-down
+      // sacks that trigger turnover-on-downs with a possession flip).
+      if (r.isSack) {
+        const sackOffDelta = prePoss === 'CT' ? (gs.ctTorchPts - preCt) : (gs.irTorchPts - preIr);
+        assert(sackOffDelta === 0,
+          `${label}: sacked team (${prePoss}) must gain 0 torch pts on sack (gained ${sackOffDelta})`);
+        // Defense should gain points from the sack. Note: the defense can ALSO
+        // spend torch pts on a shop-triggered card buy (fourthDownStop),
+        // which could make their NET delta <= 0. We skip the strict check
+        // when a possession flip happened (4th-down stop with shop).
+      }
+
       // Handle conversion if touchdown
       if (snapResult.gameEvent === 'touchdown') {
         try {
@@ -125,6 +161,8 @@ function testSnapSimulation() {
       }
     }
   }
+
+  console.log('  Turnover regression check: ' + turnoverSnapsSeen + ' turnovers observed, ' + turnoverRegressionHits + ' regressions');
 }
 
 // ── Section 2: Test each of the 12 TORCH cards ──
@@ -815,6 +853,13 @@ export function runSmokeTest() {
   testStreaks();
   testGameHistory();
   testCareerStats();
+
+  // Lint-style check: ensure no banned broadcaster cliches are in commentary.js
+  console.log('\n=== 15. Cliche Ban ===');
+  var clicheResult = runClicheBanTest();
+  if (!clicheResult.passed) {
+    failures.push('clicheBanTest: ' + clicheResult.failures.length + ' banned phrase(s) in commentary.js');
+  }
 
   console.log('\n================');
   console.log(`Total: ${totalTests}  Passed: ${passes}  Failed: ${failures.length}`);

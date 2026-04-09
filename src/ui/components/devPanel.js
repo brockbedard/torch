@@ -78,6 +78,14 @@ export function injectDevPanel(el, gs, callbacks) {
   html += sel('dev-opp', Object.keys(TEAMS).map(function(k) { return { v: k, l: TEAMS[k].name }; }), 'Opp');
   html += '</div>';
 
+  // ── CADENCE A/B (prominent — top-of-panel for post-snap timing work) ──
+  html += section('POST-SNAP CADENCE');
+  var _cadOn = FEATURES.cadenceBeats;
+  var _cadColor = _cadOn ? '#3df58a' : '#888';
+  var _cadLabel = _cadOn ? '5-BEAT CADENCE (new)' : '3-BEAT LEGACY (old)';
+  html += '<button id="dev-toggle-cadence" style="display:block;width:100%;margin:2px 0;padding:8px 10px;background:' + _cadColor + '11;border:1px solid ' + _cadColor + ';color:' + _cadColor + ';font-family:monospace;font-size:11px;font-weight:700;cursor:pointer;border-radius:4px;text-align:center;letter-spacing:1px;">' + _cadLabel + '</button>';
+  html += '<div style="font-size:8px;color:#666;margin-top:2px;line-height:1.3;">Tap SNAP a few times. Green = new 5-beat (result → context → story → reward → settle). Gray = old crammed cluster.</div>';
+
   // ── GAME STATE ──
   html += section('GAME STATE');
   html += '<div style="display:flex;gap:4px;flex-wrap:wrap;">';
@@ -213,6 +221,26 @@ export function injectDevPanel(el, gs, callbacks) {
 
   // ── EVENT HANDLERS ──
   panel.addEventListener('click', function(e) {
+    // Dedicated cadence toggle — custom label + syncs the generic flag button below
+    if (e.target.id === 'dev-toggle-cadence') {
+      var cNew = !FEATURES.cadenceBeats;
+      setFeatureFlag('cadenceBeats', cNew);
+      var cCol = cNew ? '#3df58a' : '#888';
+      e.target.textContent = cNew ? '5-BEAT CADENCE (new)' : '3-BEAT LEGACY (old)';
+      e.target.style.color = cCol;
+      e.target.style.borderColor = cCol;
+      e.target.style.background = cCol + '11';
+      // Also update the auto-generated toggle in the FEATURE FLAGS section
+      var genericBtn = panel.querySelector('button[data-flag="cadenceBeats"]');
+      if (genericBtn) {
+        var gCol = cNew ? '#3df58a' : '#555';
+        genericBtn.textContent = 'cadenceBeats: ' + (cNew ? 'ON' : 'OFF');
+        genericBtn.style.color = gCol;
+        genericBtn.style.borderColor = gCol + '44';
+      }
+      return;
+    }
+
     // Feature flag toggles
     var flagKey = e.target.dataset.flag;
     if (flagKey && flagKey in FEATURES) {
@@ -222,6 +250,17 @@ export function injectDevPanel(el, gs, callbacks) {
       var newColor = newVal ? '#3df58a' : '#555';
       e.target.style.color = newColor;
       e.target.style.borderColor = newColor + '44';
+      // If the cadence flag was toggled from the generic button, sync the prominent one
+      if (flagKey === 'cadenceBeats') {
+        var topBtn = panel.querySelector('#dev-toggle-cadence');
+        if (topBtn) {
+          var tCol = newVal ? '#3df58a' : '#888';
+          topBtn.textContent = newVal ? '5-BEAT CADENCE (new)' : '3-BEAT LEGACY (old)';
+          topBtn.style.color = tCol;
+          topBtn.style.borderColor = tCol;
+          topBtn.style.background = tCol + '11';
+        }
+      }
       return;
     }
 

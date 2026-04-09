@@ -10,6 +10,7 @@ import { TEAMS } from '../../data/teams.js';
 import { renderTorchCardIcon, TORCH_CARD_ICONS } from '../../data/torchCardIcons.js';
 import { CATEGORY_COLORS, TIER_COLORS } from '../../data/torchCards.js';
 import { attachDetailListeners } from './detailTooltip.js';
+import { FLAME_SILHOUETTE_PATH, flameIconSVG } from '../../utils/flameIcon.js';
 
 // renderTeamBadge removed — player cards no longer use team badges
 
@@ -30,7 +31,10 @@ export function injectCardStyles() {
 // ====== CARD BACK — Unified TORCH Brand Design ======
 
 var _uid = 0;
-export var FLAME_PATH = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
+// Backward-compat: FLAME_PATH is now the outer silhouette of the 4-layer
+// flame (34×34 viewBox). All cards.js inline uses that reference this
+// constant have had their SVG viewBoxes updated to match.
+export var FLAME_PATH = FLAME_SILHOUETTE_PATH;
 
 // Inject card back keyframes once
 var _cardBackStylesInjected = false;
@@ -51,7 +55,7 @@ function cornerPip(accent, size, top, left, right, bottom) {
   if (bottom !== null) style += 'bottom:' + bottom + ';';
   if (left !== null) style += 'left:' + left + ';';
   if (right !== null) style += 'right:' + right + ';';
-  return '<div style="' + style + '"><svg viewBox="0 0 44 56" width="' + size + '" fill="' + accent + '"><path d="' + FLAME_PATH + '"/></svg></div>';
+  return '<div style="' + style + '"><svg viewBox="0 0 34 34" width="' + size + '" height="' + size + '" fill="' + accent + '"><path d="' + FLAME_PATH + '"/></svg></div>';
 }
 
 export function buildHomeCard(type, w, h) {
@@ -105,14 +109,19 @@ export function buildHomeCard(type, w, h) {
   pipsEl.innerHTML = pipsHtml;
   card.appendChild(pipsEl.firstChild);
 
-  // Center flame emblem
-  var embW = Math.round((isTorch ? 70 : 32) * sc);
-  var embH = Math.round((isTorch ? 80 : 38) * sc);
-  var embOp = isTorch ? '0.85' : '0.6';
+  // Center flame emblem — TORCH card gets the full 4-layer flame (built-in
+  // color depth), offense/defense cards get a team-accent silhouette.
+  // New flame is on a square 34×34 viewBox so we use equal W/H.
+  var embSize = Math.round((isTorch ? 78 : 36) * sc);
+  var embOp = isTorch ? '0.9' : '0.6';
   var embGlow = isTorch ? 'drop-shadow(0 0 12px #FF451188)' : 'drop-shadow(0 0 8px ' + accent + '55)';
   var emblem = document.createElement('div');
   emblem.style.cssText = 'z-index:2;animation:emblemGlow 3s ease-in-out infinite;';
-  emblem.innerHTML = '<svg viewBox="0 0 44 56" width="' + embW + '" height="' + embH + '" fill="' + accent + '" style="opacity:' + embOp + ';filter:' + embGlow + ';"><path d="' + FLAME_PATH + '"/></svg>';
+  if (isTorch) {
+    emblem.innerHTML = flameIconSVG(embSize, parseFloat(embOp), 'filter:' + embGlow);
+  } else {
+    emblem.innerHTML = '<svg viewBox="0 0 34 34" width="' + embSize + '" height="' + embSize + '" fill="' + accent + '" style="opacity:' + embOp + ';filter:' + embGlow + ';"><path d="' + FLAME_PATH + '"/></svg>';
+  }
   card.appendChild(emblem);
 
   // "TORCH" text
@@ -302,7 +311,7 @@ export function buildMaddenPlayer(p, w, h, isHot) {
   pipsEl.style.cssText = 'display:flex;gap:2px;align-items:center;';
   var pipsHtml = renderFlamePips(stars, 5, '#EBB010', 8);
   if (isHot) {
-    pipsHtml += '<svg viewBox="0 0 12 16" width="10" height="13" style="margin-left:4px;filter:drop-shadow(0 0 4px #FF4511);animation:breathe 1.5s ease-in-out infinite;"><path d="' + FLAME_PIP_PATH + '" fill="#FF4511"/></svg>';
+    pipsHtml += '<svg viewBox="0 0 34 34" width="13" height="13" style="margin-left:4px;filter:drop-shadow(0 0 4px #FF4511);animation:breathe 1.5s ease-in-out infinite;"><path d="' + FLAME_PIP_PATH + '" fill="#FF4511"/></svg>';
   }
   pipsEl.innerHTML = pipsHtml;
   center.appendChild(pipsEl);
@@ -329,7 +338,9 @@ export function buildMaddenPlayer(p, w, h, isHot) {
 }
 
 // ====== FLAME PIP RATING ======
-var FLAME_PIP_PATH = 'M6 0C6 0 2 5 1.5 8C1 11 3 13.5 5 14.5C5 14.5 3.5 11 5 8C5.5 6.5 6 5 6 3.5C6 5 6.5 6.5 7 8C8.5 11 7 14.5 7 14.5C9 13.5 11 11 10.5 8C10 5 6 0 6 0Z';
+// Pips render at 10px by default — too small for the full 4-layer flame.
+// Use the silhouette only (layer 1 of the new flame, on a 34×34 square viewBox).
+var FLAME_PIP_PATH = FLAME_SILHOUETTE_PATH;
 
 // Renders a row of flame pips (e.g., 4 out of 5 filled)
 // Returns an HTML string
@@ -337,13 +348,12 @@ export function renderFlamePips(filled, total, filledColor, size) {
   total = total || 5;
   filledColor = filledColor || '#EBB010';
   size = size || 10;
-  var h = Math.round(size * 1.3);
   var html = '';
   for (var i = 0; i < total; i++) {
     if (i < filled) {
-      html += '<svg viewBox="0 0 12 16" width="' + size + '" height="' + h + '" style="margin-right:1px;"><path d="' + FLAME_PIP_PATH + '" fill="' + filledColor + '"/></svg>';
+      html += '<svg viewBox="0 0 34 34" width="' + size + '" height="' + size + '" style="margin-right:1px;"><path d="' + FLAME_PIP_PATH + '" fill="' + filledColor + '"/></svg>';
     } else {
-      html += '<svg viewBox="0 0 12 16" width="' + size + '" height="' + h + '" style="margin-right:1px;opacity:0.4;"><path d="' + FLAME_PIP_PATH + '" fill="none" stroke="' + filledColor + '" stroke-width="1.2"/></svg>';
+      html += '<svg viewBox="0 0 34 34" width="' + size + '" height="' + size + '" style="margin-right:1px;opacity:0.4;"><path d="' + FLAME_PIP_PATH + '" fill="none" stroke="' + filledColor + '" stroke-width="2"/></svg>';
     }
   }
   return html;

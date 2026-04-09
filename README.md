@@ -1,7 +1,7 @@
 # TORCH Football
 
-![Version](https://img.shields.io/badge/version-0.25.2-EBB010?style=flat-square)
-![Status](https://img.shields.io/badge/status-Active%20Development-brightgreen?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.34.0-EBB010?style=flat-square)
+![Status](https://img.shields.io/badge/status-Live-brightgreen?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-Web%20(Mobile%20First)-blue?style=flat-square)
 ![License](https://img.shields.io/badge/license-Private-gray?style=flat-square)
 
@@ -33,13 +33,14 @@ Each team has a weighted draft pool, formation tendencies, and unique animation 
 ## Key Features
 
 - **80 play cards** with real football concepts — not random names
-- **52 players** across 4 rosters with OVR ratings and abilities
-- **12 TORCH cards** — Bronze/Silver/Gold power-ups you buy with your score
+- **56 players** across 4 rosters with OVR ratings and abilities
+- **25 TORCH cards** — Gold/Silver/Bronze power-ups you buy with your score
 - **The Booster** — card shop at halftime, after TDs, turnovers, and big stops
+- **Full Football Engine**: Safeties, Overtime, Onside Kicks, and consistent conversion logic.
 - **User-biased presentation** — green = good for you, red = bad. Always. The commentary, timing, visual weight, and ambient mood are all on your side
 - **Broadcast-style UI** — ESPN-inspired possession changes, TD celebrations with confetti
 - **Scheme identity** — team selection changes your playbook, card draw weights, and field animations
-- **3-game seasons** with card and point persistence
+- **Conference Season Mode** with card and point persistence
 - **Red zone onboarding** — first-time players start at the 9-yard line with a tutorial
 
 ## TORCH Cards
@@ -70,7 +71,7 @@ npx vite --host    # → localhost:5173
 | Engine | Custom gaussian snap resolver with coverage modifiers |
 | Icons | game-icons.net (CC BY 3.0) |
 | Hosting | Vercel |
-| Testing | 639 automated assertions + 1200-drive balance test |
+| Testing | 812 automated assertions + 400-game balance simulation |
 
 ## Environments
 
@@ -91,7 +92,7 @@ Full architecture docs, engine specs, and design system in [CLAUDE.md](CLAUDE.md
 
 ## Current Version
 
-**v0.25.2** — 12 TORCH cards, economy rebalance, user perspective bias, broadcast UI, red zone onboarding, automated testing. [Full changelog](https://github.com/brockbedard/torch/releases/tag/v0.25.2).
+**v0.34.0 "Football Integrity"** — Core engine logic audit & UI balance: Fixed "multiple TD" bug via explicit state reset after scoring, implemented Safeties (2pts + free kick from 20), added Overtime support (simplified matching possessions), and fixed numerous other logic gaps. Redesigned and polished all major UI screens (Pregame, Coin Toss, Gameplay) for better readability, spacing, and animation synchronization. [Full changelog](https://github.com/brockbedard/torch/releases/tag/v0.34.0).
 
 ---
 

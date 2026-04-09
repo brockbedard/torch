@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TORCH — Audio Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700;900&family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/howler@2.2.4/dist/howler.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0A0804;
+    --surface: #141008;
+    --torch: #FF4511;
+    --gold: #EBB010;
+    --good: #00ff44;
+    --bad: #ff0040;
+    --text: #ffffff;
+    --text-dim: #888;
+    --border: rgba(255, 255, 255, 0.08);
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    padding: 20px;
+    max-width: 920px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-family: 'Teko', sans-serif;
+    font-weight: 900;
+    font-size: 36px;
+    letter-spacing: 3px;
+    background: linear-gradient(180deg, #FFD060, #EBB010, #8B4A1F, #EBB010);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 8px rgba(235, 176, 16, 0.4));
+  }
+  .sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-top: 2px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 18px;
+  }
+  .section-title {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 3px;
+    margin: 22px 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::before,
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(235, 176, 16, 0.3), transparent);
+  }
+
+  /* ── HUD: intensity bar + state readout ── */
+  .hud {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .hud-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .hud-row strong {
+    color: var(--text);
+    font-family: 'Teko', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+  .hud-row .state-pill {
+    padding: 2px 8px;
+    background: rgba(235, 176, 16, 0.1);
+    border: 1px solid rgba(235, 176, 16, 0.35);
+    border-radius: 3px;
+    color: var(--gold);
+    font-family: 'Teko', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+  }
+  .intensity-bar {
+    flex: 1;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    position: relative;
+    overflow: hidden;
+  }
+  .intensity-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0%;
+    background: linear-gradient(90deg, #8B4A1F, #EBB010, #FF4511);
+    transition: width 0.05s linear;
+  }
+  .intensity-target {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    width: 2px;
+    background: #fff;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+    transition: left 0.3s;
+  }
+  .hud-stats {
+    display: flex;
+    gap: 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+  }
+  .hud-stats b {
+    color: var(--text);
+    font-family: 'Teko', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  /* ── Buttons ── */
+  .btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  button {
+    font-family: 'Teko', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    padding: 9px 14px;
+    background: rgba(235, 176, 16, 0.08);
+    color: var(--gold);
+    border: 1px solid rgba(235, 176, 16, 0.35);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.12s;
+    text-transform: uppercase;
+  }
+  button:hover { background: rgba(235, 176, 16, 0.18); color: #fff; }
+  button:active { transform: translateY(1px); }
+  button.primary {
+    background: linear-gradient(180deg, var(--gold), #8B4A1F);
+    color: #000;
+    border: none;
+    font-size: 14px;
+    padding: 10px 18px;
+  }
+  button.primary:hover { color: #000; filter: brightness(1.15); }
+  button.danger { color: var(--bad); border-color: rgba(255, 0, 64, 0.35); background: rgba(255, 0, 64, 0.05); }
+  button.danger:hover { background: rgba(255, 0, 64, 0.12); }
+  button.muted { color: var(--text-dim); border-color: rgba(255, 255, 255, 0.12); background: transparent; }
+
+  /* ── Log ── */
+  .log {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    height: 280px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .log-entry {
+    padding: 2px 0;
+    white-space: nowrap;
+    border-left: 2px solid transparent;
+    padding-left: 8px;
+    margin-left: -10px;
+  }
+  .log-entry.state { color: var(--gold); border-left-color: var(--gold); }
+  .log-entry.sfx { color: #4DA6FF; border-left-color: #4DA6FF; }
+  .log-entry.crowd { color: var(--good); border-left-color: var(--good); }
+  .log-entry.tier { color: var(--text); font-weight: bold; border-left-color: var(--text); margin-top: 4px; }
+  .log-entry .time {
+    color: #555;
+    display: inline-block;
+    width: 60px;
+  }
+
+  .footer {
+    margin-top: 24px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .footer code {
+    background: rgba(235, 176, 16, 0.08);
+    color: var(--gold);
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+  }
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+  }
+  .toggle-row label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+  .toggle-row input[type=checkbox] {
+    accent-color: var(--gold);
+  }
+</style>
+</head>
+<body>
+
+<h1>AUDIO SIMULATOR</h1>
+<div class="sub">TORCH CROWD STATE MACHINE — LIVE DEBUG + PLAY SCENARIOS</div>
+
+<div class="section-title">LIVE HUD</div>
+<div class="hud">
+  <div class="hud-row">
+    <strong style="min-width:90px;">STATE</strong>
+    <div class="state-pill" id="hud-state">menu</div>
+    <div style="flex:1;"></div>
+    <span>HOLD:</span>
+    <strong id="hud-hold">0ms</strong>
+  </div>
+  <div class="hud-row">
+    <strong style="min-width:90px;">INTENSITY</strong>
+    <div class="intensity-bar">
+      <div class="intensity-fill" id="hud-fill"></div>
+      <div class="intensity-target" id="hud-target" style="left:0%;"></div>
+    </div>
+    <strong id="hud-val">0.00</strong>
+  </div>
+  <div class="hud-stats">
+    <div>TARGET: <b id="hud-target-val">0.00</b></div>
+    <div>LAYERS:</div>
+    <div>L <b id="hud-l">0.00</b></div>
+    <div>M <b id="hud-m">0.00</b></div>
+    <div>H <b id="hud-h">0.00</b></div>
+  </div>
+</div>
+
+<div class="section-title">GAMEPLAY CONTROL</div>
+<div class="btn-row">
+  <button class="primary" id="btn-init">🔊 INIT AUDIO</button>
+  <button id="btn-start">START CROWD</button>
+  <button id="btn-stop" class="muted">STOP</button>
+  <button id="btn-clear" class="muted">CLEAR LOG</button>
+</div>
+
+<div class="section-title">QUICK TRIGGERS (INDIVIDUAL PLAYS)</div>
+<div class="btn-row">
+  <button data-scenario="tier1-run">TIER 1 RUN (+4)</button>
+  <button data-scenario="tier1-incomp">INCOMPLETE</button>
+  <button data-scenario="tier2-pass">TIER 2 PASS (+12)</button>
+  <button data-scenario="tier2-explosive">TIER 2 EXPLOSIVE (+18)</button>
+  <button data-scenario="td">TOUCHDOWN (USER)</button>
+  <button data-scenario="td-opp">OPPONENT TD</button>
+  <button data-scenario="sack">SACK (USER DEFENSE)</button>
+  <button data-scenario="int">INT (USER DEFENSE)</button>
+  <button data-scenario="fumble-user">FUMBLE (USER OFFENSE)</button>
+</div>
+
+<div class="section-title">PRESET SEQUENCES</div>
+<div class="btn-row">
+  <button class="primary" data-preset="typical-drive">▶ TYPICAL DRIVE (6 plays → TD)</button>
+  <button data-preset="back-to-back">RAPID TIER-MIXED</button>
+  <button data-preset="two-min">2-MIN DRILL</button>
+  <button data-preset="defensive-stand">DEFENSIVE STAND</button>
+</div>
+
+<div class="section-title">STATE OVERRIDE</div>
+<div class="btn-row">
+  <button data-state="normal_play">NORMAL</button>
+  <button data-state="big_moment">BIG MOMENT</button>
+  <button data-state="touchdown">TOUCHDOWN</button>
+  <button data-state="turnover">TURNOVER</button>
+  <button data-state="two_min_drill">2-MIN DRILL</button>
+  <button data-state="halftime" class="danger">HALFTIME</button>
+</div>
+
+<div class="toggle-row">
+  <input type="checkbox" id="toggle-smooth" checked>
+  <label for="toggle-smooth">Smooth mode (RAF-driven exponential fades + min-hold + debounce)</label>
+</div>
+<div class="toggle-row" style="margin-top:0;">
+  <input type="checkbox" id="toggle-visual-only">
+  <label for="toggle-visual-only">Visual only (no audio — for timing inspection)</label>
+</div>
+
+<div class="section-title">EVENT LOG</div>
+<div class="log" id="log"></div>
+
+<div class="footer">
+  Click <code>🔊 INIT AUDIO</code> first (browsers require user interaction to unlock audio). Then trigger individual plays or run a preset sequence. The HUD shows live crowd intensity, the target it's heading to, and the individual layer volumes (L/M/H crossfade). If smooth mode is off, behavior falls back to the old "linear Howler fade" style so you can compare.
+  <br><br>
+  This simulator uses the same crowd loop files as the game (<code>/audio/crowd/crowd_{low,mid,high}.{webm,mp3}</code>) and mirrors the fixed <code>AudioManager</code> logic. Once you're happy with the feel here, the same behavior is in <code>src/engine/audioManager.js</code>.
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// STATE MACHINE — mirrors src/engine/audioManager.js
+// ══════════════════════════════════════════════════════════
+var MIN_HOLD_MS = 1500;
+var DEBOUNCE_MS = 250;
+var UP_FADE_MS = 450;
+var DOWN_FADE_MS = 2200;
+var ELEVATED = { big_moment: true, touchdown: true, turnover: true, game_over_win: true };
+
+var STATE_MAP = {
+  menu:           0.03,
+  pre_game:       0.10,
+  normal_play:    0.28,
+  big_moment:     0.58,
+  two_min_drill:  0.48,
+  touchdown:      0.88,
+  turnover:       0.18,
+  halftime:       0,
+  game_over:      0,
+  game_over_win:  0.72,
+  game_over_loss: 0.08,
+  paused:         0.12,
+};
+
+var audio = {
+  ready: false,
+  currentState: 'menu',
+  intensity: 0,
+  target: 0,
+  holdUntil: 0,
+  lastStateChange: 0,
+  pendingState: null,
+  pendingTimer: null,
+  holdTimer: null,
+  fadeRAF: null,
+  smoothMode: true,
+  visualOnly: false,
+  low: null, mid: null, high: null,
+};
+
+function now() { return performance.now(); }
+
+function log(msg, cls) {
+  var logEl = document.getElementById('log');
+  var t = (now() - logStart) / 1000;
+  var entry = document.createElement('div');
+  entry.className = 'log-entry ' + (cls || '');
+  entry.innerHTML = '<span class="time">' + t.toFixed(2) + 's</span> ' + msg;
+  logEl.appendChild(entry);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+var logStart = now();
+
+function applyLayerVolumes(intensity) {
+  var baseVol = 0.45;
+  var lowVol  = Math.max(0, 1 - intensity * 2) * baseVol;
+  var midVol  = (intensity < 0.5 ? intensity * 2 : 2 - intensity * 2) * baseVol;
+  var highVol = Math.max(0, intensity * 2 - 1) * baseVol;
+  try {
+    if (audio.low && !audio.visualOnly)  audio.low.volume(lowVol);
+    if (audio.mid && !audio.visualOnly)  audio.mid.volume(midVol);
+    if (audio.high && !audio.visualOnly) audio.high.volume(highVol);
+  } catch(e) {}
+  document.getElementById('hud-l').textContent = lowVol.toFixed(2);
+  document.getElementById('hud-m').textContent = midVol.toFixed(2);
+  document.getElementById('hud-h').textContent = highVol.toFixed(2);
+}
+
+function animateIntensity(target, durationMs) {
+  if (audio.fadeRAF) cancelAnimationFrame(audio.fadeRAF);
+  audio.target = target;
+  var from = audio.intensity;
+  var delta = target - from;
+  var start = now();
+  var dur = Math.max(50, durationMs || 1000);
+  var isUp = delta > 0;
+
+  if (!audio.smoothMode) {
+    // Legacy linear mode — exactly what Howler's fade does
+    function linearTick() {
+      var t = Math.min(1, (now() - start) / dur);
+      audio.intensity = from + delta * t;
+      applyLayerVolumes(audio.intensity);
+      updateHUD();
+      if (t < 1) audio.fadeRAF = requestAnimationFrame(linearTick);
+      else { audio.fadeRAF = null; audio.intensity = target; applyLayerVolumes(target); updateHUD(); }
+    }
+    audio.fadeRAF = requestAnimationFrame(linearTick);
+    return;
+  }
+
+  function tick() {
+    var t = Math.min(1, (now() - start) / dur);
+    var eased = isUp
+      ? 1 - Math.pow(1 - t, 3)
+      : (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+    audio.intensity = from + delta * eased;
+    applyLayerVolumes(audio.intensity);
+    updateHUD();
+    if (t < 1) audio.fadeRAF = requestAnimationFrame(tick);
+    else { audio.fadeRAF = null; audio.intensity = target; applyLayerVolumes(target); updateHUD(); }
+  }
+  audio.fadeRAF = requestAnimationFrame(tick);
+}
+
+function setCrowdIntensity(intensity, fadeMs) {
+  if (fadeMs === undefined) fadeMs = (intensity > audio.intensity) ? UP_FADE_MS : DOWN_FADE_MS;
+  animateIntensity(intensity, fadeMs);
+}
+
+function setState(state) {
+  var nowT = Date.now();
+
+  // Min-hold guard: can't downgrade from an elevated state before its hold ends
+  if (audio.smoothMode && audio.holdUntil > nowT) {
+    var calmer = { normal_play: true, pre_game: true, menu: true };
+    if (calmer[state]) {
+      if (audio.pendingTimer) clearTimeout(audio.pendingTimer);
+      audio.pendingState = state;
+      log('→ queued "' + state + '" (held for ' + (audio.holdUntil - nowT) + 'ms more)', 'state');
+      audio.pendingTimer = setTimeout(function() {
+        audio.pendingTimer = null;
+        var s = audio.pendingState;
+        audio.pendingState = null;
+        if (s) setState(s);
+      }, audio.holdUntil - nowT + 20);
+      return;
+    }
+  }
+
+  // Debounce
+  if (audio.smoothMode && state === audio.currentState && (nowT - audio.lastStateChange) < DEBOUNCE_MS) {
+    log('× debounced repeat "' + state + '"', 'state');
+    return;
+  }
+  audio.lastStateChange = nowT;
+  audio.currentState = state;
+
+  // Clear prior pending settles
+  if (audio.pendingTimer) { clearTimeout(audio.pendingTimer); audio.pendingTimer = null; audio.pendingState = null; }
+  if (audio.holdTimer) { clearTimeout(audio.holdTimer); audio.holdTimer = null; }
+
+  if (audio.smoothMode && ELEVATED[state]) {
+    audio.holdUntil = nowT + MIN_HOLD_MS;
+  } else {
+    audio.holdUntil = 0;
+  }
+
+  log('→ setState("' + state + '")', 'state');
+  document.getElementById('hud-state').textContent = state;
+
+  var i = STATE_MAP[state];
+  if (i !== undefined) {
+    if (i === 0) {
+      setCrowdIntensity(0, 500);
+    } else {
+      var isUp = i > audio.intensity;
+      setCrowdIntensity(i, isUp ? UP_FADE_MS : DOWN_FADE_MS);
+    }
+  }
+}
+
+function holdThenSettle(holdMs, targetState) {
+  var nowT = Date.now();
+  var actualHold = Math.max(holdMs || 0, audio.smoothMode ? MIN_HOLD_MS : 0);
+  audio.holdUntil = Math.max(audio.holdUntil, nowT + actualHold);
+  if (audio.holdTimer) clearTimeout(audio.holdTimer);
+  log('⏱ holdThenSettle(' + actualHold + 'ms) → ' + targetState, 'state');
+  audio.holdTimer = setTimeout(function() {
+    audio.holdTimer = null;
+    audio.holdUntil = 0;
+    setState(targetState);
+  }, actualHold);
+}
+
+// ══════════════════════════════════════════════════════════
+// HUD
+// ══════════════════════════════════════════════════════════
+function updateHUD() {
+  document.getElementById('hud-fill').style.width = (audio.intensity * 100).toFixed(1) + '%';
+  document.getElementById('hud-target').style.left = (audio.target * 100).toFixed(1) + '%';
+  document.getElementById('hud-val').textContent = audio.intensity.toFixed(2);
+  document.getElementById('hud-target-val').textContent = audio.target.toFixed(2);
+  var rem = Math.max(0, audio.holdUntil - Date.now());
+  document.getElementById('hud-hold').textContent = rem + 'ms';
+}
+setInterval(updateHUD, 50);
+
+// ══════════════════════════════════════════════════════════
+// AUDIO INIT
+// ══════════════════════════════════════════════════════════
+function initAudio() {
+  if (audio.ready) return;
+  try {
+    audio.low  = new Howl({ src: ['/audio/crowd/crowd_low.webm',  '/audio/crowd/crowd_low.mp3'],  preload: true, loop: true, volume: 0, html5: false });
+    audio.mid  = new Howl({ src: ['/audio/crowd/crowd_mid.webm',  '/audio/crowd/crowd_mid.mp3'],  preload: true, loop: true, volume: 0, html5: false });
+    audio.high = new Howl({ src: ['/audio/crowd/crowd_high.webm', '/audio/crowd/crowd_high.mp3'], preload: true, loop: true, volume: 0, html5: false });
+    audio.ready = true;
+    log('Audio loaded. Click START CROWD to begin.', 'sfx');
+  } catch(e) {
+    log('Audio load failed: ' + e.message, 'sfx');
+  }
+}
+
+function startCrowd() {
+  if (!audio.ready) { log('× not initialized — click INIT AUDIO first', 'sfx'); return; }
+  audio.low.play(); audio.mid.play(); audio.high.play();
+  log('▶ crowd loops playing', 'crowd');
+  setState('normal_play');
+}
+
+function stopAllAudio() {
+  if (audio.holdTimer) clearTimeout(audio.holdTimer);
+  if (audio.pendingTimer) clearTimeout(audio.pendingTimer);
+  if (audio.fadeRAF) cancelAnimationFrame(audio.fadeRAF);
+  audio.holdTimer = audio.pendingTimer = audio.fadeRAF = null;
+  audio.pendingState = null;
+  audio.holdUntil = 0;
+  audio.intensity = 0; audio.target = 0;
+  applyLayerVolumes(0);
+  if (audio.low)  audio.low.stop();
+  if (audio.mid)  audio.mid.stop();
+  if (audio.high) audio.high.stop();
+  updateHUD();
+  log('⏹ stopped', 'crowd');
+  audio.currentState = 'menu';
+  document.getElementById('hud-state').textContent = 'menu';
+}
+
+// ══════════════════════════════════════════════════════════
+// SCENARIOS — mirror what gameplay.js fires per tier
+// ══════════════════════════════════════════════════════════
+var SCENARIOS = {
+  'tier1-run':       function() { log('── TIER 1 RUN (+4)', 'tier'); log('SND.hit() + setState(normal_play)', 'sfx'); setState('normal_play'); },
+  'tier1-incomp':    function() { log('── INCOMPLETE', 'tier'); log('SND.incomp()', 'sfx'); setTimeout(function() { log('SND.crowdOoh() (delayed 350ms)', 'sfx'); }, 350); setState('normal_play'); },
+  'tier2-pass':      function() { log('── TIER 2 PASS (+12)', 'tier'); log('SND.bigPlay()', 'sfx'); setState('big_moment'); holdThenSettle(2000, 'normal_play'); },
+  'tier2-explosive': function() { log('── TIER 2 EXPLOSIVE (+18)', 'tier'); log('SND.bigPlay()', 'sfx'); setState('big_moment'); holdThenSettle(2500, 'normal_play'); },
+  'td':              function() { log('── USER TOUCHDOWN', 'tier'); log('SND.td()', 'sfx'); setState('touchdown'); holdThenSettle(4000, 'normal_play'); },
+  'td-opp':          function() { log('── OPPONENT TD', 'tier'); log('SND.turnover()', 'sfx'); setState('turnover'); holdThenSettle(3000, 'normal_play'); },
+  'sack':            function() { log('── SACK (USER DEFENSE)', 'tier'); log('SND.bigPlay() + SND.sack()', 'sfx'); setState('big_moment'); holdThenSettle(2000, 'normal_play'); },
+  'int':             function() { log('── INT (USER DEFENSE)', 'tier'); log('SND.bigPlay() + SND.horn()', 'sfx'); setState('big_moment'); holdThenSettle(2500, 'normal_play'); },
+  'fumble-user':     function() { log('── USER FUMBLES', 'tier'); log('SND.turnover()', 'sfx'); setState('turnover'); holdThenSettle(3000, 'normal_play'); },
+};
+
+var PRESETS = {
+  'typical-drive': [
+    { at: 0,     name: 'tier1-run' },
+    { at: 3500,  name: 'tier1-run' },
+    { at: 7500,  name: 'tier1-incomp' },
+    { at: 11500, name: 'tier2-pass' },
+    { at: 16500, name: 'tier1-run' },
+    { at: 20500, name: 'td' },
+  ],
+  'back-to-back': [
+    { at: 0,     name: 'tier1-run' },
+    { at: 2500,  name: 'tier1-run' },
+    { at: 4800,  name: 'tier2-pass' },
+    { at: 7500,  name: 'tier1-run' },
+    { at: 10000, name: 'tier1-run' },
+    { at: 12500, name: 'tier2-explosive' },
+    { at: 16500, name: 'tier1-incomp' },
+    { at: 19000, name: 'td' },
+  ],
+  'two-min': [
+    { at: 0,    act: function() { setState('two_min_drill'); } },
+    { at: 500,  name: 'tier1-run' },
+    { at: 3500, name: 'tier1-incomp' },
+    { at: 5500, name: 'tier2-pass' },
+    { at: 10000,name: 'tier1-run' },
+    { at: 13000,name: 'td' },
+  ],
+  'defensive-stand': [
+    { at: 0,     name: 'tier1-run' },
+    { at: 3500,  name: 'tier1-run' },
+    { at: 6500,  name: 'sack' },
+    { at: 10500, name: 'tier1-incomp' },
+    { at: 13500, name: 'int' },
+  ],
+};
+
+function runPreset(name) {
+  var seq = PRESETS[name];
+  if (!seq) return;
+  log('▶ PRESET: ' + name, 'tier');
+  seq.forEach(function(step) {
+    setTimeout(function() {
+      if (step.act) step.act();
+      else if (step.name && SCENARIOS[step.name]) SCENARIOS[step.name]();
+    }, step.at);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// WIRING
+// ══════════════════════════════════════════════════════════
+document.getElementById('btn-init').addEventListener('click', initAudio);
+document.getElementById('btn-start').addEventListener('click', startCrowd);
+document.getElementById('btn-stop').addEventListener('click', stopAllAudio);
+document.getElementById('btn-clear').addEventListener('click', function() {
+  document.getElementById('log').innerHTML = '';
+  logStart = now();
+});
+document.querySelectorAll('[data-scenario]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var fn = SCENARIOS[btn.dataset.scenario];
+    if (fn) fn();
+  });
+});
+document.querySelectorAll('[data-preset]').forEach(function(btn) {
+  btn.addEventListener('click', function() { runPreset(btn.dataset.preset); });
+});
+document.querySelectorAll('[data-state]').forEach(function(btn) {
+  btn.addEventListener('click', function() { setState(btn.dataset.state); });
+});
+document.getElementById('toggle-smooth').addEventListener('change', function(e) {
+  audio.smoothMode = e.target.checked;
+  log('Smooth mode: ' + (audio.smoothMode ? 'ON' : 'OFF (legacy linear fades)'), 'state');
+});
+document.getElementById('toggle-visual-only').addEventListener('change', function(e) {
+  audio.visualOnly = e.target.checked;
+  if (audio.visualOnly) {
+    if (audio.low) audio.low.volume(0);
+    if (audio.mid) audio.mid.volume(0);
+    if (audio.high) audio.high.volume(0);
+  }
+  log('Visual only: ' + (audio.visualOnly ? 'ON' : 'OFF'), 'state');
+});
+
+log('Ready. Click INIT AUDIO to load crowd loops.', 'sfx');
+</script>
+</body>
+</html>

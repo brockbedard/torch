@@ -11,8 +11,8 @@ import { STAGS_OFF_PLAYS, STAGS_DEF_PLAYS } from './data/stagsPlays.js';
 import { SERPENTS_OFF_PLAYS, SERPENTS_DEF_PLAYS } from './data/serpentsPlays.js';
 import { getOffenseRoster, getDefenseRoster } from './data/players.js';
 
-export var VERSION = '0.35.0';
-export var VERSION_NAME = 'Moments of Joy';
+export var VERSION = '0.36.0';
+export var VERSION_NAME = 'Kickoff Ritual';
 
 // Game speed is locked to normal — multiplier always 1.0.
 // Stub export kept so call sites don't need refactoring.
@@ -39,6 +39,10 @@ export var FEATURES = {
   weatherAudio: true,
   smartHighlights: true,
   tutorialSystem: true,
+  // Post-snap result overlay uses a 5-beat cadence (result → context → story →
+  // reward → settle) instead of a single crammed cluster. Set via localStorage
+  // torch_features to A/B against the legacy 3-beat layout.
+  cadenceBeats: true,
 };
 
 // Load overrides from localStorage

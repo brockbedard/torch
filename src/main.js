@@ -169,15 +169,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Initialize audio on first user interaction (standard browser security policy)
 function handleFirstInteraction() {
-  // Use the SND object which already has a reference to AudioManager
-  // to ensure we call init() synchronously in the event loop
   if (SND && SND.init) {
     SND.init();
   } else {
-    // Fallback: reach into the imported AudioManager if SND doesn't expose it
     import('./engine/audioManager.js').then(m => {
       if (m.default && m.default.init) m.default.init();
     });
+  }
+  // Re-apply the current crowd state — setState() called during buildGameplay()
+  // runs before _initialized is true, so crowd never starts without this.
+  if (SND && SND.crowdStart) {
+    setTimeout(function() { SND.crowdStart(); }, 50);
   }
   document.removeEventListener('touchstart', handleFirstInteraction);
   document.removeEventListener('mousedown', handleFirstInteraction);

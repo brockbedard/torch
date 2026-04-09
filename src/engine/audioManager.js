@@ -11,12 +11,31 @@ var _initialized = false;
 var _muted = localStorage.getItem('torch_muted') === 'true';
 var _sfx = {};
 var _crowd = {};
-var _crowdIntensity = 0;
+var _ambient = {};
+var _crowdIntensity = 0;          // current *actual* intensity (animated toward _crowdTarget)
+var _crowdTarget = 0;             // where we're heading — single source of truth
+var _crowdFadeRAF = null;         // current fade animation frame id
 var _lastPlayed = {};
 var _crowdStopTimer = null;
 var _filter = null;
 var _currentState = 'menu';
-var _crowdHoldTimer = null; // Timer for holding elevated crowd states
+var _crowdHoldTimer = null;       // fires when a held state is allowed to fade back
+var _crowdHoldUntil = 0;          // wall-clock time until which elevated state is locked
+var _lastStateChange = 0;         // wall-clock time of last state change (for debounce)
+var _pendingState = null;         // state queued behind a debounce window
+var _pendingStateTimer = null;
+
+// ── Tunables — adjust if the crowd feel needs work ──
+var MIN_HOLD_MS = 1500;           // minimum time an elevated state must hold
+var DEBOUNCE_MS = 250;            // ignore repeat setState calls faster than this
+var UP_FADE_MS = 450;             // time to ramp up to target (spike)
+var DOWN_FADE_MS = 2200;          // time to ramp down to target (settle)
+var ELEVATED_STATES = {           // states that require MIN_HOLD_MS before fading back
+  big_moment: true,
+  touchdown: true,
+  turnover: true,
+  game_over_win: true,
+};
 
 function loadPool(name, sources, opts) {
   _sfx[name] = sources.map(function(src) {
@@ -35,65 +54,38 @@ function pickVariant(name) {
   return pool[idx];
 }
 
-// Crossfade loop: starts a second instance before the first ends,
-// crossfading over 500ms for seamless gapless playback.
+// Ambient loop wrapper. Uses Howler's native loop:true — gapless for
+// WebM/Opus sources, and Web Audio mode (html5:false) handles the MP3
+// fallback cleanly. The previous implementation tried to manage crossfades
+// with setTimeout, but drifted under browser load and caused audible
+// chopping. Name kept for call-site compatibility.
 function _createCrossfadeLoop(sources) {
-  var XFADE = 500; // crossfade duration in ms
-  var _vol = 0;
+  var howl = new Howl({
+    src: sources,
+    preload: true,
+    loop: true,
+    volume: 0,
+    html5: false
+  });
   var _playing = false;
-  var _current = null;
-  var _timer = null;
-
-  function _newHowl() {
-    return new Howl({ src: sources, preload: true, volume: 0 });
-  }
-
-  function _scheduleNext(howl) {
-    var dur = howl.duration() * 1000;
-    if (dur <= 0) { // Duration not yet known — retry after load
-      howl.once('load', function() { _scheduleNext(howl); });
-      return;
-    }
-    var triggerAt = Math.max(100, dur - XFADE);
-    _timer = setTimeout(function() {
-      if (!_playing) return;
-      // Start next instance, crossfade
-      var next = _newHowl();
-      next.volume(0);
-      next.play();
-      next.fade(0, _vol, XFADE);
-      howl.fade(_vol, 0, XFADE);
-      setTimeout(function() { howl.stop(); howl.unload(); }, XFADE + 50);
-      _current = next;
-      _scheduleNext(next);
-    }, triggerAt);
-  }
-
   return {
     play: function() {
       if (_playing) return;
       _playing = true;
-      _current = _newHowl();
-      _current.volume(_vol);
-      _current.play();
-      _scheduleNext(_current);
+      howl.play();
     },
     stop: function() {
       _playing = false;
-      if (_timer) { clearTimeout(_timer); _timer = null; }
-      if (_current) { _current.stop(); _current.unload(); _current = null; }
+      howl.stop();
     },
     fade: function(from, to, dur) {
-      _vol = to;
-      if (_current && _playing) {
-        _current.fade(from, to, dur);
-      }
+      howl.fade(from, to, dur);
     },
     volume: function(v) {
-      if (v !== undefined) { _vol = v; if (_current) _current.volume(v); return v; }
-      return _vol;
+      if (v !== undefined) { howl.volume(v); return v; }
+      return howl.volume();
     },
-    playing: function() { return _playing; },
+    playing: function() { return _playing && howl.playing(); }
   };
 }
 
@@ -150,7 +142,6 @@ var AudioManager = {
     // SFX pools — Cards
     loadPool('cardDeal', ['/audio/sfx/card_deal_01.wav','/audio/sfx/card_deal_02.wav','/audio/sfx/card_deal_03.wav','/audio/sfx/card_deal_04.wav'], { volume: 0.5 });
     loadPool('cardPlace', ['/audio/sfx/card_place_01.wav','/audio/sfx/card_place_02.wav','/audio/sfx/card_place_03.wav','/audio/sfx/card_place_04.wav'], { volume: 0.5 });
-    loadPool('cardFlip', ['/audio/sfx/card_flip_01.wav','/audio/sfx/card_flip_02.wav','/audio/sfx/card_flip_03.wav'], { volume: 0.5 });
     loadPool('cardFlipSlam', ['/audio/sfx/card_flip_slam_01.wav'], { volume: 0.6 });
     loadPool('cardFlipDramatic', ['/audio/sfx/card_flip_dramatic_01.wav','/audio/sfx/card_flip_dramatic_02.wav'], { volume: 0.6 });
     loadPool('cardDiscard', ['/audio/sfx/card_discard_01.wav','/audio/sfx/card_discard_02.wav'], { volume: 0.5 });
@@ -163,11 +154,17 @@ var AudioManager = {
     loadPool('kickThud', ['/audio/sfx/kick_thud_01.wav'], { volume: 0.6 });
     loadPool('whistle', ['/audio/sfx/whistle_01.wav','/audio/sfx/whistle_short_01.wav'], { volume: 0.05 });
     loadPool('whistleLong', ['/audio/sfx/whistle_long_01.wav'], { volume: 0.05 });
+    // New football foley
+    loadPool('goalPostClang', ['/audio/sfx/goal_post_clang_01.mp3','/audio/sfx/goal_post_clang_02.mp3'], { volume: 0.75 });
+    loadPool('chainGang', ['/audio/sfx/chain_gang_01.mp3'], { volume: 0.4 });
+    loadPool('passWhoosh', ['/audio/sfx/pass_whoosh_01.mp3','/audio/sfx/pass_whoosh_02.mp3'], { volume: 0.5 });
+    loadPool('whistleEndHalf', ['/audio/sfx/whistle_end_half_01.mp3','/audio/sfx/whistle_end_half_02.mp3','/audio/sfx/whistle_end_half_03.mp3'], { volume: 0.5 });
 
     // SFX pools — Impacts
     loadPool('hitComposite', ['/audio/sfx/hit_composite_01.wav','/audio/sfx/hit_composite_02.wav','/audio/sfx/hit_composite_03.wav','/audio/sfx/hit_composite_04.wav'], { volume: 0.7 });
     loadPool('hitHeavy', ['/audio/sfx/hit_heavy_01.wav','/audio/sfx/hit_heavy_02.wav','/audio/sfx/hit_heavy_03.wav','/audio/sfx/hit_heavy_04.wav','/audio/sfx/hit_heavy_05.wav','/audio/sfx/hit_heavy_06.wav'], { volume: 0.8 });
     loadPool('hitModerate', ['/audio/sfx/hit_moderate_01.wav','/audio/sfx/hit_moderate_02.wav'], { volume: 0.6 });
+    loadPool('helmetImpact', ['/audio/sfx/helmet_impact_01.mp3'], { volume: 0.75 });
     loadPool('resultSlam', ['/audio/sfx/result_slam_01.wav'], { volume: 0.85 });
 
     // SFX pools — Cinematic
@@ -176,12 +173,13 @@ var AudioManager = {
     loadPool('victoryImpact', ['/audio/sfx/victory_impact_01.wav','/audio/sfx/victory_impact_02.wav'], { volume: 0.7 });
     loadPool('horn', ['/audio/sfx/horn_01.wav','/audio/sfx/horn_02.wav','/audio/sfx/horn_03.wav'], { volume: 0.7 });
     loadPool('whooshIn', ['/audio/sfx/whoosh_in_01.wav','/audio/sfx/whoosh_in_02.wav'], { volume: 0.4 });
+    loadPool('possessionSwoosh', ['/audio/sfx/possession_swoosh_01.mp3','/audio/sfx/possession_swoosh_02.mp3'], { volume: 0.55 });
     loadPool('broadcastSweep', ['/audio/sfx/broadcast_sweep_01.wav'], { volume: 0.4 });
-    loadPool('paperFlip', ['/audio/sfx/paper_flip_01.wav'], { volume: 0.5 });
 
     // SFX pools — Special
     loadPool('ignite', ['/audio/sfx/ignite_01.wav'], { volume: 0.6 });
     loadPool('coinFlip', ['/audio/sfx/coin_flip_01.wav'], { volume: 0.6 });
+    loadPool('coinCatch', ['/audio/sfx/coin_catch_01.mp3','/audio/sfx/coin_catch_02.mp3'], { volume: 0.55 });
     loadPool('tdCelebration', ['/audio/sfx/td_celebration_01.mp3'], { volume: 0.9 });
     loadPool('gameOverWin', ['/audio/sfx/game_over_win_01.wav'], { volume: 0.9 });
     loadPool('gameOverLoss', ['/audio/sfx/game_over_loss_01.wav'], { volume: 0.7 });
@@ -189,6 +187,7 @@ var AudioManager = {
     // SFX pools — Crowd reactions (one-shots)
     loadPool('crowdCheer', ['/audio/sfx/crowd_cheer_01.wav'], { volume: 0.7 });
     loadPool('crowdGroan', ['/audio/sfx/crowd_groan_01.wav'], { volume: 0.6 });
+    loadPool('crowdOoh', ['/audio/sfx/crowd_ooh_01.mp3','/audio/sfx/crowd_ooh_02.mp3'], { volume: 0.55 });
     loadPool('tdEruption', ['/audio/crowd/Stadium_crowd_celebr_#3-1775233609710.wav','/audio/crowd/Outdoor_American_foo_#2-1775233465681.wav','/audio/crowd/Outdoor_American_foo_#3-1775233456755.wav'], { volume: 0.85 });
     loadPool('bigPlayCrowd', ['/audio/crowd/big_play_01.wav','/audio/crowd/big_play_02.wav'], { volume: 0.7 });
     loadPool('groan', ['/audio/crowd/groan_01.wav','/audio/crowd/groan_02.wav'], { volume: 0.6 });
@@ -198,6 +197,14 @@ var AudioManager = {
     _crowd.low = _createCrossfadeLoop(['/audio/crowd/crowd_low.webm', '/audio/crowd/crowd_low.mp3']);
     _crowd.mid = _createCrossfadeLoop(['/audio/crowd/crowd_mid.webm', '/audio/crowd/crowd_mid.mp3']);
     _crowd.high = _createCrossfadeLoop(['/audio/crowd/crowd_high.webm', '/audio/crowd/crowd_high.mp3']);
+
+    // Ambient one-off loops (simple Howl loop, not crossfaded)
+    _ambient.lockerRoom = new Howl({
+      src: ['/audio/sfx/locker_room_loop_01.mp3'],
+      preload: true,
+      loop: true,
+      volume: 0
+    });
 
     _initialized = true;
     console.log('[Audio] AudioManager initialized successfully');
@@ -261,22 +268,21 @@ var AudioManager = {
 
   startCrowd: function() {
     if (!_initialized) return;
-    // Cancel any pending stop timer
     if (_crowdStopTimer) { clearTimeout(_crowdStopTimer); _crowdStopTimer = null; }
     // Guard: don't restart if already playing
     if (_crowd.low && _crowd.low.playing()) return;
     _crowd.low.play(); _crowd.mid.play(); _crowd.high.play();
-    this.setCrowdIntensity(0.25, 0.5);
+    // Force instant baseline application — the first setState after start will ramp
+    _crowdIntensity = 0;
+    this.setCrowdIntensity(0.25, 500);
   },
 
   stopCrowd: function(fadeDuration) {
     var fd = (fadeDuration || 0.3) * 1000;
-    if (_crowd.low) _crowd.low.fade(_crowd.low.volume(), 0, fd);
-    if (_crowd.mid) _crowd.mid.fade(_crowd.mid.volume(), 0, fd);
-    if (_crowd.high) _crowd.high.fade(_crowd.high.volume(), 0, fd);
-    // Cancel any prior stop timer
+    // Manual fade to 0 via the same RAF engine as normal intensity changes,
+    // so there's no conflict with an in-flight spike.
+    this._animateIntensity(0, fd);
     if (_crowdStopTimer) clearTimeout(_crowdStopTimer);
-    // Stop after fade completes to free resources
     _crowdStopTimer = setTimeout(function() {
       _crowdStopTimer = null;
       if (_crowd.low) _crowd.low.stop();
@@ -285,36 +291,89 @@ var AudioManager = {
     }, fd + 50);
   },
 
-  setCrowdIntensity: function(intensity, fadeDuration) {
-    _crowdIntensity = intensity;
-    var fd = (fadeDuration || 0.5) * 1000;
-    // Base volume multiplier for phone speaker optimization
+  // ── Volume curve helpers ──
+  _applyCrowdVolumes: function(intensity) {
+    // 3-layer crossfade: low (0–0.5) → mid (0.25–0.75) → high (0.5–1.0)
+    // Smooth triangular mix so total perceived volume stays consistent.
     var baseVol = 0.45;
-    var lowVol = Math.max(0, 1 - intensity * 2) * baseVol;
-    var midVol = (intensity < 0.5 ? intensity * 2 : 2 - intensity * 2) * baseVol;
+    var lowVol  = Math.max(0, 1 - intensity * 2) * baseVol;
+    var midVol  = (intensity < 0.5 ? intensity * 2 : 2 - intensity * 2) * baseVol;
     var highVol = Math.max(0, intensity * 2 - 1) * baseVol;
-    if (_crowd.low) _crowd.low.fade(_crowd.low.volume(), lowVol, fd);
-    if (_crowd.mid) _crowd.mid.fade(_crowd.mid.volume(), midVol, fd);
-    if (_crowd.high) _crowd.high.fade(_crowd.high.volume(), highVol, fd);
+    try {
+      if (_crowd.low)  _crowd.low.volume(lowVol);
+      if (_crowd.mid)  _crowd.mid.volume(midVol);
+      if (_crowd.high) _crowd.high.volume(highVol);
+    } catch(e) {}
+  },
+
+  /**
+   * Smoothly animate _crowdIntensity toward target using exponential easing.
+   * Replaces the linear Howler fades that caused "choppy" amplitude steps.
+   * Any in-flight fade is cancelled and replaced — single source of truth.
+   */
+  _animateIntensity: function(target, durationMs) {
+    var self = this;
+    if (_crowdFadeRAF) { cancelAnimationFrame(_crowdFadeRAF); _crowdFadeRAF = null; }
+    _crowdTarget = target;
+    var from = _crowdIntensity;
+    var delta = target - from;
+    var start = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    var dur = Math.max(50, durationMs || 1000);
+    // Exponential ease-out for up-fades (fast start, slow settle),
+    // ease-in-out for down-fades (natural decay).
+    var isUp = delta > 0;
+    function tick(now) {
+      var nowT = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      var t = Math.min(1, (nowT - start) / dur);
+      var eased = isUp
+        ? 1 - Math.pow(1 - t, 3)                          // ease-out cubic
+        : (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);  // ease-in-out quad
+      _crowdIntensity = from + delta * eased;
+      self._applyCrowdVolumes(_crowdIntensity);
+      if (t < 1) {
+        _crowdFadeRAF = requestAnimationFrame(tick);
+      } else {
+        _crowdFadeRAF = null;
+        _crowdIntensity = target;
+        self._applyCrowdVolumes(target);
+      }
+    }
+    _crowdFadeRAF = requestAnimationFrame(tick);
+  },
+
+  /**
+   * Set crowd intensity target. Always routed through the single animator so
+   * a new call cleanly interrupts any in-flight fade without audible jumps.
+   */
+  setCrowdIntensity: function(intensity, fadeDurationMs) {
+    if (!_initialized) return;
+    var fd = fadeDurationMs;
+    if (fd === undefined) fd = (intensity > _crowdIntensity) ? UP_FADE_MS : DOWN_FADE_MS;
+    // Accept both legacy seconds and new ms — if value < 10, assume seconds
+    if (fd < 10) fd = fd * 1000;
+    this._animateIntensity(intensity, fd);
   },
 
   crowdDip: function(duration) {
+    if (_crowdHoldUntil > Date.now()) return; // don't interrupt elevated hold
     var saved = _crowdIntensity;
     var self = this;
-    this.setCrowdIntensity(0.05, 0.2);
-    setTimeout(function() { self.setCrowdIntensity(saved, 0.3); }, duration || 800);
+    this._animateIntensity(0.05, 200);
+    setTimeout(function() { self._animateIntensity(saved, 300); }, duration || 800);
   },
 
   crowdSpike: function(type, returnIntensity) {
+    if (_crowdHoldUntil > Date.now()) return; // don't interrupt elevated hold
     var self = this;
     if (type === 'cheer') {
       this.playExact('crowdCheer', { volume: 0.8 });
-      this.setCrowdIntensity(0.95, 0.3); // Fast up (300ms)
+      this._animateIntensity(0.95, 300);
     } else {
       this.playExact('crowdGroan', { volume: 0.6 });
-      this.setCrowdIntensity(0.15, 0.3); // Fast down (300ms)
+      this._animateIntensity(0.15, 300);
     }
-    setTimeout(function() { self.setCrowdIntensity(returnIntensity || _crowdIntensity, 1.5); }, 1500); // Slow settle (1.5s)
+    var ret = (returnIntensity !== undefined) ? returnIntensity : _crowdTarget;
+    setTimeout(function() { self._animateIntensity(ret, 1500); }, 1500);
   },
 
   // ── STATE ──
@@ -322,29 +381,62 @@ var AudioManager = {
 
   setState: function(state) {
     if (!_initialized) return;
+
+    var now = Date.now();
+
+    // ── Min-hold guard ──
+    // If we're still in an elevated state's minimum hold window, ignore
+    // attempts to DOWNGRADE to a calmer state. Let the crowd finish its moment.
+    if (_crowdHoldUntil > now) {
+      var calmerStates = { normal_play: true, pre_game: true, menu: true };
+      if (calmerStates[state]) {
+        // Queue it for when the hold expires
+        if (_pendingStateTimer) clearTimeout(_pendingStateTimer);
+        _pendingState = state;
+        var self = this;
+        _pendingStateTimer = setTimeout(function() {
+          _pendingStateTimer = null;
+          var queued = _pendingState;
+          _pendingState = null;
+          if (queued) self.setState(queued);
+        }, _crowdHoldUntil - now + 20);
+        return;
+      }
+    }
+
+    // ── Debounce rapid-fire calls ──
+    // Prevents flicker when multiple systems call setState in the same tick
+    // (e.g. a TD triggering both the touchdown state and an immediate settle).
+    if (state === _currentState && (now - _lastStateChange) < DEBOUNCE_MS) return;
+    _lastStateChange = now;
     _currentState = state;
 
-    // Cancel any pending crowd hold timer when state changes explicitly
+    // Clear pending settles when a new explicit call comes in
+    if (_pendingStateTimer) { clearTimeout(_pendingStateTimer); _pendingStateTimer = null; _pendingState = null; }
     if (_crowdHoldTimer) { clearTimeout(_crowdHoldTimer); _crowdHoldTimer = null; }
 
-    var map = {
-      menu:           0.03,  // Barely perceptible parking lot hum
-      pre_game:       0.08,  // Low rumble, clearly atmospheric
-      normal_play:    0.25,  // Pulled down so spikes feel bigger by contrast
-      big_moment:     0.55,  // Noticeable jump from 0.25
-      two_min_drill:  0.50,  // Sustained tension
-      touchdown:      0.85,  // The peak — massive contrast from 0.25
-      turnover:       0.15,  // Deflating, energy drops noticeably
-      halftime:       0,     // Silence
-      game_over:      0,     // Fade out
-      game_over_win:  0.70,  // Victory roar
-      game_over_loss: 0.05,  // Deflated murmur
-      paused:         0.10
-    };
+    // Set min-hold for elevated states so a subsequent tier-1 snap can't
+    // yank the crowd back to baseline before the moment has landed.
+    if (ELEVATED_STATES[state]) {
+      _crowdHoldUntil = now + MIN_HOLD_MS;
+    } else {
+      _crowdHoldUntil = 0;
+    }
 
-    // Fade speed: spike UP fast (0.5s), settle DOWN slow (1.5s)
-    var upStates = ['big_moment', 'two_min_drill', 'touchdown', 'game_over_win'];
-    var fadeDuration = upStates.indexOf(state) >= 0 ? 0.5 : 1.5;
+    var map = {
+      menu:           0.03,  // parking lot hum
+      pre_game:       0.10,  // low atmospheric rumble
+      normal_play:    0.28,  // sustained baseline (slightly up for consistency)
+      big_moment:     0.58,  // noticeable lift from baseline
+      two_min_drill:  0.48,  // sustained tension
+      touchdown:      0.88,  // peak — massive contrast
+      turnover:       0.18,  // deflating crowd
+      halftime:       0,     // silence
+      game_over:      0,     // fade out
+      game_over_win:  0.72,  // victory roar
+      game_over_loss: 0.08,  // deflated murmur
+      paused:         0.12,
+    };
 
     var i = map[state];
     if (i !== undefined) {
@@ -352,33 +444,61 @@ var AudioManager = {
         this.stopCrowd(state === 'game_over' ? 2 : (state === 'halftime' ? 1.5 : 0.3));
       } else {
         if (!_crowd.low || !_crowd.low.playing()) this.startCrowd();
-        this.setCrowdIntensity(i, fadeDuration);
+        // Up-fades use snappy timing, down-fades are slow/natural
+        var isUp = i > _crowdIntensity;
+        this.setCrowdIntensity(i, isUp ? UP_FADE_MS : DOWN_FADE_MS);
       }
     }
 
     // "Broadcast Booth" Low-Pass Filter Logic
     if (_filter && Howler.ctx) {
-      var freq = 20000; // Fully open
-      if (state === 'menu') freq = 800;           // Distant parking lot hum
-      else if (state === 'pre_game') freq = 600;   // Low rumble — clearly intentional
-      else if (state === 'halftime' || state === 'paused') freq = 1200; // Muffled
+      var freq = 20000;
+      if (state === 'menu') freq = 800;
+      else if (state === 'pre_game') freq = 600;
+      else if (state === 'halftime' || state === 'paused') freq = 1200;
       _filter.frequency.setTargetAtTime(freq, Howler.ctx.currentTime, 0.1);
     }
   },
 
-  // Hold an elevated state for a duration, then fade to a target state
+  // ── AMBIENT (one-off looped textures, e.g. locker room at halftime) ──
+  startAmbient: function(name, targetVol, fadeMs) {
+    var a = _ambient[name];
+    if (!a) return;
+    var v = (targetVol !== undefined) ? targetVol : 0.35;
+    var fd = (fadeMs !== undefined) ? fadeMs : 600;
+    if (!a.playing()) { a.volume(0); a.play(); }
+    a.fade(a.volume(), v, fd);
+  },
+  stopAmbient: function(name, fadeMs) {
+    var a = _ambient[name];
+    if (!a) return;
+    var fd = (fadeMs !== undefined) ? fadeMs : 600;
+    a.fade(a.volume(), 0, fd);
+    setTimeout(function() { try { a.stop(); } catch(e) {} }, fd + 50);
+  },
+
+  // Hold an elevated state for a duration, then fade to a target state.
+  // Honors MIN_HOLD_MS — the actual hold is max(holdMs, MIN_HOLD_MS).
   holdThenSettle: function(holdMs, targetState) {
     var self = this;
+    var now = Date.now();
+    var actualHold = Math.max(holdMs || 0, MIN_HOLD_MS);
+    // Update the hold-until so any interim setState calls honor it
+    _crowdHoldUntil = Math.max(_crowdHoldUntil, now + actualHold);
     if (_crowdHoldTimer) clearTimeout(_crowdHoldTimer);
     _crowdHoldTimer = setTimeout(function() {
       _crowdHoldTimer = null;
+      _crowdHoldUntil = 0;
       self.setState(targetState);
-    }, holdMs);
+    }, actualHold);
   },
 
   // ── DEBUG ──
   getState: function() { return _currentState; },
   getCrowdIntensity: function() { return _crowdIntensity; },
+  getCrowdTarget: function() { return _crowdTarget; },
+  isCrowdHeld: function() { return _crowdHoldUntil > Date.now(); },
+  getHoldRemaining: function() { return Math.max(0, _crowdHoldUntil - Date.now()); },
 
   toggleMute: function() {
     _muted = !_muted;

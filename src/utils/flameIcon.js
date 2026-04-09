@@ -1,0 +1,96 @@
+/**
+ * TORCH — Flame Icon Helper
+ *
+ * Central source for the 4-layer TORCH flame (replaces the old single-path
+ * wiggly flame that lived in brand.js).
+ *
+ * The new flame has four layers with built-in color depth:
+ *   Layer 1 (#EF3820) — outer red silhouette
+ *   Layer 2 (#D8190B) — right-side depth shadow
+ *   Layer 3 (#F8AB1F) — inner orange/gold body
+ *   Layer 4 (#FE5436) — hot orange center
+ *
+ * Use `flameIconSVG(size)` for full-color flames (the default).
+ * Use `flameSilhouetteSVG(size, color)` for solid-color flames in a
+ *   custom fill (gold for points, team accent for tinted contexts).
+ * Use `FLAME_SILHOUETTE_PATH` for raw path data (Path2D canvas use).
+ *
+ * ViewBox is 34×34 (square). The flame content sits roughly top-centered.
+ * When sizing, use equal width/height — the aspect ratio of the new flame
+ * is square, unlike the old 44×56 flame which was taller than wide.
+ */
+
+// ── Path data strings (extracted from src/assets/flame.svg) ──
+
+export var FLAME_LAYER_1 = 'M16.77607,32.97235c0,0-8.62259,0.72281-10.90293-5.22241c0,0,0.91624,0.14254,2.18875,0.05089c0,0-2.97258-3.07435-1.99533-7.94048c0,0,0.38685,1.59829,1.49651,2.0971c0,0-0.04076-0.39698-0.08146-1.03833c-0.45648-7.88977,5.29012-10.11692,5.39545-13.621l0.733,1.11979c0,0,2.1378-3.52234-0.04076-6.89196c-0.18323-0.2952,0.12216-0.64129,0.42761-0.48863c2.20907,1.16055,6.60689,3.99059,8.71418,8.98906c0,0,0.67186-1.45575,1.3641-1.64917c-0.07127,0.23412-1.18087,3.88881,1.07909,6.99374c0,0,2.13786,3.36962,1.8019,5.80268c0,0,0.82459-0.7737,1.11979-1.65936C28.07597,19.51426,29.58267,32.59569,16.77607,32.97235z';
+
+export var FLAME_LAYER_2 = 'M18.38282,32.85566c1-19.39996-2.13995-28.09998-4.56-31.84998c0.06-0.01001,0.11005,0,0.17004,0.02997c2.20996,1.16003,6.60998,3.98999,8.71997,8.98999c0,0,0.66998-1.45996,1.35999-1.64996c-0.07001,0.23999-1.17999,3.89001,1.08002,7c0,0,2.14001,3.35999,1.79999,5.79999c0,0,0.83002-0.78003,1.12-1.65997C28.07282,19.5157,29.45283,31.46565,18.38282,32.85566z';
+
+export var FLAME_LAYER_3 = 'M14.68431,13.2c0.17783,0.38763,0.45541,0.83912,0.88113,0.8137c0.42606-0.02543,0.64873-0.50917,0.76382-0.92017c0.4423-1.57952,0.65917-3.22198,0.642-4.86216c1.26,1.41103,2.52715,2.83159,3.5182,4.44293c2.2072,3.58867,1.46806,5.55673,1.91391,5.90033c0.16984,0.13089,0.43115,0.06213,0.57997-0.09224c0.14882-0.15437,0.2131-0.36923,0.27243-0.57528c0.67106,2.61303,0.35992,5.46612-0.85859,7.87308c0.37932-0.13055,0.71753-0.18838,1.09686-0.31894c-0.38076,1.07008-1.03283,6.55796-7.37309,6.15187c-0.82954-0.05313-1.65846-0.17206-2.39113-0.56469c-0.67899-0.36387-1.30035-0.85278-1.75136-1.4773c-0.451-0.62452-0.72358-1.39081-0.69091-2.16047c0.42093,0.21707,0.84186,0.43414,1.26279,0.65121C10.9112,22.66396,12.55488,18.42272,14.68431,13.2z';
+
+export var FLAME_LAYER_4 = 'M15.82508,20.82087c0.75659,1.6492,1.36161-0.99505,1.34152-2.91459c1.46794,1.6439,3.03924,3.44229,3.08256,5.73405c0.00228,0.12064,0.00834,0.25964,0.10391,0.33329c0.09963,0.07678,0.25291,0.03645,0.34021-0.05411s0.125-0.21659,0.15981-0.33746c0.39364,1.5328,0.21113,3.20642-0.50365,4.61834c0.22251-0.07658,0.4209-0.1105,0.64341-0.18709c-0.22335,0.62771-0.60585,3.84689-4.32504,3.60868c-0.48661-0.03117-0.97285-0.10093-1.40263-0.33125c-0.3983-0.21344-0.76279-0.50024-1.02735-0.86658c-0.26456-0.36634-0.42445-0.81585-0.40529-1.26733c0.24692,0.12733,0.49383,0.25467,0.74075,0.382C13.61178,26.37241,14.57596,23.8845,15.82508,20.82087z';
+
+// Raw path string used by canvas Path2D or legacy inline SVG callers that
+// only want the silhouette shape in a custom color.
+export var FLAME_SILHOUETTE_PATH = FLAME_LAYER_1;
+
+// ── SVG helpers ──
+
+/**
+ * Returns the full 4-layer flame as an SVG markup string.
+ * Use for any "torch red" context — the 4 fills give the flame built-in
+ * color depth so no gradient is needed.
+ *
+ * @param {number} size - pixel dimensions (width = height, viewBox is square)
+ * @param {number} [opacity=1] - style opacity (0-1)
+ * @param {string} [extraStyle=''] - optional additional inline style
+ * @returns {string} SVG markup
+ */
+export function flameIconSVG(size, opacity, extraStyle) {
+  size = size || 24;
+  opacity = opacity != null ? opacity : 1;
+  extraStyle = extraStyle || '';
+  var style = 'display:block;opacity:' + opacity + (extraStyle ? ';' + extraStyle : '');
+  return '<svg viewBox="0 0 34 34" width="' + size + '" height="' + size + '" style="' + style + '">' +
+    '<path fill="#EF3820" d="' + FLAME_LAYER_1 + '"/>' +
+    '<path fill="#D8190B" d="' + FLAME_LAYER_2 + '"/>' +
+    '<path fill="#F8AB1F" d="' + FLAME_LAYER_3 + '"/>' +
+    '<path fill="#FE5436" d="' + FLAME_LAYER_4 + '"/>' +
+    '</svg>';
+}
+
+/**
+ * Returns a single-layer silhouette flame SVG in a custom fill color.
+ * Use when you need the flame SHAPE but in a specific color (gold for
+ * points, team accent for tinted chrome, white for brand marks, etc.)
+ * or at sizes below ~12px where the inner layers would be invisible.
+ *
+ * @param {number} size - pixel dimensions
+ * @param {string} color - fill color (hex or css color)
+ * @param {number} [opacity=1] - style opacity
+ * @param {string} [extraStyle=''] - optional additional inline style
+ * @returns {string} SVG markup
+ */
+export function flameSilhouetteSVG(size, color, opacity, extraStyle) {
+  size = size || 24;
+  color = color || '#EF3820';
+  opacity = opacity != null ? opacity : 1;
+  extraStyle = extraStyle || '';
+  var style = 'display:block;opacity:' + opacity + (extraStyle ? ';' + extraStyle : '');
+  return '<svg viewBox="0 0 34 34" width="' + size + '" height="' + size + '" style="' + style + '">' +
+    '<path fill="' + color + '" d="' + FLAME_LAYER_1 + '"/>' +
+    '</svg>';
+}
+
+/**
+ * Returns just the inner 4-layer path markup (no wrapping <svg>).
+ * Use when you need to embed the layers inside an existing SVG with
+ * its own viewBox, <defs>, or wrapping <g> (e.g., gradient-filled
+ * backgrounds, animation groups).
+ */
+export function flameLayersMarkup() {
+  return '<path fill="#EF3820" d="' + FLAME_LAYER_1 + '"/>' +
+    '<path fill="#D8190B" d="' + FLAME_LAYER_2 + '"/>' +
+    '<path fill="#F8AB1F" d="' + FLAME_LAYER_3 + '"/>' +
+    '<path fill="#FE5436" d="' + FLAME_LAYER_4 + '"/>';
+}

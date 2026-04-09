@@ -1,0 +1,1735 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>TORCH — Pre-Game Runway Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Oswald:wght@600;700&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    background: #050403;
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 12px 40px;
+  }
+
+  /* ── CONTROL PANEL ── */
+  .title {
+    font-family: 'Teko', sans-serif;
+    font-weight: 900;
+    font-size: 22px;
+    color: #EBB010;
+    letter-spacing: 3px;
+    margin-bottom: 2px;
+    text-align: center;
+  }
+  .subtitle {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 10px;
+    color: #666;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .controls {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .control-row {
+    display: flex;
+    gap: 4px;
+    background: rgba(20, 16, 8, 0.6);
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .control-row.tabs { gap: 4px; }
+  .control-btn {
+    flex: 1;
+    padding: 8px 4px;
+    border-radius: 5px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 9px;
+    color: #888;
+    letter-spacing: 1.2px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    background: transparent;
+    border: 1px solid transparent;
+    line-height: 1.2;
+    user-select: none;
+  }
+  .control-btn:hover { color: #bbb; }
+  .control-btn.primary {
+    background: linear-gradient(180deg, rgba(255, 69, 17, 0.25), rgba(235, 176, 16, 0.15));
+    border-color: rgba(255, 69, 17, 0.5);
+    color: #EBB010;
+  }
+  .control-btn.active {
+    background: linear-gradient(180deg, rgba(235, 176, 16, 0.2), rgba(255, 69, 17, 0.08));
+    border-color: rgba(235, 176, 16, 0.4);
+    color: #EBB010;
+  }
+
+  /* ── PHONE FRAME ── */
+  /* Fixed 375×812 — absolute positions rely on these dimensions.      */
+  /* If viewport is shorter, page scrolls rather than squishing phone. */
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: #050302;
+    border-radius: 38px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.6), 0 0 0 8px #111, 0 0 0 9px #222;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .stage {
+    position: absolute; inset: 0;
+    border-radius: 30px;
+    overflow: hidden;
+    background: #000;
+  }
+  .beat-label {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    padding: 4px 10px;
+    background: rgba(0,0,0,0.7);
+    border: 1px solid rgba(235,176,16,0.3);
+    border-radius: 12px;
+    font-family: 'Oswald';
+    font-weight: 700;
+    font-size: 8px;
+    color: #EBB010;
+    letter-spacing: 2px;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .beat-label.show { opacity: 1; }
+
+  /* ══════════════════════════════════════════════════════ */
+  /* BEAT 1 — MATCHUP SLAM                                  */
+  /* ══════════════════════════════════════════════════════ */
+  .beat-1 {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 20%, rgba(255,245,200,0.08) 0%, transparent 40%),
+      radial-gradient(ellipse at 50% 50%, #0a0804 0%, #030201 80%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .beat-1.show { opacity: 1; }
+
+  .stadium-glow-1 {
+    position: absolute; top: 0; left: 0; right: 0; height: 60%;
+    background:
+      radial-gradient(circle at 15% 18%, rgba(255,245,200,0.35) 0%, transparent 6%),
+      radial-gradient(circle at 35% 14%, rgba(255,245,200,0.4) 0%, transparent 7%),
+      radial-gradient(circle at 65% 14%, rgba(255,245,200,0.4) 0%, transparent 7%),
+      radial-gradient(circle at 85% 18%, rgba(255,245,200,0.35) 0%, transparent 6%),
+      radial-gradient(ellipse at 50% 12%, rgba(255,180,60,0.15) 0%, transparent 40%);
+    filter: blur(6px);
+    opacity: 0;
+    transition: opacity 0.8s;
+  }
+  .beat-1.show .stadium-glow-1 { opacity: 0.7; }
+
+  /* Horizon removed — crowd dots looked noisy. Stadium glow at the top */
+  /* does enough to suggest atmosphere without adding distraction.      */
+
+  /* Full-width horizontal cards stacked vertically. Each gets the entire   */
+  /* phone width so 8-char team names (SPECTRES/DOLPHINS/SERPENTS) have     */
+  /* room to breathe at proper broadcast-graphic size.                      */
+  /* Height 176 (was 188) to give VS a real breathing gap instead of        */
+  /* jamming it edge-to-edge between the two cards.                         */
+  .card-slot {
+    position: absolute;
+    left: 14px; right: 14px;
+    height: 176px;
+    border-radius: 14px;
+    border: 2px solid rgba(255,255,255,0.12);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 14px 18px 14px 22px;
+    box-shadow:
+      0 24px 70px rgba(0,0,0,0.85),
+      0 0 0 1px rgba(255,255,255,0.04),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+    transform-origin: center;
+  }
+  /* Diagonal pattern overlay — subtle texture so cards don't read flat */
+  .card-slot::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(135deg, transparent 0 8px, rgba(255,255,255,0.015) 8px 9px);
+    pointer-events: none;
+  }
+  .card-slot::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(160deg, transparent 15%, rgba(0,0,0,0.35) 75%);
+    pointer-events: none;
+  }
+  /* Slam from top (away) and bottom (home) — vertical axis gives full width */
+  /* Away: top 58, height 176 → 58-234. Home: top 336, height 176 → 336-512. */
+  /* Gap: 234-336 (102px). VS at 84px gets 9px breathing room each side.     */
+  .card-away { top: 58px; transform: translateY(-520px) rotate(-2deg); }
+  .card-home { top: 336px; transform: translateY(520px) rotate(2deg); }
+  .beat-1.slam-1 .card-away { transform: translateY(0) rotate(0deg); transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1); }
+  .beat-1.slam-1 .card-home { transform: translateY(0) rotate(0deg); transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1); transition-delay: 0.18s; }
+  .beat-1.settled .card-away, .beat-1.settled .card-home {
+    transform: translateY(0) rotate(0deg);
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .card-slot .accent-edge {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+    z-index: 2;
+  }
+  .card-slot .badge-wrap {
+    position: relative;
+    flex-shrink: 0;
+    width: 108px; height: 108px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Teko'; font-weight: 900; font-size: 62px;
+    border: 3px solid rgba(255,255,255,0.15);
+    box-shadow: 0 14px 32px rgba(0,0,0,0.78), inset 0 0 28px rgba(0,0,0,0.55);
+    z-index: 1;
+  }
+  .card-slot .badge-wrap::after {
+    content: '';
+    position: absolute; inset: 6px;
+    border-radius: 50%;
+    border: 1px dashed rgba(255,255,255,0.12);
+  }
+  .card-slot .info {
+    flex: 1;
+    min-width: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+  .card-slot .label {
+    font-family: 'Oswald'; font-weight: 700; font-size: 9px;
+    letter-spacing: 3px;
+    margin-bottom: 2px;
+  }
+  .card-slot .name {
+    font-family: 'Teko'; font-weight: 900; font-size: 38px;
+    color: #fff; letter-spacing: 1px; line-height: 0.88;
+    text-shadow: 0 3px 10px rgba(0,0,0,0.95), 0 0 20px rgba(0,0,0,0.4);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+  }
+  .card-slot .school {
+    font-family: 'Rajdhani'; font-weight: 600; font-size: 10px;
+    color: rgba(255,255,255,0.5); letter-spacing: 2px;
+    margin-top: 4px;
+  }
+  .card-slot .divider {
+    height: 1px;
+    margin: 8px 0 7px;
+    width: 80%;
+  }
+  .card-slot .scheme {
+    font-family: 'Oswald'; font-weight: 700; font-size: 11px;
+    letter-spacing: 1.8px;
+  }
+  /* OFF/DEF rating rows sit inline side by side at the bottom of info */
+  .card-slot .ratings {
+    display: flex;
+    gap: 14px;
+    margin-top: 7px;
+  }
+  .card-slot .rating-row {
+    display: flex; align-items: center; gap: 5px;
+    font-family: 'Oswald'; font-weight: 700; font-size: 8px;
+    letter-spacing: 1.5px;
+  }
+  .card-slot .rating-row .rating-label.off { color: #00ff44; }
+  .card-slot .rating-row .rating-label.def { color: #4DA6FF; }
+  .card-slot .rating-row .pips { display: flex; gap: 3px; }
+  .card-slot .rating-row .pip {
+    width: 7px; height: 7px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.06);
+  }
+  .card-slot .rating-row .pip.on.off {
+    background: #00ff44;
+    border-color: #00ff44;
+    box-shadow: 0 0 6px rgba(0,255,68,0.5);
+  }
+  .card-slot .rating-row .pip.on.def {
+    background: #4DA6FF;
+    border-color: #4DA6FF;
+    box-shadow: 0 0 6px rgba(77,166,255,0.5);
+  }
+
+  /* Stags — user */
+  .card-away.stags {
+    background:
+      linear-gradient(170deg, rgba(133,193,233,0.22) 0%, rgba(10,8,4,0.95) 55%, rgba(10,8,4,1) 100%);
+    border-color: rgba(133,193,233,0.55);
+    box-shadow:
+      0 24px 70px rgba(0,0,0,0.85),
+      0 0 36px rgba(133,193,233,0.12),
+      0 0 0 1px rgba(133,193,233,0.15),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .card-away.stags .accent-edge {
+    background: linear-gradient(180deg, #85C1E9, #1B4F72);
+    box-shadow: 0 0 12px rgba(133,193,233,0.6);
+  }
+  .card-away.stags .accent-top { background: linear-gradient(90deg, #85C1E9, transparent); }
+  .card-away.stags .badge-wrap {
+    background: radial-gradient(circle at 35% 30%, #2f6c9c 0%, #1B4F72 45%, #050A14 100%);
+    color: #85C1E9;
+    border-color: rgba(133,193,233,0.55);
+    box-shadow:
+      0 10px 26px rgba(0,0,0,0.75),
+      0 0 30px rgba(133,193,233,0.3),
+      inset 0 0 22px rgba(0,0,0,0.55),
+      inset 0 0 0 2px rgba(133,193,233,0.2);
+  }
+  .card-away.stags .label { color: #85C1E9; }
+  .card-away.stags .divider { background: linear-gradient(90deg, transparent, rgba(133,193,233,0.5), transparent); }
+  .card-away.stags .scheme { color: #85C1E9; }
+
+  /* Boars — opponent */
+  .card-home.sentinels {
+    background:
+      linear-gradient(170deg, rgba(196,162,101,0.22) 0%, rgba(10,8,4,0.95) 55%, rgba(10,8,4,1) 100%);
+    border-color: rgba(196,162,101,0.55);
+    box-shadow:
+      0 24px 70px rgba(0,0,0,0.85),
+      0 0 36px rgba(196,162,101,0.12),
+      0 0 0 1px rgba(196,162,101,0.15),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .card-home.sentinels .accent-edge {
+    background: linear-gradient(180deg, #C4A265, #6B3818);
+    box-shadow: 0 0 12px rgba(196,162,101,0.6);
+  }
+  .card-home.sentinels .accent-top { background: linear-gradient(90deg, #C4A265, transparent); }
+  .card-home.sentinels .badge-wrap {
+    background: radial-gradient(circle at 35% 30%, #b50808 0%, #8B0000 45%, #2a0000 100%);
+    color: #C4A265;
+    border-color: rgba(196,162,101,0.55);
+    box-shadow:
+      0 10px 26px rgba(0,0,0,0.75),
+      0 0 30px rgba(139,0,0,0.35),
+      inset 0 0 22px rgba(0,0,0,0.55),
+      inset 0 0 0 2px rgba(196,162,101,0.2);
+  }
+  .card-home.sentinels .label { color: #C4A265; }
+  .card-home.sentinels .divider { background: linear-gradient(90deg, transparent, rgba(196,162,101,0.5), transparent); }
+  .card-home.sentinels .scheme { color: #C4A265; }
+
+  /* VS burn — sits in the 102px gap between cards (234→336), centered */
+  /* at y=285 with 9px of breathing room on each side. Bigger font     */
+  /* (84px) and an "impact settle" animation: starts scaled up to 1.3  */
+  /* and contracts to 1 with ease-out, giving it weight without        */
+  /* bouncing. Opacity fades in quickly; scale settles over 0.75s.     */
+  .vs-burn {
+    position: absolute;
+    top: 285px;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1.3);
+    font-family: 'Teko'; font-weight: 900; font-size: 84px;
+    line-height: 1;
+    letter-spacing: 4px;
+    background: linear-gradient(180deg, #FFE17A 0%, #FFD060 22%, #EBB010 45%, #8B4A1F 72%, #EBB010 90%, #FFD060 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    filter:
+      drop-shadow(0 5px 12px rgba(0,0,0,0.95))
+      drop-shadow(0 0 24px rgba(235,176,16,0.55));
+    opacity: 0;
+    pointer-events: none;
+    z-index: 5;
+    white-space: nowrap;
+    transition:
+      opacity 0.35s ease-out,
+      transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .beat-1.vs-in .vs-burn {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  /* Conditions strip — sits well below the home card (ends at 508) */
+  /* at bottom 100 → top ~627. No chance of overlapping cards.       */
+  /* Removed the 1.4s CSS transition delay that made it flash only   */
+  /* briefly before Beat 1 ended.                                    */
+  .conditions-strip {
+    position: absolute; bottom: 100px; left: 14px; right: 14px;
+    padding: 12px 14px;
+    background: rgba(10,8,4,0.65);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+  }
+  .beat-1.settled .conditions-strip { opacity: 1; transform: translateY(0); }
+  .conditions-strip .cs-item {
+    display: flex; align-items: center; gap: 8px;
+    flex: 1;
+    justify-content: center;
+  }
+  .conditions-strip .cs-icon {
+    width: 22px; height: 22px;
+    color: #EBB010;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 6px rgba(235,176,16,0.3));
+  }
+  .conditions-strip .cs-text { display: flex; flex-direction: column; gap: 2px; }
+  .conditions-strip .cs-val { font-family: 'Teko'; font-weight: 700; font-size: 17px; color: #fff; line-height: 1; letter-spacing: 0.5px; }
+  .conditions-strip .cs-lbl { font-family: 'Oswald'; font-weight: 700; font-size: 7px; color: #888; letter-spacing: 1.2px; }
+  .conditions-strip .cs-div { width: 1px; height: 28px; background: rgba(255,255,255,0.08); flex-shrink: 0; }
+  .conditions-strip .cs-val.match.fav { color: #00ff44; }
+  .conditions-strip .cs-val.match.tough { color: #ff0040; }
+  .conditions-strip .cs-item.match .cs-icon { color: #00ff44; filter: drop-shadow(0 0 6px rgba(0,255,68,0.4)); }
+
+  /* ══════════════════════════════════════════════════════ */
+  /* BEAT 2 — COIN TOSS                                     */
+  /* ══════════════════════════════════════════════════════ */
+  .beat-2 {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 45%, #1a1208 0%, #050302 70%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .beat-2.show { opacity: 1; pointer-events: auto; transition: opacity 0.5s; }
+
+  .spot-pool {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 360px; height: 360px;
+    background: radial-gradient(circle, rgba(255,180,60,0.12) 0%, rgba(255,140,40,0.06) 25%, transparent 55%);
+    filter: blur(8px);
+    opacity: 0;
+    transition: opacity 0.6s;
+  }
+  .beat-2.show .spot-pool { opacity: 1; }
+
+  .midfield-label {
+    position: absolute; top: 76px; left: 0; right: 0;
+    text-align: center;
+    font-family: 'Oswald'; font-weight: 700; font-size: 9px;
+    color: rgba(235,176,16,0.7); letter-spacing: 4px;
+    opacity: 0;
+    transition: opacity 0.4s 0.2s;
+  }
+  .beat-2.show .midfield-label { opacity: 1; }
+
+  /* Captain badges removed — the coin itself has the team logos on  */
+  /* its faces, so the extra side circles were redundant and busy.   */
+
+  .coin-wrap {
+    position: absolute; top: 168px; left: 50%; transform: translateX(-50%);
+    width: 96px; height: 96px;
+    perspective: 800px;
+    opacity: 0;
+    transition: opacity 0.4s 0.5s;
+    filter: drop-shadow(0 12px 24px rgba(0,0,0,0.6)) drop-shadow(0 0 16px rgba(235,176,16,0.25));
+  }
+  .beat-2.show .coin-wrap { opacity: 1; }
+  .coin {
+    width: 100%; height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transform: rotateY(0deg);
+  }
+  /* Two spin variants so the coin actually lands on the winner's face */
+  .beat-2.coin-spin.winner-user .coin {
+    animation: coinSpinUser 1.8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  }
+  .beat-2.coin-spin.winner-ai .coin {
+    animation: coinSpinAi 1.8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  }
+  @keyframes coinSpinUser {
+    0% { transform: rotateY(0deg) translateY(0); }
+    20% { transform: rotateY(720deg) translateY(-50px); }
+    50% { transform: rotateY(1440deg) translateY(-75px); }
+    80% { transform: rotateY(2160deg) translateY(-35px); }
+    100% { transform: rotateY(2520deg) translateY(0); }
+  }
+  @keyframes coinSpinAi {
+    0% { transform: rotateY(0deg) translateY(0); }
+    20% { transform: rotateY(720deg) translateY(-50px); }
+    50% { transform: rotateY(1440deg) translateY(-75px); }
+    80% { transform: rotateY(2340deg) translateY(-35px); }
+    100% { transform: rotateY(2700deg) translateY(0); }
+  }
+
+  .coin-face {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Teko'; font-weight: 900; font-size: 52px;
+    line-height: 1;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    box-shadow:
+      inset 0 0 0 3px #FFE17A,
+      inset 0 0 0 4px rgba(139,74,31,0.6),
+      inset 0 0 18px rgba(0,0,0,0.45),
+      inset 0 -6px 12px rgba(0,0,0,0.35),
+      inset 0 6px 12px rgba(255,255,255,0.22);
+    overflow: hidden;
+  }
+
+  /* Gold rim + inner detail (shared across both faces) */
+  .coin-face::before {
+    content: '';
+    position: absolute; inset: 6px;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(10,8,4,0.3);
+    pointer-events: none;
+  }
+  .coin-face::after {
+    content: '';
+    position: absolute; top: 8%; left: 18%;
+    width: 50%; height: 35%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.35) 0%, transparent 60%);
+    border-radius: 50%;
+    filter: blur(2px);
+    pointer-events: none;
+  }
+
+  /* FRONT = Spectres (user team in demo) */
+  .coin-face.front {
+    background:
+      radial-gradient(circle at 35% 30%, #FFE17A 0%, #EBB010 40%, #8B4A1F 100%);
+  }
+  .coin-face.front .letter {
+    position: relative;
+    z-index: 1;
+    color: #1B4F72;
+    text-shadow:
+      0 2px 0 rgba(10,8,4,0.25),
+      0 0 8px rgba(133,193,233,0.3);
+    letter-spacing: 0;
+  }
+  .coin-face.front .team-ring {
+    position: absolute; inset: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(27,79,114,0.55);
+    box-shadow: inset 0 0 12px rgba(27,79,114,0.25);
+    pointer-events: none;
+  }
+
+  /* BACK = Boars (opponent in demo) */
+  .coin-face.back {
+    background:
+      radial-gradient(circle at 35% 30%, #FFE17A 0%, #C4A265 40%, #6B3818 100%);
+    transform: rotateY(180deg);
+  }
+  .coin-face.back .letter {
+    position: relative;
+    z-index: 1;
+    color: #8B0000;
+    text-shadow:
+      0 2px 0 rgba(10,8,4,0.25),
+      0 0 8px rgba(196,162,101,0.3);
+    letter-spacing: 0;
+  }
+  .coin-face.back .team-ring {
+    position: absolute; inset: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(139,0,0,0.6);
+    box-shadow: inset 0 0 12px rgba(139,0,0,0.3);
+    pointer-events: none;
+  }
+
+  /* Toss result sits between the coin (ends at y=264) and the choice */
+  /* cards (start at y=360). Centered in the 96px gap → top 282.     */
+  .toss-result {
+    position: absolute; top: 282px; left: 0; right: 0;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(8px) scale(0.9);
+    transition: opacity 0.35s, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .beat-2.result-in .toss-result { opacity: 1; transform: translateY(0) scale(1); }
+  .toss-result .eyebrow {
+    font-family: 'Oswald'; font-weight: 700; font-size: 8px;
+    color: rgba(255,255,255,0.4); letter-spacing: 2.5px;
+  }
+  .toss-result .winner {
+    font-family: 'Teko'; font-weight: 900; font-size: 30px;
+    color: #EBB010; letter-spacing: 3px; line-height: 1;
+    margin-top: 3px;
+    text-shadow: 0 0 20px rgba(235,176,16,0.4);
+  }
+  .toss-result .sub {
+    font-family: 'Rajdhani'; font-weight: 600; font-size: 10px;
+    color: rgba(255,255,255,0.5); letter-spacing: 1.5px;
+    margin-top: 4px;
+  }
+
+  /* Choice cards — the two options must be visually distinct, not just */
+  /* two identical boxes with different icons. KICKOFF uses green (the  */
+  /* field/offense color). TORCH CARD uses gold/orange (brand).        */
+  .choice-wrap {
+    position: absolute;
+    top: 360px;
+    left: 16px; right: 16px;
+    display: flex;
+    gap: 14px;
+    opacity: 0;
+    transition: opacity 0.4s;
+    pointer-events: none;
+  }
+  .beat-2.choice-in .choice-wrap { opacity: 1; pointer-events: auto; }
+
+  .choice-card {
+    flex: 1;
+    height: 240px;
+    border-radius: 14px;
+    border: 2px solid rgba(255,255,255,0.12);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 22px 12px 20px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transform: rotateY(90deg);
+    transform-origin: center;
+    opacity: 0;
+    transition:
+      transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+      opacity 0.35s,
+      box-shadow 0.2s;
+  }
+  .beat-2.choice-in .choice-card { transform: rotateY(0deg); opacity: 1; }
+  .beat-2.choice-in .choice-card:nth-child(1) { transition-delay: 0.1s; }
+  .beat-2.choice-in .choice-card:nth-child(2) { transition-delay: 0.22s; }
+
+  /* KICKOFF card — green (field color) */
+  .choice-card.kickoff {
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(0,255,68,0.18) 0%, transparent 55%),
+      linear-gradient(180deg, rgba(10,30,14,0.9) 0%, rgba(5,12,6,0.95) 100%);
+    border-color: rgba(0,255,68,0.5);
+    box-shadow:
+      0 12px 32px rgba(0,0,0,0.7),
+      0 0 24px rgba(0,255,68,0.15),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .choice-card.kickoff .icon-box {
+    color: #00ff44;
+    filter: drop-shadow(0 0 14px rgba(0,255,68,0.45));
+  }
+  .choice-card.kickoff .label { color: #00ff44; }
+
+  /* TORCH CARD card — gold/orange (brand) */
+  .choice-card.torch {
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(235,176,16,0.2) 0%, transparent 55%),
+      linear-gradient(180deg, rgba(40,20,8,0.9) 0%, rgba(15,8,4,0.95) 100%);
+    border-color: rgba(235,176,16,0.55);
+    box-shadow:
+      0 12px 32px rgba(0,0,0,0.7),
+      0 0 26px rgba(235,176,16,0.18),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .choice-card.torch .icon-box {
+    color: #EBB010;
+    filter: drop-shadow(0 0 14px rgba(235,176,16,0.55));
+  }
+  .choice-card.torch .label { color: #EBB010; }
+
+  .choice-card:hover:not(.dim):not(.picked) {
+    box-shadow:
+      0 14px 36px rgba(0,0,0,0.8),
+      0 0 32px rgba(255,255,255,0.12),
+      inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+
+  .choice-card .icon-box {
+    width: 74px; height: 74px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px;
+  }
+  .choice-card .icon-box svg { width: 100%; height: 100%; }
+
+  .choice-card .label {
+    font-family: 'Teko'; font-weight: 900; font-size: 22px;
+    letter-spacing: 2px;
+    line-height: 0.95;
+    text-align: center;
+    white-space: nowrap;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+  }
+  .choice-card .sub {
+    font-family: 'Rajdhani'; font-weight: 600; font-size: 10px;
+    color: rgba(255,255,255,0.55); letter-spacing: 0.8px;
+    margin-top: 10px;
+    text-align: center;
+    line-height: 1.3;
+    padding: 0 4px;
+  }
+
+  /* Picked state — winner glows, loser dims */
+  .choice-card.picked.kickoff {
+    border-color: #00ff44;
+    box-shadow: 0 0 32px rgba(0,255,68,0.5), inset 0 0 0 1px rgba(255,255,255,0.15);
+    transform: scale(1.03);
+  }
+  .choice-card.picked.torch {
+    border-color: #EBB010;
+    box-shadow: 0 0 32px rgba(235,176,16,0.5), inset 0 0 0 1px rgba(255,255,255,0.15);
+    transform: scale(1.03);
+  }
+  .choice-card.dim {
+    opacity: 0.28;
+    transform: scale(0.95);
+  }
+
+  /* ══════════════════════════════════════════════════════ */
+  /* BEAT 2b — TORCH CARD SELECTION (sub-phase of Beat 2)  */
+  /* ══════════════════════════════════════════════════════ */
+  /* Triggered when the coin toss winner picks "TAKE A      */
+  /* TORCH CARD". 3 face-down cards appear; winner flips    */
+  /* one. Works for both USER (tap to pick) and AI (auto).  */
+  .card-select-wrap {
+    position: absolute; inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s;
+  }
+  .beat-2.card-select-in .card-select-wrap { opacity: 1; pointer-events: auto; }
+
+  .card-select-wrap .cs-title {
+    position: absolute; top: 76px; left: 0; right: 0;
+    text-align: center;
+    font-family: 'Oswald'; font-weight: 700; font-size: 9px;
+    color: rgba(235,176,16,0.8); letter-spacing: 4px;
+  }
+  .card-select-wrap .cs-sub {
+    position: absolute; top: 94px; left: 0; right: 0;
+    text-align: center;
+    font-family: 'Teko'; font-weight: 700; font-size: 22px;
+    color: #fff; letter-spacing: 2px; line-height: 1;
+  }
+  .card-select-wrap .cs-sub.ai {
+    color: #FF7B00;
+  }
+
+  /* 3 face-down card backs in a row */
+  .facedown-row {
+    position: absolute; top: 200px; left: 0; right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    padding: 0 20px;
+  }
+  .facedown {
+    width: 90px;
+    height: 126px;
+    border-radius: 10px;
+    background:
+      linear-gradient(165deg, #1a1208 0%, #0a0604 55%, #050302 100%);
+    border: 2px solid rgba(235,176,16,0.5);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(235,176,16,0.12);
+    position: relative;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(40px) rotate(var(--rot, 0deg));
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s, box-shadow 0.2s, border-color 0.2s;
+  }
+  .beat-2.card-select-in .facedown { opacity: 1; transform: translateY(0) rotate(var(--rot, 0deg)); }
+  .beat-2.card-select-in .facedown:nth-child(1) { --rot: -6deg; transition-delay: 0.1s; }
+  .beat-2.card-select-in .facedown:nth-child(2) { --rot: 0deg; transition-delay: 0.22s; }
+  .beat-2.card-select-in .facedown:nth-child(3) { --rot: 6deg; transition-delay: 0.34s; }
+
+  .facedown::before {
+    content: '';
+    position: absolute; inset: 6px;
+    border: 1px solid rgba(235,176,16,0.15);
+    border-radius: 6px;
+  }
+  .facedown::after {
+    content: '🔥';
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 28px;
+    opacity: 0.45;
+    filter: drop-shadow(0 0 8px rgba(255,69,17,0.4));
+  }
+
+  .facedown:hover:not(.dim):not(.picked) {
+    transform: translateY(-6px) rotate(var(--rot, 0deg));
+    border-color: rgba(235,176,16,0.9);
+    box-shadow: 0 16px 36px rgba(0,0,0,0.8), 0 0 24px rgba(235,176,16,0.25);
+  }
+  .facedown.dim {
+    opacity: 0.2;
+    transform: translateY(0) rotate(var(--rot, 0deg)) scale(0.92);
+    pointer-events: none;
+  }
+  .facedown.picked {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Reveal card — flies in at center when one is picked */
+  .reveal-card {
+    position: absolute; top: 158px; left: 50%; transform: translate(-50%, 0) scale(0.6) rotateY(180deg);
+    width: 148px;
+    height: 208px;
+    border-radius: 14px;
+    opacity: 0;
+    perspective: 1000px;
+    transform-style: preserve-3d;
+    pointer-events: none;
+    transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s;
+  }
+  .beat-2.reveal-in .reveal-card {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1) rotateY(0deg);
+  }
+
+  /* Silver tier reveal — matches TORCH card design language */
+  .reveal-card .face {
+    position: absolute; inset: 0;
+    border-radius: 14px;
+    background:
+      radial-gradient(ellipse at 50% 20%, rgba(192,192,192,0.22) 0%, transparent 50%),
+      linear-gradient(165deg, rgba(192,192,192,0.18) 0%, #141008 40%, #0a0604 100%);
+    border: 2px solid #C0C0C0;
+    box-shadow:
+      0 20px 48px rgba(0,0,0,0.85),
+      0 0 44px rgba(192,192,192,0.35),
+      0 0 0 1px rgba(255,255,255,0.1),
+      inset 0 1px 0 rgba(255,255,255,0.15),
+      inset 0 0 0 1px rgba(192,192,192,0.2);
+    overflow: hidden;
+  }
+  /* Shimmer sweep across the card face */
+  .reveal-card .face::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(110deg, transparent 28%, rgba(255,255,255,0.18) 50%, transparent 72%);
+    background-size: 280px 100%;
+    animation: shimmerSweep 2.8s ease-in-out infinite;
+    z-index: 2;
+    pointer-events: none;
+  }
+  /* TORCH flame watermark faded behind the icon */
+  .reveal-card .face::after {
+    content: '';
+    position: absolute; top: 22%; left: 50%; transform: translateX(-50%);
+    width: 80px; height: 100px;
+    background:
+      radial-gradient(ellipse at 50% 100%, rgba(255,69,17,0.25) 0%, rgba(255,140,40,0.12) 25%, transparent 55%);
+    filter: blur(4px);
+    pointer-events: none;
+  }
+  @keyframes shimmerSweep {
+    0%, 100% { background-position: -280px 0; }
+    50% { background-position: 280px 0; }
+  }
+  .reveal-card .tier-label {
+    position: absolute; top: 12px; left: 0; right: 0;
+    text-align: center;
+    font-family: 'Oswald'; font-weight: 700; font-size: 9px;
+    color: #E0E0E0; letter-spacing: 3px;
+    z-index: 3;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  }
+  .reveal-card .cost {
+    position: absolute; top: 10px; right: 12px;
+    background: rgba(192,192,192,0.22);
+    border: 1px solid rgba(192,192,192,0.6);
+    border-radius: 10px;
+    padding: 2px 7px;
+    font-family: 'Teko'; font-weight: 700; font-size: 11px;
+    color: #fff;
+    line-height: 1;
+    z-index: 3;
+  }
+  .reveal-card .icon-wrap {
+    position: absolute; top: 36px; left: 50%; transform: translateX(-50%);
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 30%, rgba(255,255,255,0.22) 0%, rgba(192,192,192,0.1) 40%, rgba(192,192,192,0.02) 100%);
+    border: 2px solid rgba(192,192,192,0.6);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Teko'; font-weight: 900; font-size: 34px;
+    color: #EBB010;
+    text-shadow: 0 0 14px rgba(235,176,16,0.6), 0 0 24px rgba(255,69,17,0.4);
+    box-shadow:
+      0 6px 14px rgba(0,0,0,0.6),
+      inset 0 2px 4px rgba(255,255,255,0.15),
+      inset 0 -2px 4px rgba(0,0,0,0.3);
+    z-index: 3;
+  }
+  .reveal-card .name {
+    position: absolute; top: 112px; left: 0; right: 0;
+    text-align: center;
+    font-family: 'Teko'; font-weight: 900; font-size: 20px;
+    color: #fff; letter-spacing: 2px; line-height: 0.95;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.95), 0 0 12px rgba(192,192,192,0.2);
+    z-index: 3;
+  }
+  .reveal-card .divider {
+    position: absolute; top: 140px; left: 18px; right: 18px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(192,192,192,0.5), transparent);
+    z-index: 3;
+  }
+  .reveal-card .effect {
+    position: absolute; top: 148px; left: 10px; right: 10px;
+    text-align: center;
+    font-family: 'Rajdhani'; font-weight: 600; font-size: 10px;
+    color: rgba(255,255,255,0.8); line-height: 1.3;
+    letter-spacing: 0.3px;
+    z-index: 3;
+  }
+  .reveal-card .type {
+    position: absolute; bottom: 10px; left: 0; right: 0;
+    text-align: center;
+    font-family: 'Oswald'; font-weight: 700; font-size: 8px;
+    color: rgba(192,192,192,0.8); letter-spacing: 2px;
+    z-index: 3;
+  }
+
+  /* Stamp under the reveal so user knows what just happened */
+  .reveal-stamp {
+    position: absolute; top: 384px; left: 0; right: 0;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.3s 0.4s, transform 0.3s 0.4s;
+  }
+  .beat-2.reveal-in .reveal-stamp { opacity: 1; transform: translateY(0); }
+  .reveal-stamp .eye {
+    font-family: 'Oswald'; font-weight: 700; font-size: 8px;
+    color: rgba(255,255,255,0.4); letter-spacing: 2.5px;
+  }
+  .reveal-stamp .line {
+    font-family: 'Teko'; font-weight: 700; font-size: 16px;
+    color: #EBB010; letter-spacing: 2px; line-height: 1;
+    margin-top: 3px;
+  }
+
+  /* ══════════════════════════════════════════════════════ */
+  /* BEAT 2 PHASE-EXCLUSIVE VISIBILITY                      */
+  /* Each sub-phase cleanly hides the previous one so the   */
+  /* screen doesn't stack coin toss + choices + face-downs. */
+  /* ══════════════════════════════════════════════════════ */
+
+  /* The coin-toss phase elements fade out BEFORE the choice cards  */
+  /* flip in (using a separate `fade-coin` class fired ~300ms       */
+  /* earlier in JS). This avoids the crossfade overlap where the    */
+  /* coin and choice cards were both visible at once.               */
+  .beat-2.fade-coin .midfield-label,
+  .beat-2.fade-coin .coin-wrap,
+  .beat-2.fade-coin .spot-pool {
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+    pointer-events: none;
+  }
+
+  /* When the card-select phase begins, fade out everything */
+  /* from the coin-toss phase AND the choice cards.         */
+  .beat-2.card-select-in .midfield-label,
+  .beat-2.card-select-in .coin-wrap,
+  .beat-2.card-select-in .toss-result,
+  .beat-2.card-select-in .choice-wrap,
+  .beat-2.card-select-in .spot-pool {
+    opacity: 0;
+    transition: opacity 0.35s ease-out;
+    pointer-events: none;
+  }
+
+  /* When the reveal phase begins, fade out the face-down */
+  /* row and the "PICK YOUR CARD" labels so only the        */
+  /* reveal card + reveal stamp are on screen.             */
+  .beat-2.reveal-in .facedown-row,
+  .beat-2.reveal-in .cs-title,
+  .beat-2.reveal-in .card-select-wrap .cs-sub {
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+    pointer-events: none;
+  }
+
+  /* ══════════════════════════════════════════════════════ */
+  /* BEAT 3 — KICKOFF                                       */
+  /* ══════════════════════════════════════════════════════ */
+  .beat-3 {
+    position: absolute; inset: 0;
+    background: #050403;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .beat-3.show { opacity: 1; transition: opacity 0.25s; }
+
+  .stadium-flash {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 40%, rgba(255,245,200,0.5) 0%, rgba(255,180,60,0.25) 20%, transparent 60%);
+    opacity: 0;
+  }
+  .beat-3.flash-in .stadium-flash { opacity: 1; transition: opacity 0.2s; }
+  .beat-3.flash-settle .stadium-flash { opacity: 0.6; transition: opacity 0.8s; }
+
+  .kickoff-stamp {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.3);
+    font-family: 'Teko'; font-weight: 900; font-size: 86px;
+    background: linear-gradient(180deg, #FFE17A 0%, #FFD060 20%, #EBB010 45%, #8B4A1F 72%, #EBB010 90%, #FFD060 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+    letter-spacing: 8px;
+    filter:
+      drop-shadow(0 6px 0 rgba(0,0,0,0.9))
+      drop-shadow(0 0 36px rgba(235,176,16,0.65))
+      drop-shadow(0 0 72px rgba(255,69,17,0.45));
+    opacity: 0;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .beat-3.stamp-in .kickoff-stamp {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+  }
+  .kickoff-sub {
+    position: absolute; top: calc(50% + 58px); left: 0; right: 0;
+    text-align: center;
+    font-family: 'Rajdhani'; font-weight: 700; font-size: 11px;
+    color: rgba(255,255,255,0.55); letter-spacing: 4px;
+    opacity: 0;
+  }
+  .beat-3.stamp-in .kickoff-sub { opacity: 1; transition: opacity 0.35s 0.2s; }
+
+  .ember-field {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 400px;
+    pointer-events: none;
+  }
+  .ember-field .ember {
+    position: absolute; bottom: 0;
+    width: 3px; height: 3px; border-radius: 50%;
+    background: radial-gradient(circle, #FFB040, rgba(255,94,26,0.4), transparent);
+    opacity: 0;
+    animation: riseUp 3.5s ease-out infinite;
+  }
+  @keyframes riseUp {
+    0% { opacity: 0; transform: translateY(0) translateX(0) scale(1); }
+    15% { opacity: 0.9; }
+    80% { opacity: 0.25; }
+    100% { opacity: 0; transform: translateY(-280px) translateX(var(--drift, 0px)) scale(0.3); }
+  }
+
+  /* ── CAPTION ── */
+  .caption {
+    text-align: center;
+    margin-top: 14px;
+    font-family: 'Rajdhani'; font-size: 11px; font-weight: 600;
+    color: #888; max-width: 400px;
+    line-height: 1.4;
+  }
+  .caption b { color: #EBB010; font-weight: 700; }
+  .caption .beat-tag {
+    display: inline-block;
+    background: rgba(255,69,17,0.12);
+    color: #FF7B00;
+    border: 1px solid rgba(255,69,17,0.35);
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 9px;
+    font-family: 'Oswald';
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    margin-right: 6px;
+  }
+
+  /* Screen shake for slams */
+  @keyframes shake {
+    0%, 100% { transform: translate(0, 0); }
+    20% { transform: translate(-2px, 1px); }
+    40% { transform: translate(2px, -1px); }
+    60% { transform: translate(-1px, 2px); }
+    80% { transform: translate(1px, -2px); }
+  }
+  .stage.shake { animation: shake 0.15s ease-in-out; }
+
+</style>
+</head>
+<body>
+
+<div class="title">TORCH PRE-GAME RUNWAY</div>
+<div class="subtitle">3-BEAT CINEMATIC SEQUENCE · ~9 SECONDS</div>
+
+<div class="controls">
+  <div class="control-row">
+    <div class="control-btn primary" id="btn-play">▶ PLAY FULL RUNWAY</div>
+  </div>
+  <div class="control-row">
+    <div class="control-btn" data-jump="1">BEAT 1<br/>SLAM</div>
+    <div class="control-btn" data-jump="2">BEAT 2<br/>TOSS</div>
+    <div class="control-btn" data-jump="3">BEAT 3<br/>KICKOFF</div>
+  </div>
+  <div class="control-row">
+    <div class="control-btn active" data-winner="user">USER WINS</div>
+    <div class="control-btn" data-winner="ai">AI WINS</div>
+  </div>
+  <div class="control-row">
+    <div class="control-btn active" data-choice="card">PICK: CARD</div>
+    <div class="control-btn" data-choice="kickoff">PICK: KICKOFF</div>
+  </div>
+</div>
+
+<div class="phone">
+  <div class="stage" id="stage">
+
+    <div class="beat-label" id="beatLabel">BEAT 1 · SLAM</div>
+
+    <!-- ────── BEAT 1: MATCHUP SLAM ────── -->
+    <div class="beat-1" id="beat1">
+      <div class="stadium-glow-1"></div>
+
+      <div class="card-slot card-away stags">
+        <div class="accent-edge"></div>
+        <div class="badge-wrap">S</div>
+        <div class="info">
+          <div class="label">AWAY</div>
+          <div class="name">SPECTRES</div>
+          <div class="school">HOLLOWRIDGE</div>
+          <div class="divider"></div>
+          <div class="scheme">SPREAD RPO</div>
+          <div class="ratings">
+            <div class="rating-row">
+              <span class="rating-label off">OFF</span>
+              <span class="pips">
+                <span class="pip on off"></span>
+                <span class="pip on off"></span>
+                <span class="pip on off"></span>
+                <span class="pip on off"></span>
+                <span class="pip on off"></span>
+              </span>
+            </div>
+            <div class="rating-row">
+              <span class="rating-label def">DEF</span>
+              <span class="pips">
+                <span class="pip on def"></span>
+                <span class="pip on def"></span>
+                <span class="pip"></span>
+                <span class="pip"></span>
+                <span class="pip"></span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-slot card-home sentinels">
+        <div class="accent-edge"></div>
+        <div class="badge-wrap">B</div>
+        <div class="info">
+          <div class="label">HOME</div>
+          <div class="name">BOARS</div>
+          <div class="school">RIDGEMONT</div>
+          <div class="divider"></div>
+          <div class="scheme">POWER SPREAD</div>
+          <div class="ratings">
+            <div class="rating-row">
+              <span class="rating-label off">OFF</span>
+              <span class="pips">
+                <span class="pip on off"></span>
+                <span class="pip on off"></span>
+                <span class="pip on off"></span>
+                <span class="pip on off"></span>
+                <span class="pip"></span>
+              </span>
+            </div>
+            <div class="rating-row">
+              <span class="rating-label def">DEF</span>
+              <span class="pips">
+                <span class="pip on def"></span>
+                <span class="pip on def"></span>
+                <span class="pip on def"></span>
+                <span class="pip"></span>
+                <span class="pip"></span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vs-burn">VS</div>
+
+      <div class="conditions-strip">
+        <!-- Favorable matchup — upward arrow (game-icons style) -->
+        <div class="cs-item match">
+          <svg class="cs-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2L3 14h5v8h8v-8h5L12 2z"/>
+          </svg>
+          <div class="cs-text">
+            <div class="cs-val match fav">FAVORABLE</div>
+            <div class="cs-lbl">MATCHUP</div>
+          </div>
+        </div>
+        <div class="cs-div"></div>
+        <!-- Sun — clear weather -->
+        <div class="cs-item">
+          <svg class="cs-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" fill="currentColor"/>
+            <line x1="12" y1="2" x2="12" y2="5"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="5" y2="12"/>
+            <line x1="19" y1="12" x2="22" y2="12"/>
+            <line x1="4.5" y1="4.5" x2="6.7" y2="6.7"/>
+            <line x1="17.3" y1="17.3" x2="19.5" y2="19.5"/>
+            <line x1="4.5" y1="19.5" x2="6.7" y2="17.3"/>
+            <line x1="17.3" y1="6.7" x2="19.5" y2="4.5"/>
+          </svg>
+          <div class="cs-text">
+            <div class="cs-val">72°</div>
+            <div class="cs-lbl">CLEAR</div>
+          </div>
+        </div>
+        <div class="cs-div"></div>
+        <!-- Turf — grass blades pattern -->
+        <div class="cs-item">
+          <svg class="cs-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M3 20 Q 4 13, 5 20"/>
+            <path d="M7 20 Q 8 11, 9 20"/>
+            <path d="M11 20 Q 12 9, 13 20"/>
+            <path d="M15 20 Q 16 11, 17 20"/>
+            <path d="M19 20 Q 20 13, 21 20"/>
+            <line x1="2" y1="21" x2="22" y2="21"/>
+          </svg>
+          <div class="cs-text">
+            <div class="cs-val">TURF</div>
+            <div class="cs-lbl">SURFACE</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ────── BEAT 2: COIN TOSS ────── -->
+    <div class="beat-2" id="beat2">
+      <div class="spot-pool"></div>
+
+      <div class="midfield-label">◆ MIDFIELD · COIN TOSS ◆</div>
+
+      <div class="coin-wrap">
+        <div class="coin" id="coin">
+          <div class="coin-face front">
+            <div class="team-ring"></div>
+            <span class="letter">S</span>
+          </div>
+          <div class="coin-face back">
+            <div class="team-ring"></div>
+            <span class="letter">B</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="toss-result">
+        <div class="eyebrow">SPECTRES WIN THE TOSS</div>
+        <div class="winner" id="tossWinner">YOUR CHOICE</div>
+        <div class="sub" id="tossSub">RECEIVE KICKOFF OR TAKE A TORCH CARD</div>
+      </div>
+
+      <div class="choice-wrap" id="choiceWrap">
+        <!-- KICKOFF card — green, football icon -->
+        <div class="choice-card kickoff" data-pick="kickoff">
+          <div class="icon-box">
+            <svg viewBox="0 0 64 48" fill="currentColor" aria-hidden="true">
+              <ellipse cx="32" cy="24" rx="28" ry="17"/>
+              <g fill="none" stroke="#0A1208" stroke-width="2" stroke-linecap="round">
+                <line x1="18" y1="24" x2="46" y2="24"/>
+                <line x1="24" y1="20" x2="24" y2="28"/>
+                <line x1="29" y1="20" x2="29" y2="28"/>
+                <line x1="35" y1="20" x2="35" y2="28"/>
+                <line x1="40" y1="20" x2="40" y2="28"/>
+              </g>
+            </svg>
+          </div>
+          <div class="label">RECEIVE<br/>KICKOFF</div>
+          <div class="sub">Your offense starts<br/>the game</div>
+        </div>
+
+        <!-- TORCH CARD card — gold/orange, flame icon -->
+        <div class="choice-card torch" data-pick="card">
+          <div class="icon-box">
+            <svg viewBox="0 0 44 56" fill="currentColor" aria-hidden="true">
+              <path d="M22 0c0 0 -3 10 -3 18s6 12 6 18s-6 8 -6 14s3 6 3 6s-12 -4 -12 -16s8 -12 8 -20s4 -20 4 -20zM30 20c0 0 2 8 6 12s4 10 0 16s-12 8 -12 8s6 -4 6 -10s-4 -8 -4 -14s4 -12 4 -12z"/>
+            </svg>
+          </div>
+          <div class="label">TAKE A<br/>TORCH CARD</div>
+          <div class="sub">Free card,<br/>opponent kicks</div>
+        </div>
+      </div>
+
+      <!-- ── BEAT 2b: TORCH CARD SELECTION ── -->
+      <div class="card-select-wrap" id="cardSelectWrap">
+        <div class="cs-title">◆ 3 FACE-DOWN · FLIP ONE ◆</div>
+        <div class="cs-sub" id="csSub">PICK YOUR CARD</div>
+
+        <div class="facedown-row">
+          <div class="facedown" data-slot="0"></div>
+          <div class="facedown" data-slot="1"></div>
+          <div class="facedown" data-slot="2"></div>
+        </div>
+
+        <div class="reveal-card">
+          <div class="face">
+            <div class="tier-label">SILVER</div>
+            <div class="cost">100</div>
+            <div class="icon-wrap">◆</div>
+            <div class="name">DEEP SHOT</div>
+            <div class="divider"></div>
+            <div class="effect">2× yards on your next pass play</div>
+            <div class="type">PRE-SNAP</div>
+          </div>
+        </div>
+
+        <div class="reveal-stamp">
+          <div class="eye" id="revealEye">YOU DREW</div>
+          <div class="line" id="revealLine">DEEP SHOT · SILVER</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ────── BEAT 3: KICKOFF ────── -->
+    <div class="beat-3" id="beat3">
+      <div class="stadium-flash"></div>
+      <div class="ember-field">
+        <div class="ember" style="left: 12%; --drift: 18px; animation-delay: 0s;"></div>
+        <div class="ember" style="left: 28%; --drift: -14px; animation-delay: 0.4s;"></div>
+        <div class="ember" style="left: 45%; --drift: 12px; animation-delay: 0.8s;"></div>
+        <div class="ember" style="left: 58%; --drift: -22px; animation-delay: 0.2s;"></div>
+        <div class="ember" style="left: 72%; --drift: 16px; animation-delay: 1.1s;"></div>
+        <div class="ember" style="left: 88%; --drift: -10px; animation-delay: 0.6s;"></div>
+      </div>
+      <div class="kickoff-stamp">KICKOFF</div>
+      <div class="kickoff-sub">◆ GAME STARTS NOW ◆</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="caption" id="caption">
+  <span class="beat-tag">RUNWAY</span>
+  Tap <b>▶ PLAY FULL RUNWAY</b> to watch the 3-beat sequence with audio. Use beat buttons to jump. Toggle USER/AI to preview both toss-winner paths.
+</div>
+
+<!-- ────── AUDIO CUES (real files from public/audio/sfx) ────── -->
+<!-- Minimal cue set — one sound per moment, everything lowered -->
+<audio id="a-slam" src="/audio/sfx/result_slam_01.wav" preload="auto"></audio>
+<audio id="a-vs-burn" src="/audio/sfx/ignite_01.wav" preload="auto"></audio>
+<audio id="a-coin-flip" src="/audio/sfx/coin_flip_01.wav" preload="auto"></audio>
+<audio id="a-coin-catch" src="/audio/sfx/coin_catch_01.mp3" preload="auto"></audio>
+<audio id="a-card-place" src="/audio/sfx/card_place_01.wav" preload="auto"></audio>
+<audio id="a-card-reveal" src="/audio/sfx/card_flip_dramatic_02.wav" preload="auto"></audio>
+<audio id="a-kickoff-drop" src="/audio/sfx/bass_drop_01.wav" preload="auto"></audio>
+<audio id="a-crowd-cheer" src="/audio/sfx/crowd_cheer_01.wav" preload="auto"></audio>
+
+<script>
+  var stage = document.getElementById('stage');
+  var beat1 = document.getElementById('beat1');
+  var beat2 = document.getElementById('beat2');
+  var beat3 = document.getElementById('beat3');
+  var beatLabel = document.getElementById('beatLabel');
+  var captionEl = document.getElementById('caption');
+  var coin = document.getElementById('coin');
+  var coinFront = document.getElementById('coinFront');
+  var tossWinnerEl = document.getElementById('tossWinner');
+  var tossSubEl = document.getElementById('tossSub');
+  var tossEyebrowEl = document.querySelector('.toss-result .eyebrow');
+  var choiceWrap = document.getElementById('choiceWrap');
+
+  var WINNER = 'user'; // or 'ai'
+  var CHOICE = 'card'; // or 'kickoff'
+  var timers = [];
+
+  function clearTimers() {
+    timers.forEach(function(t) { clearTimeout(t); });
+    timers = [];
+    beat1.classList.remove('show', 'slam-1', 'vs-in', 'settled');
+    beat2.classList.remove('show', 'coin-spin', 'winner-user', 'winner-ai', 'result-in', 'fade-coin', 'choice-in', 'card-select-in', 'reveal-in');
+    beat3.classList.remove('show', 'flash-in', 'flash-settle', 'stamp-in');
+    document.querySelectorAll('.choice-card').forEach(function(c) { c.classList.remove('picked', 'dim'); });
+    document.querySelectorAll('.facedown').forEach(function(c) { c.classList.remove('picked', 'dim'); });
+    stage.classList.remove('shake');
+    beatLabel.classList.remove('show');
+  }
+
+  function at(ms, fn) {
+    timers.push(setTimeout(fn, ms));
+  }
+
+  // Per-cue volumes — minimal, one sound per moment, all lowered from
+  // the previous noisier set. ~10-12 cues across the whole runway.
+  var VOLUMES = {
+    'a-slam': 0.32,
+    'a-vs-burn': 0.28,
+    'a-coin-flip': 0.25,
+    'a-coin-catch': 0.32,
+    'a-card-place': 0.28,
+    'a-card-reveal': 0.38,
+    'a-kickoff-drop': 0.4,
+    'a-crowd-cheer': 0.3
+  };
+
+  function play(id) {
+    try {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.volume = VOLUMES[id] != null ? VOLUMES[id] : 0.5;
+      el.currentTime = 0;
+      el.play().catch(function() {});
+    } catch(e) {}
+  }
+
+  function shake() {
+    stage.classList.remove('shake');
+    void stage.offsetWidth;
+    stage.classList.add('shake');
+  }
+
+  function showLabel(txt) {
+    beatLabel.textContent = txt;
+    beatLabel.classList.add('show');
+  }
+
+  function setCaption(tag, html) {
+    captionEl.innerHTML = '<span class="beat-tag">' + tag + '</span>' + html;
+  }
+
+  // ── BEAT 1: MATCHUP SLAM (3.8 seconds) ──
+  // Slowed pacing so each element has time to breathe:
+  //  0-550ms: cards slam in + slam sound
+  //  550-1000ms: cards settle at rest
+  //  1000-1400ms: conditions strip fades in
+  //  1500-2250ms: VS burn reveals (0.75s impact-settle animation)
+  //  2250-3800ms: full matchup holds (1.5s to digest before Beat 2)
+  function runBeat1(onDone) {
+    beat1.classList.add('show');
+    showLabel('BEAT 1 · MATCHUP SLAM');
+    setCaption('BEAT 1 · 3.8s', '<b>MATCHUP SLAM</b> — Cards slam in, conditions strip settles, VS burns in with weight. 1.5s hold before Beat 2 so the matchup has time to land.');
+
+    // Cards animate in — no audio yet, just the visual reveal
+    at(350, function() {
+      beat1.classList.add('slam-1');
+      shake();
+    });
+    // ONE slam thud when both cards are settled (around 550ms)
+    at(550, function() {
+      play('a-slam');
+    });
+    // Conditions strip reveals after cards settle, before the VS appears
+    at(1000, function() {
+      beat1.classList.add('settled');
+    });
+    // VS burn in — delayed so the cards have time to register first
+    at(1500, function() {
+      beat1.classList.add('vs-in');
+      play('a-vs-burn');
+    });
+    // 1.55s hold after VS settles, then transition to Beat 2
+    at(3800, function() {
+      onDone && onDone();
+    });
+  }
+
+  // ── BEAT 2: COIN TOSS + CARD SELECTION ──
+  // Per coin toss rule: "Loser gets whatever winner didn't pick."
+  // So the card selection ALWAYS happens. Who picks it flips:
+  //   WINNER=user, CHOICE=card    → user picks card, ai receives
+  //   WINNER=user, CHOICE=kickoff → user receives, AI picks card
+  //   WINNER=ai,   CHOICE=card    → ai picks card, user receives
+  //   WINNER=ai,   CHOICE=kickoff → ai receives, USER picks card
+  // The user always sees the reveal, whether it's theirs or the opponent's.
+  function runBeat2(onDone) {
+    beat1.classList.remove('show');
+    beat2.classList.add('show');
+    showLabel('BEAT 2 · COIN TOSS');
+    setCaption('BEAT 2 · ~7s', '<b>COIN TOSS + CARD</b> — Coin spins, winner chooses. Card selection always happens — loser gets whatever winner didn\'t pick. User sees the reveal either way (their own or the opponent\'s).');
+
+    // Derive who ends up picking the card. "Loser gets what winner didn't."
+    //   winner picks card    → winner picks card (cardPicker = winner)
+    //   winner picks kickoff → loser picks card  (cardPicker = loser)
+    var userWon = (WINNER === 'user');
+    var winnerPicksCard = (CHOICE === 'card');
+    var cardPicker = winnerPicksCard ? (userWon ? 'user' : 'ai')
+                                     : (userWon ? 'ai'   : 'user');
+    var receiver = winnerPicksCard ? (userWon ? 'ai' : 'user')
+                                   : (userWon ? 'user' : 'ai');
+
+    // No whoosh on entry — the scene quietly crossfades in
+
+    at(500, function() {
+      play('a-coin-flip');
+      // Add the winner class first so the correct keyframe plays
+      beat2.classList.add(userWon ? 'winner-user' : 'winner-ai');
+      beat2.classList.add('coin-spin');
+    });
+    at(2200, function() {
+      play('a-coin-catch');
+      shake();
+    });
+    at(2500, function() {
+      beat2.classList.add('result-in');
+      // No chime — the coin catch IS the landing sound
+      if (userWon) {
+        tossEyebrowEl.textContent = 'SPECTRES WIN THE TOSS';
+        tossWinnerEl.textContent = 'YOUR CHOICE';
+        tossSubEl.textContent = 'RECEIVE KICKOFF OR TAKE A TORCH CARD';
+      } else {
+        tossEyebrowEl.textContent = 'BOARS WIN THE TOSS';
+        tossWinnerEl.textContent = 'OPPONENT CHOOSING...';
+        tossSubEl.textContent = ' ';
+      }
+    });
+
+    if (userWon) {
+      // Fade out coin phase 300ms before choice cards come in, so they
+      // don't crossfade on top of each other.
+      at(2700, function() {
+        beat2.classList.add('fade-coin');
+      });
+      // Interactive: two choice cards flip in, user (or auto) picks one
+      at(3000, function() {
+        beat2.classList.add('choice-in');
+        play('a-card-place');
+      });
+      at(4100, function() {
+        var pickEl = document.querySelector('.choice-card[data-pick="' + CHOICE + '"]');
+        var otherEl = document.querySelector('.choice-card[data-pick="' + (CHOICE === 'card' ? 'kickoff' : 'card') + '"]');
+        if (pickEl) pickEl.classList.add('picked');
+        if (otherEl) otherEl.classList.add('dim');
+        // No ignite on lock-in — the visual snap + border color is enough
+      });
+      at(5000, function() {
+        runCardSelect(cardPicker, receiver, onDone);
+      });
+    } else {
+      // AI announces what it picked, then we chain into card select.
+      // Fade out coin phase first so it's not still on screen when the
+      // announcement updates.
+      at(3500, function() {
+        beat2.classList.add('fade-coin');
+      });
+      at(3800, function() {
+        if (winnerPicksCard) {
+          tossWinnerEl.textContent = 'BOARS PICK A CARD';
+          tossSubEl.textContent = 'SPECTRES RECEIVE KICKOFF';
+        } else {
+          tossWinnerEl.textContent = 'BOARS WILL RECEIVE';
+          tossSubEl.textContent = 'SPECTRES GET A FREE CARD';
+        }
+      });
+      at(4800, function() {
+        runCardSelect(cardPicker, receiver, onDone);
+      });
+    }
+  }
+
+  // ── BEAT 2b: TORCH CARD SELECTION ──
+  // Fades the choice cards out, reveals the 3 face-down cards, then flips
+  // one to a silver-tier reveal. User path is interactive (tap any card);
+  // AI path auto-picks the middle card after a beat.
+  // `receiver` is passed through so we can show "YOU RECEIVE" context if
+  // we want to layer in more detail later — unused for now.
+  function runCardSelect(mode, receiver, onDone) {
+    // Clear the choice cards so they don't compete for screen space
+    beat2.classList.remove('choice-in');
+    document.querySelectorAll('.choice-card').forEach(function(c) { c.classList.remove('picked', 'dim'); });
+
+    // Wire reveal stamp copy to who picked
+    var csSub = document.getElementById('csSub');
+    var revealEye = document.getElementById('revealEye');
+    var revealLine = document.getElementById('revealLine');
+    csSub.classList.toggle('ai', mode === 'ai');
+    if (mode === 'user') {
+      csSub.textContent = 'PICK YOUR CARD';
+      revealEye.textContent = 'YOU DREW';
+    } else {
+      csSub.textContent = 'OPPONENT PICKING...';
+      revealEye.textContent = 'OPPONENT DREW';
+    }
+    revealLine.textContent = 'DEEP SHOT · SILVER';
+
+    at(250, function() {
+      beat2.classList.add('card-select-in');
+    });
+    // ONE soft place sound for the face-down row dealing in
+    at(500, function() { play('a-card-place'); });
+
+    // AI auto-pick after a beat so the user sees what the opponent drew
+    if (mode === 'ai') {
+      at(1800, function() {
+        var target = document.querySelector('.facedown[data-slot="1"]');
+        pickFaceDown(target, onDone);
+      });
+    } else {
+      // User path — wait for tap, but auto-pick after 3s as fallback
+      _userCardSelectHandler = function(target) {
+        pickFaceDown(target, onDone);
+      };
+      at(3500, function() {
+        if (_userCardSelectHandler) {
+          var target = document.querySelector('.facedown[data-slot="1"]');
+          pickFaceDown(target, onDone);
+        }
+      });
+    }
+  }
+
+  var _userCardSelectHandler = null;
+
+  // Handle a face-down card being picked — dim the others, flip the reveal
+  function pickFaceDown(target, onDone) {
+    _userCardSelectHandler = null;
+    if (!target) { onDone && onDone(); return; }
+    target.classList.add('picked');
+    document.querySelectorAll('.facedown').forEach(function(c) {
+      if (c !== target) c.classList.add('dim');
+    });
+    // Single dramatic reveal sound — no layered shimmer or double flip
+    at(180, function() {
+      beat2.classList.add('reveal-in');
+      play('a-card-reveal');
+      shake();
+    });
+    at(2100, function() {
+      onDone && onDone();
+    });
+  }
+
+  // ── BEAT 3: KICKOFF (2 seconds) ──
+  function runBeat3(onDone) {
+    beat2.classList.remove('show');
+    beat3.classList.add('show');
+    showLabel('BEAT 3 · KICKOFF');
+    setCaption('BEAT 3 · 2.0s', '<b>KICKOFF</b> — Stadium lights snap on, crowd swells, KICKOFF stamp burns in. One bass thump under the flash, one crowd swell. Holds 0.8s.');
+
+    beat3.classList.add('flash-in');
+    // Single bass drop under the flash, then crowd swell. No third dramatic layer.
+    play('a-kickoff-drop');
+
+    at(400, function() {
+      beat3.classList.add('flash-settle');
+      play('a-crowd-cheer');
+    });
+    at(450, function() {
+      beat3.classList.add('stamp-in');
+      shake();
+    });
+    at(2000, function() {
+      onDone && onDone();
+    });
+  }
+
+  // ── FULL RUNWAY ──
+  function runFullRunway() {
+    clearTimers();
+    runBeat1(function() {
+      runBeat2(function() {
+        runBeat3(function() {
+          // End — stay on beat 3 final frame
+          setCaption('COMPLETE', '<b>Runway complete.</b> ~9 seconds. Tap PLAY to replay, or toggle USER/AI and jump to a specific beat.');
+        });
+      });
+    });
+  }
+
+  // ── JUMP TO INDIVIDUAL BEAT ──
+  function jumpTo(n) {
+    clearTimers();
+    if (n === 1) runBeat1(function() {});
+    else if (n === 2) runBeat2(function() {});
+    else if (n === 3) runBeat3(function() {});
+  }
+
+  // ── EVENTS ──
+  document.getElementById('btn-play').addEventListener('click', runFullRunway);
+  document.querySelectorAll('[data-jump]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      jumpTo(parseInt(btn.dataset.jump));
+    });
+  });
+  document.querySelectorAll('[data-winner]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('[data-winner]').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      WINNER = btn.dataset.winner;
+    });
+  });
+  document.querySelectorAll('[data-choice]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('[data-choice]').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      CHOICE = btn.dataset.choice;
+    });
+  });
+
+  // Let user manually pick coin toss choice
+  document.querySelectorAll('.choice-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      if (!beat2.classList.contains('choice-in')) return;
+      if (card.classList.contains('dim') || card.classList.contains('picked')) return;
+      var all = document.querySelectorAll('.choice-card');
+      all.forEach(function(c) {
+        if (c === card) c.classList.add('picked');
+        else c.classList.add('dim');
+      });
+      play('a-ignite');
+    });
+  });
+
+  // Let user manually pick a face-down torch card during Beat 2b
+  document.querySelectorAll('.facedown').forEach(function(card) {
+    card.addEventListener('click', function() {
+      if (!beat2.classList.contains('card-select-in')) return;
+      if (beat2.classList.contains('reveal-in')) return;
+      if (card.classList.contains('dim') || card.classList.contains('picked')) return;
+      if (_userCardSelectHandler) {
+        _userCardSelectHandler(card);
+      }
+    });
+  });
+
+  // Initial state — show Beat 1 frozen so user can see starting pose
+  beat1.classList.add('show');
+  showLabel('READY');
+</script>
+
+</body>
+</html>

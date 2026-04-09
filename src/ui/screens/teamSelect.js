@@ -220,7 +220,10 @@ export function buildTeamSelect() {
 
     setGs(function(s) {
       return Object.assign({}, s || {}, {
-        screen: 'pregame',
+        // New runway flow: team select → roster (Meet The Squads) →
+        // pregame (3-beat runway) → gameplay. The pregame screen is
+        // now the cinematic runway (slam + toss + kickoff).
+        screen: 'roster',
         team: selectedTeamId,
         difficulty: difficulty,
         opponent: opponentId,
@@ -283,10 +286,12 @@ export function buildTeamSelect() {
 
   var brandMark = document.createElement('div');
   brandMark.style.cssText = "display:flex;align-items:center;gap:6px;";
+  // 10×10 square silhouettes — new flame viewBox is 0 0 34 34.
+  var brandFlame = "<svg viewBox='0 0 34 34' width='10' height='10' fill='#FF4511' style='opacity:0.3;'><path d='" + FLAME_PATH + "'/></svg>";
   brandMark.innerHTML =
-    "<svg viewBox='0 0 44 56' width='8' height='10' fill='#FF4511' style='opacity:0.3;'><path d='" + FLAME_PATH + "'/></svg>" +
+    brandFlame +
     "<span style=\"font-family:'Rajdhani';font-weight:600;font-size:9px;color:#333;letter-spacing:1.5px;\">TORCH FOOTBALL</span>" +
-    "<svg viewBox='0 0 44 56' width='8' height='10' fill='#FF4511' style='opacity:0.3;'><path d='" + FLAME_PATH + "'/></svg>";
+    brandFlame;
   footer.appendChild(brandMark);
 
   el.appendChild(footer);

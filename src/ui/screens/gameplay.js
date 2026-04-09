@@ -20,8 +20,10 @@ import { renderTeamBadge } from '../../data/teamLogos.js';
 import { getConditionEffects } from '../../data/gameConditions.js';
 import { checkPlayCombos } from '../../data/playSequenceCombos.js';
 import { generateCommentary, generateContext, resetNarrative } from '../../engine/commentary.js';
+import { computeEPA, formatEPA, epaLabel, formatKPA } from '../../engine/epa.js';
 import { initPointsAnim, playPointsSequence } from '../effects/torchPointsAnim.js';
 import { injectDevPanel, getForceResult, getForceConversion } from '../components/devPanel.js';
+import { flameIconSVG, flameSilhouetteSVG, flameLayersMarkup, FLAME_SILHOUETTE_PATH } from '../../utils/flameIcon.js';
 import { renderCardTray } from '../components/cardTray.js';
 import { createHandState, afterSnap as handAfterSnap, canDiscard, discard as handDiscard, resetDriveDiscards, redeal as handRedeal } from '../../engine/handManager.js';
 import { createSTDeck, burnPlayer, restorePlayer, aiPickST } from '../../engine/stDeck.js';
@@ -93,8 +95,11 @@ const CSS = `
 @keyframes T-flame-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:0.85}}
 .T-torch-banner-label{font-family:'Teko';font-weight:700;font-size:28px;letter-spacing:6px;line-height:1;background:linear-gradient(180deg,#FFD060 0%,#EBB010 30%,#8B4A1F 60%,#EBB010 80%,#FFD060 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .T-torch-banner-sep{width:1px;height:16px;background:linear-gradient(180deg,transparent,#EBB01044,transparent)}
-.T-torch-banner-pts{font-family:'Teko';font-weight:700;font-size:26px;color:#fff;line-height:1;transition:transform .3s;animation:scoreGlow 2.5s ease-in-out infinite}
-@keyframes scoreGlow{0%,100%{text-shadow:0 0 6px rgba(255,255,255,0.2)}50%{text-shadow:0 0 12px rgba(255,255,255,0.5),0 0 20px rgba(255,69,17,0.2)}}
+.T-torch-banner-pts{font-family:'Teko';font-weight:700;font-size:28px;color:#FFE080;line-height:1;letter-spacing:0.5px;transition:transform .3s;animation:bannerHeat 2.8s ease-in-out infinite alternate;--team-accent-rgb:196,162,101;position:relative;z-index:1}
+@keyframes bannerHeat{
+  0%{text-shadow:0 0 2px #FFE080,0 0 4px rgba(235,176,16,0.7),0 -1px 3px rgba(255,69,17,0.55),0 -1px 5px rgba(255,34,0,0.35),0 0 8px rgba(var(--team-accent-rgb),0.3),0 1px 2px rgba(0,0,0,0.95)}
+  100%{text-shadow:0 0 3px #FFE080,0 0 5px rgba(235,176,16,0.75),0 -1px 4px rgba(255,69,17,0.6),0 -2px 6px rgba(255,34,0,0.4),0 0 11px rgba(var(--team-accent-rgb),0.4),0 1px 2px rgba(0,0,0,0.95)}
+}
 
 /* drive summary */
 .T-drive{flex:1;overflow-y:auto;padding:12px 14px 16px;background:linear-gradient(180deg,rgba(10,8,4,0) 0%,rgba(10,8,4,0.95) 8%);font-family:'Rajdhani',sans-serif}
@@ -571,6 +576,30 @@ export function buildGameplay() {
   var cDefStats = _ss ? _ss.cDefStats : {}; // { name: { pos, tkl, pbu, int, sack } }
   // Per-player game stats for card display (keyed by player id)
   var _playerGameStats = _ss ? _ss._playerGameStats : {}; // { id: { yds, rec, recYds, rushAtt, rushYds, passAtt, passComp, passYds, tkl, pbu, int, sack, td } }
+  // Game-wide EPA, turnover, and 3rd-down tracking (for Clipboard + halftime + end-of-game)
+  var _hEpaSum    = _ss ? (_ss._hEpaSum || 0)   : 0;
+  var _cEpaSum    = _ss ? (_ss._cEpaSum || 0)   : 0;
+  var _hEpaPlays  = _ss ? (_ss._hEpaPlays || 0) : 0;
+  var _cEpaPlays  = _ss ? (_ss._cEpaPlays || 0) : 0;
+  var _hTurnovers = _ss ? (_ss._hTurnovers || 0): 0;
+  var _cTurnovers = _ss ? (_ss._cTurnovers || 0): 0;
+  var _h3rdAtt    = _ss ? (_ss._h3rdAtt || 0)   : 0;
+  var _h3rdConv   = _ss ? (_ss._h3rdConv || 0)  : 0;
+  var _c3rdAtt    = _ss ? (_ss._c3rdAtt || 0)   : 0;
+  var _c3rdConv   = _ss ? (_ss._c3rdConv || 0)  : 0;
+  var _hExplosive = _ss ? (_ss._hExplosive || 0): 0; // 15+ yard gains (for halftime)
+  var _cExplosive = _ss ? (_ss._cExplosive || 0): 0;
+  // TDs by play type, FGs, cards used, drive history (for the stats sheet)
+  var _hTdsPass   = _ss ? (_ss._hTdsPass || 0)   : 0;
+  var _hTdsRush   = _ss ? (_ss._hTdsRush || 0)   : 0;
+  var _cTdsPass   = _ss ? (_ss._cTdsPass || 0)   : 0;
+  var _cTdsRush   = _ss ? (_ss._cTdsRush || 0)   : 0;
+  var _hFgMade    = _ss ? (_ss._hFgMade || 0)    : 0;
+  var _cFgMade    = _ss ? (_ss._cFgMade || 0)    : 0;
+  var _hCardsUsed = _ss ? (_ss._hCardsUsed || 0) : 0;
+  var _cCardsUsed = _ss ? (_ss._cCardsUsed || 0) : 0;
+  // Per-drive summary array: { team, plays, yards, epa, result }
+  var _gameDriveHistory = _ss ? (_ss._gameDriveHistory || []) : [];
   var _hotStreak = 0; // consecutive positive plays (user offense)
   GS._gameplayStats = null; // Clear after restoring
   // CPU roster for QB lookup
@@ -677,25 +706,46 @@ export function buildGameplay() {
   bug.addEventListener('click', function() {
     if (phase === 'busy') return;
     import('../components/statsSheet.js').then(function(mod) {
-      // Compute TDs, sacks, INTs from tracked stats
-      var _hTDs = 0, _hSacks = 0, _hInts = 0;
-      var _cTDs = 0, _cSacks = 0, _cInts = 0;
-      Object.keys(hDefStats).forEach(function(k) { var d = hDefStats[k]; _hSacks += d.sack; _hInts += d.int; });
-      Object.keys(cDefStats).forEach(function(k) { var d = cDefStats[k]; _cSacks += d.sack; _cInts += d.int; });
+      // Aggregate sacks / PBUs / INTs / forced fumbles from per-player def stats
+      var _hSacks = 0, _hPBUs = 0;
+      var _cSacks = 0, _cPBUs = 0;
+      Object.keys(hDefStats).forEach(function(k) { var d = hDefStats[k]; _hSacks += d.sack || 0; _hPBUs += d.pbu || 0; });
+      Object.keys(cDefStats).forEach(function(k) { var d = cDefStats[k]; _cSacks += d.sack || 0; _cPBUs += d.pbu || 0; });
       var s = gs.getSummary();
       mod.showStatsSheet(el, {
         humanTeam: hTeam, oppTeam: oTeam,
+        humanAbbr: hAbbr,
         humanScore: hAbbr === 'CT' ? s.ctScore : s.irScore,
-        oppScore: hAbbr === 'CT' ? s.irScore : s.ctScore,
-        half: gs.half, playsUsed: gs.playsUsed,
+        oppScore:   hAbbr === 'CT' ? s.irScore : s.ctScore,
+        half: gs.half,
+        playsUsed: gs.playsUsed,
+        clockText: gs.twoMinActive ? fmtClock(gs.clockSeconds) + ' REMAINING' : '',
+        // Passing / rushing
         hPassAtt: hOffPassAtt, hPassComp: hOffPassComp, hPassYds: hOffPassYds,
         hRushAtt: hOffRushAtt, hRushYds: hOffRushYds,
-        hSacks: _hSacks, hInts: _hInts,
-        hTorch: hAbbr === 'CT' ? s.ctTorchPts : s.irTorchPts,
         cPassAtt: cOffPassAtt, cPassComp: cOffPassComp, cPassYds: cOffPassYds,
         cRushAtt: cOffRushAtt, cRushYds: cOffRushYds,
-        cSacks: _cSacks, cInts: _cInts,
+        // TDs by type
+        hTdsPass: _hTdsPass, hTdsRush: _hTdsRush,
+        cTdsPass: _cTdsPass, cTdsRush: _cTdsRush,
+        // FGs
+        hFgMade: _hFgMade, cFgMade: _cFgMade,
+        // Defense
+        hSacks: _hSacks, hPBUs: _hPBUs,
+        cSacks: _cSacks, cPBUs: _cPBUs,
+        // Turnovers
+        hTurnovers: _hTurnovers, cTurnovers: _cTurnovers,
+        // Key metrics
+        hEpaSum: _hEpaSum, cEpaSum: _cEpaSum,
+        h3rdAtt: _h3rdAtt, h3rdConv: _h3rdConv,
+        c3rdAtt: _c3rdAtt, c3rdConv: _c3rdConv,
+        hExplosive: _hExplosive, cExplosive: _cExplosive,
+        // Economy
+        hTorch: hAbbr === 'CT' ? s.ctTorchPts : s.irTorchPts,
         cTorch: hAbbr === 'CT' ? s.irTorchPts : s.ctTorchPts,
+        hCardsUsed: _hCardsUsed, cCardsUsed: _cCardsUsed,
+        // Drive history
+        driveHistory: _gameDriveHistory,
       });
     });
   });
@@ -964,8 +1014,21 @@ export function buildGameplay() {
     }
 
     // ── Down & distance + Ball position (Combined) ──
+    // Field position is always shown from the USER's perspective so it's
+    // consistent regardless of who has the ball. When the user is on defense,
+    // "OPP 20" on the old label actually meant the opponent is 20 yards from
+    // scoring — which is bad for the user but read like good field position.
+    // Now: "OWN 20" = ball is in user's territory (20 yds from user's goal),
+    //      "OPP 20" = ball is in opponent's territory,
+    //      "50"     = midfield.
     const ydsToEz = s.yardsToEndzone;
-    const ballPos = ydsToEz === 50 ? '50' : ydsToEz < 50 ? 'OPP ' + ydsToEz : 'OWN ' + (100 - ydsToEz);
+    // Translate ballPosition (0-100 from CT's perspective) into user-relative
+    var _rawBall = gs.ballPosition !== undefined ? gs.ballPosition
+      : (hAbbr === 'CT' ? (100 - ydsToEz) : ydsToEz);
+    var _userBall = hAbbr === 'CT' ? _rawBall : (100 - _rawBall);
+    const ballPos = _userBall === 50 ? '50'
+      : _userBall < 50 ? 'OWN ' + _userBall
+      : 'OPP ' + (100 - _userBall);
     
     if (conversionMode) {
       _bugEls.downEl.textContent = (conversionMode.choice || '2pt').toUpperCase() + ' ATTEMPT \u2022 ' + ballPos;
@@ -979,13 +1042,17 @@ export function buildGameplay() {
     var newDist = s.distance;
     var downChanged = newDown !== _prevDown || newDist !== _prevDist;
 
-    // ── 3rd Down Crowd Swell ──
-    if (newDown === 3 && !conversionMode) {
-      AudioStateManager.setCrowdIntensity(0.85, 0.4);
-    } else if (newDown === 4 && !conversionMode) {
-      AudioStateManager.setCrowdIntensity(0.95, 0.3);
-    } else {
-      AudioStateManager.setCrowdIntensity(0.5, 1.0);
+    // ── 3rd/4th Down Crowd Swell ──
+    // Skip if a post-play hold is active (TD celebration, turnover, big moment)
+    // to prevent drawBug() from clobbering the holdThenSettle fade.
+    if (!AudioStateManager.isCrowdHeld()) {
+      if (newDown === 3 && !conversionMode) {
+        AudioStateManager.setCrowdIntensity(0.85, 0.4);
+      } else if (newDown === 4 && !conversionMode) {
+        AudioStateManager.setCrowdIntensity(0.95, 0.3);
+      } else {
+        AudioStateManager.setCrowdIntensity(0.5, 1.0);
+      }
     }
 
     if (downChanged && _prevDown > 0) {
@@ -1123,7 +1190,9 @@ export function buildGameplay() {
   var _torchFrozenValue = 0;
   var _prevCardCount = -1;
   // Build once
-  var _tbFlameSvg = '<svg class="T-torch-banner-flame" viewBox="0 0 44 56" width="20" height="26" fill="#FF4511"><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z"/></svg>';
+  // Torch banner flame — always-on-screen HUD flame. Full 4-layer flame
+  // for built-in color depth. Keep T-torch-banner-flame class for CSS hooks.
+  var _tbFlameSvg = '<svg class="T-torch-banner-flame" viewBox="0 0 34 34" width="26" height="26">' + flameLayersMarkup() + '</svg>';
   torchBanner.innerHTML =
     '<div class="T-torch-banner-border"></div>' +
     '<div class="T-torch-banner-content">' +
@@ -1138,6 +1207,18 @@ export function buildGameplay() {
     '<div class="T-torch-banner-border"></div>';
   var torchBannerPtsEl = torchBanner.querySelector('.T-torch-banner-pts');
   var _torchCardsBtn = torchBanner.querySelector('#torch-cards-btn');
+  // Set the team-accent RGB on the banner number so the Stacked Flame outer
+  // halo tints to the user's team color. Parses the hex accent into "R, G, B".
+  (function() {
+    var hex = (hTeam.accent || '#EBB010').replace('#', '');
+    if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
+    var r = parseInt(hex.substring(0,2), 16);
+    var g = parseInt(hex.substring(2,4), 16);
+    var b = parseInt(hex.substring(4,6), 16);
+    if (!isNaN(r) && !isNaN(g) && !isNaN(b)) {
+      torchBannerPtsEl.style.setProperty('--team-accent-rgb', r + ', ' + g + ', ' + b);
+    }
+  })();
 
   function drawTorchBanner() {
     var _s = gs.getSummary();
@@ -1478,7 +1559,9 @@ export function buildGameplay() {
       h += '<div class="T-placed T-placed-torch" id="T-placed-torch-slot"></div>';
     } else {
       const hasTorchCards = torchInventory.length > 0;
-      var _flameSvg = '<svg viewBox="0 0 44 44" width="16" height="18" fill="none" style="display:block;margin:0 auto 2px;animation:T-flame-pulse 2s ease-in-out infinite;filter:drop-shadow(0 0 4px ' + hTeam.accent + ')"><defs><linearGradient id="tf' + hTeam.accent.replace('#','') + '" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="' + hTeam.accent + '"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#tf' + hTeam.accent.replace('#','') + ')"/></svg>';
+      // 4-layer flame — the native color depth replaces the old red→accent
+      // gradient. Team accent glow applied via drop-shadow filter.
+      var _flameSvg = '<svg viewBox="0 0 34 34" width="18" height="18" style="display:block;margin:0 auto 2px;animation:T-flame-pulse 2s ease-in-out infinite;filter:drop-shadow(0 0 4px ' + hTeam.accent + ')">' + flameLayersMarkup() + '</svg>';
       const torchLbl = hasTorchCards
         ? (phase === 'torch' ? 'TAP<br><br>TORCH<br><br>CARD' : _flameSvg + '<span class="T-torch-brand" style="color:' + hTeam.accent + '">TORCH</span>')
         : _flameSvg + '<span class="T-torch-brand" style="color:' + hTeam.accent + '">TORCH</span>';
@@ -1606,6 +1689,11 @@ export function buildGameplay() {
   // ── DRIVE SUMMARY PANEL (replaces old play-by-play booth) ──
   const driveSummaryEl = document.createElement('div'); driveSummaryEl.className = 'T-drive'; driveSummaryEl.style.display = 'none'; el.appendChild(driveSummaryEl);
 
+  // ── Clipboard removed ──
+  // The swipe-up Clipboard bottom sheet was consolidated into the stats sheet
+  // (triggered by tapping the scorebug). One canonical stats destination with
+  // all the hero metrics + detailed box score. See src/ui/components/statsSheet.js.
+
   // Keep narr as a virtual container for backward compat — content mirrored into drive summary commentary
   const narr = document.createElement('div'); narr.className = 'T-narr'; narr.style.display = 'none';
   el.appendChild(narr);
@@ -1654,13 +1742,14 @@ export function buildGameplay() {
       '<div class="T-drive-hdr-r" style="font-family:\'Teko\';font-size:16px;font-weight:700"><span style="color:' + driveColor + '">' + totalPlays + '</span> plays \u00b7 <span style="color:' + driveColor + '">' + totalYds + '</span> yds \u00b7 <span style="color:' + driveColor + '">' + driveFirstDowns + '</span> 1st dn</div>' +
       '</div>';
 
-    // Play-by-play ticker rows (newest first)
-    // Drive log — show last 4 plays full, compress older ones
+    // Play-by-play ticker rows — chronological order (oldest → newest),
+    // matching traditional football PBP / ESPN gamecast format. The newest
+    // play sits at the bottom with a highlight border so the eye still knows
+    // where "now" is in the drive.
     if (driveSummaryLog.length > 0) {
       var logLen = driveSummaryLog.length;
 
-      // All entries (newest first)
-      for (var _ti = logLen - 1; _ti >= 0; _ti--) {
+      for (var _ti = 0; _ti < logLen; _ti++) {
         var e = driveSummaryLog[_ti];
         var isNewest = _ti === logLen - 1;
         var resColor, resText;
@@ -1799,15 +1888,27 @@ export function buildGameplay() {
 
   /** Animate torch points flying from commentary to scoreboard, then roll up the total */
   /** Animate torch points flying from commentary to banner, then roll up the total */
-  function animateTorchFly(sourceEl, pts, onDone) {
-    if (!sourceEl || pts <= 0) {
+  /**
+   * Flame Streak fly-in.
+   *
+   * Emerges from the hero result text (srcRect), streaks to the torch banner
+   * as a glowing Stacked Flame "+N" popup, drops team-colored embers along
+   * the path, and lands with a team-colored impact flash on the banner.
+   *
+   * @param {DOMRect|object} srcRect — rect with {left, top, width, height}
+   *   captured BEFORE the result overlay fades out. Passing a live element
+   *   doesn't work because by the time this fires, the overlay is gone and
+   *   the element is detached (getBoundingClientRect returns zeros).
+   * @param {number} pts — torch points to display
+   * @param {function} onDone — called after fly + banner bump complete
+   */
+  function animateTorchFly(srcRect, pts, onDone) {
+    if (!srcRect || pts <= 0) {
       _torchDisplayFrozen = false;
       drawTorchBanner();
       if (onDone) onDone();
       return;
     }
-    var srcRect = sourceEl.getBoundingClientRect();
-    // Target the TORCH banner points
     var torchTarget = torchBanner.querySelector('.T-torch-banner-pts');
     if (!torchTarget) {
       _torchDisplayFrozen = false;
@@ -1817,30 +1918,144 @@ export function buildGameplay() {
     }
     var tgtRect = torchTarget.getBoundingClientRect();
 
-    // Create flying element
+    // Centers
+    var srcX = srcRect.left + (srcRect.width || 0) / 2;
+    var srcY = srcRect.top  + (srcRect.height || 0) / 2;
+    var tgtX = tgtRect.left + tgtRect.width / 2;
+    var tgtY = tgtRect.top  + tgtRect.height / 2;
+    var deltaX = tgtX - srcX;
+    var deltaY = tgtY - srcY;
+
+    // Team accent — parse hex to RGB for rgba() opacity control
+    var teamHex = (hTeam.accent || '#EBB010').replace('#', '');
+    if (teamHex.length === 3) teamHex = teamHex.split('').map(function(c){return c+c;}).join('');
+    var tR = parseInt(teamHex.substring(0,2), 16);
+    var tG = parseInt(teamHex.substring(2,4), 16);
+    var tB = parseInt(teamHex.substring(4,6), 16);
+    if (isNaN(tR)) { tR = 235; tG = 176; tB = 16; }
+    var teamAccent = 'rgb(' + tR + ',' + tG + ',' + tB + ')';
+    var teamRgbStr = tR + ',' + tG + ',' + tB;
+
+    // ── Fly element: Stacked Flame +N popup styling ──
     var fly = document.createElement('div');
-    fly.className = 'T-torch-fly';
-    fly.style.cssText = 'position:fixed;left:' + srcRect.left + 'px;top:' + srcRect.top + 'px;z-index:9999;font-family:\'Teko\';font-weight:700;font-size:24px;color:#EBB010;pointer-events:none;text-shadow:0 0 12px rgba(235,176,16,0.6);';
+    fly.className = 'T-torch-fly-hero';
+    fly.style.cssText =
+      'position:fixed;' +
+      'left:' + srcX + 'px;top:' + srcY + 'px;' +
+      'transform:translate(-50%,-50%) scale(0.6);' +
+      'z-index:9999;' +
+      "font-family:'Teko',sans-serif;font-weight:900;font-size:44px;line-height:0.9;letter-spacing:2px;" +
+      'color:#FFE080;pointer-events:none;opacity:0;white-space:nowrap;' +
+      'text-shadow:' +
+        '0 0 6px #FFE080,' +
+        '0 0 14px rgba(235,176,16,0.75),' +
+        '0 -2px 14px rgba(255,69,17,0.6),' +
+        '0 -4px 22px rgba(255,34,0,0.45),' +
+        '0 0 32px rgba(' + teamRgbStr + ',0.4),' +
+        '0 4px 10px rgba(0,0,0,0.9);';
     fly.textContent = '+' + pts;
     document.body.appendChild(fly);
 
+    // ── Embers: 5 sparks in team color, positioned along the flight path ──
+    var emberEls = [];
+    for (var i = 0; i < 5; i++) {
+      var t = 0.2 + i * 0.15;
+      var eX = srcX + deltaX * t + (Math.random() - 0.5) * 12;
+      var eY = srcY + deltaY * t + (Math.random() - 0.5) * 8;
+      var ember = document.createElement('div');
+      ember.style.cssText =
+        'position:fixed;' +
+        'left:' + eX + 'px;top:' + eY + 'px;' +
+        'width:4px;height:4px;border-radius:50%;' +
+        'background:' + teamAccent + ';' +
+        'box-shadow:0 0 8px ' + teamAccent + ',0 0 3px rgba(255,255,255,0.7);' +
+        'z-index:9998;opacity:0;pointer-events:none;';
+      document.body.appendChild(ember);
+      emberEls.push(ember);
+    }
+
+    // ── Impact flash: team-colored blur behind the banner on arrival ──
+    var impact = document.createElement('div');
+    impact.style.cssText =
+      'position:fixed;' +
+      'left:' + (tgtRect.left - 10) + 'px;' +
+      'top:'  + (tgtRect.top  - 6)  + 'px;' +
+      'width:'  + (tgtRect.width  + 20) + 'px;' +
+      'height:' + (tgtRect.height + 12) + 'px;' +
+      'border-radius:6px;' +
+      'background:' + teamAccent + ';' +
+      'z-index:9997;opacity:0;filter:blur(6px);pointer-events:none;';
+    document.body.appendChild(impact);
+
+    function cleanup() {
+      if (fly.parentNode) fly.remove();
+      if (impact.parentNode) impact.remove();
+      emberEls.forEach(function(e) { if (e.parentNode) e.remove(); });
+    }
+
     try {
-      gsap.to(fly, {
-        x: (tgtRect.left - srcRect.left),
-        y: (tgtRect.top - srcRect.top),
-        scale: 1.5,
-        duration: 0.6,
-        ease: 'power2.in',
+      var tl = gsap.timeline({
         onComplete: function() {
-          fly.remove();
+          cleanup();
           _torchDisplayFrozen = false;
           animateTorchBannerPts(pts);
           Haptic.cardTap();
           if (onDone) onDone();
-        }
+        },
       });
+
+      // Puff in at source
+      tl.to(fly, { opacity: 1, scale: 1.15, duration: 0.18, ease: 'power2.out' });
+      // Streak to target — power2.in gives natural acceleration toward arrival
+      tl.to(fly, {
+        x: deltaX, y: deltaY,
+        scale: 1.2,
+        duration: 0.75,
+        ease: 'power2.in',
+      });
+      // Fade out at arrival
+      tl.to(fly, { opacity: 0, scale: 0.5, duration: 0.12, ease: 'power2.in' }, '-=0.04');
+
+      // Embers: fade in staggered along the path, then fall and fade
+      emberEls.forEach(function(ember, idx) {
+        gsap.fromTo(ember,
+          { opacity: 0, scale: 0.4 },
+          {
+            opacity: 0.95, scale: 1,
+            duration: 0.2,
+            delay: 0.22 + idx * 0.08,
+            ease: 'power2.out',
+            onComplete: function() {
+              gsap.to(ember, {
+                y: '+=52', x: '-=6', opacity: 0, scale: 0.35,
+                duration: 0.75,
+                ease: 'power1.in',
+              });
+            },
+          }
+        );
+      });
+
+      // Impact flash on arrival — pulse in at end of streak, fade out
+      gsap.to(impact, {
+        opacity: 0.5,
+        scale: 1.25,
+        duration: 0.14,
+        delay: 0.86,
+        ease: 'power2.out',
+      });
+      gsap.to(impact, {
+        opacity: 0,
+        scale: 1.4,
+        duration: 0.24,
+        delay: 1.0,
+        ease: 'power2.in',
+      });
+
+      // Audio cue on arrival — subtle chime
+      setTimeout(function() { try { SND.chime(); } catch(e) {} }, 880);
     } catch(e) {
-      fly.remove();
+      cleanup();
       _torchDisplayFrozen = false;
       drawTorchBanner();
       if (onDone) onDone();
@@ -2145,12 +2360,11 @@ export function buildGameplay() {
 
   /** Flame badge CONTINUE button — shared across overlays */
   function _flameBadgeContinue(text, onTap) {
-    var FLAME = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
     var btn = document.createElement('button');
     btn.style.cssText = "width:80%;max-width:300px;padding:0;border:none;border-radius:6px;background:linear-gradient(180deg,#EBB010,#FF4511);display:flex;align-items:stretch;overflow:hidden;cursor:pointer;box-shadow:0 4px 16px rgba(255,69,17,0.3),0 0 20px rgba(235,176,16,0.15);margin-top:16px;";
     btn.innerHTML =
       '<div style="background:rgba(0,0,0,0.2);padding:10px 12px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(0,0,0,0.15);">' +
-        "<svg viewBox='0 0 44 56' width='14' height='18' fill='#fff'><path d='" + FLAME + "'/></svg>" +
+        flameSilhouetteSVG(18, '#fff') +
       '</div>' +
       "<div style=\"flex:1;padding:12px;font-family:'Teko';font-weight:700;font-size:18px;color:#fff;letter-spacing:4px;text-align:center;text-shadow:0 2px 4px rgba(0,0,0,0.3);line-height:1;\">" + (text || 'CONTINUE') + '</div>';
     btn.onclick = function(e) { e.stopPropagation(); if (onTap) onTap(); };
@@ -2243,7 +2457,7 @@ export function buildGameplay() {
     if (opts.torchPts && opts.torchPts > 0) {
       var pts = document.createElement('div');
       pts.style.cssText = "display:flex;align-items:center;gap:4px;opacity:0;transform:translateY(10px) scale(0.8);";
-      pts.innerHTML = "<svg viewBox='0 0 44 56' width='14' height='18' fill='#EBB010'><path d='M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z'/></svg>" +
+      pts.innerHTML = flameSilhouetteSVG(18, '#EBB010') +
         "<span style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;text-shadow:0 0 8px rgba(235,176,16,0.4);letter-spacing:1px;\">+" + opts.torchPts + "</span>";
       container.appendChild(pts);
     }
@@ -2308,6 +2522,7 @@ export function buildGameplay() {
 
     if (tier === 2) {
       SND.hit();
+      setTimeout(function(){ try { SND.helmetImpact(); } catch(e) {} }, 35);
       flashField(isDef ? 'rgba(48,192,224,0.4)' : 'rgba(61,245,138,0.4)', 400);
       return;
     }
@@ -2572,12 +2787,13 @@ export function buildGameplay() {
             burnPlayer(_humanSTDeck, punter, 'punter', puntResult.gross + '-yard punt');
             driveSummaryLog.push({ down: 4, dist: gs.distance, playName: puntResult.label, yards: 0, isUserOff: true });
             pushTicker('PUNT — ' + puntResult.label, '#4DA6FF');
+            var _puntType = puntResult.blocked ? 'blocked_punt' : 'punt';
             showSpecialTeamsResult(puntResult.label, '#4DA6FF', function() {
               showDrive(driveSnaps, prevPoss, function() {
                 driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
                 if (!checkEnd()) nextSnap();
               });
-            });          }
+            }, _puntType);          }
         });
       };
 
@@ -2601,17 +2817,19 @@ export function buildGameplay() {
               var prevPoss = gs.possession;
               SND.kickThud();
               var fgResult = gs.attemptFieldGoal(bestKicker);
-              if (fgResult.made) SND.kickGood(); else SND.kickMiss();
+              if (fgResult.made) { SND.kickGood(); _hFgMade++; }
+              else { SND.goalPostClang(); setTimeout(function(){ SND.kickMiss(); }, 250); }
               burnPlayer(_humanSTDeck, bestKicker, 'kicker', 'RINGER ' + (fgResult.made ? 'Made ' : 'Missed ') + fgResult.distance + '-yard FG');
               driveSummaryLog.push({ down: 4, dist: gs.distance, playName: fgResult.label, yards: 0, isUserOff: true });
               var fgColor = fgResult.made ? '#00ff44' : '#ff0040';
               pushTicker('RINGER! FG ' + fgResult.distance + ' yds — ' + (fgResult.made ? 'GOOD' : 'NO GOOD'), fgColor);
+              var _ringerFgType = fgResult.blocked ? 'blocked_fg' : (fgResult.made ? 'fg_good' : 'fg_miss');
               showSpecialTeamsResult('RINGER! ' + fgResult.label, fgColor, function() {
                 showDrive(driveSnaps, prevPoss, function() {
                   driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
                   if (!checkEnd()) nextSnap();
                 });
-              });              return;
+              }, _ringerFgType);              return;
             }
           }
           // Show ST kicker selection
@@ -2633,18 +2851,20 @@ export function buildGameplay() {
               var clIdx = torchInventory.findIndex(function(c) { return c.id === 'cannon_leg'; });
               if (clIdx >= 0) { consumeTorchCard('cannon_leg'); torchCardToast('CANNON LEG', 'FG range extended +10 yards'); }
               var fgResult = gs.attemptFieldGoal(kicker);
-              if (fgResult.made) SND.kickGood(); else SND.kickMiss();
+              if (fgResult.made) { SND.kickGood(); _hFgMade++; }
+              else { SND.goalPostClang(); setTimeout(function(){ SND.kickMiss(); }, 250); }
               var fgContext = (fgResult.made ? 'Made ' : 'Missed ') + fgResult.distance + '-yard FG';
               burnPlayer(_humanSTDeck, kicker, 'kicker', fgContext);
               driveSummaryLog.push({ down: 4, dist: gs.distance, playName: fgResult.label, yards: 0, isUserOff: true });
               var fgColor = fgResult.made ? '#00ff44' : '#ff0040';
               pushTicker('FG ' + fgResult.distance + ' yds — ' + (fgResult.made ? 'GOOD' : 'NO GOOD'), fgColor);
+              var _humanFgType = fgResult.blocked ? 'blocked_fg' : (fgResult.made ? 'fg_good' : 'fg_miss');
               showSpecialTeamsResult(fgResult.label, fgColor, function() {
                 showDrive(driveSnaps, prevPoss, function() {
                   driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
                   if (!checkEnd()) nextSnap();
                 });
-              });            }
+              }, _humanFgType);            }
           });
         };
       } else {
@@ -2923,7 +3143,7 @@ export function buildGameplay() {
       // Show informational overlay — tap to dismiss
       var torchTutOv = document.createElement('div');
       torchTutOv.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(10,8,4,0.92);opacity:0;transition:opacity .3s;pointer-events:auto;';
-      var _flameTutSvg = '<svg viewBox="0 0 44 44" width="40" height="46" fill="none" style="animation:T-flame-pulse 2s ease-in-out infinite;filter:drop-shadow(0 0 12px ' + hTeam.accent + ')"><defs><linearGradient id="tft" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="' + hTeam.accent + '"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#tft)"/></svg>';
+      var _flameTutSvg = '<svg viewBox="0 0 34 34" width="46" height="46" style="animation:T-flame-pulse 2s ease-in-out infinite;filter:drop-shadow(0 0 12px ' + hTeam.accent + ')">' + flameLayersMarkup() + '</svg>';
       var _hasReactiveOnly2 = torchInventory.every(function(c) { return c.type === 'reactive'; });
       var _tutDesc2 = _hasReactiveOnly2
         ? 'Reactive cards activate automatically when triggered. Look for the prompt during play!'
@@ -3270,27 +3490,33 @@ export function buildGameplay() {
     var firedCombos = checkPlayCombos(drivePlayHistory, playCat, lastDefCat, playedPlay ? playedPlay.id : null);
     drivePlayHistory.push({ cat: playCat, playId: playedPlay ? playedPlay.id : null });
 
-    // Combo names for UI flash (yards already applied by engine pipeline)
+    // Combo names for UI flash (yards already applied by engine pipeline).
+    // These celebrate OFFENSIVE synergy (trait matchups, play-call rhythm,
+    // Hot Read trigger, stacked TORCH cards) — they only fire when the user
+    // is ON OFFENSE. If the user is on defense, a "TEMPO" badge celebrating
+    // the opponent's rhythm would feel wrong (they're hurting the user).
     // Order matters: this is the synergy chain played as ascending pitch pops in BEAT 3.
     var comboNames = [];
     var rr = res && res.result;
-    // 1. Personnel synergy (trait/star matchup landed)
-    if (rr && rr.personnelMod && rr.personnelMod.totalMod >= 2) {
-      comboNames.push('MATCHUP');
-    }
-    // 2. Tempo / play history rhythm
-    if (rr && rr.historyBonus > 0) {
-      comboNames.push('TEMPO');
-    }
-    // 3. Badge combos (offense)
-    firedCombos.forEach(function(combo) { comboNames.push(combo.name); });
-    // 4. Hot Read fired inside engine
-    if (rr && rr.hotReadFired) {
-      comboNames.push('HOT READ');
-    }
-    // 5. Card combo (TORCH cards stacked)
-    if (rr && rr.cardComboFired) {
-      comboNames.push('CARD COMBO');
+    if (isOff) {
+      // 1. Personnel synergy (trait/star matchup landed)
+      if (rr && rr.personnelMod && rr.personnelMod.totalMod >= 2) {
+        comboNames.push('MATCHUP');
+      }
+      // 2. Tempo / play history rhythm
+      if (rr && rr.historyBonus > 0) {
+        comboNames.push('TEMPO');
+      }
+      // 3. Badge combos (offense)
+      firedCombos.forEach(function(combo) { comboNames.push(combo.name); });
+      // 4. Hot Read fired inside engine
+      if (rr && rr.hotReadFired) {
+        comboNames.push('HOT READ');
+      }
+      // 5. Card combo (TORCH cards stacked)
+      if (rr && rr.cardComboFired) {
+        comboNames.push('CARD COMBO');
+      }
     }
     if (comboNames.length > 0) {
       res._combos = comboNames;
@@ -3348,6 +3574,8 @@ export function buildGameplay() {
       else if (r.yards < 0) espnDesc = rusherName + ' runs for a loss of ' + Math.abs(r.yards) + (defName ? ', tackled by ' + defName : '');
       else espnDesc = rusherName + ' runs, no gain' + (defName ? ', tackled by ' + defName : '');
     }
+    // Attach to res so run3BeatSnap/showPostPlay (sibling closures) can read it
+    res._espnDesc = espnDesc;
     // Track game-wide stats for BOTH teams
     if (isOff) {
       // Human on offense → track human OFF stats + CPU DEF stats
@@ -3467,6 +3695,45 @@ export function buildGameplay() {
     driveSummaryEl.style.display = ''; // Show PBP during snap result
     res._preSnap = preSnap;
 
+    // Compute EPA (Expected Points Added) for this snap — positive = offense
+    // helped themselves, negative = offense hurt themselves. Used by drive recap,
+    // halftime, Clipboard, and end-of-game stat surfaces.
+    try {
+      var _postSnap = gs.getSummary();
+      res._epa = computeEPA(preSnap, _postSnap, res.result);
+    } catch(e) { res._epa = 0; }
+
+    // Accumulate game-wide stats by possessing team
+    var _resR = res.result || {};
+    var _isPassPlay = _resR.playType === 'pass';
+    if (isOff) {
+      _hEpaSum += res._epa || 0;
+      _hEpaPlays++;
+      if (_resR.isInterception || _resR.isFumbleLost) _hTurnovers++;
+      if (_resR.yards >= 15 && !_resR.isInterception && !_resR.isFumbleLost) _hExplosive++;
+      if (preSnap.down === 3) {
+        _h3rdAtt++;
+        if (res.gotFirstDown || _resR.isTouchdown) _h3rdConv++;
+      }
+      if (_resR.isTouchdown) {
+        if (_isPassPlay) _hTdsPass++; else _hTdsRush++;
+      }
+      if (selTorchId) _hCardsUsed++;
+    } else {
+      _cEpaSum += res._epa || 0;
+      _cEpaPlays++;
+      if (_resR.isInterception || _resR.isFumbleLost) _cTurnovers++;
+      if (_resR.yards >= 15 && !_resR.isInterception && !_resR.isFumbleLost) _cExplosive++;
+      if (preSnap.down === 3) {
+        _c3rdAtt++;
+        if (res.gotFirstDown || _resR.isTouchdown) _c3rdConv++;
+      }
+      if (_resR.isTouchdown) {
+        if (_isPassPlay) _cTdsPass++; else _cTdsRush++;
+      }
+      if (selTorchId) _cCardsUsed++;
+    }
+
     // Check star activation
     var wasOffHot = offStarHot, wasDefHot = defStarHot;
     checkStarActivation(res);
@@ -3551,6 +3818,16 @@ export function buildGameplay() {
     hitstopMs = Math.round(hitstopMs * _speedMult);
     aftermathDur = Math.round(aftermathDur * _speedMult);
 
+    // 5-beat cadence (non-TD only — TD flows have their own walkout structure).
+    // Each beat gets an isolated anchor so the eye always has a single arrival:
+    //   1 RESULT  2 CONTEXT  3 STORY  4 REWARD  5 SETTLE
+    // Gap scales with tier so bigger plays breathe more.
+    var _cadenceOn = FEATURES.cadenceBeats && !isTD;
+    var _beatGap = _cadenceOn ? (tier === 3 ? 1100 : tier === 2 ? 900 : 750) : 0;
+    if (_cadenceOn) {
+      aftermathDur = Math.round(_beatGap * 5 * _speedMult);
+    }
+
     // User-biased result display
     var resultColor, resultText;
     if (res._isConversion) {
@@ -3606,28 +3883,41 @@ export function buildGameplay() {
       SND.whistle();
 
       // ── Big Hit Audio Logic ──
-      // Use heavy thud for TFLs or stuffed runs
+      // Use heavy thud for TFLs or stuffed runs, layered with a helmet crunch
       if (r.yards <= 0 && !r.isIncomplete && !r.isInterception && !r.isFumbleLost) {
         SND.sack();
+        setTimeout(function(){ try { SND.helmetImpact(); } catch(e) {} }, 40);
+      }
+
+      // ── Capture fly source rect BEFORE the overlay fades ──
+      // On non-TD plays, the source is the #tp-result-torch pill (the "+N TORCH"
+      // indicator in BEAT 4 REWARD). On TDs, it's the "TOUCHDOWN" hero text.
+      // Either way, the element is marked with .T-torch-fly-source. We must
+      // capture the rect here — after overlay.remove() the element is detached
+      // and getBoundingClientRect() returns zeros.
+      var _heroSrcRect = null;
+      var _srcEl = overlay.querySelector('.T-torch-fly-source');
+      if (_srcEl) {
+        var _hr = _srcEl.getBoundingClientRect();
+        _heroSrcRect = { left: _hr.left, top: _hr.top, width: _hr.width, height: _hr.height };
       }
 
       if (_ovClockInt) clearInterval(_ovClockInt);
       try {
         gsap.to(overlay, { opacity: 0, duration: 0.35, ease: 'power2.in', onComplete: function() {
-          var savedTpEl = overlay.querySelector('#tp-result-torch');
           if (overlay.parentNode) overlay.remove();
-          
+
           // Trigger animations after overlay is gone
           drawBug();
-          if (savedTpEl && res._torchEarned > 0) {
-            animateTorchFly(savedTpEl, res._torchEarned, onFinished);
+          if (_heroSrcRect && res._torchEarned > 0) {
+            animateTorchFly(_heroSrcRect, res._torchEarned, onFinished);
           } else {
             drawTorchBanner();
             if (onFinished) onFinished();
           }
         }});
-      } catch(e) { 
-        overlay.remove(); 
+      } catch(e) {
+        overlay.remove();
         drawBug();
         drawTorchBanner();
         if (onFinished) onFinished();
@@ -3649,6 +3939,8 @@ export function buildGameplay() {
 
     // ── PHASE 1: COMMIT (0.2s) — screen dims, snap sound ──
     if (SND.snap) SND.snap(); else if (SND.cardSnap) SND.cardSnap(); else if (SND.click) SND.click();
+    // Pass whoosh mid-animation (ball in the air). Skip on sacks — ball never released.
+    if (r.playType === 'pass' && !r.isSack) { setTimeout(function(){ try { SND.passWhoosh(); } catch(e) {} }, 180); }
 
     // ── PHASE 2: BLACKOUT (tier-scaled tension) — field animates underneath ──
     var blackoutMs = Math.round((tier === 1 ? 50 : tier === 2 ? 400 : 700) * _speedMult);
@@ -3798,9 +4090,11 @@ export function buildGameplay() {
       else if (isTD && !isUserOff) { SND.turnover(); AudioStateManager.setState('turnover'); AudioStateManager.holdThenSettle(3000, _settleState); }
       else if (isGoodForUser && tier >= 2) { SND.bigPlay(); AudioStateManager.setState('big_moment'); AudioStateManager.holdThenSettle(2000, _settleState); }
       else if (isBadForUser) { SND.turnover(); AudioStateManager.setState('turnover'); AudioStateManager.holdThenSettle(3000, _settleState); }
-      else if (r.isIncomplete) { SND.incomp(); }
-      else if (tier === 1 && r.yards > 0) { SND.hit(); }
-      // Zero or negative yards = no sound (silence for nothing plays)
+      else if (r.isIncomplete) { SND.incomp(); setTimeout(function(){ try { SND.crowdOoh(); } catch(e) {} }, 350); AudioStateManager.setState(_settleState); }
+      else if (tier === 1 && r.yards > 0) { SND.hit(); AudioStateManager.setState(_settleState); }
+      else { AudioStateManager.setState(_settleState); }
+      // Zero or negative yards = no result sound (silence is intentional), but
+      // we still reset the crowd state so it doesn't float from the previous play
 
       // Ambient particle intensity boost
       if (tier >= 3 && isGoodForUser) _boostParticles(true);
@@ -3980,8 +4274,10 @@ export function buildGameplay() {
         resultWrap.appendChild(teamNameEl);
         try { gsap.to(teamNameEl, { opacity: 1, y: 0, duration: 0.2, delay: 0.3, ease: 'power2.out' }); } catch(e) { teamNameEl.style.opacity='1'; }
 
-        // "TOUCHDOWN" — chrome green gradient
+        // "TOUCHDOWN" — chrome green gradient. TDs don't have a pill, so the
+        // TD hero text doubles as the torch fly source.
         var tdTextEl = document.createElement('div');
+        tdTextEl.className = 'T-torch-fly-source';
         tdTextEl.style.cssText = "font-family:'Teko';font-weight:900;font-size:56px;letter-spacing:3px;line-height:1;background:linear-gradient(180deg,#fff 0%,#00ff44 30%,#fff 50%,#00ff44 70%,#fff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 24px rgba(0,255,68,0.6)) drop-shadow(0 0 48px rgba(0,255,68,0.3)) drop-shadow(0 6px 12px rgba(0,0,0,0.9));opacity:0;transform:scale(0.3);white-space:nowrap;";
         tdTextEl.textContent = 'TOUCHDOWN';
         resultWrap.appendChild(tdTextEl);
@@ -4066,7 +4362,7 @@ export function buildGameplay() {
           setTimeout(function() {
             var line = document.createElement('div');
             line.style.cssText = "display:flex;align-items:center;gap:4px;justify-content:center;opacity:0;transform:translateY(10px) scale(0.8);";
-            line.innerHTML = "<svg viewBox='0 0 44 56' width='14' height='18' fill='#EBB010'><path d='M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z'/></svg>" +
+            line.innerHTML = flameSilhouetteSVG(18, '#EBB010') +
               "<span style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;text-shadow:0 0 8px rgba(235,176,16,0.4);\">" + item.label + " +" + item.pts + "</span>";
             cascadeWrap.appendChild(line);
             try { gsap.to(line, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: 'back.out(1.5)' }); } catch(e) { line.style.opacity='1'; line.style.transform='none'; }
@@ -4236,7 +4532,7 @@ export function buildGameplay() {
 
           var convPtsEl = document.createElement('div');
           convPtsEl.style.cssText = "display:flex;align-items:center;gap:4px;opacity:0;transform:translateY(10px) scale(0.8);margin-top:4px;";
-          convPtsEl.innerHTML = "<svg viewBox='0 0 44 56' width='14' height='18' fill='#EBB010'><path d='M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z'/></svg>" +
+          convPtsEl.innerHTML = flameSilhouetteSVG(18, '#EBB010') +
             "<span style=\"font-family:'Teko';font-weight:700;font-size:22px;color:#EBB010;text-shadow:0 0 8px rgba(235,176,16,0.4);letter-spacing:1px;\">+" + convPts + "</span>";
           convWrap.appendChild(convPtsEl);
           try { gsap.to(convPtsEl, { opacity: 1, y: 0, scale: 1, duration: 0.3, delay: 0.4, ease: 'back.out(1.5)' }); } catch(e) { convPtsEl.style.opacity='1'; convPtsEl.style.transform='none'; }
@@ -4300,11 +4596,26 @@ export function buildGameplay() {
       } else {
         // ── NON-TD: Normal result display ──
         // Single flex column container — all elements flow vertically, no absolute overlap
+        //
+        // Beat schedule (cadence flag ON → real 5-beat cadence, OFF → legacy cluster):
+        //   BEAT 1 (0ms)        = hero slam + shake/particles/flash (runs synchronously below)
+        //   BEAT 2 (BEAT_CTX)   = FIRST DOWN stamp or down & distance, narrative strip audio cue
+        //   BEAT 3 (BEAT_STORY) = single commentary line, milestone
+        //   BEAT 4 (BEAT_REWARD)= TORCH points card + sources breakdown + combo pops
+        //   BEAT 5 (aftermathDur) = doSettle (already scheduled below)
+        var BEAT_CTX    = _cadenceOn ? _beatGap     : 800;
+        var BEAT_STORY  = _cadenceOn ? _beatGap * 2 : 800;
+        var BEAT_REWARD = _cadenceOn ? _beatGap * 3 : 2000;
+        // Hoisted so BEAT 3 (story) can read what BEAT 2 (context) generated
+        var _commLine1 = '', _commLine2 = '';
+        // FIRST DOWN moves to BEAT 2 as its own anchor instead of piling onto the hero
+        var _firstDownStamp = false;
 
         var nonTdWrap = document.createElement('div');
         nonTdWrap.style.cssText = 'position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;max-width:90%;';
 
-        // Hero text
+        // Hero text — the fly source on non-TD plays is the TORCH pill below
+        // (see BEAT 4 REWARD), NOT this hero text. Hero stays clean.
         var heroEl = document.createElement('div');
         heroEl.style.cssText = "font-family:'Teko';font-weight:900;font-size:" + ydsFontSize + ";color:" + resultColor + ";letter-spacing:3px;line-height:1;text-shadow:0 0 24px " + resultColor + "60,0 0 48px " + resultColor + "20,0 2px 6px rgba(0,0,0,0.8);opacity:0;transform:scale(0.3);text-align:center;";
         heroEl.textContent = resultText;
@@ -4343,8 +4654,9 @@ export function buildGameplay() {
           ctxLabel.textContent = 'STUFFED';
           ctxLabel.style.color = '#FF6B00';
         } else if (r.yards > 0 && gotFirstDown) {
-          ctxLabel.textContent = 'FIRST DOWN';
-          ctxLabel.style.color = '#EBB010';
+          // FIRST DOWN lands in BEAT 2 as its own stamp — not piled on the hero
+          ctxLabel.textContent = '';
+          _firstDownStamp = true;
         } else {
           // Hero already shows "+X" or "-X" — no context needed
           ctxLabel.textContent = '';
@@ -4356,13 +4668,25 @@ export function buildGameplay() {
         divider.style.cssText = "width:80px;height:1px;background:linear-gradient(90deg,transparent," + resultColor + "44,transparent);margin:8px 0;transform:scaleX(0);";
         nonTdWrap.appendChild(divider);
 
-        // Turnover sub-label (inside the flow, not absolute)
-        if ((r.isInterception || r.isFumbleLost) && !res._isConversion) {
+        // On user turnovers (INT thrown / fumble lost), the Shame Card is the
+        // hero — fired earlier in run3BeatSnap. We HIDE the hero text, divider,
+        // and turnover subtitle here so the screen isn't cluttered with 4
+        // overlapping elements (big "FUMBLE" + shame card + "Possession lost."
+        // + "FUMBLED" verdict). On defense-forced turnovers (good for user),
+        // there's no shame card and the hero + "YOUR BALL!" celebration stays.
+        var isUserTurnover = (r.isInterception || r.isFumbleLost) && isUserOff && !res._isConversion;
+        if (isUserTurnover) {
+          heroEl.style.display = 'none';
+          divider.style.display = 'none';
+        }
+
+        // Turnover sub-label (inside the flow, not absolute).
+        // Suppressed on user turnovers — the shame card shows "FUMBLED"/"PICKED" already.
+        if ((r.isInterception || r.isFumbleLost) && !res._isConversion && !isUserTurnover) {
           var turnoverSub = document.createElement('div');
-          var isUserTurnover = isUserOff;
-          turnoverSub.style.cssText = "font-family:'Teko';font-weight:700;font-size:18px;letter-spacing:3px;text-shadow:0 0 12px " + (isUserTurnover ? 'rgba(255,0,64,0.4)' : 'rgba(0,255,68,0.4)') + ";opacity:0;transform:translateY(6px);margin-top:4px;";
-          turnoverSub.style.color = isUserTurnover ? '#ff0040' : '#00ff44';
-          turnoverSub.textContent = isUserTurnover ? 'Possession lost.' : 'YOUR BALL!';
+          turnoverSub.style.cssText = "font-family:'Teko';font-weight:700;font-size:18px;letter-spacing:3px;text-shadow:0 0 12px rgba(0,255,68,0.4);opacity:0;transform:translateY(6px);margin-top:4px;";
+          turnoverSub.style.color = '#00ff44';
+          turnoverSub.textContent = 'YOUR BALL!';
           nonTdWrap.appendChild(turnoverSub);
         }
 
@@ -4426,24 +4750,28 @@ export function buildGameplay() {
 
       // First down gold bar removed — distracting on frosted overlay
 
-      // First down chain chime — escalates with consecutive first downs in a drive
+      // First down chain chime + confetti — delayed to BEAT 2 so audio lands
+      // with the FIRST DOWN stamp instead of piling on the hero slam
       if (res.gotFirstDown && !isTD && !r.isInterception && !r.isFumbleLost && isUserOff) {
         var _fdCount = driveFirstDowns || 1;
-        try { SND.chime(); } catch(e) {}
-        flashField('rgba(0,255,68,0.2)', 300);
-        Haptic.cardTap();
-        // 3rd+ first down: gold flash
-        if (_fdCount >= 3) flashField('rgba(235,176,16,0.15)', 400);
-        // 5th+ first down: mini confetti burst
-        if (_fdCount >= 5) {
-          var _fdCols = ['#00ff44', '#EBB010', '#fff'];
-          for (var _fi = 0; _fi < 8; _fi++) {
-            var _fc = document.createElement('div');
-            _fc.style.cssText = 'position:absolute;top:-10px;left:' + (20 + Math.random() * 60) + '%;width:' + (2 + Math.random() * 3) + 'px;height:' + (2 + Math.random() * 3) + 'px;background:' + _fdCols[_fi % 3] + ';border-radius:1px;opacity:0.9;z-index:11;pointer-events:none;';
-            overlay.appendChild(_fc);
-            try { gsap.to(_fc, { y: 200, rotation: 360 + Math.random() * 720, opacity: 0, duration: 1.5 + Math.random(), ease: 'power1.in', delay: Math.random() * 0.3, onComplete: function() { if (_fc.parentNode) _fc.remove(); } }); } catch(e) { _fc.remove(); }
+        setTimeout(function() {
+          if (!overlay.parentNode) return;
+          try { SND.chime(); setTimeout(function(){ SND.chainGang(); }, 120); } catch(e) {}
+          flashField('rgba(0,255,68,0.2)', 300);
+          Haptic.cardTap();
+          // 3rd+ first down: gold flash
+          if (_fdCount >= 3) flashField('rgba(235,176,16,0.15)', 400);
+          // 5th+ first down: mini confetti burst
+          if (_fdCount >= 5) {
+            var _fdCols = ['#00ff44', '#EBB010', '#fff'];
+            for (var _fi = 0; _fi < 8; _fi++) {
+              var _fc = document.createElement('div');
+              _fc.style.cssText = 'position:absolute;top:-10px;left:' + (20 + Math.random() * 60) + '%;width:' + (2 + Math.random() * 3) + 'px;height:' + (2 + Math.random() * 3) + 'px;background:' + _fdCols[_fi % 3] + ';border-radius:1px;opacity:0.9;z-index:11;pointer-events:none;';
+              overlay.appendChild(_fc);
+              try { gsap.to(_fc, { y: 200, rotation: 360 + Math.random() * 720, opacity: 0, duration: 1.5 + Math.random(), ease: 'power1.in', delay: Math.random() * 0.3, onComplete: function() { if (_fc.parentNode) _fc.remove(); } }); } catch(e) { _fc.remove(); }
+            }
           }
-        }
+        }, BEAT_CTX);
       }
 
       // Hot streak tracking
@@ -4462,13 +4790,23 @@ export function buildGameplay() {
         }
       }
 
-      // ── BEAT 2: CONTEXT (800ms-2s) — first down, down & distance, commentary (non-TD only) ──
+      // ── BEAT 2: CONTEXT — FIRST DOWN stamp OR down & distance, narrative strip audio cue ──
       setTimeout(function() {
         if (isTD) return; // TD has its own commentary flow above
         if (!overlay.parentNode) return; // screen exited
 
-        // New down & distance (skip if first down flash showing or conversion)
-        if (!r.isInterception && !r.isFumbleLost && !gotFirstDown && !res._isConversion) {
+        if (_firstDownStamp) {
+          // FIRST DOWN lands as its own anchor — big, gold, punctuated
+          var fdStamp = document.createElement('div');
+          var _fdCol = isUserOff ? '#EBB010' : '#ff0040';
+          fdStamp.style.cssText = "font-family:'Teko';font-weight:900;font-size:36px;color:" + _fdCol + ";letter-spacing:6px;margin-top:8px;text-shadow:0 0 24px " + _fdCol + "99,0 0 48px " + _fdCol + "44,0 2px 6px rgba(0,0,0,0.9);opacity:0;transform:scale(0.6);";
+          fdStamp.textContent = 'FIRST DOWN';
+          resultWrap.appendChild(fdStamp);
+          try {
+            gsap.to(fdStamp, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2.5)' });
+          } catch(e) { fdStamp.style.opacity = '1'; fdStamp.style.transform = 'none'; }
+        } else if (!r.isInterception && !r.isFumbleLost && !res._isConversion) {
+          // New down & distance (only when we didn't already stamp FIRST DOWN)
           var newS = gs.getSummary();
           var dnLabels = ['','1ST','2ND','3RD','4TH'];
           var dnText = (dnLabels[newS.down] || '') + ' & ' + (newS.yardsToEndzone <= 10 ? 'GOAL' : newS.distance);
@@ -4481,42 +4819,47 @@ export function buildGameplay() {
           try { gsap.to(dnEl, { opacity: 1, y: 0, duration: 0.2, delay: 0.1, ease: 'power2.out' }); } catch(e) { dnEl.style.opacity = '1'; }
         }
 
-        // Commentary
-        var commLine1, commLine2;
+        // Generate commentary once — BEAT 3 reads _commLine1 from outer scope
         if (res._isConversion) {
-          commLine1 = r.description;
-          commLine2 = '';
+          _commLine1 = r.description;
+          _commLine2 = '';
         } else {
           var gameCtx = gs.getSummary();
           gameCtx.preSnapPossession = prevPoss;
           var comm = generateCommentary(res, gameCtx, hTeam.name, oTeam.name);
           var ctx = generateContext(gameCtx, hTeam.name, oTeam.name, res);
-          commLine1 = comm.line1;
-          commLine2 = comm.line2 || ctx || '';
+          _commLine1 = comm.line1;
+          _commLine2 = comm.line2 || ctx || '';
         }
-        // Build commentary opts for the badge row
+        // Narrative strip audio cue lands here in BEAT 2 (context punctuation)
         var _narrBias = isGoodForUser ? '#00ff44' : isBadForUser ? '#ff0040' : '#EBB010';
         var _narrEvent = r.isTouchdown ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTION' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : res.gotFirstDown ? 'FIRST DOWN' : null;
         var _narrPlay = res.offPlay ? res.offPlay.name : null;
         var _narrPlayer = res.featuredOff ? res.featuredOff.name : null;
-        setNarr(commLine1, commLine2, {
+        setNarr(_commLine1, _commLine2, {
           biasColor: _narrBias,
           yards: r.yards,
           event: _narrEvent,
           playName: _narrPlay,
           playerName: _narrPlayer
         });
+      }, BEAT_CTX);
 
-        // Commentary text on the result overlay (not just narr)
-        if (commLine1 && !res._isConversion) {
+      // ── BEAT 3: STORY — single narrative line (commentary), milestone only ──
+      setTimeout(function() {
+        if (isTD) return;
+        if (!overlay.parentNode) return;
+
+        // The ONLY text line in the story beat — keep it clean, let it breathe
+        if (_commLine1 && !res._isConversion) {
           var commEl = document.createElement('div');
-          commEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:16px;color:rgba(255,255,255,0.7);text-shadow:0 2px 4px rgba(0,0,0,0.8);max-width:300px;text-align:center;margin-top:6px;opacity:0;transform:translateY(6px);line-height:1.3;";
-          commEl.textContent = commLine1;
+          commEl.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:15px;color:rgba(255,255,255,0.75);text-shadow:0 2px 4px rgba(0,0,0,0.8);max-width:300px;text-align:center;margin-top:10px;opacity:0;transform:translateY(6px);line-height:1.3;";
+          commEl.textContent = _commLine1;
           resultWrap.appendChild(commEl);
-          try { gsap.to(commEl, { opacity: 1, y: 0, duration: 0.25, delay: 0.15, ease: 'power2.out' }); } catch(e) { commEl.style.opacity = '1'; }
+          try { gsap.to(commEl, { opacity: 1, y: 0, duration: 0.3, delay: 0.05, ease: 'power2.out' }); } catch(e) { commEl.style.opacity = '1'; }
         }
 
-        // ── Milestone Stat Pop-Ups ──
+        // Milestone stat pop-ups (rare, non-blocking flourish)
         if (res.featuredOff && _playerGameStats[res.featuredOff.id]) {
           var pStats = _playerGameStats[res.featuredOff.id];
           var milestoneText = null;
@@ -4529,24 +4872,33 @@ export function buildGameplay() {
             msEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:14px;color:#EBB010;letter-spacing:2px;margin-top:8px;padding:2px 10px;border:1px solid rgba(235,176,16,0.3);background:rgba(235,176,16,0.05);border-radius:4px;opacity:0;transform:scale(0.8);";
             msEl.textContent = milestoneText;
             resultWrap.appendChild(msEl);
-            try { gsap.to(msEl, { opacity: 1, scale: 1, duration: 0.3, delay: 0.6, ease: 'back.out(2)' }); } catch(e) { msEl.style.opacity = '1'; }
+            try { gsap.to(msEl, { opacity: 1, scale: 1, duration: 0.3, delay: 0.3, ease: 'back.out(2)' }); } catch(e) { msEl.style.opacity = '1'; }
           }
         }
+      }, BEAT_STORY);
 
-        // TORCH points on the result overlay — only show on human-earned points
+      // ── BEAT 4: REWARD — TORCH points pill, sources breakdown, combo pops ──
+      // The pill (#tp-result-torch, .T-torch-fly-source) is the fly source.
+      // When doSettle fires, the "+N TORCH" number floats up DIRECTLY from
+      // this pill to the torch banner at the top.
+      setTimeout(function() {
+        if (isTD) return;
+        if (!overlay.parentNode) return;
+
+        // TORCH points pill — only show on human-earned points
         var isHumanBall = prevPoss === hAbbr;
         var _showTorchOnOverlay = res._torchEarned && res._torchEarned > 0 && isHumanBall && !res._isConversion;
         if (_showTorchOnOverlay) {
-          var FLAME = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
           var tpEl = document.createElement('div');
           tpEl.id = 'tp-result-torch';
+          tpEl.className = 'T-torch-fly-source';
           tpEl.style.cssText = "display:flex;align-items:center;gap:6px;justify-content:center;margin-top:10px;opacity:0;transform:translateY(14px) scale(0.6);padding:6px 16px;background:rgba(235,176,16,0.06);border:1px solid rgba(235,176,16,0.15);border-radius:6px;";
-          tpEl.innerHTML = "<svg viewBox='0 0 44 56' width='18' height='23' fill='#EBB010' style='filter:drop-shadow(0 0 6px rgba(235,176,16,0.5));'><path d='" + FLAME + "'/></svg><span style=\"font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;text-shadow:0 0 12px rgba(235,176,16,0.5);letter-spacing:2px;\">+" + res._torchEarned + "</span><span style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:rgba(235,176,16,0.5);letter-spacing:2px;\">TORCH</span>";
+          tpEl.innerHTML = flameSilhouetteSVG(23, '#EBB010', 1, 'filter:drop-shadow(0 0 6px rgba(235,176,16,0.5));') + "<span style=\"font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;text-shadow:0 0 12px rgba(235,176,16,0.5);letter-spacing:2px;\">+" + res._torchEarned + "</span><span style=\"font-family:'Rajdhani';font-weight:700;font-size:10px;color:rgba(235,176,16,0.5);letter-spacing:2px;\">TORCH</span>";
           resultWrap.appendChild(tpEl);
           try {
-            gsap.to(tpEl, { opacity: 1, y: 0, scale: 1, duration: 0.4, delay: 0.3, ease: 'back.out(2.5)' });
+            gsap.to(tpEl, { opacity: 1, y: 0, scale: 1, duration: 0.4, delay: 0.05, ease: 'back.out(2.5)' });
             // Glow pulse after landing
-            gsap.to(tpEl, { boxShadow: '0 0 20px rgba(235,176,16,0.3)', duration: 0.3, delay: 0.7, yoyo: true, repeat: 1 });
+            gsap.to(tpEl, { boxShadow: '0 0 20px rgba(235,176,16,0.3)', duration: 0.3, delay: 0.45, yoyo: true, repeat: 1 });
             // Gold sparks from flame icon
             setTimeout(function() {
               try {
@@ -4562,11 +4914,11 @@ export function buildGameplay() {
                   gsap.to(_tsp, { x: Math.cos(_tsAngle) * _tsDist, y: Math.sin(_tsAngle) * _tsDist - 8, opacity: 0, duration: 0.4 + Math.random() * 0.2, ease: 'power2.out', onComplete: function() { _tsp.remove(); } });
                 }
               } catch(e2) {}
-            }, 500);
+            }, 250);
           } catch(e) { tpEl.style.opacity = '1'; tpEl.style.transform = 'none'; }
         }
 
-        // TORCH points earned — color-coded breakdown below commentary
+        // TORCH points earned — color-coded breakdown on the narrative strip
         if (res._torchSources && res._torchSources.length > 0) {
           var srcColors = { play: '#F1F5F9', combo: '#FF6B2B', bonus: '#22D3EE' };
           var srcLabels = { play: 'PLAY', combo: 'COMBO', bonus: 'BONUS' };
@@ -4588,42 +4940,8 @@ export function buildGameplay() {
           narr.appendChild(ptSimple);
         }
 
-        // Play description line (ESPN style)
-        if (espnDesc && espnDesc !== '?') {
-          var descEl = document.createElement('div');
-          descEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:12px;color:#888;letter-spacing:0.5px;margin-top:6px;max-width:320px;text-align:center;line-height:1.3;opacity:0;";
-          descEl.textContent = espnDesc;
-          resultWrap.appendChild(descEl);
-          try { gsap.to(descEl, { opacity: 1, duration: 0.3, delay: 0.2 }); } catch(e) { descEl.style.opacity = '1'; }
-        }
-
-        var labelEl = document.createElement('div');
-        labelEl.className = 'T-clash-label';
-        labelEl.style.cssText = "color:#e8e6ff;opacity:0;transition:opacity 0.3s;margin-top:8px;font-family:'Rajdhani';font-size:15px;font-weight:700;line-height:1.3;text-align:center;max-width:280px;";
-        labelEl.textContent = commLine1;
-        resultWrap.appendChild(labelEl);
-        setTimeout(function() { labelEl.style.opacity = '1'; }, 100);
-
-        // Matchup reveal — show both featured players
-        if (res.featuredOff && res.featuredDef && !res._isConversion) {
-          var matchEl = document.createElement('div');
-          matchEl.style.cssText = "display:flex;justify-content:center;gap:16px;margin-top:10px;opacity:0;transition:opacity 0.3s;";
-          var offColor = isUserOff ? hTeam.accent : oTeam.accent;
-          var defColor = isUserOff ? oTeam.accent : hTeam.accent;
-          matchEl.innerHTML =
-            "<div style='text-align:center;'><div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:" + offColor + ";letter-spacing:1px;\">" + res.featuredOff.pos + "</div><div style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:#fff;\">" + res.featuredOff.name + "</div></div>" +
-            "<div style=\"font-family:'Teko';font-size:14px;color:#555;align-self:center;\">vs</div>" +
-            "<div style='text-align:center;'><div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:" + defColor + ";letter-spacing:1px;\">" + res.featuredDef.pos + "</div><div style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:#fff;\">" + res.featuredDef.name + "</div></div>";
-          resultWrap.appendChild(matchEl);
-          setTimeout(function() { matchEl.style.opacity = '1'; }, 200);
-        }
-
-      }, 800);
-
-      // ── BEAT 3: REWARD (2-3.5s) — TORCH points + combos ──
-      setTimeout(function() {
-        if (!overlay.parentNode) return; // screen exited
-        // Combo flash + ascending pop chain (Balatro feel)
+        // Combo flash + ascending pop chain (Balatro feel) — fires on the reward beat
+        // so it punctuates the TORCH arrival instead of firing into dead air.
         if (res._combos && res._combos.length > 0) {
           var comboEl = document.createElement('div');
           comboEl.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:2px;text-shadow:0 0 12px rgba(235,176,16,0.5);margin-top:6px;animation:T-clash-yds 0.4s ease-out both;";
@@ -4639,8 +4957,7 @@ export function buildGameplay() {
             });
           }
         }
-
-      }, 2000);
+      }, BEAT_REWARD);
 
       // ── BEAT 4: READY (cleanup + proceed) ──
       // Uses raw setTimeout — this timer MUST fire to continue the game
@@ -4816,6 +5133,32 @@ export function buildGameplay() {
     }
   }
 
+  /**
+   * Brief possession handoff banner — shows new team name + "HAVE THE BALL"
+   * as a centered hero toast. Non-blocking; fades in/holds/fades out in ~1s.
+   * All four team names (Boars/Dolphins/Spectres/Serpents) are plural, so the
+   * verb is always "HAVE" — no conditional needed.
+   */
+  function showPossessionBanner(newPossTeam) {
+    var accent = newPossTeam.accent || '#EBB010';
+    var banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:42%;left:50%;transform:translate(-50%,-50%);z-index:660;text-align:center;pointer-events:none;opacity:0;';
+    banner.innerHTML =
+      "<div style=\"width:120px;height:1px;margin:0 auto 8px;background:linear-gradient(90deg,transparent," + accent + ",transparent);opacity:0;\" data-bar='top'></div>" +
+      "<div style=\"font-family:'Teko';font-weight:900;font-size:40px;color:" + accent + ";letter-spacing:5px;line-height:1;text-shadow:0 0 24px " + accent + "80,0 0 48px " + accent + "40,0 4px 12px rgba(0,0,0,0.9);\">" + newPossTeam.name.toUpperCase() + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:11px;color:#aaa;letter-spacing:4px;margin-top:6px;\">HAVE THE BALL</div>" +
+      "<div style=\"width:120px;height:1px;margin:8px auto 0;background:linear-gradient(90deg,transparent," + accent + ",transparent);opacity:0;\" data-bar='bot'></div>";
+    el.appendChild(banner);
+    var bars = banner.querySelectorAll('[data-bar]');
+    try {
+      gsap.to(banner, { opacity: 1, y: '-50%', duration: 0.3, ease: 'power2.out' });
+      gsap.fromTo(bars, { scaleX: 0 }, { scaleX: 1, opacity: 1, duration: 0.35, delay: 0.1, ease: 'power2.out' });
+      gsap.to(banner, { opacity: 0, y: '-60%', duration: 0.3, delay: 0.9, ease: 'power2.in',
+        onComplete: function() { if (banner.parentNode) banner.remove(); } });
+    } catch(e) { setTimeout(function() { if (banner.parentNode) banner.remove(); }, 1300); }
+    Haptic.cardTap();
+  }
+
   var _lastPossession = gs.possession;
   function nextSnap() {
     // Card replacement already happened in doSnap post-processing
@@ -4824,19 +5167,24 @@ export function buildGameplay() {
       _lastPossession = gs.possession;
       _isNewDrive = true;
       _hotStreak = 0; // Reset hot streak on possession change
+      try { SND.possessionSwoosh(); } catch(e) {}
       var newHs = getHandState();
       handRedeal(newHs);
       resetDriveDiscards(newHs);
       _driveHeat = 0; drawDriveHeat();
       _driveCardsUsed = [];
-      // Crossfade the card tray on possession change
+      // Possession handoff banner — brief hero moment before the new tray arrives
+      var _newPossTeam = gs.possession === hAbbr ? hTeam : oTeam;
+      showPossessionBanner(_newPossTeam);
+      // Crossfade the card tray — delayed so it layers UNDER the banner's hold
       try {
         var trayEl = panel.querySelector('.CT-wrap');
         if (trayEl) {
-          gsap.to(trayEl, { opacity: 0, y: 4, duration: 0.15, onComplete: function() {
+          // Hold the old tray at low opacity during the banner, then crossfade to new
+          gsap.to(trayEl, { opacity: 0, y: 4, duration: 0.2, delay: 0.25, ease: 'power2.in', onComplete: function() {
             drawPanel();
             var newTray = panel.querySelector('.CT-wrap');
-            if (newTray) { newTray.style.opacity = '0'; newTray.style.transform = 'translateY(4px)'; gsap.to(newTray, { opacity: 1, y: 0, duration: 0.2, ease: 'power2.out' }); }
+            if (newTray) { newTray.style.opacity = '0'; newTray.style.transform = 'translateY(4px)'; gsap.to(newTray, { opacity: 1, y: 0, duration: 0.3, delay: 0.1, ease: 'power2.out' }); }
           }});
         }
       } catch(e) {}
@@ -4903,12 +5251,13 @@ export function buildGameplay() {
             if (aiPunter) burnPlayer(_cpuSTDeck, aiPunter, 'punter', 'AI punt');
             var puntResult = gs.punt(aiPunter, _bkPuntOpts);
             var puntColor = puntResult.blocked ? '#00ff44' : '#4DA6FF';
+            var _aiPuntType = puntResult.blocked ? 'blocked_punt' : 'punt';
             showSpecialTeamsResult(puntResult.label, puntColor, function() {
               showDrive(driveSnaps, prevPoss, function() {
                 driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
                 if (!checkEnd()) nextSnap();
               });
-            });
+            }, _aiPuntType);
           }, 250);
         });
         puntOv.appendChild(_pBtn);
@@ -4952,14 +5301,20 @@ export function buildGameplay() {
             if (aiKicker) burnPlayer(_cpuSTDeck, aiKicker, 'kicker', 'AI FG');
             SND.kickThud();
             var fgResult = gs.attemptFieldGoal(aiKicker, _aiFgOpts);
+            if (fgResult.made) _cFgMade++;
+            setTimeout(function() {
+              if (fgResult.made) { SND.turnover(); AudioStateManager.setState('turnover'); AudioStateManager.holdThenSettle(2000, _settleState); }
+              else { SND.goalPostClang(); setTimeout(function(){ SND.kickMiss(); }, 250); }
+            }, 300);
             var fgColor = fgResult.made ? '#ff0040' : '#00ff44';
             var fgLabel = fgResult.blocked ? 'BLOCKED!' : (fgResult.made ? 'IT\'S GOOD! +3' : 'NO GOOD!');
+            var _aiFgType = fgResult.blocked ? 'blocked_fg' : (fgResult.made ? 'fg_good' : 'fg_miss');
             showSpecialTeamsResult(fgLabel, fgColor, function() {
               showDrive(driveSnaps, prevPoss, function() {
                 driveSnaps = []; drivePlayHistory = []; resetDriveSummary();
                 if (!checkEnd()) nextSnap();
               });
-            });
+            }, _aiFgType);
           }, 250);
         });
         fgOv.appendChild(_fBtn);
@@ -5017,11 +5372,11 @@ export function buildGameplay() {
       else if (ev === 'turnover_on_downs') { title = 'DEFENSE HOLDS!'; subtitle = 'Stopped on 4th down.'; }
       else if (ev === 'punt') { title = newPossTeam.name.toUpperCase() + ' BALL!'; subtitle = 'After the punt.'; }
       else if (ev === 'missed_fg') { title = 'NO GOOD!'; subtitle = 'Missed field goal. ' + newPossTeam.name + ' ball!'; }
-      else if (ev === 'safety') { title = 'SAFETY!'; subtitle = newPossTeam.name + ' gets the ball back!'; }
+      else if (ev === 'safety') { title = 'SAFETY!'; subtitle = newPossTeam.name + ' get the ball back!'; }
       else { title = newPossTeam.name.toUpperCase() + ' BALL!'; subtitle = 'New drive.'; }
     } else {
-      if (ev === 'interception') { title = 'TURNOVER'; subtitle = otherTeam.name + ' intercepts.'; }
-      else if (ev === 'fumble_lost') { title = 'TURNOVER'; subtitle = 'Fumble. ' + otherTeam.name + ' recovers.'; }
+      if (ev === 'interception') { title = 'TURNOVER'; subtitle = otherTeam.name + ' intercept.'; }
+      else if (ev === 'fumble_lost') { title = 'TURNOVER'; subtitle = 'Fumble. ' + otherTeam.name + ' recover.'; }
       else if (ev === 'turnover_on_downs') { title = 'TURNOVER ON DOWNS'; subtitle = 'Failed to convert.'; }
       else if (ev === 'punt') { title = 'PUNT'; subtitle = newPossTeam.name + ' ball.'; }
       else if (ev === 'missed_fg') { title = 'MISSED FIELD GOAL'; subtitle = newPossTeam.name + ' ball.'; }
@@ -5125,92 +5480,281 @@ export function buildGameplay() {
   // ── DRIVE SUMMARY ──
   function showDrive(log, poss, done) {
     if (log.length < 1) { done(); return; }
-    var yds = log.reduce(function(s,r) { return s + (r.result ? r.result.yards || 0 : r.yards || 0); }, 0);
-    var td = log.some(function(r) { return r.result ? r.result.isTouchdown : r.isTD; });
-    var to = log.some(function(r) { return r.result ? (r.result.isInterception || r.result.isFumbleLost) : (r.isInt || r.isFumble); });
+
+    // ── Classify drive ──
+    var nonConv = log.filter(function(r) { return !r._isConversion; });
+    var totalYds = nonConv.reduce(function(s,r) { return s + (r.result ? r.result.yards || 0 : r.yards || 0); }, 0);
+    var totalPlays = nonConv.length;
+    var firstDowns = nonConv.filter(function(r) { return r.gotFirstDown; }).length;
+    var td = nonConv.some(function(r) { return r.result ? r.result.isTouchdown : r.isTD; });
+    var hasInt = nonConv.some(function(r) { return r.result ? r.result.isInterception : r.isInt; });
+    var hasFum = nonConv.some(function(r) { return r.result ? r.result.isFumbleLost : r.isFumble; });
+    var to = hasInt || hasFum;
+
+    // Check driveSummaryLog tail for punt/FG classification (showDrive is called after
+    // punt/FG results are pushed there, but those don't appear in driveSnaps).
+    // Engine labels look like:
+    //   Made FG:    "42-yard field goal is GOOD! +3"
+    //   Missed FG:  "42-yard field goal NO GOOD!"
+    //   Blocked FG: "BLOCKED! 42-yard field goal is BLOCKED!"
+    //   Punt:       "Punt — 45 yards — Short return to the 25"
+    // We search for "FIELD GOAL" (not "FG" — that substring never appears)
+    // and "NO GOOD" must be checked BEFORE "GOOD" since it contains "GOOD".
+    var lastSumEntry = driveSummaryLog.length > 0 ? driveSummaryLog[driveSummaryLog.length - 1] : null;
+    var isPunt = false, isFgGood = false, isFgMiss = false;
+    if (lastSumEntry && lastSumEntry.playName) {
+      var pn = lastSumEntry.playName.toUpperCase();
+      if (pn.indexOf('PUNT') >= 0) {
+        isPunt = true;
+      } else if (pn.indexOf('FIELD GOAL') >= 0) {
+        if (pn.indexOf('NO GOOD') >= 0 || pn.indexOf('BLOCKED') >= 0) {
+          isFgMiss = true;
+        } else if (pn.indexOf('GOOD') >= 0) {
+          isFgGood = true;
+        }
+      }
+    }
+
     var pTeam = poss === 'CT' ? hTeam : oTeam;
     var pAccent = pTeam.accent || '#EBB010';
+    var isUserTeam = poss === hAbbr;
 
+    // Drive point total — compute from first-snap pre-drive score vs current gs score.
+    // Includes the TD + XP/2pt/3pt conversion since showDrive is called AFTER the conversion resolves.
+    var firstSnapPre = nonConv.length > 0 ? nonConv[0]._preSnap : null;
+    var drivePoints = 0;
+    if (firstSnapPre) {
+      var _startScore = poss === 'CT' ? (firstSnapPre.ctScore || 0) : (firstSnapPre.irScore || 0);
+      var _endScore = poss === 'CT' ? gs.ctScore : gs.irScore;
+      drivePoints = Math.max(0, _endScore - _startScore);
+    }
+    var _ptSuffix = drivePoints === 1 ? 'POINT' : 'POINTS';
+
+    // Result classification — hero stamp text + color
+    var resText, resColor, resSub;
+    if (td) {
+      // Real point total including XP/2pt/3pt (e.g. "7 POINTS ON THE BOARD")
+      resText = 'TOUCHDOWN';
+      resColor = isUserTeam ? '#00ff44' : '#ff0040';
+      resSub = drivePoints + ' ' + _ptSuffix + ' ON THE BOARD';
+    } else if (hasInt) {
+      resText = 'INTERCEPTION'; resColor = isUserTeam ? '#ff0040' : '#00ff44'; resSub = 'Drive ends with a pick';
+    } else if (hasFum) {
+      resText = 'FUMBLE'; resColor = isUserTeam ? '#ff0040' : '#00ff44'; resSub = 'Ball comes loose';
+    } else if (isFgGood) {
+      resText = 'FIELD GOAL'; resColor = '#EBB010'; resSub = drivePoints + ' ' + _ptSuffix;
+    } else if (isFgMiss) {
+      resText = 'NO GOOD'; resColor = isUserTeam ? '#ff0040' : '#00ff44'; resSub = 'Field goal missed';
+    } else if (isPunt) {
+      resText = 'PUNT'; resColor = '#888'; resSub = 'Flipping the field';
+    } else {
+      // 4th down stop, no score — neutral result
+      resText = 'TURNOVER ON DOWNS'; resColor = isUserTeam ? '#ff0040' : '#00ff44'; resSub = 'Came up short';
+    }
+
+    // ── Backdrop ──
     var ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;z-index:950;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,8,4,0.96);opacity:0;transition:opacity 0.4s;pointer-events:auto;';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:950;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0A0804;pointer-events:auto;';
 
-    // Glow background
+    // Top/bottom team color accent bars
+    var topBar = document.createElement('div');
+    topBar.style.cssText = 'position:absolute;top:0;left:0;right:0;height:3px;background:' + pAccent + ';opacity:0;';
+    ov.appendChild(topBar);
+    var botBar = document.createElement('div');
+    botBar.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:3px;background:' + pAccent + ';opacity:0;';
+    ov.appendChild(botBar);
+
+    // Ambient glow (team color, subtle)
     var glow = document.createElement('div');
-    glow.style.cssText = 'position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,' + pAccent + '15 0%,transparent 70%);z-index:0;';
+    glow.style.cssText = 'position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,' + pAccent + '18 0%,transparent 55%);pointer-events:none;';
     ov.appendChild(glow);
 
+    // ── Content column ──
     var content = document.createElement('div');
-    content.style.cssText = 'width:90%;max-width:320px;z-index:1;display:flex;flex-direction:column;gap:24px;align-items:center;';
+    content.style.cssText = 'position:relative;width:88%;max-width:340px;z-index:1;display:flex;flex-direction:column;align-items:center;gap:14px;';
     ov.appendChild(content);
 
-    // Header
-    var hdr = document.createElement('div');
-    hdr.style.cssText = 'text-align:center;';
-    hdr.innerHTML = 
-      "<div style=\"font-family:'Oswald';font-weight:700;font-size:11px;color:#888;letter-spacing:3px;margin-bottom:4px;\">DRIVE RECAP</div>" +
-      "<div style=\"font-family:'Teko';font-weight:900;font-size:36px;color:" + pAccent + ";letter-spacing:2px;line-height:1;\">" + pTeam.name.toUpperCase() + "</div>";
-    content.appendChild(hdr);
+    // ── HERO: Result stamp (giant, color-coded) ──
+    var heroWrap = document.createElement('div');
+    heroWrap.style.cssText = 'text-align:center;opacity:0;transform:scale(0.75);';
+    var heroFont = resText.length > 12 ? 44 : resText.length > 9 ? 52 : 60;
+    heroWrap.innerHTML =
+      "<div style=\"font-family:'Teko';font-weight:900;font-size:" + heroFont + "px;color:" + resColor + ";letter-spacing:3px;line-height:0.95;text-shadow:0 0 30px " + resColor + "70,0 0 60px " + resColor + "30,0 4px 12px rgba(0,0,0,0.9);\">" + resText + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:11px;color:#888;letter-spacing:2px;margin-top:4px;\">" + resSub.toUpperCase() + "</div>";
+    content.appendChild(heroWrap);
 
-    // Pick exactly one "Key Play" (TD or biggest gain)
-    var keyPlay = log.filter(r => !r._isConversion).sort((a,b) => {
-      if (a.result?.isTouchdown || a.isTD) return -1;
-      if (b.result?.isTouchdown || b.isTD) return 1;
-      var ya = a.result ? a.result.yards || 0 : a.yards || 0;
-      var yb = b.result ? b.result.yards || 0 : b.yards || 0;
-      return Math.abs(yb) - Math.abs(ya);
-    })[0];
+    // ── Team strip (team name + accent bar) ──
+    var teamStrip = document.createElement('div');
+    teamStrip.style.cssText = 'text-align:center;opacity:0;';
+    teamStrip.innerHTML =
+      "<div style=\"font-family:'Oswald';font-weight:700;font-size:18px;color:" + pAccent + ";letter-spacing:6px;text-shadow:0 0 14px " + pAccent + "66;\">" + pTeam.name.toUpperCase() + "</div>" +
+      "<div style=\"width:48px;height:1px;margin:6px auto 0;background:linear-gradient(90deg,transparent," + pAccent + ",transparent);\"></div>";
+    content.appendChild(teamStrip);
 
-    if (keyPlay) {
-      var ky = keyPlay.result ? keyPlay.result.yards || 0 : keyPlay.yards || 0;
-      var kt = keyPlay.result ? keyPlay.result.description : keyPlay.desc || '';
-      var kd = keyPlay.down || 1;
-      var kdst = keyPlay.distance || 10;
-      var kdsLabel = kd + (kd===1?'st':kd===2?'nd':kd===3?'rd':'th') + ' & ' + kdst;
+    // ── Stat row (one line: PLAYS · YARDS · 1ST DOWNS · EPA) ──
+    // EPA = sum of per-snap Expected Points Added across the drive.
+    // Positive = offense helped themselves. Negative = offense hurt themselves.
+    var driveEPA = nonConv.reduce(function(s, r) { return s + (r._epa || 0); }, 0);
+    var _epaColor = driveEPA >= 1.0 ? '#00ff44' : driveEPA >= 0 ? '#ccc' : driveEPA >= -1.0 ? '#FF6B00' : '#ff0040';
 
-      var playBox = document.createElement('div');
-      playBox.style.cssText = 'width:100%;padding:20px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid rgba(255,255,255,0.08);text-align:center;position:relative;overflow:hidden;';
-      
-      playBox.innerHTML = 
-        "<div style=\"font-family:'Oswald';font-weight:700;font-size:10px;color:#666;letter-spacing:2px;margin-bottom:12px;\">KEY PLAY</div>" +
-        "<div style=\"display:flex;align-items:center;justify-content:center;gap:15px;margin-bottom:10px;\">" +
-          "<div style=\"font-family:'Teko';font-weight:700;font-size:24px;color:#888;\">" + kdsLabel.toUpperCase() + "</div>" +
-          "<div style=\"width:1px;height:24px;background:rgba(255,255,255,0.1);\"></div>" +
-          "<div style=\"font-family:'Teko';font-weight:900;font-size:48px;color:" + (ky > 0 ? '#00ff44' : ky < 0 ? '#ff0040' : '#fff') + ";text-shadow:0 0 20px " + (ky > 0 ? 'rgba(0,255,68,0.3)' : 'transparent') + ";\">" + (ky > 0 ? '+' + ky : ky) + "</div>" +
-        "</div>" +
-        "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:#ccc;line-height:1.2;padding:0 10px;\">" + kt.toUpperCase() + "</div>";
-      
-      content.appendChild(playBox);
-    }
-
-    // Totals Grid
-    var statsGrid = document.createElement('div');
-    statsGrid.style.cssText = 'display:flex;justify-content:center;gap:40px;width:100%;opacity:0.6;';
-    
-    function mkStat(val, lbl) {
-      return "<div style='text-align:center;'><div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#fff;\">" + val + "</div><div style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:#888;letter-spacing:1px;\">" + lbl + "</div></div>";
-    }
-    
-    var plays = log.filter(r => !r._isConversion).length;
-    statsGrid.innerHTML = mkStat(plays, 'PLAYS') + mkStat(Math.abs(yds), 'TOTAL YARDS');
-    content.appendChild(statsGrid);
-
-    // Result Label
-    var resLabel = document.createElement('div');
-    var resColor = td ? '#00ff44' : to ? '#ff0040' : '#EBB010';
-    var resText = td ? 'TOUCHDOWN' : to ? 'TURNOVER' : 'DRIVE OVER';
-    resLabel.style.cssText = "font-family:'Teko';font-weight:700;font-size:28px;color:" + resColor + ";letter-spacing:4px;text-shadow:0 0 15px " + resColor + "40;";
-    resLabel.textContent = resText;
-    content.appendChild(resLabel);
-
-    // Continue
-    var btn = _flameBadgeContinue('NEW POSSESSION', function() {
-      ov.style.opacity = '0';
-      setTimeout(function() { if (ov.parentNode) ov.remove(); done(); }, 400);
+    // Push a summary to the game-wide drive history (for the stats sheet)
+    var _driveResultTag = td ? 'TD' : hasInt ? 'INT' : hasFum ? 'FUM' : isFgGood ? 'FG' : isFgMiss ? 'NO GOOD' : isPunt ? 'PUNT' : 'DOWNS';
+    _gameDriveHistory.push({
+      team: poss,
+      plays: totalPlays,
+      yards: totalYds,
+      epa: driveEPA,
+      result: _driveResultTag,
+      points: drivePoints,
     });
-    content.appendChild(btn);
+
+    var statRow = document.createElement('div');
+    statRow.style.cssText = 'display:flex;justify-content:center;align-items:center;gap:12px;opacity:0;transform:translateY(6px);';
+    function _statCell(val, lbl, valColor) {
+      var col = valColor || '#fff';
+      return "<div style='text-align:center;'>" +
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:" + col + ";line-height:1;\">" + val + "</div>" +
+        "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#666;letter-spacing:1.5px;margin-top:2px;\">" + lbl + "</div>" +
+      "</div>";
+    }
+    function _statDivider() {
+      return "<div style='width:1px;height:22px;background:rgba(255,255,255,0.12);'></div>";
+    }
+    statRow.innerHTML =
+      _statCell(totalPlays, 'PLAYS') + _statDivider() +
+      _statCell((totalYds >= 0 ? '' : '-') + Math.abs(totalYds), 'YARDS') + _statDivider() +
+      _statCell(firstDowns, '1ST DNS') + _statDivider() +
+      _statCell(formatKPA(driveEPA), 'KPA', _epaColor);
+    content.appendChild(statRow);
+
+    // ── Play timeline — compact rows, one per play ──
+    var timelineWrap = document.createElement('div');
+    timelineWrap.style.cssText = 'width:100%;margin-top:4px;display:flex;flex-direction:column;gap:3px;max-height:240px;overflow-y:auto;padding:0 4px;';
+
+    // Helpers for compact row text
+    function _dnOrd(d) { return d === 1 ? 'ST' : d === 2 ? 'ND' : d === 3 ? 'RD' : 'TH'; }
+    // Express yard line from the possessing team's perspective ("OWN 35" / "OPP 35" / "50")
+    function _yardLineText(yte) {
+      if (yte === undefined || yte === null) return '';
+      if (yte > 50) return 'OWN ' + (100 - yte);
+      if (yte === 50) return '50';
+      if (yte > 0)  return 'OPP ' + yte;
+      return 'GOAL';
+    }
+    // Compact play description — no yardage (shown in the yards column), no tackler filler
+    function _compactDesc(snap) {
+      var res = snap.result || {};
+      var off = snap.featuredOff;
+      var def = snap.featuredDef;
+      var offPlay = snap.offPlay;
+      var isRun = offPlay && (offPlay.isRun || offPlay.type === 'run');
+      var offName = off && off.name ? off.name : (isRun ? 'Rush' : 'Pass');
+      var defName = def && def.name ? def.name : 'defense';
+      if (res.isInterception) return 'Intercepted by ' + defName;
+      if (res.isFumbleLost)   return 'Fumble recovered by ' + defName;
+      if (res.isSack)         return 'Sacked by ' + defName;
+      if (res.isIncomplete)   return 'Incomplete pass';
+      if (isRun) return offName + ' run';
+      // Pass play — name receiver if featured player isn't the QB
+      if (off && off.pos !== 'QB') return 'Pass to ' + offName;
+      return 'Pass complete';
+    }
+
+    // Build rows from nonConv snaps (+ append punt/FG tail entry from driveSummaryLog if present)
+    var rows = [];
+    nonConv.forEach(function(r) {
+      var res = r.result || {};
+      var preSnap = r._preSnap || {};
+      var dn = preSnap.down || 1;
+      var dst = preSnap.distance || 10;
+      var yTe = preSnap.yardsToEndzone;
+      var dsText = dn + _dnOrd(dn) + ' & ' + (yTe !== undefined && yTe <= 10 ? 'GOAL' : dst);
+      var yLine = _yardLineText(yTe);
+      var y = res.yards || 0;
+      var isInc = res.isIncomplete;
+      var isSack = res.isSack;
+      var isInt = res.isInterception;
+      var isFum = res.isFumbleLost;
+      var isTd = res.isTouchdown;
+      var yardColor = isTd ? '#EBB010' : (isInt || isFum || isSack) ? '#ff0040' : y >= 10 ? '#00ff44' : y > 0 ? '#ccc' : '#888';
+      var yardText = isInt ? 'INT' : isFum ? 'FUM' : isSack ? (y || '—') : isInc ? '—' : (y > 0 ? '+' + y : y === 0 ? '—' : y);
+      // Right-side marker pill
+      var marker = '';
+      if (isTd) marker = "<span style=\"font-family:'Teko';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:1px;padding:1px 5px;background:rgba(235,176,16,0.12);border:1px solid rgba(235,176,16,0.35);border-radius:3px;margin-left:6px;white-space:nowrap;\">TD</span>";
+      else if (r.gotFirstDown) marker = "<span style=\"font-family:'Teko';font-weight:700;font-size:10px;color:#00ff44;letter-spacing:1px;padding:1px 5px;background:rgba(0,255,68,0.12);border:1px solid rgba(0,255,68,0.35);border-radius:3px;margin-left:6px;white-space:nowrap;\">1ST</span>";
+      rows.push({ dsText: dsText, yLine: yLine, pd: _compactDesc(r), yardText: yardText, yardColor: yardColor, marker: marker });
+    });
+    // Append punt/FG tail row if present — yard line from last snap in the drive
+    if ((isPunt || isFgGood || isFgMiss) && lastSumEntry) {
+      var _lastSnap = nonConv[nonConv.length - 1];
+      var _lastYte = _lastSnap && _lastSnap._preSnap ? _lastSnap._preSnap.yardsToEndzone : undefined;
+      rows.push({
+        dsText: (lastSumEntry.down || 4) + _dnOrd(lastSumEntry.down || 4) + ' & ' + (lastSumEntry.dist || '—'),
+        yLine: _yardLineText(_lastYte),
+        pd: lastSumEntry.playName || '',
+        yardText: '',
+        yardColor: '#888',
+        marker: '',
+      });
+    }
+
+    rows.forEach(function(row, idx) {
+      var rowEl = document.createElement('div');
+      rowEl.style.cssText = 'display:flex;align-items:center;gap:10px;padding:7px 10px;background:rgba(255,255,255,0.02);border-left:2px solid ' + pAccent + '33;border-radius:2px;opacity:0;transform:translateX(-8px);';
+      // D&D cell — two stacked lines (down & distance + yard line)
+      var dndCell =
+        "<div style=\"min-width:62px;line-height:1.15;\">" +
+          "<div style=\"font-family:'Teko';font-weight:700;font-size:13px;color:#888;letter-spacing:0.5px;\">" + row.dsText + "</div>" +
+          (row.yLine ? "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:9px;color:#555;letter-spacing:0.5px;margin-top:1px;\">" + row.yLine + "</div>" : '') +
+        "</div>";
+      // Description cell — flex, allow wrap, no truncation
+      var descCell = "<div style=\"flex:1;min-width:0;font-family:'Rajdhani';font-weight:500;font-size:11px;color:#bbb;line-height:1.3;word-break:break-word;\">" + row.pd + "</div>";
+      // Yards cell + marker
+      var ydsCell = row.yardText !== '' ? "<div style=\"font-family:'Teko';font-weight:700;font-size:16px;color:" + row.yardColor + ";letter-spacing:0.5px;min-width:30px;text-align:right;white-space:nowrap;\">" + row.yardText + "</div>" : '';
+      rowEl.innerHTML = dndCell + descCell + ydsCell + row.marker;
+      timelineWrap.appendChild(rowEl);
+    });
+    content.appendChild(timelineWrap);
+
+    // ── Continue button ──
+    var btnWrap = document.createElement('div');
+    btnWrap.style.cssText = 'opacity:0;transform:translateY(8px);width:100%;display:flex;justify-content:center;';
+    var btn = _flameBadgeContinue('CONTINUE', function() {
+      try { gsap.to(ov, { opacity: 0, duration: 0.25, ease: 'power2.in', onComplete: function() { if (ov.parentNode) ov.remove(); done(); } }); }
+      catch(e) { if (ov.parentNode) ov.remove(); done(); }
+    });
+    btnWrap.appendChild(btn);
+    content.appendChild(btnWrap);
 
     el.appendChild(ov);
-    requestAnimationFrame(function() { ov.style.opacity = '1'; });
+
+    // ── Cascading entry animation ──
+    // 0-200ms: backdrop fades in, accent bars slide in
+    // 150-500ms: hero stamp scales in with overshoot
+    // 400-600ms: team strip fades in
+    // 500-700ms: stat row lifts in
+    // 650ms+: play rows stagger in left-to-right
+    // (last row + 200ms): continue button fades in
+    try {
+      ov.style.opacity = '0';
+      gsap.to(ov, { opacity: 1, duration: 0.2, ease: 'power2.out' });
+      gsap.to([topBar, botBar], { opacity: 1, duration: 0.25, delay: 0.05 });
+      gsap.to(heroWrap, { opacity: 1, scale: 1, duration: 0.45, delay: 0.15, ease: 'back.out(2.2)' });
+      gsap.to(teamStrip, { opacity: 1, duration: 0.3, delay: 0.4, ease: 'power2.out' });
+      gsap.to(statRow, { opacity: 1, y: 0, duration: 0.3, delay: 0.5, ease: 'power2.out' });
+      var _rowEls = timelineWrap.querySelectorAll('div');
+      gsap.to(_rowEls, { opacity: 1, x: 0, duration: 0.25, delay: 0.65, stagger: 0.06, ease: 'power2.out' });
+      var _btnDelay = 0.65 + _rowEls.length * 0.06 + 0.15;
+      gsap.to(btnWrap, { opacity: 1, y: 0, duration: 0.3, delay: _btnDelay, ease: 'power2.out' });
+    } catch(e) {
+      ov.style.opacity = '1';
+      heroWrap.style.opacity = '1'; heroWrap.style.transform = 'scale(1)';
+      teamStrip.style.opacity = '1';
+      statRow.style.opacity = '1'; statRow.style.transform = 'none';
+      btnWrap.style.opacity = '1'; btnWrap.style.transform = 'none';
+      var _rowEls2 = timelineWrap.querySelectorAll('div');
+      for (var _i = 0; _i < _rowEls2.length; _i++) { _rowEls2[_i].style.opacity = '1'; _rowEls2[_i].style.transform = 'none'; }
+    }
   }
 
   // ── CONVERSION ──
@@ -5508,7 +6052,11 @@ export function buildGameplay() {
       var rotations = humanWins ? 1800 : 1980; // 1800 = 5 full turns (front), 1980 = 5.5 turns (back)
       coinInner.style.transform = 'rotateY(' + rotations + 'deg)';
       label.textContent = '';
-      SND.coinFlip();
+      // Defer 80ms — this is often the very first interaction, so AudioContext.resume()
+      // needs a tick to settle before Howler can play.
+      setTimeout(function() { SND.coinFlip(); }, 80);
+      // Coin lands in palm just before Phase 2 reveal (~1600ms total spin time)
+      setTimeout(function() { SND.coinCatch(); }, 1400);
 
       setTimeout(function() {
         // Phase 2: Result + Choice
@@ -5590,15 +6138,18 @@ export function buildGameplay() {
 
           var choiceMsg = document.createElement('div');
           choiceMsg.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#fff;letter-spacing:2px;";
-          choiceMsg.textContent = aiTakesCard ? 'THEY TAKE A TORCH CARD' : 'THEY CHOOSE TO RECEIVE';
+          choiceMsg.textContent = aiTakesCard
+            ? oTeam.name.toUpperCase() + ' TAKE A TORCH CARD'
+            : oTeam.name.toUpperCase() + ' CHOOSE TO RECEIVE';
           resBox.appendChild(choiceMsg);
 
           content.appendChild(resBox);
 
-          // What you get
+          // What you get — full 4-layer flame (built-in color depth
+          // replaces the old red→gold gradient).
           var youIcon = aiTakesCard
             ? ''
-            : "<svg viewBox='0 0 44 44' width='24' height='26' fill='none' style='margin-bottom:4px;'><defs><linearGradient id='yg1' x1='22' y1='40' x2='22' y2='0'><stop offset='0%' stop-color='#FF4511'/><stop offset='100%' stop-color='#EBB010'/></linearGradient></defs><path d='M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z' fill='url(#yg1)'/></svg>";
+            : flameIconSVG(26, 1, 'margin-bottom:4px;');
           var youGetMsg = document.createElement('div');
           youGetMsg.style.cssText = "text-align:center;z-index:1;opacity:0;transform:translateY(10px);";
           youGetMsg.id = 'toss-you';
@@ -5838,13 +6389,8 @@ export function buildGameplay() {
 
       setTimeout(function() {
         if (!ov.parentNode) return;
-        var info = document.createElement('div');
-        info.style.cssText = 'text-align:center;margin-top:8px;max-width:260px;';
-        info.innerHTML =
-          "<div style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#fff;letter-spacing:2px;\">" + pickedCard.name + "</div>" +
-          "<div style=\"font-family:'Rajdhani';font-size:11px;color:#888;margin-top:4px;line-height:1.3;\">" + pickedCard.effect + "</div>";
-        ov.appendChild(info);
-
+        // Card face already shows the name + effect via buildTorchCard. No
+        // duplicate info panel beneath — just the continue button.
         var btn = _flameBadgeContinue('CONTINUE', function() {
           btn.onclick = null;
           ov.style.transition = 'opacity 0.25s';
@@ -5857,7 +6403,18 @@ export function buildGameplay() {
   }
 
   // Special teams result overlay (punt, FG, kickoff)
-  function showSpecialTeamsResult(text, color, onDone) {
+  /**
+   * Show a special-teams result (punt / FG / blocked kick).
+   * @param {string} text  — the full descriptive label (goes in the details box)
+   * @param {string} color — accent color for the hero text + ambient glow
+   * @param {function} onDone — callback after the user dismisses the overlay
+   * @param {string} type  — explicit result type. Pass one of:
+   *   'punt' | 'fg_good' | 'fg_miss' | 'blocked_fg' | 'blocked_punt'
+   *   Omit to fall back to string-matching on `text`. Prefer explicit — the
+   *   old string matching failed on short AI FG labels like "BLOCKED!" or
+   *   "NO GOOD!" which didn't contain "PUNT" / "FIELD GOAL".
+   */
+  function showSpecialTeamsResult(text, color, onDone, type) {
     var stOv = document.createElement('div');
     var _stFired = false;
     function _stDone() { if (_stFired) return; _stFired = true; if (stOv.parentNode) stOv.remove(); if (onDone) onDone(); }
@@ -5872,28 +6429,45 @@ export function buildGameplay() {
     content.style.cssText = 'width:90%;max-width:320px;z-index:1;display:flex;flex-direction:column;gap:24px;align-items:center;';
     stOv.appendChild(content);
 
-    // Title label
-    var isPunt = text.toUpperCase().indexOf('PUNT') >= 0;
-    var isFG = text.toUpperCase().indexOf('FG') >= 0 || text.toUpperCase().indexOf('FIELD GOAL') >= 0;
-    var typeText = isPunt ? 'PUNT' : isFG ? 'FIELD GOAL' : 'SPECIAL TEAMS';
-    
-    var label = document.createElement('div');
-    label.style.cssText = "font-family:'Oswald';font-weight:700;font-size:11px;color:#888;letter-spacing:4px;text-transform:uppercase;opacity:0;transform:translateY(10px);";
-    label.textContent = 'SPECIAL TEAMS';
-    content.appendChild(label);
+    // ── Resolve type ──
+    // Prefer the explicit type parameter. Fall back to string-match on `text`
+    // for legacy call sites (but all 5 internal call sites now pass it).
+    var resolvedType = type;
+    if (!resolvedType) {
+      var upper = (text || '').toUpperCase();
+      if (upper.indexOf('BLOCKED') >= 0 && upper.indexOf('PUNT') >= 0) resolvedType = 'blocked_punt';
+      else if (upper.indexOf('BLOCKED') >= 0) resolvedType = 'blocked_fg';
+      else if (upper.indexOf('PUNT') >= 0) resolvedType = 'punt';
+      else if (upper.indexOf('NO GOOD') >= 0) resolvedType = 'fg_miss';
+      else if (upper.indexOf('FIELD GOAL') >= 0 || upper.indexOf("IT'S GOOD") >= 0 || upper.indexOf('GOOD') >= 0) resolvedType = 'fg_good';
+      else resolvedType = 'special_teams';
+    }
 
-    // Main Title (The Type)
+    // Hero text per type
+    var typeText;
+    switch (resolvedType) {
+      case 'punt':         typeText = 'PUNT'; break;
+      case 'fg_good':      typeText = 'FIELD GOAL'; break;
+      case 'fg_miss':      typeText = 'NO GOOD'; break;
+      case 'blocked_fg':   typeText = 'BLOCKED!'; break;
+      case 'blocked_punt': typeText = 'BLOCKED!'; break;
+      default:             typeText = 'SPECIAL TEAMS';
+    }
+
+    // Main Title (the hero). No separate "SPECIAL TEAMS" header — it was
+    // redundant with the hero and caused the "SPECIAL TEAMS / SPECIAL TEAMS"
+    // double-display when classification failed on short AI labels.
     var resultEl = document.createElement('div');
-    resultEl.style.cssText = "font-family:'Teko';font-weight:900;font-size:48px;color:" + color + ";letter-spacing:2px;text-align:center;line-height:1;text-shadow:0 0 30px " + color + "40;opacity:0;transform:scale(0.8);";
+    resultEl.style.cssText = "font-family:'Teko';font-weight:900;font-size:52px;color:" + color + ";letter-spacing:2px;text-align:center;line-height:1;text-shadow:0 0 30px " + color + "40,0 0 60px " + color + "20,0 4px 12px rgba(0,0,0,0.9);opacity:0;transform:scale(0.8);";
     resultEl.textContent = typeText;
     content.appendChild(resultEl);
 
     // Details Box
     var resBox = document.createElement('div');
-    resBox.style.cssText = 'width:100%;padding:24px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid rgba(255,255,255,0.08);text-align:center;opacity:0;transform:translateY(10px);';
+    resBox.style.cssText = 'width:100%;padding:22px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid rgba(255,255,255,0.08);text-align:center;opacity:0;transform:translateY(10px);';
     // Clean up the text: remove the redundant type prefix if it exists
     var displayDetails = text.replace(/^(Punt|Field Goal|FG) [\u2014\u2013-] /i, '').toUpperCase();
-    resBox.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:16px;color:#fff;letter-spacing:1px;line-height:1.4;\">" + displayDetails + "</div>";
+    resBox.innerHTML = "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:15px;color:#fff;letter-spacing:1px;line-height:1.4;\">" + displayDetails + "</div>";
     content.appendChild(resBox);
 
     // Continue button
@@ -5907,12 +6481,11 @@ export function buildGameplay() {
     requestAnimationFrame(function() {
       stOv.style.opacity = '1';
       try {
-        gsap.to(label, { opacity: 1, y: 0, duration: 0.3, delay: 0.1 });
-        gsap.to(resultEl, { opacity: 1, scale: 1, duration: 0.4, delay: 0.15, ease: 'back.out(1.5)' });
-        gsap.to(resBox, { opacity: 1, y: 0, duration: 0.3, delay: 0.3 });
-        gsap.to(contBtn, { opacity: 1, y: 0, duration: 0.3, delay: 0.45 });
-      } catch(e) { 
-        label.style.opacity='1'; resultEl.style.opacity='1'; resultEl.style.transform='none';
+        gsap.to(resultEl, { opacity: 1, scale: 1, duration: 0.4, delay: 0.1, ease: 'back.out(1.5)' });
+        gsap.to(resBox, { opacity: 1, y: 0, duration: 0.3, delay: 0.25 });
+        gsap.to(contBtn, { opacity: 1, y: 0, duration: 0.3, delay: 0.4 });
+      } catch(e) {
+        resultEl.style.opacity='1'; resultEl.style.transform='none';
         resBox.style.opacity='1'; resBox.style.transform='none'; contBtn.style.opacity='1'; contBtn.style.transform='none';
       }
     });
@@ -6060,13 +6633,28 @@ export function buildGameplay() {
 
   function checkEnd() {
     if (gs.gameOver) {
-      SND.whistle();
+      SND.whistleEndHalf();
       AudioStateManager.stopCrowd(2);
+      // Attach final game-wide stat accumulators to the engine so endGame can
+      // surface efficiency metrics (EPA, turnover margin, 3rd down %)
+      gs._finalStats = {
+        _hEpaSum: _hEpaSum, _cEpaSum: _cEpaSum,
+        _hEpaPlays: _hEpaPlays, _cEpaPlays: _cEpaPlays,
+        _hTurnovers: _hTurnovers, _cTurnovers: _cTurnovers,
+        _h3rdAtt: _h3rdAtt, _h3rdConv: _h3rdConv,
+        _c3rdAtt: _c3rdAtt, _c3rdConv: _c3rdConv,
+        _hExplosive: _hExplosive, _cExplosive: _cExplosive,
+        _hTdsPass: _hTdsPass, _hTdsRush: _hTdsRush,
+        _cTdsPass: _cTdsPass, _cTdsRush: _cTdsRush,
+        _hFgMade: _hFgMade, _cFgMade: _cFgMade,
+        _hCardsUsed: _hCardsUsed, _cCardsUsed: _cCardsUsed,
+        _gameDriveHistory: _gameDriveHistory,
+      };
       showHalfEnd(true, function() { setGs(s => ({...s, screen:'end_game', finalEngine:gs, humanAbbr:hAbbr})); });
       return true;
     }
     if (gs.needsHalftime) {
-      SND.whistle();
+      SND.whistleEndHalf();
       // Persist stat accumulators across halftime rebuild
       GS._gameplayStats = {
         hOffPassAtt: hOffPassAtt, hOffPassComp: hOffPassComp, hOffPassYds: hOffPassYds,
@@ -6080,6 +6668,17 @@ export function buildGameplay() {
         cOffQBName: cOffQBName, cOffRBName: cOffRBName, cOffWRName: cOffWRName,
         cDefStats: cDefStats,
         _playerGameStats: _playerGameStats,
+        _hEpaSum: _hEpaSum, _cEpaSum: _cEpaSum,
+        _hEpaPlays: _hEpaPlays, _cEpaPlays: _cEpaPlays,
+        _hTurnovers: _hTurnovers, _cTurnovers: _cTurnovers,
+        _h3rdAtt: _h3rdAtt, _h3rdConv: _h3rdConv,
+        _c3rdAtt: _c3rdAtt, _c3rdConv: _c3rdConv,
+        _hExplosive: _hExplosive, _cExplosive: _cExplosive,
+        _hTdsPass: _hTdsPass, _hTdsRush: _hTdsRush,
+        _cTdsPass: _cTdsPass, _cTdsRush: _cTdsRush,
+        _hFgMade: _hFgMade, _cFgMade: _cFgMade,
+        _hCardsUsed: _hCardsUsed, _cCardsUsed: _cCardsUsed,
+        _gameDriveHistory: _gameDriveHistory,
       };
       showHalfEnd(false, function() { setGs(s => ({...s, screen:'halftime'})); });
       return true;
@@ -6119,9 +6718,49 @@ export function buildGameplay() {
   }, 500);
   if (gs.twoMinActive) { prev2min = true; el.classList.add('T-urgent'); el.classList.add('T-2min-active'); }
 
+  // Shared helper — resolves the opening kickoff and enters the play phase.
+  // Called from BOTH paths: the legacy inline coin toss (fallback for
+  // dev quick play) and the new runway path where the coin toss was
+  // already handled in pregame.js before arriving here.
+  function _enterPlayAfterOpeningKickoff(humanReceives) {
+    // Resolve kickoff and set field position (HOUSE_CALL auto-consumed if human receives)
+    var kickResult = _resolveKickoff(humanReceives);
+    var startYard = kickResult === -1 ? 25 : kickResult; // return TD = rare, treat as touchback for simplicity
+    if (humanReceives) {
+      gs.possession = 'CT';
+      gs.ballPosition = startYard; // CT at own yard line
+    } else {
+      gs.possession = 'IR';
+      gs.ballPosition = 100 - startYard; // IR at own yard line (from CT perspective)
+    }
+    gs.down = 1;
+    gs.distance = 10;
+
+    var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
+    showKickoffResult(posLabel, function() {
+      drawBug(); drawField();
+      phase = 'play';
+      panel.style.display = '';
+      drawPanel();
+    });
+  }
+
   // First load: coin toss → kickoff → play
-  if (!GS._coinTossDone) {
+  // Two entry paths:
+  //   (a) Runway already ran the coin toss in pregame.js. GS._coinTossDone
+  //       is true, GS.humanReceives is set. Skip showCoinToss, go straight
+  //       to kickoff resolution.
+  //   (b) Legacy path (dev quick play, tests): _coinTossDone is false. Run
+  //       the old inline showCoinToss for backwards compat.
+  if (GS._coinTossDone && !GS._openingKickoffResolved) {
+    // (a) Runway path — coin toss was handled in pregame.js
+    GS._openingKickoffResolved = true;
+    panel.style.display = 'none';
+    _enterPlayAfterOpeningKickoff(GS.humanReceives === true);
+  } else if (!GS._coinTossDone) {
+    // (b) Legacy inline coin toss fallback
     GS._coinTossDone = true;
+    GS._openingKickoffResolved = true;
     panel.style.display = 'none'; // Hide card tray until after kickoff
     showCoinToss(function(result) {
       // result.chose = 'receive' | 'card' | 'card_cpu_receives'
@@ -6151,7 +6790,7 @@ export function buildGameplay() {
           _torchTutorialShown = true;
           var torchTutOv = document.createElement('div');
           torchTutOv.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(10,8,4,0.92);opacity:0;transition:opacity .3s;pointer-events:auto;';
-          var _ftSvg = '<svg viewBox="0 0 44 44" width="40" height="46" fill="none" style="animation:T-flame-pulse 2s ease-in-out infinite;filter:drop-shadow(0 0 12px ' + hTeam.accent + ')"><defs><linearGradient id="tft2" x1="22" y1="40" x2="22" y2="0"><stop offset="0%" stop-color="#FF4511"/><stop offset="100%" stop-color="' + hTeam.accent + '"/></linearGradient></defs><path d="M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z" fill="url(#tft2)"/></svg>';
+          var _ftSvg = '<svg viewBox="0 0 34 34" width="46" height="46" style="animation:T-flame-pulse 2s ease-in-out infinite;filter:drop-shadow(0 0 12px ' + hTeam.accent + ')">' + flameLayersMarkup() + '</svg>';
           var _hasReactiveOnly = torchInventory.every(function(c) { return c.type === 'reactive'; });
           var _tutDesc = _hasReactiveOnly
             ? 'Reactive cards activate automatically when triggered. Look for the prompt during play!'

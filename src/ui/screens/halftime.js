@@ -12,6 +12,7 @@ import { renderTeamBadge } from '../../data/teamLogos.js';
 import { FLAME_PATH, buildTorchHeader, buildFlameBadgeButton, buildAccentBar } from '../components/brand.js';
 import AudioStateManager from '../../engine/audioManager.js';
 import { setHalftimeScore } from '../../engine/commentary.js';
+import { formatKPA } from '../../engine/epa.js';
 
 var ADJUSTMENTS = [
   { id: 'aggressive', label: 'AGGRESSIVE', desc: 'Push the pace. Higher risk, higher reward.', effect: '+2 yds / +5% turnover risk', color: '#FF4511' },
@@ -23,6 +24,8 @@ var ADJUSTMENTS = [
 
 export function buildHalftime() {
   AudioStateManager.setState('halftime');
+  // Locker room ambience loop — cleats on tile, distant crowd
+  try { SND.lockerRoomStart(); } catch(e) {}
 
   var el = document.createElement('div');
   el.style.cssText = 'height:100vh;height:100dvh;display:flex;flex-direction:column;background:#0A0804;overflow:hidden;position:relative;padding-top:env(safe-area-inset-top,0px);';
@@ -72,6 +75,133 @@ export function buildHalftime() {
       "<div style=\"font-family:'Teko';font-weight:700;font-size:36px;color:#fff;line-height:0.9;\">" + cpuScore + '</div>' +
     '</div>';
   content.appendChild(scorePanel);
+
+  // ── MOMENTUM SWING (KPA tug-of-war) ──
+  // Hero stat — net Kindle Points Added differential visualized as a
+  // horizontal tug-of-war bar. The team that "controlled" the half often
+  // differs from who's ahead on the scoreboard; this surfaces that.
+  // KPA = Kindle Points Added (TORCH's branded name for standard EPA).
+  var halfStats = GS._gameplayStats || {};
+  var hEpaSum = halfStats._hEpaSum || 0;
+  var cEpaSum = halfStats._cEpaSum || 0;
+  var hEpaPlays = halfStats._hEpaPlays || 0;
+  var cEpaPlays = halfStats._cEpaPlays || 0;
+  var hTurnovers = halfStats._hTurnovers || 0;
+  var cTurnovers = halfStats._cTurnovers || 0;
+  var hExplosive = halfStats._hExplosive || 0;
+  var cExplosive = halfStats._cExplosive || 0;
+  var h3Att = halfStats._h3rdAtt || 0, h3Conv = halfStats._h3rdConv || 0;
+  var c3Att = halfStats._c3rdAtt || 0, c3Conv = halfStats._c3rdConv || 0;
+
+  // Net KPA differential — positive = user winning the "real" game
+  var epaDiff = hEpaSum - cEpaSum;
+  // Normalize for the bar: clamp to ±15 (very lopsided half) then map to -1..+1
+  var epaShare = Math.max(-1, Math.min(1, epaDiff / 15));
+  // Percent split for the bar: 50 + 50*share on the user side
+  var userPct = Math.max(5, Math.min(95, 50 + 50 * epaShare));
+
+  var momentumBox = document.createElement('div');
+  momentumBox.style.cssText = 'width:100%;max-width:340px;';
+
+  var momLabel = document.createElement('div');
+  momLabel.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px;';
+  momLabel.innerHTML =
+    '<div style="flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(235,176,16,0.3));"></div>' +
+    "<div style=\"font-family:'Oswald';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:3px;\">MOMENTUM SWING</div>" +
+    '<div style="flex:1;height:1px;background:linear-gradient(270deg,transparent,rgba(235,176,16,0.3));"></div>';
+  momentumBox.appendChild(momLabel);
+
+  var barWrap = document.createElement('div');
+  barWrap.style.cssText = 'position:relative;width:100%;height:28px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;';
+  // User side (fills from left by userPct)
+  var userBar = document.createElement('div');
+  userBar.style.cssText = 'position:absolute;top:0;left:0;bottom:0;width:0%;background:linear-gradient(90deg,' + teamColor + '88,' + teamColor + '44);transition:width 0.9s cubic-bezier(0.22,1,0.36,1);';
+  barWrap.appendChild(userBar);
+  // Opponent side (fills from right by 100 - userPct)
+  var oppBar = document.createElement('div');
+  oppBar.style.cssText = 'position:absolute;top:0;right:0;bottom:0;width:0%;background:linear-gradient(270deg,' + oppColor + '88,' + oppColor + '44);transition:width 0.9s cubic-bezier(0.22,1,0.36,1);';
+  barWrap.appendChild(oppBar);
+  // Center tick mark
+  var centerTick = document.createElement('div');
+  centerTick.style.cssText = 'position:absolute;top:0;bottom:0;left:50%;width:1px;background:rgba(255,255,255,0.2);';
+  barWrap.appendChild(centerTick);
+  // KPA values on each side
+  var userVal = document.createElement('div');
+  userVal.style.cssText = "position:absolute;top:50%;left:8px;transform:translateY(-50%);font-family:'Teko';font-weight:700;font-size:14px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.7);letter-spacing:0.5px;";
+  userVal.textContent = formatKPA(hEpaSum) + ' KPA';
+  barWrap.appendChild(userVal);
+  var oppVal = document.createElement('div');
+  oppVal.style.cssText = "position:absolute;top:50%;right:8px;transform:translateY(-50%);font-family:'Teko';font-weight:700;font-size:14px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.7);letter-spacing:0.5px;";
+  oppVal.textContent = formatKPA(cEpaSum);
+  barWrap.appendChild(oppVal);
+  momentumBox.appendChild(barWrap);
+
+  // Caption beneath the bar — tells the story
+  var capTxt;
+  if (Math.abs(epaDiff) < 1.5) {
+    capTxt = 'Dead even so far. The 2nd half decides it.';
+  } else if (epaDiff >= 1.5) {
+    capTxt = 'You controlled the 1st half ' + formatKPA(epaDiff) + ' in your favor.';
+  } else {
+    capTxt = 'They controlled the 1st half ' + formatKPA(-epaDiff) + ' in their favor.';
+  }
+  var momCap = document.createElement('div');
+  momCap.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:10px;color:#888;text-align:center;margin-top:6px;letter-spacing:0.5px;";
+  momCap.textContent = capTxt;
+  momentumBox.appendChild(momCap);
+  content.appendChild(momentumBox);
+
+  // Animate the bars filling in after insertion
+  requestAnimationFrame(function() {
+    userBar.style.width = userPct + '%';
+    oppBar.style.width = (100 - userPct) + '%';
+  });
+
+  // ── STORY OF THE HALF — 3 dynamic bullets ──
+  var storyBox = document.createElement('div');
+  storyBox.style.cssText = 'width:100%;max-width:340px;display:flex;flex-direction:column;gap:4px;';
+  var bullets = [];
+  // Bullet 1: turnover battle
+  if (hTurnovers === 0 && cTurnovers === 0) {
+    bullets.push({ color: '#888', text: 'Zero turnovers so far. Ball security holding up.' });
+  } else if (cTurnovers > hTurnovers) {
+    bullets.push({ color: '#00ff44', text: 'Turnover battle +' + (cTurnovers - hTurnovers) + ' in your favor.' });
+  } else if (hTurnovers > cTurnovers) {
+    bullets.push({ color: '#ff0040', text: 'You\'re -' + (hTurnovers - cTurnovers) + ' in turnovers. Protect the ball.' });
+  } else {
+    bullets.push({ color: '#EBB010', text: hTurnovers + ' turnovers each. Even trade.' });
+  }
+  // Bullet 2: explosive plays
+  if (hExplosive > cExplosive) {
+    bullets.push({ color: '#00ff44', text: hExplosive + ' explosive plays ' + (cExplosive > 0 ? 'to their ' + cExplosive : '(none for them)') + '.' });
+  } else if (cExplosive > hExplosive) {
+    bullets.push({ color: '#ff0040', text: 'They\'ve hit ' + cExplosive + ' chunk plays. You have ' + hExplosive + '.' });
+  } else if (hExplosive > 0) {
+    bullets.push({ color: '#EBB010', text: 'Both teams at ' + hExplosive + ' explosive plays.' });
+  } else {
+    bullets.push({ color: '#888', text: 'No explosive plays yet. Grinding it out.' });
+  }
+  // Bullet 3: 3rd down efficiency
+  var h3Pct = h3Att > 0 ? Math.round(100 * h3Conv / h3Att) : null;
+  var c3Pct = c3Att > 0 ? Math.round(100 * c3Conv / c3Att) : null;
+  if (h3Att > 0 || c3Att > 0) {
+    var h3Text = h3Att > 0 ? (h3Conv + '/' + h3Att + ' (' + h3Pct + '%)') : '—';
+    var c3Text = c3Att > 0 ? (c3Conv + '/' + c3Att + ' (' + c3Pct + '%)') : '—';
+    var better = (h3Pct || 0) >= (c3Pct || 0);
+    bullets.push({ color: better ? '#00ff44' : '#ff0040', text: '3rd down: ' + h3Text + ' vs their ' + c3Text + '.' });
+  } else {
+    bullets.push({ color: '#888', text: 'No 3rd downs faced yet. Stay ahead of the chains.' });
+  }
+
+  bullets.forEach(function(b) {
+    var row = document.createElement('div');
+    row.style.cssText = "display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(255,255,255,0.02);border-left:2px solid " + b.color + "66;border-radius:3px;";
+    row.innerHTML =
+      '<div style="width:4px;height:4px;border-radius:50%;background:' + b.color + ';flex-shrink:0;"></div>' +
+      "<div style=\"font-family:'Rajdhani';font-weight:500;font-size:11px;color:#ccc;line-height:1.3;\">" + b.text + '</div>';
+    storyBox.appendChild(row);
+  });
+  content.appendChild(storyBox);
 
   // ── STAT STRIP ──
   var st = gs.stats || {};
@@ -168,7 +298,7 @@ export function buildHalftime() {
       "<div style=\"font-family:'Oswald';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:3px;\">TORCH STORE</div>" +
     '</div>' +
     '<div style="display:flex;align-items:center;gap:4px;">' +
-      "<svg viewBox='0 0 44 56' width='10' height='13' fill='#EBB010'><path d='" + FLAME_PATH + "'/></svg>" +
+      "<svg viewBox='0 0 34 34' width='13' height='13' fill='#EBB010'><path d='" + FLAME_PATH + "'/></svg>" +
       "<span style=\"font-family:'Teko';font-weight:700;font-size:16px;color:#EBB010;\">" + humanPts + "</span>" +
       "<span style=\"font-family:'Rajdhani';font-weight:600;font-size:8px;color:#EBB01066;letter-spacing:1px;\">PTS</span>" +
     '</div>';
@@ -194,10 +324,10 @@ export function buildHalftime() {
 
     cardSlot.innerHTML =
       "<div style=\"font-family:'Oswald';font-weight:700;font-size:7px;color:" + tc + ";opacity:0.5;letter-spacing:1px;\">" + card.tier + '</div>' +
-      "<svg viewBox='0 0 44 56' width='16' height='21' fill='" + tc + "' style='opacity:0.5;'><path d='" + FLAME_PATH + "'/></svg>" +
+      "<svg viewBox='0 0 34 34' width='21' height='21' fill='" + tc + "' style='opacity:0.5;'><path d='" + FLAME_PATH + "'/></svg>" +
       "<div style=\"font-family:'Teko';font-weight:700;font-size:10px;color:#fff;text-align:center;line-height:1;letter-spacing:0.5px;\">" + card.name + '</div>' +
       '<div style="display:flex;align-items:center;gap:2px;margin-top:2px;">' +
-        "<svg viewBox='0 0 44 56' width='8' height='10' fill='#EBB010'><path d='" + FLAME_PATH + "'/></svg>" +
+        "<svg viewBox='0 0 34 34' width='10' height='10' fill='#EBB010'><path d='" + FLAME_PATH + "'/></svg>" +
         "<span style=\"font-family:'Teko';font-weight:700;font-size:12px;color:#EBB010;\">" + card.cost + '</span>' +
       '</div>';
 
@@ -294,6 +424,7 @@ export function buildHalftime() {
 
   var ctaBtn = buildFlameBadgeButton('2ND HALF', function() {
     if (SND.snap) SND.snap(); else if (SND.click) SND.click();
+    try { SND.lockerRoomStop(); } catch(e) {}
     gs.startSecondHalf();
     gs.halftimeAdjustment = GS.halftimeAdjustment || 'balanced';
     var humanReceives2nd = !GS.humanReceives;

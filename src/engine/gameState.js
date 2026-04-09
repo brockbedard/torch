@@ -761,16 +761,23 @@ export class GameState {
       }
       const offPts = calcOffenseTorchPoints(result, false);
       const defPts = calcDefenseTorchPoints(result, false);
-      
-      // Points awarded to respective teams BEFORE pos flip or accounting for it
-      if (this.possession === 'CT') {
+
+      // BUG FIX: by the time we get here, this.possession has already been
+      // flipped to the defensive team (via flipPossession above). We must
+      // award points based on the ORIGINAL possession (the team that threw
+      // the pick gets offPts = 0; the team that caught it gets defPts = 12).
+      // defTeam is captured above BEFORE the flip and holds the interceptor's
+      // team, so we use that as the source of truth.
+      if (defTeam === 'IR') {
+        // CT threw the INT → CT is original offense, IR is defense (interceptor)
         this.ctTorchPts += offPts;
         this.irTorchPts += Math.ceil(defPts * 1.2); // IR boost
       } else {
+        // IR threw the INT → IR is original offense, CT is defense (interceptor)
         this.irTorchPts += Math.ceil(offPts * 1.2); // IR boost
         this.ctTorchPts += defPts;
       }
-      
+
       // Shop trigger for turnovers (defensive team forced it)
       this._triggerShop(this.humanTeam === defTeam, 'turnover');
 
@@ -810,16 +817,21 @@ export class GameState {
       }
       const offPts = calcOffenseTorchPoints(result, false);
       const defPts = calcDefenseTorchPoints(result, false);
-      
-      // Points awarded to respective teams BEFORE pos flip or accounting for it
-      if (this.possession === 'CT') {
+
+      // BUG FIX: this.possession has already been flipped via flipPossession
+      // above. Award points based on the ORIGINAL possession using defTeam
+      // (captured before the flip) as the source of truth. The team that
+      // fumbled gets offPts = 0; the team that recovered gets defPts = 12.
+      if (defTeam === 'IR') {
+        // CT fumbled → CT is original offense, IR recovered
         this.ctTorchPts += offPts;
         this.irTorchPts += Math.ceil(defPts * 1.2); // IR boost
       } else {
+        // IR fumbled → IR is original offense, CT recovered
         this.irTorchPts += Math.ceil(offPts * 1.2); // IR boost
         this.ctTorchPts += defPts;
       }
-      
+
       // Shop trigger for turnovers (defensive team forced it)
       this._triggerShop(this.humanTeam === defTeam, 'turnover');
 
@@ -924,21 +936,28 @@ export class GameState {
       }
       // Incomplete passes: distance stays the same (yards = 0)
       this.down++;
-
-      if (this.down > 4) {
-        if (this.drivePlays <= 4) this.stats.threeAndOuts++;
-        gameEvent = 'turnover_on_downs';
-        // Shop trigger for turnover on downs stop (defensive team)
-        const defTeam = this.possession === 'CT' ? 'IR' : 'CT';
-        this._triggerShop(this.humanTeam === defTeam, 'fourthDownStop');
-        this.flipPossession(this.ballPosition);
-      }
     }
 
-    // TORCH points
+    // ── TORCH points — AWARDED BEFORE any turnover-on-downs possession flip ──
+    // This must run BEFORE the down-count check below, otherwise a 4th-down
+    // sack / stop flips possession via flipPossession, then _awardTorchPts
+    // sees the NEW possession and credits the torch points to the wrong
+    // team. Example bug: user's defense sacks the QB on 4th down → ball
+    // flips to user → _awardTorchPts sees possession=CT (user, new offense)
+    // → credits defPts to IR (old offense that got sacked). User never
+    // sees their +8 sack reward.
     const offPts = calcOffenseTorchPoints(result, gotFirstDown);
     const defPts = calcDefenseTorchPoints(result, gotFirstDown);
     this._awardTorchPts(offPts, defPts);
+
+    // ── Turnover on downs (4th-and-failed) — flip possession AFTER award ──
+    if (!gotFirstDown && this.down > 4) {
+      if (this.drivePlays <= 4) this.stats.threeAndOuts++;
+      gameEvent = 'turnover_on_downs';
+      const defTeam = this.possession === 'CT' ? 'IR' : 'CT';
+      this._triggerShop(this.humanTeam === defTeam, 'fourthDownStop');
+      this.flipPossession(this.ballPosition);
+    }
 
     // Injury check
     const injury = checkInjury(result, featuredOff, featuredDef);

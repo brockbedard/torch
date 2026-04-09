@@ -4,8 +4,14 @@
  */
 
 import { gsap } from 'gsap';
+import { flameIconSVG, flameSilhouetteSVG, FLAME_SILHOUETTE_PATH } from '../../utils/flameIcon.js';
 
-export var FLAME_PATH = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
+// Backward-compat export: the old FLAME_PATH was a single wiggly path on a
+// 44×56 viewBox. The new 4-layer flame lives on a 34×34 viewBox. FLAME_PATH
+// is now the outer silhouette (layer 1) of the new flame so anything still
+// importing this constant gets a valid path for its existing viewBox="0 0 34 34"
+// or for Path2D canvas use. For new code, prefer flameIconSVG() / flameSilhouetteSVG().
+export var FLAME_PATH = FLAME_SILHOUETTE_PATH;
 
 /**
  * Build the TORCH brand header (flowing gold border + dark bar + chrome title)
@@ -32,7 +38,10 @@ export function buildTorchHeader(title, opts) {
   noise.style.cssText = 'position:absolute;inset:0;opacity:0.03;pointer-events:none;background:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.5) 2px,rgba(255,255,255,0.5) 3px);';
   bar.appendChild(noise);
 
-  var flameSvg = "<svg viewBox='0 0 44 56' width='10' height='13' fill='#FF4511' style='opacity:0.7;animation:emblemPulse 3s ease-in-out infinite;position:relative;z-index:1;'><path d='" + FLAME_PATH + "'/></svg>";
+  // 4-layer flame — built-in color depth, no need for a gradient.
+  // Size 13×13 (square) so the new 34×34-viewBox flame keeps the same
+  // rendered height as the old 10×13 44×56-viewBox rectangle.
+  var flameSvg = flameIconSVG(13, 0.7, 'animation:emblemPulse 3s ease-in-out infinite;position:relative;z-index:1;');
   bar.innerHTML += flameSvg;
 
   var titleEl = document.createElement('div');
@@ -77,7 +86,9 @@ export function buildFlameBadgeButton(label, onClick, opts) {
 
   var badge = document.createElement('div');
   badge.style.cssText = 'background:rgba(0,0,0,0.2);padding:12px 14px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(0,0,0,0.15);';
-  badge.innerHTML = "<svg viewBox='0 0 44 56' width='16' height='21' fill='#fff'><path d='" + FLAME_PATH + "'/></svg>";
+  // White silhouette flame emblem on the button badge (solid white, not
+  // the full-color flame — the button background is already red/gold).
+  badge.innerHTML = flameSilhouetteSVG(21, '#fff');
 
   var text = document.createElement('div');
   text.style.cssText = "flex:1;padding:14px;font-family:'Teko';font-weight:700;font-size:22px;color:#fff;letter-spacing:6px;text-align:center;text-shadow:0 2px 4px rgba(0,0,0,0.3);line-height:1;";

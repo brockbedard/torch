@@ -13,10 +13,12 @@ import { renderTeamBadge } from '../../data/teamLogos.js';
 import { buildMaddenPlayer } from '../components/cards.js';
 import AudioStateManager from '../../engine/audioManager.js';
 import { recordDailyResult } from './dailyDrive.js';
+import { flameSilhouetteSVG } from '../../utils/flameIcon.js';
 import { updateStreak, getStreak, getH2H } from '../../engine/streaks.js';
 import { checkAchievements } from '../../engine/achievements.js';
 import { recordGameStats } from '../../engine/careerStats.js';
 import { recordGame } from '../../engine/gameHistory.js';
+import { formatKPA } from '../../engine/epa.js';
 
 // ── MVP CALCULATION ──
 function calculateMVP(snapLog, teamId) {
@@ -333,7 +335,9 @@ export function buildEndGame() {
   var seasonComplete = isChampionshipGame || (season.currentGame >= 3);
 
   // ── BUILD DOM ──
-  var FLAME_PATH = 'M22 2C22 2 10 14 9 22C8 30 13 36 17 38C17 38 14 32 17 26C19 22 21 18 22 14C23 18 25 22 27 26C30 32 27 38 27 38C31 36 36 30 35 22C34 14 22 2 22 2Z';
+  // FLAME_PATH removed — replaced with flameSilhouetteSVG helper imports
+  // above. The old wiggly path on 44×56 is gone; the single use-site
+  // (points row) now renders a gold silhouette of the new 4-layer flame.
 
   // Inject keyframes
   if (!document.getElementById('eg-anims')) {
@@ -461,7 +465,7 @@ export function buildEndGame() {
   ptsWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;opacity:0;';
   var ptsRow = document.createElement('div');
   ptsRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
-  ptsRow.innerHTML = "<svg viewBox='0 0 44 56' width='14' height='18' fill='#EBB010'><path d='" + FLAME_PATH + "'/></svg>" +
+  ptsRow.innerHTML = flameSilhouetteSVG(18, '#EBB010') +
     "<span style=\"font-family:'Teko';font-weight:900;font-size:30px;color:#EBB010;text-shadow:0 0 12px rgba(235,176,16,0.4);\">+" + totalEarned + "</span>";
   ptsWrap.appendChild(ptsRow);
   var ptsLabel = document.createElement('div');
@@ -477,6 +481,63 @@ export function buildEndGame() {
     loopEl.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:10px;color:#EBB010;margin-top:6px;padding:4px 10px;border:1px solid #EBB01022;border-radius:4px;background:rgba(235,176,16,0.04);opacity:0;";
     loopEl.textContent = openLoop.text;
     content.appendChild(loopEl);
+  }
+
+  // ── ADVANCED STATS ROW (EPA / Turnover / 3rd Down) ──
+  // Pulls from game-wide accumulators if available. Analytics-forward: shows
+  // efficiency metrics modern football fans actually care about.
+  var finalStats = (gs && gs._finalStats) || GS._gameplayStats || {};
+  var _finalHEpa = (finalStats._hEpaSum !== undefined) ? finalStats._hEpaSum : 0;
+  var _finalCEpa = (finalStats._cEpaSum !== undefined) ? finalStats._cEpaSum : 0;
+  var _finalHTo  = finalStats._hTurnovers || 0;
+  var _finalCTo  = finalStats._cTurnovers || 0;
+  var _finalH3A  = finalStats._h3rdAtt || 0;
+  var _finalH3C  = finalStats._h3rdConv || 0;
+  var _epaDiff = _finalHEpa - _finalCEpa;
+  var _toMargin = _finalCTo - _finalHTo; // +ve = user won the battle
+  var _h3Pct = _finalH3A > 0 ? Math.round(100 * _finalH3C / _finalH3A) : 0;
+
+  var advStatsRow = document.createElement('div');
+  advStatsRow.style.cssText = 'display:flex;gap:10px;margin-top:10px;opacity:0;';
+  function _advTile(label, val, valColor) {
+    var col = valColor || '#fff';
+    return "<div style=\"flex:1;text-align:center;padding:8px 6px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:4px;min-width:70px;\">" +
+      "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:" + col + ";line-height:1;\">" + val + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:#555;letter-spacing:1.5px;margin-top:3px;\">" + label + "</div>" +
+    "</div>";
+  }
+  var _epaColor = _epaDiff >= 2 ? '#00ff44' : _epaDiff >= 0 ? '#c8a030' : _epaDiff >= -2 ? '#FF6B00' : '#ff0040';
+  var _toColor = _toMargin > 0 ? '#00ff44' : _toMargin < 0 ? '#ff0040' : '#888';
+  var _3dColor = _h3Pct >= 50 ? '#00ff44' : _h3Pct >= 33 ? '#c8a030' : '#FF6B00';
+  advStatsRow.innerHTML =
+    _advTile('KPA DIFF', formatKPA(_epaDiff), _epaColor) +
+    _advTile('TO MARGIN', (_toMargin > 0 ? '+' : '') + _toMargin, _toColor) +
+    _advTile('3RD DOWN', (_finalH3A > 0 ? _finalH3C + '/' + _finalH3A : '—'), _3dColor);
+  content.appendChild(advStatsRow);
+
+  // ── TOP MOMENTS CASCADE (Balatro-style — top 3 plays fire into the summary) ──
+  // Use the existing highlights extractor to find the best plays of the game.
+  var topMoments = extractHighlights(gs.snapLog).plays.slice(0, 3);
+  var momentsEls = [];
+  if (topMoments.length > 0) {
+    var momentsHeader = document.createElement('div');
+    momentsHeader.style.cssText = "font-family:'Oswald';font-weight:700;font-size:9px;color:#666;letter-spacing:3px;margin-top:12px;opacity:0;";
+    momentsHeader.textContent = 'TOP MOMENTS';
+    content.appendChild(momentsHeader);
+    momentsEls.push(momentsHeader);
+    topMoments.forEach(function(m) {
+      var ind = getTypeIndicator(m.type);
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;margin-top:4px;background:rgba(255,255,255,0.02);border-left:2px solid ' + ind.color + '66;border-radius:3px;width:100%;max-width:300px;opacity:0;transform:translateX(-10px);';
+      var labelText = m.label || 'Play ' + m.snap;
+      if (labelText.length > 38) labelText = labelText.substring(0, 36) + '…';
+      row.innerHTML =
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:10px;color:" + ind.color + ";letter-spacing:1px;padding:1px 5px;background:" + ind.color + "15;border:1px solid " + ind.color + "44;border-radius:2px;\">" + ind.icon + "</div>" +
+        "<div style=\"flex:1;font-family:'Rajdhani';font-weight:500;font-size:11px;color:#bbb;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\">" + labelText + "</div>" +
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:12px;color:#555;\">#" + m.snap + "</div>";
+      content.appendChild(row);
+      momentsEls.push(row);
+    });
   }
 
   // Achievement banners
@@ -610,6 +671,12 @@ export function buildEndGame() {
     tl.to(ptsWrap, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2)' }, '-=0.1');
     tl.from(ptsWrap, { scale: 0.8, duration: 0.3, ease: 'back.out(2)' }, '<');
     if (loopEl) { tl.to(loopEl, { opacity: 1, duration: 0.2 }, '+=0.1'); tl.from(loopEl, { y: 6, duration: 0.2 }, '<'); }
+    // Advanced stats row (EPA / TO / 3rd Down)
+    tl.to(advStatsRow, { opacity: 1, duration: 0.3, ease: 'power2.out' }, '+=0.1');
+    // Top Moments cascade — each row staggers in, Balatro-style
+    if (momentsEls.length > 0) {
+      tl.to(momentsEls, { opacity: 1, x: 0, duration: 0.3, stagger: 0.1, ease: 'power2.out' }, '+=0.15');
+    }
     achEls.forEach(function(achEl) { tl.to(achEl, { opacity: 1, duration: 0.3 }, '+=0.1'); });
     tl.to(playBtn, { opacity: 1, duration: 0.3 }, '+=0.1');
     tl.call(function() {
@@ -638,6 +705,8 @@ export function buildEndGame() {
     div2.style.transform = 'scaleX(1)';
     ptsWrap.style.opacity = '1';
     if (loopEl) loopEl.style.opacity = '1';
+    advStatsRow.style.opacity = '1';
+    momentsEls.forEach(function(m) { m.style.opacity = '1'; m.style.transform = 'none'; });
     playBtn.style.opacity = '1';
   }
 

@@ -172,7 +172,9 @@ export function buildRoster() {
 
   var startBtn = buildFlameBadgeButton('START GAME', function() {
     if (SND.snap) SND.snap(); else if (SND.click) SND.click();
-    setGs(function(s) { return Object.assign({}, s, { screen: 'gameplay' }); });
+    // Now hands off to the pregame runway (matchup slam → coin toss →
+    // kickoff) before entering gameplay.
+    setGs(function(s) { return Object.assign({}, s, { screen: 'pregame' }); });
   });
 
   btnWrap.appendChild(startBtn);

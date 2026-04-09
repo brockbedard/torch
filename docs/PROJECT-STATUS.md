@@ -1,6 +1,6 @@
 # TORCH Football — Project Status
 
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-09
 **Updated By:** Claude
 
 ---
@@ -9,14 +9,24 @@
 
 TORCH Football is a mobile card game (Balatro meets college football). 4 fictional college teams, card-based play selection, TORCH points economy (score = wallet). Built with Vite + vanilla JS + GSAP + Howler.js. Solo dev (Brock), 17 days in development.
 
-**Production (main):** v0.35.0 — Moments of Joy shipped.
-**Preview (dev remote):** v0.35.0
+**Production (main):** v0.36.0 — Kickoff Ritual shipped.
+**Preview (dev remote):** v0.36.0
 **Local Dev (dev branch):** Synced with main.
 **Field Animation (src/ui/field/):** Isolated project, iterating independently. NOT merged into game.
 
 ---
 
-## What's In Production (v0.35.0)
+## What's In Production (v0.36.0)
+
+### v0.36.0 "Kickoff Ritual"
+- **3-Beat Pregame Runway**: Replaces the old static matchup card + inline gameplay coin toss with a cinematic 3-beat sequence. Beat 1 slams full-width team cards from top and bottom with a gold VS burn and conditions strip (weather + field surface icons). Beat 2 is a tap-to-flip 3D coin with real team badges on each face, winner's interactive choice between RECEIVE KICKOFF and TAKE A TORCH CARD, and a 3 face-down card pick that flips open to a tier-styled reveal (bronze/silver/gold). Beat 3 stamps KICKOFF with a stadium flash and bass drop. Full implementation in `src/ui/screens/pregame.js` (~720 lines). Uses real `GS.team` / `GS.opponent` / `TORCH_CARDS` data, SND audio (`coinFlip`, `coinCatch`, `cardDeal`, `flipDramatic`, `bassDrop`), and GSAP timelines throughout.
+- **Routing Refactor**: Game flow is now `team select → roster (Meet The Squads) → pregame runway → gameplay`. Previously roster came AFTER the static pregame card; now it precedes the runway so the player sees rosters before the ritual. `gameplay.js` coin toss gate split: `_coinTossDone` + new `_openingKickoffResolved` flag let the runway own the coin toss while gameplay still resolves the opening kickoff via a new `_enterPlayAfterOpeningKickoff()` helper. Legacy inline coin toss preserved as a fallback for dev quick play.
+- **4-Layer Flame SVG Overhaul**: Replaced the old single-path wiggly flame (44×56 viewBox) with a new 4-layer flame (34×34 viewBox) featuring built-in color depth: outer red (#EF3820), dark red shadow (#D8190B), inner gold (#F8AB1F), and hot orange core (#FE5436). Centralized in new `src/utils/flameIcon.js` helper (`flameIconSVG`, `flameSilhouetteSVG`, `flameLayersMarkup`, `FLAME_SILHOUETTE_PATH`, `FLAME_LAYER_1-4`). Swept across 13 files: `brand.js` (header + button badge), `cards.js` (torch card emblem + corner pips + hot flame), `cardTray.js` (discard banner + burn button + SNAP badge), `shop.js` (4 header/cost/cover flames), `gameplay.js` (10 inline flames: torch banner, torch tab, choice icons, 3× gold points rows, tutorial, conversion pts, result overlay), `home.js` (hero title flame), `pregame.js` (TORCH CARD choice icon), `halftime.js` (3 shop flames), `endGame.js` (points row), `teamSelect.js` (footer brand mark), `fieldRenderer.js` (midfield decoration canvas Path2D).
+- **9-Layer Leather Football Overhaul**: Replaced the old gradient football (D4893B → B5652B → 8B4A1F gradient + cream laces) with a new 9-layer leather football featuring tip panels (#1a1208 / #140e06), saddle brown body (#8B4513), dark brown shadow depth (#6B3410), and warm cream stitching (#E8DCC8). Centralized in new `src/utils/footballIcon.js` helper. Swept the field renderer (midfield decoration) and the TORCH title "O" in the home wordmark.
+- **Meet The Squads Polish**: Tighter team identity strip (school tag + team name + OFF/DEF scheme tags + team motto), symmetric OFFENSE/DEFENSE section headers with average star rating pips, flame pips now align vertically across all 14 player rows (previously drifted due to variable trait-column widths), tightened row padding so all 14 players fit on a standard phone viewport without scrolling.
+- **Bug Fixes**: Auto-fullscreen removed (Chrome's fullscreen toast was shifting viewport and pushing KICK OFF button off screen + creating dead space on coin toss). Team card scale-on-select removed (tapping a team no longer causes it to grow/push neighbors). Pregame runway click events wired via direct `.style.pointerEvents = 'auto'` instead of `gsap.set({ pointerEvents })` which was silently dropping the property and making the 3 face-down torch cards unclickable. Coin hover animation keyframe fixed to include `translate(-50%)` so the coin stays centered horizontally during the breathing loop. Phase-exclusive visibility rules in Beat 2 so midfield label / captains / coin / result stamp / choice cards / face-downs / reveal cards each own their own on-screen window. Coin positioned to avoid overlapping midfield label during the spin's peak height and result stamp at rest. Team names (SPECTRES/DOLPHINS/SERPENTS) sized at 38px Teko with 1px letter spacing so 8-character names fit full-width horizontal cards without clipping. Crowd dot horizon silhouette removed (too noisy). Captains removed from coin toss (redundant with team logos on coin faces).
+- **Home Page Mockups**: Four home-screen archetypes in `public/mockups/home-page-mockup.html` informed by Gemini deep research (Hero Focal, Stadium Tunnel, Broadcast Dashboard, Focal Hybrid ★) plus a First Launch variant for Focal Hybrid showing progressive disclosure for new players. Design direction saved but not wired into the real home screen.
+- **Runway Mockup**: Standalone `public/mockups/runway-mockup.html` with interactive 3-beat controls (jump to beat, user/AI winner toggle, choice toggle) used to iterate on the runway design before porting to real code.
 
 ### v0.35.0 "Moments of Joy"
 - **Synergy Chain Combo Pops**: MATCHUP, TEMPO, HOT READ, CARD COMBO badges pop in sequence on Beat 3 with pitch-shifted 12-TET audio cues (ascending semitone steps per badge).
