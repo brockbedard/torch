@@ -74,7 +74,7 @@ export function buildRoster() {
 
   // ── CONTENT (scrollable) ──
   var content = document.createElement('div');
-  content.style.cssText = 'flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 10px;';
+  content.style.cssText = 'flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 10px 4px;';
 
   function renderContent() {
     content.innerHTML = '';
@@ -84,25 +84,37 @@ export function buildRoster() {
     var offRoster = sortByPos(getOffenseRoster(tid), OFF_POS_ORDER);
     var defRoster = sortByPos(getDefenseRoster(tid), DEF_POS_ORDER);
 
-    // Team header card
+    // ── TEAM IDENTITY STRIP ──
+    // Compact card: badge + school/name stack + OFF/DEF scheme tags + motto.
+    // Gives the roster context without eating vertical space.
     var teamHdr = document.createElement('div');
-    teamHdr.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:8px;border-radius:6px;background:linear-gradient(90deg,' + ac + '12,transparent);border-left:3px solid ' + ac + ';';
+    teamHdr.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 10px;margin-bottom:6px;border-radius:6px;background:linear-gradient(90deg,' + ac + '18,' + ac + '04 60%,transparent);border:1px solid ' + ac + '33;border-left:3px solid ' + ac + ';';
     teamHdr.innerHTML =
-      renderTeamBadge(tid, 40) +
-      '<div style="flex:1;">' +
-        "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:#fff;letter-spacing:2px;line-height:0.9;\">" + (tm.school ? tm.school.toUpperCase() + ' ' : '') + tm.name.toUpperCase() + "</div>" +
-        "<div style=\"font-family:'Oswald';font-weight:700;font-size:9px;color:" + ac + ";letter-spacing:1.5px;margin-top:2px;\">" + tm.offScheme + "</div>" +
+      '<div style="flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));">' + renderTeamBadge(tid, 38) + '</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:8px;color:rgba(255,255,255,0.35);letter-spacing:1.5px;line-height:1;\">" + (tm.school || '').toUpperCase() + "</div>" +
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:#fff;letter-spacing:2px;line-height:1;margin-top:2px;\">" + tm.name.toUpperCase() + "</div>" +
+        '<div style="display:flex;gap:6px;margin-top:3px;align-items:center;">' +
+          "<span style=\"font-family:'Oswald';font-weight:700;font-size:8px;color:#00ff44;letter-spacing:1px;\">OFF</span>" +
+          "<span style=\"font-family:'Oswald';font-weight:700;font-size:9px;color:#fff;letter-spacing:0.5px;\">" + (tm.offScheme || '') + "</span>" +
+          '<span style="width:1px;height:8px;background:rgba(255,255,255,0.15);"></span>' +
+          "<span style=\"font-family:'Oswald';font-weight:700;font-size:8px;color:#4DA6FF;letter-spacing:1px;\">DEF</span>" +
+          "<span style=\"font-family:'Oswald';font-weight:700;font-size:9px;color:#fff;letter-spacing:0.5px;\">" + (tm.defScheme || '') + "</span>" +
+        '</div>' +
       '</div>';
     content.appendChild(teamHdr);
 
-    // OFFENSE
-    var offHdr = document.createElement('div');
-    offHdr.style.cssText = 'display:flex;align-items:center;gap:6px;padding:6px 4px;margin-top:4px;';
-    offHdr.innerHTML =
-      '<div style="height:2px;flex:0 0 12px;background:#00ff44;border-radius:1px;"></div>' +
-      "<div style=\"font-family:'Oswald';font-weight:700;font-size:11px;color:#00ff44;letter-spacing:3px;\">OFFENSE</div>" +
-      '<div style="height:1px;flex:1;background:linear-gradient(90deg,#00ff4422,transparent);"></div>';
-    content.appendChild(offHdr);
+    // Motto micro-strip (if present)
+    if (tm.motto) {
+      var motto = document.createElement('div');
+      motto.style.cssText = "font-family:'Rajdhani';font-style:italic;font-weight:500;font-size:9px;color:" + ac + "99;letter-spacing:0.5px;text-align:center;padding:2px 0 6px;";
+      motto.textContent = '\u201C' + tm.motto + '\u201D';
+      content.appendChild(motto);
+    }
+
+    // ── OFFENSE SECTION HEADER ──
+    var offAvg = avgStars(offRoster);
+    content.appendChild(buildSectionHeader('OFFENSE', '#00ff44', offAvg, offRoster.length));
 
     var rows = [];
     offRoster.forEach(function(p) {
@@ -111,13 +123,10 @@ export function buildRoster() {
       rows.push(row);
     });
 
-    // DEFENSE
-    var defHdr = document.createElement('div');
-    defHdr.style.cssText = 'display:flex;align-items:center;gap:6px;padding:6px 4px;margin-top:10px;';
-    defHdr.innerHTML =
-      '<div style="height:2px;flex:0 0 12px;background:#4DA6FF;border-radius:1px;"></div>' +
-      "<div style=\"font-family:'Oswald';font-weight:700;font-size:11px;color:#4DA6FF;letter-spacing:3px;\">DEFENSE</div>" +
-      '<div style="height:1px;flex:1;background:linear-gradient(90deg,#4DA6FF22,transparent);"></div>';
+    // ── DEFENSE SECTION HEADER ──
+    var defAvg = avgStars(defRoster);
+    var defHdr = buildSectionHeader('DEFENSE', '#4DA6FF', defAvg, defRoster.length);
+    defHdr.style.marginTop = '8px';
     content.appendChild(defHdr);
 
     defRoster.forEach(function(p) {
@@ -130,6 +139,28 @@ export function buildRoster() {
     try {
       gsap.from(rows, { opacity: 0, x: -10, duration: 0.15, stagger: 0.02, ease: 'power2.out' });
     } catch(e) {}
+  }
+
+  // Average star rating helper — used to show side-of-ball strength at a glance.
+  function avgStars(roster) {
+    if (!roster || !roster.length) return 0;
+    var sum = 0;
+    for (var i = 0; i < roster.length; i++) sum += (roster[i].stars || 3);
+    return sum / roster.length;
+  }
+
+  // Symmetric section header with color accent, avg star pips, player count.
+  function buildSectionHeader(label, color, avg, count) {
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 2px;margin-top:4px;';
+    var pipsHtml = renderFlamePips(Math.round(avg), 5, color, 8);
+    hdr.innerHTML =
+      '<div style="height:2px;flex:0 0 12px;background:' + color + ';border-radius:1px;"></div>' +
+      "<div style=\"font-family:'Oswald';font-weight:700;font-size:11px;color:" + color + ";letter-spacing:3px;\">" + label + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:8px;color:" + color + "88;letter-spacing:0.5px;\">" + count + " PLAYERS</div>" +
+      '<div style="height:1px;flex:1;background:linear-gradient(90deg,' + color + '22,transparent);"></div>' +
+      '<div style="display:flex;flex-shrink:0;opacity:0.9;">' + pipsHtml + '</div>';
+    return hdr;
   }
 
   renderContent();
@@ -151,26 +182,34 @@ export function buildRoster() {
 }
 
 // ── Build a compact player row ──
+// Star players get a stronger left border, subtle gold-tinted background, and
+// a visible star title. Non-stars stay muted but readable. Row height kept
+// tight so all 14 players fit on a standard phone viewport alongside the
+// team strip, two section headers, and the START GAME button.
 function buildRow(p, tm, ac, sideColor) {
   var isStar = p.isStar;
   var row = document.createElement('div');
-  row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:7px 8px;margin:2px 0;border-radius:5px;' +
-    (isStar ? 'background:linear-gradient(90deg,' + ac + '10,transparent);border-left:2px solid ' + ac + ';' : 'border-left:2px solid transparent;');
+  row.style.cssText = 'display:flex;align-items:center;gap:7px;padding:5px 8px;margin:1px 0;border-radius:5px;position:relative;' +
+    (isStar
+      ? 'background:linear-gradient(90deg,' + ac + '1c,' + ac + '06 40%,transparent);border-left:3px solid ' + ac + ';box-shadow:inset 0 0 0 1px ' + ac + '14;'
+      : 'border-left:3px solid transparent;');
 
-  // Number
+  // Number — star players get team accent, non-stars get muted gray
   row.innerHTML =
-    "<div style=\"font-family:'Teko';font-weight:700;font-size:16px;color:" + (isStar ? ac : '#444') + ";width:24px;text-align:right;line-height:1;flex-shrink:0;\">" + (p.num || '') + "</div>" +
-    // Position badge
-    "<div style=\"font-family:'Oswald';font-weight:700;font-size:8px;color:" + sideColor + ";background:" + sideColor + "12;border:1px solid " + sideColor + "22;border-radius:3px;padding:1px 4px;flex-shrink:0;letter-spacing:0.5px;\">" + p.pos + "</div>" +
-    // Name
+    "<div style=\"font-family:'Teko';font-weight:700;font-size:17px;color:" + (isStar ? ac : '#555') + ";width:24px;text-align:right;line-height:1;flex-shrink:0;\">" + (p.num || '') + "</div>" +
+    // Position badge — filled for stars, outlined for non-stars
+    "<div style=\"font-family:'Oswald';font-weight:700;font-size:8px;color:" + (isStar ? '#0A0804' : sideColor) + ";background:" + (isStar ? sideColor : sideColor + '14') + ";border:1px solid " + sideColor + (isStar ? 'cc' : '33') + ";border-radius:3px;padding:2px 5px;flex-shrink:0;letter-spacing:1px;min-width:18px;text-align:center;\">" + p.pos + "</div>" +
+    // Name + star title
     '<div style="flex:1;min-width:0;">' +
       "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:" + (isStar ? '#fff' : '#bbb') + ";line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">" + p.name + "</div>" +
-      (isStar && p.starTitle ? "<div style=\"font-family:'Rajdhani';font-size:8px;color:" + ac + "88;font-style:italic;\">" + p.starTitle + "</div>" : '') +
+      (isStar && p.starTitle
+        ? "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:8px;color:" + ac + ";font-style:italic;letter-spacing:0.3px;line-height:1.2;margin-top:1px;\">" + p.starTitle + "</div>"
+        : '') +
     '</div>' +
-    // Stars
-    '<div style="display:flex;flex-shrink:0;">' + renderFlamePips(p.stars || 3, 5, '#EBB010', 7) + '</div>' +
-    // Trait
-    "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:7px;color:" + (isStar ? ac : '#444') + ";letter-spacing:0.5px;flex-shrink:0;text-align:right;width:50px;white-space:nowrap;\">" + (p.trait || '') + "</div>";
+    // Flame star pips
+    '<div style="display:flex;flex-shrink:0;gap:0;">' + renderFlamePips(p.stars || 3, 5, '#EBB010', 7) + '</div>' +
+    // Trait — fits content width, readable on dark background
+    "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:" + (isStar ? ac : '#888') + ";letter-spacing:0.5px;flex-shrink:0;text-align:right;white-space:nowrap;padding-left:4px;min-width:60px;\">" + (p.trait || '\u2014') + "</div>";
 
   return row;
 }
