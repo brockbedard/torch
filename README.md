@@ -1,6 +1,6 @@
 # TORCH Football
 
-![Version](https://img.shields.io/badge/version-0.34.0-EBB010?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.36.1-EBB010?style=flat-square)
 ![Status](https://img.shields.io/badge/status-Live-brightgreen?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-Web%20(Mobile%20First)-blue?style=flat-square)
 ![License](https://img.shields.io/badge/license-Private-gray?style=flat-square)
@@ -55,7 +55,7 @@ Your score is your wallet. Buying power costs points.
 
 ## Tech
 
-Built with Vite + vanilla JavaScript. No framework. ~16K lines across 67 source files.
+Built with Vite + vanilla JavaScript. No framework. ~31K lines across 84 source files.
 
 ```bash
 git clone https://github.com/brockbedard/torch.git
@@ -65,13 +65,13 @@ npx vite --host    # → localhost:5173
 
 | Layer | Stack |
 |-------|-------|
-| Frontend | Vanilla JS, HTML5 Canvas 2D |
-| Fonts | Teko, Rajdhani, Barlow Condensed |
-| Audio | Howler.js + jsfxr |
-| Engine | Custom gaussian snap resolver with coverage modifiers |
+| Frontend | Vanilla JS, HTML5 Canvas 2D, GSAP |
+| Fonts | Teko, Rajdhani, Barlow Condensed, Oswald |
+| Audio | Howler.js + ElevenLabs voice samples + jsfxr fallbacks |
+| Engine | Custom gaussian snap resolver + 4-layer personnel system |
 | Icons | game-icons.net (CC BY 3.0) |
 | Hosting | Vercel |
-| Testing | 812 automated assertions + 400-game balance simulation |
+| Testing | 821 engine assertions + 12-combination balance test + game sim |
 
 ## Environments
 
@@ -92,7 +92,9 @@ Full architecture docs, engine specs, and design system in [CLAUDE.md](CLAUDE.md
 
 ## Current Version
 
-**v0.34.0 "Football Integrity"** — Core engine logic audit & UI balance: Fixed "multiple TD" bug via explicit state reset after scoring, implemented Safeties (2pts + free kick from 20), added Overtime support (simplified matching possessions), and fixed numerous other logic gaps. Redesigned and polished all major UI screens (Pregame, Coin Toss, Gameplay) for better readability, spacing, and animation synchronization. [Full changelog](https://github.com/brockbedard/torch/releases/tag/v0.34.0).
+**v0.36.1 "Spring Cleaning"** — Refactor + dead-code pass with no behavior changes. Extracted ~260 lines of inline CSS from `gameplay.js` into a sibling module, consolidated team-specific TD celebration config into `teams.js`, moved icon files into a new `src/assets/icons/` directory, deleted ~70 lines of unreferenced legacy code, archived design mockups and audit drafts. Engine smoke 821/821, balance green. [Full changelog](https://github.com/brockbedard/torch/releases/tag/v0.36.1).
+
+**v0.36.0 "Kickoff Ritual"** — Cinematic 3-beat pregame runway (Matchup Slam → Coin Toss → Kickoff). 4-layer flame SVG and 9-layer leather football SVG overhaul across 13 files. Routing flipped: team select → Meet The Squads → runway → gameplay. [Changelog](https://github.com/brockbedard/torch/releases/tag/v0.36.0).
 
 ---
 

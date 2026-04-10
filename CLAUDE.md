@@ -40,14 +40,13 @@ git checkout main && git merge dev --no-edit && git push origin main  # Producti
 ```
 
 ### Deployment Checklist (production pushes only)
-1. Bump version in `state.js` + `package.json`
-2. Update DEV_LOG in `home.js`
-3. Update this file's Version line
-4. Commit, push dev, merge to main, push main
-5. Tag: `git tag -a v0.X.Y -m "description"` + push tags
-6. Create GitHub Release: `gh release create v0.X.Y --title "title" --notes "changelog"`
-7. Run `/smoke` (engine + balance + build)
-8. Return to dev branch
+1. Bump version in `state.js` (`VERSION` + `VERSION_NAME`) and `package.json`. Home banner + footer label read directly from `state.js`'s `VERSION` export, so no changelog file to update.
+2. Update this file's Version line with a 1-paragraph summary
+3. Commit, push dev, merge to main, push main
+4. Tag: `git tag -a v0.X.Y -m "description"` + push tags
+5. Create GitHub Release: `gh release create v0.X.Y --title "title" --notes "changelog"`
+6. Run `/smoke` (engine + balance + build)
+7. Return to dev branch
 
 ### Versioning
 - **Patch** (v0.25.2→v0.25.3): bug fixes, balance tuning, text/docs changes
@@ -56,69 +55,25 @@ git checkout main && git merge dev --no-edit && git push origin main  # Producti
 - Docs-only changes: no version bump, no tag
 
 ## File Structure
-```
-src/
-├── main.js                    # App router (screen switching)
-├── state.js                   # Global state, version, hand management, team draw weights
-├── style.css                  # CSS custom properties / design system
-├── data/
-│   ├── teams.js               # 4 teams: Boars (sentinels), Dolphins (wolves), Spectres (stags), Serpents
-│   ├── players.js             # 56 players (4 teams × 14: 7 OFF + 7 DEF) with stars, traits, ST ratings
-│   ├── *Plays.js              # 10 OFF + 10 DEF plays per team (80 total)
-│   ├── torchCards.js           # 24 TORCH cards (4 Gold, 10 Silver, 10 Bronze)
-│   ├── torchCardIcons.js       # 20 game-icons.net SVG paths + renderTorchCardIcon()
-│   ├── badges.js              # Badge enum + inline SVG icons
-│   ├── teamLogos.js           # Team mascot SVGs (boar/dolphin/spectre/serpent)
-│   └── gameConditions.js      # Weather/field/crowd (45 combos)
-├── engine/
-│   ├── gameState.js           # GameState class — full game simulation
-│   ├── snapResolver.js        # Play resolution with personnel system + TORCH card effects
-│   ├── personnelSystem.js     # 4-layer personnel modifier (baseline, synergy, heat, matchup)
-│   ├── handManager.js         # 8-card hand: deal, carry-over, discard, reshuffle
-│   ├── stDeck.js              # Special teams burn deck (14 players, burn on use)
-│   ├── aiOpponent.js          # AI play/player selection + archetype weighting
-│   ├── torchPoints.js         # TORCH point calculations (points only go UP)
-│   ├── commentary.js          # Template-based user-biased commentary (4 tiers)
-│   ├── ovrSystem.js           # OVR modifier calculations
-│   ├── badgeCombos.js         # Badge combo checks
-│   ├── sound.js               # jsfxr sound system + card sound placeholders
-│   └── [5 more engine files]
-├── ui/
-│   ├── components/
-│   │   ├── cards.js           # Shared card builders (play, player, torch cards with real SVG icons)
-│   │   ├── cardTray.js        # 8-card tray: play + player rows, discard, GSAP animations
-│   │   ├── shop.js            # Torch Store — TORCH card shop bottom sheet
-│   │   ├── stSelect.js        # Special teams player selection overlay
-│   │   ├── devPanel.js        # In-game dev tools (?dev)
-│   │   ├── detailTooltip.js   # Hover/long-press info tooltips
-│   │   ├── personnelTooltip.js # First-game onboarding tooltips (4 max)
-│   │   └── tooltip.js         # First-time teach tooltips
-│   ├── effects/
-│   │   └── torchPointsAnim.js # Sequential points fly-in animation
-│   ├── field/
-│   │   ├── fieldRenderer.js   # Digital Glass Floor (Canvas 2D, NOT yet wired into gameplay)
-│   │   ├── fieldAnimator.js   # Animation: shake, particles, ball flight, camera follow
-│   │   ├── playBuilder.js     # 13 pass concepts + 6 run concepts
-│   │   └── test.html          # Interactive field test harness
-│   └── screens/
-│       ├── home.js            # Home screen (TORCH FOOTBALL, LET'S GO!)
-│       ├── teamSelect.js      # Team select (centered badges, KICK OFF!)
-│       ├── roster.js          # Meet Your Squad (14 players, pre-game preview)
-│       ├── pregame.js         # Game Day (3s hold, broadcast matchup)
-│       ├── gameplay.js        # Main game (~4000 lines — user-biased everything)
-│       ├── halftime.js        # Halftime report + Torch Store + 2nd half card pick
-│       ├── endGame.js         # End game (TORCH breakdown, Film Room, Play Again)
-│       └── [3 more screens]
-├── tests/
-│   ├── smokeTest.js           # 699 engine assertions (snaps, cards, conversions, state)
-│   ├── balanceTest.js         # 1200-drive balance test
-│   └── gameSimTest.js         # 100-game simulation (scoring, economy, card usage)
-└── docs/
-    ├── research/
-    │   ├── TORCH-7v7-FOOTBALL-RESEARCH.md    # Football source of truth
-    │   └── TORCH-TEAM-SCHEME-IDENTITY.md     # Team scheme identity
-    └── PERSONNEL-AUDIT.md     # Phase A codebase audit
-```
+
+A high-level map. Per-file listings drift fast — `ls src/<dir>/` is always authoritative.
+
+| Path | Purpose | Key entry points |
+|---|---|---|
+| `src/main.js` | App router. Screen switch + transitions, called once on boot. | `render()` |
+| `src/state.js` | Global `GS`, version, draw weights, save/load, getTeam helpers. | `VERSION`, `GS`, `setGs()`, `getTeam()` |
+| `src/style.css` | Global CSS variables (colors, typography, spacing, animation tokens). | — |
+| `src/data/` | All static game data: 4 teams, 56 players, 80 plays (4 × `*Plays.js`), 25 torch cards, 45 weather/field/crowd combos, play sequence combos, badge enum stubs. | `TEAMS`, `TORCH_CARDS`, `getOffenseRoster()`, `getDefenseRoster()` |
+| `src/engine/` | Game state and resolution. ~24 modules: `gameState.js` is the simulation heart, `snapResolver.js` resolves plays, `personnelSystem.js` is the 4-layer player modifier, `aiOpponent.js` is AI brain, `torchPoints.js` is the economy. Plus systems for momentum, achievements, streaks, career stats, game history, injuries, EPA, red zone, turnover returns, audio, haptics. | `new GameState()`, `resolveSnap()`, `selectAIPlay()` |
+| `src/ui/screens/` | Full-screen builders. One per route: `home`, `teamSelect`, `roster`, `pregame`, `gameplay` (the 6,700-line main game loop and refactor candidate), `halftime`, `endGame`, `dailyDrive`, `seasonRecap`, `settings`, `teamCreator`, `visualTest`, `cardMockup`. `gameplay.css.js` holds the gameplay style sheet as a sibling string export. | `buildGameplay()`, `buildPregame()`, etc. |
+| `src/ui/components/` | Reusable widgets: `cards.js` (play/player/torch builders), `cardTray.js` (8-card hand UI), `shop.js` (Torch Store sheet), `stSelect.js` (special teams picker), `devPanel.js`, `statsSheet.js` (scorebug-tap stats), `detailTooltip.js`, `personnelTooltip.js`, `tooltip.js`, `brand.js` (header/flame badge/accent bar), `clipboard.js`. | — |
+| `src/ui/effects/` | `torchPointsAnim.js` — sequential points fly-in. | — |
+| `src/ui/field/` | Canvas 2D field renderer + animator. Wired into gameplay as a background layer. | `createFieldAnimator()` |
+| `src/utils/` | `flameIcon.js` (4-layer flame SVG helper), `footballIcon.js` (9-layer leather football SVG helper). | `flameIconSVG()`, `footballIconSVG()` |
+| `src/assets/icons/` | Icon path data: `teamLogos.js`, `torchCardIcons.js`. Moved out of `src/data/` in v0.36.1. | `renderTeamBadge()`, `renderTorchCardIcon()` |
+| `src/tests/` | `smokeTest.js` (821 engine assertions), `balanceTest.js` (12-combination drive sim), `gameSimTest.js` (full-game simulation), `regressionTest.js`. | `runSmokeTest()`, `runBalanceTest()` |
+| `docs/` | `CLAUDE.md` (design system), `MOBILE-APP-RESEARCH.md`, `PHASE-B-STATUS.md`, `TEST-PLAN-PREPROD.md`, `TESTING-GUIDE.md`, `elevenlabs-sfx-prompts.md`, `research/` (football source-of-truth docs). | — |
+| `public/` | Static assets: `audio/` (crowd loops, sfx, ambient, PA), `mockups/` (in-progress design HTMLs). | — |
 
 ## The 4 Teams
 
@@ -379,34 +334,37 @@ All card animations use GSAP (not CSS transitions). Installed: `gsap@3.14.2`.
 ### Card Sounds (jsfxr placeholders)
 `cardDeal`, `cardThud`, `cardFlick`, `cardLift`, `resultGood`, `resultBad`, `kickThud`, `kickGood`, `kickMiss`, `discardConfirm` — all mapped to jsfxr presets. Replace with Pixabay samples later.
 
-## Torch Cards (24 total)
+## Torch Cards (25 total)
+
+Source of truth: `src/data/torchCards.js`. Tier counts: 4 Gold, 11 Silver, 10 Bronze.
 
 | Tier | Card | Type | Cost | Effect |
 |------|------|------|------|--------|
 | Gold | SCOUT TEAM | pre-snap | 180 | See opponent's play before picking yours |
 | Gold | SURE HANDS | reactive | 200 | Cancel a turnover, drive continues |
-| Gold | BLOCKED KICK | reactive | 150 | Chance to block opponent's FG or punt |
-| Gold | HOUSE CALL | pre-snap | 175 | Returner guaranteed 50+ yard return |
+| Gold | BLOCKED KICK | reactive | 150 | 35% chance to block opponent's FG or punt |
+| Gold | HOUSE CALL | pre-snap | 160 | Returner guaranteed 50+ yard return |
 | Silver | HARD COUNT | pre-snap | 90 | Force opponent to random play |
-| Silver | DEEP SHOT | pre-snap | 100 | 2x yards on pass |
+| Silver | DEEP SHOT | pre-snap | 120 | 2x yards on pass |
 | Silver | TRUCK STICK | pre-snap | 100 | 2x yards on run, no fumble |
-| Silver | CHALLENGE FLAG | reactive | 120 | Reroll snap, 50% better outcome |
-| Silver | PRIME TIME | pre-snap | 75 | Featured player OVR = 99 |
-| Silver | SCOUT REPORT | pre-snap | 30 | See all 7 players instead of 4 |
-| Silver | PRE-SNAP READ | pre-snap | 35 | Reveals if opponent is in zone, man, or blitz |
+| Silver | CHALLENGE FLAG | reactive | 90 | Reroll snap, 50% better outcome |
+| Silver | PRIME TIME | pre-snap | 75 | Featured player OVR = 99, no fumbles |
+| Silver | SCOUT REPORT | pre-snap | 40 | See all 7 players instead of 4 |
+| Silver | PRE-SNAP READ | pre-snap | 35 | Reveal opponent's featured player |
 | Silver | ICE THE KICKER | pre-snap | 20 | Reduce kicker accuracy by 1 star |
 | Silver | CANNON LEG | pre-snap | 25 | Extend FG range by 10 yards |
 | Silver | IRON MAN | pre-snap | 20 | Restore a burned ST player |
 | Silver | RINGER | pre-snap | 30 | Best player kicks regardless of deck |
 | Bronze | PLAY ACTION | pre-snap | 35 | +5 yards vs run defense |
 | Bronze | SCRAMBLE DRILL | pre-snap | 40 | Convert negative to 0 yards |
-| Bronze | 12TH MAN | pre-snap | 50 | +4 yards + 2x TORCH points |
+| Bronze | 12TH MAN | pre-snap | 60 | +4 yards + 2x TORCH points |
 | Bronze | ICE | pre-snap | 50 | Zero opponent OVR + combos |
-| Bronze | PERSONNEL REPORT | pre-snap | 30 | Reveal opponent's player |
-| Bronze | FRESH LEGS | pre-snap | 10 | Extra discard this drive |
-| Bronze | GAME PLAN | pre-snap | 10 | Reset player heat to zero |
+| Bronze | PERSONNEL REPORT | pre-snap | 30 | Reveal opponent's featured player |
+| Bronze | TIMEOUT | pre-snap | 40 | Add 30s to the 2-minute drill clock |
+| Bronze | FRESH LEGS | pre-snap | 15 | Extra discard this drive |
+| Bronze | GAME PLAN | pre-snap | 15 | Reset a player's heat to zero |
 | Bronze | COFFIN CORNER | pre-snap | 15 | Punt guaranteed inside the 10 |
-| Bronze | FAIR CATCH GHOST | pre-snap | 10 | Force opponent fair catch |
+| Bronze | FAIR CATCH GHOST | pre-snap | 15 | Force opponent fair catch |
 
 ## Locked Design Decisions
 - 4 teams, no draft. Predetermined squads and playbooks.
@@ -418,17 +376,10 @@ All card animations use GSAP (not CSS transitions). Installed: `gsap@3.14.2`.
 - User perspective bias is always on — the game takes your side.
 
 ## Not Yet Built
-- Option D snap reveal sequence (commit → blackout → result slam → card reveal)
-  - Offense: result slams first, then cards flip to show matchup (highlight reel feel)
-  - Defense: same rhythm, cold color palette (blue tones vs warm offense tones)
-  - GSAP timeline: commit (0.2s) → blackout (0.2-0.6s) → result slam (0.4s) → card reveal (0.8s) → settle (0.5s)
-  - Tier-scaled: routine plays ~1.8s total, big plays ~4-5s with extended blackout and screen shake
-- Wire Canvas field renderer into gameplay.js (replace DOM field strip)
-- Card activation animations (bronze/silver/gold escalation)
-- Daily Drive shareable result grid (Wordle-style)
-- Stats bottom sheet (swipe-up during gameplay)
-- Real crowd audio loops (infrastructure exists, files not sourced)
-- Multiplayer, dynasty mode, app store release
+- Multiplayer (challenge links, async play)
+- Dynasty mode (multi-season, recruiting, prestige)
+- Native app store release (iOS/Android)
+- Full DOM field-strip → Canvas migration (canvas currently renders as a background layer behind the DOM strip; the DOM strip still hosts card placement)
 
 ## DESIGN PRINCIPLES
 
