@@ -38,8 +38,9 @@ var TEAM_COLORS = {
 };
 
 /**
- * Render a team badge icon at a given size.
- * Icon rendered as team-colored fill on dark circular background.
+ * Render a team mascot icon at a given size.
+ * No background circle — mascot floats on the game's dark canvas.
+ * Multi-path logos use their native colors; single-path use team fg.
  * @param {string} teamId
  * @param {number} size — hero:140, card:80, icon:40, micro:24
  * @returns {string} SVG markup
@@ -48,24 +49,16 @@ export function renderTeamBadge(teamId, size) {
   size = size || 80;
   var colors = TEAM_COLORS[teamId];
   if (!colors) return '';
-  var r = size / 2;
-  var bw = Math.max(1.5, Math.round(size * 0.025));
-  var iconScale = (size * 0.65) / 512;
-  var iconOffset = size * 0.175;
   var markup = ICON_MARKUP[teamId];
   var inner;
   if (markup) {
-    // Multi-path logo with native fill colors
-    inner = '<g transform="translate(' + iconOffset + ',' + iconOffset + ') scale(' + iconScale.toFixed(4) + ')">' + markup + '</g>';
+    inner = markup;
   } else {
-    // Single-path silhouette with team fg color
     var path = ICON_PATHS[teamId];
     if (!path) return '';
-    inner = '<g transform="translate(' + iconOffset + ',' + iconOffset + ') scale(' + iconScale.toFixed(4) + ')">' +
-      '<path d="' + path + '" fill="' + colors.fg + '"/></g>';
+    inner = '<path d="' + path + '" fill="' + colors.fg + '"/>';
   }
-  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" xmlns="http://www.w3.org/2000/svg">' +
-    '<circle cx="' + r + '" cy="' + r + '" r="' + (r - bw) + '" fill="' + colors.bg + '" stroke="' + colors.border + '" stroke-width="' + bw + '"/>' +
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">' +
     inner + '</svg>';
 }
 
