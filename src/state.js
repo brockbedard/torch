@@ -11,8 +11,8 @@ import { STAGS_OFF_PLAYS, STAGS_DEF_PLAYS } from './data/stagsPlays.js';
 import { SERPENTS_OFF_PLAYS, SERPENTS_DEF_PLAYS } from './data/serpentsPlays.js';
 import { getOffenseRoster, getDefenseRoster } from './data/players.js';
 
-export var VERSION = '0.36.1';
-export var VERSION_NAME = 'Spring Cleaning';
+export var VERSION = '0.37.0';
+export var VERSION_NAME = 'Fresh Paint';
 
 // Game speed is locked to normal — multiplier always 1.0.
 // Stub export kept so call sites don't need refactoring.
