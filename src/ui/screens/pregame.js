@@ -24,6 +24,7 @@ import { TORCH_CARDS } from '../../data/torchCards.js';
 import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
 import { renderTorchCardIcon } from '../../assets/icons/torchCardIcons.js';
 import { FLAME_SILHOUETTE_PATH, flameLayersMarkup } from '../../utils/flameIcon.js';
+import { footballLayersMarkup } from '../../utils/footballIcon.js';
 import { buildHomeCard } from '../components/cards.js';
 import AudioStateManager from '../../engine/audioManager.js';
 
@@ -516,16 +517,12 @@ function buildChoiceCard(type) {
   var iconBox = document.createElement('div');
   iconBox.style.cssText = 'width:74px;height:74px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;color:' + accent + ';filter:drop-shadow(0 0 14px rgba(' + tint + ',0.5));';
   if (isKickoff) {
-    // Football icon
+    // 9-layer leather football, rotated vertical (tips up/down)
     iconBox.innerHTML =
-      '<svg viewBox="0 0 64 48" fill="currentColor" width="100%" height="100%">' +
-      '<ellipse cx="32" cy="24" rx="28" ry="17"/>' +
-      '<g fill="none" stroke="#0A1208" stroke-width="2" stroke-linecap="round">' +
-      '<line x1="18" y1="24" x2="46" y2="24"/>' +
-      '<line x1="24" y1="20" x2="24" y2="28"/>' +
-      '<line x1="29" y1="20" x2="29" y2="28"/>' +
-      '<line x1="35" y1="20" x2="35" y2="28"/>' +
-      '<line x1="40" y1="20" x2="40" y2="28"/></g></svg>';
+      '<svg viewBox="17 -25 66 150" preserveAspectRatio="xMidYMid meet" width="100%" height="100%">' +
+      '<g transform="translate(50,50) scale(0.22) rotate(-45) translate(-256,-256)">' +
+      footballLayersMarkup() +
+      '</g></svg>';
   } else {
     // Flame icon — full 4-layer for color depth
     iconBox.innerHTML =
