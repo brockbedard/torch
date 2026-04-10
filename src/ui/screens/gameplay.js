@@ -24,7 +24,6 @@ import { computeEPA, formatEPA, epaLabel, formatKPA } from '../../engine/epa.js'
 import { initPointsAnim, playPointsSequence } from '../effects/torchPointsAnim.js';
 import { injectDevPanel, getForceResult, getForceConversion } from '../components/devPanel.js';
 import { flameIconSVG, flameSilhouetteSVG, flameLayersMarkup, FLAME_SILHOUETTE_PATH } from '../../utils/flameIcon.js';
-import { footballInlineO } from '../../utils/footballIcon.js';
 import { renderCardTray } from '../components/cardTray.js';
 import { createHandState, afterSnap as handAfterSnap, canDiscard, discard as handDiscard, resetDriveDiscards, redeal as handRedeal } from '../../engine/handManager.js';
 import { createSTDeck, burnPlayer, restorePlayer, aiPickST } from '../../engine/stDeck.js';
@@ -934,7 +933,7 @@ export function buildGameplay() {
     '<div class="T-torch-banner-content">' +
       '<div style="position:absolute;inset:0;opacity:0.03;pointer-events:none;background:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.5) 2px,rgba(255,255,255,0.5) 3px);"></div>' +
       _tbFlameSvg +
-      '<div class="T-torch-banner-label">T' + footballInlineO('drop-shadow(0 0 3px rgba(235,176,16,0.4))') + 'RCH</div>' +
+      '<div class="T-torch-banner-label">TORCH</div>' +
       '<div class="T-torch-banner-sep"></div>' +
       '<div class="T-torch-banner-pts">0</div>' +
       _tbFlameSvg +

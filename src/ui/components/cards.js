@@ -11,7 +11,6 @@ import { renderTorchCardIcon, TORCH_CARD_ICONS } from '../../assets/icons/torchC
 import { CATEGORY_COLORS, TIER_COLORS } from '../../data/torchCards.js';
 import { attachDetailListeners } from './detailTooltip.js';
 import { FLAME_SILHOUETTE_PATH, flameIconSVG } from '../../utils/flameIcon.js';
-import { footballInlineO } from '../../utils/footballIcon.js';
 
 // renderTeamBadge removed — player cards no longer use team badges
 
@@ -126,7 +125,7 @@ export function buildHomeCard(type, w, h) {
   } else {
     torchText.style.cssText = "font-family:'Teko';font-weight:700;font-size:" + Math.round(14 * sc) + "px;color:" + accent + ";letter-spacing:4px;margin-top:4px;opacity:0.4;z-index:2;";
   }
-  torchText.innerHTML = 'T' + footballInlineO() + 'RCH';
+  torchText.textContent = 'TORCH';
   card.appendChild(torchText);
 
   // Type label (offense/defense only)
