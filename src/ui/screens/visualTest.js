@@ -8,7 +8,7 @@ import { GS, setGs, setRender, getOffCards, getDefCards } from '../../state.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { TEAMS, getSeasonOpponents } from '../../data/teams.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
-import { renderTeamBadge } from '../../data/teamLogos.js';
+import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
 import { buildHome } from './home.js';
 import { buildTeamSelect } from './teamSelect.js';
 import { buildGameplay } from './gameplay.js';

@@ -6,7 +6,7 @@
 
 import { gsap } from 'gsap';
 import { buildPlayV1, buildMaddenPlayer, buildTorchCard, buildHomeCard } from './cards.js';
-import { renderTorchCardIcon } from '../../data/torchCardIcons.js';
+import { renderTorchCardIcon } from '../../assets/icons/torchCardIcons.js';
 import { SND } from '../../engine/sound.js';
 import { Haptic } from '../../engine/haptics.js';
 import { flameIconSVG, flameSilhouetteSVG } from '../../utils/flameIcon.js';

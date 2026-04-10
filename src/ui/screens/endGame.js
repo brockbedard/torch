@@ -9,7 +9,7 @@ import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam, clearGameSave } from '../../state.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
 import { getFullRoster } from '../../data/players.js';
-import { renderTeamBadge } from '../../data/teamLogos.js';
+import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
 import { buildMaddenPlayer } from '../components/cards.js';
 import AudioStateManager from '../../engine/audioManager.js';
 import { recordDailyResult } from './dailyDrive.js';

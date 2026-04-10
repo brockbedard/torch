@@ -8,7 +8,7 @@ import { gsap } from 'gsap';
 import { GS, setGs, getTeam } from '../../state.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { TEAMS } from '../../data/teams.js';
-import { renderTeamBadge } from '../../data/teamLogos.js';
+import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
 import { renderFlamePips } from '../components/cards.js';
 import { FLAME_PATH, buildTorchHeader, buildFlameBadgeButton, buildAccentBar } from '../components/brand.js';
 import { SND } from '../../engine/sound.js';

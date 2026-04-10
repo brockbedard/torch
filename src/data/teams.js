@@ -19,6 +19,10 @@ export const TEAMS = {
     defScheme: 'PRESS MAN',
     ratings: { offense: 4, defense: 3 },
     vibe: 'Run-first. Physical. Patient football.',
+    celebration: {
+      colors: ['#C4A265', '#8B0000', '#fff', '#EBB010'],
+      phrases: ['BOARS FOOTBALL!', "THAT'S RIDGEMONT!", 'POWER!']
+    }
   },
   wolves: {
     id: 'wolves',
@@ -34,6 +38,10 @@ export const TEAMS = {
     defScheme: 'COVER 1 + SPY',
     ratings: { offense: 3, defense: 4 },
     vibe: 'Relentless. Speed kills. Ride the current.',
+    celebration: {
+      colors: ['#FF7EB3', '#E8548F', '#fff', '#8B2252'],
+      phrases: ['RIDE THE CURRENT!', 'DOLPHINS STRIKE!', 'SPEED KILLS!']
+    }
   },
   stags: {
     id: 'stags',
@@ -49,6 +57,10 @@ export const TEAMS = {
     defScheme: 'COVER 0 BLITZ',
     ratings: { offense: 5, defense: 2 },
     vibe: 'Explosive. Electric. Outscore everyone.',
+    celebration: {
+      colors: ['#85C1E9', '#5DADE2', '#fff', '#1B4F72'],
+      phrases: ['FROM THE SHADOWS!', 'SPECTRES ATTACK!', 'ELECTRIC!']
+    }
   },
   serpents: {
     id: 'serpents',
@@ -64,6 +76,10 @@ export const TEAMS = {
     defScheme: 'PATTERN MATCH',
     ratings: { offense: 3, defense: 4 },
     vibe: 'Cerebral. Methodical. Death by paper cuts.',
+    celebration: {
+      colors: ['#39FF14', '#2E0854', '#fff', '#00cc10'],
+      phrases: ['DEATH BY A THOUSAND CUTS!', 'SERPENTS VENOM!', 'CALCULATED!']
+    }
   },
 };
 

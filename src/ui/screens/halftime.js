@@ -8,7 +8,7 @@ import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam } from '../../state.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
 import { buildTorchCard, buildHomeCard } from '../components/cards.js';
-import { renderTeamBadge } from '../../data/teamLogos.js';
+import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
 import { FLAME_PATH, buildTorchHeader, buildFlameBadgeButton, buildAccentBar } from '../components/brand.js';
 import AudioStateManager from '../../engine/audioManager.js';
 import { setHalftimeScore } from '../../engine/commentary.js';

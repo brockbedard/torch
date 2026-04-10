@@ -7,7 +7,7 @@
 
 import { gsap } from 'gsap';
 import { TEAMS } from '../../data/teams.js';
-import { renderTorchCardIcon, TORCH_CARD_ICONS } from '../../data/torchCardIcons.js';
+import { renderTorchCardIcon, TORCH_CARD_ICONS } from '../../assets/icons/torchCardIcons.js';
 import { CATEGORY_COLORS, TIER_COLORS } from '../../data/torchCards.js';
 import { attachDetailListeners } from './detailTooltip.js';
 import { FLAME_SILHOUETTE_PATH, flameIconSVG } from '../../utils/flameIcon.js';

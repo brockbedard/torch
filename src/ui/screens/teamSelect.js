@@ -12,7 +12,7 @@ import { TEAMS, getSeasonOpponents } from '../../data/teams.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { buildMaddenPlayer, teamHelmetSvg, renderFlamePips } from '../components/cards.js';
 import { FLAME_PATH, buildTorchHeader, buildFlameBadgeButton } from '../components/brand.js';
-import { renderTeamBadge } from '../../data/teamLogos.js';
+import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
 import { generateConditions, WEATHER, FIELD, CROWD } from '../../data/gameConditions.js';
 import { getTeamRecord } from './endGame.js';
 // getStreak removed — no longer shown on team select

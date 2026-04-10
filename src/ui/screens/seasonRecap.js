@@ -6,7 +6,7 @@
 import { gsap } from 'gsap';
 import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam } from '../../state.js';
-import { renderTeamBadge } from '../../data/teamLogos.js';
+import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
 import { getSeasonOpponents } from '../../data/teams.js';
 import AudioStateManager from '../../engine/audioManager.js';
 
@@ -187,13 +187,7 @@ export function buildSeasonRecap() {
 
     // Champion confetti
     if (isChampion) {
-      var TEAM_CELEBRATION_SR = {
-        sentinels: ['#C4A265', '#8B0000', '#fff', '#EBB010'],
-        wolves:    ['#FF7EB3', '#E8548F', '#fff', '#8B2252'],
-        stags:     ['#85C1E9', '#5DADE2', '#fff', '#1B4F72'],
-        serpents:  ['#39FF14', '#2E0854', '#fff', '#00cc10'],
-      };
-      var champColors = TEAM_CELEBRATION_SR[GS.team] || [team.accent, '#EBB010', '#fff', '#00ff44'];
+      var champColors = team.celebration.colors;
       setTimeout(function() {
         for (var ci = 0; ci < 60; ci++) {
           var conf = document.createElement('div');

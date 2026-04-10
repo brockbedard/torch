@@ -9,7 +9,7 @@ import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam, getOffCards, getDefCards } from '../../state.js';
 import { TEAMS } from '../../data/teams.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
-import { renderTeamBadge } from '../../data/teamLogos.js';
+import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
 
 // ============================================================
 // SEEDED RNG — LCG (deterministic, date-based)

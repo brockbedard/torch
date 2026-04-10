@@ -11,8 +11,8 @@ import { STAGS_OFF_PLAYS, STAGS_DEF_PLAYS } from './data/stagsPlays.js';
 import { SERPENTS_OFF_PLAYS, SERPENTS_DEF_PLAYS } from './data/serpentsPlays.js';
 import { getOffenseRoster, getDefenseRoster } from './data/players.js';
 
-export var VERSION = '0.36.0';
-export var VERSION_NAME = 'Kickoff Ritual';
+export var VERSION = '0.36.1';
+export var VERSION_NAME = 'Spring Cleaning';
 
 // Game speed is locked to normal — multiplier always 1.0.
 // Stub export kept so call sites don't need refactoring.
@@ -185,34 +185,6 @@ export function getDrawWeight(teamId, playType) {
   var tw = TEAM_DRAW_WEIGHTS[teamId];
   return (tw && tw[playType]) || 1;
 }
-
-// ============================================================
-// HAND MANAGEMENT — Option D (draw 5, cycle through 10)
-// ============================================================
-
-export function initHand(playbook) {
-  var shuffled = shuffle(playbook.slice());
-  return { hand: shuffled.slice(0, 5), deck: shuffled.slice(5) };
-}
-
-export function cycleCard(hand, deck, playedIndex) {
-  var played = hand.splice(playedIndex, 1)[0];
-  deck.push(played);
-  if (deck.length > 0) {
-    hand.push(deck.shift());
-  }
-  return { hand: hand, deck: deck };
-}
-
-// Hot Route: reshuffle all 10, deal 5 fresh
-export function hotRoute(hand, deck) {
-  var combined = shuffle(hand.concat(deck));
-  return { hand: combined.slice(0, 5), deck: combined.slice(5) };
-}
-
-// ============================================================
-// UTILITIES
-// ============================================================
 
 export function shuffle(arr) {
   var a = arr.slice();
