@@ -11,7 +11,7 @@ import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { buildHomeCard } from '../components/cards.js';
 import { FLAME_PATH, buildFlameBadgeButton } from '../components/brand.js';
 import { flameIconSVG } from '../../utils/flameIcon.js';
-import { footballLayersMarkup } from '../../utils/footballIcon.js';
+import { footballInlineO } from '../../utils/footballIcon.js';
 import AudioStateManager from '../../engine/audioManager.js';
 
 function injectHomeStyles() {
@@ -93,28 +93,9 @@ export function buildHome() {
   // TORCH wordmark with football-O
   var title = document.createElement('h1');
   title.style.cssText = "font-family:'Teko';font-weight:900;font-size:64px;line-height:0.8;color:#EBB010;letter-spacing:8px;text-align:center;z-index:2;animation:titleGlow 4s ease-in-out infinite;position:relative;opacity:0;margin:0;";
-  title.textContent = 'T';
-  // Football-O SVG — new multi-layer TORCH leather football at its natural
-  // 45° orientation (diamond, tips top-left/bottom-right). The old SVG
-  // rotated a horizontal football by -45° to match; the new one is already
-  // at that angle, so rotation is dropped. Gradient defs removed — the
-  // football has 9 layers of built-in color depth.
-  var oSpan = document.createElement('span');
-  oSpan.style.cssText = 'display:inline-block;width:0.52em;height:0.72em;vertical-align:top;position:relative;margin:0 3px 0 -2px;overflow:visible;';
-  var oSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  oSvg.setAttribute('viewBox', '0 0 100 100');
-  oSvg.setAttribute('fill', 'none');
-  oSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-  oSvg.style.cssText = 'width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 5px rgba(255,140,0,0.5));';
-  oSvg.innerHTML =
-    '<g transform="translate(50,50) scale(0.22) translate(-256,-256)">' +
-    footballLayersMarkup() +
-    '</g>';
-  oSpan.appendChild(oSvg);
-  title.appendChild(oSpan);
-  var rch = document.createElement('span');
-  rch.textContent = 'RCH';
-  title.appendChild(rch);
+  // Football-O replaces the "O" in TORCH — vertical orientation, leather detail.
+  // Cap height for 64px Teko bold ≈ 51px.
+  title.innerHTML = 'T' + footballInlineO(51, 'drop-shadow(0 0 6px rgba(255,140,0,0.5)) drop-shadow(0 2px 3px rgba(0,0,0,0.6))') + 'RCH';
   content.appendChild(title);
 
   // FOOTBALL subtitle

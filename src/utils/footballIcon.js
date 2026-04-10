@@ -75,6 +75,30 @@ export function footballIconSVG(size, opacity, extraStyle) {
 }
 
 /**
+ * Returns an inline <span> with a vertical football SVG sized to replace
+ * the "O" in "TORCH" at the caller's font size. Height-based so it matches
+ * cap height: `'T' + footballInlineO(capH) + 'RCH'`.
+ *
+ * After rotate(-45), the football's vertical extent is ~126 units and
+ * horizontal is ~44 units (aspect ratio ≈ 0.35). viewBox "27 -15 46 130"
+ * tightly frames the vertical football with 1-unit padding.
+ *
+ * @param {number} [height=18] - Height in px (should match cap height)
+ * @param {string} [filter=''] - Optional CSS filter (e.g. drop-shadow)
+ * @returns {string} HTML markup for the inline span
+ */
+export function footballInlineO(height, filter) {
+  height = height || 18;
+  var width = Math.round(height * 0.36);
+  var f = filter ? 'filter:' + filter + ';' : '';
+  return '<span style="display:inline-block;width:' + width + 'px;height:' + height + 'px;vertical-align:middle;position:relative;margin:0 1px;">' +
+    '<svg viewBox="27 -15 46 130" preserveAspectRatio="xMidYMid meet" style="position:absolute;inset:0;width:100%;height:100%;' + f + '">' +
+    '<g transform="translate(50,50) scale(0.22) rotate(-45) translate(-256,-256)">' +
+    footballLayersMarkup() +
+    '</g></svg></span>';
+}
+
+/**
  * Returns just the inner path markup (no wrapping <svg>). Use when you
  * need to embed the football inside an existing SVG with its own viewBox,
  * <defs>, or wrapping <g> (e.g., the TORCH title "O" with a gradient).
