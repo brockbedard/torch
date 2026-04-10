@@ -1296,7 +1296,7 @@ export function buildGameplay() {
       const hasTorchCards = torchInventory.length > 0;
       // 4-layer flame — the native color depth replaces the old red→accent
       // gradient. Team accent glow applied via drop-shadow filter.
-      var _flameSvg = '<svg viewBox="0 0 34 34" width="18" height="18" style="display:block;margin:0 auto 2px;animation:T-flame-pulse 2s ease-in-out infinite;filter:drop-shadow(0 0 4px ' + hTeam.accent + ')">' + flameLayersMarkup() + '</svg>';
+      var _flameSvg = flameSilhouetteSVG(18, hTeam.accent, 1, 'display:block;margin:0 auto 2px;animation:T-flame-pulse 2s ease-in-out infinite;filter:drop-shadow(0 0 4px ' + hTeam.accent + ');');
       const torchLbl = hasTorchCards
         ? (phase === 'torch' ? 'TAP<br><br>TORCH<br><br>CARD' : _flameSvg + '<span class="T-torch-brand" style="color:' + hTeam.accent + '">TORCH</span>')
         : _flameSvg + '<span class="T-torch-brand" style="color:' + hTeam.accent + '">TORCH</span>';
@@ -2099,7 +2099,7 @@ export function buildGameplay() {
     btn.style.cssText = "width:80%;max-width:300px;padding:0;border:none;border-radius:6px;background:linear-gradient(180deg,#EBB010,#FF4511);display:flex;align-items:stretch;overflow:hidden;cursor:pointer;box-shadow:0 4px 16px rgba(255,69,17,0.3),0 0 20px rgba(235,176,16,0.15);margin-top:16px;";
     btn.innerHTML =
       '<div style="background:rgba(0,0,0,0.2);padding:10px 12px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(0,0,0,0.15);">' +
-        flameIconSVG(18, 1, 'filter:drop-shadow(0 0 3px rgba(255,69,17,0.4))') +
+        flameSilhouetteSVG(18, '#fff') +
       '</div>' +
       "<div style=\"flex:1;padding:12px;font-family:'Teko';font-weight:700;font-size:18px;color:#fff;letter-spacing:4px;text-align:center;text-shadow:0 2px 4px rgba(0,0,0,0.3);line-height:1;\">" + (text || 'CONTINUE') + '</div>';
     btn.onclick = function(e) { e.stopPropagation(); if (onTap) onTap(); };
@@ -2192,7 +2192,7 @@ export function buildGameplay() {
     if (opts.torchPts && opts.torchPts > 0) {
       var pts = document.createElement('div');
       pts.style.cssText = "display:flex;align-items:center;gap:4px;opacity:0;transform:translateY(10px) scale(0.8);";
-      pts.innerHTML = flameIconSVG(18, 1, 'filter:drop-shadow(0 0 4px rgba(235,176,16,0.4))') +
+      pts.innerHTML = flameSilhouetteSVG(18, '#EBB010') +
         "<span style=\"font-family:'Teko';font-weight:700;font-size:18px;color:#EBB010;text-shadow:0 0 8px rgba(235,176,16,0.4);letter-spacing:1px;\">+" + opts.torchPts + "</span>";
       container.appendChild(pts);
     }
@@ -4097,7 +4097,7 @@ export function buildGameplay() {
           setTimeout(function() {
             var line = document.createElement('div');
             line.style.cssText = "display:flex;align-items:center;gap:4px;justify-content:center;opacity:0;transform:translateY(10px) scale(0.8);";
-            line.innerHTML = flameIconSVG(18, 1, 'filter:drop-shadow(0 0 4px rgba(235,176,16,0.4))') +
+            line.innerHTML = flameSilhouetteSVG(18, '#EBB010') +
               "<span style=\"font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;text-shadow:0 0 8px rgba(235,176,16,0.4);\">" + item.label + " +" + item.pts + "</span>";
             cascadeWrap.appendChild(line);
             try { gsap.to(line, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: 'back.out(1.5)' }); } catch(e) { line.style.opacity='1'; line.style.transform='none'; }
@@ -4267,7 +4267,7 @@ export function buildGameplay() {
 
           var convPtsEl = document.createElement('div');
           convPtsEl.style.cssText = "display:flex;align-items:center;gap:4px;opacity:0;transform:translateY(10px) scale(0.8);margin-top:4px;";
-          convPtsEl.innerHTML = flameIconSVG(18, 1, 'filter:drop-shadow(0 0 4px rgba(235,176,16,0.4))') +
+          convPtsEl.innerHTML = flameSilhouetteSVG(18, '#EBB010') +
             "<span style=\"font-family:'Teko';font-weight:700;font-size:22px;color:#EBB010;text-shadow:0 0 8px rgba(235,176,16,0.4);letter-spacing:1px;\">+" + convPts + "</span>";
           convWrap.appendChild(convPtsEl);
           try { gsap.to(convPtsEl, { opacity: 1, y: 0, scale: 1, duration: 0.3, delay: 0.4, ease: 'back.out(1.5)' }); } catch(e) { convPtsEl.style.opacity='1'; convPtsEl.style.transform='none'; }

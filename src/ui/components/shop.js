@@ -56,7 +56,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
   hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;';
   hdr.innerHTML =
     '<div style="display:flex;align-items:center;gap:6px;">' +
-      flameIconSVG(16, 0.6) +
+      "<svg viewBox='0 0 34 34' width='12' height='12' fill='#EBB010' style='opacity:0.7;'><path d='" + FLAME_PATH + "'/></svg>" +
       "<div style=\"font-family:'Oswald';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:3px;\">TORCH STORE</div>" +
     '</div>' +
     '<div style="display:flex;align-items:center;gap:4px;">' +
@@ -113,9 +113,9 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
 
     // Cost
     var costEl = document.createElement('div');
-    costEl.style.cssText = "display:flex;align-items:center;gap:3px;";
+    costEl.style.cssText = "display:flex;align-items:center;gap:4px;";
     costEl.innerHTML =
-      "<svg viewBox='0 0 34 34' width='10' height='10' fill='" + (canAfford ? '#EBB010' : '#444') + "'><path d='" + FLAME_PATH + "'/></svg>" +
+      "<svg viewBox='0 0 34 34' width='11' height='11' fill='" + (canAfford ? '#EBB010' : '#444') + "'><path d='" + FLAME_PATH + "'/></svg>" +
       "<span style=\"font-family:'Teko';font-weight:700;font-size:14px;color:" + (canAfford ? '#EBB010' : '#444') + ";letter-spacing:1px;\">" + card.cost + "</span>";
     wrap.appendChild(costEl);
 

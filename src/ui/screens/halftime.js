@@ -299,7 +299,7 @@ export function buildHalftime() {
       "<div style=\"font-family:'Oswald';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:3px;\">TORCH STORE</div>" +
     '</div>' +
     '<div style="display:flex;align-items:center;gap:4px;">' +
-      "<svg viewBox='0 0 34 34' width='13' height='13' fill='#EBB010'><path d='" + FLAME_PATH + "'/></svg>" +
+      "<svg viewBox='0 0 34 34' width='11' height='11' fill='#EBB010'><path d='" + FLAME_PATH + "'/></svg>" +
       "<span style=\"font-family:'Teko';font-weight:700;font-size:16px;color:#EBB010;\">" + humanPts + "</span>" +
       "<span style=\"font-family:'Rajdhani';font-weight:600;font-size:8px;color:#EBB01066;letter-spacing:1px;\">PTS</span>" +
     '</div>';
@@ -327,8 +327,8 @@ export function buildHalftime() {
       "<div style=\"font-family:'Oswald';font-weight:700;font-size:7px;color:" + tc + ";opacity:0.5;letter-spacing:1px;\">" + card.tier + '</div>' +
       flameIconSVG(21, 0.5, 'filter:drop-shadow(0 0 4px ' + tc + '55)') +
       "<div style=\"font-family:'Teko';font-weight:700;font-size:10px;color:#fff;text-align:center;line-height:1;letter-spacing:0.5px;\">" + card.name + '</div>' +
-      '<div style="display:flex;align-items:center;gap:2px;margin-top:2px;">' +
-        "<svg viewBox='0 0 34 34' width='10' height='10' fill='#EBB010'><path d='" + FLAME_PATH + "'/></svg>" +
+      '<div style="display:flex;align-items:center;gap:4px;margin-top:2px;">' +
+        "<svg viewBox='0 0 34 34' width='11' height='11' fill='#EBB010'><path d='" + FLAME_PATH + "'/></svg>" +
         "<span style=\"font-family:'Teko';font-weight:700;font-size:12px;color:#EBB010;\">" + card.cost + '</span>' +
       '</div>';
 
