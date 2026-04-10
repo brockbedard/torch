@@ -119,15 +119,14 @@ export function buildHomeCard(type, w, h) {
   emblem.innerHTML = flameIconSVG(embSize, embOp, 'filter:' + embGlow);
   card.appendChild(emblem);
 
-  // "T🏈RCH" text — football replaces the O
+  // "T🏈RCH" text — football replaces the O, em-based sizing auto-scales
   var torchText = document.createElement('div');
-  var fbCapH = Math.round((isTorch ? 13 : 11) * sc);
   if (isTorch) {
     torchText.style.cssText = "font-family:'Teko';font-weight:700;font-size:" + Math.round(16 * sc) + "px;letter-spacing:4px;margin-top:-4px;opacity:0.7;z-index:2;background:linear-gradient(180deg,#FFD060,#FF4511);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;";
   } else {
     torchText.style.cssText = "font-family:'Teko';font-weight:700;font-size:" + Math.round(14 * sc) + "px;color:" + accent + ";letter-spacing:4px;margin-top:4px;opacity:0.4;z-index:2;";
   }
-  torchText.innerHTML = 'T' + footballInlineO(fbCapH) + 'RCH';
+  torchText.innerHTML = 'T' + footballInlineO() + 'RCH';
   card.appendChild(torchText);
 
   // Type label (offense/defense only)

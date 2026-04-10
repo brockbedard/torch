@@ -93,9 +93,8 @@ export function buildHome() {
   // TORCH wordmark with football-O
   var title = document.createElement('h1');
   title.style.cssText = "font-family:'Teko';font-weight:900;font-size:64px;line-height:0.8;color:#EBB010;letter-spacing:8px;text-align:center;z-index:2;animation:titleGlow 4s ease-in-out infinite;position:relative;opacity:0;margin:0;";
-  // Football-O replaces the "O" in TORCH — vertical orientation, leather detail.
-  // Cap height for 64px Teko bold ≈ 51px.
-  title.innerHTML = 'T' + footballInlineO(51, 'drop-shadow(0 0 6px rgba(255,140,0,0.5)) drop-shadow(0 2px 3px rgba(0,0,0,0.6))') + 'RCH';
+  // Football-O replaces the "O" in TORCH — em-based sizing auto-matches font.
+  title.innerHTML = 'T' + footballInlineO('drop-shadow(0 0 6px rgba(255,140,0,0.5)) drop-shadow(0 2px 3px rgba(0,0,0,0.6))') + 'RCH';
   content.appendChild(title);
 
   // FOOTBALL subtitle
