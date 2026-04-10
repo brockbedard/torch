@@ -76,23 +76,27 @@ export function footballIconSVG(size, opacity, extraStyle) {
 
 /**
  * Returns an inline <span> with a vertical football SVG sized to replace
- * the "O" in "TORCH" at the caller's font size. Height-based so it matches
- * cap height: `'T' + footballInlineO(capH) + 'RCH'`.
+ * the "O" in "TORCH" at the caller's font size.
  *
- * After rotate(-45), the football's vertical extent is ~126 units and
- * horizontal is ~44 units (aspect ratio ≈ 0.35). viewBox "27 -15 46 130"
- * tightly frames the vertical football with 1-unit padding.
+ * Computed bounding box after rotate(-45):
+ *   x: 20..80  y: -22..122  (width 60, height 144, aspect 0.417)
+ * viewBox "17 -25 66 150" adds 3-unit padding on all sides.
  *
- * @param {number} [height=18] - Height in px (should match cap height)
+ * Span width is set to match Teko Bold "O" character width (~0.58 × capHeight)
+ * so the football sits in the same horizontal space the letter would occupy.
+ * The football is narrower than the O (0.44 vs 0.58 aspect) so it centres
+ * within the span with natural horizontal breathing room.
+ *
+ * @param {number} [capHeight=18] - Cap height in px
  * @param {string} [filter=''] - Optional CSS filter (e.g. drop-shadow)
  * @returns {string} HTML markup for the inline span
  */
-export function footballInlineO(height, filter) {
-  height = height || 18;
-  var width = Math.round(height * 0.36);
+export function footballInlineO(capHeight, filter) {
+  capHeight = capHeight || 18;
+  var width = Math.round(capHeight * 0.58);
   var f = filter ? 'filter:' + filter + ';' : '';
-  return '<span style="display:inline-block;width:' + width + 'px;height:' + height + 'px;vertical-align:middle;position:relative;margin:0 1px;">' +
-    '<svg viewBox="27 -15 46 130" preserveAspectRatio="xMidYMid meet" style="position:absolute;inset:0;width:100%;height:100%;' + f + '">' +
+  return '<span style="display:inline-block;width:' + width + 'px;height:' + capHeight + 'px;vertical-align:middle;position:relative;">' +
+    '<svg viewBox="17 -25 66 150" preserveAspectRatio="xMidYMid meet" style="position:absolute;inset:0;width:100%;height:100%;' + f + '">' +
     '<g transform="translate(50,50) scale(0.22) rotate(-45) translate(-256,-256)">' +
     footballLayersMarkup() +
     '</g></svg></span>';

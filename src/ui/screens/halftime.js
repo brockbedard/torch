@@ -10,6 +10,7 @@ import { TORCH_CARDS } from '../../data/torchCards.js';
 import { buildTorchCard, buildHomeCard } from '../components/cards.js';
 import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
 import { FLAME_PATH, buildTorchHeader, buildFlameBadgeButton, buildAccentBar } from '../components/brand.js';
+import { flameIconSVG } from '../../utils/flameIcon.js';
 import AudioStateManager from '../../engine/audioManager.js';
 import { setHalftimeScore } from '../../engine/commentary.js';
 import { formatKPA } from '../../engine/epa.js';
@@ -324,7 +325,7 @@ export function buildHalftime() {
 
     cardSlot.innerHTML =
       "<div style=\"font-family:'Oswald';font-weight:700;font-size:7px;color:" + tc + ";opacity:0.5;letter-spacing:1px;\">" + card.tier + '</div>' +
-      "<svg viewBox='0 0 34 34' width='21' height='21' fill='" + tc + "' style='opacity:0.5;'><path d='" + FLAME_PATH + "'/></svg>" +
+      flameIconSVG(21, 0.5, 'filter:drop-shadow(0 0 4px ' + tc + '55)') +
       "<div style=\"font-family:'Teko';font-weight:700;font-size:10px;color:#fff;text-align:center;line-height:1;letter-spacing:0.5px;\">" + card.name + '</div>' +
       '<div style="display:flex;align-items:center;gap:2px;margin-top:2px;">' +
         "<svg viewBox='0 0 34 34' width='10' height='10' fill='#EBB010'><path d='" + FLAME_PATH + "'/></svg>" +

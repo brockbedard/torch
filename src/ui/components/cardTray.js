@@ -740,11 +740,10 @@ export function renderCardTray(opts) {
   snapBar.className = 'CT-snap-bar';
   var snapBtn = document.createElement('button');
   snapBtn.className = 'CT-snap-btn' + (opts.is2Min ? ' CT-snap-urgent' : '') + (opts.is4thDownGo ? ' CT-snap-aura' : '') + (opts.pressureBeat ? ' CT-snap-pressure' : '');
-  // Flame badge left + text right — white silhouette on the SNAP button,
-  // matches the buildFlameBadgeButton treatment in brand.js.
+  // Flame badge left — 4-layer for color depth on the SNAP button.
   var snapBadge = document.createElement('div');
   snapBadge.style.cssText = 'background:rgba(0,0,0,0.2);padding:12px 14px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(0,0,0,0.15);';
-  snapBadge.innerHTML = flameSilhouetteSVG(24, '#fff');
+  snapBadge.innerHTML = flameIconSVG(24, 1, 'filter:drop-shadow(0 0 4px rgba(255,69,17,0.4))');
   var snapText = document.createElement('div');
   snapText.style.cssText = "flex:1;padding:14px;font-family:'Teko';font-weight:700;font-size:24px;color:#fff;letter-spacing:8px;text-align:center;text-shadow:0 2px 4px rgba(0,0,0,0.3);line-height:1;";
   snapText.textContent = opts.isConversion ? 'ATTEMPT' : 'SNAP';

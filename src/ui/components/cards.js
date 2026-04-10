@@ -110,19 +110,13 @@ export function buildHomeCard(type, w, h) {
   pipsEl.innerHTML = pipsHtml;
   card.appendChild(pipsEl.firstChild);
 
-  // Center flame emblem — TORCH card gets the full 4-layer flame (built-in
-  // color depth), offense/defense cards get a team-accent silhouette.
-  // New flame is on a square 34×34 viewBox so we use equal W/H.
+  // Center flame emblem — full 4-layer flame for all card types.
   var embSize = Math.round((isTorch ? 78 : 36) * sc);
-  var embOp = isTorch ? '0.9' : '0.6';
+  var embOp = isTorch ? 0.9 : 0.6;
   var embGlow = isTorch ? 'drop-shadow(0 0 12px #FF451188)' : 'drop-shadow(0 0 8px ' + accent + '55)';
   var emblem = document.createElement('div');
   emblem.style.cssText = 'z-index:2;animation:emblemGlow 3s ease-in-out infinite;';
-  if (isTorch) {
-    emblem.innerHTML = flameIconSVG(embSize, parseFloat(embOp), 'filter:' + embGlow);
-  } else {
-    emblem.innerHTML = '<svg viewBox="0 0 34 34" width="' + embSize + '" height="' + embSize + '" fill="' + accent + '" style="opacity:' + embOp + ';filter:' + embGlow + ';"><path d="' + FLAME_PATH + '"/></svg>';
-  }
+  emblem.innerHTML = flameIconSVG(embSize, embOp, 'filter:' + embGlow);
   card.appendChild(emblem);
 
   // "T🏈RCH" text — football replaces the O

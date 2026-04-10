@@ -86,9 +86,7 @@ export function buildFlameBadgeButton(label, onClick, opts) {
 
   var badge = document.createElement('div');
   badge.style.cssText = 'background:rgba(0,0,0,0.2);padding:12px 14px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(0,0,0,0.15);';
-  // White silhouette flame emblem on the button badge (solid white, not
-  // the full-color flame — the button background is already red/gold).
-  badge.innerHTML = flameSilhouetteSVG(21, '#fff');
+  badge.innerHTML = flameIconSVG(21, 1, 'filter:drop-shadow(0 0 4px rgba(255,69,17,0.4))');
 
   var text = document.createElement('div');
   text.style.cssText = "flex:1;padding:14px;font-family:'Teko';font-weight:700;font-size:22px;color:#fff;letter-spacing:6px;text-align:center;text-shadow:0 2px 4px rgba(0,0,0,0.3);line-height:1;";

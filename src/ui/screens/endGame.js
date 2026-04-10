@@ -13,7 +13,7 @@ import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
 import { buildMaddenPlayer } from '../components/cards.js';
 import AudioStateManager from '../../engine/audioManager.js';
 import { recordDailyResult } from './dailyDrive.js';
-import { flameSilhouetteSVG } from '../../utils/flameIcon.js';
+import { flameSilhouetteSVG, flameIconSVG } from '../../utils/flameIcon.js';
 import { updateStreak, getStreak, getH2H } from '../../engine/streaks.js';
 import { checkAchievements } from '../../engine/achievements.js';
 import { recordGameStats } from '../../engine/careerStats.js';
@@ -465,7 +465,7 @@ export function buildEndGame() {
   ptsWrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;opacity:0;';
   var ptsRow = document.createElement('div');
   ptsRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
-  ptsRow.innerHTML = flameSilhouetteSVG(18, '#EBB010') +
+  ptsRow.innerHTML = flameIconSVG(18, 1, 'filter:drop-shadow(0 0 4px rgba(235,176,16,0.4))') +
     "<span style=\"font-family:'Teko';font-weight:900;font-size:30px;color:#EBB010;text-shadow:0 0 12px rgba(235,176,16,0.4);\">+" + totalEarned + "</span>";
   ptsWrap.appendChild(ptsRow);
   var ptsLabel = document.createElement('div');

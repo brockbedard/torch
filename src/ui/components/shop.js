@@ -9,6 +9,7 @@ import { Haptic } from '../../engine/haptics.js';
 import { TORCH_CARDS, getRandomCard, SHOP_WEIGHTS } from '../../data/torchCards.js';
 import { buildTorchCard } from './cards.js';
 import { FLAME_PATH } from './brand.js';
+import { flameIconSVG, flameLayersMarkup } from '../../utils/flameIcon.js';
 
 /**
  * Show the TORCH card shop.
@@ -55,7 +56,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
   hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;';
   hdr.innerHTML =
     '<div style="display:flex;align-items:center;gap:6px;">' +
-      "<svg viewBox='0 0 34 34' width='16' height='16' fill='#EBB010' style='opacity:0.6;'><path d='" + FLAME_PATH + "'/></svg>" +
+      flameIconSVG(16, 0.6) +
       "<div style=\"font-family:'Oswald';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:3px;\">TORCH STORE</div>" +
     '</div>' +
     '<div style="display:flex;align-items:center;gap:4px;">' +
@@ -106,7 +107,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
       'display:flex;align-items:center;justify-content:center;' +
       'z-index:10;pointer-events:none;will-change:opacity,transform;';
     cover.innerHTML =
-      "<svg viewBox='0 0 34 34' width='40' height='40' fill='" + tierColor + "' style='opacity:0.45;'><path d='" + FLAME_PATH + "'/></svg>";
+      flameIconSVG(40, 0.45, 'filter:drop-shadow(0 0 8px ' + tierColor + '55)');
     cardEl.appendChild(cover);
     _glowItems.push({ cardEl: cardEl, cover: cover, tier: card.tier, color: tierColor });
 

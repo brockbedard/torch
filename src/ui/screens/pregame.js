@@ -23,7 +23,7 @@ import { TEAMS } from '../../data/teams.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
 import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
 import { renderTorchCardIcon } from '../../assets/icons/torchCardIcons.js';
-import { FLAME_SILHOUETTE_PATH } from '../../utils/flameIcon.js';
+import { FLAME_SILHOUETTE_PATH, flameLayersMarkup } from '../../utils/flameIcon.js';
 import { buildHomeCard } from '../components/cards.js';
 import AudioStateManager from '../../engine/audioManager.js';
 
@@ -527,10 +527,10 @@ function buildChoiceCard(type) {
       '<line x1="35" y1="20" x2="35" y2="28"/>' +
       '<line x1="40" y1="20" x2="40" y2="28"/></g></svg>';
   } else {
-    // Flame icon — silhouette since the choice card uses currentColor (gold)
+    // Flame icon — full 4-layer for color depth
     iconBox.innerHTML =
-      '<svg viewBox="0 0 34 34" fill="currentColor" width="100%" height="100%">' +
-      '<path d="' + FLAME_SILHOUETTE_PATH + '"/></svg>';
+      '<svg viewBox="0 0 34 34" width="100%" height="100%">' +
+      flameLayersMarkup() + '</svg>';
   }
   card.appendChild(iconBox);
 
