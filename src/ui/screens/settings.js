@@ -1,7 +1,8 @@
-import { setGs, VERSION } from '../../state.js';
+import { setGs, GS, VERSION } from '../../state.js';
 import { getAllAchievements, getUnlockedIds, getProgress } from '../../engine/achievements.js';
 import AudioStateManager from '../../engine/audioManager.js';
 import { getRecentGames, getFormString } from '../../engine/gameHistory.js';
+import { exportCoachProfile } from '../../engine/ghostManager.js';
 
 export function buildSettings() {
   var el = document.createElement('div');
@@ -131,6 +132,31 @@ export function buildSettings() {
   }
 
   el.appendChild(statsSection);
+
+  // ── COACH PROFILE (Ghost Arena) ──
+  var coachSection = createSection('COACH IDENTITY');
+  
+  var exportBtn = document.createElement('button');
+  exportBtn.className = 'btn-glass-light-demo active-scale';
+  exportBtn.style.cssText = "width:100%;padding:12px;font-family:'Teko';font-size:16px;letter-spacing:2px;margin-bottom:8px;";
+  exportBtn.textContent = 'EXPORT COACH PROFILE';
+  exportBtn.onclick = function() {
+    SND.click();
+    const profile = exportCoachProfile(GS.team || 'sentinels');
+    navigator.clipboard.writeText(profile).then(() => {
+      alert('Coach Profile copied! Share this code with a friend.');
+    });
+  };
+  coachSection.appendChild(exportBtn);
+
+  var importBtn = document.createElement('button');
+  importBtn.className = 'btn-glass-light-demo active-scale';
+  importBtn.style.cssText = "width:100%;padding:12px;font-family:'Teko';font-size:16px;letter-spacing:2px;opacity:0.5;";
+  importBtn.textContent = 'IMPORT GHOST (SOON)';
+  importBtn.disabled = true;
+  coachSection.appendChild(importBtn);
+
+  el.appendChild(coachSection);
 
   // ── VERSION ──
   var verEl = document.createElement('div');

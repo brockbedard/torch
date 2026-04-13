@@ -62,13 +62,72 @@ export function setFeatureFlag(key, value) {
 
 export var GS = null;
 
-export function setGs(fn) {
+// Lightweight Event Bus for targeted UI updates
+var _listeners = {};
+export function subscribe(event, callback) {
+  if (!_listeners[event]) _listeners[event] = [];
+  _listeners[event].push(callback);
+  return () => { _listeners[event] = _listeners[event].filter(cb => cb !== callback); };
+}
+
+export function emit(event, data) {
+  if (_listeners[event]) _listeners[event].forEach(cb => cb(data));
+}
+
+export function setGs(fn, eventType = null) {
   GS = typeof fn === 'function' ? fn(GS) : fn;
-  render();
+  
+  if (eventType) {
+    emit(eventType, GS);
+  } else {
+    render();
+  }
+
   // Auto-save whenever we're in gameplay with an active engine
   if (GS && GS.screen === 'gameplay' && GS.engine) {
     saveGameState();
   }
+}
+
+// Security Salt for save data integrity
+const SAVE_SALT = 'torch_v1_secure';
+
+function encodeSave(data) {
+  const str = JSON.stringify(data);
+  const b64 = btoa(unescape(encodeURIComponent(str)));
+  // Simple checksum/hash with salt
+  let hash = 0;
+  const salted = b64 + SAVE_SALT;
+  for (let i = 0; i < salted.length; i++) {
+    hash = ((hash << 5) - hash) + salted.charCodeAt(i);
+    hash |= 0;
+  }
+  return b64 + '.' + Math.abs(hash).toString(16);
+}
+
+function decodeSave(encoded) {
+  if (!encoded) return null;
+  const parts = encoded.split('.');
+  if (parts.length !== 2) return null; // Legacy or corrupt
+  
+  const b64 = parts[0];
+  const hash = parts[1];
+  
+  // Verify hash with salt
+  let check = 0;
+  const salted = b64 + SAVE_SALT;
+  for (let i = 0; i < salted.length; i++) {
+    check = ((check << 5) - check) + salted.charCodeAt(i);
+    check |= 0;
+  }
+  if (Math.abs(check).toString(16) !== hash) {
+    console.warn('[TORCH] Save integrity check failed.');
+    return null;
+  }
+
+  try {
+    return JSON.parse(decodeURIComponent(escape(atob(b64))));
+  } catch(e) { return null; }
 }
 
 export function saveGameState() {
@@ -81,6 +140,8 @@ export function saveGameState() {
     isFirstSeason: GS.isFirstSeason,
     isDailyDrive: GS.isDailyDrive,
     humanReceives: GS.humanReceives,
+    _coinTossDone: GS._coinTossDone,
+    _openingKickoffResolved: GS._openingKickoffResolved,
     gameConditions: GS.gameConditions,
     season: GS.season,
     engineSnapshot: {
@@ -107,7 +168,7 @@ export function saveGameState() {
     }
   };
   try {
-    localStorage.setItem('torch_save', JSON.stringify(save));
+    localStorage.setItem('torch_save', encodeSave(save));
   } catch(e) {}
 }
 
@@ -115,7 +176,11 @@ export function loadGameState() {
   try {
     var raw = localStorage.getItem('torch_save');
     if (!raw) return null;
-    return JSON.parse(raw);
+    // Check if it's legacy JSON or new encoded format
+    if (raw.startsWith('{')) {
+      return JSON.parse(raw);
+    }
+    return decodeSave(raw);
   } catch(e) { return null; }
 }
 
@@ -211,6 +276,7 @@ export function createInitialState() {
     team: null,           // 'sentinels' | 'wolves' | 'stags' | 'serpents'
     difficulty: null,     // 'EASY' | 'MEDIUM' | 'HARD' (null = auto-Easy on first game)
     isFirstSeason: true,  // Progressive disclosure flag — flips after first season
+    gamesPlayed: 0,       // Total games completed (for FTUE progressive disclosure)
 
     // Season state
     season: {

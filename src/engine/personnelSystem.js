@@ -191,16 +191,16 @@ var TRAIT_MATCHUP = {
  * Only fires when both positions have relevance to the play.
  */
 export function directMatchup(offPlayer, defPlayer, playGroup) {
-  if (!offPlayer || !defPlayer) return 0;
+  if (!offPlayer || !defPlayer) return { total: 0, starMod: 0, traitMod: 0 };
 
   var relWeights = RELEVANCE[playGroup];
-  if (!relWeights) return 0;
+  if (!relWeights) return { total: 0, starMod: 0, traitMod: 0 };
 
   var offRel = relWeights[offPlayer.pos] || 0;
   var defRel = relWeights[defPlayer.pos] || 0;
 
   // Only clash when both are relevant
-  if (offRel < 0.3 || defRel < 0.3) return 0;
+  if (offRel < 0.3 || defRel < 0.3) return { total: 0, starMod: 0, traitMod: 0 };
 
   // Star difference
   var starDiff = (offPlayer.stars || 3) - (defPlayer.stars || 3);
@@ -213,7 +213,11 @@ export function directMatchup(offPlayer, defPlayer, playGroup) {
     if (matchups) traitMod = matchups[defPlayer.trait] || 0;
   }
 
-  return starMod + traitMod;
+  return {
+    total: starMod + traitMod,
+    starMod: starMod,
+    traitMod: traitMod
+  };
 }
 
 // ── COMBINED: Apply all 4 layers ──
@@ -250,7 +254,8 @@ export function calculatePersonnelMod(opts) {
   var heatMod = offHeat - defHeat;
 
   // Layer 4: Direct matchup
-  var matchupMod = directMatchup(opts.featuredOff, opts.featuredDef, playGroup);
+  var matchup = directMatchup(opts.featuredOff, opts.featuredDef, playGroup);
+  var matchupMod = matchup.total;
 
   var total = baselineMod + synergyMod + heatMod + matchupMod;
 
@@ -264,6 +269,11 @@ export function calculatePersonnelMod(opts) {
       synergy: Math.round(synergyMod * 10) / 10,
       heat: Math.round(heatMod * 10) / 10,
       matchup: Math.round(matchupMod * 10) / 10,
+    },
+    details: {
+      offTrait: opts.featuredOff ? opts.featuredOff.trait : null,
+      defTrait: opts.featuredDef ? opts.featuredDef.trait : null,
+      traitMatchupMod: matchup.traitMod
     }
   };
 }

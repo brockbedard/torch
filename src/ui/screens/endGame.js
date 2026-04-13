@@ -19,6 +19,9 @@ import { checkAchievements } from '../../engine/achievements.js';
 import { recordGameStats } from '../../engine/careerStats.js';
 import { recordGame } from '../../engine/gameHistory.js';
 import { formatKPA } from '../../engine/epa.js';
+import { logGameComplete } from '../../engine/telemetry.js';
+import { recordRivalryData } from '../../engine/rivalrySystem.js';
+import { getLeagueStandings } from '../../engine/leagueSimulator.js';
 
 // ── MVP CALCULATION ──
 function calculateMVP(snapLog, teamId) {
@@ -314,7 +317,7 @@ export function buildEndGame() {
   // Headline (generated early so share button can reference it)
   var headline = generateHeadline(humanWon, tied, humanScore, cpuScore, team, opp, mvp, gs);
 
-  recordGame({
+  const gameRecord = {
     team: GS.team,
     opponent: GS.opponent,
     difficulty: GS.difficulty,
@@ -326,7 +329,30 @@ export function buildEndGame() {
     mvp: mvp ? mvp.name : null,
     isDaily: !!GS.isDailyDrive,
     isChampionship: !!(season && season.championshipPlayed),
-  });
+  };
+
+  recordGame(gameRecord);
+  logGameComplete(gameRecord);
+
+  // Record Rivalry Data (Persistent AI memory)
+  if (gs && gs.humanTendencies) {
+    recordRivalryData(GS.opponent, gs.humanTendencies);
+  }
+
+  // Update League Standings
+  const standings = getLeagueStandings();
+  const hId = GS.team;
+  const oId = GS.opponent;
+  if (standings[hId] && standings[oId]) {
+    standings[hId].pointsFor += humanScore;
+    standings[hId].pointsAgainst += cpuScore;
+    standings[oId].pointsFor += cpuScore;
+    standings[oId].pointsAgainst += humanScore;
+    if (humanWon) { standings[hId].wins++; standings[oId].losses++; }
+    else if (tied) { standings[hId].ties++; standings[oId].ties++; }
+    else { standings[oId].wins++; standings[hId].losses++; }
+    localStorage.setItem('torch_league_standings', JSON.stringify(standings));
+  }
 
   // Open loop
   var openLoop = getOpenLoop(totalEarned);
@@ -569,7 +595,7 @@ export function buildEndGame() {
   if (seasonComplete) ctaText = 'SEASON RECAP';
 
   var playBtn = document.createElement('button');
-  playBtn.style.cssText = "width:100%;padding:16px;border-radius:6px;border:none;font-family:'Teko';font-weight:700;font-size:24px;letter-spacing:6px;color:" + ctaColor + ";background:" + ctaGrad + ";cursor:pointer;opacity:0;";
+  playBtn.style.cssText = "flex:1;padding:16px;border-radius:6px;border:none;font-family:'Teko';font-weight:700;font-size:24px;letter-spacing:6px;color:" + ctaColor + ";background:" + ctaGrad + ";cursor:pointer;opacity:0;";
   playBtn.textContent = ctaText;
   playBtn.onclick = function() {
     SND.click();
@@ -577,6 +603,7 @@ export function buildEndGame() {
       setGs(function(s) {
         return Object.assign({}, s, {
           screen: 'seasonRecap', engine: null, finalEngine: null,
+          gamesPlayed: (s.gamesPlayed || 0) + 1,
           season: season
         });
       });
@@ -596,13 +623,36 @@ export function buildEndGame() {
           screen: 'pregame',
           opponent: nextOpponentId,
           engine: null, finalEngine: null,
+          gamesPlayed: (s.gamesPlayed || 0) + 1,
           _coinTossDone: false,
           season: season
         });
       });
     }
   };
-  botZone.appendChild(playBtn);
+
+  // Share Button
+  var shareBtn = document.createElement('button');
+  shareBtn.style.cssText = "width:60px;height:60px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);cursor:pointer;opacity:0;transition:all 0.2s;";
+  shareBtn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
+  shareBtn.onclick = function() {
+    SND.click();
+    var shareText = "TORCH FOOTBALL\n" + headline + "\n" + humanScore + " - " + cpuScore + "\n" + (mvp ? "MVP: " + mvp.name : "");
+    if (navigator.share) {
+      navigator.share({ title: 'TORCH Football', text: shareText, url: window.location.href }).catch(function(){});
+    } else {
+      // Fallback: Copy to clipboard
+      navigator.clipboard.writeText(shareText).then(function() {
+        alert('Box score copied to clipboard!');
+      });
+    }
+  };
+
+  var ctaRow = document.createElement('div');
+  ctaRow.style.cssText = 'display:flex;gap:8px;';
+  ctaRow.appendChild(playBtn);
+  ctaRow.appendChild(shareBtn);
+  botZone.appendChild(ctaRow);
   el.appendChild(botZone);
 
   // ── BOTTOM ACCENT BAR ──
@@ -679,6 +729,7 @@ export function buildEndGame() {
     }
     achEls.forEach(function(achEl) { tl.to(achEl, { opacity: 1, duration: 0.3 }, '+=0.1'); });
     tl.to(playBtn, { opacity: 1, duration: 0.3 }, '+=0.1');
+    tl.to(shareBtn, { opacity: 1, duration: 0.3 }, '<');
     tl.call(function() {
       playBtn.style.animation = 'ctaBreathe 2s ease-in-out infinite';
     });
@@ -708,6 +759,7 @@ export function buildEndGame() {
     advStatsRow.style.opacity = '1';
     momentsEls.forEach(function(m) { m.style.opacity = '1'; m.style.transform = 'none'; });
     playBtn.style.opacity = '1';
+    shareBtn.style.opacity = '1';
   }
 
   return el;

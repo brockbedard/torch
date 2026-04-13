@@ -138,11 +138,11 @@ function isOnCooldown(key) { return (_usedTemplates[key] || 0) >= 2; }
  * Generate commentary for a snap result.
  * @param {object} res — snap result from executeSnap
  * @param {object} gameState — { down, distance, yardsToEndzone, half, ctScore, irScore, possession, playsUsed, twoMinActive }
- * @param {string} humanTeamName — human's team name for possession context
- * @param {string} oppTeamName
+ * @param {object} humanTeam — human's team object
+ * @param {object} oppTeam — opponent's team object
  * @returns {{ line1: string, line2: string|null }} — line1 = play description, line2 = context (may be null)
  */
-export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
+export function generateCommentary(res, gameState, humanTeam, oppTeam) {
   var r = res.result;
   var off = res.featuredOff;
   var def = res.featuredDef;
@@ -152,8 +152,14 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
   // Use pre-snap possession if provided (post-snap possession may have flipped on turnovers)
   var preSnapPoss = gameState.preSnapPossession || gameState.possession;
   var isHumanOnOff = preSnapPoss === 'CT';
-  var possTeam = isHumanOnOff ? humanTeamName : oppTeamName;
-  var defTeam = isHumanOnOff ? oppTeamName : humanTeamName;
+  
+  var hName = humanTeam ? (humanTeam.name || 'HOME') : 'HOME';
+  var oName = oppTeam ? (oppTeam.name || 'AWAY') : 'AWAY';
+  var possTeamName = isHumanOnOff ? hName : oName;
+  var defTeamName = isHumanOnOff ? oName : hName;
+  
+  var activeOffTeam = isHumanOnOff ? humanTeam : oppTeam;
+  var activeDefTeam = isHumanOnOff ? oppTeam : humanTeam;
 
   // Update narrative state
   _narrative.snapCount++;
@@ -192,6 +198,23 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
   var line1 = '';
   var line2 = null;
 
+  // ── TRAIT MATCHUP INJECTION ──
+  if (r.personnelMod && r.personnelMod.details && Math.abs(r.personnelMod.details.traitMatchupMod) >= 1) {
+    var d = r.personnelMod.details;
+    if (d.traitMatchupMod > 0 && isHumanOnOff) {
+      line2 = d.offTrait + ' overpowers ' + d.defTrait + '!';
+    } else if (d.traitMatchupMod < 0 && !isHumanOnOff) {
+      line2 = d.defTrait + ' shuts down ' + d.offTrait + '!';
+    }
+  }
+
+  // ── LORE INJECTION (Mottos on big plays) ──
+  if (r.isTouchdown && activeOffTeam && activeOffTeam.motto) {
+    line2 = '"' + activeOffTeam.motto.toUpperCase() + '!"';
+  } else if (r.yards >= 20 && Math.random() < 0.4 && activeOffTeam && activeOffTeam.motto) {
+    line2 = activeOffTeam.name + ': ' + activeOffTeam.motto;
+  }
+
   // User-biased sentiment: good for user = energetic, bad for user = flat
   var isGoodForUser = isHumanOnOff
     ? (yards > 0 || r.isTouchdown) && !r.isInterception && !r.isFumbleLost && !r.isSack
@@ -212,12 +235,12 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       if (isPass) {
         // Ray Scott principle: noun, noun, outcome. No yardage (hero shows it).
         var tdPassPool = [
-          'TOUCHDOWN ' + possTeam.toUpperCase() + '!',
+          'TOUCHDOWN ' + possTeamName.toUpperCase() + '!',
           qbName + ' to ' + receiverName + '! Touchdown!',
           receiverName + '! End zone! Touchdown!',
           'Found him! ' + receiverName + '! Six!',
           qbName + ' ' + pick(PASS_VERBS) + ' it. ' + receiverName + '. Touchdown.',
-          possTeam.toUpperCase() + '! ' + receiverName + ' in the end zone!',
+          possTeamName.toUpperCase() + '! ' + receiverName + ' in the end zone!',
           'Ball game! ' + receiverName + ' walks it in!',
           receiverName + ' — nobody near him! Touchdown!',
         ];
@@ -232,13 +255,13 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
         line1 = pick(tdPassPool);
       } else {
         var tdRunPool = [
-          'TOUCHDOWN ' + possTeam.toUpperCase() + '!',
+          'TOUCHDOWN ' + possTeamName.toUpperCase() + '!',
           rusherName + ' punches it in! Touchdown!',
           rusherName + ' crosses the plane. Touchdown.',
           'Six! ' + rusherName + '!',
           rusherName + ' ' + pick(['bulldozes', 'powers', 'muscles']) + ' in!',
           rusherName + ' won\'t be denied! Touchdown!',
-          possTeam.toUpperCase() + '! ' + rusherName + ' in for six!',
+          possTeamName.toUpperCase() + '! ' + rusherName + ' in for six!',
           rusherName + ' finds pay dirt!',
         ];
         if (traitFlavor(off)) {
@@ -255,30 +278,30 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
       if (offId && _narrative.playerTouches[offId] && _narrative.playerTouches[offId].tds >= 2) {
         var ptTd = _narrative.playerTouches[offId];
         line2 = ptTd.name + ' with TD #' + ptTd.tds + '! ' + (ptTd.tds >= 3 ? 'HAT TRICK! THIS KID IS UNSTOPPABLE!' : 'Keeps finding the end zone!');
-      } else {
+      } else if (!line2) {
         // Narrative: comeback — only fire if down 8+ at half and now scoring
         var scoreDiffNow = gameState.ctScore - gameState.irScore;
         if (_narrative.scoreDiffAtHalf <= -8 && scoreDiffNow >= 0) {
-          line2 = 'FROM ' + Math.abs(_narrative.scoreDiffAtHalf) + ' DOWN AT THE HALF! ' + possTeam.toUpperCase() + ' COMPLETES THE COMEBACK!!';
+          line2 = 'FROM ' + Math.abs(_narrative.scoreDiffAtHalf) + ' DOWN AT THE HALF! ' + possTeamName.toUpperCase() + ' COMPLETES THE COMEBACK!!';
         } else if (_narrative.scoreDiffAtHalf <= -8 && scoreDiffNow > _narrative.scoreDiffAtHalf) {
           line2 = 'They were down ' + Math.abs(_narrative.scoreDiffAtHalf) + ' at halftime. This fight isn\'t over.';
         } else {
-          line2 = 'The ' + possTeam + ' celebrate! The crowd is on their feet!';
+          line2 = 'The ' + possTeamName + ' celebrate! The crowd is on their feet!';
         }
       }
     } else {
       // Opponent scores against user — flat, factual, no yardage filler
       if (isPass) {
         line1 = pick([
-          'Touchdown ' + possTeam + '. Caught by ' + receiverName + '.',
+          'Touchdown ' + possTeamName + '. Caught by ' + receiverName + '.',
           receiverName + ' finds the end zone.',
-          possTeam + ' score. Pass to ' + receiverName + '.',
+          possTeamName + ' score. Pass to ' + receiverName + '.',
           'Touchdown allowed.',
         ]);
       } else {
         line1 = pick([
           rusherName + ' runs it in.',
-          possTeam + ' score. ' + rusherName + '.',
+          possTeamName + ' score. ' + rusherName + '.',
           'Into the end zone. ' + rusherName + '.',
           'Touchdown allowed.',
         ]);

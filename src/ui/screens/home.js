@@ -10,8 +10,10 @@ import { setGs, getOffCards, getDefCards, VERSION } from '../../state.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { buildHomeCard } from '../components/cards.js';
 import { FLAME_PATH, buildFlameBadgeButton } from '../components/brand.js';
+import { buildMatchupWidget } from '../components/MatchupWidget.js';
 import { flameIconSVG } from '../../utils/flameIcon.js';
 import AudioStateManager from '../../engine/audioManager.js';
+import { GS } from '../../state.js';
 
 function injectHomeStyles() {
   if (document.getElementById('home-anims')) return;
@@ -101,37 +103,44 @@ export function buildHome() {
   sub.textContent = 'FOOTBALL';
   content.appendChild(sub);
 
-  // Card fan
-  var cardFan = document.createElement('div');
-  cardFan.style.cssText = 'position:relative;width:320px;height:200px;margin-top:28px;animation:fanFloat 6s ease-in-out infinite;flex-shrink:0;opacity:0;';
+  // Matchup Widget or Card fan
+  var mainVisual;
+  if (GS && GS.team && GS.season && GS.season.opponents) {
+    var oppId = GS.opponent || GS.season.opponents[GS.season.currentGame];
+    mainVisual = buildMatchupWidget(GS.team, oppId);
+    mainVisual.style.opacity = '0';
+    mainVisual.style.marginTop = '28px';
+    content.appendChild(mainVisual);
+  } else {
+    mainVisual = document.createElement('div');
+    mainVisual.style.cssText = 'position:relative;width:320px;height:200px;margin-top:28px;animation:fanFloat 6s ease-in-out infinite;flex-shrink:0;opacity:0;';
 
-  var fanTypes = ['offense', 'torch', 'defense'];
-  var fanAngles = [-14, 0, 14];
-  var fanX = [-76, 0, 76];
-  var fanY = [10, 0, 10];
-  var fanZ = [1, 3, 1];
-  var fanScale = [1, 1.12, 1];
+    var fanTypes = ['offense', 'torch', 'defense'];
+    var fanAngles = [-14, 0, 14];
+    var fanX = [-76, 0, 76];
+    var fanY = [10, 0, 10];
+    var fanZ = [1, 3, 1];
+    var fanScale = [1, 1.12, 1];
 
-  for (var c = 0; c < 3; c++) {
-    var cardEl = buildHomeCard(fanTypes[c], 100, 140);
-    cardEl.style.cssText += ';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + fanAngles[c] + 'deg) translateX(' + fanX[c] + 'px) translateY(' + fanY[c] + 'px) scale(' + fanScale[c] + ');z-index:' + fanZ[c] + ';';
+    for (var c = 0; c < 3; c++) {
+      var cardEl = buildHomeCard(fanTypes[c], 100, 140);
+      cardEl.style.cssText += ';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(' + fanAngles[c] + 'deg) translateX(' + fanX[c] + 'px) translateY(' + fanY[c] + 'px) scale(' + fanScale[c] + ');z-index:' + fanZ[c] + ';';
 
-    // Warm light cast from torch onto neighbors
-    var innerCard = cardEl.querySelector('.torch-card-inner');
-    if (fanTypes[c] === 'offense' && innerCard) {
-      var warmR = document.createElement('div');
-      warmR.style.cssText = 'position:absolute;top:0;right:0;width:40%;height:100%;background:linear-gradient(to left,rgba(255,120,40,0.06),transparent);border-radius:0 8px 8px 0;z-index:1;pointer-events:none;';
-      innerCard.appendChild(warmR);
+      var innerCard = cardEl.querySelector('.torch-card-inner');
+      if (fanTypes[c] === 'offense' && innerCard) {
+        var warmR = document.createElement('div');
+        warmR.style.cssText = 'position:absolute;top:0;right:0;width:40%;height:100%;background:linear-gradient(to left,rgba(255,120,40,0.06),transparent);border-radius:0 8px 8px 0;z-index:1;pointer-events:none;';
+        innerCard.appendChild(warmR);
+      }
+      if (fanTypes[c] === 'defense' && innerCard) {
+        var warmL = document.createElement('div');
+        warmL.style.cssText = 'position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(to right,rgba(255,120,40,0.06),transparent);border-radius:8px 0 0 8px;z-index:1;pointer-events:none;';
+        innerCard.appendChild(warmL);
+      }
+      mainVisual.appendChild(cardEl);
     }
-    if (fanTypes[c] === 'defense' && innerCard) {
-      var warmL = document.createElement('div');
-      warmL.style.cssText = 'position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(to right,rgba(255,120,40,0.06),transparent);border-radius:8px 0 0 8px;z-index:1;pointer-events:none;';
-      innerCard.appendChild(warmL);
-    }
-
-    cardFan.appendChild(cardEl);
+    content.appendChild(mainVisual);
   }
-  content.appendChild(cardFan);
 
   // Tagline
   var tagline = document.createElement('div');
@@ -146,17 +155,35 @@ export function buildHome() {
   ctaWrap.style.cssText = 'width:100%;z-index:2;flex-shrink:0;padding:0 20px 20px;padding-bottom:max(20px,env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;';
 
   // PLAY button (flame badge)
-  var playBtn = buildFlameBadgeButton('PLAY', function() {
+  var playBtn = buildFlameBadgeButton((GS && GS.team) ? 'CONTINUE' : 'PLAY', function() {
     SND.click();
     AudioStateManager.init();
     AudioStateManager.setState('menu');
-    var firstDone = localStorage.getItem('torch_first_season_done');
-    setGs(function(s) { return Object.assign({}, s || {}, { screen: 'teamSelect', team: null, isFirstSeason: !firstDone }); });
+    
+    if (GS && GS.team && GS.screen === 'home') {
+      // Continue season
+      setGs(s => ({ ...s, screen: 'pregame' }));
+    } else {
+      var firstDone = localStorage.getItem('torch_first_season_done');
+      setGs(function(s) { return Object.assign({}, s || {}, { screen: 'teamSelect', team: null, isFirstSeason: !firstDone }); });
+    }
   });
   playBtn.style.opacity = '0';
   playBtn.style.borderRadius = '8px';
+  playBtn.classList.add('active-scale');
+
+  // Stadium Upgrade Button
+  var stadiumBtn = document.createElement('button');
+  stadiumBtn.className = 'btn-glass-light-demo active-scale';
+  stadiumBtn.style.cssText = "width:100%;padding:14px;font-family:'Teko';font-weight:700;font-size:18px;letter-spacing:4px;opacity:0;";
+  stadiumBtn.textContent = 'STADIUM';
+  stadiumBtn.onclick = function() {
+    SND.click();
+    setGs({ screen: 'stadiumManagement' });
+  };
 
   ctaWrap.appendChild(playBtn);
+  ctaWrap.appendChild(stadiumBtn);
   el.appendChild(ctaWrap);
 
   // ── DEV QUICK PLAY ──
@@ -196,15 +223,21 @@ export function buildHome() {
       gsap.to(title, { opacity: 1, y: 0, duration: 0.4, delay: 0.2 });
       gsap.from(title, { y: 12, duration: 0.4, delay: 0.2 });
       gsap.to(sub, { opacity: 1, duration: 0.3, delay: 0.35 });
-      gsap.to(cardFan, { opacity: 1, duration: 0.4, delay: 0.5 });
-      // Deal cards in with stagger
-      var cards = cardFan.children;
-      for (var i = 0; i < cards.length; i++) {
-        gsap.from(cards[i], { y: 60, scale: 0.5, opacity: 0, duration: 0.4, delay: 0.5 + i * 0.1, ease: 'back.out(1.7)' });
+      gsap.to(mainVisual, { opacity: 1, duration: 0.4, delay: 0.5 });
+      // If it's the card fan, deal cards in with stagger
+      if (mainVisual.children.length > 1) {
+        var cards = mainVisual.children;
+        for (var i = 0; i < cards.length; i++) {
+          gsap.from(cards[i], { y: 60, scale: 0.5, opacity: 0, duration: 0.4, delay: 0.5 + i * 0.1, ease: 'back.out(1.7)' });
+        }
+      } else {
+        gsap.from(mainVisual, { y: 20, duration: 0.4, delay: 0.5, ease: 'power2.out' });
       }
       gsap.to(tagline, { opacity: 1, duration: 0.3, delay: 1.0 });
       gsap.to(playBtn, { opacity: 1, y: 0, duration: 0.3, delay: 1.2 });
       gsap.from(playBtn, { y: 10, duration: 0.3, delay: 1.2 });
+      gsap.to(stadiumBtn, { opacity: 1, y: 0, duration: 0.3, delay: 1.3 });
+      gsap.from(stadiumBtn, { y: 10, duration: 0.3, delay: 1.3 });
     } catch (e) {
       flameEl.style.opacity = '1'; title.style.opacity = '1'; sub.style.opacity = '1';
       cardFan.style.opacity = '1'; tagline.style.opacity = '1'; playBtn.style.opacity = '1';

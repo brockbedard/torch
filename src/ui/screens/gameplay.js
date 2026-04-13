@@ -6,7 +6,7 @@
 
 import { gsap } from 'gsap';
 import { SND } from '../../engine/sound.js';
-import { GS, setGs, getTeam, getOtherTeam, fmtClock, getOffCards, getDefCards, getDrawWeight, getSpeedMultiplier, FEATURES } from '../../state.js';
+import { GS, setGs, subscribe, emit, getTeam, getOtherTeam, fmtClock, getOffCards, getDefCards, getDrawWeight, getSpeedMultiplier, FEATURES, saveGameState } from '../../state.js';
 import { GameState } from '../../engine/gameState.js';
 import { getOffenseRoster, getDefenseRoster, getFullRoster } from '../../data/players.js';
 // playSvg removed — play cards no longer use SVG diagrams
@@ -29,10 +29,18 @@ import { createHandState, afterSnap as handAfterSnap, canDiscard, discard as han
 import { createSTDeck, burnPlayer, restorePlayer, aiPickST } from '../../engine/stDeck.js';
 import { aiSelectPlay, aiSelectPlayer } from '../../engine/aiOpponent.js';
 import { showSTSelect } from '../components/stSelect.js';
-import { createFieldAnimator } from '../field/fieldAnimator.js';
+import { createWebGLFieldAnimator as createFieldAnimator } from '../field/webglAnimator.js';
 import { checkCardCombo } from '../../engine/cardCombos.js';
 import { getMomentumMultiplier } from '../../engine/momentumSystem.js';
 import { Haptic } from '../../engine/haptics.js';
+import { triggerImpact } from '../../engine/impactLoop.js';
+import { EconomyManager } from '../../engine/managers/EconomyManager.js';
+import { SpecialTeamsManager } from '../../engine/managers/SpecialTeamsManager.js';
+import { simulateLeagueWeek } from '../../engine/leagueSimulator.js';
+import { buildNewsTicker } from '../components/NewsTicker.js';
+import { Sonar } from '../../engine/accessibility.js';
+import { processGameXP } from '../../engine/progressionSystem.js';
+import { hasUpgrade } from '../../data/stadiumUpgrades.js';
 import { GAMEPLAY_CSS as CSS } from './gameplay.css.js';
 
 /* ═══════════════════════════════════════════
@@ -99,6 +107,12 @@ export function buildGameplay() {
   const hTeam = getTeam(GS.team);
   const oppId = GS.opponent || getOtherTeam(GS.team).id;
   const oTeam = getTeam(oppId);
+
+  // Progressive Disclosure / FTUE Flags
+  const gamesPlayed = GS.gamesPlayed || 0;
+  const showTorchCards = gamesPlayed >= 1;
+  const showHeatMomentum = gamesPlayed >= 2;
+  const isFirstGame = gamesPlayed === 0;
 
   // engine
   if (!GS.engine) {
@@ -191,15 +205,24 @@ export function buildGameplay() {
   var _lastPlayFlashed = false; // true after LAST PLAY flash fires, reset each half
   var _pbpVisible = false; // Play-by-play toggle state
   var snapCount = 0; // Track snap number for teach tooltips
-  var _onboardingDone = true; // Onboarding disabled — will revisit
-  var _tutorialStep = 0;
-  var _torchTutorialShown = true; // Onboarding disabled — will revisit
+  var _onboardingDone = !isFirstGame;
+  var _tutorialStep = isFirstGame ? 1 : 0;
+  var _torchTutorialShown = !isFirstGame;
+  var _heatTutorialShown = gamesPlayed < 2 ? false : true;
   var twoMinTimer = null; // Real-time clock interval for 2-minute drill
   var _fourthDownDecided = false; // true after player clicks GO FOR IT (hides the bar)
   var _driveHeat = 0; // 0-120 momentum bar
   var _driveCardsUsed = []; // torch card IDs used this drive
   var _activeDriveCombo = null; // combo triggered this snap, applied post-executeSnap
   var _torchFanfareCount = 0; // scales fanfare duration on repeat usage
+
+  // ── Targeted UI Updates via EventBus ──
+  const _unsubscribe = subscribe('gs-update', function() {
+    drawBug();
+    drawField();
+    drawPanel();
+    drawDriveSummary();
+  });
 
   // ── LAYER 6: Ambient mood — subtle brightness/vignette based on user momentum ──
   var _moodHistory = []; // last 4 plays: +1 good, -1 bad, 0 neutral
@@ -277,8 +300,10 @@ export function buildGameplay() {
     if (twoMinTimer) { clearInterval(twoMinTimer); twoMinTimer = null; }
   }
 
-  // Progressive disclosure
-  var isFirstGame = false; // tutorial system disabled — will be rebuilt
+  // ── NEWS TICKER (Phase 5) ──
+  const leagueResults = simulateLeagueWeek(GS.team, oppId);
+  const leagueTicker = buildNewsTicker(leagueResults);
+  leagueTicker.style.flexShrink = '0';
 
   // Game Day Conditions (v0.21)
   var weatherId = (GS.gameConditions && GS.gameConditions.weather) || 'clear';
@@ -365,9 +390,13 @@ export function buildGameplay() {
     var opts = {};
     if (humanReceives) {
       var hcIdx = torchInventory.findIndex(function(c) { return c.id === 'house_call'; });
-      if (hcIdx >= 0) { opts.houseCall = true; consumeTorchCard('house_call'); torchCardToast('HOUSE CALL', 'Guaranteed 50+ yard return'); }
+      if (hcIdx >= 0) { 
+        opts.houseCall = true; 
+        consumeTorchCard('house_call'); 
+        torchCardToast('HOUSE CALL', 'Guaranteed 50+ yard return'); 
+      }
     }
-    return gs.constructor.resolveKickoff(null, opts);
+    return SpecialTeamsManager.resolveKickoff(null, opts);
   }
 
   // Star Heat Check (v0.21)
@@ -433,7 +462,7 @@ export function buildGameplay() {
   const el = document.createElement('div');
   el.className = 'T';
   const sty = document.createElement('style'); sty.textContent = CSS; el.appendChild(sty);
-
+  el.appendChild(leagueTicker);
 
   // ── SCOREBOARD ──
   const bug = document.createElement('div'); bug.className = 'T-sb'; bug.style.cursor = 'pointer'; el.appendChild(bug);
@@ -1118,6 +1147,17 @@ export function buildGameplay() {
 
     // Ball position indicator bar
     var ydsToEz = gs.yardsToEndzone();
+    
+    // Update Accessibility Sonar
+    try {
+      if (typeof Sonar !== 'undefined') {
+        Sonar.update(ydsToEz);
+        var _isRedZone = ydsToEz <= 20 && gs.possession === hAbbr;
+        if (_isRedZone && !_wasInRedZone) Sonar.beep(660, 0.2);
+        _wasInRedZone = _isRedZone;
+      }
+    } catch(e) { console.error('[Sonar] Error:', e); }
+
     var ballPct = 7 + s.ballPosition * 0.86; // same math as lp
     // Position LOS and FD lines to match canvas yard lines exactly.
     // Lines are children of stripWrap. Canvas is child of strip which is child of stripWrap.
@@ -2023,8 +2063,8 @@ export function buildGameplay() {
     bubble.textContent = text;
 
     // Position bubble near target
-    document.body.appendChild(overlay);
-    document.body.appendChild(bubble);
+    el.appendChild(overlay);
+    el.appendChild(bubble);
 
     requestAnimationFrame(function() {
       var rect = targetEl.getBoundingClientRect();
@@ -2448,6 +2488,26 @@ export function buildGameplay() {
         '<div style="' + _slotStyle + _slotTorch + '">TORCH</div>' +
       '</div>';
     panel.appendChild(panelHdr);
+
+    // Heat & Momentum tutorial — Game 3
+    if (!_heatTutorialShown && gamesPlayed === 2 && snapCount === 0) {
+      _heatTutorialShown = true;
+      var heatTutOv = document.createElement('div');
+      heatTutOv.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(10,8,4,0.92);opacity:0;transition:opacity .3s;pointer-events:auto;';
+      var _momIcon = renderTorchCardIcon('onFire', 46, '#EBB010');
+      heatTutOv.innerHTML =
+        "<div style='animation:T-flame-pulse 2s ease-in-out infinite;filter:drop-shadow(0 0 12px #EBB010)'>" + _momIcon.outerHTML + "</div>" +
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:#EBB010;letter-spacing:4px;text-shadow:0 0 20px rgba(235,176,16,0.4);\">HEAT & MOMENTUM</div>" +
+        "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:14px;color:#999;letter-spacing:2px;text-align:center;max-width:280px;line-height:1.4;\">" + 
+        "Players get TIRED if used too much. Big plays build MOMENTUM for your whole team!" + "</div>" +
+        "<button class='btn-blitz' style='margin-top:20px;font-size:16px;padding:14px 40px;background:#141008;color:#EBB010;border-color:#EBB010;letter-spacing:3px;'>GOT IT</button>";
+      heatTutOv.querySelector('button').onclick = function() {
+        heatTutOv.style.opacity = '0';
+        setTimeout(function() { heatTutOv.remove(); }, 300);
+      };
+      el.appendChild(heatTutOv);
+      requestAnimationFrame(function() { heatTutOv.style.opacity = '1'; });
+    }
 
     // 2min check + close game crowd
     if (gs.twoMinActive && !prev2min) { prev2min = true; _lastPlayFlashed = true; el.classList.add('T-urgent'); el.classList.add('T-2min-active'); show2MinWarn(); start2MinClock(); }
@@ -3482,7 +3542,7 @@ export function buildGameplay() {
   }
 
   // ── 4-PHASE CARD CLASH / REVEAL (v0.22 Phase 5) ──
-  function run3BeatSnap(res, prevPoss, wasOffHot, wasDefHot) {
+  async function run3BeatSnap(res, prevPoss, wasOffHot, wasDefHot) {
     var r = res.result;
     var isTD = r.isTouchdown;
     var isExplosive = r.yards >= 15;
@@ -3519,25 +3579,14 @@ export function buildGameplay() {
       var _ballYard = _s.ballPosition * 1.1 + 5;
       var _offTeamId = isUserOff ? GS.team : (GS.opponent || 'wolves');
       var _defTeamId = isUserOff ? (GS.opponent || 'wolves') : GS.team;
-      var _formation = 'shotgun_deuce';
-      if (res.offPlay && _fieldAnimator.pickFormation) {
-        _formation = _fieldAnimator.pickFormation(res.offPlay.playType || 'SHORT', _offTeamId);
-      }
-      var _animType = isTD ? 'touchdown' : r.isSack ? 'sack' : r.isInterception ? 'interception' : r.isIncomplete ? 'incomplete' : (res.offPlay && res.offPlay.isRun) ? 'run' : 'complete';
-      try {
-        _fieldAnimator.playSequence(_animType, r.yards, {
-          ballYard: Math.max(10, Math.min(110, _ballYard)),
-          losYard: Math.max(10, Math.min(110, _ballYard)),
-          firstDownYard: Math.max(10, Math.min(110, _ballYard + _s.distance)),
-          formation: _formation,
-          playType: res.offPlay ? res.offPlay.playType : 'SHORT',
-          defScheme: res.defPlay ? res.defPlay.cardType : 'ZONE',
-          offTeam: _offTeamId,
-          defTeam: _defTeamId,
-          skipDots: true,
-          skipLOS: true,
-        });
-      } catch(e) { /* Field animation is non-critical */ }
+      
+      // Phase 6: Await cinematic animation
+      await _fieldAnimator.animatePlay(res, {
+        ballYard: Math.max(10, Math.min(110, _ballYard)),
+        losYard: Math.max(10, Math.min(110, _ballYard)),
+        firstDownYard: Math.max(10, Math.min(110, _ballYard + _s.distance)),
+        possession: gs.possession
+      });
     }
 
     // Tier-based timing
@@ -6228,12 +6277,30 @@ export function buildGameplay() {
 
   // Brief kickoff result overlay
   function showKickoffResult(resultText, onDone) {
+    console.log('[TORCH] Showing kickoff result:', resultText);
     var recTeam = gs.possession === hAbbr ? hTeam : oTeam;
     var recColor = recTeam.accent || '#EBB010';
     var kov = document.createElement('div');
     var _kovFired = false;
-    function _kovDone() { if (_kovFired) return; _kovFired = true; if (kov.parentNode) kov.remove(); if (onDone) onDone(); }
-    kov.style.cssText = 'position:fixed;inset:0;z-index:950;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:rgba(10,8,4,0.96);opacity:0;transition:opacity 0.4s;pointer-events:auto;';
+    
+    function _kovDone() { 
+      if (_kovFired) return; 
+      _kovFired = true; 
+      console.log('[TORCH] Kickoff overlay dismissing...');
+      if (kov.parentNode) kov.remove(); 
+      if (onDone) {
+        try {
+          onDone();
+        } catch(err) {
+          console.error('[TORCH] Critical error in kickoff callback, forced recovery:', err);
+          phase = 'play';
+          panel.style.display = '';
+          drawPanel();
+        }
+      }
+    }
+
+    kov.style.cssText = 'position:fixed;inset:0;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:rgba(10,8,4,0.98);opacity:0;transition:opacity 0.4s;pointer-events:auto;';
 
     // Background radial glow
     var bgGlow = document.createElement('div');
@@ -6267,8 +6334,27 @@ export function buildGameplay() {
     contBtn.style.transform = 'translateY(10px)';
     contBtn.id = 'kov-btn';
     content.appendChild(contBtn);
+    
+    // Safety auto-advance (5 seconds)
+    var safetyTimer = setTimeout(_kovDone, 5000);
+    
+    // EMERGENCY FALLBACK (8 seconds) - Unconditional execution just in case
+    setTimeout(function() {
+      if (kov.parentNode) {
+        console.warn('[TORCH] Emergency Kickoff Overlay Dismissal Activated');
+        _kovFired = true;
+        kov.remove();
+        phase = 'play';
+        panel.style.display = '';
+        drawPanel();
+      }
+    }, 8000);
 
-    kov.onclick = function() { kov.style.opacity = '0'; setTimeout(_kovDone, 200); };
+    kov.onclick = function() { 
+      clearTimeout(safetyTimer);
+      kov.style.opacity = '0'; 
+      setTimeout(_kovDone, 200); 
+    };
     el.appendChild(kov);
     
     requestAnimationFrame(function() {
@@ -6290,10 +6376,12 @@ export function buildGameplay() {
 
     // Onboarding: kickoff
     if (gs.possession === hAbbr && shouldShowHint('torch_hint_kickoff')) {
-      setTimeout(function() {
-        var contEl = kov.querySelector('button') || kov;
-        showOnboardingBubble(contEl, "You've got the ball. Time to drive.", 'torch_hint_kickoff');
-      }, 800);
+      try {
+        setTimeout(function() {
+          var contEl = kov.querySelector('button') || kov;
+          showOnboardingBubble(contEl, "You've got the ball. Time to drive.", 'torch_hint_kickoff');
+        }, 800);
+      } catch(e) { console.error('[Onboarding] Error:', e); }
     }
   }
 
@@ -6446,6 +6534,7 @@ export function buildGameplay() {
 
   // ── INIT ──
   drawBug(); drawField();
+  if (GS._openingKickoffResolved) drawPanel();
   // Apply shimmer to gold elements after they exist
   setTimeout(function() {
     var _tbContent = el.querySelector('.T-torch-banner-content');
@@ -6460,7 +6549,8 @@ export function buildGameplay() {
   function _enterPlayAfterOpeningKickoff(humanReceives) {
     // Resolve kickoff and set field position (HOUSE_CALL auto-consumed if human receives)
     var kickResult = _resolveKickoff(humanReceives);
-    var startYard = kickResult === -1 ? 25 : kickResult; // return TD = rare, treat as touchback for simplicity
+    var startYard = kickResult.returnYard || 25; 
+    var posLabel = kickResult.touchdown ? 'TOUCHDOWN! 100-YARD RETURN!' : (startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard);
     if (humanReceives) {
       gs.possession = 'CT';
       gs.ballPosition = startYard; // CT at own yard line
@@ -6471,57 +6561,12 @@ export function buildGameplay() {
     gs.down = 1;
     gs.distance = 10;
 
-    var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
     showKickoffResult(posLabel, function() {
-      drawBug(); drawField();
-      phase = 'play';
-      panel.style.display = '';
-      drawPanel();
-    });
-  }
-
-  // First load: coin toss → kickoff → play
-  // Two entry paths:
-  //   (a) Runway already ran the coin toss in pregame.js. GS._coinTossDone
-  //       is true, GS.humanReceives is set. Skip showCoinToss, go straight
-  //       to kickoff resolution.
-  //   (b) Legacy path (dev quick play, tests): _coinTossDone is false. Run
-  //       the old inline showCoinToss for backwards compat.
-  if (GS._coinTossDone && !GS._openingKickoffResolved) {
-    // (a) Runway path — coin toss was handled in pregame.js
-    GS._openingKickoffResolved = true;
-    panel.style.display = 'none';
-    _enterPlayAfterOpeningKickoff(GS.humanReceives === true);
-  } else if (!GS._coinTossDone) {
-    // (b) Legacy inline coin toss fallback
-    GS._coinTossDone = true;
-    GS._openingKickoffResolved = true;
-    panel.style.display = 'none'; // Hide card tray until after kickoff
-    showCoinToss(function(result) {
-      // result.chose = 'receive' | 'card' | 'card_cpu_receives'
-      // Determine who receives the opening kickoff
-      // 'receive' = human chose to receive. 'card' = human drew card, kicks off (CPU receives).
-      // 'card_cpu_receives' = CPU won toss and chose to receive, human got card (CPU receives).
-      var humanReceives = result.chose === 'receive';
-
-      // Resolve kickoff and set field position (HOUSE_CALL auto-consumed if human receives)
-      var kickResult = _resolveKickoff(humanReceives);
-      var startYard = kickResult === -1 ? 25 : kickResult; // return TD = rare, treat as touchback for simplicity
-      if (humanReceives) {
-        gs.possession = 'CT';
-        gs.ballPosition = startYard; // CT at own yard line
-      } else {
-        gs.possession = 'IR';
-        gs.ballPosition = 100 - startYard; // IR at own yard line (from CT perspective)
-      }
-      gs.down = 1;
-      gs.distance = 10;
-
-      var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
-      showKickoffResult(posLabel, function() {
-        drawBug(); drawField();
-        // Torch tutorial — disabled, will revisit
-        if (false) {
+      try {
+        drawBug(); 
+        drawField();
+        // Torch tutorial — enabled for Game 2
+        if (!_torchTutorialShown && gamesPlayed === 1) {
           _torchTutorialShown = true;
           var torchTutOv = document.createElement('div');
           torchTutOv.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(10,8,4,0.92);opacity:0;transition:opacity .3s;pointer-events:auto;';
@@ -6538,7 +6583,7 @@ export function buildGameplay() {
           torchTutOv.querySelector('button').onclick = function() {
             torchTutOv.style.opacity = '0';
             setTimeout(function() {
-              torchTutOv.remove();
+              if (torchTutOv.parentNode) torchTutOv.remove();
               phase = 'play';
               panel.style.display = '';
               drawPanel();
@@ -6547,6 +6592,95 @@ export function buildGameplay() {
           el.appendChild(torchTutOv);
           requestAnimationFrame(function() { torchTutOv.style.opacity = '1'; });
         } else {
+          phase = 'play';
+          panel.style.display = '';
+          drawPanel();
+        }
+      } catch(e) {
+        console.error('[TORCH] Error in kickoff callback:', e);
+        phase = 'play';
+        panel.style.display = '';
+        drawPanel();
+      }
+    });
+  }
+
+  // First load: coin toss → kickoff → play
+  // Two entry paths:
+  //   (a) Runway already ran the coin toss in pregame.js. GS._coinTossDone
+  //       is true, GS.humanReceives is set. Skip showCoinToss, go straight
+  //       to kickoff resolution.
+  //   (b) Legacy path (dev quick play, tests): _coinTossDone is false. Run
+  //       the old inline showCoinToss for backwards compat.
+  if (GS._coinTossDone && !GS._openingKickoffResolved) {
+    // (a) Runway path — coin toss was handled in pregame.js
+    GS._openingKickoffResolved = true;
+    saveGameState();
+    panel.style.display = 'none';
+    _enterPlayAfterOpeningKickoff(GS.humanReceives === true);
+  } else if (!GS._coinTossDone) {
+    // (b) Legacy inline coin toss fallback
+    GS._coinTossDone = true;
+    GS._openingKickoffResolved = true;
+    saveGameState();
+    panel.style.display = 'none'; // Hide card tray until after kickoff
+    showCoinToss(function(result) {
+      // result.chose = 'receive' | 'card' | 'card_cpu_receives'
+      // Determine who receives the opening kickoff
+      // 'receive' = human chose to receive. 'card' = human drew card, kicks off (CPU receives).
+      // 'card_cpu_receives' = CPU won toss and chose to receive, human got card (CPU receives).
+      var humanReceives = result.chose === 'receive';
+
+      // Resolve kickoff and set field position (HOUSE_CALL auto-consumed if human receives)
+      var kickResult = _resolveKickoff(humanReceives);
+      var startYard = kickResult.returnYard || 25;
+      var posLabel = kickResult.touchdown ? 'TOUCHDOWN! 100-YARD RETURN!' : (startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard);
+      if (humanReceives) {
+        gs.possession = 'CT';
+        gs.ballPosition = startYard; // CT at own yard line
+      } else {
+        gs.possession = 'IR';
+        gs.ballPosition = 100 - startYard; // IR at own yard line (from CT perspective)
+      }
+      gs.down = 1;
+      gs.distance = 10;
+
+      showKickoffResult(posLabel, function() {
+        try {
+          drawBug(); drawField();
+          // Torch tutorial — enabled for Game 2
+          if (!_torchTutorialShown && gamesPlayed === 1) {
+            _torchTutorialShown = true;
+            var torchTutOv = document.createElement('div');
+            torchTutOv.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(10,8,4,0.92);opacity:0;transition:opacity .3s;pointer-events:auto;';
+            var _ftSvg = '<svg viewBox="0 0 34 34" width="46" height="46" style="animation:T-flame-pulse 2s ease-in-out infinite;filter:drop-shadow(0 0 12px ' + hTeam.accent + ')">' + flameLayersMarkup() + '</svg>';
+            var _hasReactiveOnly = torchInventory.every(function(c) { return c.type === 'reactive'; });
+            var _tutDesc = _hasReactiveOnly
+              ? 'Reactive cards activate automatically when triggered. Look for the prompt during play!'
+              : 'When you have a playable card, tap it to power up your play before you snap.';
+            torchTutOv.innerHTML =
+              _ftSvg +
+              "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + hTeam.accent + ";letter-spacing:4px;text-shadow:0 0 20px " + hTeam.accent + "40;\">TORCH CARD EARNED!</div>" +
+              "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:14px;color:#999;letter-spacing:2px;text-align:center;max-width:280px;line-height:1.4;\">" + _tutDesc + "</div>" +
+              "<button class='btn-blitz' style='margin-top:20px;font-size:16px;padding:14px 40px;background:#141008;color:" + hTeam.accent + ";border-color:" + hTeam.accent + ";letter-spacing:3px;'>GOT IT</button>";
+            torchTutOv.querySelector('button').onclick = function() {
+              torchTutOv.style.opacity = '0';
+              setTimeout(function() {
+                if (torchTutOv.parentNode) torchTutOv.remove();
+                phase = 'play';
+                panel.style.display = '';
+                drawPanel();
+              }, 300);
+            };
+            el.appendChild(torchTutOv);
+            requestAnimationFrame(function() { torchTutOv.style.opacity = '1'; });
+          } else {
+            phase = 'play';
+            panel.style.display = '';
+            drawPanel();
+          }
+        } catch(e) {
+          console.error('[TORCH] Error in legacy kickoff callback:', e);
           phase = 'play';
           panel.style.display = '';
           drawPanel();
@@ -6587,7 +6721,7 @@ export function buildGameplay() {
     _lastPlayFlashed = false;
     prev2min = false;
     var kickResult = _resolveKickoff(GS.humanReceives);
-    var startYard = kickResult === -1 ? 25 : kickResult;
+    var startYard = kickResult.returnYard || 25;
     if (GS.humanReceives) {
       gs.possession = 'CT';
       gs.ballPosition = startYard;
@@ -6655,17 +6789,17 @@ export function buildGameplay() {
         // 'receive' = human chose to receive. 'card' = human drew card, kicks off (CPU receives).
       // 'card_cpu_receives' = CPU won toss and chose to receive, human got card (CPU receives).
       var humanReceives = result.chose === 'receive';
-        var kickResult = _resolveKickoff(humanReceives);
-        var startYard = kickResult === -1 ? 25 : kickResult;
-        gs.ballPosition = humanReceives ? startYard : 100 - startYard;
-        gs.possession = humanReceives ? 'CT' : 'IR';
+      var kickResult = _resolveKickoff(humanReceives);
+      var startYard = kickResult.returnYard || 25;
+      gs.ballPosition = humanReceives ? startYard : 100 - startYard;
+      gs.possession = humanReceives ? 'CT' : 'IR';
         gs.down = 1; gs.distance = 10;
         drawBug(); drawField(); drawPanel();
       });
     },
     showKickoff: function() {
       var kickResult = _resolveKickoff(gs.possession !== hAbbr);
-      var startYard = kickResult === -1 ? 25 : kickResult;
+      var startYard = kickResult.returnYard || 25;
       var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
       showKickoffResult(posLabel, function() { drawBug(); drawField(); drawPanel(); });
     },

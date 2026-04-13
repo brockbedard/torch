@@ -74,7 +74,8 @@ export function buildTeamSelect() {
     var accent = team.accent || team.colors.primary;
 
     var panel = document.createElement('div');
-    panel.style.cssText = 'flex:1;border-radius:8px;border:1.5px solid ' + accent + '33;background:linear-gradient(90deg,' + accent + '15,#0a0804 60%);box-shadow:0 2px 12px rgba(0,0,0,0.4);display:flex;align-items:center;gap:14px;padding:0 16px;cursor:pointer;position:relative;overflow:hidden;transition:border-color 0.2s,box-shadow 0.2s,opacity 0.2s;';
+    panel.className = 'glass-panel active-scale';
+    panel.style.cssText = 'flex:1;border-radius:8px;border:1.5px solid ' + accent + '33;display:flex;align-items:center;gap:14px;padding:0 16px;cursor:pointer;position:relative;overflow:hidden;transition:border-color 0.2s, box-shadow 0.2s, opacity 0.2s, filter 0.2s;';
     panel.dataset.team = tid;
 
     // Left accent edge
@@ -175,13 +176,14 @@ export function buildTeamSelect() {
         if (ptid === tid) {
           p.style.border = '2px solid ' + pa;
           p.style.boxShadow = '0 8px 24px rgba(0,0,0,0.5),0 0 20px ' + pa + '33';
-          p.style.background = 'linear-gradient(90deg,' + pa + '30,#0a0804 70%)';
+          p.style.background = 'rgba(255,255,255,0.12)';
           p.style.opacity = '1';
           p.style.filter = '';
         } else {
           p.style.opacity = '0.4';
-          p.style.filter = '';
+          p.style.filter = 'grayscale(0.5)';
           p.style.boxShadow = '0 2px 12px rgba(0,0,0,0.4)';
+          p.style.background = '';
         }
       });
 
@@ -229,6 +231,7 @@ export function buildTeamSelect() {
         opponent: opponentId,
         humanReceives: humanReceives,
         _coinTossDone: false,
+        _openingKickoffResolved: false,
         offRoster: getOffenseRoster(selectedTeamId).slice(0, 4).map(function(p) { return p.id; }),
         defRoster: getDefenseRoster(selectedTeamId).slice(0, 4).map(function(p) { return p.id; }),
         offHand: getOffCards(selectedTeamId).slice(0, 4),

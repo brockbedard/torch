@@ -272,6 +272,7 @@ export function buildDailyDrive() {
           difficulty: setup.difficulty,
           humanReceives: true,
           _coinTossDone: true,
+          _openingKickoffResolved: false,
           isDailyDrive: true,
           dailyDate: setup.date,
           isFirstSeason: false,

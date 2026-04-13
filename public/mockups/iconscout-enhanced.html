@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>TORCH — IconScout Enhanced Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Oswald:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    background: #050403;
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 12px;
+  }
+
+  /* ── PHONE FRAME ── */
+  .phone {
+    width: 375px;
+    height: 812px;
+    max-height: 92vh;
+    aspect-ratio: 375 / 812;
+    background: #0A0804;
+    border-radius: 38px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.8), 0 0 0 8px #111, 0 0 0 9px #222;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bg-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.2;
+    filter: saturate(1.5) contrast(1.2) hue-rotate(-10deg);
+  }
+
+  .overlay-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 30%, rgba(235, 176, 16, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── TOP NAV ── */
+  .top-nav {
+    position: absolute;
+    top: 44px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 10;
+  }
+
+  .profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 14px 6px 6px;
+    background: rgba(10, 8, 4, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
+  }
+
+  .avatar-3d {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #EBB010, #FF4511);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  }
+
+  .avatar-3d img { width: 22px; height: 22px; }
+
+  .stats-info { line-height: 1; }
+  .career-val { font-family: 'Teko'; font-size: 16px; font-weight: 700; color: #fff; }
+  .career-lbl { font-family: 'Rajdhani'; font-size: 8px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+
+  .wallet-area {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  .premium-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(235, 176, 16, 0.1);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(235, 176, 16, 0.4);
+    border-radius: 20px;
+    box-shadow: 0 0 15px rgba(235, 176, 16, 0.1);
+  }
+
+  .chip-icon { width: 18px; height: 18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+  .chip-val { font-family: 'Teko'; font-size: 18px; color: #EBB010; font-weight: 700; line-height: 1; }
+
+  /* ── WORDMARK ── */
+  .hero-area {
+    position: absolute;
+    top: 100px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    z-index: 5;
+  }
+
+  .torch-3d {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto -20px;
+    filter: drop-shadow(0 0 20px rgba(255, 69, 17, 0.4));
+    animation: torchFloat 4s ease-in-out infinite;
+  }
+
+  @keyframes torchFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(5deg); }
+  }
+
+  .wordmark {
+    font-family: 'Teko';
+    font-weight: 900;
+    font-size: 72px;
+    color: #EBB010;
+    letter-spacing: 8px;
+    line-height: 0.8;
+    text-shadow: 0 0 30px rgba(235, 176, 16, 0.3);
+  }
+
+  .wordmark-sub {
+    font-family: 'Teko';
+    font-weight: 500;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 12px;
+    margin-top: 5px;
+  }
+
+  /* ── MATCHUP WIDGET ── */
+  .matchup-widget {
+    position: absolute;
+    top: 280px;
+    left: 16px;
+    right: 16px;
+    padding: 20px;
+    background: linear-gradient(180deg, rgba(20, 16, 8, 0.8) 0%, rgba(10, 6, 4, 0.9) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(235, 176, 16, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+    z-index: 6;
+  }
+
+  .mu-header {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Oswald';
+    font-size: 10px;
+    color: #EBB010;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+  }
+
+  .mu-teams {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+  }
+
+  .team-block {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .mascot-container {
+    width: 64px;
+    height: 64px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: transform 0.3s;
+  }
+
+  .mascot-container:hover { transform: scale(1.1); }
+  .mascot-img { width: 48px; height: 48px; object-fit: contain; }
+
+  .team-name { font-family: 'Teko'; font-size: 20px; color: #fff; letter-spacing: 1px; line-height: 1; }
+  .team-rec { font-family: 'Rajdhani'; font-size: 9px; color: #888; font-weight: 700; margin-top: 4px; }
+
+  .vs-badge {
+    font-family: 'Teko';
+    font-size: 24px;
+    font-weight: 900;
+    color: rgba(235, 176, 16, 0.6);
+  }
+
+  /* ── KICKOFF SECTION ── */
+  .kickoff-area {
+    position: absolute;
+    bottom: 40px;
+    left: 16px;
+    right: 16px;
+    z-index: 10;
+  }
+
+  .helmet-3d {
+    width: 140px;
+    height: 140px;
+    margin: 0 auto -60px;
+    position: relative;
+    z-index: 11;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6));
+    animation: helmetSpin 8s linear infinite;
+  }
+
+  @keyframes helmetSpin {
+    0% { transform: rotateY(0deg); }
+    100% { transform: rotateY(360deg); }
+  }
+
+  .kickoff-btn {
+    height: 80px;
+    background: linear-gradient(180deg, #FF5A1A 0%, #EBB010 50%, #FF4511 100%);
+    border-radius: 20px;
+    border: 2px solid rgba(255, 200, 100, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 15px;
+    box-shadow: 0 10px 30px rgba(255, 69, 17, 0.4), inset 0 2px 10px rgba(255,255,255,0.4);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .kickoff-btn:active { transform: scale(0.95); }
+
+  .btn-sub { font-family: 'Rajdhani'; font-size: 10px; font-weight: 700; color: rgba(0,0,0,0.6); letter-spacing: 3px; }
+  .btn-main { font-family: 'Teko'; font-size: 42px; font-weight: 900; color: #000; letter-spacing: 5px; line-height: 0.8; margin-top: 5px; }
+
+  /* ── EXPLAINER ── */
+  .explainer {
+    width: 100%;
+    max-width: 450px;
+    margin-top: 24px;
+    padding: 16px;
+    background: rgba(235, 176, 16, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(235, 176, 16, 0.2);
+  }
+
+  .explainer h3 { font-family: 'Teko'; font-size: 24px; color: #EBB010; margin-bottom: 8px; letter-spacing: 1px; }
+  .explainer p { font-size: 13px; line-height: 1.5; color: #ccc; margin-bottom: 12px; }
+  .asset-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .asset-item { font-size: 11px; color: #888; display: flex; align-items: center; gap: 6px; }
+  .asset-item b { color: #EBB010; }
+  .dot { width: 4px; height: 4px; border-radius: 50%; background: #EBB010; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <!-- ICONSCOUT LOTTIE BACKGROUND -->
+  <video class="bg-video" autoplay muted loop playsinline>
+    <source src="https://cdnl.iconscout.com/lottie/premium/thumb/fire-flame-animation-gif-download-11004448.mp4" type="video/mp4">
+  </video>
+  
+  <div class="overlay-glow"></div>
+
+  <div class="top-nav">
+    <div class="profile">
+      <div class="avatar-3d">
+        <img src="https://cdn.iconscout.com/icon/premium/png-256-thumb/boar-mascot-icon-svg-download-png-1355440.png" alt="Avatar">
+      </div>
+      <div class="stats-info">
+        <div class="career-val">34-12</div>
+        <div class="career-lbl">CAREER</div>
+      </div>
+    </div>
+
+    <div class="wallet-area">
+      <div class="premium-chip">
+        <img class="chip-icon" src="https://cdn3d.iconscout.com/3d/premium/thumb/medieval-torch-3d-icon-png-download-14402431.png" alt="Torch">
+        <div class="chip-val">5 STREAK</div>
+      </div>
+      <div class="premium-chip" style="border-color: rgba(77, 166, 255, 0.4); background: rgba(77, 166, 255, 0.1);">
+        <img class="chip-icon" src="https://cdn3d.iconscout.com/3d/premium/thumb/football-helmet-3d-icon-png-download-3377402@0.png" alt="Points" style="filter: hue-rotate(180deg);">
+        <div class="chip-val" style="color: #4DA6FF;">1,247 TP</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-area">
+    <img class="torch-3d" src="https://cdn3d.iconscout.com/3d/premium/thumb/medieval-torch-3d-icon-png-download-14402431.png" alt="Torch">
+    <div class="wordmark">TORCH</div>
+    <div class="wordmark-sub">FOOTBALL</div>
+  </div>
+
+  <div class="matchup-widget">
+    <div class="mu-header">
+      <span>◆ WEEK 3 MATCHUP ◆</span>
+      <span>FINAL GAME</span>
+    </div>
+    <div class="mu-teams">
+      <div class="team-block">
+        <div class="mascot-container">
+          <img class="mascot-img" src="https://cdn.iconscout.com/icon/premium/png-256-thumb/wolf-mascot-icon-svg-download-png-12536277.png" alt="Spectres">
+        </div>
+        <div class="team-name">SPECTRES</div>
+        <div class="team-rec">2-0 SEASON</div>
+      </div>
+      
+      <div class="vs-badge">VS</div>
+
+      <div class="team-block">
+        <div class="mascot-container" style="background: rgba(139, 0, 0, 0.1); border-color: rgba(139, 0, 0, 0.3);">
+          <img class="mascot-img" src="https://cdn.iconscout.com/icon/premium/png-256-thumb/boar-mascot-icon-svg-download-png-13344848.png" alt="Boars">
+        </div>
+        <div class="team-name">BOARS</div>
+        <div class="team-rec">1-1 · 2× CHAMPS</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="kickoff-area">
+    <img class="helmet-3d" src="https://cdn3d.iconscout.com/3d/premium/thumb/football-helmet-3d-icon-png-download-3377402@0.png" alt="Helmet">
+    <div class="kickoff-btn">
+      <div class="btn-sub">TAP TO PLAY</div>
+      <div class="btn-main">KICKOFF</div>
+    </div>
+  </div>
+</div>
+
+<div class="explainer">
+  <h3>IconScout Enhanced UI</h3>
+  <p>This mockup uses premium assets from your subscription to transform the "Cyber-Sports" aesthetic into a high-production experience.</p>
+  <div class="asset-list">
+    <div class="asset-item"><div class="dot"></div><span><b>3D Assets:</b> Medieval Torch, Football Helmet</span></div>
+    <div class="asset-item"><div class="dot"></div><span><b>Lottie:</b> Fire Flame Ambient Background</span></div>
+    <div class="asset-item"><div class="dot"></div><span><b>Vectors:</b> Pro Mascot Logos (Wolf, Boar)</span></div>
+    <div class="asset-item"><div class="dot"></div><span><b>Depth:</b> Real 3D shadows & rotations</span></div>
+  </div>
+</div>
+
+</body>
+</html>

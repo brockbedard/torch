@@ -8,6 +8,8 @@ import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam } from '../../state.js';
 import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
 import { getSeasonOpponents } from '../../data/teams.js';
+import { getFullRoster } from '../../data/players.js';
+import { decoratePlayer, XP_PER_LEVEL } from '../../engine/progressionSystem.js';
 import AudioStateManager from '../../engine/audioManager.js';
 
 export function buildSeasonRecap() {
@@ -17,6 +19,9 @@ export function buildSeasonRecap() {
   var season = GS.season || {};
   var results = season.results || [];
   var opponents = season.opponents || getSeasonOpponents(GS.team);
+
+  // RPG: Decorate Roster with Progression Data
+  var roster = getFullRoster(GS.team).map(p => decoratePlayer(p));
 
   // Calculate record
   var wins = 0, losses = 0, ties = 0;
@@ -43,7 +48,7 @@ export function buildSeasonRecap() {
   }
 
   var el = document.createElement('div');
-  el.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;';
+  el.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;background:var(--bg);overflow-y:auto;';
 
   // ── HEADER ──
   var header = document.createElement('div');
@@ -60,8 +65,13 @@ export function buildSeasonRecap() {
   el.appendChild(header);
 
   // ── GAME RESULTS ──
-  var gamesWrap = document.createElement('div');
-  gamesWrap.style.cssText = 'flex:1;padding:8px 20px;display:flex;flex-direction:column;gap:8px;';
+  var resultsSection = document.createElement('div');
+  resultsSection.style.cssText = 'padding:8px 20px;display:flex;flex-direction:column;gap:8px;';
+  
+  var sectionLabel = document.createElement('div');
+  sectionLabel.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:10px;color:#555;letter-spacing:2px;margin-bottom:4px;";
+  sectionLabel.textContent = "SEASON PERFORMANCE";
+  resultsSection.appendChild(sectionLabel);
 
   for (var g = 0; g < results.length; g++) {
     var r = results[g];
@@ -85,13 +95,51 @@ export function buildSeasonRecap() {
         "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:" + resultColor + ";letter-spacing:2px;\">" + r.score + '-' + r.oppScore + "</div>" +
         "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:" + resultColor + ";letter-spacing:1px;\">" + resultText + "</div>" +
       "</div>";
-    gamesWrap.appendChild(row);
+    resultsSection.appendChild(row);
   }
-  el.appendChild(gamesWrap);
+  el.appendChild(resultsSection);
+
+  // ── ROSTER EVOLUTION (Phase 6 RPG) ──
+  var rosterSection = document.createElement('div');
+  rosterSection.style.cssText = 'padding:16px 20px;display:flex;flex-direction:column;gap:12px;';
+  
+  var rosterLabel = document.createElement('div');
+  rosterLabel.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:2px;";
+  rosterLabel.textContent = "ROSTER EVOLUTION";
+  rosterSection.appendChild(rosterLabel);
+
+  // Filter to show top 4 key players
+  roster.slice(0, 4).forEach(p => {
+    const nextLevelXP = p.level * XP_PER_LEVEL;
+    const currentLevelXP = (p.level - 1) * XP_PER_LEVEL;
+    const progress = ((p.xp - currentLevelXP) / XP_PER_LEVEL) * 100;
+
+    var pRow = document.createElement('div');
+    pRow.className = 'sr-player-row';
+    pRow.style.cssText = "padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.05);opacity:0;";
+    pRow.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="font-family:'Teko';font-weight:700;font-size:18px;color:#fff;">${p.name.toUpperCase()}</div>
+          <div style="font-family:'Rajdhani';font-weight:700;font-size:9px;color:${team.accent};background:${team.accent}22;padding:1px 6px;border-radius:4px;">LVL ${p.level}</div>
+        </div>
+        <div style="font-family:'Rajdhani';font-weight:700;font-size:10px;color:#555;">${p.pos}</div>
+      </div>
+      <div style="width:100%;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;position:relative;">
+        <div style="position:absolute;left:0;top:0;height:100%;width:${progress}%;background:${team.accent};box-shadow:0 0 10px ${team.accent}66;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px;">
+        <div style="font-family:'Rajdhani';font-size:8px;color:#444;">${p.xp} / ${nextLevelXP} XP</div>
+        <div style="font-family:'Rajdhani';font-weight:700;font-size:8px;color:${team.accent};letter-spacing:1px;">${p.trait}</div>
+      </div>
+    `;
+    rosterSection.appendChild(pRow);
+  });
+  el.appendChild(rosterSection);
 
   // ── POINTS CARRIED ──
   var ptsBanner = document.createElement('div');
-  ptsBanner.style.cssText = "text-align:center;padding:8px;opacity:0;";
+  ptsBanner.style.cssText = "text-align:center;padding:16px;opacity:0;";
   ptsBanner.id = 'sr-pts';
   ptsBanner.innerHTML =
     "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#EBB010;letter-spacing:2px;\">TORCH POINTS BANKED</div>" +
@@ -176,6 +224,12 @@ export function buildSeasonRecap() {
     for (var ri = 0; ri < rows.length; ri++) {
       tl.to(rows[ri], { opacity: 1, duration: 0.2, ease: 'power2.out' }, '+=0.1');
       tl.from(rows[ri], { x: -20, duration: 0.2, ease: 'power2.out' }, '<');
+    }
+
+    var pRows = el.querySelectorAll('.sr-player-row');
+    for (var pi = 0; pi < pRows.length; pi++) {
+      tl.to(pRows[pi], { opacity: 1, duration: 0.2, ease: 'power2.out' }, '+=0.05');
+      tl.from(pRows[pi], { y: 10, duration: 0.2, ease: 'power2.out' }, '<');
     }
 
     tl.to('#sr-pts', { opacity: 1, duration: 0.25 }, '+=0.1');

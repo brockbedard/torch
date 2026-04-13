@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TORCH — IconScout Vibe Gallery</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #050403;
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  h1 {
+    font-family: 'Teko', sans-serif;
+    font-size: 64px;
+    color: #EBB010;
+    letter-spacing: 4px;
+    margin-bottom: 10px;
+    text-shadow: 0 0 20px rgba(235, 176, 16, 0.3);
+  }
+  .sub {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 60px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  section {
+    width: 100%;
+    max-width: 1200px;
+    margin-bottom: 80px;
+  }
+  h2 {
+    font-family: 'Teko', sans-serif;
+    font-size: 32px;
+    color: #fff;
+    border-bottom: 2px solid rgba(235, 176, 16, 0.4);
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  h2 span { font-size: 14px; color: #EBB010; background: rgba(235, 176, 16, 0.1); padding: 4px 10px; border-radius: 4px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+  }
+
+  .asset-card {
+    background: linear-gradient(135deg, #141008, #0A0804);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+    min-height: 240px;
+  }
+  .asset-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(235, 176, 16, 0.4);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(235, 176, 16, 0.1);
+  }
+
+  .asset-preview {
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+  }
+  
+  video.asset-preview {
+    width: 160px;
+    height: 160px;
+    border-radius: 8px;
+    background: #000;
+  }
+
+  .asset-name {
+    font-family: 'Teko';
+    font-size: 18px;
+    color: #ccc;
+    text-align: center;
+    letter-spacing: 1px;
+    margin-top: auto;
+  }
+  .asset-type {
+    font-size: 10px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+
+  .featured {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+  .featured .asset-preview { width: 280px; height: 280px; }
+
+  /* Section specific accents */
+  .s-3d h2 { border-color: #EBB010; }
+  .s-lottie h2 { border-color: #4DA6FF; }
+  .s-mascot h2 { border-color: #FF4511; }
+</style>
+</head>
+<body>
+
+  <h1>PREMIUM VIBE GALLERY</h1>
+  <div class="sub">Standalone Asset Inspiration via IconScout Subscription</div>
+
+  <!-- 3D SPORTS & HARDWARE -->
+  <section class="s-3d">
+    <h2>3D SPORTS & HARDWARE <span>HIGH-END PRODUCTION</span></h2>
+    <div class="grid">
+      <div class="asset-card">
+        <img class="asset-preview" src="https://cdn3d.iconscout.com/3d/premium/thumb/football-helmet-3d-icon-png-download-3377402@0.png" alt="Helmet">
+        <div class="asset-name">PRO HELMET</div>
+        <div class="asset-type">3D ASSET</div>
+      </div>
+      <div class="asset-card">
+        <img class="asset-preview" src="https://cdn3d.iconscout.com/3d/premium/thumb/football-trophy-3d-icon-png-download-13516724.png" alt="Trophy">
+        <div class="asset-name">CHAMPIONSHIP CUP</div>
+        <div class="asset-type">3D ASSET</div>
+      </div>
+      <div class="asset-card">
+        <img class="asset-preview" src="https://cdn3d.iconscout.com/3d/premium/thumb/football-trophy-3d-icon-png-download-5727415.png" alt="Trophy 2">
+        <div class="asset-name">MVP GOLD TROPHY</div>
+        <div class="asset-type">3D ASSET</div>
+      </div>
+      <div class="asset-card">
+        <img class="asset-preview" src="https://cdn3d.iconscout.com/3d/premium/thumb/shoes-cyberpunk-3d-icon-png-download-11908740.png" alt="Cleats">
+        <div class="asset-name">CYBER-CLEATS</div>
+        <div class="asset-type">3D ASSET</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLAMES & CARD EFFECTS -->
+  <section class="s-3d">
+    <h2>FLAMES & POWER EFFECTS <span>FOR CARDS & STREAKS</span></h2>
+    <div class="grid">
+      <div class="asset-card">
+        <img class="asset-preview" src="https://cdn3d.iconscout.com/3d/premium/thumb/medieval-torch-3d-icon-png-download-14402431.png" alt="Torch">
+        <div class="asset-name">VINTAGE TORCH</div>
+        <div class="asset-type">3D ASSET</div>
+      </div>
+      <div class="asset-card">
+        <img class="asset-preview" src="https://cdn3d.iconscout.com/3d/premium/thumb/fireball-3d-icon-png-download-5107028.png" alt="Fireball">
+        <div class="asset-name">RISING FIREBALL</div>
+        <div class="asset-type">3D ASSET</div>
+      </div>
+      <div class="asset-card">
+        <img class="asset-preview" src="https://cdn3d.iconscout.com/3d/premium/thumb/fireball-3d-icon-png-download-5107121.png" alt="Fireball 2">
+        <div class="asset-name">ENERGY ORB</div>
+        <div class="asset-type">3D ASSET</div>
+      </div>
+      <div class="asset-card">
+        <img class="asset-preview" src="https://cdn3d.iconscout.com/3d/premium/thumb/cyberpunk-3d-icon-png-download-8426223.png" alt="Cyber">
+        <div class="asset-name">HUD SCANNER</div>
+        <div class="asset-type">3D ASSET</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOTTIE ANIMATIONS -->
+  <section class="s-lottie">
+    <h2>LOTTIE DYNAMICS <span>EXPLOSIONS & AMBIENCE</span></h2>
+    <div class="grid">
+      <div class="asset-card">
+        <video class="asset-preview" autoplay muted loop playsinline>
+          <source src="https://cdnl.iconscout.com/lottie/premium/thumb/explosion-animation-gif-download-11091127.mp4" type="video/mp4">
+        </video>
+        <div class="asset-name">BURST EXPLOSION</div>
+        <div class="asset-type">LOTTIE ANIMATION</div>
+      </div>
+      <div class="asset-card">
+        <video class="asset-preview" autoplay muted loop playsinline>
+          <source src="https://cdnl.iconscout.com/lottie/premium/thumb/fire-flame-animation-gif-download-11004448.mp4" type="video/mp4">
+        </video>
+        <div class="asset-name">AMBIENT FLAME</div>
+        <div class="asset-type">LOTTIE ANIMATION</div>
+      </div>
+      <div class="asset-card">
+        <video class="asset-preview" autoplay muted loop playsinline>
+          <source src="https://cdnl.iconscout.com/lottie/premium/thumb/explosion-animation-gif-download-5852234.mp4" type="video/mp4">
+        </video>
+        <div class="asset-name">SHOCKWAVE</div>
+        <div class="asset-type">LOTTIE ANIMATION</div>
+      </div>
+      <div class="asset-card">
+        <video class="asset-preview" autoplay muted loop playsinline>
+          <source src="https://cdnl.iconscout.com/lottie/premium/thumb/explosion-animation-gif-download-11220827.mp4" type="video/mp4">
+        </video>
+        <div class="asset-name">CYBER SPARKS</div>
+        <div class="asset-type">LOTTIE ANIMATION</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEAM MASCOTS -->
+  <section class="s-mascot">
+    <h2>TEAM MASCOTS <span>VECTOR AGGRESSION</span></h2>
+    <div class="grid">
+      <div class="asset-card">
+        <img class="asset-preview" src="https://cdn.iconscout.com/icon/premium/png-256-thumb/wolf-mascot-icon-svg-download-png-12536277.png" alt="Wolf">
+        <div class="asset-name">SPECTRE WOLF</div>
+        <div class="asset-type">VECTOR LOGO</div>
+      </div>
+      <div class="asset-card">
+        <img class="asset-preview" src="https://cdn.iconscout.com/icon/premium/png-256-thumb/boar-mascot-icon-svg-download-png-13344848.png" alt="Boar">
+        <div class="asset-name">RAGING BOAR</div>
+        <div class="asset-type">VECTOR LOGO</div>
+      </div>
+      <div class="asset-card">
+        <img class="asset-preview" src="https://cdn.iconscout.com/icon/premium/png-256-thumb/serpent-icon-svg-download-png-1090706.png" alt="Serpent">
+        <div class="asset-name">VIPER SERPENT</div>
+        <div class="asset-type">VECTOR LOGO</div>
+      </div>
+      <div class="asset-card">
+        <img class="asset-preview" src="https://cdn.iconscout.com/icon/premium/png-256-thumb/mascot-icon-svg-download-png-1363025.png" alt="Eagle">
+        <div class="asset-name">APEX EAGLE</div>
+        <div class="asset-type">VECTOR LOGO</div>
+      </div>
+    </div>
+  </section>
+
+</body>
+</html>

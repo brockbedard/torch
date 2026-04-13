@@ -3,7 +3,7 @@ export const GAMEPLAY_CSS = `
 .T{height:100%;display:flex;flex-direction:column;background:#0A0804;overflow:hidden;position:relative;font-family:'Barlow Condensed',sans-serif;padding-top:env(safe-area-inset-top,0px)}
 
 /* scoreboard — jumbotron */
-.T-sb{background:#141008;overflow:hidden;flex-shrink:0;z-index:60;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.3);transition:opacity 0.2s}
+.T-sb{background:#141008;overflow:hidden;flex-shrink:1;z-index:60;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.3);transition:opacity 0.2s}
 .T-sb-dim{opacity:0.7}
 .T-sb-led{height:2px;position:relative;z-index:1}
 .T-sb-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch}
@@ -27,7 +27,7 @@ export const GAMEPLAY_CSS = `
 @keyframes urgentPulse{0%,100%{border-color:#e0305044;background:rgba(224,48,80,0.03)}50%{border-color:#e0305088;background:rgba(224,48,80,0.06)}}
 
 /* TORCH points banner */
-.T-torch-banner{flex-shrink:0;display:flex;flex-direction:column;margin-bottom:12px;box-shadow:0 4px 12px rgba(78,50,23,0.3)}
+.T-torch-banner{flex-shrink:1;display:flex;flex-direction:column;margin-bottom:8px;box-shadow:0 4px 12px rgba(78,50,23,0.3)}
 .T-torch-banner-border{height:2px;background:linear-gradient(90deg,#8B4A1F,#EBB010,#FFD060,#EBB010,#8B4A1F);background-size:200% 100%;animation:borderFlow 3s linear infinite}
 @keyframes borderFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 .T-torch-banner-content{background:linear-gradient(180deg,#1a1208 0%,#0a0804 40%,#0a0804 60%,#1a1208 100%);padding:8px 14px;display:flex;align-items:center;justify-content:center;gap:8px;position:relative}
@@ -59,7 +59,7 @@ export const GAMEPLAY_CSS = `
 .T-drive-idle{font-family:'Rajdhani';font-size:11px;color:#666;letter-spacing:.5px;margin-top:8px}
 
 /* field strip — Tecmo Bowl inspired */
-.T-strip{height:136px;flex-shrink:0;position:relative;background:#050a08;overflow:hidden;border-bottom:1px solid #1E1610;box-shadow:inset 0 8px 16px rgba(0,0,0,0.4),inset 0 -8px 16px rgba(0,0,0,0.4)}
+.T-strip{height:136px;min-height:100px;flex-shrink:1;position:relative;background:#050a08;overflow:hidden;border-bottom:1px solid #1E1610;box-shadow:inset 0 8px 16px rgba(0,0,0,0.4),inset 0 -8px 16px rgba(0,0,0,0.4)}
 .T-field-turf{display:none}
 .T-yard{display:none}
 .T-yard-5{display:none}
@@ -102,7 +102,7 @@ export const GAMEPLAY_CSS = `
 .T-drop-tutorial-player .T-drop-lbl{color:#4DA6FF !important;font-size:11px !important;font-weight:700 !important;text-shadow:0 0 8px rgba(77,166,255,0.5) !important}
 
 /* cards section — hidden during play-by-play */
-.T-panel{display:flex;flex-direction:column;overflow:visible;transition:background .6s,border-color .6s;flex-shrink:0;border-top:1.5px solid transparent;position:relative;z-index:1}
+.T-panel{display:flex;flex-direction:column;overflow:visible;transition:background .6s,border-color .6s;flex-shrink:0;min-height:200px;border-top:1.5px solid transparent;position:relative;z-index:1}
 .T-panel-hidden{display:none}
 /* offense + defense panels — unified warm dark */
 .T-panel-off{background:#0E0A04;border-top-color:#FF6B0033}

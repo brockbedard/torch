@@ -12,179 +12,108 @@ import { updateHeat } from './personnelSystem.js';
 import { updateMomentum, decayMomentum, spikeMomentum, crashMomentum } from './momentumSystem.js';
 import { calcReturnYards } from './turnoverReturns.js';
 import { checkInjury, healInjuries } from './injuries.js';
-import { aiSelectPlay, aiSelectPlayer, aiBuyTorchCard } from './aiOpponent.js';
-import { TORCH_CARDS, getBoosterOffers } from '../data/torchCards.js';
-// Old CT/IR play imports removed — plays come from constructor args
+import { aiSelectPlay, aiSelectPlayer } from './aiOpponent.js';
+
+// New Managers
+import { ClockManager } from './managers/ClockManager.js';
+import { ScoreManager } from './managers/ScoreManager.js';
+import { FieldManager } from './managers/FieldManager.js';
+import { StatManager } from './managers/StatManager.js';
+import { EconomyManager } from './managers/EconomyManager.js';
+import { SpecialTeamsManager } from './managers/SpecialTeamsManager.js';
+import { engineBridge } from './worker/engineBridge.js';
 
 export class GameState {
   constructor({ humanTeam = 'CT', difficulty = 'MEDIUM', ctOffHand, ctDefHand, irOffHand, irDefHand,
                 ctOffRoster, ctDefRoster, irOffRoster, irDefRoster, coachBadge = 'SCHEMER',
                 initialBallPos, initialDown, initialDistance, initialPossession,
                 ctTeamId = null, irTeamId = null }) {
-    // Teams
+    // Basic config
     this.humanTeam = humanTeam;
     this.cpuTeam = humanTeam === 'CT' ? 'IR' : 'CT';
     this.ctTeamId = ctTeamId;
     this.irTeamId = irTeamId;
     this.difficulty = difficulty;
-    this.coachBadge = coachBadge; // SCHEMER, IRON_CURTAIN, SPEED_DEMON
-    this.halftimeAdjustment = 'balanced'; // aggressive, balanced, conservative
+    this.coachBadge = coachBadge;
+    this.halftimeAdjustment = 'balanced';
 
     // Environmental
     const weathers = ['CLEAR', 'CLEAR', 'RAIN', 'WINDY', 'SNOW'];
     this.weather = weathers[Math.floor(Math.random() * weathers.length)];
-    this.momentum = 50; // 0-100 scale
+    this.momentum = 50;
 
-    // Hands (5 cards each)
+    // Managers
+    this.clock = new ClockManager(20);
+    this.score = new ScoreManager();
+    this.field = new FieldManager(initialBallPos, initialDown, initialDistance, initialPossession || this.cpuTeam);
+    this.statsManager = new StatManager(this.field.possession);
+    this.economy = new EconomyManager(this.difficulty);
+
+    // Hands
     this.ctOffHand = ctOffHand;
     this.ctDefHand = ctDefHand;
     this.irOffHand = irOffHand;
     this.irDefHand = irDefHand;
 
-    // Rosters (with injury state added)
+    // Rosters
     this.ctOffRoster = ctOffRoster.map(p => ({ ...p, injured: false, injurySnapsRemaining: 0 }));
     this.ctDefRoster = ctDefRoster.map(p => ({ ...p, injured: false, injurySnapsRemaining: 0 }));
     this.irOffRoster = irOffRoster.map(p => ({ ...p, injured: false, injurySnapsRemaining: 0 }));
     this.irDefRoster = irDefRoster.map(p => ({ ...p, injured: false, injurySnapsRemaining: 0 }));
 
-    // Score
-    this.ctScore = 0;
-    this.irScore = 0;
-
-    // Ball state
-    this.possession = initialPossession || this.cpuTeam; // Default: CPU receives first
-    this.ballPosition = initialBallPos !== undefined ? initialBallPos : 50;
-    this.down = initialDown !== undefined ? initialDown : 1;
-    this.distance = initialDistance !== undefined ? initialDistance : 10;
-
-    // Half/clock
-    this.half = 1;
-    this.playsUsed = 0;
-    this.playsPerHalf = 20;
-    this.twoMinActive = false;
-    this.clockSeconds = 120;
-
-    // Drive tracking
-    this.drivePlayHistory = [];
-    this.totalPlays = 0;
-    this.drivePlays = 0;
-    this.inRedZone = this.yardsToEndzone() <= 20;
-
-    // TORCH points
-    this.ctTorchPts = 0;
-    this.irTorchPts = 0;
-
-    // Heat maps (personnel system) — { playerId: heatLevel }
+    // Personnel Systems
     this.offHeatMap = {};
     this.defHeatMap = {};
     this.offMomentumMap = {};
     this.defMomentumMap = {};
 
-    // Torch Cards (3 slots)
-    this.humanTorchCards = [];
-    this.cpuTorchCards = [];
-    // AI starting cards scale with difficulty
-    if (this.difficulty === 'MEDIUM') {
-      // Medium: start with a useful Bronze (situational value, not just cheapest)
-      var medBronzes = ['play_action', 'scramble_drill', 'twelfth_man', 'ice'];
-      this.cpuTorchCards.push(medBronzes[Math.floor(Math.random() * medBronzes.length)]);
-    } else if (this.difficulty === 'HARD') {
-      // Hard: start with a high-impact Silver card
-      var goodSilvers = ['deep_shot', 'truck_stick', 'prime_time', 'hard_count'];
-      this.cpuTorchCards.push(goodSilvers[Math.floor(Math.random() * goodSilvers.length)]);
-    }
+    this.humanTendencies = { runs: 0, passes: 0, total: 0 };
 
-    // Stats
-    this.stats = {
-      ctTurnovers: 0, irTurnovers: 0,
-      ctTouchdowns: 0, irTouchdowns: 0,
-      ctTotalYards: 0, irTotalYards: 0,
-      ctSacks: 0, irSacks: 0,
-      ctFirstDowns: 0, irFirstDowns: 0,
-      ctDrives: 0, irDrives: 0,
-      ctIncompletions: 0, irIncompletions: 0,
-      ctTorchPlays: 0, irTorchPlays: 0,
-      ctTorchYards: 0, irTorchYards: 0,
-      explosivePlays: 0, bigPlays: 0,
-      leadChanges: 0, tiesBroken: 0,
-      sackCount: 0, safeties: 0,
-      fourthDownAttempts: 0, fourthDownConversions: 0,
-      threeAndOuts: 0, longDrives: 0,
-      badgeCombos: 0, historyBonuses: 0,
-      redZoneTrips: this.inRedZone ? 1 : 0, redZoneTDs: 0,
-      twoMinScores: 0, turnoverTDs: 0,
-      audiblesUsed: 0,
-    };
+    // Compatibility Getters (for existing UI code)
+    Object.defineProperty(this, 'ctScore', { get: () => this.score.ctScore, set: (v) => this.score.ctScore = v });
+    Object.defineProperty(this, 'irScore', { get: () => this.score.irScore, set: (v) => this.score.irScore = v });
+    Object.defineProperty(this, 'possession', { get: () => this.field.possession, set: (v) => this.field.possession = v });
+    Object.defineProperty(this, 'ballPosition', { get: () => this.field.ballPosition, set: (v) => this.field.ballPosition = v });
+    Object.defineProperty(this, 'down', { get: () => this.field.down, set: (v) => this.field.down = v });
+    Object.defineProperty(this, 'distance', { get: () => this.field.distance, set: (v) => this.field.distance = v });
+    Object.defineProperty(this, 'half', { get: () => this.clock.half, set: (v) => this.clock.half = v });
+    Object.defineProperty(this, 'playsUsed', { get: () => this.clock.playsUsed, set: (v) => this.clock.playsUsed = v });
+    Object.defineProperty(this, 'twoMinActive', { get: () => this.clock.twoMinActive, set: (v) => this.clock.twoMinActive = v });
+    Object.defineProperty(this, 'clockSeconds', { get: () => this.clock.clockSeconds, set: (v) => this.clock.clockSeconds = v });
+    Object.defineProperty(this, 'totalPlays', { get: () => this.clock.totalPlays, set: (v) => this.clock.totalPlays = v });
+    Object.defineProperty(this, 'needsHalftime', { get: () => this.clock.needsHalftime, set: (v) => this.clock.needsHalftime = v });
+    Object.defineProperty(this, 'gameOver', { get: () => this.clock.gameOver, set: (v) => this.clock.gameOver = v });
+    Object.defineProperty(this, 'ctTorchPts', { get: () => this.economy.ctTorchPts, set: (v) => this.economy.ctTorchPts = v });
+    Object.defineProperty(this, 'irTorchPts', { get: () => this.economy.irTorchPts, set: (v) => this.economy.irTorchPts = v });
+    Object.defineProperty(this, 'humanTorchCards', { get: () => this.economy.humanTorchCards });
+    Object.defineProperty(this, 'cpuTorchCards', { get: () => this.economy.cpuTorchCards });
+    Object.defineProperty(this, 'stats', { get: () => this.statsManager.stats });
+    Object.defineProperty(this, 'drivePlayHistory', { get: () => this.field.drivePlayHistory });
+    Object.defineProperty(this, 'drivePlays', { get: () => this.field.drivePlays });
+    Object.defineProperty(this, 'inRedZone', { get: () => this.field.inRedZone, set: (v) => this.field.inRedZone = v });
 
-    // Game over flag
-    this.gameOver = false;
-    this.snapLog = []; // [{ half, team, down, ballPos, desc, yards }]
-    this.needsHalftime = false;
-
-    // Initialize drives count
-    if (this.possession === 'CT') this.stats.ctDrives = 1;
-    else this.stats.irDrives = 1;
+    this.snapLog = [];
   }
 
   /** Yards to the end zone for the team with possession */
   yardsToEndzone() {
-    return this.possession === 'CT' ? 100 - this.ballPosition : this.ballPosition;
-  }
-
-  /** Simulate a kickoff and return the receiving team's starting position (own yard line, 0-100 scale)
-   *  @param {object} [returner] - Returning player with st.returnAbility (optional)
-   */
-  static resolveKickoff(returner, opts) {
-    opts = opts || {};
-    // HOUSE CALL: guaranteed 50+ yard return (50-70 starting position, or return TD)
-    if (opts.houseCall) {
-      if (Math.random() < 0.3) return -1; // 30% return TD
-      return 50 + Math.floor(Math.random() * 21); // own 50-70
-    }
-    var KICKOFF = [
-      { weight: 58, min: 25, max: 25 },  // touchback
-      { weight: 22, min: 20, max: 28 },  // short return
-      { weight: 13, min: 28, max: 35 },  // avg return
-      { weight: 5,  min: 35, max: 45 },  // good return
-      { weight: 1.5, min: 45, max: 50 }, // big return
-      { weight: 0.5, min: -1, max: -1 }, // return TD (handled separately)
-    ];
-    // ST rating shift: returnAbility shifts percentile (±5% per star from 3)
-    var retShift = returner && returner.st ? (returner.st.returnAbility - 3) * 5 : 0;
-    var total = KICKOFF.reduce(function(s, k) { return s + k.weight; }, 0);
-    var r = Math.random() * total;
-    // Shift toward better outcomes (higher retShift = lower roll = better result at end of table)
-    r = Math.max(0, Math.min(total - 0.01, r - retShift));
-    for (var i = 0; i < KICKOFF.length; i++) {
-      r -= KICKOFF[i].weight;
-      if (r <= 0) {
-        var k = KICKOFF[i];
-        if (k.min === -1) return -1; // return TD signal
-        return k.min + Math.floor(Math.random() * (k.max - k.min + 1));
-      }
-    }
-    return 25; // fallback touchback
+    return this.field.getYardsToEndzone();
   }
 
   /** Flip possession after a score — uses kickoff distribution for starting position */
-  kickoffFlip(opts) {
-    var ownYardLine = GameState.resolveKickoff(null, opts);
-    // Convert own yard line to 0-100 coordinate for the RECEIVING team
-    var newPoss = this.possession === 'CT' ? 'IR' : 'CT';
-    var ballPos;
-    if (ownYardLine === -1) {
-      // Kick return TD — award 7 points (TD + automatic XP) to receiving team, then do a normal flip
-      if (newPoss === 'CT') this.ctScore += 7;
-      else this.irScore += 7;
-      // Flip possession so the team that just scored (current this.possession) kicks off again.
-      // Do NOT set this.possession before calling kickoffFlip — flipPossession inside will handle it.
-      // Pass opts so HOUSE CALL etc. are not lost on the follow-up kick.
-      this.possession = newPoss; // receiving team now "possesses" so kickoffFlip re-flips to kicking team's opponent
-      this.kickoffFlip(opts);
-      return { returnTD: true };
+  kickoffFlip(opts = {}) {
+    var res = SpecialTeamsManager.resolveKickoff(null, opts);
+    var newPoss = this.field.possession === 'CT' ? 'IR' : 'CT';
+    
+    if (res.touchdown) {
+      this.score.addPoints(newPoss, 7);
+      this.statsManager.recordTouchdown(newPoss, true); // turnover/kick return TD
+      this.field.possession = newPoss;
+      return this.kickoffFlip(opts);
     }
-    // Own yard line: CT at position=ownYardLine, IR at position=100-ownYardLine
-    ballPos = newPoss === 'CT' ? ownYardLine : 100 - ownYardLine;
+
+    var ownYardLine = res.returnYard;
+    var ballPos = newPoss === 'CT' ? ownYardLine : 100 - ownYardLine;
     this.flipPossession(ballPos);
     return { returnTD: false, startYard: ownYardLine };
   }
@@ -192,183 +121,48 @@ export class GameState {
   /** Resolve a punt from current field position. Returns { gross, netYards, result, label }
    *  @param {object} [punter] - Punting player with st.kickPower (optional)
    */
-  punt(punter, opts) {
-    opts = opts || {};
-    // Gross distance distribution (~42 yd average)
-    var GROSS = [
-      { min: 25, max: 34, weight: 10 },
-      { min: 35, max: 39, weight: 20 },
-      { min: 40, max: 44, weight: 35 },
-      { min: 45, max: 49, weight: 25 },
-      { min: 50, max: 58, weight: 10 },
-    ];
-    var RETURN = [
-      { ret: 0, weight: 40, label: 'Fair catch' },
-      { ret: 8, weight: 35, label: 'Short return' },
-      { ret: 19, weight: 20, label: 'Decent return' },
-      { ret: 35, weight: 5, label: 'Big return' },
-    ];
+  punt(punter, opts = {}) {
+    const res = SpecialTeamsManager.resolvePunt(this.yardsToEndzone(), punter, opts);
+    
+    this.clock.advance(this.twoMinActive);
 
-    // BLOCKED KICK: 35% chance to block the punt
-    if (opts.blockedKick) {
-      var blockRoll = Math.random();
-      if (blockRoll < 0.35) {
-        // Blocked! Punting team keeps possession at LOS (turnover on downs equivalent)
-        this.totalPlays++;
-        if (!this.twoMinActive) this.playsUsed++;
-        var blockedLabel = 'BLOCKED PUNT! Recovered at the line of scrimmage!';
-        // Opponent gets ball at current spot
-        var newPoss = this.possession === 'CT' ? 'IR' : 'CT';
-        this.flipPossession(this.ballPosition);
-        this._checkHalfEnd();
-        return { gross: 0, netYards: 0, isTouchback: false, retLabel: 'Blocked', label: blockedLabel, newBallPos: this.yardsToEndzone(), blocked: true };
-      }
-    }
-
-    // Roll gross — kickPower shifts percentile (±5% per star from 3)
-    var powerShift = punter && punter.st ? (punter.st.kickPower - 3) * 5 : 0;
-    var total = GROSS.reduce(function(s, g) { return s + g.weight; }, 0);
-    var r = Math.random() * total;
-    // Shift toward longer punts (higher power = lower roll = hits bigger distance buckets)
-    r = Math.max(0, Math.min(total - 0.01, r - powerShift));
-    var gross = 42;
-    for (var i = 0; i < GROSS.length; i++) {
-      r -= GROSS[i].weight;
-      if (r <= 0) { gross = GROSS[i].min + Math.floor(Math.random() * (GROSS[i].max - GROSS[i].min + 1)); break; }
-    }
-
-    // COFFIN CORNER: guarantee punt lands inside the 10
-    if (opts.coffinCorner) {
-      var ydsToEz = this.yardsToEndzone();
-      // Force gross to land between opponent 1-9 yard line
-      gross = Math.max(ydsToEz - 9, Math.min(ydsToEz - 1, gross));
-      if (gross < 20) gross = ydsToEz - 5; // safety: at least a reasonable punt
-    }
-
-    // Landing spot (in 0-100 coordinates)
-    var landingYdsToEz = Math.max(0, this.yardsToEndzone() - gross);
-    // Touchback check if landing inside opponent's 10
-    var isTouchback = false;
-    if (opts.coffinCorner) {
-      // Coffin corner: never touchback, always downed at the spot
-      isTouchback = false;
-    } else if (landingYdsToEz < 10 && Math.random() < 0.6) {
-      isTouchback = true;
-    }
-
-    // Return yards
-    var retYards = 0;
-    var retLabel = 'Fair catch';
-    if (opts.fairCatchGhost || opts.coffinCorner) {
-      // FAIR CATCH GHOST / COFFIN CORNER: force fair catch, no return
-      retYards = 0;
-      retLabel = 'Fair catch';
-    } else if (!isTouchback) {
-      var rt = Math.random() * 100;
-      for (var j = 0; j < RETURN.length; j++) {
-        rt -= RETURN[j].weight;
-        if (rt <= 0) {
-          retYards = Math.max(0, RETURN[j].ret + Math.floor(Math.random() * 5 - 2));
-          retLabel = RETURN[j].label;
-          break;
-        }
-      }
-    }
-
-    // Calculate new ball position for receiving team
-    var receiverYdsFromOwnEz;
-    if (isTouchback) {
-      receiverYdsFromOwnEz = 25;
+    if (res.blocked) {
+      this.flipPossession(this.field.ballPosition);
     } else {
-      receiverYdsFromOwnEz = Math.max(5, landingYdsToEz + retYards);
-      // Cap: can't return past midfield easily
-      receiverYdsFromOwnEz = Math.min(50, receiverYdsFromOwnEz);
+      const newPoss = this.field.possession === 'CT' ? 'IR' : 'CT';
+      const newBallPos = newPoss === 'CT' ? res.newBallPosFromOwnEz : 100 - res.newBallPosFromOwnEz;
+      this.flipPossession(newBallPos);
     }
 
-    // Convert to 0-100 coordinate for new possessing team
-    var newPoss = this.possession === 'CT' ? 'IR' : 'CT';
-    var newBallPos = newPoss === 'CT' ? receiverYdsFromOwnEz : 100 - receiverYdsFromOwnEz;
-
-    var netYards = gross - retYards;
-    var puntPrefix = opts.coffinCorner ? 'COFFIN CORNER! ' : opts.fairCatchGhost ? 'FAIR CATCH GHOST! ' : '';
-    var label = isTouchback
-      ? puntPrefix + 'Punt — ' + gross + ' yards — Touchback'
-      : puntPrefix + 'Punt — ' + gross + ' yards — ' + retLabel + ' to the ' + receiverYdsFromOwnEz;
-
-    this.totalPlays++;
-    if (!this.twoMinActive) this.playsUsed++;
-    this.flipPossession(newBallPos);
     this._checkHalfEnd();
-
-    return { gross: gross, netYards: netYards, isTouchback: isTouchback, retLabel: retLabel, label: label, newBallPos: receiverYdsFromOwnEz };
+    return res;
   }
 
   /** Attempt a field goal. Returns { made, distance, label }
    *  @param {object} [kicker] - Kicking player with st.kickAccuracy (optional)
    *  @param {object} [opts] - { iceTheKicker, cannonLeg, blockedKick }
    */
-  attemptFieldGoal(kicker, opts) {
-    opts = opts || {};
-    var ydsToEz = this.yardsToEndzone();
-    var fgDist = ydsToEz + 17; // 10yd endzone + 7yd snap
+  attemptFieldGoal(kicker, opts = {}) {
+    const sides = this.getCurrentSides();
+    const res = SpecialTeamsManager.resolveFieldGoal(this.yardsToEndzone(), kicker, opts, this.difficulty, sides.offenseIsHuman);
+    
+    this.clock.advance(this.twoMinActive);
 
-    // BLOCKED KICK: 35% chance to block the FG
-    if (opts.blockedKick) {
-      var blockRoll = Math.random();
-      if (blockRoll < 0.35) {
-        this.totalPlays++;
-        if (!this.twoMinActive) this.playsUsed++;
-        var newPoss = this.possession === 'CT' ? 'IR' : 'CT';
-        this.flipPossession(this.ballPosition);
-        this._checkHalfEnd();
-        return { made: false, distance: fgDist, label: 'BLOCKED! ' + fgDist + '-yard field goal is BLOCKED!', blocked: true };
-      }
-    }
-
-    // Make rates by distance
-    var makePercent;
-    if (fgDist <= 29) makePercent = 88;
-    else if (fgDist <= 39) makePercent = 80;
-    else if (fgDist <= 49) makePercent = 68;
-    else makePercent = 50;
-
-    // ST rating: kickAccuracy shifts make % (±5% per star from 3)
-    var accStars = kicker && kicker.st ? kicker.st.kickAccuracy : 3;
-    // ICE THE KICKER: reduce accuracy by 1 star
-    if (opts.iceTheKicker) accStars = Math.max(1, accStars - 1);
-    makePercent += (accStars - 3) * 5;
-
-    // Difficulty mod for AI kicks
-    var diffMod = { EASY: -5, MEDIUM: 0, HARD: 8 }[this.difficulty] || 0;
-    var sides = this.getCurrentSides();
-    if (!sides.offenseIsHuman) makePercent += diffMod;
-
-    var made = Math.random() * 100 < makePercent;
-
-    this.totalPlays++;
-    if (!this.twoMinActive) this.playsUsed++;
-
-    var prefix = opts.iceTheKicker ? 'ICE THE KICKER! ' : '';
-    if (made) {
-      // Award 3 points
-      if (this.possession === 'CT') this.ctScore += 3;
-      else this.irScore += 3;
-      var label = prefix + fgDist + '-yard field goal is GOOD! +3';
+    if (res.made) {
+      this.score.addPoints(this.field.possession, 3);
       this.kickoffFlip();
-      this._checkHalfEnd();
-      return { made: true, distance: fgDist, label: label };
+    } else if (res.blocked) {
+      this.flipPossession(this.field.ballPosition);
     } else {
-      // Missed: opponent gets ball at LOS or their own 20, whichever is farther from their endzone.
-      // ydsToEz is the kicking team's distance to score. The LOS from the receiving team's own EZ
-      // equals ydsToEz (they now have to travel that far to score). Min 20 from their own EZ.
-      var spotYds = Math.max(20, ydsToEz);
-      var newPoss2 = this.possession === 'CT' ? 'IR' : 'CT';
-      var newBallPos = newPoss2 === 'CT' ? spotYds : 100 - spotYds;
-      var label2 = prefix + fgDist + '-yard field goal NO GOOD!';
+      // Missed
+      var spotYds = Math.max(20, this.yardsToEndzone());
+      var newPoss = this.field.possession === 'CT' ? 'IR' : 'CT';
+      var newBallPos = newPoss === 'CT' ? spotYds : 100 - spotYds;
       this.flipPossession(newBallPos);
-      this._checkHalfEnd();
-      return { made: false, distance: fgDist, label: label2 };
     }
+
+    this._checkHalfEnd();
+    return res;
   }
 
   /** Check if the team can punt/FG (past the 50 into opponent territory) */
@@ -384,55 +178,23 @@ export class GameState {
 
   /** AI Conversion Decision after TD */
   aiConversionDecision() {
-    // Current score is AFTER the 6-pt TD was added, but BEFORE conversion.
-    // scoreDiff: positive = CPU is trailing, negative = CPU is leading.
-    const scoreDiff = this.possession === 'CT' ? this.irScore - this.ctScore : this.ctScore - this.irScore;
-    const isLate = this.half === 2 && (this.twoMinActive || this.playsUsed > 20);
-
-    // ─── AGGRESSIVE MODE (3-POINT) ───
-    // Go for 3 if trailing by 9+ late (try to make it one possession)
-    if (isLate && scoreDiff >= 9) return '3pt';
-    // Small chance for HARD difficulty to just be aggressive
-    if (this.difficulty === 'HARD' && Math.random() < 0.1) return '3pt';
-
-    // ─── BALANCED MODE (2-POINT) ───
-    // Standard chart situations:
-    // Trailing by 2: go for 2 to tie
-    if (scoreDiff === 2) return '2pt';
-    // Trailing by 5: go for 2 to make it a FG game (3 pts)
-    if (scoreDiff === 5) return '2pt';
-    // Trailing by 10: go for 2 to make it an 8-pt game
-    if (scoreDiff === 10) return '2pt';
-    
-    // Leading by 1: go for 2 to make it a 3-pt lead
-    if (isLate && scoreDiff === -1) return '2pt';
-    // Leading by 5: go for 2 to make it a 7-pt lead
-    if (isLate && scoreDiff === -5) return '2pt';
-
-    // Random variety for higher difficulties
-    if (this.difficulty === 'HARD' && Math.random() < 0.15) return '2pt';
-    if (this.difficulty === 'MEDIUM' && Math.random() < 0.05) return '2pt';
-
-    // Default: Extra Point
-    return 'xp';
+    return this.score.aiDecision(this.field.possession, this.clock.half, this.clock.twoMinActive, this.clock.playsUsed, this.difficulty);
   }
 
   /** AI 4th down decision */
   ai4thDownDecision() {
-    var dist = this.distance;
+    var dist = this.field.distance;
     var ydsToEz = this.yardsToEndzone();
-    var scoreDiff = this.possession === 'CT' ? this.ctScore - this.irScore : this.irScore - this.ctScore;
-    var desperate = scoreDiff <= -14 && this.twoMinActive;
+    var scoreDiff = this.score.getDiff(this.field.possession);
+    var desperate = scoreDiff >= 14 && this.clock.twoMinActive; // Trailing by 14+ late
     var aggressive = this.difficulty === 'HARD';
     
-    // ─── 1. OWN TERRITORY (More than 50 yds to EZ) ───
     if (ydsToEz > 50) {
       if (desperate) return 'go_for_it';
       if (dist === 1 && aggressive && Math.random() < 0.4) return 'go_for_it';
       return 'punt';
     }
 
-    // ─── 2. MIDFIELD / FRINGE (35-50 yds to EZ) ───
     if (ydsToEz > 35) {
       if (desperate) return 'go_for_it';
       if (dist <= 2) return 'go_for_it';
@@ -440,62 +202,43 @@ export class GameState {
       return 'punt';
     }
 
-    // ─── 3. FIELD GOAL RANGE (Inside 35 yds to EZ) ───
-    // Check if we have CANNON LEG for range boost
     const sides = this.getCurrentSides();
-    const inv = sides.offenseIsHuman ? this.humanTorchCards : this.cpuTorchCards;
+    const inv = sides.offenseIsHuman ? this.economy.humanTorchCards : this.economy.cpuTorchCards;
     const hasCannon = inv.indexOf('cannon_leg') >= 0;
 
     if (this.canAttemptFG(hasCannon)) {
       if (desperate) return 'go_for_it';
-      // Inside the 5: more likely to go for TD
       if (ydsToEz <= 5 && dist <= 3) return 'go_for_it';
-      // Short yardage in FG range: go for the throat on HARD
       if (dist <= 2 && aggressive && Math.random() < 0.6) return 'go_for_it';
-      
       return 'field_goal';
     }
 
-    // ─── 4. NO MAN'S LAND (Too close to punt, too far for FG) ───
     if (desperate || dist <= 5 || aggressive) return 'go_for_it';
     return 'punt';
   }
 
   /** Flip possession after score/turnover/failed 4th */
   flipPossession(newBallPos) {
-    this.possession = this.possession === 'CT' ? 'IR' : 'CT';
-    this.ballPosition = newBallPos;
-    this.down = 1;
-    this.distance = 10;
-    this.drivePlayHistory = [];
-    this.drivePlays = 0;
-    this.inRedZone = false;
-    if (this.possession === 'CT') this.stats.ctDrives++;
-    else this.stats.irDrives++;
+    this.field.flip(newBallPos);
+    this.statsManager.recordDrive(this.field.possession);
     decayMomentum(this.offMomentumMap);
     decayMomentum(this.defMomentumMap);
   }
 
   /** Advance the ball */
   advanceBall(yards) {
-    if (this.possession === 'CT') {
-      this.ballPosition += yards;
-      this.stats.ctTotalYards += yards;
-    } else {
-      this.ballPosition -= yards;
-      this.stats.irTotalYards += yards;
-    }
+    this.field.advance(yards);
+    this.statsManager.recordYards(this.field.possession, yards);
   }
 
   /** Get score diff from offense's perspective (positive = trailing) */
   getScoreDiff() {
-    if (this.possession === 'CT') return this.irScore - this.ctScore;
-    return this.ctScore - this.irScore;
+    return this.score.getDiff(this.field.possession);
   }
 
   /** Get the offensive/defensive hands and rosters for current possession */
   getCurrentSides() {
-    if (this.possession === 'CT') {
+    if (this.field.possession === 'CT') {
       return {
         offHand: this.ctOffHand, defHand: this.irDefHand,
         offPlayers: this.ctOffRoster, defPlayers: this.irDefRoster,
@@ -511,16 +254,9 @@ export class GameState {
 
   /**
    * Execute a snap with the given selections.
-   * Human selections are provided via options; AI auto-selects the rest.
-   * @param {object} [offPlay] - Offensive play (human provides on offense, AI auto-selects)
-   * @param {object} [featuredOff] - Featured offensive player
-   * @param {object} [defPlay] - Defensive play (human provides on defense, AI auto-selects)
-   * @param {object} [featuredDef] - Featured defensive player
-   * @param {string} [offCard] - Offensive Torch Card ID
-   * @param {string} [defCard] - Defensive Torch Card ID
-   * @returns {object} { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent }
+   * Async version for Phase 5.
    */
-  executeSnap(offPlay, featuredOff, defPlay, featuredDef, offCard, defCard, _devForceResult, extras) {
+  async executeSnap(offPlay, featuredOff, defPlay, featuredDef, offCard, defCard, _devForceResult, extras) {
     if (this.gameOver) return null;
 
     const sides = this.getCurrentSides();
@@ -529,87 +265,65 @@ export class GameState {
       ballPos: this.ballPosition, playHistory: this.drivePlayHistory,
       scoreDiff: this.getScoreDiff(),
       teamId: sides.offenseIsHuman ? null : (this.possession === 'CT' ? this.ctTeamId : this.irTeamId),
+      humanTendencies: this.humanTendencies,
     };
 
-    const offInv = sides.offenseIsHuman ? this.humanTorchCards : this.cpuTorchCards;
-    const defInv = sides.offenseIsHuman ? this.cpuTorchCards : this.humanTorchCards;
+    // Track human tendencies (before resolution)
+    if (sides.offenseIsHuman && offPlay) {
+      this.humanTendencies.total++;
+      if (offPlay.isRun || offPlay.playType === 'RUN') this.humanTendencies.runs++;
+      else this.humanTendencies.passes++;
+    }
 
-    // AI selects Torch Cards based on difficulty
-    // Easy: never uses cards. Medium: uses on 3rd down or 2-min. Hard: uses optimally.
+    // Card Selection Logic (AI)
     if (offCard === undefined || offCard === null) {
-      if (this.difficulty === 'EASY') {
-        // Easy AI never uses torch cards
-      } else if (this.difficulty === 'MEDIUM') {
-        if (offInv.length > 0 && (this.down >= 3 || this.twoMinActive) && Math.random() < 0.5) {
-          offCard = offInv.splice(Math.floor(Math.random() * offInv.length), 1)[0];
-        }
-      } else {
-        // Hard: use on 3rd down, 2-min, red zone, or trailing
-        var shouldUse = this.down >= 3 || this.twoMinActive || this.yardsToEndzone() <= 20 || this.getScoreDiff() > 7;
-        if (offInv.length > 0 && shouldUse) {
-          offCard = offInv.shift();
+      if (this.difficulty !== 'EASY') {
+        const inv = sides.offenseIsHuman ? this.economy.humanTorchCards : this.economy.cpuTorchCards;
+        const shouldUse = this.down >= 3 || this.twoMinActive || this.yardsToEndzone() <= 20 || this.getScoreDiff() > 7;
+        if (inv.length > 0 && shouldUse && (this.difficulty === 'HARD' || Math.random() < 0.5)) {
+          offCard = inv[0];
         }
       }
-    } else if (offCard) {
-      // Human provided a card — consume it from their inventory
-      var offCardIdx = offInv.indexOf(offCard);
-      if (offCardIdx >= 0) offInv.splice(offCardIdx, 1);
     }
+    if (offCard) this.economy.useCard(this.possession, offCard);
+
     if (defCard === undefined || defCard === null) {
-      if (this.difficulty === 'EASY') {
-        // Easy AI never uses torch cards
-      } else if (this.difficulty === 'MEDIUM') {
-        if (defInv.length > 0 && (this.down >= 3 || this.twoMinActive) && Math.random() < 0.4) {
-          defCard = defInv.splice(Math.floor(Math.random() * defInv.length), 1)[0];
-        }
-      } else {
-        var shouldUseDef = this.down >= 3 || this.twoMinActive || this.yardsToEndzone() <= 10;
-        if (defInv.length > 0 && shouldUseDef) {
-          defCard = defInv.shift();
+      if (this.difficulty !== 'EASY') {
+        const defTeam = this.possession === 'CT' ? 'IR' : 'CT';
+        const inv = sides.offenseIsHuman ? this.economy.cpuTorchCards : this.economy.humanTorchCards;
+        const shouldUseDef = this.down >= 3 || this.twoMinActive || this.yardsToEndzone() <= 10;
+        if (inv.length > 0 && shouldUseDef && (this.difficulty === 'HARD' || Math.random() < 0.4)) {
+          defCard = inv[0];
         }
       }
-    } else if (defCard) {
-      // Human provided a defensive card — consume it from their inventory
-      var defCardIdx = defInv.indexOf(defCard);
-      if (defCardIdx >= 0) defInv.splice(defCardIdx, 1);
     }
+    if (defCard) this.economy.useCard(this.possession === 'CT' ? 'IR' : 'CT', defCard);
 
-    // AI selects defense if not provided
+    // AI selects plays/players if not provided (NOW ASYNC via Worker)
     if (defPlay === undefined || defPlay === null) {
-      defPlay = aiSelectPlay(sides.defHand, 'defense', this.difficulty, situation);
+      defPlay = await engineBridge.aiSelectPlay(sides.defHand, 'defense', this.difficulty, situation);
     }
-
-    // AI selects offense if not provided
     if (offPlay === undefined || offPlay === null) {
-      // Reveal Card Sim-Benefits
-      let oppPlay = null;
-      if (offCard === 'scout_team') {
-        oppPlay = defPlay;
-      }
-      offPlay = aiSelectPlay(sides.offHand, 'offense', this.difficulty, { ...situation, oppPlay });
+      let oppPlay = (offCard === 'scout_team') ? defPlay : null;
+      offPlay = await engineBridge.aiSelectPlay(sides.offHand, 'offense', this.difficulty, { ...situation, oppPlay });
     }
     if (featuredOff === undefined || featuredOff === null) {
-      featuredOff = aiSelectPlayer(sides.offPlayers, offPlay, this.difficulty, true, this.offHeatMap);
+      featuredOff = await engineBridge.aiSelectPlayer(sides.offPlayers, offPlay, this.difficulty, true, this.offHeatMap);
     }
     if (featuredDef === undefined || featuredDef === null) {
-      featuredDef = aiSelectPlayer(sides.defPlayers, defPlay, this.difficulty, false, this.defHeatMap);
+      featuredDef = await engineBridge.aiSelectPlayer(sides.defPlayers, defPlay, this.difficulty, false, this.defHeatMap);
     }
 
-    // Track red zone entry
+    // Situation tracking before resolution
     const ydsToEz = this.yardsToEndzone();
     if (ydsToEz <= 20 && !this.inRedZone) {
       this.inRedZone = true;
-      this.stats.redZoneTrips++;
+      this.statsManager.stats.redZoneTrips++;
     }
-
-    // Track 4th down
     const is4th = this.down === 4;
-    if (is4th) this.stats.fourthDownAttempts++;
+    if (is4th) this.statsManager.stats.fourthDownAttempts++;
 
-    // Resolve the snap
-    const oldCtScore = this.ctScore;
-    const oldIrScore = this.irScore;
-
+    // Resolve (NOW ASYNC via Worker)
     const context = {
       playHistory: this.drivePlayHistory,
       yardsToEndzone: ydsToEz,
@@ -618,8 +332,7 @@ export class GameState {
       distance: this.distance,
       isConversion: false,
       scoreDiff: this.getScoreDiff(),
-      offCard,
-      defCard,
+      offCard, defCard,
       twoMinActive: this.twoMinActive,
       weather: this.weather,
       momentum: this.momentum,
@@ -634,430 +347,150 @@ export class GameState {
       starHotBonus: extras && extras.starHotBonus || 0,
     };
 
-    const result = resolveSnap(offPlay, defPlay, featuredOff, featuredDef,
-      sides.offPlayers, sides.defPlayers, context);
-
-    // Dev: force result override (applied before engine processes outcomes)
+    const result = await engineBridge.resolveSnap(offPlay, defPlay, featuredOff, featuredDef, sides.offPlayers, sides.defPlayers, context);
     if (_devForceResult) _devForceResult(result, ydsToEz);
 
-    // Easy difficulty adjustments now handled in snapResolver.js
-
-    // Update counters
-    this.totalPlays++;
-    this.drivePlays++;
-    if (!this.twoMinActive) this.playsUsed++;
-    this.drivePlayHistory.push(offPlay.playType);
-
-    // Update heat maps (personnel system)
-    var offIds = sides.offPlayers.map(function(p) { return p.id; });
-    var defIds = sides.defPlayers.map(function(p) { return p.id; });
-    updateHeat(featuredOff.id, offIds, this.offHeatMap);
-    updateHeat(featuredDef.id, defIds, this.defHeatMap);
-    if (this.momentumEnabled !== false) {
-      updateMomentum(featuredOff.id, featuredOff, offPlay.playType, this.offMomentumMap);
-      updateMomentum(featuredDef.id, featuredDef, defPlay.cardType, this.defMomentumMap);
-
-      // ── MOMENTUM SPIKES — big plays grant outsized boosts to whoever earned them ──
-      // TD: offense featured player rides high
-      if (result.isTouchdown) {
-        spikeMomentum(featuredOff.id, 2, this.offMomentumMap);
-        result._spikedOff = featuredOff.id;
-      }
-      // Interception: defender LOCKED IN, offender (QB) crashes
-      if (result.isInterception) {
-        spikeMomentum(featuredDef.id, 3, this.defMomentumMap);
-        crashMomentum(featuredOff.id, this.offMomentumMap);
-        result._spikedDef = featuredDef.id;
-        result._crashedOff = featuredOff.id;
-      }
-      // Forced fumble (lost): same energy
-      if (result.isFumbleLost) {
-        spikeMomentum(featuredDef.id, 3, this.defMomentumMap);
-        crashMomentum(featuredOff.id, this.offMomentumMap);
-        result._spikedDef = featuredDef.id;
-        result._crashedOff = featuredOff.id;
-      }
-      // Sack: defender pops, offender NOT crashed (sack ≠ QB's mistake)
-      if (result.isSack) {
-        spikeMomentum(featuredDef.id, 2, this.defMomentumMap);
-        result._spikedDef = featuredDef.id;
-      }
-      // 4th-down stop: it was 4th down pre-snap, no first down, no turnover
-      if (is4th && !result.isTouchdown && !result.isInterception && !result.isFumbleLost
-          && result.yards < this.distance) {
-        spikeMomentum(featuredDef.id, 2, this.defMomentumMap);
-        result._spikedDef = featuredDef.id;
-        result._fourthDownStop = true;
-      }
-    }
-
-    // Track moments
-    if (offCard || defCard) {
-      if (this.possession === 'CT') {
-        this.stats.ctTorchPlays++;
-        this.stats.ctTorchYards += result.yards;
-      } else {
-        this.stats.irTorchPlays++;
-        this.stats.irTorchYards += result.yards;
-      }
-    }
-
-    if (result.yards >= 15) {
-      this.stats.explosivePlays++;
-      this.momentum = Math.min(100, this.momentum + 10);
-    }
-    if (result.yards >= 10) this.stats.bigPlays++;
-    if (result.isSack) this.momentum = Math.min(100, this.momentum + 5);
+    // Update state using managers
+    this.clock.advance(this.twoMinActive, result);
+    this.field.recordPlay(offPlay.playType);
     
-    // Momentum decay
-    this.momentum = Math.max(0, this.momentum - 1);
+    // Personnel/Momentum updates
+    updateHeat(featuredOff.id, sides.offPlayers.map(p => p.id), this.offHeatMap);
+    updateHeat(featuredDef.id, sides.defPlayers.map(p => p.id), this.defHeatMap);
+    updateMomentum(featuredOff.id, featuredOff, offPlay.playType, this.offMomentumMap);
+    updateMomentum(featuredDef.id, featuredDef, defPlay.cardType, this.defMomentumMap);
 
-    if (result.offComboPts > 0 || result.defComboPts > 0) this.stats.badgeCombos++;
-    if (result.historyBonus !== 0) this.stats.historyBonuses++;
-    if (result.isIncomplete) {
-      if (this.possession === 'CT') this.stats.ctIncompletions++;
-      else this.stats.irIncompletions++;
+    if (result.isTouchdown) spikeMomentum(featuredOff.id, 2, this.offMomentumMap);
+    if (result.isInterception || result.isFumbleLost) {
+      spikeMomentum(featuredDef.id, 3, this.defMomentumMap);
+      crashMomentum(featuredOff.id, this.offMomentumMap);
     }
+    if (result.isSack) spikeMomentum(featuredDef.id, 2, this.defMomentumMap);
 
-    // 2-minute clock
-    if (this.twoMinActive) {
-      if (result.isIncomplete) this.clockSeconds -= 5;
-      else if (result.isSack) this.clockSeconds -= 20;
-      else this.clockSeconds -= 25 + Math.floor(Math.random() * 6); // 25-30
-    }
+    // Stats
+    if (offCard || defCard) this.statsManager.recordTorchPlay(this.possession, result.yards);
+    this.statsManager.recordExplosivePlay(result.yards, this);
+    if (result.isSack) this.statsManager.recordSack(this.possession, this);
+    if (result.isIncomplete) this.statsManager.recordIncompletion(this.possession);
+    if (result.offComboPts > 0 || result.defComboPts > 0) this.statsManager.stats.badgeCombos++;
 
-    // TORCH points
+    // Game Events & Possession Flipping
     let gotFirstDown = false;
     let gameEvent = null;
 
-    // === HANDLE RESULT ===
-    // Safety removed in v1 — ball capped at 1-yard line instead
-
-    if (result.isInterception) {
+    if (result.isInterception || result.isFumbleLost) {
+      const defTeam = this.possession === 'CT' ? 'IR' : 'CT';
       const returnYds = calcReturnYards(featuredDef);
-      const defTeam = this.possession === 'CT' ? 'IR' : 'CT';
-      if (this.possession === 'CT') {
-        this.stats.ctTurnovers++;
-        let newPos = this.ballPosition - returnYds;
-        if (newPos <= 0) {
-          this.irScore += 7; this.stats.irTouchdowns++; this.stats.turnoverTDs++;
-          gameEvent = 'turnover_td';
-          this.kickoffFlip();
-        } else {
-          this.flipPossession(Math.max(1, Math.min(99, newPos)));
-          gameEvent = 'interception';
-        }
+      const fumbleMod = result.isFumbleLost ? (this.possession === 'CT' ? 1 : -1) * Math.floor(result.yards * 0.5) : 0;
+      let newPos = this.ballPosition + fumbleMod + (defTeam === 'CT' ? 1 : -1) * returnYds;
+
+      if ((defTeam === 'CT' && newPos >= 100) || (defTeam === 'IR' && newPos <= 0)) {
+        this.score.addPoints(defTeam, 7);
+        this.statsManager.recordTouchdown(defTeam, true);
+        gameEvent = 'turnover_td';
+        this.kickoffFlip();
       } else {
-        this.stats.irTurnovers++;
-        let newPos = this.ballPosition + returnYds;
-        if (newPos >= 100) {
-          this.ctScore += 7; this.stats.ctTouchdowns++; this.stats.turnoverTDs++;
-          gameEvent = 'turnover_td';
-          this.kickoffFlip();
-        } else {
-          this.flipPossession(Math.max(1, Math.min(99, newPos)));
-          gameEvent = 'interception';
-        }
+        this.flipPossession(Math.max(1, Math.min(99, newPos)));
+        gameEvent = result.isInterception ? 'interception' : 'fumble_lost';
+        this.statsManager.recordTurnover(this.possession === 'CT' ? 'IR' : 'CT'); // Old offense
       }
-      const offPts = calcOffenseTorchPoints(result, false);
-      const defPts = calcDefenseTorchPoints(result, false);
-
-      // BUG FIX: by the time we get here, this.possession has already been
-      // flipped to the defensive team (via flipPossession above). We must
-      // award points based on the ORIGINAL possession (the team that threw
-      // the pick gets offPts = 0; the team that caught it gets defPts = 12).
-      // defTeam is captured above BEFORE the flip and holds the interceptor's
-      // team, so we use that as the source of truth.
-      if (defTeam === 'IR') {
-        // CT threw the INT → CT is original offense, IR is defense (interceptor)
-        this.ctTorchPts += offPts;
-        this.irTorchPts += Math.ceil(defPts * 1.2); // IR boost
-      } else {
-        // IR threw the INT → IR is original offense, CT is defense (interceptor)
-        this.irTorchPts += Math.ceil(offPts * 1.2); // IR boost
-        this.ctTorchPts += defPts;
-      }
-
-      // Shop trigger for turnovers (defensive team forced it)
-      this._triggerShop(this.humanTeam === defTeam, 'turnover');
-
-      this._checkHalfEnd();
-      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown, offCard: offCard || null });
-      return { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent };
-    }
-
-    if (result.isFumbleLost) {
-      const defTeam = this.possession === 'CT' ? 'IR' : 'CT';
-      if (this.possession === 'CT') {
-        this.stats.ctTurnovers++;
-        const fumbleSpot = this.ballPosition + Math.floor(result.yards * (0.3 + Math.random() * 0.5));
-        const returnYds = calcReturnYards(featuredDef);
-        let newPos = fumbleSpot - returnYds;
-        if (newPos <= 0) {
-          this.irScore += 7; this.stats.irTouchdowns++; this.stats.turnoverTDs++;
-          gameEvent = 'turnover_td';
-          this.kickoffFlip();
-        } else {
-          this.flipPossession(Math.max(1, Math.min(99, newPos)));
-          gameEvent = 'fumble_lost';
-        }
-      } else {
-        this.stats.irTurnovers++;
-        const fumbleSpot = this.ballPosition - Math.floor(result.yards * (0.3 + Math.random() * 0.5));
-        const returnYds = calcReturnYards(featuredDef);
-        let newPos = fumbleSpot + returnYds;
-        if (newPos >= 100) {
-          this.ctScore += 7; this.stats.ctTouchdowns++; this.stats.turnoverTDs++;
-          gameEvent = 'turnover_td';
-          this.kickoffFlip();
-        } else {
-          this.flipPossession(Math.max(1, Math.min(99, newPos)));
-          gameEvent = 'fumble_lost';
-        }
-      }
-      const offPts = calcOffenseTorchPoints(result, false);
-      const defPts = calcDefenseTorchPoints(result, false);
-
-      // BUG FIX: this.possession has already been flipped via flipPossession
-      // above. Award points based on the ORIGINAL possession using defTeam
-      // (captured before the flip) as the source of truth. The team that
-      // fumbled gets offPts = 0; the team that recovered gets defPts = 12.
-      if (defTeam === 'IR') {
-        // CT fumbled → CT is original offense, IR recovered
-        this.ctTorchPts += offPts;
-        this.irTorchPts += Math.ceil(defPts * 1.2); // IR boost
-      } else {
-        // IR fumbled → IR is original offense, CT recovered
-        this.irTorchPts += Math.ceil(offPts * 1.2); // IR boost
-        this.ctTorchPts += defPts;
-      }
-
-      // Shop trigger for turnovers (defensive team forced it)
-      this._triggerShop(this.humanTeam === defTeam, 'turnover');
-
-      this._checkHalfEnd();
-      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown, offCard: offCard || null });
-      return { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent };
-    }
-
-    // Sack stat tracking
-    if (result.isSack) {
-      this.stats.sackCount++;
-      if (this.possession === 'CT') this.stats.irSacks++;
-      else this.stats.ctSacks++;
-    }
-
-    // Advance ball
-    this.advanceBall(result.yards);
-
-    // Safety Check: ball in own endzone after non-turnover play
-    if (this.possession === 'CT' && this.ballPosition <= 0) {
-      this.irScore += 2;
-      this.stats.safeties++;
-      gameEvent = 'safety';
-      this.flipPossession(20); // Free kick from the 20 (modeled as flip to 20)
-      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: 'SAFETY! CT tackled in endzone.', event: 'safety', yards: result.yards });
-      this._checkHalfEnd();
-      return { result, offPlay, defPlay, featuredOff, featuredDef, gotFirstDown, gameEvent };
-    } else if (this.possession === 'IR' && this.ballPosition >= 100) {
-      this.ctScore += 2;
-      this.stats.safeties++;
-      gameEvent = 'safety';
-      this.flipPossession(80); // Free kick from the 20 (80 from IR perspective)
-      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: 'SAFETY! IR tackled in endzone.', event: 'safety', yards: result.yards });
-      this._checkHalfEnd();
-      return { result, offPlay, defPlay, featuredOff, featuredDef, gotFirstDown, gameEvent };
-    }
-
-    // Touchdown
-    if (result.isTouchdown) {
+      this.economy.triggerShop(this.humanTeam === defTeam, 'turnover');
+    } else if (result.isTouchdown) {
       const scoringTeam = this.possession;
-      if (scoringTeam === 'CT') {
-        this.ctScore += 6; this.stats.ctTouchdowns++;
-      } else {
-        this.irScore += 6; this.stats.irTouchdowns++;
-      }
-      if (this.twoMinActive) this.stats.twoMinScores++;
-      if (this.inRedZone) this.stats.redZoneTDs++;
-      if (this.drivePlays >= 6) this.stats.longDrives++;
-      if (is4th) this.stats.fourthDownConversions++;
-
-      const offPts = calcOffenseTorchPoints(result, false);
-      const defPts = calcDefenseTorchPoints(result, false);
-      
-      // Points awarded to respective teams BEFORE pos flip or accounting for it
-      if (this.possession === 'CT') {
-        this.ctTorchPts += offPts;
-        this.irTorchPts += Math.ceil(defPts * 1.2); // IR boost
-      } else {
-        this.irTorchPts += Math.ceil(offPts * 1.2); // IR boost
-        this.ctTorchPts += defPts;
-      }
-
-      // Shop trigger for touchdown (scoring team)
-      this._triggerShop(this.humanTeam === scoringTeam, 'touchdown');
-
+      this.score.addPoints(scoringTeam, 6);
+      this.statsManager.recordTouchdown(scoringTeam, false, this.twoMinActive, this.inRedZone, this.drivePlays);
       gameEvent = 'touchdown';
-      
-      // BUG FIX: Ensure ball is positioned exactly at the goal line for the upcoming conversion attempt,
-      // and reset down/distance so the conversion isn't played on (e.g.) 4th and Goal.
-      this.ballPosition = scoringTeam === 'CT' ? 100 : 0;
-      this.down = 1;
-      this.distance = 10;
-
-      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown, offCard: offCard || null });
-      // Possession flip will happen in handleConversion, but we should ensure ball resets to 50 there too.
-      // However, if it's a turnover TD, it's already handled.
-      // For a regular TD, we don't flip yet because of the conversion attempt.
-      return { result, offPlay, defPlay, featuredOff, featuredDef, gotFirstDown, gameEvent, scoringTeam };
-    }
-
-    // Down and distance
-    this.ballPosition = Math.max(1, Math.min(99, this.ballPosition));
-
-    if (result.yards >= this.distance) {
-      gotFirstDown = true;
-      this.down = 1;
-      // Always reset to 10 (or goal if inside the 10)
-      const ydsLeft = this.yardsToEndzone();
-      this.distance = ydsLeft <= 10 ? ydsLeft : 10;
-      if (this.possession === 'CT') {
-        this.stats.ctFirstDowns++;
-      } else {
-        this.stats.irFirstDowns++;
-      }
-      if (is4th) this.stats.fourthDownConversions++;
+      this.economy.triggerShop(this.humanTeam === scoringTeam, 'touchdown');
+      // Set up for conversion
+      this.field.ballPosition = scoringTeam === 'CT' ? 100 : 0;
     } else {
-      // Negative yards (sacks, stuffed runs) increase the distance
-      if (result.yards > 0) {
-        this.distance -= result.yards;
-      } else if (result.yards < 0) {
-        this.distance += Math.abs(result.yards);
+      // Normal advancement
+      this.advanceBall(result.yards);
+      gotFirstDown = this.field.updateDown(result.yards);
+      if (gotFirstDown) {
+        this.statsManager.recordFirstDown(this.possession, is4th);
+      } else if (this.field.down > 4) {
+        if (this.field.drivePlays <= 4) this.statsManager.stats.threeAndOuts++;
+        gameEvent = 'turnover_on_downs';
+        const defTeam = this.possession === 'CT' ? 'IR' : 'CT';
+        this.economy.triggerShop(this.humanTeam === defTeam, 'fourthDownStop');
+        this.flipPossession(this.field.ballPosition);
       }
-      // Incomplete passes: distance stays the same (yards = 0)
-      this.down++;
     }
 
-    // ── TORCH points — AWARDED BEFORE any turnover-on-downs possession flip ──
-    // This must run BEFORE the down-count check below, otherwise a 4th-down
-    // sack / stop flips possession via flipPossession, then _awardTorchPts
-    // sees the NEW possession and credits the torch points to the wrong
-    // team. Example bug: user's defense sacks the QB on 4th down → ball
-    // flips to user → _awardTorchPts sees possession=CT (user, new offense)
-    // → credits defPts to IR (old offense that got sacked). User never
-    // sees their +8 sack reward.
+    // Award Torch Points
     const offPts = calcOffenseTorchPoints(result, gotFirstDown);
     const defPts = calcDefenseTorchPoints(result, gotFirstDown);
     this._awardTorchPts(offPts, defPts);
 
-    // ── Turnover on downs (4th-and-failed) — flip possession AFTER award ──
-    if (!gotFirstDown && this.down > 4) {
-      if (this.drivePlays <= 4) this.stats.threeAndOuts++;
-      gameEvent = 'turnover_on_downs';
-      const defTeam = this.possession === 'CT' ? 'IR' : 'CT';
-      this._triggerShop(this.humanTeam === defTeam, 'fourthDownStop');
-      this.flipPossession(this.ballPosition);
-    }
-
-    // Injury check
+    // Final checks
     const injury = checkInjury(result, featuredOff, featuredDef);
-    if (injury) {
-      injury.player.injured = true;
-      injury.player.injurySnapsRemaining = injury.snapsRemaining;
-    }
-
-    // Heal injuries
+    if (injury) { injury.player.injured = true; injury.player.injurySnapsRemaining = injury.snapsRemaining; }
     healInjuries([this.ctOffRoster, this.ctDefRoster, this.irOffRoster, this.irDefRoster]);
-
     this._checkHalfEnd();
 
-    this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: result.description, event: gameEvent, featuredOffId: featuredOff ? featuredOff.id : null, featuredDefId: featuredDef ? featuredDef.id : null, yards: result.yards || 0, gotFirstDown: gotFirstDown, offCard: offCard || null });
+    this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, result: result.description, event: gameEvent });
     return { result, offPlay, defPlay, featuredOff, featuredDef, offCard, defCard, gotFirstDown, gameEvent };
   }
 
   /** Use a one-time audible to swap the current play for a new random one from the deck */
   useAudible(isOffense) {
-    if (this.stats.audiblesUsed >= 1) return null;
-
+    if (this.statsManager.stats.audiblesUsed >= 1) return null;
     const sides = this.getCurrentSides();
     const pool = isOffense ? sides.offHand : sides.defHand;
     const newPlay = pool[Math.floor(Math.random() * pool.length)];
-
-    this.stats.audiblesUsed++;
+    this.statsManager.stats.audiblesUsed++;
     return newPlay;
   }
 
   /** Spike the ball — 2-minute drill only, 3 seconds off clock, 0 yards */
   spike() {
     if (!this.twoMinActive) return null;
-    this.clockSeconds -= 3;
-    this.totalPlays++;
-    this.down++;  // Spike costs a down (like real football)
-    if (this.down > 4) {
-      // Turnover on downs after spike
-      this.flipPossession(this.ballPosition);
-      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: 'SPIKE', defPlay: '-', result: 'Ball spiked on 4th down — turnover.', event: 'turnover_on_downs' });
-      this._checkHalfEnd();
+    this.clock.tick(3);
+    this.field.down++;
+    if (this.field.down > 4) {
+      this.flipPossession(this.field.ballPosition);
       return { event: 'turnover_on_downs', description: 'Ball spiked on 4th down — turnover on downs.' };
     }
-    this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: 'SPIKE', defPlay: '-', result: 'Ball spiked. Clock stops.', event: 'spike' });
-    this._checkHalfEnd();
     return { event: 'spike', description: 'Ball spiked. Clock stops.' };
   }
 
   /** Kneel the ball — 2-minute drill only, 30 seconds off clock, 0 yards */
   kneel() {
     if (!this.twoMinActive) return null;
-    this.clockSeconds -= 30;
-    this.totalPlays++;
-    this.down++; // Kneel costs a down
-    if (!this.twoMinActive) this.playsUsed++; // Fallback for consistency
-    
+    this.clock.tick(30);
+    this.field.down++;
     healInjuries([this.ctOffRoster, this.ctDefRoster, this.irOffRoster, this.irDefRoster]);
-    
-    if (this.down > 4) {
-      this.flipPossession(this.ballPosition);
-      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: 'KNEEL', defPlay: '-', result: 'Ball turned over on downs after kneel.', event: 'turnover_on_downs' });
-      this._checkHalfEnd();
+    if (this.field.down > 4) {
+      this.flipPossession(this.field.ballPosition);
       return { event: 'turnover_on_downs', description: 'Ball turned over on downs after kneel.' };
     }
-
-    this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: 'KNEEL', defPlay: '-', result: 'Quarterback kneels. Clock running.', event: 'kneel' });
-    this._checkHalfEnd();
     return { event: 'kneel', description: 'Quarterback kneels. Clock running.' };
   }
 
   /**
    * Handle conversion after a touchdown.
-   * @param {'xp'|'2pt'|'3pt'} choice
-   * @param {object} [offPlay] - For 2pt/3pt, the play used
-   * @param {object} [featuredOff] - Featured player for conversion
-   * @param {object} [defPlay] - Defensive selection
-   * @param {object} [featuredDef] - Defensive player selection
-   * @returns {object} { success, points, result }
+   * Async version.
    */
-  handleConversion(choice, offPlay, featuredOff, defPlay, featuredDef) {
+  async handleConversion(choice, offPlay, featuredOff, defPlay, featuredDef) {
     const scoringTeam = this.possession;
 
     if (choice === 'xp') {
-      if (scoringTeam === 'CT') this.ctScore += 1;
-      else this.irScore += 1;
-      // BUG FIX: Reset ball position to 50 for the kickoff resolution
-      this.ballPosition = 50;
+      this.score.addPoints(scoringTeam, 1);
+      this.field.ballPosition = 50;
       this.kickoffFlip();
       this._checkHalfEnd();
       return { success: true, points: 1 };
     }
 
-    // 2pt or 3pt: resolve a snap from the appropriate yard line
     const fromYardLine = choice === '2pt' ? 5 : 10;
     const sides = this.getCurrentSides();
     const situation = { down: 1, distance: fromYardLine, ballPos: this.ballPosition, playHistory: [], scoreDiff: 0, teamId: null };
 
-    if (!offPlay) offPlay = aiSelectPlay(sides.offHand, 'offense', this.difficulty, situation);
-    if (!featuredOff) featuredOff = aiSelectPlayer(sides.offPlayers, offPlay, this.difficulty, true);
-    if (!defPlay) defPlay = aiSelectPlay(sides.defHand, 'defense', this.difficulty, situation);
-    if (!featuredDef) featuredDef = aiSelectPlayer(sides.defPlayers, defPlay, this.difficulty, false);
+    if (!offPlay) offPlay = await engineBridge.aiSelectPlay(sides.offHand, 'offense', this.difficulty, situation);
+    if (!featuredOff) featuredOff = await engineBridge.aiSelectPlayer(sides.offPlayers, offPlay, this.difficulty, true);
+    if (!defPlay) defPlay = await engineBridge.aiSelectPlay(sides.defHand, 'defense', this.difficulty, situation);
+    if (!featuredDef) featuredDef = await engineBridge.aiSelectPlayer(sides.defPlayers, defPlay, this.difficulty, false);
 
     const context = {
       playHistory: [], yardsToEndzone: fromYardLine,
@@ -1071,153 +504,83 @@ export class GameState {
       offenseIsHuman: sides.offenseIsHuman,
     };
 
-    const result = resolveSnap(offPlay, defPlay, featuredOff, featuredDef,
-      sides.offPlayers, sides.defPlayers, context);
+    const result = await engineBridge.resolveSnap(offPlay, defPlay, featuredOff, featuredDef, sides.offPlayers, sides.defPlayers, context);
 
     const success = result.isTouchdown;
     const points = choice === '2pt' ? 2 : 3;
+    if (success) this.score.addPoints(scoringTeam, points);
 
-    if (success) {
-      if (scoringTeam === 'CT') this.ctScore += points;
-      else this.irScore += points;
-    }
+    this.field.ballPosition = 50;
 
-    // BUG FIX: Ensure ball position is reset to 50 for the kickoff flip, unless it's an onside recovery
-    this.ballPosition = 50;
-
-    // ONSIDE KICK: 35% chance to recover at midfield instead of flipping possession
+    // Onside Kick
     var onsideRecovery = false;
     var scoringInv = scoringTeam === this.humanTeam ? this.humanTorchCards : this.cpuTorchCards;
     var onsideIdx = scoringInv.indexOf('onside_kick');
     if (onsideIdx >= 0) {
-      scoringInv.splice(onsideIdx, 1);  // consume the card
+      scoringInv.splice(onsideIdx, 1);
       if (Math.random() < 0.35) {
         onsideRecovery = true;
-        // Don't flip — scoring team keeps it at the 50
-        this.ballPosition = 50;
-        this.down = 1;
-        this.distance = 10;
-        this.drivePlays = 0;
-        this.drivePlayHistory = [];
+        this.field.ballPosition = 50;
+        this.field.down = 1;
+        this.field.distance = 10;
       }
     }
     
-    // CRITICAL BUG FIX: Ensure possession flips after a 2pt/3pt conversion
-    if (!onsideRecovery) {
-      this.kickoffFlip();
-    }
-    
+    if (!onsideRecovery) this.kickoffFlip();
     this._checkHalfEnd();
     return { success, points: success ? points : 0, result, onsideRecovery };
   }
 
-  /** Halftime Booster Shop — port of halftime_booster logic from sim */
+  /** Halftime Booster Shop */
   halftimeShop() {
-    this._triggerShop(true, 'halftime');
-    this._triggerShop(false, 'halftime');
+    this.economy.triggerShop(true, 'halftime');
+    this.economy.triggerShop(false, 'halftime');
   }
 
   /** Award TORCH points to the correct teams */
   _awardTorchPts(offPts, defPts) {
-    // IR (CPU) gets a 20% boost to TORCH points to help their economy
     const irOff = this.possession === 'IR' ? Math.ceil(offPts * 1.2) : offPts;
     const irDef = this.possession === 'CT' ? Math.ceil(defPts * 1.2) : defPts;
-
-    if (this.possession === 'CT') {
-      this.ctTorchPts += offPts;
-      this.irTorchPts += irDef;
-    } else {
-      this.irTorchPts += irOff;
-      this.ctTorchPts += defPts;
-    }
+    this.economy.awardPoints(this.possession === 'CT' ? offPts : irDef, this.possession === 'IR' ? irOff : irDef);
   }
 
-  /** Shop trigger — buys cards based on situation for the specified side */
+  /** Compatibility Wrapper */
   _triggerShop(isHuman, trigger) {
-    if (this.difficulty === 'EASY' || this.difficulty === 'RANDOM') return;
-    
-    const inv = isHuman ? this.humanTorchCards : this.cpuTorchCards;
-    if (inv.length >= 3) return;
-
-    const pts = isHuman ? this.ctTorchPts : this.irTorchPts;
-    const offers = getBoosterOffers(trigger);
-    const bought = aiBuyTorchCard(offers, pts, inv, this.difficulty);
-    
-    if (bought) {
-      inv.push(bought.id);
-      if (isHuman) this.ctTorchPts -= bought.cost;
-      else this.irTorchPts -= bought.cost;
-    }
+    this.economy.triggerShop(isHuman, trigger);
   }
 
-  /** AI Shop trigger — CPU buys cards based on situation (compatibility wrapper) */
+  /** Compatibility Wrapper */
   _triggerAiShop(trigger) {
-    this._triggerShop(false, trigger);
+    this.economy.triggerShop(false, trigger);
   }
 
   /** Check if the half should end */
   _checkHalfEnd() {
-    if (!this.twoMinActive && this.playsUsed >= this.playsPerHalf) {
-      this.twoMinActive = true;
-      this.clockSeconds = 120;
-    }
-    if (this.twoMinActive && this.clockSeconds <= 0) {
-      if (this.half === 1) {
-        this.needsHalftime = true;
-      } else {
-        // OVERTIME CHECK
-        if (this.ctScore === this.irScore) {
-          this.half++; // Enter OT (Half 3, 4, etc)
-          this.playsUsed = 0;
-          this.twoMinActive = false;
-          this.clockSeconds = 120;
-          // In OT, possession flip occurs like a new half
-          this.kickoffFlip();
-        } else {
-          this._endGame();
-        }
-      }
-    }
-    // Hard cap total plays to prevent infinite loops (expanded for OT)
-    if (this.totalPlays > 200) {
+    const transition = this.clock.checkTransitions(this.score.ctScore, this.score.irScore);
+    if (transition === 'overtime') {
+      this.kickoffFlip();
+    } else if (transition === 'gameover') {
       this._endGame();
     }
   }
 
-  /** Transition to the second half — kickoff handled by gameplay.js halftime flow */
+  /** Transition to the second half */
   startSecondHalf() {
-    this.half = 2;
-    this.playsUsed = 0;
-    this.twoMinActive = false;
-    this.clockSeconds = 120;
-    this.needsHalftime = false;
-    // Note: kickoff is resolved separately in resolveHalftimeKickoff()
-    // Do NOT call kickoffFlip() here — it would set position before the display
+    this.clock.startSecondHalf();
   }
 
   /** End the game */
   _endGame() {
-    this.gameOver = true;
-    // Win bonus recalibrated for v0.23
-    if (this.ctScore > this.irScore) this.ctTorchPts += 20;
-    else if (this.irScore > this.ctScore) this.irTorchPts += 20;
+    this.economy.awardPoints(this.score.ctScore > this.score.irScore ? 20 : 0, this.score.irScore > this.score.ctScore ? 20 : 0);
   }
 
   /** Get a summary of the current game state for UI */
   getSummary() {
     return {
-      ctScore: this.ctScore, irScore: this.irScore,
-      possession: this.possession,
-      ballPosition: this.ballPosition,
-      down: this.down, distance: this.distance,
-      half: this.half,
-      playsUsed: this.playsUsed,
-      twoMinActive: this.twoMinActive,
-      clockSeconds: this.clockSeconds,
-      ctTorchPts: this.ctTorchPts, irTorchPts: this.irTorchPts,
-      yardsToEndzone: this.yardsToEndzone(),
-      gameOver: this.gameOver,
-      totalPlays: this.totalPlays,
+      ...this.score.getState(),
+      ...this.field.getState(),
+      ...this.clock.getState(),
+      ...this.economy.getState()
     };
   }
 }

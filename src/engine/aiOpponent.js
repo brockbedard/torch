@@ -5,6 +5,7 @@
 
 import { isRunType, checkOffensiveBadgeCombo } from './badgeCombos.js';
 import { traitSynergy, heatPenalty } from './personnelSystem.js';
+import { getRivalryWeights } from './rivalrySystem.js';
 
 // Team archetype play-type multipliers — applied to all difficulty levels
 var TEAM_AI_BIAS = {
@@ -35,11 +36,11 @@ function weightedChoice(items, weights) {
  * @param {object[]} hand - Available play cards
  * @param {'offense'|'defense'} playType
  * @param {'EASY'|'MEDIUM'|'HARD'} difficulty
- * @param {object} situation - { down, distance, ballPos, playHistory, scoreDiff }
+ * @param {object} situation - { down, distance, ballPos, playHistory, scoreDiff, humanTendencies, teamId }
  * @returns {object} Selected play card
  */
 export function aiSelectPlay(hand, playType, difficulty, situation) {
-  const { down, distance, ballPos, playHistory } = situation;
+  const { down, distance, ballPos, playHistory, humanTendencies, teamId } = situation;
   const available = [...hand];
 
   if (difficulty === 'RANDOM') {
@@ -96,8 +97,28 @@ export function aiSelectPlay(hand, playType, difficulty, situation) {
     return available[Math.floor(Math.random() * available.length)];
   }
 
+  // Rivalry memory weights (Long-term)
+  const rivalry = getRivalryWeights(teamId);
+
   const weights = available.map(p => {
     let w = 1.0;
+    
+    // Adaptive tendencies (Short-term / Game-local)
+    if (difficulty === 'HARD' && humanTendencies) {
+      const runRate = humanTendencies.runs / Math.max(1, humanTendencies.total);
+      if (runRate > 0.6) { // Human spams runs
+        if (p.runDefMod < -1) w *= 1.5; // Weight run-stuffers
+      } else if (runRate < 0.3) { // Human spams passes
+        if (p.passDefMod < -1) w *= 1.5; // Weight coverage
+      }
+    }
+
+    // Rivalry weights (Long-term)
+    if (difficulty === 'HARD') {
+      if (p.runDefMod < -1) w *= (rivalry ? rivalry.runWeight : 1.0);
+      if (p.passDefMod < -1) w *= (rivalry ? rivalry.passWeight : 1.0);
+    }
+
     if (distance <= 3 && p.runDefMod < -1) w *= 2.0;
     if (distance >= 8 && p.cardType === 'BLITZ') w *= 1.5;
     if (down >= 3 && distance >= 5) {

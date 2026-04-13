@@ -31,6 +31,9 @@ import { buildRoster } from './ui/screens/roster.js';
 import { buildSeasonRecap } from './ui/screens/seasonRecap.js';
 import { buildSettings } from './ui/screens/settings.js';
 import { buildTeamCreator } from './ui/screens/teamCreator.js';
+import { buildStadiumManagement } from './ui/screens/stadiumManagement.js';
+import { buildCommandCenter } from './ui/screens/commandCenter.js';
+import { buildLeagueNews } from './ui/screens/leagueNews.js';
 
 const root = document.getElementById('root');
 
@@ -38,7 +41,7 @@ var _transitioning = false;
 var _prevScreen = null;
 
 // Screen order for directional transitions (forward = slide left, backward = slide right)
-var SCREEN_ORDER = ['home', 'teamSelect', 'roster', 'pregame', 'gameplay', 'halftime', 'gameplay2', 'end_game', 'seasonRecap'];
+var SCREEN_ORDER = ['home', 'teamSelect', 'roster', 'pregame', 'gameplay', 'halftime', 'gameplay2', 'end_game', 'seasonRecap', 'stadiumManagement', 'commandCenter', 'leagueNews'];
 
 function getScreenKey(gs) {
   if (!gs) return 'home';
@@ -82,12 +85,24 @@ function render() {
       case 'dailyDrive': content = buildDailyDrive(); break;
       case 'roster': content = buildRoster(); break;
       case 'pregame': content = buildPregame(); break;
-      case 'gameplay': try { content = buildGameplay(); } catch(e) { console.error('[TORCH] Gameplay build error:', e); } break;
+      case 'gameplay': try { content = buildGameplay(); } catch(e) {
+        console.error('[TORCH] Gameplay build error:', e);
+        // Surface the error visually so dev can see it rather than being silently stuck on pregame
+        var errDiv = document.createElement('div');
+        errDiv.style.cssText = 'height:100vh;background:#0A0804;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;box-sizing:border-box;';
+        errDiv.innerHTML = '<div style="font-family:Teko;font-size:28px;color:#FF4511;letter-spacing:3px;">GAMEPLAY ERROR</div>' +
+          '<div style="font-family:Rajdhani;font-size:13px;color:#888;text-align:center;word-break:break-all;max-width:340px;">' + String(e) + '</div>' +
+          '<button onclick="location.reload()" style="margin-top:8px;padding:12px 28px;background:#FF4511;color:#fff;border:none;border-radius:4px;font-family:Rajdhani;font-size:15px;font-weight:700;letter-spacing:2px;cursor:pointer;">RELOAD</button>';
+        content = errDiv;
+      } break;
       case 'halftime': content = buildHalftime(); break;
       case 'end_game': content = buildEndGame(); break;
       case 'seasonRecap': content = buildSeasonRecap(); break;
       case 'settings': content = buildSettings(); break;
       case 'teamCreator': content = buildTeamCreator(); break;
+      case 'stadiumManagement': content = buildStadiumManagement(); break;
+      case 'commandCenter': content = buildCommandCenter(); break;
+      case 'leagueNews': content = buildLeagueNews(); break;
       default: content = buildHome();
     }
   }

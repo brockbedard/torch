@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>TORCH — Design Direction Comparison</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+  body { background: #050403; color: #fff; font-family: 'Rajdhani'; padding: 40px; }
+  h1 { font-family: 'Teko'; font-size: 48px; color: #EBB010; text-align: center; margin-bottom: 10px; }
+  .subtitle { text-align: center; color: #666; margin-bottom: 50px; text-transform: uppercase; letter-spacing: 2px; }
+  
+  .comparison-table { width: 100%; max-width: 1000px; margin: 0 auto; border-collapse: collapse; }
+  th { font-family: 'Teko'; font-size: 24px; padding: 20px; text-align: left; color: #888; border-bottom: 2px solid #222; }
+  td { padding: 30px 20px; border-bottom: 1px solid #111; vertical-align: middle; }
+  
+  .element-label { font-family: 'Teko'; font-size: 22px; color: #EBB010; line-height: 1; }
+  .element-sub { font-size: 11px; color: #444; text-transform: uppercase; margin-top: 5px; }
+  
+  .asset-box { display: flex; align-items: center; gap: 20px; }
+  .preview-img { width: 80px; height: 80px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); }
+  .cyber-glow { filter: drop-shadow(0 0 15px rgba(235, 176, 16, 0.4)); }
+  
+  .note { font-size: 12px; color: #666; font-style: italic; max-width: 250px; }
+  
+  .tag-old { background: #333; color: #888; font-size: 10px; padding: 2px 6px; border-radius: 3px; }
+  .tag-new { background: rgba(0,255,68,0.1); color: #00ff44; font-size: 10px; padding: 2px 6px; border-radius: 3px; border: 1px solid rgba(0,255,68,0.2); }
+
+  .big-preview {
+    margin-top: 60px;
+    padding: 40px;
+    background: linear-gradient(135deg, #0A0804, #141008);
+    border: 1px solid #EBB010;
+    border-radius: 20px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+  <h1>TORCH VISUAL EVOLUTION</h1>
+  <div class="subtitle">Replacing Generic Assets with High-Contrast Cyber-Sports Alternatives</div>
+
+  <table class="comparison-table">
+    <thead>
+      <tr>
+        <th>GAME ELEMENT</th>
+        <th>CURRENT (SVG/GENERIC)</th>
+        <th>PROPOSED (CYBER-SPORTS 3D)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- SCOUT TEAM -->
+      <tr>
+        <td>
+          <div class="element-label">SCOUT TEAM</div>
+          <div class="element-sub">GOLD CARD / INFORMATION</div>
+        </td>
+        <td>
+          <div class="asset-box">
+            <div class="tag-old">SVG ICON</div>
+            <div style="width:50px; height:50px; border: 1px solid #444; display: flex; align-items:center; justify-content:center; color:#444;">👁️</div>
+          </div>
+        </td>
+        <td>
+          <div class="asset-box">
+            <img class="preview-img cyber-glow" src="https://cdn3d.iconscout.com/3d/premium/thumb/cyber-eye-3d-icon-png-download-13061749.png">
+            <div>
+              <div class="tag-new">CYBER EYE</div>
+              <div class="note">Matches the "Intelligence" and "Tech" theme of the Air Raid / Scouting mechanics.</div>
+            </div>
+          </div>
+        </td>
+      </tr>
+
+      <!-- BLOCKED KICK -->
+      <tr>
+        <td>
+          <div class="element-label">BLOCKED KICK</div>
+          <div class="element-sub">GOLD CARD / DISRUPTION</div>
+        </td>
+        <td>
+          <div class="asset-box">
+            <div class="tag-old">SVG ICON</div>
+            <div style="width:50px; height:50px; border: 1px solid #444; display: flex; align-items:center; justify-content:center; color:#444;">🧱</div>
+          </div>
+        </td>
+        <td>
+          <div class="asset-box">
+            <img class="preview-img" style="filter: drop-shadow(0 0 15px rgba(77, 166, 255, 0.4));" src="https://cdn3d.iconscout.com/3d/premium/thumb/layered-holographic-arch-shield-3d-icon-png-download-13206551.png">
+            <div>
+              <div class="tag-new">HOLO-SHIELD</div>
+              <div class="note">Replaces the "Brick Wall" with a high-tech energy barrier.</div>
+            </div>
+          </div>
+        </td>
+      </tr>
+
+      <!-- HELMET BADGE -->
+      <tr>
+        <td>
+          <div class="element-label">HELMET BADGE</div>
+          <div class="element-sub">PLAYER TRAIT / TRUCK STICK</div>
+        </td>
+        <td>
+          <div class="asset-box">
+            <div class="tag-old">SVG ICON</div>
+            <div style="width:50px; height:50px; border: 1px solid #444; display: flex; align-items:center; justify-content:center; color:#444;">🪖</div>
+          </div>
+        </td>
+        <td>
+          <div class="asset-box">
+            <img class="preview-img" style="filter: drop-shadow(0 0 15px rgba(255, 69, 17, 0.4));" src="https://cdn3d.iconscout.com/3d/premium/thumb/futuristic-helmet-3d-icon-png-download-3774573.png">
+            <div>
+              <div class="tag-new">CYBER-HELMET</div>
+              <div class="note">Aggressive, chrome-plated helmet matching the Ridgemont Boars vibe.</div>
+            </div>
+          </div>
+        </td>
+      </tr>
+
+      <!-- HOUSE CALL -->
+      <tr>
+        <td>
+          <div class="element-label">HOUSE CALL</div>
+          <div class="element-sub">GOLD CARD / SPECIAL TEAMS</div>
+        </td>
+        <td>
+          <div class="asset-box">
+            <div class="tag-old">SVG ICON</div>
+            <div style="width:50px; height:50px; border: 1px solid #444; display: flex; align-items:center; justify-content:center; color:#444;">🔥</div>
+          </div>
+        </td>
+        <td>
+          <div class="asset-box">
+            <img class="preview-img" style="filter: drop-shadow(0 0 20px rgba(255, 69, 17, 0.6));" src="https://cdn3d.iconscout.com/3d/premium/thumb/firewall-security-3d-icon-png-download-14402013.png">
+            <div>
+              <div class="tag-new">CYBER-FLAME</div>
+              <div class="note">Neon-etched flame core for maximum impact on big plays.</div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="big-preview">
+    <div class="element-label" style="font-size:32px; margin-bottom: 20px;">CORE VIBE: QUANTUM COMPUTING X PRO FOOTBALL</div>
+    <img src="https://cdn3d.iconscout.com/3d/premium/thumb/quantum-computing-core-3d-icon-png-download-11825892.png" style="width:240px; height:240px; filter: drop-shadow(0 0 30px rgba(77, 166, 255, 0.3));">
+    <div class="note" style="margin: 20px auto; max-width: 500px; color: #aaa;">This is the "DNA" of the new assets: Dark bases, neon highlights, and high-tech geometric shapes. They fit the `#050403` background perfectly while providing the premium "snap" the game needs.</div>
+  </div>
+
+</body>
+</html>

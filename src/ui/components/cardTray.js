@@ -326,7 +326,7 @@ export function renderCardTray(opts) {
 
   // DISCARD button
   var discToggle = document.createElement('button');
-  discToggle.className = 'CT-disc-toggle' + (canDiscAny ? '' : ' CT-disc-toggle-used');
+  discToggle.className = 'CT-disc-toggle active-scale' + (canDiscAny ? '' : ' CT-disc-toggle-used');
   discToggle.textContent = canDiscAny ? 'DISCARD' : 'NO DISCARDS';
   discToggle.disabled = !canDiscAny;
   if (opts.tutorialStep > 0) { discToggle.style.opacity = '0.15'; discToggle.style.pointerEvents = 'none'; }
@@ -334,7 +334,7 @@ export function renderCardTray(opts) {
   wrap.appendChild(header);
 
   // ── TORCH CARDS ROW (always shown in 'torch' phase — cards + SKIP) ──
-  var torchPhase = opts.phase === 'torch';
+  var torchPhase = opts.phase === 'torch' && opts.showTorchCards;
   var _torchLabelEl = null, _torchRowEl = null;
   if (torchPhase) {
     var torchSlots = (opts.torchCards || []).filter(function(c) { return c.type === 'pre-snap'; }).slice(0, 3);
@@ -554,7 +554,7 @@ export function renderCardTray(opts) {
         }
       }
     }
-    var momentum = (opts.momentumMap && p.id) ? (opts.momentumMap[p.id] || 0) : 0;
+    var momentum = (opts.showHeatMomentum && opts.momentumMap && p.id) ? (opts.momentumMap[p.id] || 0) : 0;
     if (momentum >= 3) {
       var hotBadge = document.createElement('div');
       hotBadge.className = 'CT-hot-badge' + (momentum >= 5 ? ' CT-hot-max' : '');
@@ -565,7 +565,7 @@ export function renderCardTray(opts) {
       c.appendChild(hotBadge);
     }
     // Heat/fatigue indicator
-    var heat = (opts.heatMap && p.id) ? (opts.heatMap[p.id] || 0) : 0;
+    var heat = (opts.showHeatMomentum && opts.heatMap && p.id) ? (opts.heatMap[p.id] || 0) : 0;
     if (heat >= 3 && opts.snapCount > 3) {
       var dimAmount = Math.min(0.4, (heat - 2) * 0.1);
       c.style.filter = 'brightness(' + (1 - dimAmount) + ')';
@@ -739,7 +739,7 @@ export function renderCardTray(opts) {
   var snapBar = document.createElement('div');
   snapBar.className = 'CT-snap-bar';
   var snapBtn = document.createElement('button');
-  snapBtn.className = 'CT-snap-btn' + (opts.is2Min ? ' CT-snap-urgent' : '') + (opts.is4thDownGo ? ' CT-snap-aura' : '') + (opts.pressureBeat ? ' CT-snap-pressure' : '');
+  snapBtn.className = 'CT-snap-btn active-scale' + (opts.is2Min ? ' CT-snap-urgent' : '') + (opts.is4thDownGo ? ' CT-snap-aura' : '') + (opts.pressureBeat ? ' CT-snap-pressure' : '');
   // Flame badge left — 4-layer for color depth on the SNAP button.
   var snapBadge = document.createElement('div');
   snapBadge.style.cssText = 'background:rgba(0,0,0,0.2);padding:12px 14px;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(0,0,0,0.15);';

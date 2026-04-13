@@ -477,6 +477,19 @@ var AudioManager = {
     setTimeout(function() { try { a.stop(); } catch(e) {} }, fd + 50);
   },
 
+  // Duck the master volume temporarily
+  duck: function(ratio, durationMs) {
+    if (!Howler.masterGain || !Howler.ctx) return;
+    var now = Howler.ctx.currentTime;
+    var target = ratio || 0.2;
+    var dur = (durationMs || 500) / 1000;
+    
+    Howler.masterGain.gain.cancelScheduledValues(now);
+    Howler.masterGain.gain.setValueAtTime(Howler.masterGain.gain.value, now);
+    Howler.masterGain.gain.exponentialRampToValueAtTime(target, now + 0.05);
+    Howler.masterGain.gain.exponentialRampToValueAtTime(1.0, now + dur);
+  },
+
   // Hold an elevated state for a duration, then fade to a target state.
   // Honors MIN_HOLD_MS — the actual hold is max(holdMs, MIN_HOLD_MS).
   holdThenSettle: function(holdMs, targetState) {

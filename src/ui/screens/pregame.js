@@ -26,6 +26,7 @@ import { renderTorchCardIcon } from '../../assets/icons/torchCardIcons.js';
 import { FLAME_SILHOUETTE_PATH, flameLayersMarkup } from '../../utils/flameIcon.js';
 import { footballLayersMarkup } from '../../utils/footballIcon.js';
 import { buildHomeCard } from '../components/cards.js';
+import { buildMatchupCutscene } from '../components/MatchupCutscene.js';
 import AudioStateManager from '../../engine/audioManager.js';
 
 var WEATHER_TEMP  = { clear: '72°', rain: '58°', wind: '64°', snow: '28°', heat: '88°' };
@@ -947,22 +948,28 @@ export function buildPregame() {
 
 // ─── Commit runway result to GS and transition to gameplay ───
 function finishRunway(ctx) {
-  // Bump games played counter (this used to happen on tap in old pregame)
+  // Bump games played counter
   try { localStorage.setItem('torch_games_played', String(ctx.gamesPlayed + 1)); } catch(e) {}
 
-  setGs(function(s) {
-    var next = Object.assign({}, s || {}, {
-      screen: 'gameplay',
-      humanReceives: ctx.humanReceives === true,
-      _coinTossDone: true,
+  // Phase 7: Play high-impact Matchup Cutscene before entering gameplay
+  const cutscene = buildMatchupCutscene(GS.team, GS.opponent, function() {
+    setGs(function(s) {
+      var next = Object.assign({}, s || {}, {
+        screen: 'gameplay',
+        humanReceives: ctx.humanReceives === true,
+        _coinTossDone: true,
+        _openingKickoffResolved: false,
+      });
+      // If user drew a free card, add to season.torchCards
+      if (ctx.pickedCard && ctx.pickedBy === 'user') {
+        var newSeason = Object.assign({}, (s && s.season) || {});
+        newSeason.torchCards = ((s && s.season && s.season.torchCards) || []).slice();
+        newSeason.torchCards.push(ctx.pickedCard);
+        next.season = newSeason;
+      }
+      return next;
     });
-    // If user drew a free card, add to season.torchCards
-    if (ctx.pickedCard && ctx.pickedBy === 'user') {
-      var newSeason = Object.assign({}, (s && s.season) || {});
-      newSeason.torchCards = ((s && s.season && s.season.torchCards) || []).slice();
-      newSeason.torchCards.push(ctx.pickedCard);
-      next.season = newSeason;
-    }
-    return next;
   });
+  
+  ctx.el.appendChild(cutscene);
 }
