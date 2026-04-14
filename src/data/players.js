@@ -1,110 +1,226 @@
 /**
- * TORCH v0.26.1 — Player Rosters
- * 4 teams × (7 offense + 7 defense) = 56 players.
- * New data model: stars (1-5), trait (keyword), st (special teams ratings).
- * Backward-compatible: retains ovr, badge, isStar, num, ability fields.
+ * TORCH — Ember Eight Player Rosters
+ * 8 teams × (7 offense + 7 defense) = 112 players.
+ *
+ * Source of truth: docs/EMBER-EIGHT-ROSTERS.md
+ *
+ * Player schema:
+ *   id         — team_prefix + slot (e.g. lar_o1, rid_d3)
+ *   name       — last name
+ *   firstName
+ *   pos        — QB, RB, FB, WR, TE, slot WR, H-back, OL, DL, LB, CB, SS, FS, OLB/SS
+ *   year       — Fr | RS-Fr | So | RS-So | Jr | RS-Jr | Sr | RS-Sr | 5th-Sr
+ *   stars      — 1-5 (visible quality)
+ *   ovr        — 65-89 (engine-facing rating)
+ *   trait      — single-keyword (drives personnel synergy)
+ *   isStar     — boolean (3 stars per top tier, 2 per middle, 1 per bottom)
+ *   starTitle  — only when isStar=true
+ *   badge      — visual icon enum (HELMET, CROSSHAIR, SPEED_LINES, FOOTBALL,
+ *                GLOVE, BRICK, PADLOCK, EYE, CLEAT, CLIPBOARD)
+ *   num        — jersey number (position-appropriate)
+ *   ability    — short descriptive string
+ *   side       — 'offense' | 'defense'
+ *   team       — internal team ID (legacy: sentinels/wolves/stags/serpents/...)
+ *   st         — { kickPower, kickAccuracy, returnAbility } — 1-5 each
  */
 
-// ============================================================
-// RIDGEMONT BOARS — Power Spread: Strong OL, power RB, balanced WR
-// ============================================================
-export const SENTINELS_OFFENSE = [
-  { id: 'rdg_o1', name: 'Henderson', firstName: 'Marcus', pos: 'RB', ovr: 84, badge: 'HELMET', isStar: true, starTitle: 'The Freight Train', num: 34, ability: 'Breaks arm tackles', stars: 5, trait: 'TRUCK STICK', side: 'offense', team: 'sentinels', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 3 } },
-  { id: 'rdg_o2', name: 'Calloway', firstName: 'Jordan', pos: 'QB', ovr: 80, badge: 'CROSSHAIR', isStar: false, num: 7, ability: 'Pinpoint accuracy in rhythm', stars: 4, trait: 'DEEP BALL', side: 'offense', team: 'sentinels', st: { kickPower: 2, kickAccuracy: 3, returnAbility: 1 } },
-  { id: 'rdg_o3', name: 'Monroe', firstName: 'DeVante', pos: 'WR', ovr: 80, badge: 'SPEED_LINES', isStar: false, num: 1, ability: 'Burns man coverage deep', stars: 4, trait: 'BURNER', side: 'offense', team: 'sentinels', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 5 } },
-  { id: 'rdg_o4', name: 'Frazier', firstName: 'Tyrell', pos: 'WR', ovr: 76, badge: 'FOOTBALL', isStar: false, num: 4, ability: 'Reliable hands in traffic', stars: 3, trait: 'ROUTE IQ', side: 'offense', team: 'sentinels', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 3 } },
-  { id: 'rdg_o5', name: 'Walsh', firstName: 'Connor', pos: 'TE', ovr: 76, badge: 'GLOVE', isStar: false, num: 82, ability: 'Mismatch in the seam', stars: 3, trait: 'MISMATCH', side: 'offense', team: 'sentinels', st: { kickPower: 2, kickAccuracy: 1, returnAbility: 2 } },
-  { id: 'rdg_o6', name: 'Davis', firstName: 'Terrence', pos: 'OL', ovr: 80, badge: 'BRICK', isStar: false, num: 65, ability: 'Clears the path for the run game', stars: 4, trait: 'ROAD GRADER', side: 'offense', team: 'sentinels', st: { kickPower: 5, kickAccuracy: 2, returnAbility: 1 } },
-  { id: 'rdg_o7', name: 'Thompson', firstName: 'Bryce', pos: 'OL', ovr: 80, badge: 'BRICK', isStar: false, num: 72, ability: 'Anchors the pocket', stars: 4, trait: 'BRICK WALL', side: 'offense', team: 'sentinels', st: { kickPower: 3, kickAccuracy: 3, returnAbility: 1 } },
+
+// ════════════════════════════════════════════════════════════════════════════
+// LARKSPUR PRONGHORNS — Power Spread (top tier, veteran-heavy)
+// ════════════════════════════════════════════════════════════════════════════
+export const PRONGHORNS_OFFENSE = [
+  { id:'lar_o1', name:'Schroeder', firstName:'Brock', pos:'RB', year:'5th-Sr', stars:5, ovr:88, trait:'TRUCK STICK', isStar:true, starTitle:'The Hammer', badge:'HELMET', num:28, ability:'Breaks arm tackles, finishes runs forward', side:'offense', team:'pronghorns', st:{kickPower:1,kickAccuracy:1,returnAbility:3} },
+  { id:'lar_o2', name:'Anderson', firstName:'Reid', pos:'QB', year:'Sr', stars:4, ovr:81, trait:'RPO READER', isStar:false, badge:'CROSSHAIR', num:14, ability:'Reads the conflict defender pre-snap', side:'offense', team:'pronghorns', st:{kickPower:2,kickAccuracy:3,returnAbility:1} },
+  { id:'lar_o3', name:'Olson', firstName:'Kade', pos:'H-back', year:'Jr', stars:3, ovr:77, trait:'MISMATCH', isStar:false, badge:'GLOVE', num:45, ability:'Wins the seam vs LB coverage', side:'offense', team:'pronghorns', st:{kickPower:3,kickAccuracy:2,returnAbility:2} },
+  { id:'lar_o4', name:'Hernandez', firstName:'Ty', pos:'WR', year:'Sr', stars:3, ovr:78, trait:'YAC BEAST', isStar:false, badge:'SPEED_LINES', num:5, ability:'Explosive after the catch', side:'offense', team:'pronghorns', st:{kickPower:1,kickAccuracy:1,returnAbility:4} },
+  { id:'lar_o5', name:'Bauer', firstName:'Gunnar', pos:'OL', year:'RS-Sr', stars:5, ovr:86, trait:'PULLING GUARD', isStar:true, starTitle:'The Wagon Train', badge:'BRICK', num:66, ability:'Pulls and leads the play to the gap', side:'offense', team:'pronghorns', st:{kickPower:5,kickAccuracy:2,returnAbility:1} },
+  { id:'lar_o6', name:'Koch', firstName:'Drew', pos:'OL', year:'RS-Sr', stars:4, ovr:80, trait:'ANCHOR', isStar:false, badge:'BRICK', num:62, ability:'Holds the point, snaps it clean', side:'offense', team:'pronghorns', st:{kickPower:4,kickAccuracy:3,returnAbility:1} },
+  { id:'lar_o7', name:'Kraus', firstName:'Cooper', pos:'OL', year:'Sr', stars:4, ovr:80, trait:'ROAD GRADER', isStar:false, badge:'BRICK', num:71, ability:'Drives D-linemen off the ball', side:'offense', team:'pronghorns', st:{kickPower:4,kickAccuracy:2,returnAbility:1} },
+];
+export const PRONGHORNS_DEFENSE = [
+  { id:'lar_d1', name:'Polacek', firstName:'Karsen', pos:'DL', year:'So', stars:3, ovr:75, trait:'EDGE SETTER', isStar:false, badge:'BRICK', num:92, ability:'Sets the edge vs the option', side:'defense', team:'pronghorns', st:{kickPower:2,kickAccuracy:1,returnAbility:1} },
+  { id:'lar_d2', name:'Fischer', firstName:'Cody', pos:'DL', year:'So', stars:3, ovr:76, trait:'RUN STUFFER', isStar:false, badge:'BRICK', num:98, ability:'Plugs the A-gap', side:'defense', team:'pronghorns', st:{kickPower:4,kickAccuracy:1,returnAbility:1} },
+  { id:'lar_d3', name:'Svoboda', firstName:'Tucker', pos:'DL', year:'Fr', stars:3, ovr:72, trait:'PASS RUSHER', isStar:false, badge:'SPEED_LINES', num:56, ability:'Quick first step off the snap', side:'defense', team:'pronghorns', st:{kickPower:1,kickAccuracy:1,returnAbility:1} },
+  { id:'lar_d4', name:'Hoffman', firstName:'Easton', pos:'OLB/SS', year:'Sr', stars:5, ovr:85, trait:'OVERHANG', isStar:true, starTitle:'The Wedge', badge:'EYE', num:11, ability:'Hybrid overhang — covers TEs and fits the run', side:'defense', team:'pronghorns', st:{kickPower:1,kickAccuracy:2,returnAbility:3} },
+  { id:'lar_d5', name:'Meyer', firstName:'Tanner', pos:'CB', year:'Sr', stars:4, ovr:81, trait:'PATTERN READER', isStar:false, badge:'PADLOCK', num:2, ability:'Reads route distribution and matches', side:'defense', team:'pronghorns', st:{kickPower:1,kickAccuracy:1,returnAbility:3} },
+  { id:'lar_d6', name:'Brooks', firstName:'Marcus', pos:'CB', year:'Jr', stars:3, ovr:77, trait:'ZONE READER', isStar:false, badge:'EYE', num:21, ability:'Reads the QB eyes in zone', side:'defense', team:'pronghorns', st:{kickPower:1,kickAccuracy:1,returnAbility:2} },
+  { id:'lar_d7', name:'Lopez', firstName:'Diego', pos:'FS', year:'Jr', stars:4, ovr:79, trait:'CENTERFIELDER', isStar:false, badge:'EYE', num:33, ability:'Plays the deep middle', side:'defense', team:'pronghorns', st:{kickPower:1,kickAccuracy:2,returnAbility:3} },
 ];
 
-export const SENTINELS_DEFENSE = [
-  { id: 'rdg_d1', name: 'Tillery', firstName: 'Jalen', pos: 'CB', ovr: 84, badge: 'PADLOCK', isStar: true, starTitle: 'The Lockdown', num: 2, ability: 'Lockdown in press coverage', stars: 5, trait: 'SHUTDOWN', side: 'defense', team: 'sentinels', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 4 } },
-  { id: 'rdg_d2', name: 'Reeves', firstName: 'Darius', pos: 'S', ovr: 80, badge: 'EYE', isStar: false, num: 21, ability: 'Ball hawk — reads the QB', stars: 4, trait: 'BALL HAWK', side: 'defense', team: 'sentinels', st: { kickPower: 1, kickAccuracy: 2, returnAbility: 3 } },
-  { id: 'rdg_d3', name: 'Creed', firstName: 'Nolan', pos: 'CB', ovr: 78, badge: 'PADLOCK', isStar: false, num: 5, ability: 'Physical at the line of scrimmage', stars: 4, trait: 'PRESS CORNER', side: 'defense', team: 'sentinels', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 2 } },
-  { id: 'rdg_d4', name: 'Obi', firstName: 'Chukwuma', pos: 'S', ovr: 76, badge: 'SPEED_LINES', isStar: false, num: 33, ability: 'Big hitter in the box', stars: 3, trait: 'ENFORCER', side: 'defense', team: 'sentinels', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 2 } },
-  { id: 'rdg_d5', name: 'Clay', firstName: 'Rashad', pos: 'LB', ovr: 76, badge: 'HELMET', isStar: false, num: 44, ability: 'Plugs every gap', stars: 3, trait: 'TACKLER', side: 'defense', team: 'sentinels', st: { kickPower: 2, kickAccuracy: 1, returnAbility: 1 } },
-  { id: 'rdg_d6', name: 'Torres', firstName: 'Miguel', pos: 'DL', ovr: 76, badge: 'BRICK', isStar: false, num: 95, ability: 'Plugs gaps and eats blocks', stars: 3, trait: 'RUN STUFFER', side: 'defense', team: 'sentinels', st: { kickPower: 4, kickAccuracy: 1, returnAbility: 1 } },
-  { id: 'rdg_d7', name: 'Nakamura', firstName: 'Kenji', pos: 'DL', ovr: 72, badge: 'SPEED_LINES', isStar: false, num: 90, ability: 'Quick off the snap', stars: 2, trait: 'PASS RUSHER', side: 'defense', team: 'sentinels', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 1 } },
-];
 
-// ============================================================
-// CORAL BAY DOLPHINS — Spread Option: ESCAPE ARTIST QB, fast skill players, weaker OL
-// ============================================================
-export const WOLVES_OFFENSE = [
-  { id: 'npa_o1', name: 'Briggs', firstName: 'Jayden', pos: 'QB', ovr: 84, badge: 'CLEAT', isStar: true, starTitle: 'The Magician', num: 12, ability: 'Escapes pressure and creates', stars: 5, trait: 'ESCAPE ARTIST', side: 'offense', team: 'wolves', st: { kickPower: 2, kickAccuracy: 2, returnAbility: 4 } },
-  { id: 'npa_o2', name: 'Thorne', firstName: 'Malik', pos: 'RB', ovr: 80, badge: 'HELMET', isStar: false, num: 34, ability: 'Breaks arm tackles', stars: 4, trait: 'ELUSIVE', side: 'offense', team: 'wolves', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 5 } },
-  { id: 'npa_o3', name: 'Quick', firstName: 'Tavon', pos: 'WR', ovr: 78, badge: 'SPEED_LINES', isStar: false, num: 6, ability: 'Explosive after the catch', stars: 4, trait: 'YAC BEAST', side: 'offense', team: 'wolves', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 4 } },
-  { id: 'npa_o4', name: 'Hargrove', firstName: 'Dante', pos: 'WR', ovr: 76, badge: 'SPEED_LINES', isStar: false, num: 22, ability: 'Gets to the edge fast', stars: 3, trait: 'BURNER', side: 'offense', team: 'wolves', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 3 } },
-  { id: 'npa_o5', name: 'Ballard', firstName: 'Corey', pos: 'RB', ovr: 74, badge: 'CLEAT', isStar: false, num: 8, ability: 'Catches out of the backfield', stars: 3, trait: 'PASS CATCHER', side: 'offense', team: 'wolves', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 3 } },
-  { id: 'npa_o6', name: 'Okafor', firstName: 'Emeka', pos: 'TE', ovr: 74, badge: 'BRICK', isStar: false, num: 45, ability: 'Blocks and catches', stars: 3, trait: 'PASS CATCHER', side: 'offense', team: 'wolves', st: { kickPower: 3, kickAccuracy: 1, returnAbility: 1 } },
-  { id: 'npa_o7', name: 'Maddox', firstName: 'Elijah', pos: 'OL', ovr: 72, badge: 'BRICK', isStar: false, num: 72, ability: 'Does his best out there', stars: 2, trait: 'ANCHOR', side: 'offense', team: 'wolves', st: { kickPower: 4, kickAccuracy: 3, returnAbility: 1 } },
-];
-
-export const WOLVES_DEFENSE = [
-  { id: 'npa_d1', name: 'Ledford', firstName: 'Trevon', pos: 'LB', ovr: 84, badge: 'HELMET', isStar: true, starTitle: 'The General', num: 55, ability: 'Reads and reacts instantly', stars: 5, trait: 'TACKLER', side: 'defense', team: 'wolves', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 2 } },
-  { id: 'npa_d2', name: 'McBride', firstName: 'Patrick', pos: 'LB', ovr: 78, badge: 'EYE', isStar: false, num: 42, ability: 'Plugs every gap', stars: 4, trait: 'RUN STUFFER', side: 'defense', team: 'wolves', st: { kickPower: 2, kickAccuracy: 1, returnAbility: 1 } },
-  { id: 'npa_d3', name: 'Posey', firstName: 'Kamari', pos: 'S', ovr: 78, badge: 'EYE', isStar: false, num: 27, ability: 'Plays the deep half', stars: 4, trait: 'CENTERFIELDER', side: 'defense', team: 'wolves', st: { kickPower: 1, kickAccuracy: 2, returnAbility: 3 } },
-  { id: 'npa_d4', name: 'Baskins', firstName: 'Roderick', pos: 'DL', ovr: 76, badge: 'BRICK', isStar: false, num: 95, ability: 'Collapses the pocket', stars: 3, trait: 'INTERIOR BULL', side: 'defense', team: 'wolves', st: { kickPower: 3, kickAccuracy: 1, returnAbility: 1 } },
-  { id: 'npa_d5', name: 'Mercer', firstName: 'Quinton', pos: 'CB', ovr: 76, badge: 'PADLOCK', isStar: false, num: 3, ability: 'Sticky in zone coverage', stars: 3, trait: 'ZONE READER', side: 'defense', team: 'wolves', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 2 } },
-  { id: 'npa_d6', name: 'Kline', firstName: 'Travis', pos: 'S', ovr: 72, badge: 'CLIPBOARD', isStar: false, num: 18, ability: 'Comes downhill to stop the run', stars: 2, trait: 'RUN SUPPORT', side: 'defense', team: 'wolves', st: { kickPower: 5, kickAccuracy: 4, returnAbility: 1 } },
-  { id: 'npa_d7', name: 'Simms', firstName: 'Andre', pos: 'DL', ovr: 74, badge: 'SPEED_LINES', isStar: false, num: 91, ability: 'Speed rush from the outside', stars: 3, trait: 'EDGE SPEED', side: 'defense', team: 'wolves', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 1 } },
-];
-
-// ============================================================
-// HOLLOWRIDGE SPECTRES — Air Raid: DEEP BALL QB, BURNER + ROUTE IQ WRs, weak run game
-// ============================================================
+// ════════════════════════════════════════════════════════════════════════════
+// HOLLOWRIDGE SPECTRES — Spread Option (top tier, defensive-heavy stars)
+// ════════════════════════════════════════════════════════════════════════════
 export const SPECTRES_OFFENSE = [
-  { id: 'crv_o1', name: 'Strand', firstName: 'Colton', pos: 'QB', ovr: 84, badge: 'CROSSHAIR', isStar: true, starTitle: 'The Cannon', num: 1, ability: 'Throws the deep ball with accuracy', stars: 5, trait: 'DEEP BALL', side: 'offense', team: 'stags', st: { kickPower: 3, kickAccuracy: 4, returnAbility: 1 } },
-  { id: 'crv_o2', name: 'DaCosta', firstName: 'Rafael', pos: 'WR', ovr: 84, badge: 'SPEED_LINES', isStar: false, num: 11, ability: 'Burns man coverage deep', stars: 5, trait: 'BURNER', side: 'offense', team: 'stags', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 5 } },
-  { id: 'crv_o3', name: 'Booker', firstName: 'Kendrick', pos: 'WR', ovr: 80, badge: 'FOOTBALL', isStar: false, num: 9, ability: 'Crisp routes get him open', stars: 4, trait: 'ROUTE IQ', side: 'offense', team: 'stags', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 3 } },
-  { id: 'crv_o4', name: 'Cortland', firstName: 'Isaiah', pos: 'RB', ovr: 74, badge: 'CLEAT', isStar: false, num: 25, ability: 'Catches out of the backfield', stars: 3, trait: 'PASS CATCHER', side: 'offense', team: 'stags', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 4 } },
-  { id: 'crv_o5', name: 'Vance', firstName: 'Deion', pos: 'WR', ovr: 76, badge: 'GLOVE', isStar: false, num: 82, ability: 'Wins the contested catch', stars: 3, trait: 'CONTESTED CATCH', side: 'offense', team: 'stags', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 2 } },
-  { id: 'crv_o6', name: 'Odom', firstName: 'Jamal', pos: 'OL', ovr: 72, badge: 'BRICK', isStar: false, num: 68, ability: 'Holds the point of attack', stars: 2, trait: 'ANCHOR', side: 'offense', team: 'stags', st: { kickPower: 4, kickAccuracy: 2, returnAbility: 1 } },
-  { id: 'crv_o7', name: 'Reyes', firstName: 'Carlos', pos: 'TE', ovr: 72, badge: 'BRICK', isStar: false, num: 28, ability: 'Blocks when asked', stars: 2, trait: 'ROAD GRADER', side: 'offense', team: 'stags', st: { kickPower: 2, kickAccuracy: 1, returnAbility: 1 } },
+  { id:'hol_o1', name:'Petrillo', firstName:'Anthony', pos:'QB', year:'Sr', stars:5, ovr:88, trait:'DUAL THREAT', isStar:true, starTitle:'The Storm Caller', badge:'CLEAT', num:7, ability:'Reads the DE — gives or keeps and runs', side:'offense', team:'stags', st:{kickPower:2,kickAccuracy:3,returnAbility:4} },
+  { id:'hol_o2', name:'Blankenship', firstName:'Hunter', pos:'RB', year:'Jr', stars:4, ovr:80, trait:'ZONE CUT', isStar:false, badge:'CLEAT', num:32, ability:'Reads the playside DT and cuts', side:'offense', team:'stags', st:{kickPower:1,kickAccuracy:1,returnAbility:4} },
+  { id:'hol_o3', name:'Workman', firstName:'Caleb', pos:'WR', year:'Jr', stars:3, ovr:76, trait:'ROUTE IQ', isStar:false, badge:'FOOTBALL', num:9, ability:'Crisp routes get him open', side:'offense', team:'stags', st:{kickPower:1,kickAccuracy:1,returnAbility:3} },
+  { id:'hol_o4', name:'McCoy', firstName:'Logan', pos:'WR', year:'So', stars:3, ovr:75, trait:'YAC BEAST', isStar:false, badge:'SPEED_LINES', num:88, ability:'Explosive after the catch', side:'offense', team:'stags', st:{kickPower:1,kickAccuracy:1,returnAbility:4} },
+  { id:'hol_o5', name:'DiLorenzo', firstName:'Vincent', pos:'OL', year:'Sr', stars:3, ovr:78, trait:'ANCHOR', isStar:false, badge:'BRICK', num:74, ability:'Holds the point of attack', side:'offense', team:'stags', st:{kickPower:4,kickAccuracy:2,returnAbility:1} },
+  { id:'hol_o6', name:'Kovach', firstName:'Dominic', pos:'OL', year:'Sr', stars:4, ovr:81, trait:'LEADER', isStar:false, badge:'CLIPBOARD', num:65, ability:'Sets the protections, leads the line', side:'offense', team:'stags', st:{kickPower:3,kickAccuracy:3,returnAbility:1} },
+  { id:'hol_o7', name:'Stover', firstName:'Tyler', pos:'OL', year:'Jr', stars:3, ovr:77, trait:'ROAD GRADER', isStar:false, badge:'BRICK', num:79, ability:'Drives D-linemen off the ball', side:'offense', team:'stags', st:{kickPower:4,kickAccuracy:2,returnAbility:1} },
 ];
-
 export const SPECTRES_DEFENSE = [
-  { id: 'crv_d1', name: 'Blackwell', firstName: 'Zion', pos: 'DL', ovr: 84, badge: 'SPEED_LINES', isStar: true, starTitle: 'Chaos', num: 99, ability: 'Unblockable off the edge', stars: 5, trait: 'EDGE SPEED', side: 'defense', team: 'stags', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 2 } },
-  { id: 'crv_d2', name: 'Tate', firstName: 'Lamar', pos: 'LB', ovr: 80, badge: 'SPEED_LINES', isStar: false, num: 52, ability: 'Dangerous on designed blitzes', stars: 4, trait: 'BLITZ SPECIALIST', side: 'defense', team: 'stags', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 2 } },
-  { id: 'crv_d3', name: 'Ross', firstName: 'Xavier', pos: 'CB', ovr: 78, badge: 'PADLOCK', isStar: false, num: 24, ability: 'Physical at the line', stars: 4, trait: 'PRESS CORNER', side: 'defense', team: 'stags', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 3 } },
-  { id: 'crv_d4', name: 'Shields', firstName: 'Devon', pos: 'LB', ovr: 76, badge: 'HELMET', isStar: false, num: 41, ability: 'Covers backs and tight ends', stars: 3, trait: 'COVERAGE LB', side: 'defense', team: 'stags', st: { kickPower: 2, kickAccuracy: 2, returnAbility: 1 } },
-  { id: 'crv_d5', name: 'Holbrook', firstName: 'Nathan', pos: 'DL', ovr: 76, badge: 'BRICK', isStar: false, num: 93, ability: 'Two-gaps and eats blocks', stars: 3, trait: 'RUN STUFFER', side: 'defense', team: 'stags', st: { kickPower: 5, kickAccuracy: 3, returnAbility: 1 } },
-  { id: 'crv_d6', name: 'Beckett', firstName: 'Tre', pos: 'S', ovr: 74, badge: 'EYE', isStar: false, num: 15, ability: 'Reads the QB pre-snap', stars: 3, trait: 'BALL HAWK', side: 'defense', team: 'stags', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 3 } },
-  { id: 'crv_d7', name: 'Kane', firstName: 'Desmond', pos: 'CB', ovr: 72, badge: 'EYE', isStar: false, num: 37, ability: 'Reads the QB eyes in zone', stars: 2, trait: 'ZONE READER', side: 'defense', team: 'stags', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 1 } },
+  { id:'hol_d1', name:'Bartek', firstName:'Bryce', pos:'DL', year:'RS-Sr', stars:3, ovr:78, trait:'EDGE SPEED', isStar:false, badge:'SPEED_LINES', num:99, ability:'Speed off the edge', side:'defense', team:'stags', st:{kickPower:1,kickAccuracy:1,returnAbility:1} },
+  { id:'hol_d2', name:'Lilly', firstName:'Garrett', pos:'DL', year:'Jr', stars:4, ovr:80, trait:'INTERIOR BULL', isStar:false, badge:'BRICK', num:94, ability:'Bull-rushes the interior', side:'defense', team:'stags', st:{kickPower:4,kickAccuracy:1,returnAbility:1} },
+  { id:'hol_d3', name:'Freeman', firstName:'Khalil', pos:'DL', year:'Fr', stars:3, ovr:74, trait:'PASS RUSHER', isStar:false, badge:'SPEED_LINES', num:58, ability:'Quick first step', side:'defense', team:'stags', st:{kickPower:1,kickAccuracy:1,returnAbility:1} },
+  { id:'hol_d4', name:'Mazur', firstName:'Cole', pos:'LB', year:'Sr', stars:4, ovr:81, trait:'ROBBER LB', isStar:false, badge:'EYE', num:44, ability:'Robs the QB eyes underneath', side:'defense', team:'stags', st:{kickPower:2,kickAccuracy:1,returnAbility:1} },
+  { id:'hol_d5', name:'Washington', firstName:'Demetrius', pos:'CB', year:'Sr', stars:5, ovr:87, trait:'SHUTDOWN', isStar:true, starTitle:'The Lockdown', badge:'PADLOCK', num:4, ability:'Lockdown press man — never beaten deep', side:'defense', team:'stags', st:{kickPower:1,kickAccuracy:1,returnAbility:4} },
+  { id:'hol_d6', name:'Carter', firstName:'Marquez', pos:'CB', year:'Fr', stars:3, ovr:73, trait:'PRESS CORNER', isStar:false, badge:'PADLOCK', num:25, ability:'Physical at the line', side:'defense', team:'stags', st:{kickPower:1,kickAccuracy:1,returnAbility:2} },
+  { id:'hol_d7', name:'Hatfield', firstName:'Bryce', pos:'FS', year:'RS-Sr', stars:5, ovr:86, trait:'BALL HAWK', isStar:true, starTitle:'The Hollowridge Howl', badge:'EYE', num:20, ability:'Reads the QB and jumps the route', side:'defense', team:'stags', st:{kickPower:1,kickAccuracy:2,returnAbility:3} },
 ];
 
-// ============================================================
-// BLACKWATER SERPENTS — Multiple/Pro: balanced 3-4 stars, versatile, no single star
-// ============================================================
+
+// ════════════════════════════════════════════════════════════════════════════
+// VERMONT MAPLES — Multiple (middle tier, balanced/intellectual)
+// ════════════════════════════════════════════════════════════════════════════
+export const MAPLES_OFFENSE = [
+  { id:'vmt_o1', name:'Pelletier', firstName:'Owen', pos:'QB', year:'Sr', stars:3, ovr:78, trait:'GAME MANAGER', isStar:false, badge:'CLIPBOARD', num:16, ability:'Doesn\'t turn it over — knows the playbook cold', side:'offense', team:'maples', st:{kickPower:2,kickAccuracy:3,returnAbility:1} },
+  { id:'vmt_o2', name:'Bergeron', firstName:'Connor', pos:'RB', year:'So', stars:3, ovr:75, trait:'BALANCED', isStar:false, badge:'CLEAT', num:30, ability:'Catches and runs equally', side:'offense', team:'maples', st:{kickPower:1,kickAccuracy:1,returnAbility:3} },
+  { id:'vmt_o3', name:'Whitcomb', firstName:'Liam', pos:'TE', year:'Sr', stars:5, ovr:86, trait:'OPTION ROUTES', isStar:true, starTitle:'The Professor', badge:'GLOVE', num:87, ability:'Reads the coverage and breaks accordingly', side:'offense', team:'maples', st:{kickPower:3,kickAccuracy:1,returnAbility:1} },
+  { id:'vmt_o4', name:'Murphy', firstName:'Logan', pos:'WR', year:'So', stars:3, ovr:73, trait:'POSSESSION', isStar:false, badge:'GLOVE', num:18, ability:'Reliable hands on third down', side:'offense', team:'maples', st:{kickPower:1,kickAccuracy:1,returnAbility:2} },
+  { id:'vmt_o5', name:'Gagnon', firstName:'Mathieu', pos:'OL', year:'Sr', stars:3, ovr:77, trait:'ANCHOR', isStar:false, badge:'BRICK', num:67, ability:'Holds the point of attack', side:'offense', team:'maples', st:{kickPower:4,kickAccuracy:2,returnAbility:1} },
+  { id:'vmt_o6', name:'Tremblay', firstName:'Pierre', pos:'OL', year:'RS-Sr', stars:4, ovr:79, trait:'LEADER', isStar:false, badge:'CLIPBOARD', num:50, ability:'Sets protections, runs the line', side:'offense', team:'maples', st:{kickPower:3,kickAccuracy:3,returnAbility:1} },
+  { id:'vmt_o7', name:'Hastings', firstName:'Brayden', pos:'OL', year:'Jr', stars:3, ovr:75, trait:'ROAD GRADER', isStar:false, badge:'BRICK', num:76, ability:'Drives D-linemen off the ball', side:'offense', team:'maples', st:{kickPower:4,kickAccuracy:2,returnAbility:1} },
+];
+export const MAPLES_DEFENSE = [
+  { id:'vmt_d1', name:'O\'Connor', firstName:'Finn', pos:'DL', year:'So', stars:3, ovr:74, trait:'EDGE', isStar:false, badge:'SPEED_LINES', num:91, ability:'Sets the edge', side:'defense', team:'maples', st:{kickPower:1,kickAccuracy:1,returnAbility:1} },
+  { id:'vmt_d2', name:'Lavoie', firstName:'Nolan', pos:'DL', year:'Jr', stars:3, ovr:76, trait:'RUN STUFFER', isStar:false, badge:'BRICK', num:97, ability:'Plugs the A-gap', side:'defense', team:'maples', st:{kickPower:4,kickAccuracy:1,returnAbility:1} },
+  { id:'vmt_d3', name:'Bouchard', firstName:'Remi', pos:'DL', year:'RS-Sr', stars:3, ovr:75, trait:'EDGE', isStar:false, badge:'SPEED_LINES', num:54, ability:'Sets the edge', side:'defense', team:'maples', st:{kickPower:1,kickAccuracy:1,returnAbility:1} },
+  { id:'vmt_d4', name:'Roy', firstName:'Tyler', pos:'LB', year:'So', stars:3, ovr:75, trait:'COVERAGE LB', isStar:false, badge:'EYE', num:43, ability:'Covers backs and tight ends', side:'defense', team:'maples', st:{kickPower:2,kickAccuracy:1,returnAbility:1} },
+  { id:'vmt_d5', name:'Bennett', firstName:'Marcus', pos:'CB', year:'Jr', stars:3, ovr:76, trait:'ZONE READER', isStar:false, badge:'EYE', num:6, ability:'Reads the QB eyes in zone', side:'defense', team:'maples', st:{kickPower:1,kickAccuracy:1,returnAbility:2} },
+  { id:'vmt_d6', name:'Boucher', firstName:'Declan', pos:'SS', year:'Fr', stars:3, ovr:72, trait:'RUN SUPPORT', isStar:false, badge:'HELMET', num:29, ability:'Comes downhill to fit the run', side:'defense', team:'maples', st:{kickPower:1,kickAccuracy:1,returnAbility:2} },
+  { id:'vmt_d7', name:'LaFleur', firstName:'Samuel', pos:'FS', year:'Sr', stars:5, ovr:86, trait:'DISGUISE ARTIST', isStar:true, starTitle:'The Reading Room', badge:'EYE', num:19, ability:'Disguises pre-snap, rotates late', side:'defense', team:'maples', st:{kickPower:1,kickAccuracy:2,returnAbility:3} },
+];
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// HELIX SALAMANDERS — Air Raid (middle tier, balanced/analytical)
+// ════════════════════════════════════════════════════════════════════════════
+export const SALAMANDERS_OFFENSE = [
+  { id:'hel_o1', name:'Cervantes', firstName:'Mateo', pos:'QB', year:'Sr', stars:5, ovr:87, trait:'PRECISION POCKET', isStar:true, starTitle:'The Equation', badge:'CROSSHAIR', num:10, ability:'Surgical from the pocket — never misses the open guy', side:'offense', team:'salamanders', st:{kickPower:2,kickAccuracy:4,returnAbility:1} },
+  { id:'hel_o2', name:'Reyes', firstName:'Diego', pos:'RB', year:'Jr', stars:3, ovr:75, trait:'PASS CATCHER', isStar:false, badge:'CLEAT', num:23, ability:'Catches out of the backfield', side:'offense', team:'salamanders', st:{kickPower:1,kickAccuracy:1,returnAbility:3} },
+  { id:'hel_o3', name:'Mendoza', firstName:'Daniel', pos:'WR', year:'Sr', stars:4, ovr:80, trait:'ROUTE IQ', isStar:false, badge:'FOOTBALL', num:11, ability:'Reads coverage and breaks open', side:'offense', team:'salamanders', st:{kickPower:1,kickAccuracy:1,returnAbility:3} },
+  { id:'hel_o4', name:'Flores', firstName:'Joaquin', pos:'WR', year:'Jr', stars:3, ovr:76, trait:'MESH SPECIALIST', isStar:false, badge:'GLOVE', num:4, ability:'Times the rub on mesh — gets clean every time', side:'offense', team:'salamanders', st:{kickPower:1,kickAccuracy:1,returnAbility:3} },
+  { id:'hel_o5', name:'Schmidt', firstName:'Karl', pos:'OL', year:'Jr', stars:3, ovr:76, trait:'ANCHOR', isStar:false, badge:'BRICK', num:69, ability:'Holds the pocket', side:'offense', team:'salamanders', st:{kickPower:4,kickAccuracy:2,returnAbility:1} },
+  { id:'hel_o6', name:'Mueller', firstName:'Lukas', pos:'OL', year:'Sr', stars:3, ovr:78, trait:'LEADER', isStar:false, badge:'CLIPBOARD', num:54, ability:'Sets protection IDs', side:'offense', team:'salamanders', st:{kickPower:3,kickAccuracy:3,returnAbility:1} },
+  { id:'hel_o7', name:'Weber', firstName:'Hayden', pos:'OL', year:'So', stars:3, ovr:73, trait:'PASS PRO', isStar:false, badge:'BRICK', num:77, ability:'Sound in pass protection', side:'offense', team:'salamanders', st:{kickPower:3,kickAccuracy:2,returnAbility:1} },
+];
+export const SALAMANDERS_DEFENSE = [
+  { id:'hel_d1', name:'Krause', firstName:'Brennan', pos:'DL', year:'Fr', stars:3, ovr:71, trait:'EDGE', isStar:false, badge:'SPEED_LINES', num:95, ability:'Sets the edge', side:'defense', team:'salamanders', st:{kickPower:1,kickAccuracy:1,returnAbility:1} },
+  { id:'hel_d2', name:'Hoffman', firstName:'Emilio', pos:'DL', year:'So', stars:3, ovr:75, trait:'INTERIOR', isStar:false, badge:'BRICK', num:93, ability:'Plugs the interior', side:'defense', team:'salamanders', st:{kickPower:4,kickAccuracy:1,returnAbility:1} },
+  { id:'hel_d3', name:'Novak', firstName:'Kade', pos:'DL', year:'Jr', stars:3, ovr:77, trait:'EDGE', isStar:false, badge:'SPEED_LINES', num:59, ability:'Sets the edge', side:'defense', team:'salamanders', st:{kickPower:1,kickAccuracy:1,returnAbility:1} },
+  { id:'hel_d4', name:'Janecek', firstName:'Adrian', pos:'LB', year:'Sr', stars:5, ovr:86, trait:'PROCESSOR', isStar:true, starTitle:'The Algorithm', badge:'EYE', num:50, ability:'Diagnoses pre-snap and triggers correctly', side:'defense', team:'salamanders', st:{kickPower:2,kickAccuracy:1,returnAbility:1} },
+  { id:'hel_d5', name:'Garcia', firstName:'Cristian', pos:'CB', year:'So', stars:3, ovr:74, trait:'ZONE READER', isStar:false, badge:'EYE', num:1, ability:'Reads the QB eyes in zone', side:'defense', team:'salamanders', st:{kickPower:1,kickAccuracy:1,returnAbility:2} },
+  { id:'hel_d6', name:'Bryant', firstName:'Trey', pos:'SS', year:'Fr', stars:3, ovr:72, trait:'COVER 2 SAFETY', isStar:false, badge:'EYE', num:22, ability:'Plays the half-field over the top', side:'defense', team:'salamanders', st:{kickPower:1,kickAccuracy:1,returnAbility:2} },
+  { id:'hel_d7', name:'Ramirez', firstName:'Santiago', pos:'FS', year:'RS-Sr', stars:3, ovr:79, trait:'RANGE FS', isStar:false, badge:'EYE', num:15, ability:'Plays sideline-to-sideline at depth', side:'defense', team:'salamanders', st:{kickPower:1,kickAccuracy:2,returnAbility:3} },
+];
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// CORAL BAY DOLPHINS — Vertical Pass (middle tier, transfer-portal veteran)
+// ════════════════════════════════════════════════════════════════════════════
+export const WOLVES_OFFENSE = [
+  { id:'cor_o1', name:'Rodriguez', firstName:'Christian', pos:'QB', year:'RS-Sr', stars:4, ovr:82, trait:'STRONG ARM', isStar:false, badge:'CROSSHAIR', num:8, ability:'Drives the deep ball with arm strength', side:'offense', team:'wolves', st:{kickPower:3,kickAccuracy:3,returnAbility:1} },
+  { id:'cor_o2', name:'Thompson', firstName:'Dimitri', pos:'RB', year:'Sr', stars:3, ovr:76, trait:'PASS CATCHER', isStar:false, badge:'CLEAT', num:26, ability:'Catches out of the backfield on third down', side:'offense', team:'wolves', st:{kickPower:1,kickAccuracy:1,returnAbility:3} },
+  { id:'cor_o3', name:'Beauvais', firstName:'Tre', pos:'WR', year:'5th-Sr', stars:5, ovr:89, trait:'CONTESTED CATCH', isStar:true, starTitle:'The Misfit', badge:'GLOVE', num:3, ability:'Wins jump balls 1-on-1 vs press man', side:'offense', team:'wolves', st:{kickPower:1,kickAccuracy:1,returnAbility:4} },
+  { id:'cor_o4', name:'Hayes', firstName:'Xavier', pos:'WR', year:'RS-Sr', stars:4, ovr:81, trait:'DEEP THREAT', isStar:false, badge:'SPEED_LINES', num:13, ability:'Burns single-high coverage deep', side:'offense', team:'wolves', st:{kickPower:1,kickAccuracy:1,returnAbility:5} },
+  { id:'cor_o5', name:'Suarez', firstName:'Carlos', pos:'OL', year:'Sr', stars:3, ovr:78, trait:'ANCHOR', isStar:false, badge:'BRICK', num:75, ability:'Anchors the pocket', side:'offense', team:'wolves', st:{kickPower:4,kickAccuracy:2,returnAbility:1} },
+  { id:'cor_o6', name:'Pierre', firstName:'Jean-Baptiste', pos:'OL', year:'Sr', stars:3, ovr:78, trait:'LEADER', isStar:false, badge:'CLIPBOARD', num:58, ability:'Sets protections, snaps clean', side:'offense', team:'wolves', st:{kickPower:3,kickAccuracy:3,returnAbility:1} },
+  { id:'cor_o7', name:'Castillo', firstName:'Marco', pos:'OL', year:'Jr', stars:3, ovr:75, trait:'PASS PRO', isStar:false, badge:'BRICK', num:72, ability:'Sound in pass protection', side:'offense', team:'wolves', st:{kickPower:3,kickAccuracy:2,returnAbility:1} },
+];
+export const WOLVES_DEFENSE = [
+  { id:'cor_d1', name:'Diaz', firstName:'Alejandro', pos:'DL', year:'Sr', stars:3, ovr:78, trait:'EDGE SPEED', isStar:false, badge:'SPEED_LINES', num:96, ability:'Speed off the edge', side:'defense', team:'wolves', st:{kickPower:1,kickAccuracy:1,returnAbility:1} },
+  { id:'cor_d2', name:'Henderson', firstName:'Luis', pos:'DL', year:'Jr', stars:3, ovr:76, trait:'INTERIOR', isStar:false, badge:'BRICK', num:92, ability:'Plugs the interior', side:'defense', team:'wolves', st:{kickPower:4,kickAccuracy:1,returnAbility:1} },
+  { id:'cor_d3', name:'Foster', firstName:'Kendrick', pos:'DL', year:'RS-Sr', stars:3, ovr:78, trait:'EDGE', isStar:false, badge:'SPEED_LINES', num:51, ability:'Sets the edge', side:'defense', team:'wolves', st:{kickPower:1,kickAccuracy:1,returnAbility:1} },
+  { id:'cor_d4', name:'Joseph', firstName:'Anthony', pos:'LB', year:'Jr', stars:3, ovr:76, trait:'COVER LB', isStar:false, badge:'EYE', num:41, ability:'Locks up RBs and TEs in man', side:'defense', team:'wolves', st:{kickPower:2,kickAccuracy:1,returnAbility:1} },
+  { id:'cor_d5', name:'Saint-Fleur', firstName:'Marco', pos:'CB', year:'Sr', stars:4, ovr:81, trait:'PRESS CORNER', isStar:false, badge:'PADLOCK', num:24, ability:'Physical at the line', side:'defense', team:'wolves', st:{kickPower:1,kickAccuracy:1,returnAbility:3} },
+  { id:'cor_d6', name:'Owens', firstName:'Jamal', pos:'CB', year:'Fr', stars:3, ovr:73, trait:'PRESS CORNER', isStar:false, badge:'PADLOCK', num:34, ability:'Aggressive press technique', side:'defense', team:'wolves', st:{kickPower:1,kickAccuracy:1,returnAbility:2} },
+  { id:'cor_d7', name:'Cadet', firstName:'Giovanni', pos:'FS', year:'Sr', stars:5, ovr:87, trait:'BALL HAWK', isStar:true, starTitle:'The Architect\'s Kid', badge:'EYE', num:7, ability:'Reads the QB and jumps the route', side:'defense', team:'wolves', st:{kickPower:1,kickAccuracy:2,returnAbility:3} },
+];
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// BLACKWATER SERPENTS — Triple Option (middle tier, balanced)
+// ════════════════════════════════════════════════════════════════════════════
 export const SERPENTS_OFFENSE = [
-  { id: 'bws_o1', name: 'Ash', firstName: 'Caleb', pos: 'QB', ovr: 80, badge: 'CROSSHAIR', isStar: true, starTitle: 'The Conductor', num: 10, ability: 'Quick release, sharp reads', stars: 4, trait: 'QUICK RELEASE', side: 'offense', team: 'serpents', st: { kickPower: 2, kickAccuracy: 3, returnAbility: 2 } },
-  { id: 'bws_o2', name: 'Hayward', firstName: 'Keenan', pos: 'WR', ovr: 80, badge: 'GLOVE', isStar: false, num: 3, ability: 'Sure hands in traffic', stars: 4, trait: 'SURE HANDS', side: 'offense', team: 'serpents', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 3 } },
-  { id: 'bws_o3', name: 'Dupree', firstName: 'Marquise', pos: 'WR', ovr: 78, badge: 'SPEED_LINES', isStar: false, num: 88, ability: 'Stretches the field deep', stars: 4, trait: 'CONTESTED CATCH', side: 'offense', team: 'serpents', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 2 } },
-  { id: 'bws_o4', name: 'Slade', firstName: 'Derrick', pos: 'RB', ovr: 76, badge: 'HELMET', isStar: false, num: 7, ability: 'Yards after contact', stars: 3, trait: 'POWER BACK', side: 'offense', team: 'serpents', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 4 } },
-  { id: 'bws_o5', name: 'Cortez', firstName: 'Alejandro', pos: 'OL', ovr: 76, badge: 'BRICK', isStar: false, num: 75, ability: 'Pass-pro specialist', stars: 3, trait: 'BRICK WALL', side: 'offense', team: 'serpents', st: { kickPower: 3, kickAccuracy: 4, returnAbility: 1 } },
-  { id: 'bws_o6', name: 'Moreno', firstName: 'Gabriel', pos: 'TE', ovr: 76, badge: 'GLOVE', isStar: false, num: 19, ability: 'Reliable receiving target', stars: 3, trait: 'PASS CATCHER', side: 'offense', team: 'serpents', st: { kickPower: 2, kickAccuracy: 1, returnAbility: 2 } },
-  { id: 'bws_o7', name: 'Osei', firstName: 'Kwame', pos: 'QB', ovr: 74, badge: 'CROSSHAIR', isStar: false, num: 14, ability: 'Sells the fake, freezes linebackers', stars: 3, trait: 'PLAY ACTION PRO', side: 'offense', team: 'serpents', st: { kickPower: 2, kickAccuracy: 2, returnAbility: 2 } },
+  { id:'bla_o1', name:'Hebert', firstName:'Etienne', pos:'QB', year:'Sr', stars:5, ovr:86, trait:'OPTION READ', isStar:true, starTitle:'The Cold Hand', badge:'EYE', num:5, ability:'Reads the keys cold — gives, keeps, or pitches', side:'offense', team:'serpents', st:{kickPower:2,kickAccuracy:3,returnAbility:3} },
+  { id:'bla_o2', name:'Boudreaux', firstName:'Beau', pos:'FB', year:'Sr', stars:3, ovr:78, trait:'INSIDE DIVE', isStar:false, badge:'HELMET', num:34, ability:'Hits the dive hole hard, downhill', side:'offense', team:'serpents', st:{kickPower:2,kickAccuracy:1,returnAbility:2} },
+  { id:'bla_o3', name:'Landry', firstName:'Remy', pos:'WR', year:'Jr', stars:3, ovr:76, trait:'PERIMETER OPTION', isStar:false, badge:'CLEAT', num:2, ability:'Takes the pitch and reads the perimeter', side:'offense', team:'serpents', st:{kickPower:1,kickAccuracy:1,returnAbility:4} },
+  { id:'bla_o4', name:'LeBlanc', firstName:'Pierre', pos:'WR', year:'Fr', stars:3, ovr:73, trait:'DEEP THREAT', isStar:false, badge:'SPEED_LINES', num:84, ability:'Burns single-high on the PA shot', side:'offense', team:'serpents', st:{kickPower:1,kickAccuracy:1,returnAbility:3} },
+  { id:'bla_o5', name:'Broussard', firstName:'Luc', pos:'OL', year:'Jr', stars:3, ovr:76, trait:'ANCHOR', isStar:false, badge:'BRICK', num:63, ability:'Holds the point of attack', side:'offense', team:'serpents', st:{kickPower:4,kickAccuracy:2,returnAbility:1} },
+  { id:'bla_o6', name:'Thibodeaux', firstName:'Jude', pos:'OL', year:'Sr', stars:4, ovr:80, trait:'LEADER', isStar:false, badge:'CLIPBOARD', num:55, ability:'Calls the line — runs the option from the snap', side:'offense', team:'serpents', st:{kickPower:3,kickAccuracy:3,returnAbility:1} },
+  { id:'bla_o7', name:'Trahan', firstName:'Blaise', pos:'OL', year:'RS-Sr', stars:3, ovr:78, trait:'ROAD GRADER', isStar:false, badge:'BRICK', num:78, ability:'Drives D-linemen off the ball', side:'offense', team:'serpents', st:{kickPower:4,kickAccuracy:2,returnAbility:1} },
 ];
-
 export const SERPENTS_DEFENSE = [
-  { id: 'bws_d1', name: 'Vega', firstName: 'Mateo', pos: 'S', ovr: 80, badge: 'CLIPBOARD', isStar: true, starTitle: 'The Eraser', num: 6, ability: 'Ball hawk — reads the QB', stars: 4, trait: 'BALL HAWK', side: 'defense', team: 'serpents', st: { kickPower: 1, kickAccuracy: 2, returnAbility: 4 } },
-  { id: 'bws_d2', name: 'Whitaker', firstName: 'Jaylen', pos: 'CB', ovr: 80, badge: 'PADLOCK', isStar: false, num: 23, ability: 'Mirrors every route', stars: 4, trait: 'SHUTDOWN', side: 'defense', team: 'serpents', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 2 } },
-  { id: 'bws_d3', name: 'Bishop', firstName: 'Deandre', pos: 'LB', ovr: 78, badge: 'HELMET', isStar: false, num: 50, ability: 'Covers backs and tight ends', stars: 4, trait: 'COVERAGE LB', side: 'defense', team: 'serpents', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 1 } },
-  { id: 'bws_d4', name: 'Baptiste', firstName: 'Jean-Pierre', pos: 'CB', ovr: 76, badge: 'EYE', isStar: false, num: 31, ability: 'Reads the QB eyes in zone', stars: 3, trait: 'ZONE READER', side: 'defense', team: 'serpents', st: { kickPower: 1, kickAccuracy: 1, returnAbility: 2 } },
-  { id: 'bws_d5', name: 'Langford', firstName: 'Terrance', pos: 'S', ovr: 76, badge: 'CLIPBOARD', isStar: false, num: 20, ability: 'Comes downhill to stop the run', stars: 3, trait: 'RUN SUPPORT', side: 'defense', team: 'serpents', st: { kickPower: 3, kickAccuracy: 5, returnAbility: 1 } },
-  { id: 'bws_d6', name: 'Collins', firstName: 'Jarvis', pos: 'DL', ovr: 76, badge: 'SPEED_LINES', isStar: false, num: 92, ability: 'Gets to the QB', stars: 3, trait: 'PASS RUSHER', side: 'defense', team: 'serpents', st: { kickPower: 2, kickAccuracy: 1, returnAbility: 1 } },
-  { id: 'bws_d7', name: 'Pruitt', firstName: 'Brandon', pos: 'LB', ovr: 74, badge: 'EYE', isStar: false, num: 48, ability: 'Fills gaps and stops the run', stars: 3, trait: 'RUN STUFFER', side: 'defense', team: 'serpents', st: { kickPower: 4, kickAccuracy: 2, returnAbility: 1 } },
+  { id:'bla_d1', name:'Guillory', firstName:'Cedric', pos:'DL', year:'Jr', stars:3, ovr:76, trait:'EDGE', isStar:false, badge:'SPEED_LINES', num:90, ability:'Sets the edge', side:'defense', team:'serpents', st:{kickPower:1,kickAccuracy:1,returnAbility:1} },
+  { id:'bla_d2', name:'Cormier', firstName:'Derrius', pos:'DL', year:'Sr', stars:5, ovr:87, trait:'PENETRATOR', isStar:true, starTitle:'The Bayou Beast', badge:'BRICK', num:99, ability:'3-tech penetrator — wrecks plays in the backfield', side:'defense', team:'serpents', st:{kickPower:5,kickAccuracy:1,returnAbility:1} },
+  { id:'bla_d3', name:'Bourgeois', firstName:'Tyrese', pos:'DL', year:'So', stars:3, ovr:74, trait:'EDGE SPEED', isStar:false, badge:'SPEED_LINES', num:57, ability:'Speed off the edge', side:'defense', team:'serpents', st:{kickPower:1,kickAccuracy:1,returnAbility:1} },
+  { id:'bla_d4', name:'Benoit', firstName:'Javonte', pos:'LB', year:'Jr', stars:3, ovr:75, trait:'PURSUIT', isStar:false, badge:'CLEAT', num:42, ability:'Sideline-to-sideline pursuit', side:'defense', team:'serpents', st:{kickPower:2,kickAccuracy:1,returnAbility:1} },
+  { id:'bla_d5', name:'Jefferson', firstName:'Tre', pos:'CB', year:'Fr', stars:3, ovr:71, trait:'ZONE READER', isStar:false, badge:'EYE', num:6, ability:'Reads the QB eyes in zone', side:'defense', team:'serpents', st:{kickPower:1,kickAccuracy:1,returnAbility:2} },
+  { id:'bla_d6', name:'Robichaux', firstName:'Malachi', pos:'SS', year:'RS-Sr', stars:3, ovr:78, trait:'RUN FIT', isStar:false, badge:'HELMET', num:38, ability:'Comes downhill to fit the run', side:'defense', team:'serpents', st:{kickPower:1,kickAccuracy:1,returnAbility:2} },
+  { id:'bla_d7', name:'Doucet', firstName:'Jamar', pos:'FS', year:'So', stars:3, ovr:73, trait:'CENTERFIELDER', isStar:false, badge:'EYE', num:25, ability:'Plays the deep middle', side:'defense', team:'serpents', st:{kickPower:1,kickAccuracy:1,returnAbility:3} },
 ];
 
-// ============================================================
+
+// ════════════════════════════════════════════════════════════════════════════
+// RIDGEMONT BOARS — Smashmouth (bottom tier, factory grinders)
+// ════════════════════════════════════════════════════════════════════════════
+export const SENTINELS_OFFENSE = [
+  { id:'rid_o1', name:'Whitaker', firstName:'Hunter', pos:'QB', year:'Sr', stars:3, ovr:76, trait:'GAME MANAGER', isStar:false, badge:'CLIPBOARD', num:12, ability:'Doesn\'t turn it over — handles the play action fake', side:'offense', team:'sentinels', st:{kickPower:2,kickAccuracy:3,returnAbility:1} },
+  { id:'rid_o2', name:'Henderson', firstName:'Marcus', pos:'RB', year:'Sr', stars:5, ovr:86, trait:'TRUCK STICK', isStar:true, starTitle:'The Freight Train', badge:'HELMET', num:34, ability:'Breaks arm tackles, finishes runs', side:'offense', team:'sentinels', st:{kickPower:1,kickAccuracy:1,returnAbility:3} },
+  { id:'rid_o3', name:'Mooney', firstName:'Caleb', pos:'TE', year:'Jr', stars:3, ovr:75, trait:'INLINE BLOCKER', isStar:false, badge:'BRICK', num:82, ability:'Seals the edge for the run game', side:'offense', team:'sentinels', st:{kickPower:3,kickAccuracy:1,returnAbility:1} },
+  { id:'rid_o4', name:'Tackett', firstName:'Wyatt', pos:'TE', year:'So', stars:3, ovr:72, trait:'MOVE TE', isStar:false, badge:'GLOVE', num:87, ability:'Motions and runs the seam off PA', side:'offense', team:'sentinels', st:{kickPower:2,kickAccuracy:1,returnAbility:2} },
+  { id:'rid_o5', name:'Pruitt', firstName:'Cooper', pos:'OL', year:'Jr', stars:3, ovr:75, trait:'ANCHOR', isStar:false, badge:'BRICK', num:65, ability:'Holds the point of attack', side:'offense', team:'sentinels', st:{kickPower:4,kickAccuracy:2,returnAbility:1} },
+  { id:'rid_o6', name:'Caldwell', firstName:'Brody', pos:'OL', year:'Sr', stars:3, ovr:76, trait:'LEADER', isStar:false, badge:'CLIPBOARD', num:50, ability:'Sets the protections', side:'offense', team:'sentinels', st:{kickPower:3,kickAccuracy:3,returnAbility:1} },
+  { id:'rid_o7', name:'Honeycutt', firstName:'Tanner', pos:'OL', year:'Jr', stars:3, ovr:74, trait:'ROAD GRADER', isStar:false, badge:'BRICK', num:72, ability:'Drives D-linemen off the ball', side:'offense', team:'sentinels', st:{kickPower:4,kickAccuracy:2,returnAbility:1} },
+];
+export const SENTINELS_DEFENSE = [
+  { id:'rid_d1', name:'Shivers', firstName:'Levi', pos:'DL', year:'RS-Sr', stars:3, ovr:75, trait:'EDGE', isStar:false, badge:'SPEED_LINES', num:92, ability:'Sets the edge', side:'defense', team:'sentinels', st:{kickPower:1,kickAccuracy:1,returnAbility:1} },
+  { id:'rid_d2', name:'Easley', firstName:'Dalton', pos:'DL', year:'Jr', stars:3, ovr:73, trait:'RUN STUFFER', isStar:false, badge:'BRICK', num:95, ability:'Plugs the A-gap', side:'defense', team:'sentinels', st:{kickPower:4,kickAccuracy:1,returnAbility:1} },
+  { id:'rid_d3', name:'Campbell', firstName:'Tucker', pos:'DL', year:'Fr', stars:2, ovr:68, trait:'EDGE', isStar:false, badge:'SPEED_LINES', num:57, ability:'Backup edge — still developing', side:'defense', team:'sentinels', st:{kickPower:1,kickAccuracy:1,returnAbility:1} },
+  { id:'rid_d4', name:'Walker', firstName:'Jaxon', pos:'LB', year:'Sr', stars:3, ovr:75, trait:'RUN STUFFER', isStar:false, badge:'HELMET', num:44, ability:'Plugs every gap', side:'defense', team:'sentinels', st:{kickPower:2,kickAccuracy:1,returnAbility:1} },
+  { id:'rid_d5', name:'Williams', firstName:'Bryson', pos:'CB', year:'Fr', stars:2, ovr:65, trait:'ZONE', isStar:false, badge:'EYE', num:25, ability:'Plays soft zone — still learning press', side:'defense', team:'sentinels', st:{kickPower:1,kickAccuracy:1,returnAbility:2} },
+  { id:'rid_d6', name:'McDonald', firstName:'Cody', pos:'SS', year:'RS-Sr', stars:3, ovr:73, trait:'RUN SUPPORT', isStar:false, badge:'HELMET', num:30, ability:'Comes downhill to fit the run', side:'defense', team:'sentinels', st:{kickPower:1,kickAccuracy:1,returnAbility:2} },
+  { id:'rid_d7', name:'Hayes', firstName:'DeMarcus', pos:'FS', year:'So', stars:2, ovr:67, trait:'CENTERFIELDER', isStar:false, badge:'EYE', num:21, ability:'Plays the deep middle — still developing range', side:'defense', team:'sentinels', st:{kickPower:1,kickAccuracy:1,returnAbility:3} },
+];
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// SACRAMENTO RACCOONS — Veer & Shoot (bottom tier, YOUNG program)
+// ════════════════════════════════════════════════════════════════════════════
+export const RACCOONS_OFFENSE = [
+  { id:'sac_o1', name:'Garcia', firstName:'Daniel', pos:'QB', year:'Jr', stars:3, ovr:76, trait:'QUICK PROCESS', isStar:false, badge:'CROSSHAIR', num:10, ability:'Quick processor — gets the ball out fast', side:'offense', team:'raccoons', st:{kickPower:2,kickAccuracy:3,returnAbility:2} },
+  { id:'sac_o2', name:'Lopez', firstName:'Anthony', pos:'RB', year:'So', stars:3, ovr:73, trait:'ZONE', isStar:false, badge:'CLEAT', num:27, ability:'Zone-runs with patience', side:'offense', team:'raccoons', st:{kickPower:1,kickAccuracy:1,returnAbility:3} },
+  { id:'sac_o3', name:'Hernandez', firstName:'Jamal', pos:'WR', year:'Sr', stars:3, ovr:78, trait:'DEEP THREAT', isStar:false, badge:'SPEED_LINES', num:19, ability:'Burns single-high on the deep ball', side:'offense', team:'raccoons', st:{kickPower:1,kickAccuracy:1,returnAbility:4} },
+  { id:'sac_o4', name:'Nguyen', firstName:'Tre', pos:'WR', year:'Sr', stars:5, ovr:86, trait:'YAC BEAST', isStar:true, starTitle:'The Sideline', badge:'SPEED_LINES', num:1, ability:'Catches and breaks tackles for the YAC', side:'offense', team:'raccoons', st:{kickPower:1,kickAccuracy:1,returnAbility:5} },
+  { id:'sac_o5', name:'Tran', firstName:'Khang', pos:'OL', year:'Fr', stars:3, ovr:70, trait:'ANCHOR', isStar:false, badge:'BRICK', num:68, ability:'Holds the pocket for a snap or two', side:'offense', team:'raccoons', st:{kickPower:3,kickAccuracy:2,returnAbility:1} },
+  { id:'sac_o6', name:'Singh', firstName:'David', pos:'OL', year:'So', stars:3, ovr:73, trait:'LEADER', isStar:false, badge:'CLIPBOARD', num:54, ability:'Sets the protections', side:'offense', team:'raccoons', st:{kickPower:3,kickAccuracy:3,returnAbility:1} },
+  { id:'sac_o7', name:'Yang', firstName:'Jacob', pos:'OL', year:'Fr', stars:3, ovr:70, trait:'PASS PRO', isStar:false, badge:'BRICK', num:75, ability:'Sound in pass protection — learning the run', side:'offense', team:'raccoons', st:{kickPower:3,kickAccuracy:2,returnAbility:1} },
+];
+export const RACCOONS_DEFENSE = [
+  { id:'sac_d1', name:'Pham', firstName:'Sergio', pos:'DL', year:'Jr', stars:3, ovr:75, trait:'EDGE', isStar:false, badge:'SPEED_LINES', num:91, ability:'Sets the edge', side:'defense', team:'raccoons', st:{kickPower:1,kickAccuracy:1,returnAbility:1} },
+  { id:'sac_d2', name:'Vang', firstName:'Tou', pos:'DL', year:'So', stars:3, ovr:72, trait:'INTERIOR', isStar:false, badge:'BRICK', num:99, ability:'Plugs the interior', side:'defense', team:'raccoons', st:{kickPower:4,kickAccuracy:1,returnAbility:1} },
+  { id:'sac_d3', name:'Le', firstName:'Marcus', pos:'DL', year:'Fr', stars:3, ovr:70, trait:'EDGE SPEED', isStar:false, badge:'SPEED_LINES', num:56, ability:'Speed off the edge — still developing', side:'defense', team:'raccoons', st:{kickPower:1,kickAccuracy:1,returnAbility:1} },
+  { id:'sac_d4', name:'Xiong', firstName:'Andres', pos:'LB', year:'Jr', stars:3, ovr:75, trait:'ZONE-DROP', isStar:false, badge:'EYE', num:45, ability:'Drops to short zone, reads the QB', side:'defense', team:'raccoons', st:{kickPower:2,kickAccuracy:1,returnAbility:1} },
+  { id:'sac_d5', name:'Mitchell', firstName:'Kai', pos:'CB', year:'Fr', stars:3, ovr:70, trait:'BOUNDARY', isStar:false, badge:'PADLOCK', num:6, ability:'Boundary corner — physical at the LOS', side:'defense', team:'raccoons', st:{kickPower:1,kickAccuracy:1,returnAbility:3} },
+  { id:'sac_d6', name:'Thao', firstName:'Pao', pos:'SS', year:'So', stars:3, ovr:71, trait:'COVER 2 SAFETY', isStar:false, badge:'EYE', num:32, ability:'Plays the half-field over the top', side:'defense', team:'raccoons', st:{kickPower:1,kickAccuracy:1,returnAbility:2} },
+  { id:'sac_d7', name:'Yang', firstName:'Minh', pos:'FS', year:'Fr', stars:3, ovr:71, trait:'RANGE FS', isStar:false, badge:'EYE', num:23, ability:'Plays sideline-to-sideline at depth', side:'defense', team:'raccoons', st:{kickPower:1,kickAccuracy:2,returnAbility:3} },
+];
+
+
+// ════════════════════════════════════════════════════════════════════════════
 // LOOKUP HELPERS
-// ============================================================
+// ════════════════════════════════════════════════════════════════════════════
 var _rosters = {
-  sentinels: { offense: SENTINELS_OFFENSE, defense: SENTINELS_DEFENSE },
-  wolves:    { offense: WOLVES_OFFENSE, defense: WOLVES_DEFENSE },
-  stags:     { offense: SPECTRES_OFFENSE, defense: SPECTRES_DEFENSE },
-  serpents:  { offense: SERPENTS_OFFENSE, defense: SERPENTS_DEFENSE },
+  pronghorns:  { offense: PRONGHORNS_OFFENSE,  defense: PRONGHORNS_DEFENSE },
+  stags:       { offense: SPECTRES_OFFENSE,    defense: SPECTRES_DEFENSE },
+  maples:      { offense: MAPLES_OFFENSE,      defense: MAPLES_DEFENSE },
+  salamanders: { offense: SALAMANDERS_OFFENSE, defense: SALAMANDERS_DEFENSE },
+  wolves:      { offense: WOLVES_OFFENSE,      defense: WOLVES_DEFENSE },
+  serpents:    { offense: SERPENTS_OFFENSE,    defense: SERPENTS_DEFENSE },
+  sentinels:   { offense: SENTINELS_OFFENSE,   defense: SENTINELS_DEFENSE },
+  raccoons:    { offense: RACCOONS_OFFENSE,    defense: RACCOONS_DEFENSE },
 };
 
 export function getOffenseRoster(teamId) {
@@ -125,4 +241,9 @@ export function getStarters(roster) {
 
 export function getBench(roster) {
   return roster.slice(4);
+}
+
+/** Get all star players (isStar=true) for a team. */
+export function getStars(teamId) {
+  return getFullRoster(teamId).filter(p => p.isStar);
 }

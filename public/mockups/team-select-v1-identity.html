@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TORCH — Team Select V1: Pure Identity</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{background:#0A0804;color:#fff;font-family:'Rajdhani',sans-serif;height:100%;overflow:hidden;}
+
+  /* Phone frame for desktop preview */
+  .frame{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000;}
+  .phone{width:390px;height:844px;border-radius:48px;overflow:hidden;position:relative;background:#000;box-shadow:0 30px 80px rgba(0,0,0,0.8);}
+  @media(max-width:430px){.frame{padding:0;}.phone{width:100%;height:100%;border-radius:0;}}
+
+  .stage{position:absolute;inset:0;overflow:hidden;}
+
+  .card{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;
+    transition:transform .55s cubic-bezier(.22,1,.36,1), opacity .35s ease;
+    opacity:0;transform:translateY(100%);
+    pointer-events:none;
+  }
+  .card.active{opacity:1;transform:translateY(0);pointer-events:auto;}
+  .card.prev{opacity:0;transform:translateY(-30%);}
+
+  /* Background gradient wash */
+  .bg{position:absolute;inset:0;}
+  .bg::before{content:"";position:absolute;inset:0;background:radial-gradient(80% 60% at 50% 25%, rgba(255,255,255,0.18), transparent 65%);}
+  .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.55) 75%, rgba(0,0,0,0.95) 100%);}
+
+  /* Top bar */
+  .top{position:absolute;top:0;left:0;right:0;padding:54px 24px 20px;display:flex;justify-content:space-between;align-items:flex-start;z-index:5;}
+  .position{display:flex;flex-direction:column;gap:7px;}
+  .position .dot{width:3px;height:14px;border-radius:2px;background:rgba(255,255,255,0.22);transition:.3s;}
+  .position .dot.on{background:#fff;height:24px;box-shadow:0 0 12px rgba(255,255,255,0.6);}
+  .tier{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:10px;letter-spacing:3px;padding:8px 14px;border:1px solid rgba(255,255,255,0.45);border-radius:2px;backdrop-filter:blur(8px);background:rgba(0,0,0,0.25);}
+  .tier.pwr{border-color:rgba(235,176,16,0.7);color:#EBB010;}
+  .tier.cnt{border-color:rgba(255,255,255,0.6);color:#fff;}
+  .tier.und{border-color:rgba(255,69,17,0.7);color:#FF6B3A;}
+
+  /* Logo */
+  .logo-wrap{flex:1;display:flex;align-items:center;justify-content:center;position:relative;z-index:3;}
+  .shield{width:240px;height:280px;position:relative;display:flex;align-items:center;justify-content:center;}
+  .shield svg{width:100%;height:100%;filter:drop-shadow(0 12px 32px rgba(0,0,0,0.55));}
+  .shield .abbr{position:absolute;font-family:'Teko',sans-serif;font-weight:600;font-size:84px;letter-spacing:-1px;color:#fff;text-shadow:0 2px 18px rgba(0,0,0,0.5);}
+
+  /* Bottom info */
+  .info{padding:0 28px 0;text-align:center;position:relative;z-index:3;}
+  .name{font-family:'Teko',sans-serif;font-weight:600;font-size:68px;line-height:0.85;letter-spacing:1px;text-transform:uppercase;text-shadow:0 4px 18px rgba(0,0,0,0.6);}
+  .school{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.78);margin-top:8px;}
+  .divider{width:42px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.55),transparent);margin:14px auto;}
+  .tagline{font-family:'Teko',sans-serif;font-weight:400;font-size:18px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,0.92);}
+  .tagline .sep{margin:0 9px;opacity:0.4;}
+
+  /* CTA */
+  .cta{padding:32px 24px 56px;position:relative;z-index:5;}
+  .btn{width:100%;height:60px;border:1.5px solid rgba(255,255,255,0.85);border-radius:4px;background:rgba(0,0,0,0.45);backdrop-filter:blur(10px);color:#fff;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:5px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;position:relative;overflow:hidden;transition:transform .15s;}
+  .btn::after{content:"";position:absolute;left:0;top:0;bottom:0;width:0%;background:rgba(255,255,255,0.18);transition:none;}
+  .btn:active::after{width:100%;transition:width 1.4s linear;}
+  .btn:active{transform:scale(0.98);}
+  .btn .ico{font-size:18px;}
+
+  /* Nav hint */
+  .swipe-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:18px;font-family:'Rajdhani',sans-serif;font-size:9px;letter-spacing:3px;color:rgba(255,255,255,0.4);z-index:10;animation:bob 2s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translate(-50%,0);}50%{transform:translate(-50%,-4px);}}
+
+  /* Variant label */
+  .label{position:fixed;top:14px;left:50%;transform:translateX(-50%);font-family:'Rajdhani',sans-serif;font-size:11px;letter-spacing:3px;color:#888;z-index:1000;background:rgba(0,0,0,0.7);padding:5px 14px;border-radius:2px;}
+  .label b{color:#EBB010;font-weight:700;}
+  @media(max-width:430px){.label{display:none;}}
+
+  /* Touch zones for nav */
+  .nav-up,.nav-down{position:absolute;left:0;right:0;height:33%;z-index:4;}
+  .nav-up{top:0;} .nav-down{bottom:0;}
+</style>
+</head>
+<body>
+<div class="label">Team Select Mockup · <b>V1 — PURE IDENTITY</b> · tap top/bottom to cycle</div>
+<div class="frame"><div class="phone"><div class="stage" id="stage"></div></div></div>
+<script>
+const teams = [
+  {id:'pronghorns',name:'PRONGHORNS',abbr:'LAR',school:'Larkspur State University',tier:'POWERHOUSE',tierClass:'pwr',off:'Power Spread',def:'Pattern Match',primary:'#166534',secondary:'#F59E0B',accent:'#FCD34D'},
+  {id:'stags',name:'SPECTRES',abbr:'HSU',school:'Hollowridge State University',tier:'POWERHOUSE',tierClass:'pwr',off:'Spread Option',def:'Robber',primary:'#5DADE2',secondary:'#1B4F72',accent:'#85C1E9'},
+  {id:'maples',name:'MAPLES',abbr:'UVM',school:'University of Vermont',tier:'CONTENDER',tierClass:'cnt',off:'Multiple',def:'Disguise',primary:'#7A1E2E',secondary:'#D97706',accent:'#FCD34D'},
+  {id:'salamanders',name:'SALAMANDERS',abbr:'HEL',school:'Helix University',tier:'CONTENDER',tierClass:'cnt',off:'Air Raid',def:"Bend Don't Break",primary:'#2ECC71',secondary:'#E84393',accent:'#F39C12'},
+  {id:'wolves',name:'DOLPHINS',abbr:'CBU',school:'Coral Bay University',tier:'CONTENDER',tierClass:'cnt',off:'Vertical Pass',def:'Press Man',primary:'#D13A7A',secondary:'#6B1E7F',accent:'#FF7EB3'},
+  {id:'serpents',name:'SERPENTS',abbr:'BWU',school:'Blackwater University',tier:'CONTENDER',tierClass:'cnt',off:'Triple Option',def:'Gap Control',primary:'#14B8A6',secondary:'#F5C542',accent:'#5EEAD4'},
+  {id:'sentinels',name:'BOARS',abbr:'RID',school:'Ridgemont University',tier:'UNDERDOG',tierClass:'und',off:'Smashmouth',def:'Cover 3',primary:'#8B0000',secondary:'#C4A265',accent:'#EBB010'},
+  {id:'raccoons',name:'RACCOONS',abbr:'SAC',school:'Sacramento Polytechnic',tier:'UNDERDOG',tierClass:'und',off:'Veer & Shoot',def:'Flyover',primary:'#52525B',secondary:'#FF8C00',accent:'#84CC16'},
+];
+
+let active = 0;
+const stage = document.getElementById('stage');
+
+function shieldSVG(team){
+  return `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="sg-${team.id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${team.accent}"/>
+        <stop offset="0.5" stop-color="${team.primary}"/>
+        <stop offset="1" stop-color="${team.secondary}"/>
+      </linearGradient>
+    </defs>
+    <path d="M100,5 L195,32 L195,140 Q195,200 100,225 Q5,200 5,140 L5,32 Z"
+      fill="url(#sg-${team.id})" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
+  </svg>
+  <span class="abbr">${team.abbr}</span>`;
+}
+
+function buildCard(team, idx){
+  const dots = teams.map((_,i)=>`<div class="dot ${i===idx?'on':''}"></div>`).join('');
+  return `
+    <div class="card ${idx===active?'active':''}" data-idx="${idx}">
+      <div class="bg" style="background:linear-gradient(180deg, ${team.primary} 0%, ${team.primary} 35%, ${team.secondary} 100%);"></div>
+      <div class="nav-up"></div><div class="nav-down"></div>
+      <div class="top">
+        <div class="position">${dots}</div>
+        <div class="tier ${team.tierClass}">${team.tier}</div>
+      </div>
+      <div class="logo-wrap"><div class="shield">${shieldSVG(team)}</div></div>
+      <div class="info">
+        <div class="name">${team.name}</div>
+        <div class="school">${team.school}</div>
+        <div class="divider"></div>
+        <div class="tagline">${team.off}<span class="sep">·</span>${team.def}</div>
+      </div>
+      <div class="cta"><button class="btn"><span class="ico">◆</span>HOLD TO COACH</button></div>
+      <div class="swipe-hint">SWIPE</div>
+    </div>`;
+}
+
+function render(){
+  stage.innerHTML = teams.map((t,i)=>buildCard(t,i)).join('');
+  bindNav();
+}
+function go(d){ active = (active+d+teams.length)%teams.length; render(); }
+function bindNav(){
+  stage.querySelectorAll('.nav-up').forEach(el=>el.addEventListener('click',()=>go(-1)));
+  stage.querySelectorAll('.nav-down').forEach(el=>el.addEventListener('click',()=>go(+1)));
+}
+let touchY=0;
+stage.addEventListener('touchstart',e=>touchY=e.touches[0].clientY);
+stage.addEventListener('touchend',e=>{const d=e.changedTouches[0].clientY-touchY;if(Math.abs(d)>50)go(d>0?-1:+1);});
+window.addEventListener('keydown',e=>{if(e.key==='ArrowDown')go(+1);if(e.key==='ArrowUp')go(-1);});
+render();
+</script>
+</body></html>

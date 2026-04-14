@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TORCH — Team Select Carousel Variants</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/src/style.css">
+<style>
+  /* ── Page chrome ── */
+  body{display:flex;flex-direction:column;align-items:center;background:#000;min-height:100vh;font-family:var(--font-ui);overflow-x:hidden;padding:0;}
+
+  .switcher{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;justify-content:center;gap:8px;padding:14px;background:linear-gradient(180deg,#000 60%,transparent);}
+  .switcher button{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#aaa;font-family:var(--font-ui);font-weight:700;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;padding:9px 18px;border-radius:3px;cursor:pointer;transition:all .2s;}
+  .switcher button:hover{color:#fff;border-color:rgba(255,255,255,0.3);}
+  .switcher button.on{background:#EBB010;color:#000;border-color:#EBB010;box-shadow:0 0 16px rgba(235,176,16,0.4);}
+  .switcher .lbl{position:absolute;left:14px;top:18px;font-size:10px;letter-spacing:3px;color:#666;font-weight:600;}
+  .switcher .hint{position:absolute;right:14px;top:18px;font-size:10px;letter-spacing:2px;color:#666;}
+
+  .stage-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:64px 0 24px;width:100%;min-height:100vh;}
+  .phone{width:390px;height:844px;border-radius:48px;overflow:hidden;position:relative;background:#000;box-shadow:0 30px 80px rgba(0,0,0,0.85);border:4px solid #1a1a1a;}
+  @media(max-width:430px){.stage-wrap{padding:50px 0 0;}.phone{width:100vw;height:calc(100vh - 50px);border-radius:0;border:none;}}
+
+  .stage{position:absolute;inset:0;overflow:hidden;background:#0A0804;}
+
+  /* ── Shared card mechanics ── */
+  .card{position:absolute;inset:0;display:flex;flex-direction:column;transition:transform .55s var(--ease-snap), opacity .35s ease;opacity:0;transform:translateY(100%);pointer-events:none;}
+  .card.active{opacity:1;transform:translateY(0);pointer-events:auto;}
+  .nav-up,.nav-down{position:absolute;left:0;right:0;z-index:8;}
+
+  /* ═══════════════════════════════════════════════════════════════ */
+  /* V1 — PURE IDENTITY (team-color amplified)                       */
+  /* ═══════════════════════════════════════════════════════════════ */
+  .v1 .nav-up{top:0;height:33%;} .v1 .nav-down{bottom:0;height:33%;}
+
+  /* Multi-stop background: accent kiss at top → primary body → bg darken at bottom */
+  .v1 .bg-wash{position:absolute;inset:0;}
+  .v1 .bg-wash::before{content:"";position:absolute;inset:0;background:radial-gradient(90% 50% at 50% 18%, rgba(255,255,255,0.22), transparent 65%);}
+  .v1 .bg-wash::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg, transparent 35%, rgba(0,0,0,0.55) 78%, rgba(0,0,0,0.96) 100%);}
+
+  /* Helmet stripes — thin accent bars hugging the side edges */
+  .v1 .helmet-stripe{position:absolute;top:0;bottom:0;width:6px;z-index:2;}
+  .v1 .helmet-stripe.l{left:0;}
+  .v1 .helmet-stripe.r{right:0;}
+  .v1 .helmet-stripe::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg, transparent 0%, currentColor 18%, currentColor 82%, transparent 100%);opacity:0.85;}
+  .v1 .helmet-stripe::after{content:"";position:absolute;inset:0;background:currentColor;filter:blur(8px);opacity:0.4;}
+
+  /* Top color seam — thin accent line under the safe area */
+  .v1 .seam{position:absolute;top:0;left:0;right:0;height:50px;z-index:2;background:linear-gradient(180deg, currentColor, transparent);opacity:0.55;}
+
+  .v1 .top-bar{position:absolute;top:0;left:0;right:0;padding:54px 24px 20px;display:flex;justify-content:space-between;align-items:flex-start;z-index:5;}
+  .position-dots{display:flex;flex-direction:column;gap:7px;}
+  .position-dots .dot{width:3px;height:14px;border-radius:2px;background:rgba(255,255,255,0.22);transition:.3s;}
+  .position-dots .dot.on{height:24px;}
+
+  .tier-badge{font-family:var(--font-ui);font-weight:700;font-size:10px;letter-spacing:3px;padding:8px 14px;border:1px solid;border-radius:2px;backdrop-filter:blur(8px);background:rgba(0,0,0,0.3);text-transform:uppercase;position:relative;}
+  .tier-badge.pwr{border-color:rgba(235,176,16,0.7);color:#EBB010;}
+  .tier-badge.cnt{border-color:rgba(255,255,255,0.55);color:#fff;}
+  .tier-badge.und{border-color:rgba(255,107,58,0.8);color:#FF6B3A;}
+  /* V1 tier badge gets a team-accent inner glow */
+  .v1 .tier-badge{box-shadow:inset 0 0 0 1px rgba(0,0,0,0.4);}
+  .v1 .tier-badge::after{content:"";position:absolute;inset:-1px;border-radius:2px;border:1px solid currentColor;opacity:0.3;pointer-events:none;}
+
+  /* Logo + accent halo behind it
+     The logo-stage is a fixed 280×280 box so the SVG centers in a known frame
+     instead of stretching with flex. Halo locks to that same frame. No outline ring.
+     padding-top pushes the logo down off the tier badge area so they aren't crowded. */
+  .v1 .logo-wrap{flex:1;display:flex;align-items:center;justify-content:center;position:relative;z-index:3;padding-top:60px;}
+  .v1 .logo-stage{width:280px;height:280px;position:relative;display:flex;align-items:center;justify-content:center;}
+  .v1 .logo-stage::before{content:"";position:absolute;inset:-30px;border-radius:50%;background:radial-gradient(circle, currentColor 0%, transparent 60%);opacity:0.32;filter:blur(22px);z-index:0;}
+  .v1 .logo-stage svg{display:block;width:240px;height:240px;position:relative;z-index:1;filter:drop-shadow(0 0 24px var(--shadow-color, rgba(0,0,0,0.6))) drop-shadow(0 16px 32px rgba(0,0,0,0.55));}
+
+  .v1 .info{padding:0 28px;text-align:center;position:relative;z-index:3;}
+  .v1 .name{font-family:var(--font-display);font-weight:600;line-height:0.85;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;}
+  /* Adaptive sizing by character count — keeps long names like SALAMANDERS on one line */
+  .v1 .name.len-s{font-size:72px;}     /* 5-6 chars: BOARS, MAPLES */
+  .v1 .name.len-m{font-size:60px;letter-spacing:0.5px;}  /* 7-8: SERPENTS, SPECTRES, RACCOONS, DOLPHINS */
+  .v1 .name.len-l{font-size:48px;letter-spacing:0px;}    /* 9+: PRONGHORNS, SALAMANDERS */
+  .v1 .school{font-family:var(--font-ui);font-weight:700;font-size:11px;letter-spacing:3.5px;text-transform:uppercase;color:currentColor;margin-top:10px;opacity:0.92;}
+  /* Divider in team accent color */
+  .v1 .divider{width:64px;height:2px;background:linear-gradient(90deg,transparent,currentColor,transparent);margin:16px auto;box-shadow:0 0 12px currentColor;}
+  .v1 .tagline{font-family:var(--font-display);font-weight:500;font-size:19px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,0.95);}
+  .v1 .tagline .sep{margin:0 11px;color:currentColor;opacity:0.95;font-weight:700;}
+
+  .v1 .cta{padding:32px 24px 56px;position:relative;z-index:5;}
+  /* HOLD TO COACH inherits the canonical TORCH gold→torch-red CTA from .btn-coach above —
+     stays brand-consistent across all 8 teams, not team-themed. The team color identity
+     comes from everything ABOVE the CTA (stripes, halo, name glow, etc.). */
+
+  /* ═══════════════════════════════════════════════════════════════ */
+  /* V2 — TRADING CARD                                               */
+  /* ═══════════════════════════════════════════════════════════════ */
+  .v2 .nav-up{top:50px;height:14%;} .v2 .nav-down{bottom:90px;height:14%;}
+  .v2 .card{padding:50px 22px 32px;}
+
+  .v2 .ambient{position:absolute;inset:0;z-index:0;}
+
+  .v2 .top-bar{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:5;}
+  .v2 .position-num{font-family:var(--font-ui);font-size:10px;font-weight:600;letter-spacing:3px;color:#888;}
+  .v2 .position-num b{color:#fff;}
+  .v2 .motto{font-family:var(--font-body);font-style:italic;font-weight:400;font-size:13px;color:rgba(255,255,255,0.55);text-align:center;letter-spacing:1px;margin-top:14px;position:relative;z-index:5;}
+
+  .v2 .trading{flex:1;display:flex;flex-direction:column;background:linear-gradient(180deg, rgba(20,16,8,0.85) 0%, rgba(10,8,4,0.95) 100%);border:1px solid rgba(255,255,255,0.1);border-radius:8px;margin-top:14px;overflow:hidden;position:relative;z-index:5;box-shadow:0 24px 48px rgba(0,0,0,0.6);}
+
+  .v2 .hero{flex:1.05;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+  .v2 .hero::after{content:"";position:absolute;inset:0;background:radial-gradient(60% 80% at 50% 50%, transparent, rgba(0,0,0,0.45));}
+  .v2 .hero svg{width:170px;height:170px;filter:drop-shadow(0 8px 22px rgba(0,0,0,0.5));position:relative;z-index:2;}
+
+  .v2 .name-block{position:absolute;bottom:14px;left:0;right:0;text-align:center;z-index:3;}
+  .v2 .name-block .name{font-family:var(--font-display);font-weight:600;font-size:42px;line-height:1;letter-spacing:1px;text-transform:uppercase;text-shadow:0 4px 12px rgba(0,0,0,0.6);}
+  .v2 .name-block .school{font-family:var(--font-ui);font-weight:600;font-size:9.5px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-top:4px;}
+
+  .v2 .stats{flex:0.95;border-top:1px solid rgba(255,255,255,0.08);display:grid;grid-template-columns:1fr 1fr;background:rgba(0,0,0,0.45);}
+  .v2 .stat{padding:14px 16px;border-right:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;justify-content:center;}
+  .v2 .stat:nth-child(2n){border-right:none;}
+  .v2 .stat:nth-child(n+3){border-bottom:none;}
+  .v2 .stat-label{font-family:var(--font-ui);font-weight:700;font-size:9px;letter-spacing:2.5px;color:#888;margin-bottom:5px;}
+  .v2 .stat-value{font-family:var(--font-display);font-weight:500;font-size:21px;letter-spacing:1px;line-height:1;}
+  .v2 .stat-value small{font-family:var(--font-ui);font-size:10px;font-weight:600;letter-spacing:2px;display:block;color:rgba(255,255,255,0.55);margin-top:3px;}
+
+  .v2 .stars{display:flex;gap:3px;margin-top:2px;}
+  .v2 .star{font-size:14px;color:#3a3530;}
+  .v2 .star.on{color:#EBB010;text-shadow:0 0 8px rgba(235,176,16,0.5);}
+
+  .v2 .matchup{margin-top:12px;padding:11px 14px;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.06);border-radius:4px;font-family:var(--font-ui);font-size:10px;letter-spacing:1.5px;color:rgba(255,255,255,0.65);position:relative;z-index:5;display:flex;align-items:center;gap:14px;justify-content:center;}
+  .v2 .matchup .k{color:#888;font-weight:700;letter-spacing:2px;font-size:9px;}
+  .v2 .matchup .v{color:#fff;font-weight:600;letter-spacing:2px;}
+
+  .v2 .cta{margin-top:12px;position:relative;z-index:5;}
+
+  /* ═══════════════════════════════════════════════════════════════ */
+  /* V3 — TACTICAL BRIEF                                             */
+  /* ═══════════════════════════════════════════════════════════════ */
+  .v3 .nav-up{top:50px;height:13%;} .v3 .nav-down{bottom:90px;height:13%;}
+
+  .v3 .ambient{position:absolute;inset:0;z-index:0;}
+
+  .v3 .ribbon{height:42px;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);border-bottom:1px solid;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:relative;z-index:5;margin-top:50px;}
+  .v3 .ribbon.pwr{border-bottom-color:#EBB010;background:linear-gradient(90deg,rgba(235,176,16,0.18),transparent);}
+  .v3 .ribbon.cnt{border-bottom-color:rgba(255,255,255,0.4);background:linear-gradient(90deg,rgba(255,255,255,0.06),transparent);}
+  .v3 .ribbon.und{border-bottom-color:#FF6B3A;background:linear-gradient(90deg,rgba(255,107,58,0.18),transparent);}
+  .v3 .ribbon-tier{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:3px;}
+  .v3 .ribbon-tier.pwr{color:#EBB010;}
+  .v3 .ribbon-tier.cnt{color:#fff;}
+  .v3 .ribbon-tier.und{color:#FF6B3A;}
+  .v3 .ribbon-pos{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:3px;color:#888;}
+  .v3 .ribbon-pos b{color:#fff;}
+
+  .v3 .id-strip{padding:16px 20px 14px;display:flex;align-items:center;gap:14px;position:relative;z-index:5;border-bottom:1px solid rgba(255,255,255,0.05);}
+  .v3 .id-strip svg{width:64px;height:64px;flex-shrink:0;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5));}
+  .v3 .id-text{flex:1;min-width:0;}
+  .v3 .id-name{font-family:var(--font-display);font-weight:600;font-size:32px;line-height:0.95;letter-spacing:1px;text-transform:uppercase;}
+  .v3 .id-school{font-family:var(--font-ui);font-weight:600;font-size:9.5px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-top:4px;}
+
+  .v3 .panel{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.05);position:relative;z-index:5;}
+  .v3 .panel-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .v3 .panel-kicker{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:3px;color:#888;}
+  .v3 .panel-scheme{font-family:var(--font-display);font-weight:600;font-size:24px;letter-spacing:1px;text-transform:uppercase;line-height:1;}
+
+  .v3 .meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+  .v3 .pill{padding:3px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:2px;text-transform:uppercase;font-size:9.5px;letter-spacing:1.5px;font-weight:600;color:rgba(255,255,255,0.7);}
+
+  .v3 .rp-bar{height:5px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin:8px 0 6px;display:flex;}
+  .v3 .rp-bar .run{background:#FF6B3A;}
+  .v3 .rp-bar .pass{background:#5DADE2;}
+  .v3 .rp-labels{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9px;color:#888;letter-spacing:2px;}
+  .v3 .rp-labels .r{color:#FF6B3A;}
+  .v3 .rp-labels .p{color:#5DADE2;}
+
+  .v3 .philosophy{font-family:var(--font-body);font-style:italic;font-weight:400;font-size:13px;color:rgba(255,255,255,0.78);line-height:1.45;margin-top:10px;letter-spacing:0.3px;}
+
+  .v3 .matchup{padding:14px 20px;background:rgba(0,0,0,0.4);border-top:1px solid rgba(255,255,255,0.06);position:relative;z-index:5;}
+  .v3 .mu-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .v3 .mu-label{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2.5px;color:#888;margin-bottom:6px;}
+  .v3 .mu-label.s{color:#22C55E;}
+  .v3 .mu-label.w{color:#FF4511;}
+  .v3 .mu-teams{display:flex;gap:6px;}
+  .v3 .mu-chip{flex:1;height:28px;display:flex;align-items:center;justify-content:center;border-radius:2px;font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:1px;color:#fff;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.04);}
+
+  .v3 .cta{padding:14px 20px 24px;position:relative;z-index:5;}
+
+  /* ── Shared CTA button — production TORCH pattern (gold → torch-red gradient, pulsing aura) ──
+     Mirrors `.CT-snap-btn` in src/ui/components/cardTray.js. The pulse animation is the same
+     `T-aura-pulse` keyframes used for the SNAP button when it's the dominant action on the field. */
+  .btn-coach{
+    width:100%;height:60px;
+    border:none;border-radius:6px;
+    background:linear-gradient(180deg,#EBB010 0%,#FF4511 100%);
+    color:#1A0A00;
+    font-family:var(--font-ui);font-weight:700;font-size:14px;letter-spacing:4px;text-transform:uppercase;
+    display:flex;align-items:center;justify-content:center;gap:12px;
+    cursor:pointer;position:relative;overflow:hidden;
+    box-shadow:0 4px 16px rgba(255,69,17,0.35), 0 0 20px rgba(235,176,16,0.2);
+    animation:btn-aura-breathe 2.4s ease-in-out infinite, btn-aura-pulse 2.4s ease-in-out infinite;
+    transition:transform .15s var(--ease-snap);
+    will-change:transform,box-shadow;
+  }
+  /* Subtle scale breathing — feels alive without being annoying */
+  @keyframes btn-aura-breathe{
+    0%,100%{transform:scale(1);}
+    50%{transform:scale(1.025);}
+  }
+  /* Glow pulse — gold halo expands to white-hot at peak */
+  @keyframes btn-aura-pulse{
+    0%,100%{box-shadow:0 4px 16px rgba(255,69,17,0.35), 0 0 20px rgba(235,176,16,0.25);}
+    50%    {box-shadow:0 4px 28px rgba(255,69,17,0.55), 0 0 40px rgba(255,255,255,0.35), 0 0 60px rgba(235,176,16,0.4);}
+  }
+  /* Inner top-edge highlight — adds physical depth */
+  .btn-coach::before{content:"";position:absolute;left:0;right:0;top:0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,0.32),transparent);pointer-events:none;border-radius:6px 6px 0 0;}
+  /* Hold-to-confirm progress fill (sweeps left→right on press) */
+  .btn-coach::after{content:"";position:absolute;left:0;top:0;bottom:0;width:0%;background:rgba(255,255,255,0.28);transition:none;pointer-events:none;}
+  .btn-coach:active::after{width:100%;transition:width 1.4s linear;}
+  .btn-coach:active{transform:scale(0.97);animation-play-state:paused;}
+  .btn-coach .ico{font-size:18px;color:#1A0A00;text-shadow:0 0 8px rgba(255,255,255,0.4);}
+
+  .swipe-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;font-family:var(--font-ui);font-size:9px;letter-spacing:3px;color:rgba(255,255,255,0.4);z-index:10;animation:bob 2s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translate(-50%,0);}50%{transform:translate(-50%,-4px);}}
+
+  /* ── Variant containers (only one shown at a time) ── */
+  .variant{display:none;position:absolute;inset:0;}
+  .variant.shown{display:block;}
+</style>
+</head>
+<body>
+  <div class="switcher">
+    <span class="lbl">TORCH · TEAM SELECT</span>
+    <button data-v="1" class="on">V1 IDENTITY</button>
+    <button data-v="2">V2 CARD</button>
+    <button data-v="3">V3 TACTICAL</button>
+    <span class="hint">↑↓ swipe · 1/2/3 switch</span>
+  </div>
+
+  <div class="stage-wrap">
+    <div class="phone">
+      <div class="stage">
+        <div class="variant v1 shown" id="variant-1"></div>
+        <div class="variant v2" id="variant-2"></div>
+        <div class="variant v3" id="variant-3"></div>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+import { renderTeamBadge } from '/src/assets/icons/teamLogos.js';
+
+// ── Team data — bible-driven schools, new schemes, simplified def names ──
+const teams = [
+  // Each team's `structure` is the high-contrast color that pops against `primary` —
+  // used for stripes, divider, dots, CTA. `accent` stays for subtle highlights / scheme labels.
+  // `primary` = atmosphere (background body). `bg` = vignette darken.
+  {id:'pronghorns',name:'PRONGHORNS',school:'Larkspur State University',schoolShort:'LARKSPUR STATE · NEBRASKA',town:'Larkspur State · Nebraska Panhandle',motto:'"Outrun the horizon"',
+    tier:'POWERHOUSE',tierClass:'pwr',
+    off:{name:'Power Spread',pkg:'11/12 Pistol',form:'Pistol 2x1',run:65,pass:35,phil:'RPO conflict + pulling guards. Force the safety to wrong-fit.'},
+    def:{name:'Pattern Match',pkg:'2 CB · 1 S',shell:'Rip/Liz Match',phil:'Sound geometry. Sink Check vs vertical, fit run vs gap.'},
+    region:'Plains',stars:3,strong:['MAPLES','SPECTRES'],weak:['SALAMANDERS','RACCOONS'],
+    primary:'#166534',structure:'#F5DEB3',accent:'#F59E0B',bg:'#062014'},
+  {id:'stags',name:'SPECTRES',school:'Hollowridge State University',schoolShort:'HOLLOWRIDGE STATE · WV',town:'Hollowridge State · West Virginia',motto:'"Strike from the shadows"',
+    tier:'POWERHOUSE',tierClass:'pwr',
+    off:{name:'Spread Option',pkg:'11 Spread',form:'Shotgun 2x1',run:60,pass:40,phil:'Dual-threat QB reads the DE. Defense has to defend the whole field.'},
+    def:{name:'Robber',pkg:'2 CB · 1 S',shell:'Cover 1 Robber',phil:'Press the WRs, robber on the QB eyes, free safety roams.'},
+    region:'Allegheny',stars:3,strong:['BOARS','DOLPHINS'],weak:['PRONGHORNS','SERPENTS'],
+    primary:'#5DADE2',structure:'#FFFFFF',accent:'#1B4F72',bg:'#020510'},
+  {id:'maples',name:'MAPLES',school:'University of Vermont, St. Marlowe',schoolShort:'VERMONT · ST. MARLOWE',town:'University of Vermont · St. Marlowe',motto:'"Honor the lineage"',
+    tier:'CONTENDER',tierClass:'cnt',
+    off:{name:'Multiple',pkg:'11 ACE',form:'Shotgun 2x1',run:45,pass:55,phil:'Mesh, Drive, Spider 2 Y Banana. Win with preparation, not athletes.'},
+    def:{name:'Disguise',pkg:'1 CB · 2 S',shell:'Cover 4 Match',phil:'Two-high, simulated pressures. Make the QB late.'},
+    region:'Northeast',stars:2,strong:['DOLPHINS','SALAMANDERS'],weak:['BOARS','PRONGHORNS'],
+    primary:'#7A1E2E',structure:'#D97706',accent:'#FCD34D',bg:'#2E0A14'},
+  {id:'salamanders',name:'SALAMANDERS',school:'Helix University',schoolShort:'HELIX UNIVERSITY · TX',town:'Helix University · Cypress Springs, TX',motto:'"Loud on purpose"',
+    tier:'CONTENDER',tierClass:'cnt',
+    off:{name:'Air Raid',pkg:'11 Spread → 10 Empty',form:'Shotgun max splits',run:20,pass:80,phil:'Mesh forever. Throw it 50 times, never punt.'},
+    def:{name:"Bend Don't Break",pkg:'1 CB · 2 S',shell:'Tampa 2 / Cover 6',phil:'Drop 5 in coverage, take away the deep ball, force checkdowns.'},
+    region:'Hill Country',stars:2,strong:['SERPENTS','PRONGHORNS'],weak:['MAPLES','RACCOONS'],
+    primary:'#2ECC71',structure:'#E84393',accent:'#F39C12',bg:'#186A3B'},
+  {id:'wolves',name:'DOLPHINS',school:'Coral Bay University',schoolShort:'CORAL BAY · FLORIDA',town:'Coral Bay University · South Florida',motto:'"Ride the current"',
+    tier:'CONTENDER',tierClass:'cnt',
+    off:{name:'Vertical Pass',pkg:'11 Pro',form:'Shotgun, max splits',run:40,pass:60,phil:'Strong-arm QB + alpha X. Take the top off. Quick game underneath.'},
+    def:{name:'Press Man',pkg:'2 CB · 1 S',shell:'Cover 0 / Cover 1',phil:'Lock up at the line. High risk, high reward.'},
+    region:'South FL',stars:2,strong:['SERPENTS','RACCOONS'],weak:['MAPLES','SPECTRES'],
+    primary:'#D13A7A',structure:'#6B1E7F',accent:'#FF7EB3',bg:'#080118'},
+  {id:'serpents',name:'SERPENTS',school:'Blackwater University',schoolShort:'BLACKWATER · LOUISIANA',town:'Blackwater University · Atchafalaya, LA',motto:'"Death by a thousand cuts"',
+    tier:'CONTENDER',tierClass:'cnt',
+    off:{name:'Triple Option',pkg:'21 Triple',form:'Under-center / Pistol',run:85,pass:15,phil:'Inside Veer, Midline, Rocket Toss. 8-minute drives. Recapture the 70s.'},
+    def:{name:'Gap Control',pkg:'1 CB · 2 S',shell:'3-4 Cover 3 Match',phil:'Disciplined gap exchange. Single-high, slant fronts.'},
+    region:'Atchafalaya',stars:2,strong:['BOARS','SPECTRES'],weak:['DOLPHINS','SALAMANDERS'],
+    primary:'#14B8A6',structure:'#F5C542',accent:'#5EEAD4',bg:'#0A1F1E'},
+  {id:'sentinels',name:'BOARS',school:'Ridgemont University',schoolShort:'RIDGEMONT · ARKANSAS',town:'Ridgemont University · Ozarks, Arkansas',motto:'"Eyes up, hands ready"',
+    tier:'UNDERDOG',tierClass:'und',
+    off:{name:'Smashmouth',pkg:'12 Pro Heavy',form:'I-Form / Pistol',run:70,pass:30,phil:'Two TEs, downhill RB. Win the line of scrimmage.'},
+    def:{name:'Cover 3',pkg:'1 CB · 2 S',shell:'Cover 3 Match',phil:'Stop the run first. Bend-don\'t-break zone behind it.'},
+    region:'Ozarks',stars:1,strong:['MAPLES','RACCOONS'],weak:['SPECTRES','SERPENTS'],
+    primary:'#8B0000',structure:'#EBB010',accent:'#C4A265',bg:'#4A0000'},
+  {id:'raccoons',name:'RACCOONS',school:'Sacramento Polytechnic',schoolShort:'SAC POLY · CALIFORNIA',town:'Sacramento Polytechnic · Downtown Sac',motto:'"What\'s yours is ours"',
+    tier:'UNDERDOG',tierClass:'und',
+    off:{name:'Veer & Shoot',pkg:'11 Spread',form:'Shotgun, extreme splits',run:50,pass:50,phil:'RPO-driven. Sideline splits break pattern match geometry.'},
+    def:{name:'Flyover',pkg:'1 CB · 2 S',shell:'Tampa 2 from 3-safety',phil:'Three safeties high, clog crossers, force checkdowns.'},
+    region:'Sacramento',stars:1,strong:['SALAMANDERS','PRONGHORNS'],weak:['BOARS','DOLPHINS'],
+    primary:'#52525B',structure:'#84CC16',accent:'#FF8C00',bg:'#09090B'},
+];
+
+let active = 0;
+
+// ── Build helpers ──
+function dots(idx){ return teams.map((_,i)=>`<div class="dot ${i===idx?'on':''}"></div>`).join(''); }
+function stars(n){ let s=''; for(let i=0;i<3;i++) s+=`<div class="star ${i<n?'on':''}">★</div>`; return `<div class="stars">${s}</div>`; }
+function logo(id, size){ return renderTeamBadge(id, size); }
+
+// ── V1 dot override (active dot uses team STRUCTURE color — the high-contrast pop) ──
+function v1Dots(idx, color){
+  return teams.map((_,i)=>`<div class="dot ${i===idx?'on':''}" style="${i===idx?`background:${color};box-shadow:0 0 14px ${color}, 0 0 4px ${color};`:''}"></div>`).join('');
+}
+
+// ── Helper: pick adaptive size class by character length ──
+function nameSizeClass(name){
+  const n = name.length;
+  if (n <= 6) return 'len-s';
+  if (n <= 8) return 'len-m';
+  return 'len-l';
+}
+
+// ── Per-team logo nudges (CSS transform applied INSIDE .logo-stage)
+// Use these to correct visual centering when an SVG's artwork sits off-center
+// within its 512×512 viewBox. Default null = no transform. Add `tx` (px x-offset),
+// `ty` (px y-offset), `scale` (multiplier) for any team that looks off.
+const LOGO_TUNE = {
+  // sentinels: {tx: 0, ty: -8, scale: 1.0},
+  // wolves:    {tx: 4, ty: 0,  scale: 1.0},
+  // ... fill in as needed after visual inspection
+};
+function logoTransform(teamId){
+  const t = LOGO_TUNE[teamId];
+  if(!t) return '';
+  const tx = t.tx || 0, ty = t.ty || 0, sc = t.scale || 1;
+  return `transform:translate(${tx}px,${ty}px) scale(${sc});`;
+}
+
+// ── V1 ──
+function buildV1Card(team, idx){
+  // Color roles, applied so each team's identity reads at a glance:
+  //   primary   → atmosphere (background body + logo halo warmth)
+  //   structure → all structural pop elements (stripes, dots, divider, CTA, name glow, school text)
+  //   accent    → small highlight (tagline separator) + name glow assist
+  //   bg        → vignette darken (bottom of gradient)
+  const s = team.structure, p = team.primary, a = team.accent, bg = team.bg;
+  const sizeClass = nameSizeClass(team.name);
+  const logoTx = logoTransform(team.id);
+  return `
+    <div class="card ${idx===active?'active':''}" data-idx="${idx}">
+      <div class="bg-wash" style="background:linear-gradient(180deg, ${s}14 0%, ${p} 22%, ${p} 50%, ${bg} 100%);"></div>
+      <div class="seam" style="color:${s};"></div>
+      <div class="helmet-stripe l" style="color:${s};"></div>
+      <div class="helmet-stripe r" style="color:${s};"></div>
+      <div class="nav-up"></div><div class="nav-down"></div>
+      <div class="top-bar">
+        <div class="position-dots">${v1Dots(idx, s)}</div>
+        <div class="tier-badge ${team.tierClass}">${team.tier}</div>
+      </div>
+      <div class="logo-wrap">
+        <div class="logo-stage" style="color:${s};--shadow-color:${p}b3;${logoTx}">${logo(team.id, 240)}</div>
+      </div>
+      <div class="info" style="color:${s};">
+        <div class="name ${sizeClass}" style="color:#fff;text-shadow:0 0 32px ${s}aa, 0 0 60px ${a}55, 0 4px 18px rgba(0,0,0,0.65);">${team.name}</div>
+        <div class="school">${team.school}</div>
+        <div class="divider"></div>
+        <div class="tagline">${team.off.name}<span class="sep" style="color:${s};">·</span>${team.def.name}</div>
+      </div>
+      <div class="cta" style="color:${s};"><button class="btn-coach"><span class="ico">◆</span>HOLD TO COACH</button></div>
+      <div class="swipe-hint">SWIPE</div>
+    </div>`;
+}
+
+// ── V2 ──
+function buildV2Card(team, idx){
+  return `
+    <div class="card ${idx===active?'active':''}" data-idx="${idx}">
+      <div class="ambient" style="background:radial-gradient(120% 60% at 50% 0%, ${team.primary}40 0%, transparent 65%), #0A0804;"></div>
+      <div class="nav-up"></div><div class="nav-down"></div>
+      <div class="top-bar">
+        <div class="position-num"><b>${String(idx+1).padStart(2,'0')}</b> / 08</div>
+        <div class="tier-badge ${team.tierClass}">${team.tier}</div>
+      </div>
+      <div class="motto">${team.motto}</div>
+      <div class="trading" style="border-top:5px solid ${team.primary};">
+        <div class="hero" style="background:linear-gradient(180deg, ${team.primary}cc 0%, ${team.bg} 100%);">
+          ${logo(team.id, 170)}
+          <div class="name-block">
+            <div class="name">${team.name}</div>
+            <div class="school">${team.schoolShort}</div>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="stat-label">OFFENSE</div><div class="stat-value">${team.off.name}<small>${team.off.run}/${team.off.pass} R/P</small></div></div>
+          <div class="stat"><div class="stat-label">DEFENSE</div><div class="stat-value">${team.def.name}<small>BASE SHELL</small></div></div>
+          <div class="stat"><div class="stat-label">REGION</div><div class="stat-value">${team.region}<small>HOME TURF</small></div></div>
+          <div class="stat"><div class="stat-label">TALENT</div>${stars(team.stars)}</div>
+        </div>
+      </div>
+      <div class="matchup"><span class="k">EDGE</span><span class="v">${team.strong[0]} · ${team.strong[1]}</span></div>
+      <div class="cta"><button class="btn-coach" style="border-color:${team.structure};color:${team.accent};">SIGN CONTRACT</button></div>
+    </div>`;
+}
+
+// ── V3 ──
+function buildV3Card(team, idx){
+  return `
+    <div class="card ${idx===active?'active':''}" data-idx="${idx}">
+      <div class="ambient" style="background:radial-gradient(120% 50% at 50% 0%, ${team.primary}28 0%, transparent 60%), #0A0804;background-image:linear-gradient(rgba(255,255,255,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.022) 1px,transparent 1px),radial-gradient(120% 50% at 50% 0%, ${team.primary}28 0%, transparent 60%);background-size:24px 24px,24px 24px,100% 100%;background-color:#0A0804;"></div>
+      <div class="nav-up"></div><div class="nav-down"></div>
+      <div class="ribbon ${team.tierClass}">
+        <div class="ribbon-tier ${team.tierClass}">▸ ${team.tier}</div>
+        <div class="ribbon-pos"><b>${String(idx+1).padStart(2,'0')}</b> / 08</div>
+      </div>
+      <div class="id-strip">
+        ${logo(team.id, 64)}
+        <div class="id-text">
+          <div class="id-name">${team.name}</div>
+          <div class="id-school">${team.town}</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-kicker">▸ OFFENSE</div>
+          <div class="panel-scheme" style="color:${team.accent};">${team.off.name}</div>
+        </div>
+        <div class="meta-row"><span class="pill">${team.off.pkg}</span><span class="pill">${team.off.form}</span></div>
+        <div class="rp-bar">
+          <div class="run" style="width:${team.off.run}%;"></div>
+          <div class="pass" style="width:${team.off.pass}%;"></div>
+        </div>
+        <div class="rp-labels"><span class="r">RUN ${team.off.run}%</span><span class="p">PASS ${team.off.pass}%</span></div>
+        <div class="philosophy">${team.off.phil}</div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-kicker">▸ DEFENSE</div>
+          <div class="panel-scheme" style="color:${team.accent};">${team.def.name}</div>
+        </div>
+        <div class="meta-row"><span class="pill">${team.def.pkg}</span><span class="pill">${team.def.shell}</span></div>
+        <div class="philosophy">${team.def.phil}</div>
+      </div>
+      <div class="matchup">
+        <div class="mu-grid">
+          <div>
+            <div class="mu-label s">▲ STRONG VS</div>
+            <div class="mu-teams">
+              <div class="mu-chip">${team.strong[0]}</div>
+              <div class="mu-chip">${team.strong[1]}</div>
+            </div>
+          </div>
+          <div>
+            <div class="mu-label w">▼ WEAK VS</div>
+            <div class="mu-teams">
+              <div class="mu-chip">${team.weak[0]}</div>
+              <div class="mu-chip">${team.weak[1]}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cta"><button class="btn-coach" style="border-color:${team.structure};color:${team.accent};">▸ HOLD TO COACH</button></div>
+    </div>`;
+}
+
+// ── Render ──
+function render(){
+  document.getElementById('variant-1').innerHTML = teams.map((t,i)=>buildV1Card(t,i)).join('');
+  document.getElementById('variant-2').innerHTML = teams.map((t,i)=>buildV2Card(t,i)).join('');
+  document.getElementById('variant-3').innerHTML = teams.map((t,i)=>buildV3Card(t,i)).join('');
+  bindNav();
+}
+
+function go(d){ active = (active+d+teams.length)%teams.length; render(); }
+
+function bindNav(){
+  document.querySelectorAll('.nav-up').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();go(-1);}));
+  document.querySelectorAll('.nav-down').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();go(+1);}));
+}
+
+// ── Variant switcher ──
+document.querySelectorAll('.switcher button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.switcher button').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    document.querySelectorAll('.variant').forEach(v=>v.classList.remove('shown'));
+    document.getElementById('variant-'+btn.dataset.v).classList.add('shown');
+  });
+});
+
+// ── Touch + keyboard ──
+let touchY=0;
+document.querySelector('.stage').addEventListener('touchstart',e=>touchY=e.touches[0].clientY);
+document.querySelector('.stage').addEventListener('touchend',e=>{const d=e.changedTouches[0].clientY-touchY;if(Math.abs(d)>40)go(d>0?-1:+1);});
+window.addEventListener('keydown',e=>{
+  if(e.key==='ArrowDown'||e.key==='ArrowRight')go(+1);
+  if(e.key==='ArrowUp'||e.key==='ArrowLeft')go(-1);
+  if(e.key==='1'||e.key==='2'||e.key==='3'){
+    document.querySelector(`.switcher button[data-v="${e.key}"]`).click();
+  }
+});
+
+render();
+</script>
+</body></html>

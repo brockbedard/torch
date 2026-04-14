@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TORCH — Team Select V3: Tactical Brief</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{background:#0A0804;color:#fff;font-family:'Rajdhani',sans-serif;height:100%;overflow:hidden;}
+
+  .frame{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000;}
+  .phone{width:390px;height:844px;border-radius:48px;overflow:hidden;position:relative;background:#0A0804;box-shadow:0 30px 80px rgba(0,0,0,0.8);}
+  @media(max-width:430px){.frame{padding:0;}.phone{width:100%;height:100%;border-radius:0;}}
+
+  .stage{position:absolute;inset:0;overflow:hidden;}
+
+  .card{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;
+    transition:transform .55s cubic-bezier(.22,1,.36,1), opacity .35s ease;
+    opacity:0;transform:translateY(100%);pointer-events:none;
+  }
+  .card.active{opacity:1;transform:translateY(0);pointer-events:auto;}
+
+  .ambient{position:absolute;inset:0;z-index:0;background-image:linear-gradient(rgba(255,255,255,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.022) 1px,transparent 1px);background-size:24px 24px;}
+
+  /* Tier ribbon */
+  .ribbon{height:42px;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);border-bottom:1px solid;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:relative;z-index:5;margin-top:50px;}
+  .ribbon.pwr{border-bottom-color:#EBB010;background:linear-gradient(90deg,rgba(235,176,16,0.18),transparent);}
+  .ribbon.cnt{border-bottom-color:rgba(255,255,255,0.4);background:linear-gradient(90deg,rgba(255,255,255,0.06),transparent);}
+  .ribbon.und{border-bottom-color:#FF6B3A;background:linear-gradient(90deg,rgba(255,107,58,0.18),transparent);}
+  .ribbon-tier{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:3px;}
+  .ribbon-tier.pwr{color:#EBB010;}
+  .ribbon-tier.cnt{color:#fff;}
+  .ribbon-tier.und{color:#FF6B3A;}
+  .ribbon-pos{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:3px;color:#888;}
+  .ribbon-pos b{color:#fff;}
+
+  /* ID strip */
+  .id-strip{padding:18px 20px 14px;display:flex;align-items:center;gap:14px;position:relative;z-index:5;border-bottom:1px solid rgba(255,255,255,0.05);}
+  .badge{width:62px;height:72px;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative;}
+  .badge svg{width:100%;height:100%;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5));}
+  .badge .abbr{position:absolute;font-family:'Teko',sans-serif;font-weight:600;font-size:24px;color:#fff;}
+  .id-text{flex:1;min-width:0;}
+  .id-name{font-family:'Teko',sans-serif;font-weight:600;font-size:32px;line-height:0.95;letter-spacing:1px;text-transform:uppercase;}
+  .id-school{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:9.5px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-top:4px;}
+
+  /* Tactical panels */
+  .panel{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.05);position:relative;z-index:5;}
+  .panel-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .panel-kicker{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:3px;color:#888;}
+  .panel-scheme{font-family:'Teko',sans-serif;font-weight:600;font-size:24px;letter-spacing:1px;text-transform:uppercase;line-height:1;}
+
+  .meta-row{display:flex;gap:14px;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;color:rgba(255,255,255,0.65);margin-bottom:8px;}
+  .meta-row .pill{padding:3px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:2px;text-transform:uppercase;font-size:9.5px;letter-spacing:1.5px;}
+
+  .rp-bar{height:5px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin:8px 0 8px;display:flex;}
+  .rp-bar .run{background:#FF6B3A;}
+  .rp-bar .pass{background:#5DADE2;}
+  .rp-labels{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9px;color:#888;letter-spacing:2px;}
+  .rp-labels .r{color:#FF6B3A;}
+  .rp-labels .p{color:#5DADE2;}
+
+  .philosophy{font-family:'Barlow Condensed',sans-serif;font-style:italic;font-weight:400;font-size:13px;color:rgba(255,255,255,0.78);line-height:1.45;margin-top:10px;letter-spacing:0.3px;}
+
+  /* Matchup tile */
+  .matchup{padding:16px 20px;background:rgba(0,0,0,0.4);border-top:1px solid rgba(255,255,255,0.06);position:relative;z-index:5;}
+  .matchup-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .mu-block{}
+  .mu-label{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:2.5px;color:#888;margin-bottom:6px;}
+  .mu-label.s{color:#22C55E;}
+  .mu-label.w{color:#FF4511;}
+  .mu-teams{display:flex;gap:6px;}
+  .mu-chip{flex:1;height:28px;display:flex;align-items:center;justify-content:center;border-radius:2px;font-family:'Teko',sans-serif;font-weight:600;font-size:13px;letter-spacing:1px;color:#fff;border:1px solid rgba(255,255,255,0.15);}
+
+  /* CTA */
+  .cta{padding:14px 20px 28px;position:relative;z-index:5;}
+  .btn{width:100%;height:54px;border:1.5px solid;border-radius:4px;color:#fff;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:4px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;background:rgba(0,0,0,0.4);position:relative;overflow:hidden;transition:transform .15s;}
+  .btn::after{content:"";position:absolute;left:0;top:0;bottom:0;width:0%;background:rgba(255,255,255,0.2);}
+  .btn:active::after{width:100%;transition:width 1.4s linear;}
+  .btn:active{transform:scale(0.98);}
+
+  .nav-up,.nav-down{position:absolute;left:0;right:0;height:18%;z-index:4;}
+  .nav-up{top:50px;} .nav-down{bottom:80px;}
+
+  .label{position:fixed;top:14px;left:50%;transform:translateX(-50%);font-family:'Rajdhani',sans-serif;font-size:11px;letter-spacing:3px;color:#888;z-index:1000;background:rgba(0,0,0,0.7);padding:5px 14px;border-radius:2px;}
+  .label b{color:#EBB010;font-weight:700;}
+  @media(max-width:430px){.label{display:none;}}
+</style>
+</head>
+<body>
+<div class="label">Team Select Mockup · <b>V3 — TACTICAL BRIEF</b> · tap mid-top/bottom to cycle</div>
+<div class="frame"><div class="phone"><div class="stage" id="stage"></div></div></div>
+<script>
+const teams = [
+  {id:'pronghorns',name:'PRONGHORNS',abbr:'LAR',school:'Larkspur State · Nebraska Panhandle',tier:'POWERHOUSE',tierClass:'pwr',
+    off:{name:'Power Spread',pkg:'11/12 Pistol',form:'Pistol 2x1',run:65,pass:35,phil:'RPO conflict + pulling guards. Force the safety to wrong-fit.'},
+    def:{name:'Pattern Match',pkg:'2 CB · 1 S',shell:'Rip/Liz Match',phil:'Sound geometry. Sink Check vs vertical, fit run vs gap.'},
+    strong:['MAPLES','SPECTRES'],weak:['SALAMANDERS','RACCOONS'],
+    primary:'#166534',secondary:'#F59E0B',accent:'#FCD34D'},
+  {id:'stags',name:'SPECTRES',abbr:'HSU',school:'Hollowridge State · West Virginia',tier:'POWERHOUSE',tierClass:'pwr',
+    off:{name:'Spread Option',pkg:'11 Spread',form:'Shotgun 2x1',run:60,pass:40,phil:'Dual-threat QB reads the DE. Defense has to defend the whole field.'},
+    def:{name:'Robber',pkg:'2 CB · 1 S',shell:'Cover 1 Robber',phil:'Press the WRs, robber on the QB eyes, free safety roams.'},
+    strong:['BOARS','DOLPHINS'],weak:['PRONGHORNS','SERPENTS'],
+    primary:'#5DADE2',secondary:'#1B4F72',accent:'#85C1E9'},
+  {id:'maples',name:'MAPLES',abbr:'UVM',school:'University of Vermont · St. Marlowe',tier:'CONTENDER',tierClass:'cnt',
+    off:{name:'Multiple',pkg:'11 ACE',form:'Shotgun 2x1',run:45,pass:55,phil:'Mesh, Drive, Spider 2 Y Banana. Win with preparation, not athletes.'},
+    def:{name:'Disguise',pkg:'1 CB · 2 S',shell:'Cover 4 Match',phil:'Two-high, simulated pressures. Make the QB late.'},
+    strong:['DOLPHINS','SALAMANDERS'],weak:['BOARS','PRONGHORNS'],
+    primary:'#7A1E2E',secondary:'#D97706',accent:'#FCD34D'},
+  {id:'salamanders',name:'SALAMANDERS',abbr:'HEL',school:'Helix University · Cypress Springs, TX',tier:'CONTENDER',tierClass:'cnt',
+    off:{name:'Air Raid',pkg:'11 Spread → 10 Empty',form:'Shotgun max splits',run:20,pass:80,phil:'Mesh forever. Throw it 50 times, never punt.'},
+    def:{name:"Bend Don't Break",pkg:'1 CB · 2 S',shell:'Tampa 2 / Cover 6',phil:'Drop 5 in coverage, take away the deep ball, force checkdowns.'},
+    strong:['SERPENTS','PRONGHORNS'],weak:['MAPLES','RACCOONS'],
+    primary:'#2ECC71',secondary:'#E84393',accent:'#F39C12'},
+  {id:'wolves',name:'DOLPHINS',abbr:'CBU',school:'Coral Bay University · South Florida',tier:'CONTENDER',tierClass:'cnt',
+    off:{name:'Vertical Pass',pkg:'11 Pro',form:'Shotgun, max splits',run:40,pass:60,phil:'Strong-arm QB + alpha X. Take the top off. Quick game underneath.'},
+    def:{name:'Press Man',pkg:'2 CB · 1 S',shell:'Cover 0 / Cover 1',phil:'Lock up at the line. High risk, high reward.'},
+    strong:['SERPENTS','RACCOONS'],weak:['MAPLES','SPECTRES'],
+    primary:'#D13A7A',secondary:'#6B1E7F',accent:'#FF7EB3'},
+  {id:'serpents',name:'SERPENTS',abbr:'BWU',school:'Blackwater University · Atchafalaya, LA',tier:'CONTENDER',tierClass:'cnt',
+    off:{name:'Triple Option',pkg:'21 Triple',form:'Under-center / Pistol',run:85,pass:15,phil:'Inside Veer, Midline, Rocket Toss. 8-minute drives. Recapture the 70s.'},
+    def:{name:'Gap Control',pkg:'1 CB · 2 S',shell:'3-4 Cover 3 Match',phil:'Disciplined gap exchange. Single-high, slant fronts.'},
+    strong:['BOARS','SPECTRES'],weak:['DOLPHINS','SALAMANDERS'],
+    primary:'#14B8A6',secondary:'#F5C542',accent:'#5EEAD4'},
+  {id:'sentinels',name:'BOARS',abbr:'RID',school:'Ridgemont University · Ozarks, Arkansas',tier:'UNDERDOG',tierClass:'und',
+    off:{name:'Smashmouth',pkg:'12 Pro Heavy',form:'I-Form / Pistol',run:70,pass:30,phil:'Two TEs, downhill RB. Win the line of scrimmage.'},
+    def:{name:'Cover 3',pkg:'1 CB · 2 S',shell:'Cover 3 Match',phil:'Stop the run first. Bend-don\'t-break zone behind it.'},
+    strong:['MAPLES','RACCOONS'],weak:['SPECTRES','SERPENTS'],
+    primary:'#8B0000',secondary:'#C4A265',accent:'#EBB010'},
+  {id:'raccoons',name:'RACCOONS',abbr:'SAC',school:'Sacramento Polytechnic · Downtown Sac',tier:'UNDERDOG',tierClass:'und',
+    off:{name:'Veer & Shoot',pkg:'11 Spread',form:'Shotgun, extreme splits',run:50,pass:50,phil:'RPO-driven. Sideline splits break pattern match geometry.'},
+    def:{name:'Flyover',pkg:'1 CB · 2 S',shell:'Tampa 2 from 3-safety',phil:'Three safeties high, clog crossers, force checkdowns.'},
+    strong:['SALAMANDERS','PRONGHORNS'],weak:['BOARS','DOLPHINS'],
+    primary:'#52525B',secondary:'#FF8C00',accent:'#84CC16'},
+];
+
+let active = 0;
+const stage = document.getElementById('stage');
+
+function badgeSVG(team){
+  return `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="bg-${team.id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${team.accent}"/>
+        <stop offset="0.5" stop-color="${team.primary}"/>
+        <stop offset="1" stop-color="${team.secondary}"/>
+      </linearGradient>
+    </defs>
+    <path d="M100,5 L195,32 L195,140 Q195,200 100,225 Q5,200 5,140 L5,32 Z"
+      fill="url(#bg-${team.id})" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+  </svg><span class="abbr">${team.abbr}</span>`;
+}
+
+function buildCard(team, idx){
+  return `
+    <div class="card ${idx===active?'active':''}" data-idx="${idx}">
+      <div class="ambient" style="background:radial-gradient(120% 50% at 50% 0%, ${team.primary}28 0%, transparent 60%), #0A0804;background-image:linear-gradient(rgba(255,255,255,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.022) 1px,transparent 1px);background-size:24px 24px,24px 24px,100% 100%;"></div>
+      <div class="nav-up"></div><div class="nav-down"></div>
+      <div class="ribbon ${team.tierClass}">
+        <div class="ribbon-tier ${team.tierClass}">▸ ${team.tier}</div>
+        <div class="ribbon-pos"><b>${String(idx+1).padStart(2,'0')}</b> / 08</div>
+      </div>
+      <div class="id-strip">
+        <div class="badge">${badgeSVG(team)}</div>
+        <div class="id-text">
+          <div class="id-name">${team.name}</div>
+          <div class="id-school">${team.school}</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-kicker">▸ OFFENSE</div>
+          <div class="panel-scheme" style="color:${team.accent};">${team.off.name}</div>
+        </div>
+        <div class="meta-row"><span class="pill">${team.off.pkg}</span><span class="pill">${team.off.form}</span></div>
+        <div class="rp-bar">
+          <div class="run" style="width:${team.off.run}%;"></div>
+          <div class="pass" style="width:${team.off.pass}%;"></div>
+        </div>
+        <div class="rp-labels"><span class="r">RUN ${team.off.run}%</span><span class="p">PASS ${team.off.pass}%</span></div>
+        <div class="philosophy">"${team.off.phil}"</div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-kicker">▸ DEFENSE</div>
+          <div class="panel-scheme" style="color:${team.accent};">${team.def.name}</div>
+        </div>
+        <div class="meta-row"><span class="pill">${team.def.pkg}</span><span class="pill">${team.def.shell}</span></div>
+        <div class="philosophy">"${team.def.phil}"</div>
+      </div>
+      <div class="matchup">
+        <div class="matchup-grid">
+          <div class="mu-block">
+            <div class="mu-label s">▲ STRONG VS</div>
+            <div class="mu-teams">
+              <div class="mu-chip">${team.strong[0]}</div>
+              <div class="mu-chip">${team.strong[1]}</div>
+            </div>
+          </div>
+          <div class="mu-block">
+            <div class="mu-label w">▼ WEAK VS</div>
+            <div class="mu-teams">
+              <div class="mu-chip">${team.weak[0]}</div>
+              <div class="mu-chip">${team.weak[1]}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cta"><button class="btn" style="border-color:${team.secondary};color:${team.accent};">▸ HOLD TO COACH</button></div>
+    </div>`;
+}
+
+function render(){ stage.innerHTML = teams.map((t,i)=>buildCard(t,i)).join(''); bindNav(); }
+function go(d){ active = (active+d+teams.length)%teams.length; render(); }
+function bindNav(){
+  stage.querySelectorAll('.nav-up').forEach(el=>el.addEventListener('click',()=>go(-1)));
+  stage.querySelectorAll('.nav-down').forEach(el=>el.addEventListener('click',()=>go(+1)));
+}
+let touchY=0;
+stage.addEventListener('touchstart',e=>touchY=e.touches[0].clientY);
+stage.addEventListener('touchend',e=>{const d=e.changedTouches[0].clientY-touchY;if(Math.abs(d)>50)go(d>0?-1:+1);});
+window.addEventListener('keydown',e=>{if(e.key==='ArrowDown')go(+1);if(e.key==='ArrowUp')go(-1);});
+render();
+</script>
+</body></html>

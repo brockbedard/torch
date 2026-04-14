@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TORCH — Team Select V2: Trading Card</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{background:#0A0804;color:#fff;font-family:'Rajdhani',sans-serif;height:100%;overflow:hidden;}
+
+  .frame{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000;}
+  .phone{width:390px;height:844px;border-radius:48px;overflow:hidden;position:relative;background:#0A0804;box-shadow:0 30px 80px rgba(0,0,0,0.8);}
+  @media(max-width:430px){.frame{padding:0;}.phone{width:100%;height:100%;border-radius:0;}}
+
+  .stage{position:absolute;inset:0;overflow:hidden;}
+
+  .card{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;
+    padding:50px 22px 36px;
+    transition:transform .55s cubic-bezier(.22,1,.36,1), opacity .35s ease;
+    opacity:0;transform:translateY(100%);pointer-events:none;
+  }
+  .card.active{opacity:1;transform:translateY(0);pointer-events:auto;}
+  .card.prev{opacity:0;transform:translateY(-30%);}
+
+  .ambient{position:absolute;inset:0;z-index:0;overflow:hidden;}
+  .ambient::before{content:"";position:absolute;inset:0;}
+  .ambient::after{content:"";position:absolute;left:-20%;top:-10%;width:140%;height:60%;filter:blur(80px);opacity:0.4;}
+
+  .top{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:5;}
+  .position{font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:600;letter-spacing:3px;color:#888;}
+  .position b{color:#fff;}
+  .tier{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:9.5px;letter-spacing:2.8px;padding:6px 11px;border:1px solid;border-radius:2px;}
+  .tier.pwr{border-color:#EBB010;color:#EBB010;background:rgba(235,176,16,0.08);}
+  .tier.cnt{border-color:#fff;color:#fff;background:rgba(255,255,255,0.06);}
+  .tier.und{border-color:#FF6B3A;color:#FF6B3A;background:rgba(255,107,58,0.08);}
+
+  .motto{font-family:'Barlow Condensed',sans-serif;font-style:italic;font-weight:400;font-size:12px;color:rgba(255,255,255,0.55);text-align:center;letter-spacing:1.5px;margin-top:14px;position:relative;z-index:5;}
+
+  /* The card itself */
+  .trading{flex:1;display:flex;flex-direction:column;background:linear-gradient(180deg, rgba(20,16,8,0.85) 0%, rgba(10,8,4,0.95) 100%);border:1px solid rgba(255,255,255,0.1);border-radius:8px;margin-top:18px;overflow:hidden;position:relative;z-index:5;box-shadow:0 24px 48px rgba(0,0,0,0.6);}
+  .trading::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;}
+
+  /* Logo half */
+  .hero{flex:1.05;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+  .hero::before{content:"";position:absolute;inset:0;}
+  .hero::after{content:"";position:absolute;inset:0;background:radial-gradient(60% 80% at 50% 50%, transparent, rgba(0,0,0,0.5));}
+  .shield{width:170px;height:200px;position:relative;display:flex;align-items:center;justify-content:center;z-index:2;}
+  .shield svg{width:100%;height:100%;filter:drop-shadow(0 8px 22px rgba(0,0,0,0.5));}
+  .shield .abbr{position:absolute;font-family:'Teko',sans-serif;font-weight:600;font-size:62px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,0.5);}
+
+  .name-block{position:absolute;bottom:14px;left:0;right:0;text-align:center;z-index:3;}
+  .name{font-family:'Teko',sans-serif;font-weight:600;font-size:42px;line-height:1;letter-spacing:1px;text-transform:uppercase;}
+  .school{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:9.5px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-top:4px;}
+
+  /* Stat grid */
+  .stats{flex:0.95;border-top:1px solid rgba(255,255,255,0.08);display:grid;grid-template-columns:1fr 1fr;background:rgba(0,0,0,0.45);}
+  .stat{padding:14px 16px;border-right:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;justify-content:center;}
+  .stat:nth-child(2n){border-right:none;}
+  .stat:nth-child(n+3){border-bottom:none;}
+  .stat-label{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:9px;letter-spacing:2.5px;color:#888;margin-bottom:5px;}
+  .stat-value{font-family:'Teko',sans-serif;font-weight:500;font-size:21px;letter-spacing:1px;line-height:1;}
+  .stat-value small{font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:600;letter-spacing:2px;display:block;color:rgba(255,255,255,0.6);margin-top:3px;}
+
+  .stars{display:flex;gap:3px;margin-top:2px;}
+  .star{width:14px;height:14px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#3a3530;}
+  .star.on{color:#EBB010;text-shadow:0 0 8px rgba(235,176,16,0.5);}
+
+  /* Matchup hint */
+  .matchup{margin-top:14px;padding:11px 14px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.06);border-radius:4px;font-family:'Rajdhani',sans-serif;font-size:10px;letter-spacing:1.5px;color:rgba(255,255,255,0.65);position:relative;z-index:5;display:flex;align-items:center;gap:14px;justify-content:center;}
+  .matchup .k{color:#888;font-weight:700;letter-spacing:2px;}
+  .matchup .v{color:#fff;font-weight:600;}
+  .matchup .vs{color:#FF6B3A;}
+
+  /* CTA */
+  .cta{margin-top:14px;position:relative;z-index:5;}
+  .btn{width:100%;height:54px;border:1.5px solid;border-radius:4px;color:#fff;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:4px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;background:rgba(0,0,0,0.4);position:relative;overflow:hidden;transition:transform .15s;}
+  .btn::after{content:"";position:absolute;left:0;top:0;bottom:0;width:0%;background:rgba(255,255,255,0.2);}
+  .btn:active::after{width:100%;transition:width 1.4s linear;}
+  .btn:active{transform:scale(0.98);}
+
+  .nav-up,.nav-down{position:absolute;left:0;right:0;height:18%;z-index:4;}
+  .nav-up{top:50px;} .nav-down{bottom:80px;}
+
+  .label{position:fixed;top:14px;left:50%;transform:translateX(-50%);font-family:'Rajdhani',sans-serif;font-size:11px;letter-spacing:3px;color:#888;z-index:1000;background:rgba(0,0,0,0.7);padding:5px 14px;border-radius:2px;}
+  .label b{color:#EBB010;font-weight:700;}
+  @media(max-width:430px){.label{display:none;}}
+</style>
+</head>
+<body>
+<div class="label">Team Select Mockup · <b>V2 — TRADING CARD</b> · tap mid-top/bottom to cycle</div>
+<div class="frame"><div class="phone"><div class="stage" id="stage"></div></div></div>
+<script>
+const teams = [
+  {id:'pronghorns',name:'PRONGHORNS',abbr:'LAR',school:'LARKSPUR STATE · NEBRASKA',motto:'"Outrun the horizon"',tier:'POWERHOUSE',tierClass:'pwr',off:'Power Spread',def:'Pattern Match',runPass:'65/35',region:'Plains',stars:3,strong:['MAPLES','SPECTRES'],primary:'#166534',secondary:'#F59E0B',accent:'#FCD34D'},
+  {id:'stags',name:'SPECTRES',abbr:'HSU',school:'HOLLOWRIDGE STATE · WV',motto:'"Strike from the shadows"',tier:'POWERHOUSE',tierClass:'pwr',off:'Spread Option',def:'Robber',runPass:'60/40',region:'Allegheny',stars:3,strong:['BOARS','DOLPHINS'],primary:'#5DADE2',secondary:'#1B4F72',accent:'#85C1E9'},
+  {id:'maples',name:'MAPLES',abbr:'UVM',school:'VERMONT · ST. MARLOWE',motto:'"Honor the lineage"',tier:'CONTENDER',tierClass:'cnt',off:'Multiple',def:'Disguise',runPass:'45/55',region:'Northeast',stars:2,strong:['DOLPHINS','SALAMANDERS'],primary:'#7A1E2E',secondary:'#D97706',accent:'#FCD34D'},
+  {id:'salamanders',name:'SALAMANDERS',abbr:'HEL',school:'HELIX UNIVERSITY · TX',motto:'"Loud on purpose"',tier:'CONTENDER',tierClass:'cnt',off:'Air Raid',def:"Bend Don't Break",runPass:'20/80',region:'Hill Country',stars:2,strong:['SERPENTS','PRONGHORNS'],primary:'#2ECC71',secondary:'#E84393',accent:'#F39C12'},
+  {id:'wolves',name:'DOLPHINS',abbr:'CBU',school:'CORAL BAY · FLORIDA',motto:'"Ride the current"',tier:'CONTENDER',tierClass:'cnt',off:'Vertical Pass',def:'Press Man',runPass:'40/60',region:'South FL',stars:2,strong:['SERPENTS','RACCOONS'],primary:'#D13A7A',secondary:'#6B1E7F',accent:'#FF7EB3'},
+  {id:'serpents',name:'SERPENTS',abbr:'BWU',school:'BLACKWATER · LOUISIANA',motto:'"Death by a thousand cuts"',tier:'CONTENDER',tierClass:'cnt',off:'Triple Option',def:'Gap Control',runPass:'85/15',region:'Atchafalaya',stars:2,strong:['BOARS','SPECTRES'],primary:'#14B8A6',secondary:'#F5C542',accent:'#5EEAD4'},
+  {id:'sentinels',name:'BOARS',abbr:'RID',school:'RIDGEMONT · ARKANSAS',motto:'"Eyes up, hands ready"',tier:'UNDERDOG',tierClass:'und',off:'Smashmouth',def:'Cover 3',runPass:'70/30',region:'Ozarks',stars:1,strong:['MAPLES','RACCOONS'],primary:'#8B0000',secondary:'#C4A265',accent:'#EBB010'},
+  {id:'raccoons',name:'RACCOONS',abbr:'SAC',school:'SAC POLY · CALIFORNIA',motto:'"What\'s yours is ours"',tier:'UNDERDOG',tierClass:'und',off:'Veer & Shoot',def:'Flyover',runPass:'50/50',region:'Sacramento',stars:1,strong:['SALAMANDERS','PRONGHORNS'],primary:'#52525B',secondary:'#FF8C00',accent:'#84CC16'},
+];
+
+let active = 0;
+const stage = document.getElementById('stage');
+
+function shieldSVG(team){
+  return `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="cg-${team.id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${team.accent}"/>
+        <stop offset="0.5" stop-color="${team.primary}"/>
+        <stop offset="1" stop-color="${team.secondary}"/>
+      </linearGradient>
+    </defs>
+    <path d="M100,5 L195,32 L195,140 Q195,200 100,225 Q5,200 5,140 L5,32 Z"
+      fill="url(#cg-${team.id})" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
+  </svg>
+  <span class="abbr">${team.abbr}</span>`;
+}
+
+function stars(n){
+  let s='';
+  for(let i=0;i<3;i++) s+=`<div class="star ${i<n?'on':''}">★</div>`;
+  return `<div class="stars">${s}</div>`;
+}
+
+function buildCard(team, idx){
+  return `
+    <div class="card ${idx===active?'active':''}" data-idx="${idx}">
+      <div class="ambient" style="background:radial-gradient(120% 60% at 50% 0%, ${team.primary}38 0%, transparent 65%), #0A0804;"></div>
+      <div class="nav-up"></div><div class="nav-down"></div>
+      <div class="top">
+        <div class="position"><b>${String(idx+1).padStart(2,'0')}</b> / 08</div>
+        <div class="tier ${team.tierClass}">${team.tier}</div>
+      </div>
+      <div class="motto">${team.motto}</div>
+      <div class="trading" style="border-top:5px solid ${team.primary};">
+        <div class="hero" style="background:linear-gradient(180deg, ${team.primary}cc 0%, ${team.secondary}88 100%);">
+          <div class="shield">${shieldSVG(team)}</div>
+          <div class="name-block">
+            <div class="name">${team.name}</div>
+            <div class="school">${team.school}</div>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="stat-label">OFFENSE</div><div class="stat-value">${team.off}<small>${team.runPass} R/P</small></div></div>
+          <div class="stat"><div class="stat-label">DEFENSE</div><div class="stat-value">${team.def}<small>BASE SHELL</small></div></div>
+          <div class="stat"><div class="stat-label">REGION</div><div class="stat-value">${team.region}<small>HOME TURF</small></div></div>
+          <div class="stat"><div class="stat-label">TALENT</div>${stars(team.stars)}</div>
+        </div>
+      </div>
+      <div class="matchup"><span class="k">EDGE</span><span class="v">${team.strong[0]} · ${team.strong[1]}</span></div>
+      <div class="cta"><button class="btn" style="border-color:${team.secondary};color:${team.accent};">SIGN CONTRACT</button></div>
+    </div>`;
+}
+
+function render(){ stage.innerHTML = teams.map((t,i)=>buildCard(t,i)).join(''); bindNav(); }
+function go(d){ active = (active+d+teams.length)%teams.length; render(); }
+function bindNav(){
+  stage.querySelectorAll('.nav-up').forEach(el=>el.addEventListener('click',()=>go(-1)));
+  stage.querySelectorAll('.nav-down').forEach(el=>el.addEventListener('click',()=>go(+1)));
+}
+let touchY=0;
+stage.addEventListener('touchstart',e=>touchY=e.touches[0].clientY);
+stage.addEventListener('touchend',e=>{const d=e.changedTouches[0].clientY-touchY;if(Math.abs(d)>50)go(d>0?-1:+1);});
+window.addEventListener('keydown',e=>{if(e.key==='ArrowDown')go(+1);if(e.key==='ArrowUp')go(-1);});
+render();
+</script>
+</body></html>
