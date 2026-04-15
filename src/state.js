@@ -1,7 +1,7 @@
 /**
- * TORCH v0.26.1 — Global State
- * New flow: Home -> Team Select -> (VS transition) -> Gameplay
- * Season system: 3 games per season, cards + points persist.
+ * TORCH — Global State
+ * Flow: Home -> Team Select -> (VS transition) -> Gameplay
+ * Season system: round-robin across the Ember Eight, cards + points persist.
  */
 
 import { TEAMS, getTeamById, getSeasonOpponents } from './data/teams.js';
@@ -9,10 +9,14 @@ import { SENTINELS_OFF_PLAYS, SENTINELS_DEF_PLAYS } from './data/sentinelsPlays.
 import { WOLVES_OFF_PLAYS, WOLVES_DEF_PLAYS } from './data/wolvesPlays.js';
 import { STAGS_OFF_PLAYS, STAGS_DEF_PLAYS } from './data/stagsPlays.js';
 import { SERPENTS_OFF_PLAYS, SERPENTS_DEF_PLAYS } from './data/serpentsPlays.js';
+import { PRONGHORNS_OFF_PLAYS, PRONGHORNS_DEF_PLAYS } from './data/pronghornsPlays.js';
+import { SALAMANDERS_OFF_PLAYS, SALAMANDERS_DEF_PLAYS } from './data/salamandersPlays.js';
+import { MAPLES_OFF_PLAYS, MAPLES_DEF_PLAYS } from './data/maplesPlays.js';
+import { RACCOONS_OFF_PLAYS, RACCOONS_DEF_PLAYS } from './data/raccoonsPlays.js';
 import { getOffenseRoster, getDefenseRoster } from './data/players.js';
 
-export var VERSION = '0.37.0';
-export var VERSION_NAME = 'Fresh Paint';
+export var VERSION = '0.40.0';
+export var VERSION_NAME = 'Ember Eight';
 
 // Game speed is locked to normal — multiplier always 1.0.
 // Stub export kept so call sites don't need refactoring.
@@ -149,10 +153,14 @@ export function getOtherTeam(id) {
 }
 
 var _playLookup = {
-  sentinels: { offense: SENTINELS_OFF_PLAYS, defense: SENTINELS_DEF_PLAYS },
-  wolves:    { offense: WOLVES_OFF_PLAYS, defense: WOLVES_DEF_PLAYS },
-  stags:     { offense: STAGS_OFF_PLAYS, defense: STAGS_DEF_PLAYS },
-  serpents:  { offense: SERPENTS_OFF_PLAYS, defense: SERPENTS_DEF_PLAYS },
+  sentinels:   { offense: SENTINELS_OFF_PLAYS,   defense: SENTINELS_DEF_PLAYS },
+  wolves:      { offense: WOLVES_OFF_PLAYS,      defense: WOLVES_DEF_PLAYS },
+  stags:       { offense: STAGS_OFF_PLAYS,       defense: STAGS_DEF_PLAYS },
+  serpents:    { offense: SERPENTS_OFF_PLAYS,    defense: SERPENTS_DEF_PLAYS },
+  pronghorns:  { offense: PRONGHORNS_OFF_PLAYS,  defense: PRONGHORNS_DEF_PLAYS },
+  salamanders: { offense: SALAMANDERS_OFF_PLAYS, defense: SALAMANDERS_DEF_PLAYS },
+  maples:      { offense: MAPLES_OFF_PLAYS,      defense: MAPLES_DEF_PLAYS },
+  raccoons:    { offense: RACCOONS_OFF_PLAYS,    defense: RACCOONS_DEF_PLAYS },
 };
 
 export function getOffCards(teamId) {
@@ -171,14 +179,22 @@ export function getDefCards(teamId) {
 // ============================================================
 
 export var TEAM_DRAW_WEIGHTS = {
-  // Boars — Power Spread: 55% run / 45% pass. Run cards dominate.
-  sentinels: { RUN: 4, SHORT: 1.5, DEEP: 1, QUICK: 1, SCREEN: 0.5 },
-  // Dolphins — Spread Option: 50/50 but QB-run heavy. Zone read + QB draw + balanced pass.
-  wolves:    { RUN: 3, SHORT: 2, DEEP: 1, QUICK: 2, SCREEN: 2 },
-  // Spectres — Air Raid: 30% run / 70% pass. Quick + deep pass dominate.
-  stags:     { RUN: 0.5, SHORT: 3, DEEP: 3, QUICK: 4, SCREEN: 2 },
-  // Serpents — Multiple/Pro Style: 45/55 balanced. No bias — master of none.
-  serpents:  { RUN: 2, SHORT: 2, DEEP: 2, QUICK: 2, SCREEN: 2 },
+  // Boars — Smashmouth Pro: 70/30 run. Two TEs, downhill RB.
+  sentinels:   { RUN: 4, SHORT: 2, DEEP: 1, QUICK: 1, SCREEN: 0.5 },
+  // Dolphins — Vertical Pass: 40/60. Take the top off.
+  wolves:      { RUN: 1.5, SHORT: 2, DEEP: 4, QUICK: 2, SCREEN: 1.5 },
+  // Spectres — Spread Option: 60/40. Dual-threat QB, balanced pass.
+  stags:       { RUN: 3, SHORT: 2, DEEP: 1.5, QUICK: 2, SCREEN: 1 },
+  // Serpents — Triple Option: 85/15. Options dominate, minimal PA pass.
+  serpents:    { RUN: 5, SHORT: 1, DEEP: 1, QUICK: 0.5, SCREEN: 0.5 },
+  // Pronghorns — Power Spread: 65/35. RPO conflict + pulling guards.
+  pronghorns:  { RUN: 3, SHORT: 2, DEEP: 1.5, QUICK: 2, SCREEN: 1 },
+  // Salamanders — Air Raid: 20/80. Mesh forever, Four Verts.
+  salamanders: { RUN: 0.5, SHORT: 3, DEEP: 2.5, QUICK: 4, SCREEN: 2 },
+  // Maples — Multiple: 45/55 balanced. Master of disguise.
+  maples:      { RUN: 2, SHORT: 2.5, DEEP: 1.5, QUICK: 2, SCREEN: 1.5 },
+  // Raccoons — Veer & Shoot: 50/50 RPO-driven. Sideline splits.
+  raccoons:    { RUN: 2, SHORT: 2, DEEP: 2, QUICK: 3, SCREEN: 2 },
 };
 
 export function getDrawWeight(teamId, playType) {
@@ -208,7 +224,7 @@ export function fmtClock(sec) {
 export function createInitialState() {
   return {
     screen: 'home',
-    team: null,           // 'sentinels' | 'wolves' | 'stags' | 'serpents'
+    team: null,           // one of the 8 Ember Eight team ids
     difficulty: null,     // 'EASY' | 'MEDIUM' | 'HARD' (null = auto-Easy on first game)
     isFirstSeason: true,  // Progressive disclosure flag — flips after first season
 

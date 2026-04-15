@@ -9,6 +9,8 @@ import { GS, setGs, getTeam } from '../../state.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
 import { buildTorchCard, buildHomeCard } from '../components/cards.js';
 import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
+import { renderTeamWordmark } from '../teamWordmark.js';
+import { TEAM_WORDMARKS } from '../../data/teamWordmarks.js';
 import { FLAME_PATH, buildTorchHeader, buildFlameBadgeButton, buildAccentBar } from '../components/brand.js';
 import { flameIconSVG } from '../../utils/flameIcon.js';
 import AudioStateManager from '../../engine/audioManager.js';
@@ -58,11 +60,17 @@ export function buildHalftime() {
   var scorePanel = document.createElement('div');
   scorePanel.style.cssText = 'display:flex;align-items:center;width:100%;max-width:340px;border-radius:8px;background:linear-gradient(180deg,#0e0a06,#080604);border:1px solid rgba(255,255,255,0.08);overflow:hidden;';
 
-  // Home team side
+  // Per-team wordmark size for the halftime score panel. heroSize × 0.38
+  // lands roughly 16-22px depending on the font — fits the panel width and
+  // reads as the team's typographic identity, not generic Teko.
+  function _halfSize(tid) {
+    var wm = TEAM_WORDMARKS[tid];
+    return Math.max(15, Math.round((wm && wm.heroSize ? wm.heroSize : 40) * 0.38));
+  }
   scorePanel.innerHTML =
-    '<div style="flex:1;padding:10px 8px;text-align:center;background:linear-gradient(180deg,' + teamColor + '08,transparent);">' +
+    '<div id="htHome" style="flex:1;padding:10px 8px;text-align:center;background:linear-gradient(180deg,' + teamColor + '08,transparent);">' +
       '<div style="display:flex;justify-content:center;">' + renderTeamBadge(GS.team, 32) + '</div>' +
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:12px;color:" + teamColor + ";letter-spacing:1px;margin-top:4px;\">" + team.name + '</div>' +
+      '<div id="htHomeName" style="display:flex;justify-content:center;margin-top:4px;"></div>' +
       "<div style=\"font-family:'Teko';font-weight:700;font-size:36px;color:#fff;line-height:0.9;\">" + humanScore + '</div>' +
     '</div>' +
     '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 6px;">' +
@@ -70,12 +78,19 @@ export function buildHalftime() {
       "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#333;letter-spacing:2px;\">HALF</div>" +
       '<div style="width:1px;height:20px;background:rgba(255,255,255,0.08);"></div>' +
     '</div>' +
-    '<div style="flex:1;padding:10px 8px;text-align:center;background:linear-gradient(180deg,' + oppColor + '08,transparent);">' +
+    '<div id="htAway" style="flex:1;padding:10px 8px;text-align:center;background:linear-gradient(180deg,' + oppColor + '08,transparent);">' +
       '<div style="display:flex;justify-content:center;">' + renderTeamBadge(GS.opponent, 32) + '</div>' +
-      "<div style=\"font-family:'Teko';font-weight:700;font-size:12px;color:" + oppColor + ";letter-spacing:1px;margin-top:4px;\">" + opp.name + '</div>' +
+      '<div id="htAwayName" style="display:flex;justify-content:center;margin-top:4px;"></div>' +
       "<div style=\"font-family:'Teko';font-weight:700;font-size:36px;color:#fff;line-height:0.9;\">" + cpuScore + '</div>' +
     '</div>';
   content.appendChild(scorePanel);
+  // Inject the per-team wordmarks into the placeholder slots
+  var _hHome = scorePanel.querySelector('#htHomeName');
+  var _hAway = scorePanel.querySelector('#htAwayName');
+  var _hHomeWm = renderTeamWordmark(GS.team, 't2', { mascot: true, fontSize: _halfSize(GS.team) });
+  var _hAwayWm = renderTeamWordmark(GS.opponent, 't2', { mascot: true, fontSize: _halfSize(GS.opponent) });
+  if (_hHome && _hHomeWm) _hHome.appendChild(_hHomeWm);
+  if (_hAway && _hAwayWm) _hAway.appendChild(_hAwayWm);
 
   // ── MOMENTUM SWING (KPA tug-of-war) ──
   // Hero stat — net Kindle Points Added differential visualized as a

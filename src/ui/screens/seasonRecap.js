@@ -7,6 +7,8 @@ import { gsap } from 'gsap';
 import { SND } from '../../engine/sound.js';
 import { GS, setGs, getTeam } from '../../state.js';
 import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
+import { renderTeamWordmark } from '../teamWordmark.js';
+import { TEAM_WORDMARKS } from '../../data/teamWordmarks.js';
 import { getSeasonOpponents } from '../../data/teams.js';
 import AudioStateManager from '../../engine/audioManager.js';
 
@@ -56,8 +58,27 @@ export function buildSeasonRecap() {
     "<div style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#555;letter-spacing:3px;\">CONFERENCE SEASON</div>" +
     "<div style=\"font-family:'Teko';font-weight:700;font-size:36px;color:" + titleColor + ";letter-spacing:4px;text-shadow:0 0 20px " + titleColor + "40;margin-top:4px;opacity:0;\" id='sr-title'>" + titleText + "</div>" +
     "<div style=\"display:flex;justify-content:center;margin-top:8px;opacity:0;\" id='sr-badge'>" + renderTeamBadge(GS.team, 48) + "</div>" +
-    "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:" + team.accent + ";letter-spacing:3px;margin-top:4px;opacity:0;\" id='sr-record'>" + team.name + ' ' + record + "</div>";
+    '<div id="sr-record" style="display:flex;align-items:baseline;justify-content:center;gap:8px;margin-top:6px;opacity:0;"></div>';
   el.appendChild(header);
+  // Populate the record slot with per-team wordmark + (W-L)
+  (function() {
+    var _srCfg = TEAM_WORDMARKS[GS.team] || {};
+    var _srSize = Math.max(18, Math.round((_srCfg.heroSize || 40) * 0.45));
+    var _srSlot = header.querySelector('#sr-record');
+    if (!_srSlot) return;
+    var _srWm = renderTeamWordmark(GS.team, 't2', { mascot: true, fontSize: _srSize });
+    if (_srWm) _srSlot.appendChild(_srWm);
+    else {
+      var fb = document.createElement('div');
+      fb.style.cssText = "font-family:'Teko';font-weight:700;font-size:22px;color:" + team.accent + ";letter-spacing:3px;";
+      fb.textContent = team.name;
+      _srSlot.appendChild(fb);
+    }
+    var rec = document.createElement('span');
+    rec.style.cssText = "font-family:'Rajdhani',monospace;font-weight:600;font-size:14px;color:rgba(255,255,255,0.5);letter-spacing:0.5px;";
+    rec.textContent = '(' + record + ')';
+    _srSlot.appendChild(rec);
+  })();
 
   // ── GAME RESULTS ──
   var gamesWrap = document.createElement('div');
@@ -79,12 +100,24 @@ export function buildSeasonRecap() {
       "<div style='flex-shrink:0;'>" + renderTeamBadge(rowOppId, 28) + "</div>" +
       "<div style='flex:1;'>" +
         "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:#555;letter-spacing:2px;\">" + gameLabel + "</div>" +
-        "<div style=\"font-family:'Teko';font-weight:700;font-size:16px;color:#ccc;letter-spacing:1px;\">vs " + oppTeam.name + "</div>" +
+        '<div class="sr-row-opp" style="display:flex;align-items:center;gap:6px;">' +
+          "<span style=\"font-family:'Rajdhani';font-weight:500;font-size:11px;color:#666;letter-spacing:1px;\">VS</span>" +
+          '<span class="sr-row-opp-slot"></span>' +
+        '</div>' +
       "</div>" +
       "<div style='text-align:right;'>" +
         "<div style=\"font-family:'Teko';font-weight:700;font-size:18px;color:" + resultColor + ";letter-spacing:2px;\">" + r.score + '-' + r.oppScore + "</div>" +
         "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:9px;color:" + resultColor + ";letter-spacing:1px;\">" + resultText + "</div>" +
       "</div>";
+    // Inject opponent wordmark into the "VS <opponent>" slot
+    var _oppSlot = row.querySelector('.sr-row-opp-slot');
+    if (_oppSlot) {
+      var _oppWmCfg = TEAM_WORDMARKS[rowOppId] || {};
+      var _oppWmSize = Math.max(14, Math.round((_oppWmCfg.heroSize || 40) * 0.36));
+      var _oppWm = renderTeamWordmark(rowOppId, 't3', { mascot: true, fontSize: _oppWmSize });
+      if (_oppWm) _oppSlot.appendChild(_oppWm);
+      else _oppSlot.textContent = oppTeam.name;
+    }
     gamesWrap.appendChild(row);
   }
   el.appendChild(gamesWrap);

@@ -9,6 +9,8 @@ import { GS, setGs, getTeam } from '../../state.js';
 import { getOffenseRoster, getDefenseRoster } from '../../data/players.js';
 import { TEAMS } from '../../data/teams.js';
 import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
+import { renderTeamWordmark } from '../teamWordmark.js';
+import { TEAM_WORDMARKS } from '../../data/teamWordmarks.js';
 import { renderFlamePips } from '../components/cards.js';
 import { FLAME_PATH, buildTorchHeader, buildFlameBadgeButton, buildAccentBar } from '../components/brand.js';
 import { SND } from '../../engine/sound.js';
@@ -93,7 +95,7 @@ export function buildRoster() {
       '<div style="flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));">' + renderTeamBadge(tid, 38) + '</div>' +
       '<div style="flex:1;min-width:0;">' +
         "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:8px;color:rgba(255,255,255,0.35);letter-spacing:1.5px;line-height:1;\">" + (tm.school || '').toUpperCase() + "</div>" +
-        "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:#fff;letter-spacing:2px;line-height:1;margin-top:2px;\">" + tm.name.toUpperCase() + "</div>" +
+        '<div id="rosterHdrName" style="margin-top:2px;"></div>' +
         '<div style="display:flex;gap:6px;margin-top:3px;align-items:center;">' +
           "<span style=\"font-family:'Oswald';font-weight:700;font-size:8px;color:#00ff44;letter-spacing:1px;\">OFF</span>" +
           "<span style=\"font-family:'Oswald';font-weight:700;font-size:9px;color:#fff;letter-spacing:0.5px;\">" + (tm.offScheme || '') + "</span>" +
@@ -103,6 +105,12 @@ export function buildRoster() {
         '</div>' +
       '</div>';
     content.appendChild(teamHdr);
+    // Inject per-team wordmark in place of the Teko team name
+    var _rwmCfg = TEAM_WORDMARKS[tid] || {};
+    var _rwmSize = Math.max(16, Math.round((_rwmCfg.heroSize || 40) * 0.40));
+    var _rwm = renderTeamWordmark(tid, 't2', { mascot: true, fontSize: _rwmSize });
+    var _rwmSlot = teamHdr.querySelector('#rosterHdrName');
+    if (_rwmSlot && _rwm) _rwmSlot.appendChild(_rwm);
 
     // Motto micro-strip (if present)
     if (tm.motto) {

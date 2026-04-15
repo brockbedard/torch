@@ -11,16 +11,27 @@ import { SENTINELS_OFF_PLAYS, SENTINELS_DEF_PLAYS } from '../data/sentinelsPlays
 import { WOLVES_OFF_PLAYS, WOLVES_DEF_PLAYS } from '../data/wolvesPlays.js';
 import { STAGS_OFF_PLAYS, STAGS_DEF_PLAYS } from '../data/stagsPlays.js';
 import { SERPENTS_OFF_PLAYS, SERPENTS_DEF_PLAYS } from '../data/serpentsPlays.js';
+import { PRONGHORNS_OFF_PLAYS, PRONGHORNS_DEF_PLAYS } from '../data/pronghornsPlays.js';
+import { SALAMANDERS_OFF_PLAYS, SALAMANDERS_DEF_PLAYS } from '../data/salamandersPlays.js';
+import { MAPLES_OFF_PLAYS, MAPLES_DEF_PLAYS } from '../data/maplesPlays.js';
+import { RACCOONS_OFF_PLAYS, RACCOONS_DEF_PLAYS } from '../data/raccoonsPlays.js';
 
-var TEAMS = ['sentinels', 'wolves', 'stags', 'serpents'];
-var TEAM_NAMES = { sentinels: 'BOARS', wolves: 'DOLPHINS', stags: 'SPECTRES', serpents: 'SERPENTS' };
+var TEAMS = ['sentinels', 'wolves', 'stags', 'serpents', 'pronghorns', 'salamanders', 'maples', 'raccoons'];
+var TEAM_NAMES = {
+  sentinels: 'BOARS', wolves: 'DOLPHINS', stags: 'SPECTRES', serpents: 'SERPENTS',
+  pronghorns: 'PRONGHORNS', salamanders: 'SALAMANDERS', maples: 'MAPLES', raccoons: 'RACCOONS',
+};
 var DIFFICULTIES = ['EASY', 'MEDIUM', 'HARD', 'RANDOM'];
 
 var _plays = {
-  sentinels: { off: SENTINELS_OFF_PLAYS, def: SENTINELS_DEF_PLAYS },
-  wolves: { off: WOLVES_OFF_PLAYS, def: WOLVES_DEF_PLAYS },
-  stags: { off: STAGS_OFF_PLAYS, def: STAGS_DEF_PLAYS },
-  serpents: { off: SERPENTS_OFF_PLAYS, def: SERPENTS_DEF_PLAYS },
+  sentinels:   { off: SENTINELS_OFF_PLAYS,   def: SENTINELS_DEF_PLAYS },
+  wolves:      { off: WOLVES_OFF_PLAYS,      def: WOLVES_DEF_PLAYS },
+  stags:       { off: STAGS_OFF_PLAYS,       def: STAGS_DEF_PLAYS },
+  serpents:    { off: SERPENTS_OFF_PLAYS,    def: SERPENTS_DEF_PLAYS },
+  pronghorns:  { off: PRONGHORNS_OFF_PLAYS,  def: PRONGHORNS_DEF_PLAYS },
+  salamanders: { off: SALAMANDERS_OFF_PLAYS, def: SALAMANDERS_DEF_PLAYS },
+  maples:      { off: MAPLES_OFF_PLAYS,      def: MAPLES_DEF_PLAYS },
+  raccoons:    { off: RACCOONS_OFF_PLAYS,    def: RACCOONS_DEF_PLAYS },
 };
 function getOffCards(tid) { return _plays[tid].off.slice(0, 5); }
 function getDefCards(tid) { return _plays[tid].def.slice(0, 5); }

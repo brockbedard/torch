@@ -17,6 +17,8 @@ import { showShop } from '../components/shop.js';
 // tooltip system removed — will be rebuilt in v2
 import AudioStateManager from '../../engine/audioManager.js';
 import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
+import { renderTeamWordmark } from '../teamWordmark.js';
+import { TEAM_WORDMARKS } from '../../data/teamWordmarks.js';
 import { getConditionEffects } from '../../data/gameConditions.js';
 import { checkPlayCombos } from '../../data/playSequenceCombos.js';
 import { generateCommentary, generateContext, resetNarrative } from '../../engine/commentary.js';
@@ -553,9 +555,13 @@ export function buildGameplay() {
 
     // Home panel (left)
     const ctPanel = document.createElement('div'); ctPanel.className = 'T-sb-panel T-sb-panel-home';
-    const ctNameEl = document.createElement('div'); ctNameEl.className = 'T-sb-name';
-    ctNameEl.style.color = ct.accent;
-    ctNameEl.textContent = ct.name.toUpperCase();
+    // Scorebug wordmark — full mascot in team font at scorebugSize (per-team
+    // tuned so long names still fit the panel). Rendered via T3 tier so
+    // text-shadow is dropped; mascot flag swaps abbr for the full name.
+    var _ctSize = (TEAM_WORDMARKS[ct.id] && TEAM_WORDMARKS[ct.id].scorebugSize) || 11;
+    const ctNameEl = renderTeamWordmark(ct.id, 't3', { mascot: true, fontSize: _ctSize }) ||
+      (function() { var e = document.createElement('div'); e.style.color = ct.accent; e.textContent = ct.name.toUpperCase(); return e; })();
+    ctNameEl.classList.add('T-sb-name');
     const ctScoreEl = document.createElement('div'); ctScoreEl.className = 'T-sb-score';
     const ctDotEl = document.createElement('div'); ctDotEl.className = 'T-sb-poss-dot';
     ctPanel.appendChild(ctNameEl);
@@ -582,11 +588,12 @@ export function buildGameplay() {
     center.appendChild(ballEl);
     row.appendChild(center);
 
-    // Away panel (right)
+    // Away panel (right) — full mascot + per-team scorebugSize
     const irPanel = document.createElement('div'); irPanel.className = 'T-sb-panel T-sb-panel-away';
-    const irNameEl = document.createElement('div'); irNameEl.className = 'T-sb-name';
-    irNameEl.style.color = ir.accent;
-    irNameEl.textContent = ir.name.toUpperCase();
+    var _irSize = (TEAM_WORDMARKS[ir.id] && TEAM_WORDMARKS[ir.id].scorebugSize) || 11;
+    const irNameEl = renderTeamWordmark(ir.id, 't3', { mascot: true, fontSize: _irSize }) ||
+      (function() { var e = document.createElement('div'); e.style.color = ir.accent; e.textContent = ir.name.toUpperCase(); return e; })();
+    irNameEl.classList.add('T-sb-name');
     const irScoreEl = document.createElement('div'); irScoreEl.className = 'T-sb-score'; irScoreEl.style.animationDelay = '1.7s';
     const irDotEl = document.createElement('div'); irDotEl.className = 'T-sb-poss-dot';
     irPanel.appendChild(irNameEl);
@@ -4002,10 +4009,18 @@ export function buildGameplay() {
         resultWrap.style.cssText = 'z-index:10;gap:6px;';
         overlay.appendChild(resultWrap);
 
-        // Team name
-        var teamNameEl = document.createElement('div');
-        teamNameEl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:18px;color:" + teamAccent + ";letter-spacing:6px;text-shadow:0 0 16px " + teamAccent + "66;opacity:0;transform:translateY(8px);";
-        teamNameEl.textContent = hTeam.name.toUpperCase();
+        // Team name — per-team wordmark, T1 hero at ~60% of heroSize so it
+        // pairs visually with the TOUCHDOWN 56px treatment without crowding.
+        var _tdWmCfg = TEAM_WORDMARKS[hTeam.id] || {};
+        var _tdWmSize = Math.max(20, Math.round((_tdWmCfg.heroSize || 40) * 0.6));
+        var teamNameEl = renderTeamWordmark(hTeam.id, 't1', { mascot: true, fontSize: _tdWmSize });
+        if (!teamNameEl) {
+          teamNameEl = document.createElement('div');
+          teamNameEl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:18px;color:" + teamAccent + ";letter-spacing:6px;text-shadow:0 0 16px " + teamAccent + "66;";
+          teamNameEl.textContent = hTeam.name.toUpperCase();
+        }
+        teamNameEl.style.opacity = '0';
+        teamNameEl.style.transform = 'translateY(8px)';
         resultWrap.appendChild(teamNameEl);
         try { gsap.to(teamNameEl, { opacity: 1, y: 0, duration: 0.2, delay: 0.3, ease: 'power2.out' }); } catch(e) { teamNameEl.style.opacity='1'; }
 
@@ -4878,11 +4893,19 @@ export function buildGameplay() {
     var accent = newPossTeam.accent || '#EBB010';
     var banner = document.createElement('div');
     banner.style.cssText = 'position:fixed;top:42%;left:50%;transform:translate(-50%,-50%);z-index:660;text-align:center;pointer-events:none;opacity:0;';
+    // Per-team wordmark replaces the old Teko uppercase name. Size tuned to
+    // match the previous 40px Teko visual weight across fonts.
+    var _pbCfg = TEAM_WORDMARKS[newPossTeam.id] || {};
+    var _pbSize = Math.max(24, Math.round((_pbCfg.heroSize || 40) * 0.7));
+    var _pbWm = renderTeamWordmark(newPossTeam.id, 't1', { mascot: true, fontSize: _pbSize });
     banner.innerHTML =
       "<div style=\"width:120px;height:1px;margin:0 auto 8px;background:linear-gradient(90deg,transparent," + accent + ",transparent);opacity:0;\" data-bar='top'></div>" +
-      "<div style=\"font-family:'Teko';font-weight:900;font-size:40px;color:" + accent + ";letter-spacing:5px;line-height:1;text-shadow:0 0 24px " + accent + "80,0 0 48px " + accent + "40,0 4px 12px rgba(0,0,0,0.9);\">" + newPossTeam.name.toUpperCase() + "</div>" +
+      '<div id="pbName" style="display:flex;justify-content:center;"></div>' +
       "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:11px;color:#aaa;letter-spacing:4px;margin-top:6px;\">HAVE THE BALL</div>" +
       "<div style=\"width:120px;height:1px;margin:8px auto 0;background:linear-gradient(90deg,transparent," + accent + ",transparent);opacity:0;\" data-bar='bot'></div>";
+    var _pbSlot = banner.querySelector('#pbName');
+    if (_pbSlot && _pbWm) _pbSlot.appendChild(_pbWm);
+    else if (_pbSlot) _pbSlot.innerHTML = "<div style=\"font-family:'Teko';font-weight:900;font-size:40px;color:" + accent + ";letter-spacing:5px;line-height:1;text-shadow:0 0 24px " + accent + "80,0 0 48px " + accent + "40,0 4px 12px rgba(0,0,0,0.9);\">" + newPossTeam.name.toUpperCase() + "</div>";
     el.appendChild(banner);
     var bars = banner.querySelectorAll('[data-bar]');
     try {
@@ -5318,12 +5341,20 @@ export function buildGameplay() {
       "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:11px;color:#888;letter-spacing:2px;margin-top:4px;\">" + resSub.toUpperCase() + "</div>";
     content.appendChild(heroWrap);
 
-    // ── Team strip (team name + accent bar) ──
+    // ── Team strip (team wordmark + accent bar) ──
     var teamStrip = document.createElement('div');
     teamStrip.style.cssText = 'text-align:center;opacity:0;';
-    teamStrip.innerHTML =
-      "<div style=\"font-family:'Oswald';font-weight:700;font-size:18px;color:" + pAccent + ";letter-spacing:6px;text-shadow:0 0 14px " + pAccent + "66;\">" + pTeam.name.toUpperCase() + "</div>" +
-      "<div style=\"width:48px;height:1px;margin:6px auto 0;background:linear-gradient(90deg,transparent," + pAccent + ",transparent);\"></div>";
+    var _tsCfg = TEAM_WORDMARKS[pTeam.id] || {};
+    var _tsSize = Math.max(16, Math.round((_tsCfg.heroSize || 40) * 0.42));
+    var _tsWm = renderTeamWordmark(pTeam.id, 't2', { mascot: true, fontSize: _tsSize });
+    var _tsNameSlot = document.createElement('div');
+    _tsNameSlot.style.cssText = 'display:flex;justify-content:center;';
+    if (_tsWm) _tsNameSlot.appendChild(_tsWm);
+    else _tsNameSlot.innerHTML = "<div style=\"font-family:'Oswald';font-weight:700;font-size:18px;color:" + pAccent + ";letter-spacing:6px;text-shadow:0 0 14px " + pAccent + "66;\">" + pTeam.name.toUpperCase() + "</div>";
+    teamStrip.appendChild(_tsNameSlot);
+    var _tsBar = document.createElement('div');
+    _tsBar.style.cssText = 'width:48px;height:1px;margin:6px auto 0;background:linear-gradient(90deg,transparent,' + pAccent + ',transparent);';
+    teamStrip.appendChild(_tsBar);
     content.appendChild(teamStrip);
 
     // ── Stat row (one line: PLAYS · YARDS · 1ST DOWNS · EPA) ──

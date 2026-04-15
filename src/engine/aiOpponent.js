@@ -6,12 +6,17 @@
 import { isRunType, checkOffensiveBadgeCombo } from './badgeCombos.js';
 import { traitSynergy, heatPenalty } from './personnelSystem.js';
 
-// Team archetype play-type multipliers — applied to all difficulty levels
+// Team archetype play-type multipliers — applied to all difficulty levels.
+// Mirrors the scheme lean of each Ember Eight playbook.
 var TEAM_AI_BIAS = {
-  sentinels: { RUN: 2.5, SHORT: 1.5, DEEP: 0.8, QUICK: 0.8, SCREEN: 0.5 },  // Power run
-  wolves:    { RUN: 2.0, SHORT: 1.5, DEEP: 0.8, QUICK: 1.5, SCREEN: 1.8 },  // Spread option
-  stags:     { RUN: 0.5, SHORT: 1.5, DEEP: 2.0, QUICK: 2.5, SCREEN: 1.5 },  // Air raid / spread RPO
-  serpents:  { RUN: 1.5, SHORT: 1.5, DEEP: 1.5, QUICK: 1.5, SCREEN: 1.0 },  // Multiple / balanced
+  sentinels:   { RUN: 2.8, SHORT: 1.5, DEEP: 0.8, QUICK: 0.8, SCREEN: 0.5 },  // Smashmouth
+  wolves:      { RUN: 1.0, SHORT: 1.5, DEEP: 2.5, QUICK: 1.5, SCREEN: 1.0 },  // Vertical pass
+  stags:       { RUN: 2.2, SHORT: 1.5, DEEP: 1.0, QUICK: 1.5, SCREEN: 0.8 },  // Spread option
+  serpents:    { RUN: 3.5, SHORT: 0.8, DEEP: 0.8, QUICK: 0.5, SCREEN: 0.4 },  // Triple option
+  pronghorns:  { RUN: 2.2, SHORT: 1.5, DEEP: 1.2, QUICK: 1.5, SCREEN: 0.8 },  // Power spread
+  salamanders: { RUN: 0.4, SHORT: 1.8, DEEP: 2.0, QUICK: 2.8, SCREEN: 1.5 },  // Air raid
+  maples:      { RUN: 1.5, SHORT: 2.2, DEEP: 1.3, QUICK: 1.8, SCREEN: 1.2 },  // Multiple
+  raccoons:    { RUN: 1.5, SHORT: 1.5, DEEP: 1.8, QUICK: 2.2, SCREEN: 1.5 },  // Veer & Shoot
 };
 
 /**

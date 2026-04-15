@@ -19,10 +19,15 @@ import { createFieldRenderer } from './fieldRenderer.js';
 // TEAM COLORS (corrected per supplement)
 // ══════════════════════════════════════════════════════════════
 const TEAM_COLORS = {
-  sentinels: { name: 'Ridgemont Boars',      pri: '#8B1E1E', accent: '#FFB800', rgb: [196, 162, 101] },
-  wolves:    { name: 'Coral Bay Dolphins',    pri: '#E8548F', accent: '#FFB8D4', rgb: [232, 84, 143] },
-  stags:     { name: 'Hollowridge Spectres',  pri: '#5DADE2', accent: '#A8E6FF', rgb: [93, 173, 226] },
-  serpents:  { name: 'Blackwater Serpents',    pri: '#2E0854', accent: '#39FF14', rgb: [57, 255, 20] },
+  sentinels:   { name: 'Ridgemont Boars',          pri: '#8B1E1E', accent: '#FFB800', rgb: [196, 162, 101] },
+  wolves:      { name: 'Coral Bay Dolphins',       pri: '#D13A7A', accent: '#FFCFD8', rgb: [209, 58, 122] },
+  stags:       { name: 'Hollowridge Spectres',     pri: '#5DADE2', accent: '#D4ECFA', rgb: [93, 173, 226] },
+  serpents:    { name: 'Blackwater Serpents',      pri: '#14B8A6', accent: '#F5C542', rgb: [20, 184, 166] },
+  // Season 2
+  pronghorns:  { name: 'Cedar Creek Pronghorns',   pri: '#166534', accent: '#F59E0B', rgb: [22, 101, 52] },
+  salamanders: { name: 'Ashland Salamanders',      pri: '#2ECC71', accent: '#E84393', rgb: [46, 204, 113] },
+  maples:      { name: 'Autumnvale Maples',        pri: '#7A1E2E', accent: '#D97706', rgb: [122, 30, 46] },
+  raccoons:    { name: 'Moonshine Creek Raccoons', pri: '#D4D4D8', accent: '#FF8C00', rgb: [212, 212, 216] },
 };
 
 // ══════════════════════════════════════════════════════════════

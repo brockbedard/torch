@@ -223,18 +223,6 @@ export function getCounters(teamId) {
 }
 
 
-// ── DEPRECATED: legacy 4-team COUNTER_PLAY ─────────────────────────────────
-// Kept temporarily for backward compat with snapResolver/aiOpponent during
-// migration. Will be removed once all consumers read from COUNTER_MATRIX.
-// Maps the old single-string {strong, weak, neutral} shape to the first entry
-// from COUNTER_MATRIX so existing call sites don't crash.
-export const COUNTER_PLAY = {
-  sentinels: { strong: COUNTER_MATRIX.sentinels.strong[0], weak: COUNTER_MATRIX.sentinels.weak[0], neutral: COUNTER_MATRIX.sentinels.neutral[0] },
-  wolves:    { strong: COUNTER_MATRIX.wolves.strong[0],    weak: COUNTER_MATRIX.wolves.weak[0],    neutral: COUNTER_MATRIX.wolves.neutral[0] },
-  stags:     { strong: COUNTER_MATRIX.stags.strong[0],     weak: COUNTER_MATRIX.stags.weak[0],     neutral: COUNTER_MATRIX.stags.neutral[0] },
-  serpents:  { strong: COUNTER_MATRIX.serpents.strong[0],  weak: COUNTER_MATRIX.serpents.weak[0],  neutral: COUNTER_MATRIX.serpents.neutral[0] },
-};
-
 /**
  * @deprecated Season opponent helper from the 4-team era. Ember Eight runs a
  * full 7-game round-robin when season mode ships; this stub keeps existing

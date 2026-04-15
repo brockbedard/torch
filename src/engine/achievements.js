@@ -85,8 +85,8 @@ export function checkAchievements(context) {
   // Team mastery
   var records = {};
   try { records = JSON.parse(localStorage.getItem('torch_team_records') || '{}'); } catch(e) {}
-  var teamsWon = ['sentinels','wolves','stags','serpents'].filter(function(t) { return records[t] && records[t].wins > 0; });
-  if (teamsWon.length >= 4) tryUnlock('all_teams');
+  var teamsWon = ['sentinels','wolves','stags','serpents','pronghorns','salamanders','maples','raccoons'].filter(function(t) { return records[t] && records[t].wins > 0; });
+  if (teamsWon.length >= 8) tryUnlock('all_teams');
 
   var streaks = {};
   try { streaks = JSON.parse(localStorage.getItem('torch_streaks') || '{}'); } catch(e) {}

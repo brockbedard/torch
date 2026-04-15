@@ -10,6 +10,8 @@ import { GS, setGs, getTeam, clearGameSave } from '../../state.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
 import { getFullRoster } from '../../data/players.js';
 import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
+import { renderTeamWordmark } from '../teamWordmark.js';
+import { TEAM_WORDMARKS } from '../../data/teamWordmarks.js';
 import { buildMaddenPlayer } from '../components/cards.js';
 import AudioStateManager from '../../engine/audioManager.js';
 import { recordDailyResult } from './dailyDrive.js';
@@ -379,13 +381,24 @@ export function buildEndGame() {
   scoreEl.innerHTML = humanScore + " <span style=\"color:#333;font-size:40px;text-shadow:0 0 20px " + resultColor + "44,0 4px 12px rgba(0,0,0,0.8);\">\u2014</span> " + cpuScore;
   content.appendChild(scoreEl);
 
-  // Teams row
+  // Teams row — per-team wordmarks. Winner/leader team at slightly larger
+  // T2 size, opponent at the same size but lower opacity. The scoreEl above
+  // already communicates the winner; wordmarks here show identity.
   var teamsEl = document.createElement('div');
-  teamsEl.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:4px;opacity:0;';
-  teamsEl.innerHTML =
-    "<span style=\"font-family:'Oswald';font-weight:700;font-size:12px;color:" + team.accent + ";letter-spacing:2px;\">" + team.name.toUpperCase() + "</span>" +
-    "<span style=\"font-family:'Rajdhani';font-size:10px;color:#333;\">vs</span>" +
-    "<span style=\"font-family:'Oswald';font-weight:700;font-size:12px;color:" + opp.accent + ";letter-spacing:2px;opacity:0.5;\">" + opp.name.toUpperCase() + "</span>";
+  teamsEl.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:4px;opacity:0;';
+  function _endSize(tid) {
+    var wm = TEAM_WORDMARKS[tid];
+    return Math.max(16, Math.round((wm && wm.heroSize ? wm.heroSize : 40) * 0.42));
+  }
+  var _homeWm = renderTeamWordmark(GS.team, 't2', { mascot: true, fontSize: _endSize(GS.team) });
+  var _vs = document.createElement('span');
+  _vs.style.cssText = "font-family:'Rajdhani';font-size:10px;color:#333;letter-spacing:1px;";
+  _vs.textContent = 'vs';
+  var _oppWm = renderTeamWordmark(GS.opponent, 't2', { mascot: true, fontSize: _endSize(GS.opponent) });
+  if (_oppWm) _oppWm.style.opacity = '0.5';
+  if (_homeWm) teamsEl.appendChild(_homeWm);
+  teamsEl.appendChild(_vs);
+  if (_oppWm) teamsEl.appendChild(_oppWm);
   content.appendChild(teamsEl);
 
   // Win streak

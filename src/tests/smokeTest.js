@@ -44,7 +44,7 @@ function assert(condition, label) {
 
 // ── Helpers ──
 
-const TEAMS = ['sentinels', 'wolves', 'stags', 'serpents'];
+const TEAMS = ['sentinels', 'wolves', 'stags', 'serpents', 'pronghorns', 'salamanders', 'maples', 'raccoons'];
 
 function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];

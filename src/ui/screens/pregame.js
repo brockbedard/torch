@@ -22,6 +22,8 @@ import { GS, setGs } from '../../state.js';
 import { TEAMS } from '../../data/teams.js';
 import { TORCH_CARDS } from '../../data/torchCards.js';
 import { renderTeamBadge } from '../../assets/icons/teamLogos.js';
+import { renderTeamWordmark } from '../teamWordmark.js';
+import { TEAM_WORDMARKS } from '../../data/teamWordmarks.js';
 import { renderTorchCardIcon } from '../../assets/icons/torchCardIcons.js';
 import { FLAME_SILHOUETTE_PATH, flameLayersMarkup } from '../../utils/flameIcon.js';
 import { footballLayersMarkup } from '../../utils/footballIcon.js';
@@ -75,10 +77,15 @@ function shake(el) {
 // BEAT 1 — MATCHUP SLAM
 // ═══════════════════════════════════════════════════════
 function buildBeat1(ctx) {
+  // Beat is a flex-column that splits 50/50 into away + home halves.
+  // Conditions strip overlays absolute at the bottom.
   var beat = document.createElement('div');
-  beat.style.cssText = 'position:absolute;inset:0;background:radial-gradient(ellipse at 50% 20%,rgba(255,245,200,0.08) 0%,transparent 40%),radial-gradient(ellipse at 50% 50%,#0a0804 0%,#030201 80%);opacity:0;pointer-events:none;';
+  beat.style.cssText =
+    'position:absolute;inset:0;background:#05040a;' +
+    'display:flex;flex-direction:column;' +
+    'opacity:0;pointer-events:none;';
 
-  // Stadium halogen lights along the top
+  // Stadium halogen lights overlay (doesn't affect flex flow)
   var lights = document.createElement('div');
   lights.style.cssText =
     'position:absolute;top:0;left:0;right:0;height:60%;' +
@@ -86,114 +93,105 @@ function buildBeat1(ctx) {
       'radial-gradient(circle at 35% 14%,rgba(255,245,200,0.4) 0%,transparent 7%),' +
       'radial-gradient(circle at 65% 14%,rgba(255,245,200,0.4) 0%,transparent 7%),' +
       'radial-gradient(circle at 85% 18%,rgba(255,245,200,0.35) 0%,transparent 6%);' +
-    'filter:blur(6px);opacity:0;';
+    'filter:blur(6px);opacity:0;z-index:1;pointer-events:none;';
   beat.appendChild(lights);
   beat._lights = lights;
 
-  // Away card (user's team) — slams in from top
-  var awayCard = buildMatchupCard(ctx.team, GS.team, 'AWAY');
-  awayCard.style.top = '58px';
-  awayCard.style.transform = 'translateY(-520px) rotate(-2deg)';
+  // Away half (user's team) — flex:1 of the top. Slams in from top.
+  var awayCard = buildMatchupCard(ctx.team, GS.team, 'top');
+  awayCard.style.transform = 'translateY(-520px) rotate(-1deg)';
   beat.appendChild(awayCard);
   beat._awayCard = awayCard;
 
-  // Home card (opponent) — slams in from bottom
-  var homeCard = buildMatchupCard(ctx.opp, GS.opponent, 'HOME');
-  homeCard.style.top = '336px';
-  homeCard.style.transform = 'translateY(520px) rotate(2deg)';
+  // Home half (opponent) — flex:1 of the bottom. Slams in from bottom.
+  var homeCard = buildMatchupCard(ctx.opp, GS.opponent, 'bot');
+  homeCard.style.transform = 'translateY(520px) rotate(1deg)';
   beat.appendChild(homeCard);
   beat._homeCard = homeCard;
 
-  // VS burn
+  // VS burn — circular gold badge dead-center on the split seam.
+  // calc() self-centers on both axes so the transform stays free for the
+  // GSAP scale animation. Oswald 700 is already loaded via @fontsource —
+  // its condensed, heavy broadcast-sports proportions look purpose-built
+  // for circular VS emblems.
+  var VS_SIZE = 92;
   var vs = document.createElement('div');
-  vs.textContent = 'VS';
   vs.style.cssText =
-    'position:absolute;top:285px;left:50%;transform:translate(-50%,-50%) scale(1.3);' +
-    "font-family:'Teko';font-weight:900;font-size:84px;line-height:1;letter-spacing:4px;" +
-    'background:linear-gradient(180deg,#FFE17A 0%,#FFD060 22%,#EBB010 45%,#8B4A1F 72%,#EBB010 90%,#FFD060 100%);' +
+    'position:absolute;left:calc(50% - ' + (VS_SIZE/2) + 'px);top:calc(50% - ' + (VS_SIZE/2) + 'px);' +
+    'width:' + VS_SIZE + 'px;height:' + VS_SIZE + 'px;border-radius:50%;' +
+    'display:flex;align-items:center;justify-content:center;' +
+    'background:radial-gradient(circle at 32% 28%, #2a1a0a 0%, #100804 55%, #050302 100%);' +
+    'box-shadow:' +
+      'inset 0 0 0 2px #EBB010,' +
+      'inset 0 0 0 3px rgba(0,0,0,0.7),' +
+      'inset 0 0 0 4px rgba(235,176,16,0.35),' +
+      '0 0 28px rgba(235,176,16,0.55),' +
+      '0 10px 28px rgba(0,0,0,0.85),' +
+      'inset 0 0 22px rgba(235,176,16,0.18);' +
+    'opacity:0;transform:scale(1.3);pointer-events:none;z-index:10;';
+  // Inner text — Oswald 700 uppercase, tight letter-spacing for circular fit.
+  // padding-left:2px optically compensates for the "S" being slightly heavier
+  // on its right edge than "V" is on its left, preventing left-bias in the circle.
+  vs.innerHTML =
+    "<span style=\"font-family:'Oswald',sans-serif;font-weight:700;font-size:32px;line-height:1;letter-spacing:1px;padding-left:2px;" +
+    'background:linear-gradient(180deg,#FFE17A 0%,#FFD060 20%,#EBB010 48%,#8B4A1F 70%,#EBB010 88%,#FFE17A 100%);' +
     '-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;' +
-    'filter:drop-shadow(0 5px 12px rgba(0,0,0,0.95)) drop-shadow(0 0 24px rgba(235,176,16,0.55));' +
-    'opacity:0;pointer-events:none;z-index:5;white-space:nowrap;';
+    'filter:drop-shadow(0 2px 3px rgba(0,0,0,0.9)) drop-shadow(0 0 6px rgba(235,176,16,0.4));">VS</span>';
   beat.appendChild(vs);
   beat._vs = vs;
 
-  // Conditions strip
-  var strip = buildConditionsStrip(ctx.conditions);
-  beat.appendChild(strip);
-  beat._strip = strip;
+  // Conditions strip — hidden for now (re-enable by uncommenting). The strip
+  // was overlapping the split-half layout and needs a redesign pass before
+  // coming back.
+  // var strip = buildConditionsStrip(ctx.conditions);
+  // beat.appendChild(strip);
+  beat._strip = null;
 
   return beat;
 }
 
-// ─── Matchup card (team identity + ratings) ───
-function buildMatchupCard(team, teamId, sideLabel) {
-  var accent = team.accent || team.colors.primary;
+// ─── Matchup half-panel (cinematic hero: team-wash + badge + wordmark) ───
+// side: 'top' (away) — wash bleeds from top-center
+//       'bot' (home) — wash bleeds from bottom-center
+// Meant to live inside a flex-column parent where each half is flex:1.
+function buildMatchupCard(team, teamId, side) {
+  var primary = team.colors.primary;
+  var accent = team.accent || primary;
+  var isTop = side === 'top' || side === 'AWAY';
   var card = document.createElement('div');
   card.style.cssText =
-    'position:absolute;left:14px;right:14px;height:176px;border-radius:14px;' +
-    'border:2px solid ' + accent + '8c;overflow:hidden;display:flex;align-items:center;' +
-    'padding:14px 18px 14px 22px;' +
-    'background:linear-gradient(170deg,' + accent + '38,rgba(10,8,4,0.95) 55%,rgba(10,8,4,1) 100%);' +
-    'box-shadow:0 24px 70px rgba(0,0,0,0.85),0 0 36px ' + accent + '22,0 0 0 1px ' + accent + '33,inset 0 1px 0 rgba(255,255,255,0.08);';
+    'position:relative;flex:1;min-height:0;overflow:hidden;' +
+    'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;' +
+    (isTop ? 'border-bottom:1px solid rgba(255,255,255,0.08);' : '');
 
-  // Accent edge
-  var edge = document.createElement('div');
-  edge.style.cssText = 'position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(180deg,' + accent + ',' + accent + '66);box-shadow:0 0 12px ' + accent + 'aa;z-index:2;';
-  card.appendChild(edge);
+  // Wash layer — radial from the outside edge of the half, fades to transparent
+  var wash = document.createElement('div');
+  wash.style.cssText =
+    'position:absolute;inset:0;opacity:0.6;z-index:0;' +
+    'background:radial-gradient(ellipse at ' + (isTop ? 'top' : 'bottom') + ', ' + primary + ' 0%, transparent 70%);';
+  card.appendChild(wash);
 
-  // Depth gradient overlay
-  var depth = document.createElement('div');
-  depth.style.cssText = 'position:absolute;inset:0;background:linear-gradient(160deg,transparent 15%,rgba(0,0,0,0.35) 75%);pointer-events:none;';
-  card.appendChild(depth);
+  // Content column (badge + wordmark)
+  var content = document.createElement('div');
+  content.style.cssText = 'position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:14px;';
 
-  // Badge
   var badgeWrap = document.createElement('div');
   badgeWrap.style.cssText =
-    'position:relative;flex-shrink:0;width:108px;height:108px;border-radius:50%;' +
-    'display:flex;align-items:center;justify-content:center;' +
-    'border:3px solid rgba(255,255,255,0.18);' +
-    'background:radial-gradient(circle at 35% 30%,' + accent + ',' + accent + '99 45%,#050302 100%);' +
-    'box-shadow:0 14px 32px rgba(0,0,0,0.78),0 0 30px ' + accent + '55,inset 0 0 28px rgba(0,0,0,0.55);' +
-    'z-index:1;';
-  badgeWrap.innerHTML = renderTeamBadge(teamId, 78);
-  card.appendChild(badgeWrap);
+    'filter:drop-shadow(0 14px 30px rgba(0,0,0,0.7)) drop-shadow(0 0 32px ' + accent + '55);';
+  badgeWrap.innerHTML = renderTeamBadge(teamId, 130);
+  content.appendChild(badgeWrap);
 
-  // Info column
-  var info = document.createElement('div');
-  info.style.cssText = 'flex:1;min-width:0;padding-left:18px;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:1;';
+  var _wmCfg = TEAM_WORDMARKS[teamId] || {};
+  var _slamSize = Math.max(30, Math.round((_wmCfg.heroSize || 40) * 0.85));
+  var name = renderTeamWordmark(teamId, 't1', { mascot: true, fontSize: _slamSize });
+  if (!name) {
+    name = document.createElement('div');
+    name.style.cssText = "font-family:'Teko';font-weight:900;font-size:42px;color:#fff;letter-spacing:2px;line-height:0.9;text-shadow:0 3px 10px rgba(0,0,0,0.95);white-space:nowrap;";
+    name.textContent = team.name;
+  }
+  content.appendChild(name);
+  card.appendChild(content);
 
-  var lbl = document.createElement('div');
-  lbl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:9px;color:" + accent + ";letter-spacing:3px;margin-bottom:2px;";
-  lbl.textContent = sideLabel;
-  info.appendChild(lbl);
-
-  var name = document.createElement('div');
-  name.style.cssText = "font-family:'Teko';font-weight:900;font-size:38px;color:#fff;letter-spacing:1px;line-height:0.88;text-shadow:0 3px 10px rgba(0,0,0,0.95);white-space:nowrap;overflow:hidden;text-overflow:clip;";
-  name.textContent = team.name;
-  info.appendChild(name);
-
-  var school = document.createElement('div');
-  school.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:2px;margin-top:4px;";
-  school.textContent = (team.school || '').toUpperCase();
-  info.appendChild(school);
-
-  var divider = document.createElement('div');
-  divider.style.cssText = 'height:1px;margin:8px 0 7px;width:80%;background:linear-gradient(90deg,transparent,' + accent + 'aa,transparent);';
-  info.appendChild(divider);
-
-  var scheme = document.createElement('div');
-  scheme.style.cssText = "font-family:'Oswald';font-weight:700;font-size:11px;color:" + accent + ";letter-spacing:1.8px;";
-  scheme.textContent = team.offScheme || '';
-  info.appendChild(scheme);
-
-  // OFF/DEF rating pips
-  var ratings = document.createElement('div');
-  ratings.style.cssText = 'display:flex;gap:14px;margin-top:7px;';
-  ratings.appendChild(buildRatingRow('OFF', (team.ratings && team.ratings.offense) || 3, '#00ff44'));
-  ratings.appendChild(buildRatingRow('DEF', (team.ratings && team.ratings.defense) || 3, '#4DA6FF'));
-  info.appendChild(ratings);
-
-  card.appendChild(info);
   return card;
 }
 
@@ -306,7 +304,7 @@ function runBeat1(ctx, onDone) {
   tl.call(function() { SND.resultGood(); shake(ctx.el); }, null, 0.55 * speed);
 
   // Conditions strip fades in
-  tl.to(beat._strip, { opacity: 1, duration: 0.4 * speed, ease: 'power2.out' }, 1.0 * speed);
+  if (beat._strip) tl.to(beat._strip, { opacity: 1, duration: 0.4 * speed, ease: 'power2.out' }, 1.0 * speed);
 
   // VS burn — impact settle scale 1.3 → 1
   tl.to(beat._vs, { opacity: 1, scale: 1, duration: 0.75 * speed, ease: 'power3.out' }, 1.5 * speed);

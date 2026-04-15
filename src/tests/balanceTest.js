@@ -11,13 +11,21 @@ import { SENTINELS_OFF_PLAYS, SENTINELS_DEF_PLAYS } from '../data/sentinelsPlays
 import { WOLVES_OFF_PLAYS, WOLVES_DEF_PLAYS } from '../data/wolvesPlays.js';
 import { STAGS_OFF_PLAYS, STAGS_DEF_PLAYS } from '../data/stagsPlays.js';
 import { SERPENTS_OFF_PLAYS, SERPENTS_DEF_PLAYS } from '../data/serpentsPlays.js';
+import { PRONGHORNS_OFF_PLAYS, PRONGHORNS_DEF_PLAYS } from '../data/pronghornsPlays.js';
+import { SALAMANDERS_OFF_PLAYS, SALAMANDERS_DEF_PLAYS } from '../data/salamandersPlays.js';
+import { MAPLES_OFF_PLAYS, MAPLES_DEF_PLAYS } from '../data/maplesPlays.js';
+import { RACCOONS_OFF_PLAYS, RACCOONS_DEF_PLAYS } from '../data/raccoonsPlays.js';
 import { getOffenseRoster, getDefenseRoster } from '../data/players.js';
 
 var TEAMS = [
-  { id: 'sentinels', name: 'BOARS', off: SENTINELS_OFF_PLAYS, def: SENTINELS_DEF_PLAYS },
-  { id: 'wolves', name: 'DOLPHINS', off: WOLVES_OFF_PLAYS, def: WOLVES_DEF_PLAYS },
-  { id: 'stags', name: 'SPECTRES', off: STAGS_OFF_PLAYS, def: STAGS_DEF_PLAYS },
-  { id: 'serpents', name: 'SERPENTS', off: SERPENTS_OFF_PLAYS, def: SERPENTS_DEF_PLAYS },
+  { id: 'sentinels',   name: 'BOARS',       off: SENTINELS_OFF_PLAYS,   def: SENTINELS_DEF_PLAYS },
+  { id: 'wolves',      name: 'DOLPHINS',    off: WOLVES_OFF_PLAYS,      def: WOLVES_DEF_PLAYS },
+  { id: 'stags',       name: 'SPECTRES',    off: STAGS_OFF_PLAYS,       def: STAGS_DEF_PLAYS },
+  { id: 'serpents',    name: 'SERPENTS',    off: SERPENTS_OFF_PLAYS,    def: SERPENTS_DEF_PLAYS },
+  { id: 'pronghorns',  name: 'PRONGHORNS',  off: PRONGHORNS_OFF_PLAYS,  def: PRONGHORNS_DEF_PLAYS },
+  { id: 'salamanders', name: 'SALAMANDERS', off: SALAMANDERS_OFF_PLAYS, def: SALAMANDERS_DEF_PLAYS },
+  { id: 'maples',      name: 'MAPLES',      off: MAPLES_OFF_PLAYS,      def: MAPLES_DEF_PLAYS },
+  { id: 'raccoons',    name: 'RACCOONS',    off: RACCOONS_OFF_PLAYS,    def: RACCOONS_DEF_PLAYS },
 ];
 
 var DIFFICULTIES = ['EASY', 'MEDIUM', 'HARD'];
