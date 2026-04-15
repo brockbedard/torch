@@ -1,7 +1,9 @@
 /**
  * TORCH — Game History
- * Persistent log of all games played. Stored in localStorage.
+ * Persistent log of all games played. Persisted via the storage facade.
  */
+
+import { getJSON, setJSON } from './storage.js';
 
 var HISTORY_KEY = 'torch_game_history';
 var MAX_HISTORY = 50; // Keep last 50 games
@@ -24,12 +26,10 @@ export function recordGame(data) {
   });
   // Trim to max
   if (history.length > MAX_HISTORY) history = history.slice(0, MAX_HISTORY);
-  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch(e) {}
+  setJSON(HISTORY_KEY, history);
 }
 
-export function getHistory() {
-  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch(e) { return []; }
-}
+export function getHistory() { return getJSON(HISTORY_KEY, []); }
 
 export function getRecentGames(count) {
   return getHistory().slice(0, count || 10);

@@ -2,10 +2,11 @@ import { setGs, VERSION } from '../../state.js';
 import { getAllAchievements, getUnlockedIds, getProgress } from '../../engine/achievements.js';
 import AudioStateManager from '../../engine/audioManager.js';
 import { getRecentGames, getFormString } from '../../engine/gameHistory.js';
+import { getJSON } from '../../engine/storage.js';
 
 export function buildSettings() {
   var el = document.createElement('div');
-  el.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;background:var(--bg);padding:16px;overflow-y:auto;';
+  el.style.cssText = 'min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);padding:16px;padding-top:max(16px,env(safe-area-inset-top,0px));overflow-y:auto;';
 
   // Back button
   var backBtn = document.createElement('div');
@@ -69,8 +70,7 @@ export function buildSettings() {
   // ── ALL-TIME STATS SECTION ──
   var statsSection = createSection('ALL-TIME STATS');
   var gamesPlayed = parseInt(localStorage.getItem('torch_games_played') || '0');
-  var records = {};
-  try { records = JSON.parse(localStorage.getItem('torch_team_records') || '{}'); } catch(e) {}
+  var records = getJSON('torch_team_records', {});
   var totalWins = 0, totalLosses = 0, totalTies = 0;
   for (var tid in records) {
     totalWins += (records[tid].wins || 0);

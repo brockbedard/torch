@@ -1,8 +1,10 @@
 /**
  * TORCH — Achievement System
  * Persistent achievements tracked across all games.
- * Unlocked achievements stored in localStorage.
+ * Stored via the storage facade (localStorage today, native storage on mobile).
  */
+
+import { getJSON, setJSON } from './storage.js';
 
 var ACHIEVEMENTS = [
   // Game results
@@ -35,13 +37,8 @@ var ACHIEVEMENTS = [
   { id: 'hard_champion', name: 'LEGENDARY', desc: 'Win championship on Hard', icon: '🏅' },
 ];
 
-function getUnlocked() {
-  try { return JSON.parse(localStorage.getItem('torch_achievements') || '[]'); } catch(e) { return []; }
-}
-
-function saveUnlocked(arr) {
-  try { localStorage.setItem('torch_achievements', JSON.stringify(arr)); } catch(e) {}
-}
+function getUnlocked() { return getJSON('torch_achievements', []); }
+function saveUnlocked(arr) { setJSON('torch_achievements', arr); }
 
 /**
  * Check and unlock achievements based on game state.
@@ -83,13 +80,11 @@ export function checkAchievements(context) {
   if (context.comboTriggered) tryUnlock('combo_finder');
 
   // Team mastery
-  var records = {};
-  try { records = JSON.parse(localStorage.getItem('torch_team_records') || '{}'); } catch(e) {}
+  var records = getJSON('torch_team_records', {});
   var teamsWon = ['sentinels','wolves','stags','serpents','pronghorns','salamanders','maples','raccoons'].filter(function(t) { return records[t] && records[t].wins > 0; });
   if (teamsWon.length >= 8) tryUnlock('all_teams');
 
-  var streaks = {};
-  try { streaks = JSON.parse(localStorage.getItem('torch_streaks') || '{}'); } catch(e) {}
+  var streaks = getJSON('torch_streaks', {});
   for (var tid in streaks) { if (streaks[tid].currentWin >= 5) tryUnlock('streak_5'); }
 
   if (context.dailyStreak >= 7) tryUnlock('daily_streak_7');

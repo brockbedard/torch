@@ -30,7 +30,7 @@ function injectHomeStyles() {
 export function buildHome() {
   injectHomeStyles();
   var el = document.createElement('div');
-  el.style.cssText = 'height:100vh;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:20px 20px 0;';
+  el.style.cssText = 'height:100vh;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:20px 20px 0;padding-top:max(20px,env(safe-area-inset-top,0px));';
 
   // ── BACKGROUND LAYERS ──
   var bgBase = document.createElement('div');

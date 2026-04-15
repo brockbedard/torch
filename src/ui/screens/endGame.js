@@ -14,6 +14,7 @@ import { renderTeamWordmark } from '../teamWordmark.js';
 import { TEAM_WORDMARKS } from '../../data/teamWordmarks.js';
 import { buildMaddenPlayer } from '../components/cards.js';
 import AudioStateManager from '../../engine/audioManager.js';
+import { getJSON, setJSON } from '../../engine/storage.js';
 import { recordDailyResult } from './dailyDrive.js';
 import { flameSilhouetteSVG } from '../../utils/flameIcon.js';
 import { updateStreak, getStreak, getH2H } from '../../engine/streaks.js';
@@ -99,16 +100,16 @@ function getOpenLoop(torchPoints) {
 
 // ── PER-TEAM RECORDS ──
 function updateTeamRecord(teamId, won, tied) {
-  var records = JSON.parse(localStorage.getItem('torch_team_records') || '{}');
+  var records = getJSON('torch_team_records', {});
   if (!records[teamId]) records[teamId] = { wins: 0, losses: 0, ties: 0 };
   if (tied) records[teamId].ties++;
   else if (won) records[teamId].wins++;
   else records[teamId].losses++;
-  localStorage.setItem('torch_team_records', JSON.stringify(records));
+  setJSON('torch_team_records', records);
 }
 
 export function getTeamRecord(teamId) {
-  var records = JSON.parse(localStorage.getItem('torch_team_records') || '{}');
+  var records = getJSON('torch_team_records', {});
   return records[teamId] || { wins: 0, losses: 0, ties: 0 };
 }
 

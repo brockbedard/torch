@@ -1,17 +1,15 @@
 /**
  * TORCH — Career Stats
- * Tracks cumulative stats across all games. Persisted in localStorage.
+ * Tracks cumulative stats across all games. Persisted via the storage
+ * facade (localStorage today, eviction-safe native storage on mobile).
  */
+
+import { getJSON, setJSON } from './storage.js';
 
 var STATS_KEY = 'torch_career_stats';
 
-function getStats() {
-  try { return JSON.parse(localStorage.getItem(STATS_KEY) || '{}'); } catch(e) { return {}; }
-}
-
-function saveStats(stats) {
-  try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch(e) {}
-}
+function getStats() { return getJSON(STATS_KEY, {}); }
+function saveStats(stats) { setJSON(STATS_KEY, stats); }
 
 /**
  * Record stats from a completed game.
