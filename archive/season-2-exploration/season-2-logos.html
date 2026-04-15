@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TORCH — Team Identity Library</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08060a;
+    --bg-raised: #141018;
+    --bg-overlay: #1c1620;
+    --line: rgba(255,255,255,0.06);
+    --line-strong: rgba(255,255,255,0.12);
+    --ink: #f5f0e8;
+    --ink-dim: #8a827a;
+    --ink-fade: #4a4248;
+    --gold: #EBB010;
+    --torch: #FF4511;
+    --green: #00ff55;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { background: var(--bg); min-height: 100vh; }
+
+  body {
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--ink);
+    overflow-x: hidden;
+    position: relative;
+    padding-bottom: 120px;
+  }
+
+  /* Grain overlay — subtle broadcast texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' /%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+
+  /* Vignette */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 99;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%);
+  }
+
+  /* ---- HEADER ---- */
+  .masthead {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 56px 48px 24px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: end;
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .kicker::before {
+    content: '';
+    width: 28px;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  h1.hero {
+    font-family: 'Teko', sans-serif;
+    font-weight: 500;
+    font-size: clamp(64px, 10vw, 132px);
+    line-height: 0.85;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    text-transform: uppercase;
+  }
+  h1.hero em {
+    font-style: normal;
+    font-weight: 300;
+    color: var(--gold);
+    display: block;
+  }
+
+  .meta {
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--ink-dim);
+    line-height: 2;
+    text-transform: uppercase;
+  }
+  .meta b { color: var(--ink); font-weight: 500; }
+
+  /* ---- SECTION HEADER ---- */
+  .season {
+    max-width: 1440px;
+    margin: 64px auto 0;
+    padding: 0 48px;
+  }
+  .season-head {
+    display: flex;
+    align-items: baseline;
+    gap: 24px;
+    margin-bottom: 28px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .season-num {
+    font-family: 'Teko', sans-serif;
+    font-weight: 300;
+    font-size: 72px;
+    line-height: 0.8;
+    color: var(--gold);
+    letter-spacing: -0.03em;
+  }
+  .season-label {
+    font-family: 'Teko', sans-serif;
+    font-weight: 500;
+    font-size: 32px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .season-note {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    padding: 6px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 2px;
+  }
+  .season-note.new {
+    color: var(--green);
+    border-color: rgba(0,255,85,0.3);
+    background: rgba(0,255,85,0.04);
+  }
+
+  /* ---- GRID OF TEAMS ---- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+  }
+  @media (max-width: 1180px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .grid { grid-template-columns: 1fr; }
+    .masthead { padding: 32px 24px 18px; grid-template-columns: 1fr; }
+    .season { padding: 0 24px; margin-top: 44px; }
+  }
+
+  .tile {
+    background: var(--bg-raised);
+    padding: 32px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    transition: background 0.5s ease;
+  }
+  .tile:hover { background: var(--bg-overlay); }
+
+  /* Team number editorial mark */
+  .tile-num {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--ink-fade);
+  }
+
+  .logo-stage {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    border-radius: 2px;
+  }
+  .logo-stage::before {
+    /* Subtle team-tinted gradient backdrop */
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, var(--tint, rgba(255,255,255,0.04)) 0%, transparent 65%);
+  }
+  .logo-stage::after {
+    /* Floor reflection/shadow */
+    content: '';
+    position: absolute;
+    left: 18%;
+    right: 18%;
+    bottom: 10%;
+    height: 14px;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.55), transparent 70%);
+    filter: blur(2px);
+  }
+  .logo-stage svg {
+    position: relative;
+    width: 78%;
+    height: 78%;
+    filter: drop-shadow(0 16px 20px rgba(0,0,0,0.45)) drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .tile:hover .logo-stage svg { transform: scale(1.05); }
+
+  .ident {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 12px;
+    align-items: baseline;
+  }
+  .ident-name {
+    font-family: 'Teko', sans-serif;
+    font-weight: 600;
+    font-size: 32px;
+    letter-spacing: 1px;
+    line-height: 0.95;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .ident-school {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    grid-column: 1 / -1;
+    margin-top: -2px;
+  }
+  .ident-tier {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+  }
+
+  .palette {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 2px;
+    height: 32px;
+  }
+  .swatch {
+    position: relative;
+    overflow: hidden;
+  }
+  .swatch-code {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.5px;
+    color: rgba(255,255,255,0.65);
+    mix-blend-mode: difference;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  .swatch:hover .swatch-code { opacity: 1; }
+
+  .note {
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--ink-dim);
+    letter-spacing: 0.3px;
+    min-height: 50px;
+  }
+  .note em { color: var(--ink); font-style: normal; font-weight: 500; }
+
+  /* ---- FOOTER ---- */
+  .footer {
+    max-width: 1440px;
+    margin: 72px auto 0;
+    padding: 0 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--ink-fade);
+    text-transform: uppercase;
+  }
+  .footer-mark {
+    color: var(--gold);
+    font-family: 'Teko', sans-serif;
+    font-size: 20px;
+    letter-spacing: 4px;
+    font-weight: 500;
+  }
+
+  /* Animated entrance */
+  .tile { opacity: 0; transform: translateY(12px); animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div>
+    <div class="kicker">Torch Football · Brand Operations</div>
+    <h1 class="hero">Team Identity<em>Logo Library</em></h1>
+  </div>
+  <div class="meta">
+    <div><b>Eight teams</b> · two seasons</div>
+    <div>Rendered · <b>teamLogos.js</b></div>
+    <div>v0.37 · <b>2026.04.13</b></div>
+  </div>
+</header>
+
+<!-- SEASON 1 -->
+<section class="season">
+  <div class="season-head">
+    <div class="season-num">01</div>
+    <div class="season-label">Established Four</div>
+    <div class="season-note">Season 1 · Live</div>
+  </div>
+  <div class="grid" id="season1"></div>
+</section>
+
+<!-- SEASON 2 -->
+<section class="season">
+  <div class="season-head">
+    <div class="season-num">02</div>
+    <div class="season-label">New Identities</div>
+    <div class="season-note new">Season 2 · Refined</div>
+  </div>
+  <div class="grid" id="season2"></div>
+</section>
+
+<footer class="footer">
+  <div class="footer-mark">TORCH</div>
+  <div>Refined gradients · layered shading · broadcast-grade polish</div>
+  <div>08 · teams</div>
+</footer>
+
+<script type="module">
+  import { renderTeamBadge } from '/src/assets/icons/teamLogos.js';
+
+  const s1 = [
+    {
+      id:'sentinels', num:'01', name:'Boars', school:'Ridgemont University', tier:'Power Spread · Cover 3',
+      tint:'rgba(139,0,0,0.12)',
+      palette:[['#4A0000','Blood'],['#8B0000','Crimson'],['#D89040','Copper'],['#EBB010','Gold']],
+      note:'Five-stop crimson-to-gold. <em>Blood-red body catches gold rim light</em> — now uses both team colors, no more monochrome.'
+    },
+    {
+      id:'wolves', num:'02', name:'Dolphins', school:'Coral Bay Institute', tier:'Spread Option · Cover 1',
+      tint:'rgba(255,126,179,0.1)',
+      palette:[['#4A0D5E','Wine'],['#9C27B0','Magenta'],['#E8548F','Flamingo'],['#FFB0D0','Bloom']],
+      note:'Four-stop diagonal with <em>deep-wine base</em> fading to bloom pink. Speed kills, sleek and electric.'
+    },
+    {
+      id:'stags', num:'03', name:'Spectres', school:'Hollowridge State', tier:'Spread RPO · Cover 0',
+      tint:'rgba(133,193,233,0.1)',
+      palette:[['#1B4F72','Midnight'],['#5DADE2','Steel'],['#b8d4f0','Phantom'],['#f0f4ff','Icefog']],
+      note:'Four-stop ghost: <em>bright top fades into midnight shadow</em> — the ghost emerges from darkness below.'
+    },
+    {
+      id:'serpents', num:'04', name:'Serpents', school:'Blackwater State', tier:'Air Raid · Pattern Match',
+      tint:'rgba(147,51,234,0.12)',
+      palette:[['#2E0854','Occult'],['#5B21B6','Royal'],['#9333EA','Amethyst'],['#39FF14','Venom']],
+      note:'<em>Purple body, electric-green venom eyes</em>. The defining duality of Blackwater — purple was the missing signature.'
+    }
+  ];
+
+  const s2 = [
+    {
+      id:'pronghorns', num:'05', name:'Pronghorns', school:'Larkspur College', tier:'Tier 01 · Top Contender',
+      tint:'rgba(34,197,94,0.1)',
+      palette:[['#166534','Forest'],['#22C55E','Emerald'],['#F59E0B','Honey'],['#FEF3C7','Cream']],
+      note:'Emerald body + <em>warm honey-amber antlers</em>. The warm/cool tension differentiates from Serpents and sells alpine legitimacy.'
+    },
+    {
+      id:'salamanders', num:'06', name:'Salamanders', school:'Helix Polytechnic', tier:'Tier 02 · Mid-Pack',
+      tint:'rgba(255,140,0,0.12)',
+      palette:[['#661500','Char'],['#ff8c00','Flame'],['#ffcc00','Molten'],['#06B6D4','Blue Flame']],
+      note:'Fire body with <em>electric-cyan spots</em> — orange/blue is a perfect complement, and the hottest flame IS blue.'
+    },
+    {
+      id:'maples', num:'07', name:'Maples', school:'Vermont Agricultural', tier:'Tier 02 · Mid-Pack',
+      tint:'rgba(234,88,12,0.12)',
+      palette:[['#5A1616','Burgundy'],['#B91C1C','Crimson'],['#EA580C','Blaze'],['#F59E0B','Amber']],
+      note:'<em>True autumn tritone</em>: crimson center leaves, burnt-orange sides, amber-peach tips. Real New England fall, not monochrome.'
+    },
+    {
+      id:'raccoons', num:'08', name:'Raccoons', school:'Sacramento City', tier:'Tier 03 · Underdog',
+      tint:'rgba(255,140,0,0.1)',
+      palette:[['#000000','Void'],['#18181B','Ink'],['#F59E0B','Streetlight'],['#FFB547','Sodium']],
+      note:'Warm-pearl face, void-black mask, <em>streetlight-amber ears</em>. Urban noir — the amber glow replaces lime to differentiate from Serpents.'
+    }
+  ];
+
+  function render(list, mount) {
+    mount.innerHTML = list.map((t, i) => `
+      <div class="tile" style="animation-delay:${80 * i}ms">
+        <div class="tile-num">${t.num}</div>
+        <div class="logo-stage" style="--tint:${t.tint}">${renderTeamBadge(t.id, 240)}</div>
+        <div class="ident">
+          <div class="ident-name">${t.name}</div>
+          <div class="ident-tier">${t.tier.split('·')[0].trim()}</div>
+          <div class="ident-school">${t.school}</div>
+        </div>
+        <div class="palette">
+          ${t.palette.map(([hex, label]) => `
+            <div class="swatch" style="background:${hex}" title="${label} ${hex}">
+              <div class="swatch-code">${hex}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="note">${t.note}</div>
+      </div>
+    `).join('');
+  }
+  render(s1, document.getElementById('season1'));
+  render(s2, document.getElementById('season2'));
+</script>
+
+</body>
+</html>

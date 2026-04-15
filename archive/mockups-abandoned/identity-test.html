@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TORCH — Team Identity (Monograms + Helmet Stickers)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@700&family=Playfair+Display:wght@900&family=Josefin+Sans:wght@100;400&family=Italiana&family=DM+Serif+Display&family=Chakra+Petch:wght@600&family=Righteous&family=Major+Mono+Display&family=Marcellus&family=Rajdhani:wght@400;600;700&family=Teko:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #07060A; color: #fff; font-family: 'Rajdhani', sans-serif; padding: 24px 20px 60px; }
+  h1 { font-family: 'Teko', sans-serif; font-size: 36px; letter-spacing: 3px; margin: 0 0 4px; }
+  .sub { color: #888; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px; }
+  h2 { font-family: 'Teko', sans-serif; font-size: 22px; letter-spacing: 2px; color: #EBB010; margin: 36px 0 6px; border-bottom: 1px solid rgba(235,176,16,0.3); padding-bottom: 6px; }
+  .h2-sub { font-size: 11px; color: #888; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 18px; }
+
+  table { width: 100%; max-width: 780px; border-collapse: collapse; background: #141008; border: 1px solid #222; margin-bottom: 12px; }
+  th, td { padding: 16px 14px; text-align: left; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  th { background: #1E1610; color: #EBB010; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; text-align: center; }
+  th.team-col, td.team-col { text-align: left; width: 200px; }
+  td.mono { text-align: center; }
+  td.sticker { text-align: center; }
+  .team-name { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 1.5px; color: #fff; }
+  .team-sub { font-family: 'Rajdhani', sans-serif; font-size: 10px; letter-spacing: 1.5px; color: #666; text-transform: uppercase; margin-top: 2px; }
+
+  .cell-bg {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #07060A; border-radius: 4px; padding: 8px;
+    min-width: 56px; min-height: 56px;
+  }
+
+  footer { color: #555; font-size: 10px; margin-top: 30px; letter-spacing: 1px; max-width: 780px; line-height: 1.6; }
+  footer code { background: #141008; padding: 1px 5px; border-radius: 2px; color: #888; }
+</style>
+</head>
+<body>
+  <h1>TEAM IDENTITY MARKINGS</h1>
+  <div class="sub">Monograms + helmet stickers · all 8 teams · 3 tiers each</div>
+
+  <h2>MONOGRAMS · letter-based marks in team font + signature modification</h2>
+  <div class="h2-sub">40px (full detail) · 24px (mid) · 16px (letterform only)</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="team-col">Team</th>
+        <th>40</th>
+        <th>24</th>
+        <th>16</th>
+        <th style="text-align:left;padding-left:14px;">Font · Mod</th>
+      </tr>
+    </thead>
+    <tbody id="mono-tbody"></tbody>
+  </table>
+
+  <h2>HELMET STICKERS · earned-reward icons that accumulate on player cards</h2>
+  <div class="h2-sub">40px (full detail) · 24px (mid) · 16px (silhouette only)</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="team-col">Team</th>
+        <th>40</th>
+        <th>24</th>
+        <th>16</th>
+        <th style="text-align:left;padding-left:14px;">Shape</th>
+      </tr>
+    </thead>
+    <tbody id="sticker-tbody"></tbody>
+  </table>
+
+  <footer>
+    Source: <code>src/data/teamIdentity.js</code> · exports <code>renderTeamMonogram(teamId, size)</code> and <code>renderHelmetSticker(teamId, size)</code>.<br>
+    Marcellus font added to Google Fonts URL for the Blackwater monogram (spec requested Marcellus for the monogram, even though the wordmark system uses DM Serif Display).
+  </footer>
+
+<script type="module">
+  import { renderTeamMonogram, renderHelmetSticker } from '/src/data/teamIdentity.js';
+
+  var TEAMS = [
+    { id: 'sentinels',   name: 'Ridgemont Boars',      monoNote: 'Zilla Slab · R + tusk',        stickerNote: 'Boar tusk' },
+    { id: 'maples',      name: 'Vermont Maples',       monoNote: 'Playfair · V + veins',         stickerNote: 'Maple leaf' },
+    { id: 'stags',       name: 'Hollowridge Spectres', monoNote: 'Geometric · hollow H',         stickerNote: 'Vigil candle' },
+    { id: 'wolves',      name: 'Coral Bay Dolphins',   monoNote: 'Italiana · interlocking CB',   stickerNote: 'Ocean wave' },
+    { id: 'serpents',    name: 'Blackwater Serpents',  monoNote: 'Marcellus · B + serpent tail', stickerNote: 'Serpent fang' },
+    { id: 'salamanders', name: 'Helix Salamanders',    monoNote: 'Chakra Petch · helix H',       stickerNote: 'Atom' },
+    { id: 'pronghorns',  name: 'Larkspur Pronghorns',  monoNote: 'Righteous · L + antlers',      stickerNote: 'Wheat stalk' },
+    { id: 'raccoons',    name: 'Sacramento Raccoons',  monoNote: 'Major Mono · SP',              stickerNote: 'Paw print' },
+  ];
+
+  function cellMono(tid, size) {
+    return '<td class="mono"><span class="cell-bg">' + renderTeamMonogram(tid, size) + '</span></td>';
+  }
+  function cellSticker(tid, size) {
+    return '<td class="sticker"><span class="cell-bg">' + renderHelmetSticker(tid, size) + '</span></td>';
+  }
+  function teamCol(team) {
+    return '<td class="team-col"><div class="team-name">' + team.name + '</div></td>';
+  }
+
+  var monoRows = TEAMS.map(function(t) {
+    return '<tr>' +
+      teamCol(t) +
+      cellMono(t.id, 40) +
+      cellMono(t.id, 24) +
+      cellMono(t.id, 16) +
+      '<td><div class="team-sub">' + t.monoNote + '</div></td>' +
+    '</tr>';
+  }).join('');
+  document.getElementById('mono-tbody').innerHTML = monoRows;
+
+  var stickerRows = TEAMS.map(function(t) {
+    return '<tr>' +
+      teamCol(t) +
+      cellSticker(t.id, 40) +
+      cellSticker(t.id, 24) +
+      cellSticker(t.id, 16) +
+      '<td><div class="team-sub">' + t.stickerNote + '</div></td>' +
+    '</tr>';
+  }).join('');
+  document.getElementById('sticker-tbody').innerHTML = stickerRows;
+</script>
+</body>
+</html>

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TORCH — New Logo Proposals</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0A0804;
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+  h1 {
+    font-family: 'Teko', sans-serif;
+    font-size: 48px;
+    font-weight: 900;
+    letter-spacing: 6px;
+    text-align: center;
+    color: #EBB010;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .subtitle {
+    text-align: center;
+    color: #888;
+    font-size: 14px;
+    letter-spacing: 1px;
+    margin-bottom: 50px;
+    text-transform: uppercase;
+  }
+  .team-section {
+    max-width: 1000px;
+    margin: 0 auto 80px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 60px;
+  }
+  .team-section:last-child { border-bottom: none; }
+  .team-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 30px;
+  }
+  .team-name {
+    font-family: 'Teko', sans-serif;
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+  .team-desc {
+    color: #EBB010;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .variants {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+  }
+  .variant {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    background: rgba(255,255,255,0.02);
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: all 0.3s ease;
+  }
+  .variant:hover {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.1);
+    transform: translateY(-5px);
+  }
+  .logo-container {
+    width: 180px;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .logo-container svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+  }
+  .variant-info {
+    text-align: center;
+  }
+  .variant-label {
+    font-family: 'Teko', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    color: #fff;
+    text-transform: uppercase;
+  }
+  .colors {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .description {
+    font-size: 12px;
+    color: #888;
+    line-height: 1.6;
+    letter-spacing: 0.5px;
+  }
+
+  /* SVG Color Overrides */
+  .v-source .pronghorn-base { fill: #fac2b9; }
+  .v-source .pronghorn-accent { fill: #f49f93; }
+  .v-source .pronghorn-highlight { fill: #ffe2dd; }
+  .v-source .pronghorn-outline { fill: #757677; }
+  
+  .v-legacy-pronghorn .pronghorn-base { fill: #5DADE2; }
+  .v-legacy-pronghorn .pronghorn-accent { fill: #1B4F72; }
+  .v-legacy-pronghorn .pronghorn-highlight { fill: #ffffff; }
+  .v-legacy-pronghorn .pronghorn-outline { fill: #0d2b3e; }
+
+  .v-premium-pronghorn .pronghorn-base { fill: #1a472a; }
+  .v-premium-pronghorn .pronghorn-accent { fill: #00ff44; }
+  .v-premium-pronghorn .pronghorn-highlight { fill: #e6ffed; }
+  .v-premium-pronghorn .pronghorn-outline { fill: #0a1f12; }
+
+  /* Salamander */
+  .v-source-sal .sal-base { fill: #e99799; }
+  .v-source-sal .sal-accent { fill: #facad6; }
+  .v-source-sal .sal-shade { fill: #dd838a; }
+  .v-source-sal .sal-outline { fill: #3a322b; }
+
+  .v-legacy-sal .sal-base { fill: #2E0854; }
+  .v-legacy-sal .sal-accent { fill: #39FF14; }
+  .v-legacy-sal .sal-shade { fill: #1a0531; }
+  .v-legacy-sal .sal-outline { fill: #4a008a; }
+
+  .v-premium-sal .sal-base { fill: #ff8c00; }
+  .v-premium-sal .sal-accent { fill: #ffcc00; }
+  .v-premium-sal .sal-shade { fill: #e67e22; }
+  .v-premium-sal .sal-outline { fill: #2c1a00; }
+
+  /* Maple Leaf */
+  .v-source-maple .maple-base { fill: #963604; }
+  .v-source-maple .maple-accent { fill: #ff6c07; }
+  .v-source-maple .maple-outline { fill: #872a00; }
+
+  .v-legacy-maple .maple-base { fill: #E8548F; }
+  .v-legacy-maple .maple-accent { fill: #FF7EB3; }
+  .v-legacy-maple .maple-outline { fill: #4a001f; }
+
+  .v-premium-maple .maple-base { fill: #960018; }
+  .v-premium-maple .maple-accent { fill: #ff4d4d; }
+  .v-premium-maple .maple-outline { fill: #4a000c; }
+
+  /* Raccoon / Mask */
+  .v-source-mask .mask-base { fill: #e7f2f1; }
+  .v-source-mask .mask-accent { fill: #f9b132; }
+  .v-source-mask .mask-shade { fill: #655f68; }
+  .v-source-mask .mask-tan { fill: #957557; }
+
+  .v-legacy-mask .mask-base { fill: #8B0000; }
+  .v-legacy-mask .mask-accent { fill: #C4A265; }
+  .v-legacy-mask .mask-shade { fill: #5a0000; }
+  .v-legacy-mask .mask-tan { fill: #220000; }
+
+  .v-premium-mask .mask-base { fill: #333333; }
+  .v-premium-mask .mask-accent { fill: #b8e031; }
+  .v-premium-mask .mask-shade { fill: #111111; }
+  .v-premium-mask .mask-tan { fill: #555555; }
+
+</style>
+</head>
+<body>
+
+<h1>TORCH — Logo Evolution</h1>
+<p class="subtitle">Mockup Proposals for Season Tier Update</p>
+
+<!-- PRONGHORN -->
+<section class="team-section">
+  <div class="team-header">
+    <h2 class="team-name">Larkspur Pronghorns</h2>
+    <span class="team-desc">Tier: Top / Contender</span>
+  </div>
+  <div class="variants">
+    <div class="variant">
+      <div class="logo-container v-source">
+        <svg viewBox="0 0 64 64">
+          <path class="pronghorn-base" d="M41.599,30.93c3.364-2.234,4.747-5.226,4.747-5.226,1.702-5.039,14.427-5.664,14.427-5.664-3.444,14.653-16.607,15.038-16.607,15.038"/>
+          <path class="pronghorn-base" d="M19.835,35.078s-13.164-.386-16.607-15.038c0,0,12.725.625,14.427,5.664,0,0,1.383,2.992,4.747,5.226"/>
+          <path class="pronghorn-accent" d="M21.246 30.075l-2.451 3.963s-5.955-.182-10.902-4.756c5.108 5.594 11.942 5.795 11.942 5.795l2.566-4.148c-.415-.275-.799-.563-1.155-.854Z"/>
+          <path class="pronghorn-highlight" d="m22.286 31.115.115-.186c-.629-.418-1.188-.861-1.682-1.307.443.488.961.996 1.567 1.493ZM4.267 21.08s8.857.437 12.779 3.51c-3.039-4.017-13.819-4.55-13.819-4.55 1.127 4.796 3.298 8.057 5.705 10.283-1.981-2.169-3.703-5.148-4.665-9.243Z"/>
+          <path class="pronghorn-outline" d="M19.834,35.598h-.015c-.136-.004-13.603-.569-17.098-15.439-.038-.158.002-.326.107-.452.104-.125.262-.209.424-.186.534.025,13.1.704,14.894,6.017h0s1.365,2.848,4.542,4.958c.24.159.305.482.146.721-.16.241-.483.302-.721.146-3.447-2.29-4.873-5.313-4.932-5.441-1.367-4.041-10.63-5.094-13.277-5.314,3.558,13.43,15.818,13.946,15.944,13.949.287.008.513.248.505.535-.008.282-.24.505-.52.505Z"/>
+          <path class="pronghorn-highlight" d="M35.563,26.156c1.755-5.518,6.888-9.294,8.457-10.345.293-.186.465-.293.465-.293,9.68-4.242,6.954-14.998,6.954-14.998,0,0,7.127,8.496-1.024,15.171-.705.572-1.489,1.05-2.287,1.489-1.955,1.064-6.967,4.521-9.028,9.68"/>
+          <path class="pronghorn-highlight" d="M24.901,26.861c-2.061-5.159-7.074-8.616-9.028-9.68-.798-.439-1.582-.917-2.287-1.489C5.434,9.017,12.561.52,12.561.52c0,0-2.726,10.757,6.954,14.998,0,0,.173.106.465.293,1.569,1.05,6.701,4.827,8.457,10.345"/>
+        </svg>
+      </div>
+      <div class="variant-info">
+        <div class="variant-label">Source Palette</div>
+        <div class="colors">
+          <div class="color-swatch" style="background: #fac2b9"></div>
+          <div class="color-swatch" style="background: #f49f93"></div>
+          <div class="color-swatch" style="background: #757677"></div>
+        </div>
+        <p class="description">Original SVG colors. Soft pinks and muted greys. Unique but low contrast for sports.</p>
+      </div>
+    </div>
+    <div class="variant">
+      <div class="logo-container v-legacy-pronghorn">
+        <svg viewBox="0 0 64 64">
+          <path class="pronghorn-base" d="M41.599,30.93c3.364-2.234,4.747-5.226,4.747-5.226,1.702-5.039,14.427-5.664,14.427-5.664-3.444,14.653-16.607,15.038-16.607,15.038"/>
+          <path class="pronghorn-base" d="M19.835,35.078s-13.164-.386-16.607-15.038c0,0,12.725.625,14.427,5.664,0,0,1.383,2.992,4.747,5.226"/>
+          <path class="pronghorn-accent" d="M21.246 30.075l-2.451 3.963s-5.955-.182-10.902-4.756c5.108 5.594 11.942 5.795 11.942 5.795l2.566-4.148c-.415-.275-.799-.563-1.155-.854Z"/>
+          <path class="pronghorn-outline" d="M19.834,35.598h-.015c-.136-.004-13.603-.569-17.098-15.439-.038-.158.002-.326.107-.452.104-.125.262-.209.424-.186.534.025,13.1.704,14.894,6.017h0s1.365,2.848,4.542,4.958c.24.159.305.482.146.721-.16.241-.483.302-.721.146-3.447-2.29-4.873-5.313-4.932-5.441-1.367-4.041-10.63-5.094-13.277-5.314,3.558,13.43,15.818,13.946,15.944,13.949.287.008.513.248.505.535-.008.282-.24.505-.52.505Z"/>
+          <path class="pronghorn-highlight" d="M35.563,26.156c1.755-5.518,6.888-9.294,8.457-10.345.293-.186.465-.293.465-.293,9.68-4.242,6.954-14.998,6.954-14.998,0,0,7.127,8.496-1.024,15.171-.705.572-1.489,1.05-2.287,1.489-1.955,1.064-6.967,4.521-9.028,9.68"/>
+          <path class="pronghorn-highlight" d="M24.901,26.861c-2.061-5.159-7.074-8.616-9.028-9.68-.798-.439-1.582-.917-2.287-1.489C5.434,9.017,12.561.52,12.561.52c0,0-2.726,10.757,6.954,14.998,0,0,.173.106.465.293,1.569,1.05,6.701,4.827,8.457,10.345"/>
+        </svg>
+      </div>
+      <div class="variant-info">
+        <div class="variant-label">Legacy (Spectres)</div>
+        <div class="colors">
+          <div class="color-swatch" style="background: #5DADE2"></div>
+          <div class="color-swatch" style="background: #1B4F72"></div>
+          <div class="color-swatch" style="background: #0d2b3e"></div>
+        </div>
+        <p class="description">Sky Blue & Navy. High energy, fits the "Top Tier" identity of the previous Spectres team.</p>
+      </div>
+    </div>
+    <div class="variant">
+      <div class="logo-container v-premium-pronghorn">
+        <svg viewBox="0 0 64 64">
+          <path class="pronghorn-base" d="M41.599,30.93c3.364-2.234,4.747-5.226,4.747-5.226,1.702-5.039,14.427-5.664,14.427-5.664-3.444,14.653-16.607,15.038-16.607,15.038"/>
+          <path class="pronghorn-base" d="M19.835,35.078s-13.164-.386-16.607-15.038c0,0,12.725.625,14.427,5.664,0,0,1.383,2.992,4.747,5.226"/>
+          <path class="pronghorn-accent" d="M21.246 30.075l-2.451 3.963s-5.955-.182-10.902-4.756c5.108 5.594 11.942 5.795 11.942 5.795l2.566-4.148c-.415-.275-.799-.563-1.155-.854Z"/>
+          <path class="pronghorn-outline" d="M19.834,35.598h-.015c-.136-.004-13.603-.569-17.098-15.439-.038-.158.002-.326.107-.452.104-.125.262-.209.424-.186.534.025,13.1.704,14.894,6.017h0s1.365,2.848,4.542,4.958c.24.159.305.482.146.721-.16.241-.483.302-.721.146-3.447-2.29-4.873-5.313-4.932-5.441-1.367-4.041-10.63-5.094-13.277-5.314,3.558,13.43,15.818,13.946,15.944,13.949.287.008.513.248.505.535-.008.282-.24.505-.52.505Z"/>
+          <path class="pronghorn-highlight" d="M35.563,26.156c1.755-5.518,6.888-9.294,8.457-10.345.293-.186.465-.293.465-.293,9.68-4.242,6.954-14.998,6.954-14.998,0,0,7.127,8.496-1.024,15.171-.705.572-1.489,1.05-2.287,1.489-1.955,1.064-6.967,4.521-9.028,9.68"/>
+          <path class="pronghorn-highlight" d="M24.901,26.861c-2.061-5.159-7.074-8.616-9.028-9.68-.798-.439-1.582-.917-2.287-1.489C5.434,9.017,12.561.52,12.561.52c0,0-2.726,10.757,6.954,14.998,0,0,.173.106.465.293,1.569,1.05,6.701,4.827,8.457,10.345"/>
+        </svg>
+      </div>
+      <div class="variant-info">
+        <div class="variant-label">Premium Emerald</div>
+        <div class="colors">
+          <div class="color-swatch" style="background: #1a472a"></div>
+          <div class="color-swatch" style="background: #00ff44"></div>
+          <div class="color-swatch" style="background: #0a1f12"></div>
+        </div>
+        <p class="description">Deep Forest Green & Toxic Lime. Premium, aggressive, and modern. High visibility.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SALAMANDER -->
+<section class="team-section">
+  <div class="team-header">
+    <h2 class="team-name">Helix Salamanders</h2>
+    <span class="team-desc">Tier: Middle / Mid-Pack</span>
+  </div>
+  <div class="variants">
+    <div class="variant">
+      <div class="logo-container v-source-sal">
+        <svg viewBox="0 0 504 465">
+          <path class="sal-base" d="M378.217,290.486l-23.88-48.95c-1.34-0.34-2.72-0.68-4.13-1c-13.2-3.01-38.485-19.773-53.625-17.593c-11.78,1.7-13.654,21.193-24.434,26.843c-10.475,18.754-24.026,34.235-56.01,30.11c-19.95,2.98-61.19-4.64-104.4-7.1c-3.3-5.75-8.48-10.3-14.69-12.8c-3.43-1.39-8.195-7.62-12.125-7.62c-11.18,0-21.208,4.52-26.298,13.64c-7.16,0-12.697,7.57-18.967,8.51c-17.5,2.58-30.63,8.81-34.25,18.74c-4.93,13.49,4.04,29.93,13.26,36.49c9.23,6.57,31.04,5.89,39.07,9.24c8.03,3.34,9.1,15.98,17.47,19.23c8.38,3.25,22.2-3.55,33.67-1.09c5.08,1.1,18.43,8.95,36.68,17.35c0.26,1.27,0.49,2.55,0.71,3.83l35.12,10.08c15.46,4.74,32.27,8.08,49.39,8.08c56.87,0,111.36-39.75,111.36-39.75c-0.56-7.31,33.29-6.715,36.09-14.804v-51.426L378.217,290.486z"/>
+          <path class="sal-accent" d="M344.407 302.096c5.67 1.64 10.32 4.81 13.27 8.59-5.44 7.3-9.52 15.01-12.14 22.64-3.12.24-6.49-.09-9.86-1.07-11.39-3.3-18.67-12.72-16.26-21.05C321.827 302.876 333.017 298.796 344.407 302.096zM430.587 313.026c7.35 2.39 11.48 16.38 16.22 20.61-3.69 9.94-9.83 19.96-18.24 28.96-1.29 1.39-2.61 2.72-3.96 3.99-3.11-.44-12.976 1.05-16.196 0-18.58-6.03-29.504-26.095-25.824-37.415C386.257 317.851 412.007 306.996 430.587 313.026z"/>
+          <path class="sal-shade" d="M442.497,287.546c9.77,11.02,10.89,28.43,4.31,46.09c-4.74-4.23-11.08-7.87-18.43-10.26c-18.58-6.03-36.62-1.74-40.29,9.58c-3.68,11.32,8.41,25.38,26.99,31.41c3.22,1.05,6.42,1.78,9.53,2.22c-7.69,7.33-16.15,12.92-24.66,16.62c-17.96,7.82-35.805,28.069-47.195,17.439c-0.73-0.68-1.715-22.279-2.365-23.019c-4.93-5.59-7.64-12.83-8.25-20.9c-0.56-7.31,0.6-15.31,3.4-23.4c2.62-7.63,6.7-15.34,12.14-22.64c2.05-2.74,4.28-5.42,6.71-8.02c4.35-4.66,9.01-8.73,13.84-12.17c8.93-6.4,18.42-10.65,27.52-12.56c13.46-2.85,26.07-0.56,34.75,7.55C441.197,286.146,441.867,286.826,442.497,287.546z"/>
+          <path class="sal-outline" d="M338.705,344.162c-0.564,3.648-0.778,7.171-0.681,10.555c-9.666,6.604-57.889,37.755-107.251,37.755c-14.076,0-29.347-2.379-45.429-7.068c-0.601-15.045-2.292-29.493-2.91-34.41c-0.275-2.193-2.271-3.747-4.467-3.471c-2.192,0.275-3.746,2.275-3.47,4.467c0.844,6.723,1.602,14.449,2.145,22.25c-8.623-3.812-17.77-4.237-27.313-1.281c-2.628-12.877-6.616-24.459-6.785-24.948c-0.723-2.088-3.002-3.192-5.088-2.472c-2.087,0.723-3.194,3.001-2.472,5.088c1.889,5.46,3.579,11.197,4.954,16.781"/>
+        </svg>
+      </div>
+      <div class="variant-info">
+        <div class="variant-label">Source Palette</div>
+        <div class="colors">
+          <div class="color-swatch" style="background: #e99799"></div>
+          <div class="color-swatch" style="background: #facad6"></div>
+          <div class="color-swatch" style="background: #3a322b"></div>
+        </div>
+        <p class="description">Soft coral and tan. Elegant but feels more like a lifestyle brand than a football team.</p>
+      </div>
+    </div>
+    <div class="variant">
+      <div class="logo-container v-legacy-sal">
+        <svg viewBox="0 0 504 465">
+          <path class="sal-base" d="M378.217,290.486l-23.88-48.95c-1.34-0.34-2.72-0.68-4.13-1c-13.2-3.01-38.485-19.773-53.625-17.593c-11.78,1.7-13.654,21.193-24.434,26.843c-10.475,18.754-24.026,34.235-56.01,30.11c-19.95,2.98-61.19-4.64-104.4-7.1c-3.3-5.75-8.48-10.3-14.69-12.8c-3.43-1.39-8.195-7.62-12.125-7.62c-11.18,0-21.208,4.52-26.298,13.64c-7.16,0-12.697,7.57-18.967,8.51c-17.5,2.58-30.63,8.81-34.25,18.74c-4.93,13.49,4.04,29.93,13.26,36.49c9.23,6.57,31.04,5.89,39.07,9.24c8.03,3.34,9.1,15.98,17.47,19.23c8.38,3.25,22.2-3.55,33.67-1.09c5.08,1.1,18.43,8.95,36.68,17.35c0.26,1.27,0.49,2.55,0.71,3.83l35.12,10.08c15.46,4.74,32.27,8.08,49.39,8.08c56.87,0,111.36-39.75,111.36-39.75c-0.56-7.31,33.29-6.715,36.09-14.804v-51.426L378.217,290.486z"/>
+          <path class="sal-accent" d="M344.407 302.096c5.67 1.64 10.32 4.81 13.27 8.59-5.44 7.3-9.52 15.01-12.14 22.64-3.12.24-6.49-.09-9.86-1.07-11.39-3.3-18.67-12.72-16.26-21.05C321.827 302.876 333.017 298.796 344.407 302.096zM430.587 313.026c7.35 2.39 11.48 16.38 16.22 20.61-3.69 9.94-9.83 19.96-18.24 28.96-1.29 1.39-2.61 2.72-3.96 3.99-3.11-.44-12.976 1.05-16.196 0-18.58-6.03-29.504-26.095-25.824-37.415C386.257 317.851 412.007 306.996 430.587 313.026z"/>
+          <path class="sal-shade" d="M442.497,287.546c9.77,11.02,10.89,28.43,4.31,46.09c-4.74-4.23-11.08-7.87-18.43-10.26c-18.58-6.03-36.62-1.74-40.29,9.58c-3.68,11.32,8.41,25.38,26.99,31.41c3.22,1.05,6.42,1.78,9.53,2.22c-7.69,7.33-16.15,12.92-24.66,16.62c-17.96,7.82-35.805,28.069-47.195,17.439c-0.73-0.68-1.715-22.279-2.365-23.019c-4.93-5.59-7.64-12.83-8.25-20.9c-0.56-7.31,0.6-15.31,3.4-23.4c2.62-7.63,6.7-15.34,12.14-22.64c2.05-2.74,4.28-5.42,6.71-8.02c4.35-4.66,9.01-8.73,13.84-12.17c8.93-6.4,18.42-10.65,27.52-12.56c13.46-2.85,26.07-0.56,34.75,7.55C441.197,286.146,441.867,286.826,442.497,287.546z"/>
+          <path class="sal-outline" d="M338.705,344.162c-0.564,3.648-0.778,7.171-0.681,10.555c-9.666,6.604-57.889,37.755-107.251,37.755c-14.076,0-29.347-2.379-45.429-7.068c-0.601-15.045-2.292-29.493-2.91-34.41c-0.275-2.193-2.271-3.747-4.467-3.471c-2.192,0.275-3.746,2.275-3.47,4.467c0.844,6.723,1.602,14.449,2.145,22.25c-8.623-3.812-17.77-4.237-27.313-1.281c-2.628-12.877-6.616-24.459-6.785-24.948c-0.723-2.088-3.002-3.192-5.088-2.472c-2.087,0.723-3.194,3.001-2.472,5.088c1.889,5.46,3.579,11.197,4.954,16.781"/>
+        </svg>
+      </div>
+      <div class="variant-info">
+        <div class="variant-label">Legacy (Serpents)</div>
+        <div class="colors">
+          <div class="color-swatch" style="background: #2E0854"></div>
+          <div class="color-swatch" style="background: #39FF14"></div>
+          <div class="color-swatch" style="background: #4a008a"></div>
+        </div>
+        <p class="description">Cyber Purple & Toxic Green. Methodical and cerebral. Fits the mid-pack identity.</p>
+      </div>
+    </div>
+    <div class="variant">
+      <div class="logo-container v-premium-sal">
+        <svg viewBox="0 0 504 465">
+          <path class="sal-base" d="M378.217,290.486l-23.88-48.95c-1.34-0.34-2.72-0.68-4.13-1c-13.2-3.01-38.485-19.773-53.625-17.593c-11.78,1.7-13.654,21.193-24.434,26.843c-10.475,18.754-24.026,34.235-56.01,30.11c-19.95,2.98-61.19-4.64-104.4-7.1c-3.3-5.75-8.48-10.3-14.69-12.8c-3.43-1.39-8.195-7.62-12.125-7.62c-11.18,0-21.208,4.52-26.298,13.64c-7.16,0-12.697,7.57-18.967,8.51c-17.5,2.58-30.63,8.81-34.25,18.74c-4.93,13.49,4.04,29.93,13.26,36.49c9.23,6.57,31.04,5.89,39.07,9.24c8.03,3.34,9.1,15.98,17.47,19.23c8.38,3.25,22.2-3.55,33.67-1.09c5.08,1.1,18.43,8.95,36.68,17.35c0.26,1.27,0.49,2.55,0.71,3.83l35.12,10.08c15.46,4.74,32.27,8.08,49.39,8.08c56.87,0,111.36-39.75,111.36-39.75c-0.56-7.31,33.29-6.715,36.09-14.804v-51.426L378.217,290.486z"/>
+          <path class="sal-accent" d="M344.407 302.096c5.67 1.64 10.32 4.81 13.27 8.59-5.44 7.3-9.52 15.01-12.14 22.64-3.12.24-6.49-.09-9.86-1.07-11.39-3.3-18.67-12.72-16.26-21.05C321.827 302.876 333.017 298.796 344.407 302.096zM430.587 313.026c7.35 2.39 11.48 16.38 16.22 20.61-3.69 9.94-9.83 19.96-18.24 28.96-1.29 1.39-2.61 2.72-3.96 3.99-3.11-.44-12.976 1.05-16.196 0-18.58-6.03-29.504-26.095-25.824-37.415C386.257 317.851 412.007 306.996 430.587 313.026z"/>
+          <path class="sal-shade" d="M442.497,287.546c9.77,11.02,10.89,28.43,4.31,46.09c-4.74-4.23-11.08-7.87-18.43-10.26c-18.58-6.03-36.62-1.74-40.29,9.58c-3.68,11.32,8.41,25.38,26.99,31.41c3.22,1.05,6.42,1.78,9.53,2.22c-7.69,7.33-16.15,12.92-24.66,16.62c-17.96,7.82-35.805,28.069-47.195,17.439c-0.73-0.68-1.715-22.279-2.365-23.019c-4.93-5.59-7.64-12.83-8.25-20.9c-0.56-7.31,0.6-15.31,3.4-23.4c2.62-7.63,6.7-15.34,12.14-22.64c2.05-2.74,4.28-5.42,6.71-8.02c4.35-4.66,9.01-8.73,13.84-12.17c8.93-6.4,18.42-10.65,27.52-12.56c13.46-2.85,26.07-0.56,34.75,7.55C441.197,286.146,441.867,286.826,442.497,287.546z"/>
+          <path class="sal-outline" d="M338.705,344.162c-0.564,3.648-0.778,7.171-0.681,10.555c-9.666,6.604-57.889,37.755-107.251,37.755c-14.076,0-29.347-2.379-45.429-7.068c-0.601-15.045-2.292-29.493-2.91-34.41c-0.275-2.193-2.271-3.747-4.467-3.471c-2.192,0.275-3.746,2.275-3.47,4.467c0.844,6.723,1.602,14.449,2.145,22.25c-8.623-3.812-17.77-4.237-27.313-1.281c-2.628-12.877-6.616-24.459-6.785-24.948c-0.723-2.088-3.002-3.192-5.088-2.472c-2.087,0.723-3.194,3.001-2.472,5.088c1.889,5.46,3.579,11.197,4.954,16.781"/>
+        </svg>
+      </div>
+      <div class="variant-info">
+        <div class="variant-label">Premium Solar</div>
+        <div class="colors">
+          <div class="color-swatch" style="background: #ff8c00"></div>
+          <div class="color-swatch" style="background: #ffcc00"></div>
+          <div class="color-swatch" style="background: #2c1a00"></div>
+        </div>
+        <p class="description">Blazing Orange & Sunburst Yellow. Energetic, high contrast, and perfectly "Helix".</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MAPLE LEAF -->
+<section class="team-section">
+  <div class="team-header">
+    <h2 class="team-name">Vermont Maples</h2>
+    <span class="team-desc">Tier: Middle / Mid-Pack</span>
+  </div>
+  <div class="variants">
+    <div class="variant">
+      <div class="logo-container v-source-maple">
+        <svg viewBox="0 0 64 64">
+          <path class="maple-base" d="M50.869 32.986 54.2 31.02a1.007 1.007 0 0 0 .2-1.592l6.23-2.1-2.69 8.135 2.59.151a.769.769 0 0 1 .3 1.27l-6.12 6.169 5.53.3a.774.774 0 0 1 .42 1.3l-1.65 1.654 3.77 3.79a.776.776 0 0 1-.43 1.31l-6.03.867.99 2.328a.763.763 0 0 1-.89 1.049l-8.7-2.3-1.77 5.332a.758.758 0 0 1-1.26.3l-.74-.756c-3.86-3.891-4.49-8.487-3.95-10.11a4.674 4.674 0 0 1-1.4.181 11.354 11.354 0 0 1-6.6-2.38v-5.856c1 2.016 5.81 5.04 13 5.04h1.38a1.01 1.01 0 0 0 .9-1.462L44 37.038z"/>
+          <path class="maple-accent" d="M55 19.9a1.007 1.007 0 0 1 1 1.008 84.233 84.233 0 0 0-9.921 4.792L48 19.9Z"/>
+          <path class="maple-outline" d="M55.859 20.434c-.018.006-.036 0-.053.011a91.525 91.525 0 0 0-8.842 4.172l1.472-4.443.27-.272H48v-.713l-.354.357a.5.5 0 0 0-.12.2l-1.862 5.622a38.192 38.192 0 0 0-5.871 4.214l1.687-8.519.405-.951-.885.8v-1.281l-.459 1.081a.484.484 0 0 0-.031.1l-1.956 9.894a36.257 36.257 0 0 0-3.421 3.829"/>
+          <path class="maple-accent" d="M32 .75V19.9c-2 0-5-6.048-5-9.072Z"/>
+        </svg>
+      </div>
+      <div class="variant-info">
+        <div class="variant-label">Source Palette</div>
+        <div class="colors">
+          <div class="color-swatch" style="background: #963604"></div>
+          <div class="color-swatch" style="background: #ff6c07"></div>
+          <div class="color-swatch" style="background: #872a00"></div>
+        </div>
+        <p class="description">Autumn Browns & Oranges. Very literal for a Maple team, but low visibility on a green field.</p>
+      </div>
+    </div>
+    <div class="variant">
+      <div class="logo-container v-legacy-maple">
+        <svg viewBox="0 0 64 64">
+          <path class="maple-base" d="M50.869 32.986 54.2 31.02a1.007 1.007 0 0 0 .2-1.592l6.23-2.1-2.69 8.135 2.59.151a.769.769 0 0 1 .3 1.27l-6.12 6.169 5.53.3a.774.774 0 0 1 .42 1.3l-1.65 1.654 3.77 3.79a.776.776 0 0 1-.43 1.31l-6.03.867.99 2.328a.763.763 0 0 1-.89 1.049l-8.7-2.3-1.77 5.332a.758.758 0 0 1-1.26.3l-.74-.756c-3.86-3.891-4.49-8.487-3.95-10.11a4.674 4.674 0 0 1-1.4.181 11.354 11.354 0 0 1-6.6-2.38v-5.856c1 2.016 5.81 5.04 13 5.04h1.38a1.01 1.01 0 0 0 .9-1.462L44 37.038z"/>
+          <path class="maple-accent" d="M55 19.9a1.007 1.007 0 0 1 1 1.008 84.233 84.233 0 0 0-9.921 4.792L48 19.9Z"/>
+          <path class="maple-outline" d="M55.859 20.434c-.018.006-.036 0-.053.011a91.525 91.525 0 0 0-8.842 4.172l1.472-4.443.27-.272H48v-.713l-.354.357a.5.5 0 0 0-.12.2l-1.862 5.622a38.192 38.192 0 0 0-5.871 4.214l1.687-8.519.405-.951-.885.8v-1.281l-.459 1.081a.484.484 0 0 0-.031.1l-1.956 9.894a36.257 36.257 0 0 0-3.421 3.829"/>
+          <path class="maple-accent" d="M32 .75V19.9c-2 0-5-6.048-5-9.072Z"/>
+        </svg>
+      </div>
+      <div class="variant-info">
+        <div class="variant-label">Legacy (Wolves)</div>
+        <div class="colors">
+          <div class="color-swatch" style="background: #E8548F"></div>
+          <div class="color-swatch" style="background: #FF7EB3"></div>
+          <div class="color-swatch" style="background: #4a001f"></div>
+        </div>
+        <p class="description">Vibrant Pink & Neon. Relentless speed and energy. Fits the mid-pack profile.</p>
+      </div>
+    </div>
+    <div class="variant">
+      <div class="logo-container v-premium-maple">
+        <svg viewBox="0 0 64 64">
+          <path class="maple-base" d="M50.869 32.986 54.2 31.02a1.007 1.007 0 0 0 .2-1.592l6.23-2.1-2.69 8.135 2.59.151a.769.769 0 0 1 .3 1.27l-6.12 6.169 5.53.3a.774.774 0 0 1 .42 1.3l-1.65 1.654 3.77 3.79a.776.776 0 0 1-.43 1.31l-6.03.867.99 2.328a.763.763 0 0 1-.89 1.049l-8.7-2.3-1.77 5.332a.758.758 0 0 1-1.26.3l-.74-.756c-3.86-3.891-4.49-8.487-3.95-10.11a4.674 4.674 0 0 1-1.4.181 11.354 11.354 0 0 1-6.6-2.38v-5.856c1 2.016 5.81 5.04 13 5.04h1.38a1.01 1.01 0 0 0 .9-1.462L44 37.038z"/>
+          <path class="maple-accent" d="M55 19.9a1.007 1.007 0 0 1 1 1.008 84.233 84.233 0 0 0-9.921 4.792L48 19.9Z"/>
+          <path class="maple-outline" d="M55.859 20.434c-.018.006-.036 0-.053.011a91.525 91.525 0 0 0-8.842 4.172l1.472-4.443.27-.272H48v-.713l-.354.357a.5.5 0 0 0-.12.2l-1.862 5.622a38.192 38.192 0 0 0-5.871 4.214l1.687-8.519.405-.951-.885.8v-1.281l-.459 1.081a.484.484 0 0 0-.031.1l-1.956 9.894a36.257 36.257 0 0 0-3.421 3.829"/>
+          <path class="maple-accent" d="M32 .75V19.9c-2 0-5-6.048-5-9.072Z"/>
+        </svg>
+      </div>
+      <div class="variant-info">
+        <div class="variant-label">Premium Crimson</div>
+        <div class="colors">
+          <div class="color-swatch" style="background: #960018"></div>
+          <div class="color-swatch" style="background: #ff4d4d"></div>
+          <div class="color-swatch" style="background: #4a000c"></div>
+        </div>
+        <p class="description">Deep Crimson & Scarlet. Powerful, traditional, and aggressive. Fits the Vermont autumn vibe.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RACCOON -->
+<section class="team-section">
+  <div class="team-header">
+    <h2 class="team-name">Sacramento Raccoons</h2>
+    <span class="team-desc">Tier: Bottom / Underdog</span>
+  </div>
+  <div class="variants">
+    <div class="variant">
+      <div class="logo-container v-source-mask">
+        <svg viewBox="0 0 496 496">
+          <path class="mask-base" d="M457.89,193.64c-1.24-1.13-2.07-2.62-2.44-4.26c-0.5-2.25-1.07-4.45-1.69-6.62l0.43-0.12 c50.67-66.3,30.22-152.45,23.06-176.9c-1.16-3.98-5.18-6.38-9.25-5.59C380.82,17.08,353.13,70.86,348,84 c-66.084,31.931-132.741,30.685-199.9,0.34c-0.04-0.11-0.09-0.23-0.13-0.34c-5.2-12.75-32.81-66.92-120-83.85 c-4.07-0.79-8.08,1.61-9.25,5.59c-7.15,24.45-27.61,110.6,23.06,176.9l0.44,0.12c-0.62,2.17-1.19,4.37-1.69,6.62 c-0.37,1.64-1.2,3.13-2.45,4.26c-7.77,7.03-36.94,36.53-38.08,83.54c-0.03,1.38,1.29,2.38,2.6,1.97 c5.44-1.74,18.06-5.63,25.71-6.81c1.57-0.24,2.77,1.38,2.1,2.82c-3.81,8.19-13.49,32.18-17.08,70.78"/>
+          <path class="mask-shade" d="M432 280c0 0-4 12-16 20 10.83 6.37 16 12 16 12-5.22 5.4-7.88 12.3-10.15 19.88-7.69 25.58-11.02 58.86-93.85 68.12l-.31-.02c3.37-44.84-23.37-78.44-36.62-98.02-4.82-7.12-7.22-15.61-6.87-24.21 1.7-41.2 14.15-40.84 27.8-81.75 0 0 12 12 12 32 0 0 32-32 72-32 0 0-3.33 16.68-3.91 43.96-.13 5.96 2.01 11.76 6.07 16.13C403.86 262.23 414.23 271.12 432 280z"/>
+          <path class="mask-accent" d="M107.65 96.63c0 0-18.1-18.97-47.8-20.53-1.62-.08-2.64 1.73-1.75 3.08 3.14 4.81 9.06 14.18 12.68 22.07.6 1.3-.3 2.78-1.72 2.84-5.12.21-16.33.92-28.53 3.25l-.79.18C31.13 69.15 39.97 36 39.97 36 96.61 52.66 106.07 85.96 107.65 96.63zM456 36c0 0 8.84 33.15.23 71.52l-.79-.18c-12.2-2.33-23.41-3.04-28.52-3.25-1.43-.06-2.32-1.54-1.73-2.84 3.62-7.89 9.54-17.26 12.69-22.07.89-1.35-.13-3.16-1.76-3.08-29.7 1.56-47.8 20.53-47.8 20.53C389.9 85.96 399.337 52.66 456 36z"/>
+          <path class="mask-tan" d="M347,84h-99.03h-99l-0.87,0.34c30.45,78.55,62.55,74.73,95.23,94.37c1.41,0.85,3.01,1.28,4.61,1.29 c1.62,0.01,3.24-0.42,4.67-1.29C285.34,159.04,317.51,162.9,348,84H347z"/>
+        </svg>
+      </div>
+      <div class="variant-info">
+        <div class="variant-label">Source Palette</div>
+        <div class="colors">
+          <div class="color-swatch" style="background: #e7f2f1"></div>
+          <div class="color-swatch" style="background: #f9b132"></div>
+          <div class="color-swatch" style="background: #655f68"></div>
+        </div>
+        <p class="description">Grey, Orange, and Tan. Authentic raccoon mask look, but lacks "punch" for a helmet logo.</p>
+      </div>
+    </div>
+    <div class="variant">
+      <div class="logo-container v-legacy-mask">
+        <svg viewBox="0 0 496 496">
+          <path class="mask-base" d="M457.89,193.64c-1.24-1.13-2.07-2.62-2.44-4.26c-0.5-2.25-1.07-4.45-1.69-6.62l0.43-0.12 c50.67-66.3,30.22-152.45,23.06-176.9c-1.16-3.98-5.18-6.38-9.25-5.59C380.82,17.08,353.13,70.86,348,84 c-66.084,31.931-132.741,30.685-199.9,0.34c-0.04-0.11-0.09-0.23-0.13-0.34c-5.2-12.75-32.81-66.92-120-83.85 c-4.07-0.79-8.08,1.61-9.25,5.59c-7.15,24.45-27.61,110.6,23.06,176.9l0.44,0.12c-0.62,2.17-1.19,4.37-1.69,6.62 c-0.37,1.64-1.2,3.13-2.45,4.26c-7.77,7.03-36.94,36.53-38.08,83.54c-0.03,1.38,1.29,2.38,2.6,1.97 c5.44-1.74,18.06-5.63,25.71-6.81c1.57-0.24,2.77,1.38,2.1,2.82c-3.81,8.19-13.49,32.18-17.08,70.78"/>
+          <path class="mask-shade" d="M432 280c0 0-4 12-16 20 10.83 6.37 16 12 16 12-5.22 5.4-7.88 12.3-10.15 19.88-7.69 25.58-11.02 58.86-93.85 68.12l-.31-.02c3.37-44.84-23.37-78.44-36.62-98.02-4.82-7.12-7.22-15.61-6.87-24.21 1.7-41.2 14.15-40.84 27.8-81.75 0 0 12 12 12 32 0 0 32-32 72-32 0 0-3.33 16.68-3.91 43.96-.13 5.96 2.01 11.76 6.07 16.13C403.86 262.23 414.23 271.12 432 280z"/>
+          <path class="mask-accent" d="M107.65 96.63c0 0-18.1-18.97-47.8-20.53-1.62-.08-2.64 1.73-1.75 3.08 3.14 4.81 9.06 14.18 12.68 22.07.6 1.3-.3 2.78-1.72 2.84-5.12.21-16.33.92-28.53 3.25l-.79.18C31.13 69.15 39.97 36 39.97 36 96.61 52.66 106.07 85.96 107.65 96.63zM456 36c0 0 8.84 33.15.23 71.52l-.79-.18c-12.2-2.33-23.41-3.04-28.52-3.25-1.43-.06-2.32-1.54-1.73-2.84 3.62-7.89 9.54-17.26 12.69-22.07.89-1.35-.13-3.16-1.76-3.08-29.7 1.56-47.8 20.53-47.8 20.53C389.9 85.96 399.337 52.66 456 36z"/>
+          <path class="mask-tan" d="M347,84h-99.03h-99l-0.87,0.34c30.45,78.55,62.55,74.73,95.23,94.37c1.41,0.85,3.01,1.28,4.61,1.29 c1.62,0.01,3.24-0.42,4.67-1.29C285.34,159.04,317.51,162.9,348,84H347z"/>
+        </svg>
+      </div>
+      <div class="variant-info">
+        <div class="variant-label">Legacy (Sentinels)</div>
+        <div class="colors">
+          <div class="color-swatch" style="background: #8B0000"></div>
+          <div class="color-swatch" style="background: #C4A265"></div>
+          <div class="color-swatch" style="background: #220000"></div>
+        </div>
+        <p class="description">Deep Crimson & Gold. Gritty, physical, and established. Fits the "Underdog" Boars identity.</p>
+      </div>
+    </div>
+    <div class="variant">
+      <div class="logo-container v-premium-mask">
+        <svg viewBox="0 0 496 496">
+          <path class="mask-base" d="M457.89,193.64c-1.24-1.13-2.07-2.62-2.44-4.26c-0.5-2.25-1.07-4.45-1.69-6.62l0.43-0.12 c50.67-66.3,30.22-152.45,23.06-176.9c-1.16-3.98-5.18-6.38-9.25-5.59C380.82,17.08,353.13,70.86,348,84 c-66.084,31.931-132.741,30.685-199.9,0.34c-0.04-0.11-0.09-0.23-0.13-0.34c-5.2-12.75-32.81-66.92-120-83.85 c-4.07-0.79-8.08,1.61-9.25,5.59c-7.15,24.45-27.61,110.6,23.06,176.9l0.44,0.12c-0.62,2.17-1.19,4.37-1.69,6.62 c-0.37,1.64-1.2,3.13-2.45,4.26c-7.77,7.03-36.94,36.53-38.08,83.54c-0.03,1.38,1.29,2.38,2.6,1.97 c5.44-1.74,18.06-5.63,25.71-6.81c1.57-0.24,2.77,1.38,2.1,2.82c-3.81,8.19-13.49,32.18-17.08,70.78"/>
+          <path class="mask-shade" d="M432 280c0 0-4 12-16 20 10.83 6.37 16 12 16 12-5.22 5.4-7.88 12.3-10.15 19.88-7.69 25.58-11.02 58.86-93.85 68.12l-.31-.02c3.37-44.84-23.37-78.44-36.62-98.02-4.82-7.12-7.22-15.61-6.87-24.21 1.7-41.2 14.15-40.84 27.8-81.75 0 0 12 12 12 32 0 0 32-32 72-32 0 0-3.33 16.68-3.91 43.96-.13 5.96 2.01 11.76 6.07 16.13C403.86 262.23 414.23 271.12 432 280z"/>
+          <path class="mask-accent" d="M107.65 96.63c0 0-18.1-18.97-47.8-20.53-1.62-.08-2.64 1.73-1.75 3.08 3.14 4.81 9.06 14.18 12.68 22.07.6 1.3-.3 2.78-1.72 2.84-5.12.21-16.33.92-28.53 3.25l-.79.18C31.13 69.15 39.97 36 39.97 36 96.61 52.66 106.07 85.96 107.65 96.63zM456 36c0 0 8.84 33.15.23 71.52l-.79-.18c-12.2-2.33-23.41-3.04-28.52-3.25-1.43-.06-2.32-1.54-1.73-2.84 3.62-7.89 9.54-17.26 12.69-22.07.89-1.35-.13-3.16-1.76-3.08-29.7 1.56-47.8 20.53-47.8 20.53C389.9 85.96 399.337 52.66 456 36z"/>
+          <path class="mask-tan" d="M347,84h-99.03h-99l-0.87,0.34c30.45,78.55,62.55,74.73,95.23,94.37c1.41,0.85,3.01,1.28,4.61,1.29 c1.62,0.01,3.24-0.42,4.67-1.29C285.34,159.04,317.51,162.9,348,84H347z"/>
+        </svg>
+      </div>
+      <div class="variant-info">
+        <div class="variant-label">Premium Stealth</div>
+        <div class="colors">
+          <div class="color-swatch" style="background: #333333"></div>
+          <div class="color-swatch" style="background: #b8e031"></div>
+          <div class="color-swatch" style="background: #111111"></div>
+        </div>
+        <p class="description">Matte Charcoal & Acid Lime. Mean, stealthy, and professional. Perfect for a gritty underdog.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

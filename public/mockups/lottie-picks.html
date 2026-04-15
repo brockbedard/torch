@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TORCH — Curated Lottie Picks</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Teko:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #07060A; color: #fff; font-family: 'Rajdhani', sans-serif; padding: 28px 20px 80px; }
+  h1 { font-family: 'Teko', sans-serif; font-size: 44px; letter-spacing: 4px; margin: 0 0 4px; }
+  .sub { color: #888; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 28px; max-width: 900px; line-height: 1.6; }
+
+  section { margin: 0 0 44px; max-width: 1280px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin: 0 0 4px; padding-bottom: 8px; border-bottom: 1px solid rgba(235,176,16,0.4); }
+  .sec-head h2 { font-family: 'Teko', sans-serif; font-size: 26px; letter-spacing: 3px; color: #EBB010; margin: 0; }
+  .sec-head .where { font-size: 11px; letter-spacing: 1.5px; color: #888; text-transform: uppercase; }
+  .sec-note { color: #aaa; font-size: 13px; line-height: 1.5; margin: 6px 0 16px; max-width: 800px; }
+  .sec-note b { color: #fff; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .card { background: #141008; border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+  .card.top { border-color: #EBB010; box-shadow: 0 0 0 1px rgba(235,176,16,0.4); }
+  .badge { position: absolute; top: 8px; left: 8px; background: #EBB010; color: #000; font-family: 'Teko'; font-weight: 700; font-size: 12px; letter-spacing: 1.5px; padding: 2px 8px; border-radius: 3px; }
+  .vidwrap { position: relative; }
+  .vidwrap video { width: 100%; height: 180px; object-fit: contain; background: #07060A; display: block; }
+  .meta { padding: 10px 12px 12px; }
+  .name { font-size: 13px; color: #fff; font-weight: 600; line-height: 1.3; margin-bottom: 4px; }
+  .id { font-family: monospace; font-size: 10px; color: #555; }
+  .why { color: #bbb; font-size: 11.5px; line-height: 1.45; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); }
+  .price { color: #EBB010; font-family: monospace; font-size: 10px; }
+
+  .pickrow { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+  button.pick { flex: 1; background: #1E1610; color: #aaa; border: 1px solid #333; padding: 6px 10px; font-family: 'Rajdhani'; font-size: 11px; letter-spacing: 1.5px; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 3px; }
+  button.pick.on { background: #EBB010; color: #000; border-color: #EBB010; }
+
+  footer { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(7,6,10,0.96); border-top: 1px solid #333; padding: 14px 20px; backdrop-filter: blur(10px); z-index: 100; }
+  footer .row { max-width: 1280px; margin: 0 auto; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  footer .lbl { font-size: 11px; letter-spacing: 2px; color: #888; }
+  footer .picks { font-family: monospace; font-size: 12px; color: #EBB010; flex: 1; min-width: 200px; }
+</style>
+</head>
+<body>
+
+<h1>CURATED LOTTIE PICKS</h1>
+<div class="sub">My shortlist for TORCH. Top pick in each category is gold-bordered. Hover any card to play. Click PICK to lock it in.</div>
+
+<!-- ──────────────────────────────────────────────────────────── COIN -->
+<section>
+  <div class="sec-head"><h2>COIN TOSS</h2><span class="where">pregame.js · beat 2 · winner picks RECEIVE or TAKE A CARD</span></div>
+  <div class="sec-note">
+    <b>Top pick:</b> "Referee Coin Toss" — the only animation that actually shows a referee. Reads as authentic football vs generic gold spin.
+    Use as full beat (~1.8s flip) then DOM team-badges fade in over the result face.
+  </div>
+  <div class="grid" id="g-coin"></div>
+</section>
+
+<!-- ──────────────────────────────────────────────────────────── TD -->
+<section>
+  <div class="sec-head"><h2>TOUCHDOWN</h2><span class="where">gameplay.js · TD celebration beat · plays under "TOUCHDOWN" stamp</span></div>
+  <div class="sec-note">
+    <b>Top pick:</b> "Firework Burst" — clean, gold/red, no characters or text baked in. Plays as a 1.5s burst beneath the team color wash.
+    Stack 2–3 layered (different timings) for big plays. Confetti pick is a fallback for routine TDs.
+  </div>
+  <div class="grid" id="g-td"></div>
+</section>
+
+<!-- ──────────────────────────────────────────────────────────── UNLOCK -->
+<section>
+  <div class="sec-head"><h2>CARD UNLOCK · GOLD TIER</h2><span class="where">shop.js · gold-tier reveal · also viable for first-launch SURE HANDS</span></div>
+  <div class="sec-note">
+    <b>Top pick:</b> "Gold Flare" — a clean radial flare. Premium, no characters, scales any size, doesn't compete with the card art on top.
+    "Open Chest" is the alternate for "this is a big-deal card" moments.
+  </div>
+  <div class="grid" id="g-unlock"></div>
+</section>
+
+<!-- ──────────────────────────────────────────────────────────── ACHIEVEMENT -->
+<section>
+  <div class="sec-head"><h2>ACHIEVEMENT TOAST</h2><span class="where">engine/achievements.js · unlock event · 1.5s accent</span></div>
+  <div class="sec-note">
+    <b>Top pick:</b> "Star Burst" — small, snappy, fits the toast strip without dominating it. Pairs with a gold ring.
+    "Trophy" is the bigger moment for season/streak unlocks.
+  </div>
+  <div class="grid" id="g-ach"></div>
+</section>
+
+<!-- ──────────────────────────────────────────────────────────── BONUS -->
+<section>
+  <div class="sec-head"><h2>BONUS · WORTH GRABBING</h2><span class="where">utility animations that fit TORCH brand for future use</span></div>
+  <div class="sec-note">
+    Not requested, but I'd grab these now while you're shopping. Each is reusable across multiple sites.
+  </div>
+  <div class="grid" id="g-bonus"></div>
+</section>
+
+<footer>
+  <div class="row">
+    <span class="lbl">PICKED:</span>
+    <span class="picks" id="picks">none yet</span>
+    <button id="copy" style="padding:8px 14px;font-family:Rajdhani;font-weight:700;letter-spacing:2px;background:#EBB010;color:#000;border:none;border-radius:3px;cursor:pointer;font-size:11px;">COPY IDS</button>
+  </div>
+</footer>
+
+<script>
+const U = (slug, id, free) => `https://cdnl.iconscout.com/lottie/${free?'free':'premium'}/thumb/${free?'free-':''}${slug}-animation-gif-download-${id}.mp4`;
+
+const PICKS = {
+  coin: [
+    { id:'14044971', url:U('referee-coin-toss','14044971'), name:'Referee Coin Toss', top:true,
+      why:'Actual referee tossing a coin. Reads instantly as football. Best of the entire pool — nothing else has a person + football context.' },
+    { id:'12753938', url:U('coin-toss','12753938'), name:'Coin Toss', top:false,
+      why:'Clean generic gold coin spin. Backup if Referee feels too "stock animation" once you see it in context.' },
+    { id:'11167739', url:U('coin-toss','11167739'), name:'Coin Toss', top:false,
+      why:'Alternate clean gold coin spin. Similar style to 12753938, slightly different rotation arc.' },
+    { id:'8748319', url:U('coin-flip-heads','8748319'), name:'Coin Flip Heads', top:false,
+      why:'Has explicit Heads + Tails companions. Use if you want to LOCK the result frame to whichever side won.' },
+    { id:'8748293', url:U('coin-flip-tails','8748293'), name:'Coin Flip Tails', top:false,
+      why:'Companion to 8748319 — pair them so the toss lands on the "right" side every time.' },
+  ],
+  td: [
+    { id:'11006888', url:U('firework-burst','11006888'), name:'Firework Burst', top:true,
+      why:'Pure radial firework, gold/orange. No characters, no text, no logo. Perfect under TOUCHDOWN stamp + team color wash.' },
+    { id:'11006896', url:U('firework-burst','11006896'), name:'Firework Burst (alt)', top:false,
+      why:'Alternate timing/color from the same series. Stack 2 with offset for big-play TDs (50+ yds).' },
+    { id:'9013836', url:U('confetti-explosion','9013836'), name:'Confetti Explosion', top:false,
+      why:'Multi-color confetti spray — for routine TDs. Less "BIG MOMENT" than fireworks. Save firework for explosive plays only.' },
+    { id:'7078379', url:U('gold','7078379'), name:'Gold burst', top:false,
+      why:'Simple gold radial. Use as a TORCH-points fly-in halo or 1pt PAT made.' },
+    { id:'8293380', url:U('victory-celebration','8293380'), name:'Victory Celebration', top:false,
+      why:'Confetti + ribbons combo. Reserved for game-winning TD only — too much for normal scores.' },
+  ],
+  unlock: [
+    { id:'4465195', url:U('gold-flare','4465195'), name:'Gold Flare', top:true,
+      why:'Single gold radial flare ~0.6s. Plays UNDER the gold-tier card as it scales in. Doesn\'t compete with card art. Reusable for shop, store, end-of-game card grants.' },
+    { id:'8425037', url:U('open-chest','8425037'), name:'Open Chest', top:false,
+      why:'Treasure chest hinged-lid opening with light burst. For "you got something rare" moments. Use sparingly — it\'s heavy.' },
+    { id:'5868801', url:U('star-burst','5868801'), name:'Star Burst', top:false,
+      why:'Quick 4-point star expand. Cheaper visual cost than Gold Flare. Use for SILVER tier reveal so gold stays special.' },
+    { id:'8921845', url:U('gold-treasure-box','8921845'), name:'Gold Treasure Box', top:false,
+      why:'Like Open Chest but gilded. Alternate gold-tier reveal if Gold Flare reads too small.' },
+    { id:'14531046', url:U('flash','14531046'), name:'Flash', top:false,
+      why:'Pure white flash ~0.2s. Useful as a snap/pre-reveal frame BEFORE the actual gold flare.' },
+  ],
+  ach: [
+    { id:'5868804', url:U('star-burst','5868804'), name:'Star Burst', top:true,
+      why:'Clean 5-point gold star expand. Perfect achievement-toast accent — fits the 220×60 strip without overflow.' },
+    { id:'12152668', url:U('trophy','12152668',true), name:'Trophy (free)', top:false,
+      why:'Static-pose trophy with shine. Free asset. Use for SEASON-LEVEL achievements (perfect game, undefeated streak) — not per-snap.' },
+    { id:'4095741', url:U('level-up','4095741'), name:'Level Up', top:false,
+      why:'Iconic "LEVEL UP" arrow burst. Use for star-rating-up events (player gains a star mid-game).' },
+    { id:'11753912', url:U('unlock-button','11753912'), name:'Unlock Button', top:false,
+      why:'Padlock unhinging. For first-time-unlock moments (new team available, new playbook).' },
+    { id:'7374216', url:U('twinkling-star','7374216'), name:'Twinkling Star', top:false,
+      why:'Subtle 1-star sparkle. Use as ambient on a card-back when there\'s an unrevealed reward.' },
+  ],
+  bonus: [
+    { id:'10368994', url:U('exited-fans-cheering-up','10368994'), name:'Excited Fans Cheering', top:true,
+      why:'Crowd silhouette wave — VERY on-brand. Use as ambient backdrop during pregame stadium tunnel or HUD edge during big plays.' },
+    { id:'14594890', url:U('team-doing-high-five','14594890'), name:'Team High Five', top:false,
+      why:'Two players high-fiving. For end-of-drive offense huddle moment or post-TD before kickoff if you ever build one.' },
+    { id:'13208955', url:U('gold-medal','13208955'), name:'Gold Medal', top:false,
+      why:'Medal-on-ribbon. Reserve for end-of-season MVP banner or perfect-game season recap.' },
+    { id:'9874173', url:U('star','9874173'), name:'Star (single)', top:false,
+      why:'Single revealing star — fits player-rating reveal in roster screen as each star fills in across an OVR change.' },
+  ],
+};
+
+const TPL = (cat, p) => {
+  return `
+    <div class="card ${p.top?'top':''}" data-id="${p.id}" data-cat="${cat}">
+      <div class="vidwrap">
+        ${p.top ? '<div class="badge">TOP PICK</div>' : ''}
+        <video src="${p.url}" muted loop preload="metadata" playsinline onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>
+      </div>
+      <div class="meta">
+        <div class="name">${p.name}</div>
+        <div class="id">${p.id} · <span class="price">$5</span></div>
+        <div class="why">${p.why}</div>
+        <div class="pickrow">
+          <button class="pick" data-id="${p.id}" data-cat="${cat}" data-name="${p.name}">PICK</button>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+['coin','td','unlock','ach','bonus'].forEach(cat => {
+  document.getElementById('g-'+cat).innerHTML = PICKS[cat].map(p => TPL(cat,p)).join('');
+});
+
+const picked = {};
+document.querySelectorAll('button.pick').forEach(btn => {
+  btn.onclick = () => {
+    const cat = btn.dataset.cat;
+    const id = btn.dataset.id;
+    const name = btn.dataset.name;
+    if (cat === 'bonus') {
+      picked[`bonus-${id}`] = { id, name, cat };
+      btn.classList.toggle('on');
+      if (!btn.classList.contains('on')) delete picked[`bonus-${id}`];
+    } else {
+      // single-select per category
+      Object.keys(picked).forEach(k => { if (picked[k].cat === cat) delete picked[k]; });
+      document.querySelectorAll(`button.pick[data-cat="${cat}"]`).forEach(b => b.classList.remove('on'));
+      picked[cat] = { id, name, cat };
+      btn.classList.add('on');
+    }
+    refresh();
+  };
+});
+
+function refresh() {
+  const out = Object.values(picked).map(p => `${p.cat.toUpperCase()}=${p.id}`).join('  ·  ');
+  document.getElementById('picks').textContent = out || 'none yet';
+}
+document.getElementById('copy').onclick = () => {
+  const txt = Object.values(picked).map(p => `${p.cat}: ${p.id} (${p.name})`).join('\n');
+  navigator.clipboard.writeText(txt);
+  document.getElementById('copy').textContent = 'COPIED';
+  setTimeout(() => document.getElementById('copy').textContent = 'COPY IDS', 1200);
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TORCH — Design Evolution Comparison</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Barlow+Condensed:wght@400;600;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0804;
+    --brand: #FF4511;
+    --gold: #EBB010;
+    --green: #00ff44;
+    --red: #ff0040;
+    --blue: #4DA6FF;
+    --text-primary: #f7f8f8;
+    --text-muted: #8a8f98;
+    
+    /* Classic Tokens */
+    --classic-bg-surface: #141008;
+    --classic-border: rgba(255, 255, 255, 0.08);
+    
+    /* Research Tokens */
+    --res-border-subtle: rgba(255, 255, 255, 0.05);
+    --res-border-standard: rgba(255, 255, 255, 0.08);
+  }
+
+  body {
+    background: #050402;
+    color: var(--text-primary);
+    font-family: 'Barlow Condensed', sans-serif;
+    margin: 0; padding: 40px 20px;
+    display: flex; flex-direction: column; align-items: center;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1 { font-family: 'Teko'; font-size: 36px; letter-spacing: 4px; color: var(--gold); margin-bottom: 10px; text-transform: uppercase; }
+  .subtitle { font-family: 'Rajdhani'; font-size: 14px; color: var(--text-muted); margin-bottom: 50px; letter-spacing: 2px; }
+
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    max-width: 900px;
+    width: 100%;
+  }
+
+  .column-header {
+    font-family: 'Oswald';
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .example-box {
+    display: flex; flex-direction: column; align-items: center; gap: 15px;
+    margin-bottom: 60px;
+  }
+
+  .label {
+    font-family: 'Rajdhani'; font-size: 11px; font-weight: 700; color: var(--gold);
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  /* --- 1. SCOREBUG COMPARISON --- */
+
+  /* Classic */
+  .classic-scorebug {
+    width: 320px;
+    background: #141008;
+    border: 2px solid #EBB01044;
+    border-radius: 8px;
+    padding: 10px;
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+  }
+  .cl-sb-team { text-align: center; }
+  .cl-sb-name { font-family: 'Oswald'; font-size: 10px; color: #888; }
+  .cl-sb-score { font-family: 'Teko'; font-size: 32px; color: #fff; line-height: 1; }
+  .cl-sb-center { padding: 0 10px; text-align: center; border-left: 1px solid #333; border-right: 1px solid #333; }
+  .cl-sb-clock { font-family: 'Teko'; font-size: 20px; color: var(--red); }
+
+  /* New Glass */
+  .res-scorebug {
+    width: 320px;
+    background: rgba(10, 8, 4, 0.7);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--res-border-standard);
+    border-radius: 14px;
+    padding: 12px;
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .res-sb-team { text-align: center; }
+  .res-sb-name { font-family: 'Oswald'; font-size: 10px; letter-spacing: 2px; color: var(--text-muted); }
+  .res-sb-score { font-family: 'Teko'; font-size: 38px; line-height: 1; }
+  .res-sb-center { border-left: 1px solid var(--res-border-subtle); border-right: 1px solid var(--res-border-subtle); padding: 0 12px; text-align: center; }
+  .res-sb-clock { font-family: 'Teko'; font-size: 24px; color: var(--red); text-shadow: 0 0 12px rgba(255,0,64,0.3); }
+
+  /* --- 2. CARD ELEVATION COMPARISON --- */
+
+  /* Classic */
+  .classic-card {
+    width: 100px; height: 140px;
+    background: linear-gradient(170deg, #FF451130, #0a0804);
+    border: 1.5px solid #FF451166;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    font-family: 'Teko'; font-size: 16px; color: #fff;
+  }
+
+  /* New Luminance */
+  .res-card {
+    width: 100px; height: 140px;
+    background: rgba(255, 255, 255, 0.08); /* Luminance instead of heavy gradient */
+    border: 1px solid var(--res-border-standard);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Teko'; font-size: 18px; color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: transform 0.2s;
+  }
+  .res-card:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.12); }
+
+  /* --- 3. REVEAL SEQUENCE (Animation) --- */
+  .reveal-container {
+    width: 320px; height: 160px;
+    background: #0c0a06;
+    border: 1px solid var(--classic-border);
+    border-radius: 10px;
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  
+  .reveal-classic-text { font-family: 'Teko'; font-size: 40px; color: var(--gold); }
+  
+  .reveal-res-step { position: absolute; opacity: 0; text-align: center; }
+  .btn-demo {
+    margin-top: 10px; padding: 6px 16px;
+    background: #222; border: 1px solid #444; border-radius: 4px;
+    color: #fff; font-family: 'Rajdhani'; font-size: 11px; font-weight: 700;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .btn-demo:hover { background: #333; }
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+
+  <h1>TORCH — DESIGN EVOLUTION</h1>
+  <div class="subtitle">CLASSIC v0.33 vs. RESEARCH-ENHANCED</div>
+
+  <div class="comparison-grid">
+    
+    <!-- LEFT: CLASSIC -->
+    <div class="column">
+      <div class="column-header">CLASSIC (CURRENT)</div>
+      
+      <div class="example-box">
+        <div class="label">SCOREBUG: SOLID SURFACE</div>
+        <div class="classic-scorebug">
+          <div class="cl-sb-team"><div class="cl-sb-name">BOARS</div><div class="cl-sb-score">24</div></div>
+          <div class="cl-sb-center"><div class="cl-sb-clock">0:42</div><div style="font-family:'Rajdhani';font-size:9px;">3RD & 7</div></div>
+          <div class="cl-sb-team"><div class="cl-sb-name">SERPENTS</div><div class="cl-sb-score">21</div></div>
+        </div>
+      </div>
+
+      <div class="example-box">
+        <div class="label">CARDS: HEAVY GRADIENTS & SHADOWS</div>
+        <div class="classic-card">PLAY CARD</div>
+      </div>
+
+      <div class="example-box">
+        <div class="label">REVEAL: SINGLE HIT</div>
+        <div class="reveal-container" id="classic-reveal-box">
+          <div class="reveal-classic-text" id="cl-res">TOUCHDOWN</div>
+        </div>
+        <button class="btn-demo" onclick="runClassic()">PLAY CLASSIC</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: RESEARCH -->
+    <div class="column">
+      <div class="column-header">RESEARCH-ENHANCED</div>
+
+      <div class="example-box">
+        <div class="label">SCOREBUG: APPLE-STYLE GLASS</div>
+        <div class="res-scorebug">
+          <div class="res-sb-team"><div class="res-sb-name">BOARS</div><div class="res-sb-score">24</div></div>
+          <div class="res-sb-center"><div class="res-sb-clock">0:42</div><div style="font-family:'Rajdhani';font-size:10px;color:var(--gold);font-weight:700;">3RD & 7</div></div>
+          <div class="res-sb-team"><div class="res-sb-name">SERPENTS</div><div class="res-sb-score">21</div></div>
+        </div>
+      </div>
+
+      <div class="example-box">
+        <div class="label">CARDS: LINEAR-STYLE LUMINANCE</div>
+        <div class="res-card">PLAY CARD</div>
+      </div>
+
+      <div class="example-box">
+        <div class="label">REVEAL: STRIPE-STYLE SEQUENTIAL</div>
+        <div class="reveal-container" id="res-reveal-box">
+          <div id="r-step-1" class="reveal-res-step" style="font-family:'Oswald';font-size:10px;letter-spacing:3px;color:var(--text-muted);">QB vs CORNERBACK</div>
+          <div id="r-step-2" class="reveal-res-step" style="font-family:'Teko';font-size:48px;color:var(--gold);">TOUCHDOWN</div>
+          <div id="r-step-3" class="reveal-res-step" style="font-family:'Rajdhani';font-size:12px;margin-top:60px;">+42 YDS • +50 TORCH</div>
+        </div>
+        <button class="btn-demo" onclick="runRes()">PLAY ENHANCED</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function runClassic() {
+      gsap.fromTo("#cl-res", { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(2)" });
+    }
+
+    function runRes() {
+      const tl = gsap.timeline();
+      gsap.set(".reveal-res-step", { opacity: 0, scale: 0.8, y: 0 });
+      
+      // 1. Context (The Setup)
+      tl.to("#r-step-1", { opacity: 1, scale: 1, duration: 0.4, ease: "power2.out" });
+      tl.to("#r-step-1", { opacity: 0, y: -15, duration: 0.3, delay: 0.7 });
+      
+      // 2. The Result (The Slam)
+      tl.to("#r-step-2", { opacity: 1, scale: 1, duration: 0.4, ease: "power4.out" }, "-=0.1");
+      
+      // 3. The Reward (The Settle)
+      tl.to("#r-step-2", { y: -25, scale: 0.8, duration: 0.5, ease: "power2.inOut", delay: 0.4 });
+      tl.to("#r-step-3", { opacity: 1, y: -5, duration: 0.4, ease: "power2.out" }, "-=0.2");
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TORCH — Wordmark Width Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@700&family=Playfair+Display:wght@900&family=Josefin+Sans:wght@100;400&family=Italiana&family=DM+Serif+Display&family=Chakra+Petch:wght@600&family=Righteous&family=Major+Mono+Display&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Teko:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #07060A; color: #fff; font-family: 'Rajdhani', sans-serif; padding: 24px 20px 60px; }
+  h1 { font-family: 'Teko', sans-serif; font-size: 40px; letter-spacing: 3px; margin: 0 0 4px; }
+  .sub { color: #888; font-size: 12px; letter-spacing: 2px; margin-bottom: 24px; text-transform: uppercase; }
+  h2 { font-family: 'Teko', sans-serif; font-size: 22px; letter-spacing: 2px; color: #EBB010; margin: 32px 0 12px; border-bottom: 1px solid rgba(235,176,16,0.3); padding-bottom: 6px; }
+
+  table { width: 100%; max-width: 1100px; border-collapse: collapse; background: #141008; border: 1px solid #222; }
+  th, td { padding: 10px 12px; text-align: left; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  th { background: #1E1610; color: #EBB010; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; }
+  td { color: #ccc; font-family: 'Rajdhani', monospace; }
+  td.num { text-align: right; font-family: monospace; }
+  td.over { color: #ff5555; font-weight: 700; }
+  td.ok { color: #4ade80; }
+  td.tight { color: #EBB010; }
+  .team-col { font-weight: 700; color: #fff; }
+  .render-cell { background: #0A0804; padding: 14px; display: inline-block; border-radius: 4px; margin: 4px 0; min-height: 60px; display: flex; align-items: center; }
+  .container-sim { border: 1px dashed #EBB010; padding: 8px; display: inline-block; }
+  .container-label { font-size: 9px; color: #EBB010; letter-spacing: 1.5px; margin-bottom: 4px; }
+
+  .card-sim {
+    background: #141008; border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px; padding: 18px 16px; width: 320px; margin: 8px 0;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .card-sim .constraint { font-size: 10px; color: #666; letter-spacing: 1.5px; margin-bottom: 4px; }
+  .card-sim .wm { width: 100%; display: flex; justify-content: center; }
+
+  .legend { display: flex; gap: 16px; margin: 12px 0; font-size: 11px; letter-spacing: 1px; }
+  .legend span { display: flex; align-items: center; gap: 6px; color: #888; }
+  .dot { width: 10px; height: 10px; border-radius: 2px; }
+  .dot.ok { background: #4ade80; }
+  .dot.tight { background: #EBB010; }
+  .dot.over { background: #ff5555; }
+</style>
+</head>
+<body>
+  <h1>WORDMARK WIDTH AUDIT</h1>
+  <div class="sub">Ember Eight · T1 mascot + T3 abbreviation · live rendered measurements</div>
+
+  <div class="legend">
+    <span><span class="dot ok"></span>OK — under 90% of container</span>
+    <span><span class="dot tight"></span>TIGHT — 90–100% of container</span>
+    <span><span class="dot over"></span>OVER — overflows container</span>
+  </div>
+
+  <h2>T1 MASCOT @ HERO SIZE · Team select card (320px usable width)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Team</th>
+        <th>Mascot</th>
+        <th>Font</th>
+        <th>Size</th>
+        <th class="num">Width</th>
+        <th class="num">% of 320</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="t1-tbody"></tbody>
+  </table>
+
+  <h2>T1 VISUAL · rendered inside 320px card</h2>
+  <div id="card-sims"></div>
+
+  <h2>SCOREBUG MASCOT · Panel container (120px typical width)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Team</th>
+        <th>Mascot</th>
+        <th>Font</th>
+        <th>Size</th>
+        <th class="num">Width</th>
+        <th class="num">% of 120</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="t3-tbody"></tbody>
+  </table>
+
+  <h2>SCOREBUG VISUAL · on #07060A background</h2>
+  <div id="scorebug-sim" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+
+<script type="module">
+  import { TEAM_WORDMARKS } from '/src/data/teamWordmarks.js';
+  import { renderTeamWordmark } from '/src/ui/teamWordmark.js';
+
+  const CARD_WIDTH = 320;   // team select card usable width
+  const BUG_WIDTH = 120;    // scorebug per-team panel width (after mascot switch)
+
+  function statusFor(w, container) {
+    if (w > container) return { cls: 'over', label: 'OVER' };
+    if (w > container * 0.9) return { cls: 'tight', label: 'TIGHT' };
+    return { cls: 'ok', label: 'OK' };
+  }
+
+  function measure(el) {
+    // Attach off-screen, measure, return width
+    const box = document.createElement('div');
+    box.style.cssText = 'position:fixed;left:-9999px;top:0;visibility:hidden;';
+    box.appendChild(el);
+    document.body.appendChild(box);
+    const w = el.getBoundingClientRect().width;
+    box.remove();
+    return Math.round(w);
+  }
+
+  // Wait for fonts to load before measuring
+  document.fonts.ready.then(() => {
+    const t1 = document.getElementById('t1-tbody');
+    const t3 = document.getElementById('t3-tbody');
+    const cardSims = document.getElementById('card-sims');
+    const bugSim = document.getElementById('scorebug-sim');
+
+    Object.keys(TEAM_WORDMARKS).forEach(tid => {
+      const wm = TEAM_WORDMARKS[tid];
+      // T1 measure
+      const t1El = renderTeamWordmark(tid, 't1', { fontSize: wm.heroSize, mascot: true });
+      const t1w = measure(t1El);
+      const t1s = statusFor(t1w, CARD_WIDTH);
+      t1.insertAdjacentHTML('beforeend', `
+        <tr>
+          <td class="team-col">${wm.name}</td>
+          <td>${wm.mascot}</td>
+          <td>${wm.font.replace(/['"]/g, '')}</td>
+          <td class="num">${wm.heroSize}</td>
+          <td class="num">${t1w}</td>
+          <td class="num">${Math.round(t1w / CARD_WIDTH * 100)}%</td>
+          <td class="${t1s.cls}">${t1s.label}</td>
+        </tr>
+      `);
+
+      // T1 visual card
+      const card = document.createElement('div');
+      card.className = 'card-sim';
+      card.innerHTML = `<div class="constraint">${wm.name} · 320px card</div>`;
+      const wmDiv = document.createElement('div');
+      wmDiv.className = 'wm';
+      wmDiv.appendChild(renderTeamWordmark(tid, 't1', { fontSize: wm.heroSize, mascot: true }));
+      card.appendChild(wmDiv);
+      cardSims.appendChild(card);
+
+      // Scorebug mascot measure (full name, per-team scorebugSize)
+      const sbSize = wm.scorebugSize || 11;
+      const sbEl = renderTeamWordmark(tid, 't3', { mascot: true, fontSize: sbSize });
+      const sbw = measure(sbEl);
+      const sbs = statusFor(sbw, BUG_WIDTH);
+      t3.insertAdjacentHTML('beforeend', `
+        <tr>
+          <td class="team-col">${wm.name}</td>
+          <td>${wm.mascot}</td>
+          <td>${wm.font.replace(/['"]/g, '')}</td>
+          <td class="num">${sbSize}</td>
+          <td class="num">${sbw}</td>
+          <td class="num">${Math.round(sbw / BUG_WIDTH * 100)}%</td>
+          <td class="${sbs.cls}">${sbs.label}</td>
+        </tr>
+      `);
+
+      // Scorebug visual in scorebug panel mock
+      const panel = document.createElement('div');
+      panel.style.cssText = 'background:#07060A;border:1px solid #222;padding:10px 14px;min-width:120px;text-align:center;border-radius:3px;';
+      panel.appendChild(renderTeamWordmark(tid, 't3', { mascot: true, fontSize: sbSize }));
+      bugSim.appendChild(panel);
+    });
+  });
+</script>
+</body>
+</html>

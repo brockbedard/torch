@@ -1,9 +1,11 @@
 # TORCH Football — CLAUDE.md
 
 ## What This Is
-TORCH Football is a mobile card game (Balatro meets college football). 4 fictional college teams with distinct offensive schemes. Single-game format — each session is one game, TORCH points persist across games. Card-based play selection, personnel system with stars/traits, special teams burn deck, and TORCH points (score = wallet). Built with Vite + vanilla JS + GSAP, deployed on Vercel.
+TORCH Football is a mobile card game (Balatro meets college football). 8 fictional college teams (the Ember Eight conference) with distinct offensive schemes. Single-game format — each session is one game, TORCH points persist across games. Card-based play selection, personnel system with stars/traits, special teams burn deck, and TORCH points (score = wallet). Built with Vite + vanilla JS + GSAP, deployed on Vercel. **Shipping target: iOS + Android app stores via Capacitor** — all new code must work unchanged inside a native webview (see memory: Mobile App Shippability).
 
 ## Version
+**v0.40.0 "Ember Eight" (in flight, on dev)** — 4→8 team expansion shipping into single-game mode. New teams: Vermont Maples, Helix Salamanders, Larkspur Pronghorns, Sacramento Raccoons. Team select rebuilt as vertical hero carousel with POWERHOUSE / CONTENDER / UNDERDOG tier filter + hold-to-coach confirm. Per-team wordmark system lands (9 display typefaces, one per team). All downstream screens (pregame, gameplay, halftime, endGame, seasonRecap, roster) updated for the 8-team roster. Counter matrix, playbooks (4 new + 4 heavy rewrites), and 112 players all wired through. Internal team IDs `stags → Spectres`, `wolves → Dolphins`, `sentinels → Boars` are legacy from prior mascot renames; display names are correct (see Ember Eight bible at `docs/TORCH-EMBER-EIGHT-BIBLE.md`). Mobile-prep phases 1-3: audio 220→7 MB (raw WAV archive gitignored + MP3 transcode), all fonts self-hosted via `@fontsource` (no CDN), `safe-area-inset` + `100dvh` on all screen roots, Capacitor-ready haptics (`src/engine/haptics.js`) + storage (`src/engine/storage.js`) facades for future native-storage swap. Helmet generator tool shipped as a standalone utility at `/mockups/helmets.html`.
+
 **v0.37.0 "Fresh Paint"** — Visual identity overhaul for all 4 team mascots and pregame weather icons. Replaced Boars mascot with detailed multi-path boar illustration from IconScout (gold-to-bronze gradient). Added color gradients to all 4 team logos: Boars gold-to-bronze, Dolphins deep magenta-to-pink, Spectres icy blue gradient body, Serpents lime-to-forest green. Each logo now has its own namespaced `<linearGradient>` def in `teamLogos.js`. Replaced 4 crude hand-drawn weather icons (rain, snow, wind, sun) in the pregame conditions strip with polished filled icons from IconScout Unicons weather pack. All weather icons render as single-path `currentColor` fills at 22px in the gold conditions strip. No gameplay changes — smoke 815/815, build 1.12s.
 
 **v0.36.1 "Spring Cleaning"** — Refactor + dead code pass. Extracted ~260 lines of inline CSS from `gameplay.js` into a sibling `gameplay.css.js` module (gameplay.js is now ~4076 lines, was ~4340). Consolidated team-specific TD celebration config (`colors` + `phrases`) into `teams.js` instead of duplicating it across `gameplay.js` and `seasonRecap.js`. Moved icon data from `src/data/teamLogos.js` and `src/data/torchCardIcons.js` into a new `src/assets/icons/` directory and updated all 8 import sites. Deleted `src/data/badges.js` (~70 lines, fully unreferenced legacy file). Removed dead `initHand`, `cycleCard`, `hotRoute` hand-management functions from `state.js` (the live `cycleCard` is a local in `gameplay.js` with a different signature). Added `"type": "module"` to `package.json`. Cleaned up unreachable `team.celebration` fallback branches at gameplay.js:4080 and seasonRecap.js:190. No behavior changes — engine smoke 821/821, balance test green, build 967ms.
@@ -77,7 +79,32 @@ A high-level map. Per-file listings drift fast — `ls src/<dir>/` is always aut
 | `docs/` | `CLAUDE.md` (design system), `MOBILE-APP-RESEARCH.md`, `PHASE-B-STATUS.md`, `TEST-PLAN-PREPROD.md`, `TESTING-GUIDE.md`, `elevenlabs-sfx-prompts.md`, `research/` (football source-of-truth docs). | — |
 | `public/` | Static assets: `audio/` (crowd loops, sfx, ambient, PA), `mockups/` (in-progress design HTMLs). | — |
 
-## The 4 Teams
+## The Ember Eight
+
+8 teams across 3 talent tiers. Full lore, ghost coaches, regional identity,
+scheme details, and counter matrix live in `docs/TORCH-EMBER-EIGHT-BIBLE.md`
+(canonical). Quick reference:
+
+| Tier | Teams |
+|------|-------|
+| **POWERHOUSE** | Larkspur Pronghorns · Hollowridge Spectres |
+| **CONTENDER** | Vermont Maples · Helix Salamanders · Coral Bay Dolphins · Blackwater Serpents |
+| **UNDERDOG** | Ridgemont Boars · Sacramento Raccoons |
+
+Counter matrix (8-way rock-paper-scissors): see `teams.js → COUNTER_MATRIX`.
+
+**Note on internal team IDs:** 3 IDs are legacy from prior mascot renames
+and don't match the current display name. Not a bug — everything routes
+through `TEAMS[id].name` for UI:
+
+| Internal ID | Display Name | School |
+|---|---|---|
+| `stags` | SPECTRES | Hollowridge State |
+| `wolves` | DOLPHINS | Coral Bay |
+| `sentinels` | BOARS | Ridgemont |
+| `pronghorns`, `maples`, `salamanders`, `serpents`, `raccoons` | (match) | (match) |
+
+Legacy 4-team scheme details (accurate for these specific teams):
 
 | Team | Scheme | Real Analog | Run/Pass | Def Shell |
 |------|--------|-------------|----------|-----------|
@@ -86,15 +113,17 @@ A high-level map. Per-file listings drift fast — `ls src/<dir>/` is always aut
 | **Spectres** (Hollowridge) | Spread RPO | Oregon State, Baylor | 30/70 | Cover 0 blitz |
 | **Serpents** (Blackwater) | Multiple/Pro | Saban, Kirby Smart | 45/55 | Multiple/disguised |
 
-**Counter-play:** Boars > Serpents > Spectres > Dolphins > Boars
-
-### Team Differentiation
+### Team Differentiation (legacy 4)
 | Dimension | Boars | Dolphins | Spectres | Serpents |
 |-----------|-------|--------|-------|---------|
 | Draft pool | RUN 4x | RUN 3x, SCREEN 2x | QUICK 4x, DEEP 3x | All 2x |
 | Best formation | I-Form / Pistol | Shotgun / Pistol | Trips / Empty | Bunch / Twins |
 | Star player | RB | QB | WR1 | Versatile flex |
 | What beats them | Spread + quick pass | Contain QB + zone | Run the ball | Execute fundamentals |
+
+Ember Eight newcomers (Maples, Salamanders, Pronghorns, Raccoons) — see
+`docs/TORCH-EMBER-EIGHT-BIBLE.md` and `docs/EMBER-EIGHT-PLAYBOOKS.md`
+for scheme, personnel, and counter details.
 
 ## TORCH Cards (Score = Wallet)
 24 cards across 3 tiers. Max 3 in hand. Single-use. Icons from game-icons.net (CC BY 3.0).

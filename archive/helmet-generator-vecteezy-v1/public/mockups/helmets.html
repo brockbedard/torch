@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TORCH — Helmet Generator Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0A0804; font-family: 'Rajdhani', sans-serif; color: #fff; padding: 24px 20px 80px; }
+  h1 { font-family: 'Teko', sans-serif; font-size: 40px; letter-spacing: 3px; margin: 0 0 4px; }
+  .sub { color: #888; font-size: 12px; letter-spacing: 2px; margin-bottom: 20px; text-transform: uppercase; }
+
+  .tuner {
+    background: #141008; border: 1px solid #222; border-radius: 6px;
+    padding: 12px 16px; margin: 0 0 24px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 20px;
+    max-width: 900px;
+  }
+  .tuner .title {
+    grid-column: 1/-1;
+    font-family: 'Teko', sans-serif; font-size: 18px; letter-spacing: 3px; color: #EBB010;
+    margin-bottom: 4px;
+  }
+  .tuner label { display: flex; align-items: center; gap: 10px; font-size: 11px; letter-spacing: 1.5px; color: #aaa; text-transform: uppercase; }
+  .tuner label .k { width: 56px; color: #666; flex-shrink: 0; }
+  .tuner label .v { width: 46px; text-align: right; color: #EBB010; font-family: monospace; font-size: 11px; }
+  .tuner input[type="range"] { flex: 1; accent-color: #EBB010; min-width: 60px; }
+  .tuner input[type="checkbox"] { accent-color: #EBB010; }
+  .tuner .reset {
+    background: #333; color: #fff; border: none; padding: 6px 12px; border-radius: 3px;
+    font-family: 'Rajdhani'; font-weight: 700; font-size: 11px; letter-spacing: 1.5px; cursor: pointer;
+    grid-column: 1/-1; justify-self: end;
+  }
+  .tuner select {
+    background: #0A0804; color: #fff; border: 1px solid #333; padding: 3px 8px;
+    font-family: 'Rajdhani'; font-size: 11px; border-radius: 2px; flex: 1;
+  }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; max-width: 1400px; }
+  .cell { background: #141008; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;
+          padding: 16px 14px 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .name { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: 2px; }
+  .school { font-size: 10px; letter-spacing: 1.5px; color: #666; text-transform: uppercase; text-align: center; }
+  .helmet-holder { padding: 6px 0 10px; }
+  .size-row { display: flex; gap: 14px; align-items: flex-end; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); }
+  .size-row > div { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .size-row span { font-size: 9px; letter-spacing: 1.5px; color: #555; }
+
+  footer { color: #444; font-size: 10px; margin-top: 40px; letter-spacing: 1px; line-height: 1.6; max-width: 900px; }
+  footer a { color: #EBB010; text-decoration: none; }
+  footer code { background: #141008; padding: 1px 4px; border-radius: 2px; color: #888; }
+</style>
+</head>
+<body>
+  <h1>HELMET GENERATOR</h1>
+  <div class="sub">Broadcast-quality · parametric team colors · live decal tuning</div>
+
+  <div class="tuner">
+    <div class="title">DECAL TUNING · drag sliders → all 8 teams update live</div>
+    <label><span class="k">X</span><input type="range" id="x" min="0" max="5333" step="10" value="1700"><span class="v" id="x-v">1700</span></label>
+    <label><span class="k">Y</span><input type="range" id="y" min="0" max="5333" step="10" value="2000"><span class="v" id="y-v">2000</span></label>
+    <label><span class="k">Size</span><input type="range" id="size" min="400" max="2500" step="10" value="1200"><span class="v" id="size-v">1200</span></label>
+    <label><span class="k">Tilt</span><input type="range" id="tilt" min="-45" max="45" step="1" value="-5"><span class="v" id="tilt-v">-5°</span></label>
+    <label><span class="k">Opacity</span><input type="range" id="opacity" min="0" max="1" step="0.05" value="0.92"><span class="v" id="opacity-v">0.92</span></label>
+    <label><span class="k">Blend</span>
+      <select id="blend">
+        <option value="normal">normal</option>
+        <option value="multiply" selected>multiply</option>
+        <option value="overlay">overlay</option>
+        <option value="darken">darken</option>
+        <option value="color-burn">color-burn</option>
+        <option value="hard-light">hard-light</option>
+        <option value="soft-light">soft-light</option>
+      </select>
+    </label>
+    <label><span class="k">Layer</span><input type="range" id="layer" min="0" max="122" step="1" value="85"><span class="v" id="layer-v">85</span></label>
+    <label><span class="k">Top α</span><input type="range" id="topalpha" min="0" max="1" step="0.05" value="1"><span class="v" id="topalpha-v">1.00</span></label>
+    <label><span class="k">Decal</span><input type="checkbox" id="show-decal" checked style="margin-right:auto"></label>
+    <button class="reset" id="reset">RESET TO DEFAULTS</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>
+    Helmet base: <span style="color:#EBB010;opacity:0.7">Vecteezy.com</span> — "red-helmet-football-design" by LIA (Free license, attribution required).<br>
+    Source preserved at <code>src/assets/helmets/sources/helmet-template.svg</code> · generator at <code>src/assets/helmets/renderHelmet.js</code><br>
+    Once you're happy with the decal position, tell me the values and I'll bake them into the renderer as the default.
+  </footer>
+
+<script type="module">
+  import { renderHelmet } from '/src/assets/helmets/renderHelmet.js';
+  import { TEAMS } from '/src/data/teams.js';
+
+  const DEFAULTS = { x: 1700, y: 2000, size: 1200, tilt: -5, opacity: 0.92, blend: 'multiply', layer: 85, topalpha: 1, show: true };
+  const state = { ...DEFAULTS };
+
+  const grid = document.getElementById('grid');
+
+  function draw() {
+    grid.innerHTML = '';
+    const decal = { x: state.x, y: state.y, size: state.size, tilt: state.tilt, opacity: state.opacity, blend: state.blend };
+    const common = { showDecal: state.show, decal, decalLayer: state.layer, topLayerOpacity: state.topalpha };
+    Object.keys(TEAMS).forEach(tid => {
+      const team = TEAMS[tid];
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.innerHTML = `
+        <div class="name">${team.name}</div>
+        <div class="school">${team.school || ''}</div>
+        <div class="helmet-holder">${renderHelmet(tid, { size: 220, ...common })}</div>
+        <div class="size-row">
+          <div>${renderHelmet(tid, { size: 48, ...common })}<span>48</span></div>
+          <div>${renderHelmet(tid, { size: 80, ...common })}<span>80</span></div>
+          <div>${renderHelmet(tid, { size: 120, ...common })}<span>120</span></div>
+        </div>
+      `;
+      grid.appendChild(cell);
+    });
+  }
+
+  function bindSlider(id, key, format) {
+    const el = document.getElementById(id);
+    const v = document.getElementById(id + '-v');
+    el.addEventListener('input', () => {
+      state[key] = parseFloat(el.value);
+      v.textContent = format ? format(state[key]) : el.value;
+      draw();
+    });
+  }
+  bindSlider('x', 'x');
+  bindSlider('y', 'y');
+  bindSlider('size', 'size');
+  bindSlider('tilt', 'tilt', v => v + '°');
+  bindSlider('opacity', 'opacity', v => v.toFixed(2));
+  bindSlider('layer', 'layer');
+  bindSlider('topalpha', 'topalpha', v => v.toFixed(2));
+
+  document.getElementById('blend').onchange = (e) => { state.blend = e.target.value; draw(); };
+  document.getElementById('show-decal').onchange = (e) => { state.show = e.target.checked; draw(); };
+  document.getElementById('reset').onclick = () => {
+    Object.assign(state, DEFAULTS);
+    document.getElementById('x').value = DEFAULTS.x; document.getElementById('x-v').textContent = DEFAULTS.x;
+    document.getElementById('y').value = DEFAULTS.y; document.getElementById('y-v').textContent = DEFAULTS.y;
+    document.getElementById('size').value = DEFAULTS.size; document.getElementById('size-v').textContent = DEFAULTS.size;
+    document.getElementById('tilt').value = DEFAULTS.tilt; document.getElementById('tilt-v').textContent = DEFAULTS.tilt + '°';
+    document.getElementById('opacity').value = DEFAULTS.opacity; document.getElementById('opacity-v').textContent = DEFAULTS.opacity.toFixed(2);
+    document.getElementById('blend').value = DEFAULTS.blend;
+    document.getElementById('layer').value = DEFAULTS.layer; document.getElementById('layer-v').textContent = DEFAULTS.layer;
+    document.getElementById('topalpha').value = DEFAULTS.topalpha; document.getElementById('topalpha-v').textContent = DEFAULTS.topalpha.toFixed(2);
+    document.getElementById('show-decal').checked = DEFAULTS.show;
+    draw();
+  };
+
+  draw();
+</script>
+</body>
+</html>

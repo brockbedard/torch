@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TORCH — Season 2 Identity Reveal</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&family=Barlow+Condensed:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0804;
+    --torch: #FF4511;
+    --gold: #EBB010;
+    --glass: rgba(255, 255, 255, 0.05);
+    --border: rgba(255, 255, 255, 0.1);
+    
+    /* Team Colors (Premium Palettes) */
+    --pronghorn-1: #166534; --pronghorn-2: #F59E0B; --pronghorn-bg: #062014;
+    --salamander-1: #2ECC71; --salamander-2: #E84393; --salamander-bg: #186A3B;
+    --maple-1: #7A1E2E; --maple-2: #D97706; --maple-bg: #2E0A14;
+    --raccoon-1: #D4D4D8; --raccoon-2: #FF8C00; --raccoon-bg: #27272A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  .reveal-container {
+    max-width: 430px;
+    margin: 0 auto;
+    background: #000;
+    min-height: 100vh;
+    position: relative;
+    border-left: 1px solid #222;
+    border-right: 1px solid #222;
+    overflow: hidden;
+  }
+
+  header {
+    padding: 40px 20px 20px;
+    text-align: center;
+    background: linear-gradient(to bottom, #111, transparent);
+  }
+
+  .torch-logo {
+    font-family: 'Teko', sans-serif;
+    font-size: 64px;
+    font-weight: 900;
+    letter-spacing: 8px;
+    color: var(--torch);
+    text-transform: uppercase;
+    line-height: 0.8;
+    margin-bottom: 5px;
+    text-shadow: 0 0 20px rgba(255, 69, 17, 0.4);
+  }
+
+  .season-tag {
+    font-family: 'Teko', sans-serif;
+    font-size: 24px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  .matchup-card {
+    margin: 40px 15px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .matchup-header {
+    background: rgba(255,255,255,0.05);
+    padding: 10px;
+    text-align: center;
+    font-family: 'Teko', sans-serif;
+    letter-spacing: 2px;
+    color: #888;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .matchup-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 30px 15px;
+    position: relative;
+  }
+
+  .team-block {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    z-index: 2;
+  }
+
+  .vs-badge {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    background: #fff;
+    color: #000;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Teko', sans-serif;
+    font-weight: 900;
+    font-size: 24px;
+    box-shadow: 0 0 30px rgba(255,255,255,0.3);
+    z-index: 3;
+    font-style: italic;
+  }
+
+  .logo-shield {
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+  }
+
+  .logo-shield svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .team-info {
+    text-align: center;
+  }
+
+  .school-name {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #888;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .mascot-name {
+    font-family: 'Teko', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .ovr-box {
+    margin-top: 8px;
+    background: rgba(255,255,255,0.1);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-family: 'Teko', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1px;
+  }
+
+  .section-title {
+    font-family: 'Teko', sans-serif;
+    font-size: 22px;
+    padding: 0 20px;
+    margin-bottom: 15px;
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, rgba(235, 176, 16, 0.3), transparent);
+  }
+
+  .identity-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    padding: 0 15px 40px;
+  }
+
+  .identity-card {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .card-logo {
+    width: 80px;
+    height: 80px;
+  }
+
+  .card-logo svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .card-name {
+    font-family: 'Teko', sans-serif;
+    font-size: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  .card-swatches {
+    display: flex;
+    gap: 4px;
+  }
+
+  .swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* Helmet Concepts */
+  .helmet-concept {
+    width: 100%;
+    height: 200px;
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .helmet-shell {
+    width: 140px;
+    height: 120px;
+    border-radius: 60px 60px 20px 20px;
+    position: relative;
+    box-shadow: inset -10px -10px 30px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .helmet-stripe {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 100%;
+    background: rgba(255,255,255,0.2);
+  }
+
+  .helmet-logo {
+    width: 60px;
+    height: 60px;
+    z-index: 2;
+    transform: rotate(5deg);
+  }
+
+  .facemask {
+    position: absolute;
+    bottom: -10px;
+    right: -20px;
+    width: 80px;
+    height: 60px;
+    border: 6px solid #ccc;
+    border-radius: 0 0 30px 10px;
+    z-index: 3;
+    border-top: none;
+    border-left: none;
+  }
+
+  /* Specific Team Styling Overrides */
+  .t-pronghorn .helmet-shell { background: var(--pronghorn-bg); }
+  .t-pronghorn .helmet-stripe { background: var(--pronghorn-2); }
+  .t-pronghorn .facemask { border-color: #757677; }
+  
+  .t-salamander .helmet-shell { background: var(--salamander-bg); }
+  .t-salamander .helmet-stripe { background: var(--salamander-2); }
+  .t-salamander .facemask { border-color: #524956; }
+
+  .t-maple .helmet-shell { background: var(--maple-bg); }
+  .t-maple .helmet-stripe { background: var(--maple-2); }
+  .t-maple .facemask { border-color: #872a00; }
+
+  .t-raccoon .helmet-shell { background: var(--raccoon-bg); }
+  .t-raccoon .helmet-stripe { background: var(--raccoon-2); }
+  .t-raccoon .facemask { border-color: #333; }
+
+</style>
+</head>
+<body>
+
+<div class="reveal-container">
+  <header>
+    <div class="torch-logo">TORCH</div>
+    <div class="season-tag">Season 2: New Blood</div>
+  </header>
+
+  <div class="section-title">MARQUEE MATCHUP</div>
+
+  <div class="matchup-card">
+    <div class="matchup-header">NON-CONFERENCE CLASH</div>
+    <div class="matchup-content">
+      <div class="vs-badge">VS</div>
+      
+      <div class="team-block">
+        <div class="logo-shield">
+          <!-- PRONGHORN PREMIUM -->
+          <svg viewBox="0 0 64 64">
+            <defs>
+              <linearGradient id="prong-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#166534;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <path fill="url(#prong-grad)" d="M41.599,30.93c3.364-2.234,4.747-5.226,4.747-5.226,1.702-5.039,14.427-5.664,14.427-5.664-3.444,14.653-16.607,15.038-16.607,15.038"/>
+            <path fill="url(#prong-grad)" d="M19.835,35.078s-13.164-.386-16.607-15.038c0,0,12.725.625,14.427,5.664,0,0,1.383,2.992,4.747,5.226"/>
+            <path fill="#ffffff" opacity="0.4" d="M16.614 24.664s.914 1.978 3.065 3.918c-1.406-1.548-2.025-2.878-2.025-2.878-.282-.834-.87-1.545-1.647-2.154.262.346.473.715.608 1.114Z"/>
+            <path fill="#e6ffed" d="M35.563,26.156c1.755-5.518,6.888-9.294,8.457-10.345.293-.186.465-.293.465-.293,9.68-4.242,6.954-14.998,6.954-14.998,0,0,7.127,8.496-1.024,15.171-.705.572-1.489,1.05-2.287,1.489-1.955,1.064-6.967,4.521-9.028,9.68"/>
+            <path fill="#e6ffed" d="M24.901,26.861c-2.061-5.159-7.074-8.616-9.028-9.68-.798-.439-1.582-.917-2.287-1.489C5.434,9.017,12.561.52,12.561.52c0,0-2.726,10.757,6.954,14.998,0,0,.173.106.465.293,1.569,1.05,6.701,4.827,8.457,10.345"/>
+          </svg>
+        </div>
+        <div class="team-info">
+          <div class="school-name">Larkspur</div>
+          <div class="mascot-name" style="color:#F59E0B">Pronghorns</div>
+          <div class="ovr-box">92 OVR</div>
+        </div>
+      </div>
+
+      <div class="team-block">
+        <div class="logo-shield">
+          <!-- RACCOON PREMIUM -->
+          <svg viewBox="0 0 496 496">
+            <defs>
+              <linearGradient id="raccoon-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#FF8C00;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#D4D4D8;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <path fill="#333" d="M457.89,193.64c-1.24-1.13-2.07-2.62-2.44-4.26c-0.5-2.25-1.07-4.45-1.69-6.62l0.43-0.12 c50.67-66.3,30.22-152.45,23.06-176.9c-1.16-3.98-5.18-6.38-9.25-5.59C380.82,17.08,353.13,70.86,348,84 c-66.084,31.931-132.741,30.685-199.9,0.34c-0.04-0.11-0.09-0.23-0.13-0.34c-5.2-12.75-32.81-66.92-120-83.85 c-4.07-0.79-8.08,1.61-9.25,5.59c-7.15,24.45-27.61,110.6,23.06,176.9l0.44,0.12c-0.62,2.17-1.19,4.37-1.69,6.62 c-0.37,1.64-1.2,3.13-2.45,4.26c-7.77,7.03-36.94,36.53-38.08,83.54c-0.03,1.38,1.29,2.38,2.6,1.97 c5.44-1.74,18.06-5.63,25.71-6.81c1.57-0.24,2.77,1.38,2.1,2.82c-3.81,8.19-13.49,32.18-17.08,70.78"/>
+            <path fill="#111" d="M432 280c0 0-4 12-16 20 10.83 6.37 16 12 16 12-5.22 5.4-7.88 12.3-10.15 19.88-7.69 25.58-11.02 58.86-93.85 68.12l-.31-.02c3.37-44.84-23.37-78.44-36.62-98.02-4.82-7.12-7.22-15.61-6.87-24.21 1.7-41.2 14.15-40.84 27.8-81.75 0 0 12 12 12 32 0 0 32-32 72-32 0 0-3.33 16.68-3.91 43.96-.13 5.96 2.01 11.76 6.07 16.13C403.86 262.23 414.23 271.12 432 280z"/>
+            <path fill="#FF8C00" d="M107.65 96.63c0 0-18.1-18.97-47.8-20.53-1.62-.08-2.64 1.73-1.75 3.08 3.14 4.81 9.06 14.18 12.68 22.07.6 1.3-.3 2.78-1.72 2.84-5.12.21-16.33.92-28.53 3.25l-.79.18C31.13 69.15 39.97 36 39.97 36 96.61 52.66 106.07 85.96 107.65 96.63zM456 36c0 0 8.84 33.15.23 71.52l-.79-.18c-12.2-2.33-23.41-3.04-28.52-3.25-1.43-.06-2.32-1.54-1.73-2.84 3.62-7.89 9.54-17.26 12.69-22.07.89-1.35-.13-3.16-1.76-3.08-29.7 1.56-47.8 20.53-47.8 20.53C389.9 85.96 399.337 52.66 456 36z"/>
+            <path fill="url(#raccoon-grad)" d="M347,84h-99.03h-99l-0.87,0.34c30.45,78.55,62.55,74.73,95.23,94.37c1.41,0.85,3.01,1.28,4.61,1.29 c1.62,0.01,3.24-0.42,4.67-1.29C285.34,159.04,317.51,162.9,348,84H347z"/>
+          </svg>
+        </div>
+        <div class="team-info">
+          <div class="school-name">Sacramento</div>
+          <div class="mascot-name" style="color:#FF8C00">Raccoons</div>
+          <div class="ovr-box">74 OVR</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">TEAM IDENTITIES</div>
+
+  <div class="identity-grid">
+    <!-- PRONGHORN -->
+    <div class="identity-card t-pronghorn">
+      <div class="helmet-concept">
+        <div class="helmet-shell">
+          <div class="helmet-stripe"></div>
+          <div class="helmet-logo">
+             <svg viewBox="0 0 64 64"><path fill="#fff" d="M35.563,26.156c1.755-5.518,6.888-9.294,8.457-10.345.293-.186.465-.293.465-.293,9.68-4.242,6.954-14.998,6.954-14.998,0,0,7.127,8.496-1.024,15.171-.705.572-1.489,1.05-2.287,1.489-1.955,1.064-6.967,4.521-9.028,9.68"/></svg>
+          </div>
+          <div class="facemask"></div>
+        </div>
+      </div>
+      <div class="card-name">PRONGHORNS</div>
+      <div class="card-swatches">
+        <div class="swatch" style="background: var(--pronghorn-1)"></div>
+        <div class="swatch" style="background: var(--pronghorn-2)"></div>
+        <div class="swatch" style="background: #fff"></div>
+      </div>
+    </div>
+
+    <!-- SALAMANDER -->
+    <div class="identity-card t-salamander">
+      <div class="helmet-concept">
+        <div class="helmet-shell">
+          <div class="helmet-stripe"></div>
+          <div class="helmet-logo">
+            <svg viewBox="0 0 504 465">
+              <path fill="#fff" d="M378.217,290.486l-23.88-48.95c-1.34-0.34-2.72-0.68-4.13-1c-13.2-3.01-38.485-19.773-53.625-17.593c-11.78,1.7-13.654,21.193-24.434,26.843c-10.475,18.754-24.026,34.235-56.01,30.11c-19.95,2.98-61.19-4.64-104.4-7.1c-3.3-5.75-8.48-10.3-14.69-12.8c-3.43-1.39-8.195-7.62-12.125-7.62c-11.18,0-21.208,4.52-26.298,13.64c-7.16,0-12.697,7.57-18.967,8.51c-17.5,2.58-30.63,8.81-34.25,18.74c-4.93,13.49,4.04,29.93,13.26,36.49c9.23,6.57,31.04,5.89,39.07,9.24c8.03,3.34,9.1,15.98,17.47,19.23c8.38,3.25,22.2-3.55,33.67-1.09c5.08,1.1,18.43,8.95,36.68,17.35c0.26,1.27,0.49,2.55,0.71,3.83l35.12,10.08c15.46,4.74,32.27,8.08,49.39,8.08c56.87,0,111.36-39.75,111.36-39.75c-0.56-7.31,33.29-6.715,36.09-14.804v-51.426L378.217,290.486z"/>
+            </svg>
+          </div>
+          <div class="facemask"></div>
+        </div>
+      </div>
+      <div class="card-name">SALAMANDERS</div>
+      <div class="card-swatches">
+        <div class="swatch" style="background: var(--salamander-1)"></div>
+        <div class="swatch" style="background: var(--salamander-2)"></div>
+        <div class="swatch" style="background: #fff"></div>
+      </div>
+    </div>
+
+    <!-- MAPLE -->
+    <div class="identity-card t-maple">
+      <div class="helmet-concept">
+        <div class="helmet-shell">
+          <div class="helmet-stripe"></div>
+          <div class="helmet-logo">
+            <svg viewBox="0 0 64 64">
+              <path fill="#fff" d="M32 .75 37 10.83c0 3.024-3 9.072-5 9.072L27 10.83c0-3.024 3-9.072 5-9.072z"/>
+            </svg>
+          </div>
+          <div class="facemask"></div>
+        </div>
+      </div>
+      <div class="card-name">MAPLES</div>
+      <div class="card-swatches">
+        <div class="swatch" style="background: var(--maple-1)"></div>
+        <div class="swatch" style="background: var(--maple-2)"></div>
+        <div class="swatch" style="background: #fff"></div>
+      </div>
+    </div>
+
+    <!-- RACCOON -->
+    <div class="identity-card t-raccoon">
+      <div class="helmet-concept">
+        <div class="helmet-shell">
+          <div class="helmet-stripe"></div>
+          <div class="helmet-logo">
+            <svg viewBox="0 0 496 496">
+              <path fill="#fff" d="M107.65 96.63c0 0-18.1-18.97-47.8-20.53-1.62-.08-2.64 1.73-1.75 3.08 3.14 4.81 9.06 14.18 12.68 22.07.6 1.3-.3 2.78-1.72 2.84-5.12.21-16.33.92-28.53 3.25l-.79.18C31.13 69.15 39.97 36 39.97 36 96.61 52.66 106.07 85.96 107.65 96.63zM456 36c0 0 8.84 33.15.23 71.52l-.79-.18c-12.2-2.33-23.41-3.04-28.52-3.25-1.43-.06-2.32-1.54-1.73-2.84 3.62-7.89 9.54-17.26 12.69-22.07.89-1.35-.13-3.16-1.76-3.08-29.7 1.56-47.8 20.53-47.8 20.53C389.9 85.96 399.337 52.66 456 36z"/>
+            </svg>
+          </div>
+          <div class="facemask"></div>
+        </div>
+      </div>
+      <div class="card-name">RACCOONS</div>
+      <div class="card-swatches">
+        <div class="swatch" style="background: var(--raccoon-1)"></div>
+        <div class="swatch" style="background: var(--raccoon-2)"></div>
+        <div class="swatch" style="background: #fff"></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 0 20px 60px; color: #666; font-size: 12px; line-height: 1.6; text-align: center;">
+    &copy; 2026 TORCH FOOTBALL. ALL RIGHTS RESERVED.<br>
+    SEASON 2 LAUNCHING FALL 2026.
+  </div>
+
+</div>
+
+</body>
+</html>
