@@ -165,6 +165,13 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('Service worker registration failed:', err);
     });
   }
+  
+  // Initialize Vercel Speed Insights
+  import('@vercel/speed-insights').then(({ injectSpeedInsights }) => {
+    injectSpeedInsights();
+  }).catch(err => {
+    console.warn('Speed Insights initialization failed:', err);
+  });
 });
 
 // Initialize audio on first user interaction (standard browser security policy)
