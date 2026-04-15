@@ -8,3 +8,10 @@ dist/
 .fuse_hidden*
 .aidesigner/*
 !.aidesigner/.gitkeep
+
+# IconScout API preview data (generated locally, not part of the repo)
+public/_iconscout-data/
+
+# Claude Code personal / runtime files
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
