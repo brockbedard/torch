@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TORCH — Helmet Generator Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Script / wordmark fonts for helmet text decals (UCLA/Cal/Florida style) -->
+<link href="https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Pacifico&family=Lobster&family=Yellowtail&family=Alfa+Slab+One&family=Oswald:wght@400;700&family=Bungee&family=Permanent+Marker&family=Caveat+Brush&family=Damion&family=Monoton&family=Shrikhand&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0A0804; font-family: 'Rajdhani', sans-serif; color: #fff; padding: 24px 20px 80px; }
+  h1 { font-family: 'Teko', sans-serif; font-size: 40px; letter-spacing: 3px; margin: 0 0 4px; }
+  .sub { color: #888; font-size: 12px; letter-spacing: 2px; margin-bottom: 20px; text-transform: uppercase; }
+
+  /* Global tuner — applies "Apply to all" to every card when clicked */
+  .global {
+    background: #141008; border: 1px solid #222; border-radius: 6px;
+    padding: 10px 14px; margin: 0 0 20px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    max-width: 1500px;
+  }
+  .global .lbl { font-family: 'Teko'; font-weight: 700; font-size: 13px; letter-spacing: 2px; color: #EBB010; }
+  .global button {
+    background: #1E1610; color: #fff; border: 1px solid #333; padding: 6px 12px; border-radius: 3px;
+    font-family: 'Rajdhani'; font-weight: 700; font-size: 10px; letter-spacing: 1.5px; cursor: pointer;
+    text-transform: uppercase;
+  }
+  .global button:hover { background: #EBB010; color: #000; border-color: #EBB010; }
+
+  /* Card grid */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 16px; max-width: 1500px; }
+  .cell {
+    background: #141008; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;
+    padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 10px;
+    min-width: 0; overflow: hidden;
+  }
+  .cell .head { display: flex; align-items: baseline; gap: 8px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.05); min-width: 0; }
+  .cell .name { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 19px; letter-spacing: 2px; white-space: nowrap; }
+  .cell .school { font-size: 9px; letter-spacing: 1.5px; color: #666; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
+  .cell .reset {
+    background: transparent; color: #888; border: none; cursor: pointer; font-size: 10px;
+    font-family: 'Rajdhani'; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; flex-shrink: 0;
+  }
+  .cell .reset:hover { color: #EBB010; }
+  .cell .export-btn {
+    background: #1E1610; color: #EBB010; border: 1px solid #2a2218; cursor: pointer;
+    font-family: 'Rajdhani'; font-weight: 700; font-size: 9px; letter-spacing: 1px;
+    padding: 3px 8px; border-radius: 3px; text-transform: uppercase; flex-shrink: 0;
+  }
+  .cell .export-btn:hover { background: #EBB010; color: #000; border-color: #EBB010; }
+  .cell .export-btn:first-of-type { margin-left: auto; }
+
+  .helmet-holder {
+    background: rgba(255,255,255,0.02); border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 8px 0; aspect-ratio: 5/3;
+    overflow: hidden; position: relative;
+    cursor: grab;
+    touch-action: none; /* prevent scrolling while dragging the decal on mobile */
+    user-select: none;
+  }
+  .helmet-holder.dragging { cursor: grabbing; }
+  .helmet-holder svg { width: 100% !important; height: 100% !important; max-width: 100%; max-height: 100%; display: block; pointer-events: none; }
+
+  /* Size preview strip — shows the helmet at roster/scoreboard sizes below
+     the hero render, so you can spot detail loss at small scales. */
+  .size-strip {
+    display: flex; align-items: flex-end; justify-content: space-around;
+    gap: 8px; padding: 6px 8px; background: rgba(255,255,255,0.02);
+    border-radius: 4px;
+  }
+  .size-strip .slot {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    min-width: 0; flex-shrink: 0;
+  }
+  .size-strip .slot svg { display: block; }
+  .size-strip .slot .px {
+    font-family: 'Rajdhani'; font-size: 8px; font-weight: 700;
+    letter-spacing: 1px; color: #555; text-transform: uppercase;
+  }
+
+  /* Section header — visually groups related controls */
+  .sec-lbl { font-family: 'Teko'; font-weight: 700; font-size: 11px; letter-spacing: 2px; color: #EBB010; opacity: 0.7; margin-top: 4px; text-transform: uppercase; }
+
+  /* Slider row */
+  .sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
+  .sliders label { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: 1px; color: #999; text-transform: uppercase; min-width: 0; }
+  .sliders label .k { width: 40px; color: #555; font-weight: 700; flex-shrink: 0; }
+  .sliders label .v { width: 40px; text-align: right; color: #EBB010; font-family: monospace; font-size: 10px; flex-shrink: 0; }
+
+  /* Custom range slider — bigger hit target + visible thumb for drag reliability */
+  .sliders input[type="range"] {
+    flex: 1; min-width: 0; width: 100%;
+    -webkit-appearance: none; appearance: none; background: transparent;
+    height: 22px; margin: 0; padding: 0; cursor: pointer; touch-action: pan-y;
+  }
+  .sliders input[type="range"]:focus { outline: none; }
+  .sliders input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px; background: #2a2218; border-radius: 2px; border: none;
+  }
+  .sliders input[type="range"]::-moz-range-track {
+    height: 4px; background: #2a2218; border-radius: 2px; border: none;
+  }
+  .sliders input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #EBB010; border: 2px solid #0A0804; cursor: pointer;
+    margin-top: -6px; box-shadow: 0 0 0 1px rgba(235,176,16,0.3);
+  }
+  .sliders input[type="range"]::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #EBB010; border: 2px solid #0A0804; cursor: pointer;
+    box-shadow: 0 0 0 1px rgba(235,176,16,0.3);
+  }
+  .sliders input[type="range"]:hover::-webkit-slider-thumb { background: #ffd040; }
+  .sliders input[type="range"]:hover::-moz-range-thumb { background: #ffd040; }
+  .sliders input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.2); }
+  .sliders input[type="range"]:active::-moz-range-thumb { transform: scale(1.2); }
+
+  /* Color picker */
+  .picker { display: flex; flex-direction: column; gap: 6px; }
+  .picker .row { display: flex; align-items: center; gap: 8px; }
+  .picker .row .which { width: 56px; font-size: 10px; color: #666; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; flex-shrink: 0; }
+  .picker .swatches { display: flex; gap: 3px; flex-wrap: wrap; flex: 1; align-items: center; }
+  .swatch {
+    width: 20px; height: 20px; border-radius: 3px; cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.1s, border-color 0.1s;
+    position: relative;
+  }
+  .swatch:hover { transform: scale(1.12); }
+  .swatch.active { border-color: #EBB010; box-shadow: 0 0 0 1px #0A0804 inset; }
+  .swatch.auto {
+    background: repeating-linear-gradient(45deg, #2a2218, #2a2218 3px, #3a2e1c 3px, #3a2e1c 6px);
+    font-family: 'Rajdhani'; font-weight: 700; font-size: 7px; color: #EBB010;
+    display: flex; align-items: center; justify-content: center; letter-spacing: 0.5px;
+  }
+
+  /* Segmented button group (decal type, finish) */
+  .seg { display: inline-flex; border: 1px solid #2a2218; border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+  .seg button {
+    background: #1E1610; color: #888; border: none; padding: 4px 10px; cursor: pointer;
+    font-family: 'Rajdhani'; font-weight: 700; font-size: 9px; letter-spacing: 1px;
+    text-transform: uppercase; border-right: 1px solid #2a2218;
+  }
+  .seg button:last-child { border-right: none; }
+  .seg button:hover { background: #2a2218; color: #fff; }
+  .seg button.on { background: #EBB010; color: #000; }
+
+  /* Select dropdown (blend mode) */
+  .sel {
+    background: #1E1610; color: #fff; border: 1px solid #2a2218; padding: 4px 8px;
+    border-radius: 3px; font-family: 'Rajdhani'; font-weight: 600; font-size: 10px;
+    letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
+  }
+  .sel:focus { outline: 1px solid #EBB010; }
+
+  /* Number input (jersey number) */
+  .num {
+    background: #1E1610; color: #EBB010; border: 1px solid #2a2218; padding: 4px 6px;
+    border-radius: 3px; width: 48px; font-family: 'Teko'; font-weight: 700; font-size: 13px;
+    text-align: center; letter-spacing: 1px;
+  }
+  .num:focus { outline: 1px solid #EBB010; }
+
+  /* Preset chip — one per saved snapshot. Clicking the name loads it;
+     the × deletes it. No confirm dialog for delete because saves are cheap. */
+  .preset-chip {
+    display: inline-flex; align-items: stretch;
+    border: 1px solid #2a2218; border-radius: 3px; overflow: hidden;
+    background: #1E1610; height: 26px;
+  }
+  .preset-chip .name {
+    background: transparent; color: #EBB010; border: none; cursor: pointer;
+    font-family: 'Rajdhani'; font-weight: 700; font-size: 10px;
+    letter-spacing: 1px; padding: 0 10px; text-transform: uppercase;
+    border-right: 1px solid #2a2218;
+  }
+  .preset-chip .name:hover { background: #EBB010; color: #000; }
+  .preset-chip .x {
+    background: transparent; color: #666; border: none; cursor: pointer;
+    font-family: monospace; font-size: 12px; padding: 0 8px;
+  }
+  .preset-chip .x:hover { background: #3a1a1a; color: #ff6666; }
+  .preset-empty {
+    color: #555; font-size: 10px; letter-spacing: 1px; padding: 6px 0;
+    font-style: italic;
+  }
+
+  footer { color: #444; font-size: 10px; margin-top: 40px; letter-spacing: 1px; line-height: 1.6; max-width: 1500px; }
+  footer code { background: #141008; padding: 1px 4px; border-radius: 2px; color: #888; }
+</style>
+</head>
+<body>
+  <h1>HELMET GENERATOR</h1>
+  <div class="sub">Per-helmet tuning · shell · mask · stripe · decal · blend · finish · chinstrap fade · ink depth</div>
+
+  <div class="global">
+    <span class="lbl">GLOBAL</span>
+    <button id="reset-all">RESET ALL</button>
+    <button id="copy-all">COPY ALL CONFIGS</button>
+    <button id="export-all-svg">EXPORT ALL SVG</button>
+    <button id="export-all-png">EXPORT ALL PNG</button>
+    <button id="apply-decal-all">APPLY DECAL POS TO ALL</button>
+    <span style="color:#666;font-size:10px;letter-spacing:1px;">per-card SVG / PNG buttons live in each card header</span>
+  </div>
+
+  <div class="global" style="flex-direction:column;align-items:stretch;gap:8px;">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <span class="lbl">PRESETS</span>
+      <button id="save-preset">SAVE AS…</button>
+      <span id="preset-status" style="color:#666;font-size:10px;letter-spacing:1px;">saved presets persist locally — share via COPY ALL CONFIGS</span>
+    </div>
+    <div id="preset-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+  </div>
+
+  <div class="global" style="flex-direction:column;align-items:stretch;gap:10px;">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <span class="lbl">PATH LABELER</span>
+      <button id="toggle-debug">SHOW LABELED HELMET</button>
+      <button id="toggle-labels">HIDE NUMBERS</button>
+      <button id="clear-picks">CLEAR PICKS</button>
+      <span id="debug-hint" style="color:#666;font-size:10px;letter-spacing:1px;">hide numbers to click small paths cleanly</span>
+      <span id="debug-readout" style="color:#EBB010;font-size:11px;font-family:monospace;margin-left:auto;"></span>
+    </div>
+    <div id="debug-stage" style="display:none;background:#0A0804;border-radius:6px;padding:12px;position:relative;overflow:auto;"></div>
+    <div id="debug-picked" style="display:none;font-size:11px;color:#bbb;font-family:monospace;line-height:1.6;"></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>
+    Helmet base: <span style="color:#EBB010;opacity:0.7">Adobe Stock #186214272</span> — "Football helmet" by The Vector Doctor · viewBox 0 0 5000 3000.<br>
+    Stripe color overrides the shellLite band (4 paths). Depth controls how many shell paths render OVER the decal (lower = more paths overlay the logo for an inked look).<br>
+    Once a helmet config looks right, click "COPY ALL CONFIGS" to grab the JSON. Paste to me and I'll bake the values into <code>src/data/teams.js</code> (helmet.base / facemask / stripe) or <code>helmetVariants.js</code>.
+  </footer>
+
+<script type="module">
+  import { renderHelmet, renderHelmetDebug, HELMET_PATH_COUNT } from '/src/assets/helmets/renderHelmet.js';
+  import { TEAMS } from '/src/data/teams.js';
+
+  // Per-team palette = the team's own colors (primary, secondary, accent,
+  // helmet.stripe) + generic neutrals. Keeps the swatch row focused on
+  // realistic team options, never a rainbow. Dedupe on hex.
+  const GENERICS = [
+    { hex: '#FFFFFF', name: 'White' },
+    { hex: '#A8A8A8', name: 'Grey' },
+    { hex: '#000000', name: 'Black' },
+  ];
+  function getPalette(teamId) {
+    const t = TEAMS[teamId];
+    const candidates = [
+      { hex: t.colors?.primary, name: 'Primary' },
+      { hex: t.colors?.secondary, name: 'Secondary' },
+      { hex: t.accent, name: 'Accent' },
+      { hex: t.helmet?.stripe, name: 'Stripe' },
+    ].filter(c => c.hex);
+    const seen = new Set();
+    const teamColors = [];
+    for (const c of candidates) {
+      const key = c.hex.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      teamColors.push(c);
+    }
+    const generics = GENERICS.filter(g => !seen.has(g.hex.toLowerCase()));
+    return [...teamColors, ...generics];
+  }
+
+  const BLEND_MODES = ['auto', 'normal', 'multiply', 'screen', 'overlay', 'hard-light', 'soft-light', 'darken', 'lighten'];
+  const FINISHES = [
+    { key: 'standard', label: 'Std' },
+    { key: 'chrome',   label: 'Chrome' },
+    { key: 'matte',    label: 'Matte' },
+  ];
+  const DECAL_TYPES = [
+    { key: 'logo',   label: 'Logo' },
+    { key: 'text',   label: 'Text' },
+    { key: 'number', label: 'Num' },
+  ];
+
+  // Script / display fonts for text decals. Kaushan is the Florida/Ole Miss
+  // bold brush feel; Pacifico is UCLA/Miami rounded casual; Lobster and
+  // Yellowtail are alternate scripts; Alfa Slab, Oswald, Bungee, Teko
+  // cover block-letter wordmarks (CAL, TEXAS, MIAMI).
+  const DECAL_FONTS = [
+    // Cursive / brush — core helmet-script vocabulary
+    'Kaushan Script',     // Florida / Ole Miss — bold brush
+    'Pacifico',           // UCLA / Miami — rounded casual
+    'Lobster',            // bold cursive
+    'Yellowtail',         // flowing brush
+    'Damion',             // sporty brush — "Coach signed the yearbook"
+    'Permanent Marker',   // rough sharpie — rebel DIY
+    'Caveat Brush',       // friendly brush-pen
+    'Monoton',            // art-deco outlined retro script
+    // Block / heavy display — CAL, TEXAS, MIAMI wordmarks
+    'Shrikhand',          // Indian-calligraphy-influenced heavy display
+    'Alfa Slab One',
+    'Oswald',
+    'Bungee',
+    'Teko',
+  ];
+
+  // Default config per card. `stripe: null` = use the auto shellLite cascade;
+  // any hex overrides the shellLite band independent of shell/mask.
+  const DEFAULTS = {
+    stripe: null,
+    lip: null,
+    hideRivets: false,
+    facing: 'right',
+    flipLogo: false,
+    shellSolidity: 0,
+    x: 1700, y: 1100, size: 1100, tilt: -4, opacity: 0.95,
+    decalType: 'logo',
+    decalNumber: '12',
+    decalText: 'Torch',
+    decalFont: 'Kaushan Script',
+    decalTextColor: '#ffffff',
+    decalBlend: 'auto',
+    finish: 'standard',
+    topOpacity: 1,
+    decalLayer: 76,
+  };
+
+  // Per-team state — each card tracks its own config independently
+  const state = {};
+  Object.keys(TEAMS).forEach(tid => {
+    const t = TEAMS[tid];
+    state[tid] = {
+      shell: t.helmet?.base || '#888',
+      facemask: t.helmet?.facemask || '#ccc',
+      ...DEFAULTS,
+    };
+  });
+  function resetTeam(tid) {
+    const t = TEAMS[tid];
+    state[tid] = { shell: t.helmet?.base, facemask: t.helmet?.facemask, ...DEFAULTS };
+  }
+
+  let lastTouched = null;
+  const grid = document.getElementById('grid');
+
+  // ── Swatch markup ────────────────────────────────────────────────────
+  function buildSwatches(teamId, which, active, opts = {}) {
+    const items = [];
+    if (opts.includeAuto) {
+      const isActive = (active == null);
+      items.push(`<div class="swatch auto ${isActive?'active':''}" data-team="${teamId}" data-which="${which}" data-hex="" title="Auto (shell-derived)">AUTO</div>`);
+    }
+    getPalette(teamId).forEach(p => {
+      const isActive = active != null && (p.hex.toLowerCase() === active.toLowerCase());
+      items.push(`<div class="swatch ${isActive?'active':''}" data-team="${teamId}" data-which="${which}" data-hex="${p.hex}" style="background:${p.hex}" title="${p.name} (${p.hex})"></div>`);
+    });
+    return items.join('');
+  }
+
+  // ── Segmented control markup ─────────────────────────────────────────
+  function buildSeg(teamId, setting, options, current) {
+    return options.map(o =>
+      `<button class="${o.key === current ? 'on' : ''}" data-team="${teamId}" data-setting="${setting}" data-value="${o.key}">${o.label}</button>`
+    ).join('');
+  }
+
+  // ── Select dropdown markup ───────────────────────────────────────────
+  function buildSelect(teamId, key, options, current) {
+    const opts = options.map(v => `<option value="${v}" ${v===current?'selected':''}>${v}</option>`).join('');
+    return `<select class="sel" data-team="${teamId}" data-key="${key}">${opts}</select>`;
+  }
+
+  function formatVal(key, val) {
+    if (key === 'tilt') return val + '°';
+    if (key === 'opacity' || key === 'topOpacity' || key === 'shellSolidity') return (val ?? 0).toFixed(2);
+    return (val|0).toString();
+  }
+
+  function buildCard(teamId) {
+    const team = TEAMS[teamId];
+    const s = state[teamId];
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.id = `cell-${teamId}`;
+    cell.innerHTML = `
+      <div class="head">
+        <span class="name">${team.name}</span>
+        <span class="school">${team.school || ''}</span>
+        <button class="export-btn" data-team="${teamId}" data-fmt="svg">SVG</button>
+        <button class="export-btn" data-team="${teamId}" data-fmt="png">PNG</button>
+        <button class="reset" data-team="${teamId}">RESET</button>
+      </div>
+      <div class="helmet-holder" data-role="helmet"></div>
+      <div class="size-strip" data-role="sizes"></div>
+
+      <div class="sec-lbl">Decal Position</div>
+      <div class="sliders">
+        <label><span class="k">X</span><input type="range" data-team="${teamId}" data-key="x" min="0" max="5000" step="10" value="${s.x}"><span class="v" data-key="x">${formatVal('x',s.x)}</span></label>
+        <label><span class="k">Y</span><input type="range" data-team="${teamId}" data-key="y" min="0" max="3000" step="10" value="${s.y}"><span class="v" data-key="y">${formatVal('y',s.y)}</span></label>
+        <label><span class="k">Size</span><input type="range" data-team="${teamId}" data-key="size" min="200" max="2500" step="10" value="${s.size}"><span class="v" data-key="size">${formatVal('size',s.size)}</span></label>
+        <label><span class="k">Tilt</span><input type="range" data-team="${teamId}" data-key="tilt" min="-45" max="45" step="1" value="${s.tilt}"><span class="v" data-key="tilt">${formatVal('tilt',s.tilt)}</span></label>
+        <label><span class="k">Op</span><input type="range" data-team="${teamId}" data-key="opacity" min="0" max="1" step="0.05" value="${s.opacity}"><span class="v" data-key="opacity">${formatVal('opacity',s.opacity)}</span></label>
+        <label><span class="k">Chin</span><input type="range" data-team="${teamId}" data-key="topOpacity" min="0" max="1" step="0.05" value="${s.topOpacity}"><span class="v" data-key="topOpacity">${formatVal('topOpacity',s.topOpacity)}</span></label>
+        <label><span class="k">Depth</span><input type="range" data-team="${teamId}" data-key="decalLayer" min="0" max="76" step="1" value="${s.decalLayer}"><span class="v" data-key="decalLayer">${formatVal('decalLayer',s.decalLayer)}</span></label>
+      </div>
+
+      <div class="sec-lbl">Colors</div>
+      <div class="picker">
+        <div class="row">
+          <span class="which">Shell</span>
+          <div class="swatches" data-which="shell">${buildSwatches(teamId, 'shell', s.shell)}</div>
+        </div>
+        <div class="row">
+          <span class="which">Solid</span>
+          <input type="range" data-team="${teamId}" data-key="shellSolidity" min="0" max="1" step="0.05" value="${s.shellSolidity}" style="flex:1;">
+          <span class="v" data-key="shellSolidity" style="width:40px;text-align:right;color:#EBB010;font-family:monospace;font-size:10px;">${formatVal('shellSolidity', s.shellSolidity)}</span>
+        </div>
+        <div class="row">
+          <span class="which">Mask</span>
+          <div class="swatches" data-which="facemask">${buildSwatches(teamId, 'facemask', s.facemask)}</div>
+        </div>
+        <div class="row">
+          <span class="which">Stripe</span>
+          <div class="swatches" data-which="stripe">${buildSwatches(teamId, 'stripe', s.stripe, { includeAuto: true })}</div>
+        </div>
+        <div class="row">
+          <span class="which">Lip</span>
+          <div class="swatches" data-which="lip">${buildSwatches(teamId, 'lip', s.lip, { includeAuto: true })}</div>
+        </div>
+      </div>
+
+      <div class="sec-lbl">Decal &amp; Finish</div>
+      <div class="picker">
+        <div class="row">
+          <span class="which">Decal</span>
+          <div class="seg" data-role="decalType-seg">${buildSeg(teamId, 'decalType', DECAL_TYPES, s.decalType)}</div>
+          <input class="num" data-team="${teamId}" data-key="decalNumber" value="${s.decalNumber}" maxlength="3"
+            style="display:${s.decalType==='number'?'inline-block':'none'}" data-role="decalNumber">
+          <input class="num" data-team="${teamId}" data-key="decalText" value="${s.decalText.replace(/"/g,'&quot;')}" maxlength="14"
+            style="display:${s.decalType==='text'?'inline-block':'none'};width:110px;font-family:'${s.decalFont}',sans-serif;font-weight:400;font-size:14px;"
+            data-role="decalText" placeholder="Florida">
+        </div>
+        <div class="row" data-role="text-row" style="display:${s.decalType==='text'?'flex':'none'}">
+          <span class="which">Font</span>
+          ${buildSelect(teamId, 'decalFont', DECAL_FONTS, s.decalFont)}
+          <span class="which" style="margin-left:8px;">Ink</span>
+          <div class="swatches" data-which="decalTextColor">${buildSwatches(teamId, 'decalTextColor', s.decalTextColor)}</div>
+        </div>
+        <div class="row">
+          <span class="which">Blend</span>
+          ${buildSelect(teamId, 'decalBlend', BLEND_MODES, s.decalBlend)}
+        </div>
+        <div class="row">
+          <span class="which">Finish</span>
+          <div class="seg" data-role="finish-seg">${buildSeg(teamId, 'finish', FINISHES, s.finish)}</div>
+        </div>
+        <div class="row">
+          <span class="which">Rivets</span>
+          <div class="seg" data-role="rivets-seg">
+            <button class="${!s.hideRivets ? 'on' : ''}" data-team="${teamId}" data-setting="hideRivets" data-value="false">Show</button>
+            <button class="${s.hideRivets ? 'on' : ''}" data-team="${teamId}" data-setting="hideRivets" data-value="true">Hide</button>
+          </div>
+        </div>
+        <div class="row">
+          <span class="which">Facing</span>
+          <div class="seg" data-role="facing-seg">
+            <button class="${s.facing === 'right' ? 'on' : ''}" data-team="${teamId}" data-setting="facing" data-value="right">Right</button>
+            <button class="${s.facing === 'left' ? 'on' : ''}" data-team="${teamId}" data-setting="facing" data-value="left">Left</button>
+          </div>
+          <span class="which" style="margin-left:8px;">Flip Logo</span>
+          <div class="seg" data-role="flip-seg">
+            <button class="${!s.flipLogo ? 'on' : ''}" data-team="${teamId}" data-setting="flipLogo" data-value="false">Off</button>
+            <button class="${s.flipLogo ? 'on' : ''}" data-team="${teamId}" data-setting="flipLogo" data-value="true">On</button>
+          </div>
+        </div>
+      </div>
+    `;
+    grid.appendChild(cell);
+    updateHelmet(teamId);
+    attachDragToHolder(teamId, cell);
+  }
+
+  // Drag-to-position — click/touch anywhere on the helmet holder and drag
+  // to move the decal. Screen-pixel delta is converted to SVG viewBox units
+  // (0..5000 × 0..3000) so the drag is 1:1 with what the user sees. Sliders
+  // stay in sync via updateSliderValues. Size-strip re-render is skipped
+  // during active drag to keep the feel responsive.
+  function attachDragToHolder(teamId, cell) {
+    const holder = cell.querySelector('[data-role="helmet"]');
+    if (!holder) return;
+    let drag = null;
+
+    holder.addEventListener('pointerdown', (e) => {
+      // Only respond to primary button / primary touch
+      if (e.button !== undefined && e.button !== 0) return;
+      const svg = holder.querySelector('svg');
+      if (!svg) return;
+      const rect = svg.getBoundingClientRect();
+      const s = state[teamId];
+      drag = {
+        startX: e.clientX, startY: e.clientY,
+        decalX: s.x, decalY: s.y,
+        w: rect.width, h: rect.height,
+      };
+      holder.setPointerCapture(e.pointerId);
+      holder.classList.add('dragging');
+      lastTouched = teamId;
+      e.preventDefault();
+    });
+
+    holder.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      const dx = (e.clientX - drag.startX) * 5000 / drag.w;
+      const dy = (e.clientY - drag.startY) * 3000 / drag.h;
+      const s = state[teamId];
+      s.x = Math.max(0, Math.min(5000, drag.decalX + dx));
+      s.y = Math.max(0, Math.min(3000, drag.decalY + dy));
+      updateHelmet(teamId, true); // skip strip during drag for perf
+      updateSliderValues(teamId); // keep X/Y sliders in sync
+    });
+
+    function endDrag(e) {
+      if (!drag) return;
+      drag = null;
+      holder.classList.remove('dragging');
+      try { holder.releasePointerCapture(e.pointerId); } catch (_) {}
+      updateHelmet(teamId); // refresh size strip with final position
+    }
+    holder.addEventListener('pointerup', endDrag);
+    holder.addEventListener('pointercancel', endDrag);
+  }
+
+  function buildDecalOpts(s) {
+    const d = {
+      type: s.decalType,
+      x: s.x, y: s.y, size: s.size, tilt: s.tilt, opacity: s.opacity,
+      blend: s.decalBlend,
+      flip: s.flipLogo,
+    };
+    if (s.decalType === 'number') {
+      d.text = s.decalNumber || '';
+      d.color = '#ffffff';
+      d.font = 'Teko, sans-serif';
+      d.weight = '900';
+    } else if (s.decalType === 'text') {
+      d.text = s.decalText || '';
+      d.color = s.decalTextColor || '#ffffff';
+      d.font = s.decalFont || 'Kaushan Script';
+      // Scripts typically have built-in weight in the glyph design; use 400.
+      // Block fonts (Alfa Slab, Oswald, Bungee, Teko, Shrikhand) bump to 900.
+      const heavyFonts = new Set(['Alfa Slab One','Oswald','Bungee','Teko','Shrikhand']);
+      d.weight = heavyFonts.has(d.font) ? '900' : '400';
+    }
+    return d;
+  }
+
+  // Sizes shown in the preview strip. 48 = roster/chip, 80 = stats sheet,
+  // 160 = scoreboard matchup card.
+  const PREVIEW_SIZES = [48, 80, 160];
+
+  function renderHelmetFor(teamId, size) {
+    const s = state[teamId];
+    return renderHelmet(teamId, {
+      size,
+      shell: s.shell,
+      facemask: s.facemask,
+      stripeColor: s.stripe || undefined,
+      lipColor: s.lip || undefined,
+      hideRivets: s.hideRivets,
+      facing: s.facing,
+      shellSolidity: s.shellSolidity,
+      decal: buildDecalOpts(s),
+      finish: s.finish,
+      topLayerOpacity: s.topOpacity,
+      decalLayer: s.decalLayer,
+    });
+  }
+
+  function updateHelmet(teamId, skipStrip) {
+    const cell = document.getElementById(`cell-${teamId}`);
+    if (!cell) return;
+    const holder = cell.querySelector('[data-role="helmet"]');
+    holder.innerHTML = renderHelmetFor(teamId, 340);
+    if (skipStrip) return; // skip size-strip re-render during drag for perf
+    const strip = cell.querySelector('[data-role="sizes"]');
+    if (strip) {
+      strip.innerHTML = PREVIEW_SIZES.map(px =>
+        `<div class="slot">${renderHelmetFor(teamId, px)}<span class="px">${px}px</span></div>`
+      ).join('');
+    }
+  }
+
+  function updateSwatchActives(teamId) {
+    const cell = document.getElementById(`cell-${teamId}`);
+    if (!cell) return;
+    const s = state[teamId];
+    cell.querySelectorAll('.swatch').forEach(sw => {
+      const which = sw.dataset.which;
+      const hex = sw.dataset.hex; // '' for auto
+      const cur = s[which];
+      const isActive = hex === ''
+        ? (cur == null)
+        : (cur != null && hex.toLowerCase() === cur.toLowerCase());
+      sw.classList.toggle('active', isActive);
+    });
+  }
+
+  function updateSegActives(teamId) {
+    const cell = document.getElementById(`cell-${teamId}`);
+    if (!cell) return;
+    const s = state[teamId];
+    cell.querySelectorAll('.seg button').forEach(b => {
+      const setting = b.dataset.setting;
+      const cur = s[setting];
+      // Coerce both sides to string so boolean toggles ("true"/"false") work
+      b.classList.toggle('on', b.dataset.value === String(cur));
+    });
+    // Show/hide the jersey number input based on decalType
+    const numInput = cell.querySelector('[data-role="decalNumber"]');
+    if (numInput) numInput.style.display = s.decalType === 'number' ? 'inline-block' : 'none';
+    // Show/hide the text input + Font/Ink row for 'text' decalType
+    const txtInput = cell.querySelector('[data-role="decalText"]');
+    if (txtInput) txtInput.style.display = s.decalType === 'text' ? 'inline-block' : 'none';
+    const textRow = cell.querySelector('[data-role="text-row"]');
+    if (textRow) textRow.style.display = s.decalType === 'text' ? 'flex' : 'none';
+  }
+
+  function updateSelects(teamId) {
+    const cell = document.getElementById(`cell-${teamId}`);
+    if (!cell) return;
+    const s = state[teamId];
+    cell.querySelectorAll('select[data-key]').forEach(sel => {
+      if (sel.value !== s[sel.dataset.key]) sel.value = s[sel.dataset.key];
+    });
+    const numInput = cell.querySelector('[data-role="decalNumber"]');
+    if (numInput && numInput.value !== s.decalNumber) numInput.value = s.decalNumber;
+  }
+
+  function updateSliderValues(teamId) {
+    const cell = document.getElementById(`cell-${teamId}`);
+    if (!cell) return;
+    const s = state[teamId];
+    cell.querySelectorAll('.v[data-key]').forEach(v => {
+      const key = v.dataset.key;
+      v.textContent = formatVal(key, s[key]);
+    });
+    cell.querySelectorAll('input[type="range"][data-key]').forEach(inp => {
+      const key = inp.dataset.key;
+      if (parseFloat(inp.value) !== s[key]) inp.value = s[key];
+    });
+  }
+
+  function refreshAll(teamId) {
+    updateSliderValues(teamId);
+    updateSwatchActives(teamId);
+    updateSegActives(teamId);
+    updateSelects(teamId);
+    updateHelmet(teamId);
+  }
+
+  function drawAll() { Object.keys(TEAMS).forEach(buildCard); }
+
+  // ── Event delegation ─────────────────────────────────────────────────
+  grid.addEventListener('input', (e) => {
+    const el = e.target;
+    // Range slider
+    if (el.tagName === 'INPUT' && el.type === 'range') {
+      const tid = el.dataset.team;
+      const key = el.dataset.key;
+      if (!tid || !key) return;
+      state[tid][key] = parseFloat(el.value);
+      lastTouched = tid;
+      const cell = document.getElementById(`cell-${tid}`);
+      const vSpan = cell.querySelector(`.v[data-key="${key}"]`);
+      if (vSpan) vSpan.textContent = formatVal(key, state[tid][key]);
+      updateHelmet(tid);
+      return;
+    }
+    // Number input (jersey number — live update as user types)
+    if (el.tagName === 'INPUT' && el.dataset.key === 'decalNumber') {
+      const tid = el.dataset.team;
+      state[tid].decalNumber = el.value.replace(/[^0-9A-Za-z]/g, '').slice(0, 3);
+      if (el.value !== state[tid].decalNumber) el.value = state[tid].decalNumber;
+      lastTouched = tid;
+      updateHelmet(tid);
+      return;
+    }
+    // Text input (wordmark / script — live update)
+    if (el.tagName === 'INPUT' && el.dataset.key === 'decalText') {
+      const tid = el.dataset.team;
+      state[tid].decalText = el.value.slice(0, 14);
+      if (el.value !== state[tid].decalText) el.value = state[tid].decalText;
+      lastTouched = tid;
+      updateHelmet(tid);
+      return;
+    }
+  });
+
+  grid.addEventListener('change', (e) => {
+    const el = e.target;
+    if (el.tagName === 'SELECT' && el.dataset.key) {
+      const tid = el.dataset.team;
+      state[tid][el.dataset.key] = el.value;
+      lastTouched = tid;
+      // When the font picker changes, update the text input's preview font
+      // so typing shows the chosen script live.
+      if (el.dataset.key === 'decalFont') {
+        const txtInput = document.querySelector(`input[data-team="${tid}"][data-role="decalText"]`);
+        if (txtInput) txtInput.style.fontFamily = `"${el.value}", sans-serif`;
+      }
+      updateHelmet(tid);
+    }
+  });
+
+  grid.addEventListener('click', (e) => {
+    const el = e.target;
+    // Swatch click (shell / mask / stripe)
+    if (el.classList.contains('swatch')) {
+      const tid = el.dataset.team;
+      const which = el.dataset.which;
+      const hex = el.dataset.hex;
+      state[tid][which] = hex === '' ? null : hex;
+      lastTouched = tid;
+      updateSwatchActives(tid);
+      updateHelmet(tid);
+      return;
+    }
+    // Segmented button (decal type / finish / hideRivets)
+    if (el.matches('.seg button') && el.dataset.setting) {
+      const tid = el.dataset.team;
+      const setting = el.dataset.setting;
+      const raw = el.dataset.value;
+      // Coerce string "true"/"false" to boolean for toggle-style segs
+      state[tid][setting] = raw === 'true' ? true : (raw === 'false' ? false : raw);
+      lastTouched = tid;
+      updateSegActives(tid);
+      updateHelmet(tid);
+      return;
+    }
+    // Per-card reset
+    if (el.classList.contains('reset') && el.dataset.team) {
+      const tid = el.dataset.team;
+      resetTeam(tid);
+      refreshAll(tid);
+      return;
+    }
+  });
+
+  document.getElementById('reset-all').onclick = () => {
+    Object.keys(TEAMS).forEach(tid => { resetTeam(tid); refreshAll(tid); });
+  };
+
+  document.getElementById('apply-decal-all').onclick = () => {
+    if (!lastTouched) { alert('Adjust a control on one card first — that config will broadcast to all.'); return; }
+    const src = state[lastTouched];
+    // Broadcast everything except team-specific shell/mask/stripe colors.
+    const broadcastKeys = ['x','y','size','tilt','opacity','decalType','decalNumber','decalText','decalFont','decalTextColor','decalBlend','finish','topOpacity','decalLayer','hideRivets','facing','flipLogo','shellSolidity'];
+    Object.keys(TEAMS).forEach(tid => {
+      broadcastKeys.forEach(k => { state[tid][k] = src[k]; });
+      refreshAll(tid);
+    });
+  };
+
+  document.getElementById('copy-all').onclick = () => {
+    const out = JSON.stringify(state, null, 2);
+    navigator.clipboard.writeText(out);
+    const btn = document.getElementById('copy-all');
+    const orig = btn.textContent;
+    btn.textContent = 'COPIED ✓';
+    setTimeout(() => btn.textContent = orig, 1500);
+  };
+
+  // ── Export (PNG / SVG) ──────────────────────────────────────────────────
+  // High-res exports for downstream use (game assets, marketing, prints).
+  // SVG is the source of truth; PNG rasterizes via canvas at EXPORT_WIDTH.
+  // Both include attribution metadata so shared exports trace back to TORCH.
+  const EXPORT_WIDTH = 2000;
+  const EXPORT_HEIGHT = 1200; // viewBox is 5000×3000 → 5:3 aspect
+  const ATTRIBUTION = 'Made with TORCH Helmet Studio — torch.football';
+
+  function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 500);
+  }
+
+  // Produce a self-contained export SVG: renderer output + metadata tag +
+  // data-made-with attribute on the root <svg>. No external refs needed.
+  function buildExportSVG(teamId) {
+    let svg = renderHelmetFor(teamId, EXPORT_WIDTH);
+    svg = svg.replace(
+      /<svg([^>]*)>/,
+      `<svg$1 data-made-with="${ATTRIBUTION}"><metadata>${ATTRIBUTION}</metadata>`
+    );
+    return svg;
+  }
+
+  function exportHelmetSVG(teamId) {
+    const svg = buildExportSVG(teamId);
+    triggerDownload(new Blob([svg], { type: 'image/svg+xml' }), `${teamId}-helmet.svg`);
+  }
+
+  async function exportHelmetPNG(teamId) {
+    const svg = buildExportSVG(teamId);
+    const blob = new Blob([svg], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    try {
+      const img = new Image();
+      img.src = url;
+      await img.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = EXPORT_WIDTH;
+      canvas.height = EXPORT_HEIGHT;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, EXPORT_WIDTH, EXPORT_HEIGHT);
+      await new Promise(resolve => {
+        canvas.toBlob(b => {
+          triggerDownload(b, `${teamId}-helmet.png`);
+          resolve();
+        }, 'image/png');
+      });
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  // Per-card export button clicks (delegated through the grid)
+  grid.addEventListener('click', (e) => {
+    const btn = e.target.closest('.export-btn');
+    if (!btn) return;
+    const tid = btn.dataset.team;
+    if (btn.dataset.fmt === 'svg') exportHelmetSVG(tid);
+    else if (btn.dataset.fmt === 'png') exportHelmetPNG(tid);
+  });
+
+  // Batch exports — stagger downloads ~200ms apart so browsers don't dedup
+  // or drop same-tick download clicks. Browser prompts once per session.
+  async function exportAll(fmt) {
+    const ids = Object.keys(TEAMS);
+    for (const tid of ids) {
+      if (fmt === 'svg') exportHelmetSVG(tid);
+      else await exportHelmetPNG(tid);
+      await new Promise(r => setTimeout(r, 250));
+    }
+  }
+  document.getElementById('export-all-svg').onclick = () => exportAll('svg');
+  document.getElementById('export-all-png').onclick = () => exportAll('png');
+
+  drawAll();
+
+  // ── Presets (save / load / delete) ───────────────────────────────────────
+  // All 8 helmet configs are stored as a single named snapshot in localStorage.
+  // Use case: dial in "Ember Eight v1", save, try a variant, save as v2, A/B
+  // compare by clicking each name. No cloud sync — this is local-only so
+  // different browsers/devices don't share. Share via COPY ALL CONFIGS instead.
+  const PRESET_KEY = 'torch.helmets.presets';
+  const presetList = document.getElementById('preset-list');
+  const presetStatus = document.getElementById('preset-status');
+
+  function readPresets() {
+    try { return JSON.parse(localStorage.getItem(PRESET_KEY) || '{}'); }
+    catch { return {}; }
+  }
+  function writePresets(obj) {
+    localStorage.setItem(PRESET_KEY, JSON.stringify(obj));
+  }
+
+  function renderPresetList() {
+    const presets = readPresets();
+    const names = Object.keys(presets).sort((a, b) =>
+      (presets[b].savedAt || 0) - (presets[a].savedAt || 0)
+    );
+    if (names.length === 0) {
+      presetList.innerHTML = '<span class="preset-empty">no presets saved yet — dial in a look and click SAVE AS…</span>';
+      return;
+    }
+    presetList.innerHTML = names.map(name => {
+      const safe = name.replace(/"/g, '&quot;');
+      return `<div class="preset-chip">
+        <button class="name" data-name="${safe}" data-action="load">${safe}</button>
+        <button class="x" data-name="${safe}" data-action="delete" title="delete">×</button>
+      </div>`;
+    }).join('');
+  }
+
+  function flashStatus(msg) {
+    presetStatus.textContent = msg;
+    clearTimeout(flashStatus._t);
+    flashStatus._t = setTimeout(() => {
+      presetStatus.textContent = 'saved presets persist locally — share via COPY ALL CONFIGS';
+    }, 2000);
+  }
+
+  document.getElementById('save-preset').onclick = () => {
+    const presets = readPresets();
+    const defaultName = `Ember 8 v${Object.keys(presets).length + 1}`;
+    const name = prompt('Preset name:', defaultName);
+    if (!name) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    if (presets[trimmed] && !confirm(`Overwrite "${trimmed}"?`)) return;
+    presets[trimmed] = { savedAt: Date.now(), state: JSON.parse(JSON.stringify(state)) };
+    writePresets(presets);
+    renderPresetList();
+    flashStatus(`saved: ${trimmed}`);
+  };
+
+  presetList.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const name = btn.dataset.name;
+    const presets = readPresets();
+    if (btn.dataset.action === 'load') {
+      const preset = presets[name];
+      if (!preset || !preset.state) return;
+      // Merge: for each team currently in state, overlay the saved values.
+      // Teams in state but not in the preset keep their current values (so
+      // adding new teams later doesn't break old presets).
+      Object.keys(state).forEach(tid => {
+        if (preset.state[tid]) Object.assign(state[tid], preset.state[tid]);
+      });
+      // Rebuild the grid so controls reflect the restored state.
+      grid.innerHTML = '';
+      Object.keys(TEAMS).forEach(buildCard);
+      flashStatus(`loaded: ${name}`);
+    } else if (btn.dataset.action === 'delete') {
+      delete presets[name];
+      writePresets(presets);
+      renderPresetList();
+      flashStatus(`deleted: ${name}`);
+    }
+  });
+
+  renderPresetList();
+
+  // ── Path labeler (debug) ─────────────────────────────────────────────────
+  // Renders one huge helmet with every path in a unique color and an index
+  // label placed at its bbox center. Click/hover a region to read its index
+  // in the readout. Used to map path indices → semantic roles (stripe, lip,
+  // rivets) so renderHelmet.js can expose targeted overrides.
+  const picked = new Set();
+  const stage = document.getElementById('debug-stage');
+  const readout = document.getElementById('debug-readout');
+  const pickedBox = document.getElementById('debug-picked');
+  const toggleBtn = document.getElementById('toggle-debug');
+
+  function renderDebugStage() {
+    stage.innerHTML = renderHelmetDebug({ size: 1200 });
+    const svg = stage.querySelector('svg');
+    if (!svg) return;
+    // After insert, overlay a <text> at each path's bbox center with its index.
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    label.id = 'debug-label-layer';
+    label.setAttribute('font-family', 'monospace');
+    label.setAttribute('font-weight', '700');
+    label.setAttribute('text-anchor', 'middle');
+    label.setAttribute('dominant-baseline', 'central');
+    label.setAttribute('pointer-events', 'none');
+    svg.querySelectorAll('[data-debug-index]').forEach(el => {
+      try {
+        const bb = el.getBBox();
+        const cx = bb.x + bb.width / 2;
+        const cy = bb.y + bb.height / 2;
+        const idx = el.getAttribute('data-debug-index');
+        const size = Math.max(14, Math.min(48, Math.round(Math.min(bb.width, bb.height) / 3)));
+        // Dark halo for legibility on any color
+        const halo = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        halo.setAttribute('x', cx); halo.setAttribute('y', cy);
+        halo.setAttribute('font-size', size);
+        halo.setAttribute('fill', '#000'); halo.setAttribute('stroke', '#000');
+        halo.setAttribute('stroke-width', Math.max(2, size / 5));
+        halo.textContent = idx;
+        label.appendChild(halo);
+        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', cx); txt.setAttribute('y', cy);
+        txt.setAttribute('font-size', size);
+        txt.setAttribute('fill', '#fff');
+        txt.textContent = idx;
+        label.appendChild(txt);
+      } catch (_) { /* getBBox can fail on degenerate paths; skip */ }
+    });
+    svg.appendChild(label);
+
+    // Click / hover handlers
+    svg.addEventListener('mousemove', (e) => {
+      const t = e.target.closest('[data-debug-index]');
+      readout.textContent = t ? `hover: path #${t.getAttribute('data-debug-index')}` : '';
+    });
+    svg.addEventListener('mouseleave', () => { readout.textContent = ''; });
+    svg.addEventListener('click', (e) => {
+      const t = e.target.closest('[data-debug-index]');
+      if (!t) return;
+      const idx = t.getAttribute('data-debug-index');
+      if (picked.has(idx)) picked.delete(idx);
+      else picked.add(idx);
+      // Visual pick: thicken stroke
+      svg.querySelectorAll('[data-debug-index]').forEach(el => {
+        const i = el.getAttribute('data-debug-index');
+        if (picked.has(i)) {
+          el.setAttribute('stroke', '#000');
+          el.setAttribute('stroke-width', '8');
+        } else {
+          el.removeAttribute('stroke');
+          el.removeAttribute('stroke-width');
+        }
+      });
+      const list = [...picked].sort((a,b) => +a - +b).join(', ');
+      pickedBox.style.display = picked.size ? 'block' : 'none';
+      pickedBox.textContent = picked.size
+        ? `picked (${picked.size}/${HELMET_PATH_COUNT}): ${list}`
+        : '';
+    });
+  }
+
+  document.getElementById('toggle-labels').onclick = (e) => {
+    const layer = document.getElementById('debug-label-layer');
+    if (!layer) return;
+    const hidden = layer.style.display === 'none';
+    layer.style.display = hidden ? '' : 'none';
+    e.target.textContent = hidden ? 'HIDE NUMBERS' : 'SHOW NUMBERS';
+  };
+
+  document.getElementById('clear-picks').onclick = () => {
+    picked.clear();
+    const svg = stage.querySelector('svg');
+    if (svg) {
+      svg.querySelectorAll('[data-debug-index]').forEach(el => {
+        el.removeAttribute('stroke');
+        el.removeAttribute('stroke-width');
+      });
+    }
+    pickedBox.style.display = 'none';
+    pickedBox.textContent = '';
+  };
+
+  toggleBtn.onclick = () => {
+    const isOn = stage.style.display !== 'none';
+    if (isOn) {
+      stage.style.display = 'none';
+      pickedBox.style.display = 'none';
+      stage.innerHTML = '';
+      picked.clear();
+      toggleBtn.textContent = 'SHOW LABELED HELMET';
+    } else {
+      stage.style.display = 'block';
+      renderDebugStage();
+      toggleBtn.textContent = 'HIDE LABELED HELMET';
+    }
+  };
+</script>
+</body>
+</html>

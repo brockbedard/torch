@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TORCH — Helmet Variants (40 across 8 teams)</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Zilla+Slab:wght@700&family=Playfair+Display:wght@900&family=Italiana&family=Major+Mono+Display&family=Marcellus&family=Chakra+Petch:wght@600&family=Righteous&family=Josefin+Sans:wght@100;400&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #07060A; color: #fff; font-family: 'Rajdhani', sans-serif; padding: 28px 20px 80px; }
+  h1 { font-family: 'Teko', sans-serif; font-size: 44px; letter-spacing: 4px; margin: 0 0 4px; }
+  .sub { color: #888; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 36px; max-width: 900px; line-height: 1.6; }
+
+  .team-section { margin: 0 auto 60px; max-width: 1500px; }
+  .team-head {
+    display: flex; align-items: baseline; gap: 16px; margin: 0 0 4px;
+    padding-bottom: 10px; border-bottom: 1px solid rgba(235,176,16,0.4);
+  }
+  .team-head h2 {
+    font-family: 'Teko', sans-serif; font-size: 32px; letter-spacing: 3px;
+    color: #EBB010; margin: 0;
+  }
+  .team-head .school { color: #888; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+  .team-head .motto { margin-left: auto; color: #FF6B47; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-style: italic; }
+
+  .variants {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    margin-top: 18px;
+  }
+  @media (max-width: 1200px) { .variants { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 700px) { .variants { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .variants { grid-template-columns: 1fr; } }
+
+  .helmet-card {
+    background: linear-gradient(180deg, #141008 0%, #0A0804 100%);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    padding: 14px 14px 16px;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: transform 0.15s, border-color 0.15s;
+  }
+  .helmet-card:hover { transform: translateY(-2px); border-color: rgba(235,176,16,0.4); }
+  .helmet-img {
+    aspect-ratio: 5/3; background: rgba(255,255,255,0.02);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .helmet-img svg { width: 100%; height: 100%; }
+  .v-name { font-family: 'Teko', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 2px; color: #fff; line-height: 1.1; }
+  .v-blurb { font-size: 11.5px; color: #aaa; line-height: 1.4; min-height: 48px; }
+  .v-meta { display: flex; gap: 6px; flex-wrap: wrap; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.05); }
+  .v-meta .chip {
+    font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+    background: rgba(235,176,16,0.1); color: #EBB010; border: 1px solid rgba(235,176,16,0.2);
+    padding: 2px 6px; border-radius: 3px; font-weight: 700;
+  }
+  .v-meta .chip.dark { background: rgba(255,255,255,0.05); color: #888; border-color: rgba(255,255,255,0.08); }
+
+  .v-num { font-family: monospace; font-size: 10px; color: #555; }
+  .v-head { display: flex; align-items: center; justify-content: space-between; }
+
+  .legend {
+    background: #141008; border: 1px solid rgba(255,255,255,0.06); border-radius: 6px;
+    padding: 12px 16px; margin: 0 auto 32px; max-width: 1500px;
+    font-size: 12px; color: #aaa; line-height: 1.6;
+  }
+  .legend b { color: #EBB010; font-family: 'Teko'; letter-spacing: 1px; }
+  .legend code { background: #0A0804; padding: 1px 6px; border-radius: 3px; color: #EBB010; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<h1>HELMET VARIANTS</h1>
+<div class="sub">5 designs per team, 40 total. Each variant overrides shell color, facemask, stripe geometry, decal type, and optional finish (matte / chrome). Designed to ship to a future "alternate uniform" picker.</div>
+
+<div class="legend">
+  <b>STRIPE TYPES</b> — single (1 wide) · double (2 thin) · runway (3 stripes, accent flanking) · pinstripe (thick + 2 thin pinstripes) · outlined (stripe with contrast border) · none<br>
+  <b>DECAL TYPES</b> — logo (team badge) · monogram (letter mark) · text (custom string) · blank (no decal)<br>
+  <b>FINISH</b> — standard · matte (desaturated) · chrome (high-shine)
+</div>
+
+<div id="root"></div>
+
+<script type="module">
+  import { renderHelmet } from '/src/assets/helmets/renderHelmet.js';
+  import { TEAMS } from '/src/data/teams.js';
+  import { HELMET_VARIANTS } from '/src/data/helmetVariants.js';
+
+  // Display order — top tier first, then middle, then bottom
+  const ORDER = ['pronghorns', 'stags', 'maples', 'salamanders', 'wolves', 'serpents', 'sentinels', 'raccoons'];
+
+  const root = document.getElementById('root');
+
+  ORDER.forEach(teamId => {
+    const team = TEAMS[teamId];
+    const variants = HELMET_VARIANTS[teamId] || [];
+    if (!team || !variants.length) return;
+
+    const section = document.createElement('div');
+    section.className = 'team-section';
+
+    section.innerHTML = `
+      <div class="team-head">
+        <h2>${team.name}</h2>
+        <span class="school">${team.school}</span>
+        <span class="motto">"${team.motto || ''}"</span>
+      </div>
+      <div class="variants" id="variants-${teamId}"></div>
+    `;
+    root.appendChild(section);
+
+    const grid = section.querySelector(`#variants-${teamId}`);
+    variants.forEach((v, i) => {
+      const helmet = renderHelmet(teamId, {
+        size: 360,
+        shell: v.shell,
+        facemask: v.facemask,
+        stripe: v.stripe,
+        decal: v.decal,
+        finish: v.finish,
+      });
+      const card = document.createElement('div');
+      card.className = 'helmet-card';
+      const stripeChip = v.stripe && v.stripe.type && v.stripe.type !== 'none' ? `<span class="chip">${v.stripe.type}</span>` : '<span class="chip dark">no stripe</span>';
+      const decalChip = v.decal && v.decal.type && v.decal.type !== 'blank' ? `<span class="chip">${v.decal.type}</span>` : '<span class="chip dark">blank</span>';
+      const finishChip = v.finish && v.finish !== 'standard' ? `<span class="chip">${v.finish}</span>` : '';
+      card.innerHTML = `
+        <div class="v-head">
+          <span class="v-name">${v.name}</span>
+          <span class="v-num">${(i+1).toString().padStart(2,'0')}/05</span>
+        </div>
+        <div class="helmet-img">${helmet}</div>
+        <div class="v-blurb">${v.blurb}</div>
+        <div class="v-meta">${stripeChip}${decalChip}${finishChip}</div>
+      `;
+      grid.appendChild(card);
+    });
+  });
+</script>
+</body>
+</html>
