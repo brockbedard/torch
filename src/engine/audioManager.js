@@ -130,30 +130,30 @@ var AudioManager = {
     }
 
     // SFX pools — UI
-    loadPool('menuTap', ['/audio/sfx/menu_tap_01.wav','/audio/sfx/menu_tap_02.wav','/audio/sfx/menu_tap_03.wav'], { volume: 0.35 });
-    loadPool('click', ['/audio/sfx/click_01.wav','/audio/sfx/click_02.wav','/audio/sfx/click_03.wav'], { volume: 0.3 });
-    loadPool('chime', ['/audio/sfx/chime_01.wav','/audio/sfx/chime_02.wav','/audio/sfx/chime_03.wav','/audio/sfx/chime_04.wav'], { volume: 0.45 });
-    loadPool('scoreTick', ['/audio/sfx/score_tick_01.wav','/audio/sfx/score_tick_02.wav','/audio/sfx/score_tick_03.wav'], { volume: 0.5 });
-    loadPool('shimmer', ['/audio/sfx/shimmer_01.wav','/audio/sfx/shimmer_02.wav','/audio/sfx/shimmer_03.wav'], { volume: 0.4 });
-    loadPool('ping', ['/audio/sfx/ping_01.wav','/audio/sfx/ping_02.wav'], { volume: 0.4 });
-    loadPool('jackpot', ['/audio/sfx/jackpot_01.wav'], { volume: 0.5 });
-    loadPool('clockTick', ['/audio/sfx/clock_tick_01.wav'], { volume: 0.5 });
+    loadPool('menuTap', ['/audio/sfx/menu_tap_01.mp3','/audio/sfx/menu_tap_02.mp3','/audio/sfx/menu_tap_03.mp3'], { volume: 0.35 });
+    loadPool('click', ['/audio/sfx/click_01.mp3','/audio/sfx/click_02.mp3','/audio/sfx/click_03.mp3'], { volume: 0.3 });
+    loadPool('chime', ['/audio/sfx/chime_01.mp3','/audio/sfx/chime_02.mp3','/audio/sfx/chime_03.mp3','/audio/sfx/chime_04.mp3'], { volume: 0.45 });
+    loadPool('scoreTick', ['/audio/sfx/score_tick_01.mp3','/audio/sfx/score_tick_02.mp3','/audio/sfx/score_tick_03.mp3'], { volume: 0.5 });
+    loadPool('shimmer', ['/audio/sfx/shimmer_01.mp3','/audio/sfx/shimmer_02.mp3','/audio/sfx/shimmer_03.mp3'], { volume: 0.4 });
+    loadPool('ping', ['/audio/sfx/ping_01.mp3','/audio/sfx/ping_02.mp3'], { volume: 0.4 });
+    loadPool('jackpot', ['/audio/sfx/jackpot_01.mp3'], { volume: 0.5 });
+    loadPool('clockTick', ['/audio/sfx/clock_tick_01.mp3'], { volume: 0.5 });
 
     // SFX pools — Cards
-    loadPool('cardDeal', ['/audio/sfx/card_deal_01.wav','/audio/sfx/card_deal_02.wav','/audio/sfx/card_deal_03.wav','/audio/sfx/card_deal_04.wav'], { volume: 0.5 });
-    loadPool('cardPlace', ['/audio/sfx/card_place_01.wav','/audio/sfx/card_place_02.wav','/audio/sfx/card_place_03.wav','/audio/sfx/card_place_04.wav'], { volume: 0.5 });
-    loadPool('cardFlipSlam', ['/audio/sfx/card_flip_slam_01.wav'], { volume: 0.6 });
-    loadPool('cardFlipDramatic', ['/audio/sfx/card_flip_dramatic_01.wav','/audio/sfx/card_flip_dramatic_02.wav'], { volume: 0.6 });
-    loadPool('cardDiscard', ['/audio/sfx/card_discard_01.wav','/audio/sfx/card_discard_02.wav'], { volume: 0.5 });
+    loadPool('cardDeal', ['/audio/sfx/card_deal_01.mp3','/audio/sfx/card_deal_02.mp3','/audio/sfx/card_deal_03.mp3','/audio/sfx/card_deal_04.mp3'], { volume: 0.5 });
+    loadPool('cardPlace', ['/audio/sfx/card_place_01.mp3','/audio/sfx/card_place_02.mp3','/audio/sfx/card_place_03.mp3','/audio/sfx/card_place_04.mp3'], { volume: 0.5 });
+    loadPool('cardFlipSlam', ['/audio/sfx/card_flip_slam_01.mp3'], { volume: 0.6 });
+    loadPool('cardFlipDramatic', ['/audio/sfx/card_flip_dramatic_01.mp3','/audio/sfx/card_flip_dramatic_02.mp3'], { volume: 0.6 });
+    loadPool('cardDiscard', ['/audio/sfx/card_discard_01.mp3','/audio/sfx/card_discard_02.mp3'], { volume: 0.5 });
 
     // SFX pools — Football
-    loadPool('snap', ['/audio/sfx/snap_01.wav','/audio/sfx/snap_02.wav'], { volume: 0.6 });
-    loadPool('throw', ['/audio/sfx/throw_01.wav'], { volume: 0.5 });
-    loadPool('catch', ['/audio/sfx/catch_01.wav'], { volume: 0.5 });
-    loadPool('kick', ['/audio/sfx/kick_01.wav'], { volume: 0.6 });
-    loadPool('kickThud', ['/audio/sfx/kick_thud_01.wav'], { volume: 0.6 });
-    loadPool('whistle', ['/audio/sfx/whistle_01.wav','/audio/sfx/whistle_short_01.wav'], { volume: 0.05 });
-    loadPool('whistleLong', ['/audio/sfx/whistle_long_01.wav'], { volume: 0.05 });
+    loadPool('snap', ['/audio/sfx/snap_01.mp3','/audio/sfx/snap_02.mp3'], { volume: 0.6 });
+    loadPool('throw', ['/audio/sfx/throw_01.mp3'], { volume: 0.5 });
+    loadPool('catch', ['/audio/sfx/catch_01.mp3'], { volume: 0.5 });
+    loadPool('kick', ['/audio/sfx/kick_01.mp3'], { volume: 0.6 });
+    loadPool('kickThud', ['/audio/sfx/kick_thud_01.mp3'], { volume: 0.6 });
+    loadPool('whistle', ['/audio/sfx/whistle_01.mp3','/audio/sfx/whistle_short_01.mp3'], { volume: 0.05 });
+    loadPool('whistleLong', ['/audio/sfx/whistle_long_01.mp3'], { volume: 0.05 });
     // New football foley
     loadPool('goalPostClang', ['/audio/sfx/goal_post_clang_01.mp3','/audio/sfx/goal_post_clang_02.mp3'], { volume: 0.75 });
     loadPool('chainGang', ['/audio/sfx/chain_gang_01.mp3'], { volume: 0.4 });
@@ -161,37 +161,37 @@ var AudioManager = {
     loadPool('whistleEndHalf', ['/audio/sfx/whistle_end_half_01.mp3','/audio/sfx/whistle_end_half_02.mp3','/audio/sfx/whistle_end_half_03.mp3'], { volume: 0.5 });
 
     // SFX pools — Impacts
-    loadPool('hitComposite', ['/audio/sfx/hit_composite_01.wav','/audio/sfx/hit_composite_02.wav','/audio/sfx/hit_composite_03.wav','/audio/sfx/hit_composite_04.wav'], { volume: 0.7 });
-    loadPool('hitHeavy', ['/audio/sfx/hit_heavy_01.wav','/audio/sfx/hit_heavy_02.wav','/audio/sfx/hit_heavy_03.wav','/audio/sfx/hit_heavy_04.wav','/audio/sfx/hit_heavy_05.wav','/audio/sfx/hit_heavy_06.wav'], { volume: 0.8 });
-    loadPool('hitModerate', ['/audio/sfx/hit_moderate_01.wav','/audio/sfx/hit_moderate_02.wav'], { volume: 0.6 });
+    loadPool('hitComposite', ['/audio/sfx/hit_composite_01.mp3','/audio/sfx/hit_composite_02.mp3','/audio/sfx/hit_composite_03.mp3','/audio/sfx/hit_composite_04.mp3'], { volume: 0.7 });
+    loadPool('hitHeavy', ['/audio/sfx/hit_heavy_01.mp3','/audio/sfx/hit_heavy_02.mp3','/audio/sfx/hit_heavy_03.mp3','/audio/sfx/hit_heavy_04.mp3','/audio/sfx/hit_heavy_05.mp3','/audio/sfx/hit_heavy_06.mp3'], { volume: 0.8 });
+    loadPool('hitModerate', ['/audio/sfx/hit_moderate_01.mp3','/audio/sfx/hit_moderate_02.mp3'], { volume: 0.6 });
     loadPool('helmetImpact', ['/audio/sfx/helmet_impact_01.mp3'], { volume: 0.75 });
-    loadPool('resultSlam', ['/audio/sfx/result_slam_01.wav'], { volume: 0.85 });
+    loadPool('resultSlam', ['/audio/sfx/result_slam_01.mp3'], { volume: 0.85 });
 
     // SFX pools — Cinematic
-    loadPool('anvilImpact', ['/audio/sfx/anvil_impact_01.wav'], { volume: 0.8 });
-    loadPool('bassDrop', ['/audio/sfx/bass_drop_01.wav','/audio/sfx/bass_drop_02.wav'], { volume: 0.7 });
-    loadPool('victoryImpact', ['/audio/sfx/victory_impact_01.wav','/audio/sfx/victory_impact_02.wav'], { volume: 0.7 });
-    loadPool('horn', ['/audio/sfx/horn_01.wav','/audio/sfx/horn_02.wav','/audio/sfx/horn_03.wav'], { volume: 0.7 });
-    loadPool('whooshIn', ['/audio/sfx/whoosh_in_01.wav','/audio/sfx/whoosh_in_02.wav'], { volume: 0.4 });
+    loadPool('anvilImpact', ['/audio/sfx/anvil_impact_01.mp3'], { volume: 0.8 });
+    loadPool('bassDrop', ['/audio/sfx/bass_drop_01.mp3','/audio/sfx/bass_drop_02.mp3'], { volume: 0.7 });
+    loadPool('victoryImpact', ['/audio/sfx/victory_impact_01.mp3','/audio/sfx/victory_impact_02.mp3'], { volume: 0.7 });
+    loadPool('horn', ['/audio/sfx/horn_01.mp3','/audio/sfx/horn_02.mp3','/audio/sfx/horn_03.mp3'], { volume: 0.7 });
+    loadPool('whooshIn', ['/audio/sfx/whoosh_in_01.mp3','/audio/sfx/whoosh_in_02.mp3'], { volume: 0.4 });
     loadPool('possessionSwoosh', ['/audio/sfx/possession_swoosh_01.mp3','/audio/sfx/possession_swoosh_02.mp3'], { volume: 0.55 });
-    loadPool('broadcastSweep', ['/audio/sfx/broadcast_sweep_01.wav'], { volume: 0.4 });
+    loadPool('broadcastSweep', ['/audio/sfx/broadcast_sweep_01.mp3'], { volume: 0.4 });
 
     // SFX pools — Special
-    loadPool('ignite', ['/audio/sfx/ignite_01.wav'], { volume: 0.6 });
-    loadPool('coinFlip', ['/audio/sfx/coin_flip_01.wav'], { volume: 0.6 });
+    loadPool('ignite', ['/audio/sfx/ignite_01.mp3'], { volume: 0.6 });
+    loadPool('coinFlip', ['/audio/sfx/coin_flip_01.mp3'], { volume: 0.6 });
     loadPool('coinCatch', ['/audio/sfx/coin_catch_01.mp3','/audio/sfx/coin_catch_02.mp3'], { volume: 0.55 });
     loadPool('tdCelebration', ['/audio/sfx/td_celebration_01.mp3'], { volume: 0.9 });
-    loadPool('gameOverWin', ['/audio/sfx/game_over_win_01.wav'], { volume: 0.9 });
-    loadPool('gameOverLoss', ['/audio/sfx/game_over_loss_01.wav'], { volume: 0.7 });
+    loadPool('gameOverWin', ['/audio/sfx/game_over_win_01.mp3'], { volume: 0.9 });
+    loadPool('gameOverLoss', ['/audio/sfx/game_over_loss_01.mp3'], { volume: 0.7 });
 
     // SFX pools — Crowd reactions (one-shots)
-    loadPool('crowdCheer', ['/audio/sfx/crowd_cheer_01.wav'], { volume: 0.7 });
-    loadPool('crowdGroan', ['/audio/sfx/crowd_groan_01.wav'], { volume: 0.6 });
+    loadPool('crowdCheer', ['/audio/sfx/crowd_cheer_01.mp3'], { volume: 0.7 });
+    loadPool('crowdGroan', ['/audio/sfx/crowd_groan_01.mp3'], { volume: 0.6 });
     loadPool('crowdOoh', ['/audio/sfx/crowd_ooh_01.mp3','/audio/sfx/crowd_ooh_02.mp3'], { volume: 0.55 });
-    loadPool('tdEruption', ['/audio/crowd/Stadium_crowd_celebr_#3-1775233609710.wav','/audio/crowd/Outdoor_American_foo_#2-1775233465681.wav','/audio/crowd/Outdoor_American_foo_#3-1775233456755.wav'], { volume: 0.85 });
-    loadPool('bigPlayCrowd', ['/audio/crowd/big_play_01.wav','/audio/crowd/big_play_02.wav'], { volume: 0.7 });
-    loadPool('groan', ['/audio/crowd/groan_01.wav','/audio/crowd/groan_02.wav'], { volume: 0.6 });
-    loadPool('victoryCrowd', ['/audio/crowd/victory_crowd_01.wav'], { volume: 0.7 });
+    loadPool('tdEruption', ['/audio/crowd/Stadium_crowd_celebr_#3-1775233609710.mp3','/audio/crowd/Outdoor_American_foo_#2-1775233465681.mp3','/audio/crowd/Outdoor_American_foo_#3-1775233456755.mp3'], { volume: 0.85 });
+    loadPool('bigPlayCrowd', ['/audio/crowd/big_play_01.mp3','/audio/crowd/big_play_02.mp3'], { volume: 0.7 });
+    loadPool('groan', ['/audio/crowd/groan_01.mp3','/audio/crowd/groan_02.mp3'], { volume: 0.6 });
+    loadPool('victoryCrowd', ['/audio/crowd/victory_crowd_01.mp3'], { volume: 0.7 });
 
     // Crowd ambient loops — crossfade looping for seamless playback
     _crowd.low = _createCrossfadeLoop(['/audio/crowd/crowd_low.webm', '/audio/crowd/crowd_low.mp3']);

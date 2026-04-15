@@ -15,3 +15,6 @@ public/_iconscout-data/
 # Claude Code personal / runtime files
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+
+# Audio source WAVs — preserved locally for re-encoding, not shipped
+archive/audio-sources/

@@ -15,6 +15,18 @@ import '@fontsource/oswald/latin-500.css';
 import '@fontsource/oswald/latin-600.css';
 import '@fontsource/oswald/latin-700.css';
 import '@fontsource/bebas-neue/latin-400.css';
+// Ember Eight wordmark fonts — per-team display typefaces (self-hosted,
+// no CDN dependency). Each weight is imported only if actually referenced.
+import '@fontsource/zilla-slab/700.css';
+import '@fontsource/playfair-display/900.css';
+import '@fontsource/josefin-sans/100.css';
+import '@fontsource/josefin-sans/400.css';
+import '@fontsource/italiana/400.css';
+import '@fontsource/dm-serif-display/400.css';
+import '@fontsource/chakra-petch/600.css';
+import '@fontsource/righteous/400.css';
+import '@fontsource/major-mono-display/400.css';
+import '@fontsource/marcellus/400.css';
 
 import { GS, setRender } from './state.js';
 import { SND } from './engine/sound.js';
