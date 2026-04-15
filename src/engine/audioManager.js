@@ -37,9 +37,15 @@ var ELEVATED_STATES = {           // states that require MIN_HOLD_MS before fadi
   game_over_win: true,
 };
 
+// Load an SFX pool. opts.preload (default true) controls whether Howler
+// decodes the audio on init or on first play(). Rarely-used pools (end-game
+// moments, TD celebrations) pass preload:false to avoid the first-tap
+// decode hitch on older iPhones — an ~100ms delay on the first TD is fine;
+// a hitch on first button tap is not.
 function loadPool(name, sources, opts) {
+  var preload = opts && opts.preload !== undefined ? opts.preload : true;
   _sfx[name] = sources.map(function(src) {
-    return new Howl({ src: [src], preload: true, volume: (opts && opts.volume) || 0.7 });
+    return new Howl({ src: [src], preload: preload, volume: (opts && opts.volume) || 0.7 });
   });
 }
 
@@ -136,7 +142,7 @@ var AudioManager = {
     loadPool('scoreTick', ['/audio/sfx/score_tick_01.mp3','/audio/sfx/score_tick_02.mp3','/audio/sfx/score_tick_03.mp3'], { volume: 0.5 });
     loadPool('shimmer', ['/audio/sfx/shimmer_01.mp3','/audio/sfx/shimmer_02.mp3','/audio/sfx/shimmer_03.mp3'], { volume: 0.4 });
     loadPool('ping', ['/audio/sfx/ping_01.mp3','/audio/sfx/ping_02.mp3'], { volume: 0.4 });
-    loadPool('jackpot', ['/audio/sfx/jackpot_01.mp3'], { volume: 0.5 });
+    loadPool('jackpot', ['/audio/sfx/jackpot_01.mp3'], { volume: 0.5, preload: false });
     loadPool('clockTick', ['/audio/sfx/clock_tick_01.mp3'], { volume: 0.5 });
 
     // SFX pools — Cards
@@ -168,9 +174,9 @@ var AudioManager = {
     loadPool('resultSlam', ['/audio/sfx/result_slam_01.mp3'], { volume: 0.85 });
 
     // SFX pools — Cinematic
-    loadPool('anvilImpact', ['/audio/sfx/anvil_impact_01.mp3'], { volume: 0.8 });
+    loadPool('anvilImpact', ['/audio/sfx/anvil_impact_01.mp3'], { volume: 0.8, preload: false });
     loadPool('bassDrop', ['/audio/sfx/bass_drop_01.mp3','/audio/sfx/bass_drop_02.mp3'], { volume: 0.7 });
-    loadPool('victoryImpact', ['/audio/sfx/victory_impact_01.mp3','/audio/sfx/victory_impact_02.mp3'], { volume: 0.7 });
+    loadPool('victoryImpact', ['/audio/sfx/victory_impact_01.mp3','/audio/sfx/victory_impact_02.mp3'], { volume: 0.7, preload: false });
     loadPool('horn', ['/audio/sfx/horn_01.mp3','/audio/sfx/horn_02.mp3','/audio/sfx/horn_03.mp3'], { volume: 0.7 });
     loadPool('whooshIn', ['/audio/sfx/whoosh_in_01.mp3','/audio/sfx/whoosh_in_02.mp3'], { volume: 0.4 });
     loadPool('possessionSwoosh', ['/audio/sfx/possession_swoosh_01.mp3','/audio/sfx/possession_swoosh_02.mp3'], { volume: 0.55 });
@@ -180,15 +186,15 @@ var AudioManager = {
     loadPool('ignite', ['/audio/sfx/ignite_01.mp3'], { volume: 0.6 });
     loadPool('coinFlip', ['/audio/sfx/coin_flip_01.mp3'], { volume: 0.6 });
     loadPool('coinCatch', ['/audio/sfx/coin_catch_01.mp3','/audio/sfx/coin_catch_02.mp3'], { volume: 0.55 });
-    loadPool('tdCelebration', ['/audio/sfx/td_celebration_01.mp3'], { volume: 0.9 });
-    loadPool('gameOverWin', ['/audio/sfx/game_over_win_01.mp3'], { volume: 0.9 });
-    loadPool('gameOverLoss', ['/audio/sfx/game_over_loss_01.mp3'], { volume: 0.7 });
+    loadPool('tdCelebration', ['/audio/sfx/td_celebration_01.mp3'], { volume: 0.9, preload: false });
+    loadPool('gameOverWin', ['/audio/sfx/game_over_win_01.mp3'], { volume: 0.9, preload: false });
+    loadPool('gameOverLoss', ['/audio/sfx/game_over_loss_01.mp3'], { volume: 0.7, preload: false });
 
     // SFX pools — Crowd reactions (one-shots)
     loadPool('crowdCheer', ['/audio/sfx/crowd_cheer_01.mp3'], { volume: 0.7 });
     loadPool('crowdGroan', ['/audio/sfx/crowd_groan_01.mp3'], { volume: 0.6 });
     loadPool('crowdOoh', ['/audio/sfx/crowd_ooh_01.mp3','/audio/sfx/crowd_ooh_02.mp3'], { volume: 0.55 });
-    loadPool('tdEruption', ['/audio/crowd/Stadium_crowd_celebr_#3-1775233609710.mp3','/audio/crowd/Outdoor_American_foo_#2-1775233465681.mp3','/audio/crowd/Outdoor_American_foo_#3-1775233456755.mp3'], { volume: 0.85 });
+    loadPool('tdEruption', ['/audio/crowd/Stadium_crowd_celebr_#3-1775233609710.mp3','/audio/crowd/Outdoor_American_foo_#2-1775233465681.mp3','/audio/crowd/Outdoor_American_foo_#3-1775233456755.mp3'], { volume: 0.85, preload: false });
     loadPool('bigPlayCrowd', ['/audio/crowd/big_play_01.mp3','/audio/crowd/big_play_02.mp3'], { volume: 0.7 });
     loadPool('groan', ['/audio/crowd/groan_01.mp3','/audio/crowd/groan_02.mp3'], { volume: 0.6 });
     loadPool('victoryCrowd', ['/audio/crowd/victory_crowd_01.mp3'], { volume: 0.7 });
