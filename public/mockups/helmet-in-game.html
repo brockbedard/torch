@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helmet in Game — Pronghorns Integration Mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Bebas+Neue&family=Oswald:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0A0804;
+    --gold: #EBB010;
+    --ember: #FF4511;
+    --cream: rgba(255,250,235,0.8);
+    --cream-full: #FFF5E6;
+    --green: #1B4D2E;
+    --green-deep: #062014;
+    --structure: #F5DEB3;
+    --muted: rgba(255,250,235,0.35);
+    --rule: rgba(235,176,16,0.22);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: #030204;
+    color: var(--cream);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Atmosphere */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 100% 60% at 50% 0%, rgba(235,176,16,0.04), transparent 50%),
+      radial-gradient(ellipse 80% 50% at 50% 100%, rgba(255,69,17,0.03), transparent 50%);
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    opacity: 0.35;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.12 0 0 0 0 0.08 0 0 0 0 0.04 0 0 0 0.4 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+  }
+
+  .page { position: relative; z-index: 1; max-width: 1600px; margin: 0 auto; padding: 40px 32px 100px; }
+
+  /* ── Header ── */
+  .header {
+    display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap;
+    padding-bottom: 20px; border-bottom: 0.5px solid var(--rule);
+    margin-bottom: 48px;
+  }
+  .header h1 {
+    font-family: 'Teko', sans-serif; font-weight: 700;
+    font-size: 42px; letter-spacing: 3px; color: var(--cream-full);
+    line-height: 1;
+  }
+  .header .tag {
+    font-family: 'Oswald', sans-serif; font-weight: 500;
+    font-size: 10px; letter-spacing: 4px; color: var(--gold);
+    text-transform: uppercase;
+    padding: 5px 12px; border: 0.5px solid var(--rule);
+  }
+  .header .sub {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--muted); letter-spacing: 1.5px; margin-left: auto;
+  }
+
+  /* ── Grid of 4 phone mockups ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 56px 40px;
+    justify-items: center;
+  }
+  @media (max-width: 1000px) {
+    .grid { grid-template-columns: 1fr; gap: 56px; }
+  }
+
+  .cell {
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+    opacity: 0; animation: fadeUp 0.7s cubic-bezier(0.22,1,0.36,1) forwards;
+  }
+  .cell:nth-child(1) { animation-delay: 0.05s; }
+  .cell:nth-child(2) { animation-delay: 0.15s; }
+  .cell:nth-child(3) { animation-delay: 0.25s; }
+  .cell:nth-child(4) { animation-delay: 0.35s; }
+  @keyframes fadeUp { to { opacity: 1; } }
+
+  .cell-label {
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .cell-label .num {
+    font-family: 'Teko', sans-serif; font-weight: 700;
+    font-size: 28px; color: var(--gold); line-height: 1;
+  }
+  .cell-label .name {
+    font-family: 'Oswald', sans-serif; font-weight: 500;
+    font-size: 11px; letter-spacing: 4px; color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* ── Phone frame ── */
+  .phone {
+    width: 340px; height: 736px;
+    position: relative;
+    border-radius: 42px;
+    background: #000;
+    padding: 7px;
+    box-shadow:
+      0 0 0 1.5px #1a1a1a,
+      0 0 0 2.5px #333,
+      0 30px 60px rgba(0,0,0,0.7),
+      0 0 80px rgba(235,176,16,0.04);
+    flex-shrink: 0;
+  }
+  .phone .notch {
+    position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+    width: 96px; height: 26px;
+    background: #000; border-radius: 14px; z-index: 100;
+  }
+  .screen {
+    width: 100%; height: 100%;
+    border-radius: 36px;
+    overflow: hidden;
+    position: relative;
+    background: var(--ink);
+  }
+
+  /* ── Shared helmet image styles ── */
+  .helmet-img {
+    display: block;
+    filter: drop-shadow(0 8px 20px rgba(0,0,0,0.6));
+  }
+  .helmet-img.flip {
+    transform: scaleX(-1);
+  }
+  .helmet-img.glow {
+    filter:
+      drop-shadow(0 0 18px rgba(245,222,179,0.3))
+      drop-shadow(0 10px 24px rgba(0,0,0,0.55));
+  }
+  .helmet-img.tiny {
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     CONTEXT 1: PREGAME HELMET CLASH
+  ════════════════════════════════════════════════════════════════ */
+  .clash {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+  }
+  .clash .sky {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 120% 70% at 50% 30%, #1a0a08 0%, transparent 55%),
+      linear-gradient(180deg, #020108 0%, #0A0500 60%, #1a0a04 100%);
+  }
+  .clash .wash {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 90% 50% at 50% 18%, rgba(255,200,120,0.18), transparent 60%);
+  }
+  .clash .fog {
+    position: absolute; left: -10%; right: -10%; bottom: 0; height: 40%;
+    background: radial-gradient(ellipse 80% 80% at 50% 100%, rgba(80,40,15,0.5), transparent 65%);
+    filter: blur(6px);
+  }
+  /* Embers — CSS-only particle dots */
+  .clash .embers {
+    position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  }
+  .clash .embers i {
+    position: absolute; width: 2px; height: 2px; border-radius: 50%;
+    background: var(--gold); box-shadow: 0 0 4px var(--gold);
+    opacity: 0; animation: ember-rise linear infinite;
+  }
+  @keyframes ember-rise {
+    0% { transform: translateY(0); opacity: 0; }
+    10% { opacity: 0.9; }
+    90% { opacity: 0.9; }
+    100% { transform: translateY(-700px) translateX(8px); opacity: 0; }
+  }
+
+  .clash .content {
+    position: relative; z-index: 2;
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 60px 16px 40px;
+    gap: 8px;
+  }
+  .clash .helmets-row {
+    display: flex; align-items: center; justify-content: center; gap: 0;
+    width: 100%; position: relative;
+  }
+  .clash .helmets-row .helmet-img { width: 180px; }
+  .clash .vs-badge {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 38px; letter-spacing: 4px;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(235,176,16,0.5), 0 4px 12px rgba(0,0,0,0.7);
+    z-index: 5;
+    background: rgba(10,8,4,0.7);
+    padding: 4px 14px; border-radius: 3px;
+    border: 1px solid rgba(235,176,16,0.4);
+  }
+  .clash .teams-row {
+    display: flex; justify-content: space-around; width: 100%;
+    margin-top: 18px;
+  }
+  .clash .team-label {
+    text-align: center;
+  }
+  .clash .team-label .tname {
+    font-family: 'Teko', sans-serif; font-weight: 600;
+    font-size: 28px; letter-spacing: 2px; color: #fff;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+    line-height: 1;
+  }
+  .clash .team-label .tier {
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 9px; letter-spacing: 3px; color: var(--gold);
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+  .clash .team-label.opp .tname { color: #E8B0A0; }
+  .clash .team-label.opp .tier { color: #FF6B3A; }
+  .clash .matchup-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 2px; color: var(--muted);
+    text-transform: uppercase; margin-top: 20px;
+  }
+
+  /* Placeholder for opponent — a red-tinted silhouette */
+  .opp-placeholder {
+    width: 180px; height: 108px;
+    background: radial-gradient(ellipse 70% 50% at 50% 50%, rgba(180,40,30,0.5), transparent 70%);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    filter: drop-shadow(0 8px 20px rgba(0,0,0,0.5));
+  }
+  .opp-placeholder::after {
+    content: 'OPPONENT';
+    font-family: 'Oswald', sans-serif; font-size: 9px;
+    letter-spacing: 3px; color: rgba(255,180,160,0.5);
+    text-transform: uppercase;
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     CONTEXT 2: GAMEPLAY SCOREBUG
+  ════════════════════════════════════════════════════════════════ */
+  .scorebug-screen {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 50%, #0F0A06, #0A0804);
+    display: flex; flex-direction: column;
+  }
+  .scorebug-screen .safe-top { height: 48px; }
+
+  .scorebug {
+    margin: 0 10px;
+    background: rgba(10,6,4,0.85);
+    backdrop-filter: blur(8px);
+    border: 0.5px solid rgba(235,176,16,0.2);
+    border-radius: 5px;
+    padding: 8px 10px 6px;
+    position: relative;
+  }
+  .scorebug::after {
+    content: ''; position: absolute; left: 10px; right: 10px; bottom: 0;
+    height: 2px; background: linear-gradient(90deg, var(--gold), rgba(235,176,16,0.2));
+    border-radius: 0 0 2px 2px;
+  }
+  .scorebug .bug-row {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .scorebug .bug-team {
+    display: flex; align-items: center; gap: 5px;
+    flex: 1;
+  }
+  .scorebug .bug-team.right { justify-content: flex-end; }
+  .scorebug .bug-team .bug-name {
+    font-family: 'Teko', sans-serif; font-weight: 600;
+    font-size: 15px; letter-spacing: 1.5px; color: #fff;
+    line-height: 1;
+  }
+  .scorebug .bug-team .bug-score {
+    font-family: 'Teko', sans-serif; font-weight: 700;
+    font-size: 26px; color: var(--cream-full);
+    line-height: 1; min-width: 28px; text-align: center;
+  }
+  .scorebug .bug-team.right .bug-score { color: rgba(255,250,235,0.65); }
+  .scorebug .bug-sep {
+    font-family: 'Rajdhani', sans-serif; font-size: 11px;
+    color: var(--muted); letter-spacing: 1px;
+  }
+  .scorebug .helmet-img { width: 28px; height: auto; }
+  .scorebug .bug-quarter {
+    position: absolute; top: 6px; right: 10px;
+    font-family: 'Oswald', sans-serif; font-weight: 500;
+    font-size: 8px; letter-spacing: 2px; color: var(--gold);
+  }
+
+  .down-distance {
+    margin: 8px 10px 0;
+    padding: 6px 10px;
+    background: rgba(10,6,4,0.5);
+    border-radius: 3px;
+    font-family: 'Teko', sans-serif; font-weight: 500;
+    font-size: 18px; letter-spacing: 2px; color: var(--cream);
+    text-align: center;
+  }
+  .down-distance span { color: var(--gold); }
+
+  /* Field placeholder below the scorebug */
+  .field-placeholder {
+    flex: 1;
+    margin: 12px 10px;
+    background:
+      repeating-linear-gradient(90deg, transparent 0 59px, rgba(255,255,255,0.03) 59px 60px),
+      linear-gradient(180deg, #060408 0%, #0A0A06 100%);
+    border-radius: 3px;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .field-placeholder::before {
+    content: 'GAMEPLAY FIELD RENDERER';
+    font-family: 'Oswald', sans-serif; font-size: 10px;
+    letter-spacing: 4px; color: rgba(255,250,235,0.1);
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     CONTEXT 3: TEAM SELECT CARD
+  ════════════════════════════════════════════════════════════════ */
+  .ts-screen {
+    position: absolute; inset: 0;
+    overflow: hidden;
+  }
+  .ts-screen .wash {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 85% 65% at 50% 35%, #0F3A22, transparent 70%),
+      linear-gradient(180deg, var(--green-deep) 0%, #041108 100%);
+  }
+  .ts-screen .top-wash {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 90% 50% at 50% 15%, rgba(255,255,255,0.2), transparent 60%);
+  }
+  .ts-screen .floor-dark {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.35) 100%);
+  }
+  /* Helmet stripes */
+  .ts-screen .stripe {
+    position: absolute; top: 0; bottom: 0; width: 5px; z-index: 2;
+  }
+  .ts-screen .stripe.l { left: 0; }
+  .ts-screen .stripe.r { right: 0; }
+  .ts-screen .stripe::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 0%, var(--structure) 18%, var(--structure) 82%, transparent 100%);
+    opacity: 0.85;
+  }
+  .ts-screen .stripe::after {
+    content: ''; position: absolute; inset: -4px;
+    background: var(--structure); filter: blur(8px); opacity: 0.4;
+  }
+
+  .ts-screen .tier-chip {
+    position: absolute; top: 52px; right: 14px; z-index: 5;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 9px; letter-spacing: 3px;
+    padding: 5px 10px; border-radius: 2px;
+    border: 1px solid rgba(235,176,16,0.7);
+    color: var(--gold);
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(6px);
+  }
+
+  .ts-screen .hero {
+    position: absolute; left: 50%; top: 28%;
+    transform: translateX(-50%);
+    z-index: 3;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .ts-screen .hero .aura {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px; height: 250px;
+    background: radial-gradient(circle, rgba(245,222,179,0.3) 0%, transparent 60%);
+    filter: blur(12px);
+    pointer-events: none;
+  }
+  .ts-screen .hero .helmet-img { width: 200px; position: relative; z-index: 2; }
+
+  .ts-screen .info {
+    position: absolute; left: 0; right: 0; top: 58%;
+    text-align: center; z-index: 3; padding: 0 20px;
+  }
+  .ts-screen .info .wm {
+    font-family: 'Teko', sans-serif; font-weight: 600;
+    font-size: 56px; line-height: 0.9; letter-spacing: 2px;
+    color: #fff;
+    text-shadow: 0 4px 18px rgba(0,0,0,0.6);
+  }
+  .ts-screen .info .school {
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 11px; letter-spacing: 4px;
+    color: var(--structure); margin-top: 6px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  .ts-screen .info .divider {
+    width: 50px; height: 2px; margin: 12px auto;
+    background: linear-gradient(90deg, transparent, var(--structure), transparent);
+    box-shadow: 0 0 8px var(--structure);
+  }
+  .ts-screen .info .tagline {
+    font-family: 'Teko', sans-serif; font-weight: 500;
+    font-size: 15px; letter-spacing: 4px; color: rgba(255,255,255,0.9);
+  }
+  .ts-screen .info .tagline b { color: var(--structure); }
+
+  /* CTA hint at bottom */
+  .ts-screen .cta-hint {
+    position: absolute; left: 0; right: 0; bottom: 48px; z-index: 5;
+    text-align: center;
+  }
+  .ts-screen .cta-hint .btn {
+    display: inline-block;
+    padding: 14px 60px; border-radius: 5px;
+    background: linear-gradient(180deg, var(--structure) 0%, var(--gold) 100%);
+    color: #1A0A00;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 12px; letter-spacing: 5px; text-transform: uppercase;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5), 0 0 22px rgba(245,222,179,0.3);
+    position: relative; overflow: hidden;
+  }
+  .ts-screen .cta-hint .btn::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.3), transparent);
+    border-radius: 5px 5px 0 0;
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     CONTEXT 4: END GAME SCORE CARD
+  ════════════════════════════════════════════════════════════════ */
+  .endgame-screen {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 35%, #1a1004, transparent 65%),
+      linear-gradient(180deg, #050302 0%, var(--ink) 100%);
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 60px 20px 40px;
+  }
+
+  .endgame-screen .helmet-wrap {
+    position: relative;
+    margin-top: 30px;
+  }
+  .endgame-screen .helmet-wrap .helmet-img { width: 140px; }
+  .endgame-screen .win-stamp {
+    position: absolute; top: -8px; right: -18px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px; color: var(--gold);
+    text-shadow: 0 0 16px rgba(235,176,16,0.5);
+    transform: rotate(12deg);
+    z-index: 5;
+    line-height: 1;
+  }
+  .endgame-screen .aura {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 260px; height: 200px;
+    background: radial-gradient(circle, rgba(235,176,16,0.2) 0%, transparent 60%);
+    filter: blur(14px);
+    pointer-events: none;
+  }
+
+  .endgame-screen .final-tag {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px; letter-spacing: 8px; color: var(--gold);
+    margin-top: 28px;
+  }
+  .endgame-screen .score-line {
+    font-family: 'Teko', sans-serif; font-weight: 700;
+    font-size: 38px; letter-spacing: 2px; color: var(--cream-full);
+    margin-top: 4px; line-height: 1;
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .endgame-screen .score-line .sep {
+    font-size: 22px; color: var(--muted); font-weight: 400;
+  }
+  .endgame-screen .score-line .loser {
+    color: rgba(255,250,235,0.5);
+  }
+
+  .endgame-screen .rule {
+    width: 60px; height: 1px; margin: 16px 0;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .endgame-screen .drive-memo {
+    font-family: 'Rajdhani', sans-serif; font-weight: 500;
+    font-style: italic;
+    font-size: 13px; letter-spacing: 2px; color: var(--gold);
+    text-align: center; line-height: 1.5;
+  }
+
+  .endgame-screen .career-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; color: var(--muted);
+    margin-top: 14px; text-transform: uppercase;
+  }
+
+  .endgame-screen .share-btn {
+    margin-top: 28px;
+    padding: 10px 40px; border-radius: 4px;
+    background: rgba(235,176,16,0.12);
+    border: 0.5px solid rgba(235,176,16,0.4);
+    font-family: 'Oswald', sans-serif; font-weight: 500;
+    font-size: 10px; letter-spacing: 4px; color: var(--gold);
+    text-transform: uppercase; cursor: pointer;
+  }
+  .endgame-screen .share-btn:hover { background: rgba(235,176,16,0.2); }
+
+  /* ── Footer note ── */
+  .foot-note {
+    text-align: center; margin-top: 56px;
+    padding-top: 28px; border-top: 0.5px solid var(--rule);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; color: var(--muted);
+  }
+  .foot-note b { color: var(--gold); }
+</style>
+</head>
+<body>
+  <div class="page">
+
+    <header class="header">
+      <h1>HELMET IN GAME</h1>
+      <span class="tag">PRONGHORNS · INTEGRATION MOCKUPS</span>
+      <span class="sub">src/assets/helmets/pronghorns-final.svg · 84 KB · viewBox 0 0 5000 3000</span>
+    </header>
+
+    <div class="grid">
+
+      <!-- ════════ 1. PREGAME HELMET CLASH ════════ -->
+      <div class="cell">
+        <div class="cell-label">
+          <span class="num">01</span>
+          <span class="name">Pregame Helmet Clash</span>
+        </div>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="screen">
+            <div class="clash">
+              <div class="sky"></div>
+              <div class="wash"></div>
+              <div class="fog"></div>
+              <div class="embers" id="embers1"></div>
+              <div class="content">
+                <div style="font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:5px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;">Week VII · Matchup</div>
+                <div class="helmets-row">
+                  <img class="helmet-img" src="/src/assets/helmets/pronghorns-final.svg" alt="Pronghorns helmet">
+                  <div class="vs-badge">VS</div>
+                  <div class="opp-placeholder" style="transform:scaleX(-1);"></div>
+                </div>
+                <div class="teams-row">
+                  <div class="team-label">
+                    <div class="tname">PRONGHORNS</div>
+                    <div class="tier">POWERHOUSE · 12-0</div>
+                  </div>
+                  <div class="team-label opp">
+                    <div class="tname">SERPENTS</div>
+                    <div class="tier">CONTENDER · 7-5</div>
+                  </div>
+                </div>
+                <div class="matchup-meta">Blackwater · 7:30 PM · Clear 54°</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ 2. GAMEPLAY SCOREBUG ════════ -->
+      <div class="cell">
+        <div class="cell-label">
+          <span class="num">02</span>
+          <span class="name">Gameplay Scorebug</span>
+        </div>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="screen">
+            <div class="scorebug-screen">
+              <div class="safe-top"></div>
+
+              <div class="scorebug">
+                <div class="bug-quarter">Q3 · 8:42</div>
+                <div class="bug-row">
+                  <div class="bug-team">
+                    <img class="helmet-img tiny" src="/src/assets/helmets/pronghorns-final.svg" alt="" style="width:28px;">
+                    <span class="bug-name">PRONGHORNS</span>
+                    <span class="bug-score">24</span>
+                  </div>
+                  <div class="bug-sep">—</div>
+                  <div class="bug-team right">
+                    <span class="bug-score">17</span>
+                    <span class="bug-name">SERPENTS</span>
+                    <img class="helmet-img tiny flip" src="/src/assets/helmets/pronghorns-final.svg" alt="" style="width:28px;opacity:0.5;filter:brightness(0.6) hue-rotate(200deg) drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
+                  </div>
+                </div>
+              </div>
+
+              <div class="down-distance">
+                <span>2ND</span> & 7 — OWN <span>38</span>
+              </div>
+
+              <div class="field-placeholder"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ 3. TEAM SELECT CARD ════════ -->
+      <div class="cell">
+        <div class="cell-label">
+          <span class="num">03</span>
+          <span class="name">Team Select Card</span>
+        </div>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="screen">
+            <div class="ts-screen">
+              <div class="wash"></div>
+              <div class="top-wash"></div>
+              <div class="floor-dark"></div>
+              <div class="stripe l"></div>
+              <div class="stripe r"></div>
+
+              <div class="tier-chip">POWERHOUSE</div>
+
+              <div class="hero">
+                <div class="aura"></div>
+                <img class="helmet-img glow" src="/src/assets/helmets/pronghorns-final.svg" alt="Pronghorns helmet">
+              </div>
+
+              <div class="info">
+                <div class="wm">PRONGHORNS</div>
+                <div class="school">LARKSPUR STATE · POWERHOUSE</div>
+                <div class="divider"></div>
+                <div class="tagline">POWER SPREAD <b>·</b> 55/45 <b>·</b> COVER 3</div>
+              </div>
+
+              <div class="cta-hint">
+                <div class="btn">HOLD TO COACH</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ 4. END GAME SCORE CARD ════════ -->
+      <div class="cell">
+        <div class="cell-label">
+          <span class="num">04</span>
+          <span class="name">End Game Score Card</span>
+        </div>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="screen">
+            <div class="endgame-screen">
+
+              <div style="font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:5px;color:var(--muted);text-transform:uppercase;">Week VII · Final</div>
+
+              <div class="helmet-wrap">
+                <div class="aura"></div>
+                <img class="helmet-img glow" src="/src/assets/helmets/pronghorns-final.svg" alt="Pronghorns helmet">
+                <div class="win-stamp">W</div>
+              </div>
+
+              <div class="final-tag">FINAL</div>
+
+              <div class="score-line">
+                <span>PRONGHORNS</span>
+                <span>31</span>
+                <span class="sep">—</span>
+                <span class="loser">24</span>
+                <span class="loser">SERPENTS</span>
+              </div>
+
+              <div class="rule"></div>
+
+              <div class="drive-memo">
+                THE DRIVE #4<br>
+                10 plays · 80 yards · Henderson 45-yd TD
+              </div>
+
+              <div class="career-line">CAREER · 13 — 4 — 1 · W3 STREAK</div>
+
+              <button class="share-btn">SHARE RESULT</button>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="foot-note">
+      Helmet: <b>TORCH Helmet Studio</b> export · Adobe Stock #186214272 · Pronghorns config<br>
+      4 integration contexts: pregame clash · gameplay scorebug · team select · end game
+    </div>
+
+  </div>
+
+<script>
+  // Generate CSS-only ember particles for the clash screen
+  const embers = document.getElementById('embers1');
+  if (embers) {
+    for (let i = 0; i < 12; i++) {
+      const e = document.createElement('i');
+      e.style.left = (Math.random() * 100) + '%';
+      e.style.bottom = (-5 + Math.random() * 25) + '%';
+      e.style.animationDuration = (12 + Math.random() * 10) + 's';
+      e.style.animationDelay = (-Math.random() * 18) + 's';
+      e.style.transform = 'scale(' + (0.6 + Math.random() * 1.5) + ')';
+      embers.appendChild(e);
+    }
+  }
+</script>
+</body>
+</html>

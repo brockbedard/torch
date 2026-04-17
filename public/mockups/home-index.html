@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TORCH · Home Screen Archetypes — A Design Monograph</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,900&family=Marcellus&family=Italiana&family=Oswald:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0A0804; --paper: #F5E6CF;
+    --paper-70: rgba(245,230,207,0.70); --paper-40: rgba(245,230,207,0.40);
+    --paper-15: rgba(245,230,207,0.15); --paper-08: rgba(245,230,207,0.08);
+    --gold: #EBB010; --gold-pale: #D6A838; --ember: #FF4511;
+    --rule: rgba(235,176,16,0.22);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--ink); color: var(--paper);
+    font-family: 'Marcellus', serif;
+    min-height: 100vh; padding: 48px 32px 120px;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: radial-gradient(ellipse 120% 80% at 50% -10%, rgba(255,69,17,0.04), transparent 60%);
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    opacity: 0.45; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0.35 0'/></filter><rect width='220' height='220' filter='url(%23n)'/></svg>");
+  }
+  main, header { position: relative; z-index: 1; }
+  .wrap { max-width: 1500px; margin: 0 auto; }
+
+  /* ─── MASTHEAD ─── */
+  .mast {
+    display: grid; grid-template-columns: auto 1fr auto; gap: 24px;
+    align-items: baseline; padding-bottom: 18px;
+    border-bottom: 0.5px solid var(--rule); margin-bottom: 56px;
+  }
+  .mast-sigil { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 34px; letter-spacing: -0.02em; color: var(--gold); }
+  .mast-mid { text-align: center; font-family: 'Oswald', sans-serif; font-weight: 300; font-size: 10px; letter-spacing: 4px; color: var(--paper-70); text-transform: uppercase; }
+  .mast-mid b { font-weight: 700; color: var(--gold); }
+  .mast-folio { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--paper-40); letter-spacing: 1px; }
+
+  /* ─── TITLE ─── */
+  .title-sec { margin-bottom: 80px; }
+  .kicker {
+    font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 11px;
+    letter-spacing: 6px; color: var(--gold); text-transform: uppercase; margin-bottom: 18px;
+  }
+  .kicker::before { content: '※'; margin-right: 14px; color: var(--gold-pale); }
+  .title-h {
+    font-family: 'Playfair Display', serif; font-weight: 900; font-style: italic;
+    font-size: clamp(60px, 9vw, 140px); line-height: 0.88; letter-spacing: -0.035em;
+    color: var(--paper); margin-bottom: 22px;
+  }
+  .title-h em { color: var(--gold); font-weight: 400; font-style: italic; }
+  .title-h .sub {
+    display: block; font-family: 'Italiana', serif;
+    font-size: 0.2em; letter-spacing: 0.4em; color: var(--paper-40);
+    margin-top: 0.4em; font-style: normal; font-weight: 400;
+  }
+  .dek {
+    max-width: 720px; font-size: 19px; line-height: 1.55;
+    color: var(--paper-70); margin-bottom: 28px;
+  }
+  .dek::first-letter {
+    font-family: 'Playfair Display', serif; font-weight: 900; font-size: 3.2em;
+    line-height: 0.85; float: left; padding: 0.05em 0.12em 0 0; color: var(--gold);
+  }
+  .dek em { font-style: italic; color: var(--paper); }
+  .dek strong { color: var(--paper); font-weight: inherit; font-style: italic; }
+
+  /* ─── GALLERY ─── */
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 48px 28px;
+    margin-top: 60px;
+  }
+
+  .plate {
+    display: flex; flex-direction: column; gap: 12px;
+    text-decoration: none; color: inherit;
+    opacity: 0; transform: translateY(14px);
+    animation: reveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  @keyframes reveal { to { opacity: 1; transform: translateY(0); } }
+  .plate:nth-child(1) { animation-delay: 0.05s; }
+  .plate:nth-child(2) { animation-delay: 0.15s; }
+  .plate:nth-child(3) { animation-delay: 0.25s; }
+  .plate:nth-child(4) { animation-delay: 0.35s; }
+  .plate:nth-child(5) { animation-delay: 0.45s; }
+
+  .plate-numeral {
+    display: flex; align-items: baseline; gap: 12px;
+    padding-bottom: 6px; border-bottom: 0.5px solid var(--rule);
+  }
+  .plate-numeral .num {
+    font-family: 'Italiana', serif; font-size: 42px; color: var(--gold);
+    line-height: 0.9;
+  }
+  .plate-numeral .label {
+    font-family: 'Oswald', sans-serif; font-weight: 500;
+    font-size: 10px; letter-spacing: 3px; color: var(--paper-40);
+    text-transform: uppercase;
+  }
+
+  .phone-slot {
+    position: relative;
+    aspect-ratio: 9 / 19.5;
+    max-width: 290px;
+    border-radius: 28px;
+    overflow: hidden;
+    background: #000;
+    padding: 5px;
+    box-shadow:
+      0 0 0 1px #222, 0 0 0 2px #333,
+      0 28px 56px rgba(0,0,0,0.7), 0 0 80px rgba(255,69,17,0.06);
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease;
+  }
+  .plate:hover .phone-slot {
+    transform: translateY(-6px);
+    box-shadow: 0 0 0 1px #333, 0 0 0 2px #555, 0 34px 68px rgba(0,0,0,0.75), 0 0 120px rgba(235,176,16,0.15);
+  }
+  .phone-slot .notch-lite {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    width: 72px; height: 20px; background: #000; border-radius: 10px; z-index: 100;
+  }
+  .phone-slot iframe {
+    width: 100%; height: 100%;
+    border: none; border-radius: 24px;
+    transform: scale(0.73);
+    transform-origin: top left;
+    width: 137%; height: 137%;
+    pointer-events: none;
+  }
+  .phone-slot .overlay {
+    position: absolute; inset: 0; border-radius: 24px;
+    pointer-events: none;
+    box-shadow: inset 0 0 0 1px rgba(245,230,207,0.04);
+  }
+
+  .plate-body {
+    padding-top: 4px;
+  }
+  .plate-body h3 {
+    font-family: 'Playfair Display', serif; font-weight: 900;
+    font-size: 26px; line-height: 1.05; color: var(--paper);
+    margin-bottom: 4px; letter-spacing: -0.015em;
+  }
+  .plate-body .sub {
+    font-family: 'Playfair Display', serif; font-style: italic;
+    font-size: 13px; color: var(--gold); margin-bottom: 10px;
+    line-height: 1.4;
+  }
+  .plate-body .bet {
+    font-size: 12.5px; line-height: 1.55; color: var(--paper-70);
+    margin-bottom: 10px;
+  }
+  .plate-body .bet strong { color: var(--paper); font-weight: inherit; font-style: italic; }
+  .plate-body .tags {
+    display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px;
+  }
+  .plate-body .tags span {
+    font-family: 'Oswald', sans-serif; font-weight: 500;
+    font-size: 7.5px; letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 3px 7px; border: 0.5px solid var(--rule); color: var(--paper-40);
+  }
+  .plate-body .tags span.pro { color: var(--gold); border-color: rgba(235,176,16,0.5); }
+
+  .plate-open {
+    font-family: 'Oswald', sans-serif; font-weight: 700;
+    font-size: 9.5px; letter-spacing: 3px; color: var(--gold);
+    text-transform: uppercase; margin-top: 10px;
+    padding-top: 8px; border-top: 0.5px solid var(--rule);
+  }
+  .plate-open::after { content: ' →'; }
+
+  /* ─── FINAL NOTE ─── */
+  .outro {
+    margin-top: 120px;
+    padding-top: 48px; border-top: 0.5px solid var(--rule);
+    display: grid; grid-template-columns: 2fr 1fr; gap: 48px;
+  }
+  @media (max-width: 800px) { .outro { grid-template-columns: 1fr; } }
+  .outro h3 { font-family: 'Playfair Display', serif; font-weight: 900; font-style: italic; font-size: 38px; line-height: 1; margin-bottom: 12px; }
+  .outro p { font-size: 15px; line-height: 1.7; color: var(--paper-70); max-width: 600px; }
+  .outro aside {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--paper-40);
+    line-height: 1.7; padding: 16px; border: 0.5px solid var(--rule); align-self: start;
+  }
+  .outro aside h5 {
+    font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 9px;
+    letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 10px;
+  }
+  .outro aside a { color: var(--paper); text-decoration: none; border-bottom: 0.5px solid var(--rule); }
+
+  .end { text-align: center; margin-top: 80px; font-family: 'Italiana', serif; font-size: 24px; letter-spacing: 0.6em; color: var(--gold); opacity: 0.7; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <header class="mast">
+      <div class="mast-sigil">T·III</div>
+      <div class="mast-mid">A Torch Football <b>Design Monograph</b> · Volume III · Apr <b>MMXXVI</b></div>
+      <div class="mast-folio">№ 03 / VOL III</div>
+    </header>
+
+    <section class="title-sec">
+      <div class="kicker">Volume III · Reimagined Home Screen</div>
+      <h1 class="title-h">
+        Five<br>
+        <em>Approaches</em>
+        <span class="sub">· five · home · screens · one · app ·</span>
+      </h1>
+      <p class="dek">
+        Five home-screen <strong>archetypes</strong> for TORCH Football,
+        each committing to a different strategic bet about what a player
+        should feel in the first three seconds. Drawn from a research pass
+        on Balatro, Slay the Spire, Inscryption, ESPN's 2024 College
+        GameDay rebrand, and vintage gameday program covers. Tap any
+        phone to open the full-size mockup at 390&times;844.
+      </p>
+      <p style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:3px;color:var(--paper-40);text-transform:uppercase;margin-bottom:24px;">
+        Companions:
+        <a style="display:inline-block;margin-left:6px;font-family:'Oswald',sans-serif;font-size:9.5px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;border:0.5px solid var(--rule);padding:6px 12px;text-decoration:none;margin-right:6px;" href="/mockups/app-icons.html">App Icon Vol I →</a>
+        <a style="display:inline-block;font-family:'Oswald',sans-serif;font-size:9.5px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;border:0.5px solid var(--rule);padding:6px 12px;text-decoration:none;" href="/mockups/app-icons-v2.html">App Icon Vol II →</a>
+      </p>
+    </section>
+
+    <main class="gallery">
+
+      <a class="plate" href="/mockups/home-a-stadium.html">
+        <div class="plate-numeral">
+          <div class="num">I</div>
+          <div class="label">Plate 01 — Stadium Arrival</div>
+        </div>
+        <div class="phone-slot">
+          <div class="notch-lite"></div>
+          <iframe src="/mockups/home-a-stadium.html?preview=1" title="Stadium Arrival preview"></iframe>
+          <div class="overlay"></div>
+        </div>
+        <div class="plate-body">
+          <h3>Stadium Arrival</h3>
+          <div class="sub">you're walking up to the stadium at dusk.</div>
+          <p class="bet"><strong>The bet:</strong> atmospheric place-setting. Layered night sky, stadium floods bleeding through fog, crowd silhouette, ember particles. Weather strip + streak above the fold. TORCH wordmark front and center.</p>
+          <div class="tags">
+            <span class="pro">Atmospheric</span>
+            <span class="pro">Brand-leading</span>
+            <span>Team-neutral</span>
+            <span>Highest ambient motion</span>
+          </div>
+          <div class="plate-open">Open plate I</div>
+        </div>
+      </a>
+
+      <a class="plate" href="/mockups/home-b-program.html">
+        <div class="plate-numeral">
+          <div class="num">II</div>
+          <div class="label">Plate 02 — The Program</div>
+        </div>
+        <div class="phone-slot">
+          <div class="notch-lite"></div>
+          <iframe src="/mockups/home-b-program.html?preview=1" title="The Program preview"></iframe>
+          <div class="overlay"></div>
+        </div>
+        <div class="plate-body">
+          <h3>The Program</h3>
+          <div class="sub">a printed gameday program, the kind your dad kept.</div>
+          <p class="bet"><strong>The bet:</strong> college football nostalgia. Aged paper canvas, letterpress headlines, masthead with issue number, hero illustration, matchup strip, interior-page secondary nav. &ldquo;KICKOFF&rdquo; stamped at the bottom.</p>
+          <div class="tags">
+            <span class="pro">TORCH-specific</span>
+            <span class="pro">CF native</span>
+            <span>Biggest departure</span>
+            <span>Paper palette</span>
+          </div>
+          <div class="plate-open">Open plate II</div>
+        </div>
+      </a>
+
+      <a class="plate" href="/mockups/home-c-locker.html">
+        <div class="plate-numeral">
+          <div class="num">III</div>
+          <div class="label">Plate 03 — Locker Room</div>
+        </div>
+        <div class="phone-slot">
+          <div class="notch-lite"></div>
+          <iframe src="/mockups/home-c-locker.html?preview=1" title="Locker Room preview"></iframe>
+          <div class="overlay"></div>
+        </div>
+        <div class="plate-body">
+          <h3>Locker Room</h3>
+          <div class="sub">your team's helmet, waiting for you on the bench.</div>
+          <p class="bet"><strong>The bet:</strong> personalized return. Your most recently coached team's helmet is the visual anchor, generated live from the helmet tool. Nameplate, streak clipboard, &ldquo;CONTINUE THE DRIVE&rdquo; CTA. Warmest "come back" feel.</p>
+          <div class="tags">
+            <span class="pro">Most personal</span>
+            <span class="pro">Uses helmet generator</span>
+            <span>Needs save-state</span>
+            <span>First-launch trickier</span>
+          </div>
+          <div class="plate-open">Open plate III</div>
+        </div>
+      </a>
+
+      <a class="plate" href="/mockups/home-d-broadcast.html">
+        <div class="plate-numeral">
+          <div class="num">IV</div>
+          <div class="label">Plate 04 — Broadcast Deck</div>
+        </div>
+        <div class="phone-slot">
+          <div class="notch-lite"></div>
+          <iframe src="/mockups/home-d-broadcast.html?preview=1" title="Broadcast Deck preview"></iframe>
+          <div class="overlay"></div>
+        </div>
+        <div class="plate-body">
+          <h3>Broadcast Deck</h3>
+          <div class="sub">the ESPN pregame show, rendered for a phone.</div>
+          <p class="bet"><strong>The bet:</strong> broadcast-graphics vocabulary. Network header with LIVE dot + timestamp, Bebas Neue pregame headline, matchup panel with odds + weather, lower-third tiles, gold-sweep "KICKOFF" bar, scrolling scores ticker. Most dashboard-like.</p>
+          <div class="tags">
+            <span class="pro">Sports-native</span>
+            <span class="pro">Most distinctive</span>
+            <span>Dashboard risk</span>
+            <span>Feature-dense</span>
+          </div>
+          <div class="plate-open">Open plate IV</div>
+        </div>
+      </a>
+
+      <a class="plate" href="/mockups/home-e-coin.html">
+        <div class="plate-numeral">
+          <div class="num">V</div>
+          <div class="label">Plate 05 — Coin Toss Ritual</div>
+        </div>
+        <div class="phone-slot">
+          <div class="notch-lite"></div>
+          <iframe src="/mockups/home-e-coin.html?preview=1" title="Coin Toss Ritual preview"></iframe>
+          <div class="overlay"></div>
+        </div>
+        <div class="plate-body">
+          <h3>Coin Toss Ritual</h3>
+          <div class="sub">a single verb. a single tap. a single coin.</div>
+          <p class="bet"><strong>The bet:</strong> extreme commitment. One struck-gold coin, slowly breathing under a narrow spotlight, arc-text around the rim, ember specks rising past it. Nothing else. No streak. No tiles. Everything in drawer.</p>
+          <div class="tags">
+            <span class="pro">Highest confidence</span>
+            <span class="pro">Most shareable</span>
+            <span>Hardest to nail</span>
+            <span>Hides features</span>
+          </div>
+          <div class="plate-open">Open plate V</div>
+        </div>
+      </a>
+
+    </main>
+
+    <section class="outro">
+      <div>
+        <div class="kicker">How to choose</div>
+        <h3>Pick the bet you believe in.</h3>
+        <p>
+          These are five different arguments about what TORCH is. <em>Stadium</em>
+          says it&rsquo;s a night at the game. <em>Program</em> says it&rsquo;s
+          a ritual object from a more specific era. <em>Locker</em> says
+          it&rsquo;s your personal coaching career. <em>Broadcast</em> says
+          it&rsquo;s a sports network you launch. <em>Coin</em> says it&rsquo;s
+          a single sacred verb. You can&rsquo;t split the difference &mdash; pick
+          one, commit, and the rest of the app falls into line behind it.
+        </p>
+        <p style="margin-top:14px;">
+          Research is archived at <code style="color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:13px;">docs/TORCH-HOMEPAGE-RESEARCH.md</code>.
+        </p>
+      </div>
+      <aside>
+        <h5>Recommendation</h5>
+        Strongest singular bets: <b>II (Program)</b> for TORCH-specific identity, or <b>V (Coin)</b> for maximum commitment.<br><br>
+        <b>Hybrid worth considering:</b> Program chrome around a Coin central action &mdash; the masthead + date + matchup in printed-paper frame, but the primary action is tap-the-coin.<br><br>
+        <b>Skip for v1:</b> Locker (needs personalization payoff); revisit for career mode.
+      </aside>
+    </section>
+
+    <div class="end">· FIN ·</div>
+  </div>
+</body>
+</html>

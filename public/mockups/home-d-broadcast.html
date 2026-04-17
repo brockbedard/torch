@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TORCH · Home D — Broadcast Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Teko:wght@500;600;700&family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0A0804; color: #F5E6CF;
+    font-family: 'Rajdhani', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 24px 0;
+  }
+  .caption {
+    color: rgba(245,230,207,0.45);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; margin-bottom: 14px; text-transform: uppercase;
+  }
+  .caption b { color: #EBB010; letter-spacing: 3px; }
+  .nav { display: flex; gap: 8px; margin-bottom: 20px; font-size: 10px; letter-spacing: 2px; }
+  .nav a { color: rgba(245,230,207,0.5); text-decoration: none; padding: 6px 10px; border: 0.5px solid rgba(235,176,16,0.3); border-radius: 2px; }
+  .nav a.on { color: #EBB010; border-color: #EBB010; }
+  .nav a:hover { color: #EBB010; }
+
+  .phone {
+    width: 390px; height: 844px; position: relative;
+    border-radius: 48px; background: #000; padding: 8px;
+    box-shadow: 0 0 0 2px #222, 0 0 0 3px #444, 0 40px 80px rgba(0,0,0,0.8);
+  }
+  .phone .notch {
+    position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+    width: 110px; height: 32px; background: #000; border-radius: 16px; z-index: 100;
+  }
+  .screen {
+    width: 100%; height: 100%; border-radius: 42px;
+    overflow: hidden; position: relative;
+    background: linear-gradient(180deg, #040208 0%, #0A0804 40%, #120A04 100%);
+  }
+
+  /* ─── BROADCAST SCANLINES ─── */
+  .scanlines {
+    position: absolute; inset: 0; pointer-events: none; opacity: 0.4;
+    background: repeating-linear-gradient(180deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 4px);
+  }
+  /* Ambient backdrop imagery — blurred "broadcast feed" vibe */
+  .feed {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 40% 25%, rgba(255,120,40,0.12), transparent 65%),
+      radial-gradient(ellipse 45% 35% at 80% 70%, rgba(80,180,230,0.08), transparent 65%);
+  }
+
+  /* ─── TOP: NETWORK HEADER BAR ─── */
+  .net-bar {
+    position: absolute; top: 0; left: 0; right: 0;
+    padding: calc(58px + env(safe-area-inset-top, 0px)) 0 0 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 100%);
+    z-index: 10;
+  }
+  .net-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 14px 10px;
+    border-bottom: 2px solid #EBB010;
+  }
+  .net-logo {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 3px; color: #F5E6CF;
+  }
+  .net-logo .flame { display: inline-block; width: 20px; height: 20px; }
+  .net-logo .tag {
+    font-family: 'JetBrains Mono', monospace; font-weight: 700;
+    font-size: 9px; letter-spacing: 2px; color: #EBB010;
+    padding: 2px 6px; border: 0.5px solid #EBB010; border-radius: 1px;
+    margin-left: 6px;
+  }
+  .net-live {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 10px; letter-spacing: 2.5px; color: #F5E6CF;
+  }
+  .net-live .pulse {
+    width: 8px; height: 8px; border-radius: 50%; background: #FF3B30;
+    animation: pulse 1s ease-in-out infinite;
+    box-shadow: 0 0 10px #FF3B30;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ─── PREGAME HEADLINE ─── */
+  .pregame {
+    padding: 22px 16px 14px;
+    display: flex; flex-direction: column; align-items: flex-start;
+    gap: 4px;
+  }
+  .pregame .show-tag {
+    font-family: 'Oswald', sans-serif; font-weight: 500;
+    font-size: 9.5px; letter-spacing: 5px; color: #EBB010;
+  }
+  .pregame .headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 34px; line-height: 0.95; letter-spacing: 1px; color: #F5E6CF;
+  }
+  .pregame .headline em {
+    font-style: italic; color: #EBB010; font-family: 'Teko', sans-serif; font-weight: 600;
+  }
+  .pregame .dek {
+    font-family: 'Rajdhani', sans-serif; font-size: 12px; line-height: 1.4;
+    color: rgba(245,230,207,0.7); max-width: 300px; margin-top: 6px;
+  }
+
+  /* ─── MAIN BROADCAST PANEL (matchup card) ─── */
+  .panel {
+    margin: 0 14px;
+    padding: 18px 14px;
+    background: rgba(10, 6, 4, 0.55);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(235,176,16,0.3);
+    border-left: 3px solid #EBB010;
+    position: relative;
+  }
+  .panel::before {
+    content: 'MATCHUP · WK VII';
+    position: absolute; top: -8px; left: 10px;
+    background: #EBB010; color: #0A0804;
+    font-family: 'Bebas Neue', sans-serif; font-size: 10px;
+    padding: 1px 8px; letter-spacing: 2px;
+  }
+
+  .matchup-grid {
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center; gap: 10px;
+    padding: 8px 0 4px;
+  }
+  .team {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .team .tag {
+    font-family: 'Oswald', sans-serif; font-weight: 500;
+    font-size: 8px; letter-spacing: 2px; color: #EBB010;
+  }
+  .team .nm {
+    font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1.5px;
+    color: #F5E6CF;
+  }
+  .team .rec {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: rgba(245,230,207,0.6); letter-spacing: 1px;
+  }
+  .vs-col {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .vs-col .vs {
+    font-family: 'Bebas Neue', sans-serif; font-size: 14px;
+    letter-spacing: 2px; color: #EBB010;
+    padding: 3px 8px; border: 0.5px solid #EBB010;
+  }
+  .vs-col .kick {
+    font-family: 'JetBrains Mono', monospace; font-size: 8px;
+    color: rgba(245,230,207,0.55); letter-spacing: 1px;
+  }
+
+  .panel .meta-line {
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 0.5px solid rgba(245,230,207,0.1); padding-top: 8px; margin-top: 8px;
+    font-family: 'Rajdhani', sans-serif; font-size: 9.5px; letter-spacing: 2px;
+    color: rgba(245,230,207,0.6); text-transform: uppercase;
+  }
+  .panel .meta-line b { color: #EBB010; }
+
+  /* ─── LOWER-THIRD TILES ─── */
+  .lower-thirds {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px; margin: 14px 14px 0;
+  }
+  .lt {
+    background: rgba(235,176,16,0.04);
+    border: 0.5px solid rgba(235,176,16,0.3);
+    padding: 10px 8px;
+    position: relative; cursor: pointer;
+    text-align: left;
+  }
+  .lt::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 24px; height: 2px;
+    background: #EBB010;
+  }
+  .lt .lt-tag {
+    font-family: 'Bebas Neue', sans-serif; font-size: 11px;
+    letter-spacing: 1.5px; color: #EBB010; margin-bottom: 2px;
+  }
+  .lt .lt-label {
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 10px; letter-spacing: 1.5px; color: #F5E6CF;
+    text-transform: uppercase; line-height: 1.25;
+  }
+
+  /* ─── CTA BAR ─── */
+  .cta-bar {
+    position: absolute; left: 0; right: 0; bottom: 44px;
+    display: flex; justify-content: center;
+    padding: 0 14px;
+  }
+  .cta {
+    width: 100%; max-width: 340px;
+    height: 62px; border: none; cursor: pointer;
+    background: linear-gradient(90deg, #EBB010 0%, #FFD040 40%, #EBB010 60%, #C48805 100%);
+    color: #0A0804;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px; letter-spacing: 6px;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.6), 0 0 28px rgba(235,176,16,0.35);
+    position: relative; overflow: hidden;
+  }
+  .cta::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.3), transparent);
+  }
+  .cta::after {
+    content: ''; position: absolute; top: 0; bottom: 0; left: -100%; width: 60%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    animation: sweep 3s ease-in-out infinite;
+  }
+  @keyframes sweep {
+    0% { left: -60%; }
+    100% { left: 120%; }
+  }
+
+  /* ─── BOTTOM TICKER ─── */
+  .ticker {
+    position: absolute; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom, 0px));
+    height: 34px; background: #0A0804;
+    border-top: 2px solid #EBB010;
+    display: flex; align-items: center; overflow: hidden;
+  }
+  .ticker .label {
+    flex-shrink: 0;
+    background: #EBB010; color: #0A0804;
+    font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 2px;
+    padding: 6px 12px; height: 100%; display: flex; align-items: center;
+  }
+  .ticker .feed-roll {
+    display: flex; gap: 40px; flex: 1;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: #F5E6CF; letter-spacing: 1.5px;
+    white-space: nowrap; padding-left: 14px;
+    animation: roll 22s linear infinite;
+  }
+  .ticker .feed-roll b { color: #EBB010; }
+  @keyframes roll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
+  }
+</style>
+</head>
+<body>
+  <div class="caption">TORCH · HOME SCREEN MOCKUP · ARCHETYPE <b>D — BROADCAST DECK</b></div>
+  <div class="nav">
+    <a href="/mockups/home-index.html">← INDEX</a>
+    <a href="/mockups/home-a-stadium.html">A · STADIUM</a>
+    <a href="/mockups/home-b-program.html">B · PROGRAM</a>
+    <a href="/mockups/home-c-locker.html">C · LOCKER</a>
+    <a href="/mockups/home-d-broadcast.html" class="on">D · BROADCAST</a>
+    <a href="/mockups/home-e-coin.html">E · COIN</a>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="feed"></div>
+      <div class="scanlines"></div>
+
+      <!-- Network header -->
+      <div class="net-bar">
+        <div class="net-head">
+          <div class="net-logo">
+            <span class="flame" id="flameSlot"></span>
+            TORCH<span class="tag">SN · 1</span>
+          </div>
+          <div class="net-live">
+            <span class="pulse"></span>
+            PREGAME
+          </div>
+        </div>
+
+        <!-- Headline -->
+        <div class="pregame">
+          <div class="show-tag">COLLEGE GAMEDAY · WK VII</div>
+          <div class="headline">
+            THIS WEEK ON <em>TORCH:</em>
+          </div>
+          <div class="dek">
+            The 12-0 Pronghorns travel into the Atchafalaya to face the surging
+            Blackwater Serpents. Power-spread meets disguised coverage.
+          </div>
+        </div>
+      </div>
+
+      <!-- Main matchup panel -->
+      <div style="position: absolute; top: 260px; left: 0; right: 0;">
+        <div class="panel">
+          <div class="matchup-grid">
+            <div class="team">
+              <div class="tag">AWAY · POWERHOUSE</div>
+              <div class="nm">PRONGHORNS</div>
+              <div class="rec">12 — 0 · W3</div>
+            </div>
+            <div class="vs-col">
+              <div class="vs">AT</div>
+              <div class="kick">KICKOFF · 7:30</div>
+            </div>
+            <div class="team">
+              <div class="tag">HOME · CONTENDER</div>
+              <div class="nm">SERPENTS</div>
+              <div class="rec">7 — 5 · W1</div>
+            </div>
+          </div>
+          <div class="meta-line">
+            <span>TEMP <b>54°</b> · WIND <b>WNW 8</b></span>
+            <span>FAVORITE <b>PRONGHORNS -14.5</b></span>
+          </div>
+        </div>
+
+        <!-- Lower-third tiles -->
+        <div class="lower-thirds">
+          <div class="lt">
+            <div class="lt-tag">01</div>
+            <div class="lt-label">Daily Drive</div>
+          </div>
+          <div class="lt">
+            <div class="lt-tag">02</div>
+            <div class="lt-label">Roster · Pregame</div>
+          </div>
+          <div class="lt">
+            <div class="lt-tag">03</div>
+            <div class="lt-label">Hall of Fame</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="cta-bar">
+        <button class="cta">▶ KICKOFF</button>
+      </div>
+
+      <!-- Bottom ticker -->
+      <div class="ticker">
+        <div class="label">SCORES</div>
+        <div class="feed-roll">
+          <span>FINAL · <b>MAPLES 24</b> SENTINELS 17</span>
+          <span>FINAL · <b>SPECTRES 31</b> RACCOONS 10</span>
+          <span>LIVE Q4 · DOLPHINS 28 SALAMANDERS <b>34</b></span>
+          <span>UPCOMING · PRONGHORNS @ SERPENTS · 7:30</span>
+          <span>STREAK · <b>PRONGHORNS W12</b></span>
+          <span>FINAL · <b>MAPLES 24</b> SENTINELS 17</span>
+          <span>FINAL · <b>SPECTRES 31</b> RACCOONS 10</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import { FLAME_LAYER_1, FLAME_LAYER_2, FLAME_LAYER_3, FLAME_LAYER_4 } from '/src/utils/flameIcon.js';
+  document.getElementById('flameSlot').innerHTML = `
+    <svg viewBox="0 0 34 34" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#EF3820" d="${FLAME_LAYER_1}"/>
+      <path fill="#D8190B" d="${FLAME_LAYER_2}"/>
+      <path fill="#F8AB1F" d="${FLAME_LAYER_3}"/>
+      <path fill="#FE5436" d="${FLAME_LAYER_4}"/>
+    </svg>`;
+</script>
+</body>
+</html>

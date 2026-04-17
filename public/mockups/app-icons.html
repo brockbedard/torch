@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Six Marks · A TORCH Design Monograph</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Marcellus&family=Italiana&family=Oswald:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --ink: #0A0804;
+    --ink-2: #120A04;
+    --paper: #F5E6CF;
+    --paper-70: rgba(245, 230, 207, 0.70);
+    --paper-40: rgba(245, 230, 207, 0.40);
+    --paper-15: rgba(245, 230, 207, 0.15);
+    --paper-08: rgba(245, 230, 207, 0.08);
+    --gold: #EBB010;
+    --gold-pale: #D6A838;
+    --gold-deep: #7A5A0A;
+    --ember: #FF4511;
+    --ember-deep: #8B0E02;
+    --blood: #5A0505;
+    --rule: rgba(235, 176, 16, 0.22);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Marcellus', Georgia, serif;
+    font-size: 15px;
+    line-height: 1.65;
+    font-feature-settings: 'liga', 'kern', 'onum';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* Ambient background: faint radial + subtle noise mimicking heavy letterpress paper */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 120% 80% at 50% -10%, rgba(255, 69, 17, 0.04), transparent 60%),
+      radial-gradient(ellipse 80% 60% at 50% 110%, rgba(235, 176, 16, 0.03), transparent 60%);
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    opacity: 0.5; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0.35 0'/></filter><rect width='220' height='220' filter='url(%23n)'/></svg>");
+  }
+
+  main, header, footer { position: relative; z-index: 1; }
+
+  /* ─── PAGE SHELL ─────────────────────────────────────────────── */
+
+  .page {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 48px 56px 120px;
+  }
+
+  @media (max-width: 980px) {
+    .page { padding: 32px 24px 80px; }
+  }
+
+  /* ─── MASTHEAD ─────────────────────────────────────────────── */
+
+  .masthead {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 24px;
+    align-items: baseline;
+    padding-bottom: 18px;
+    border-bottom: 0.5px solid var(--rule);
+    margin-bottom: 64px;
+  }
+  .mast-sigil {
+    font-family: 'Playfair Display', serif;
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .mast-mid {
+    text-align: center;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 300;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--paper-70);
+    text-transform: uppercase;
+  }
+  .mast-mid b {
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 4px;
+  }
+  .mast-folio {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--paper-40);
+    letter-spacing: 1px;
+  }
+
+  /* ─── HERO / TITLE PAGE ─────────────────────────────────────────────── */
+
+  .title-page {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+    margin-bottom: 120px;
+    position: relative;
+  }
+
+  .kicker {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .kicker::before {
+    content: '※';
+    display: inline-block;
+    margin-right: 14px;
+    color: var(--gold-pale);
+    font-size: 12px;
+  }
+
+  .title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: clamp(64px, 11vw, 168px);
+    line-height: 0.88;
+    letter-spacing: -0.035em;
+    color: var(--paper);
+    margin-bottom: 22px;
+  }
+  .title em {
+    font-style: normal;
+    color: var(--gold);
+    font-weight: 400;
+    font-style: italic;
+  }
+  .title .sub-count {
+    display: block;
+    font-family: 'Italiana', serif;
+    font-style: normal;
+    font-size: 0.22em;
+    letter-spacing: 0.4em;
+    color: var(--paper-40);
+    margin-top: 0.4em;
+    font-weight: 400;
+  }
+
+  .dek {
+    max-width: 680px;
+    font-family: 'Marcellus', serif;
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--paper-70);
+    margin-bottom: 32px;
+    letter-spacing: 0.005em;
+  }
+  .dek::first-letter {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 3.2em;
+    line-height: 0.85;
+    float: left;
+    padding: 0.05em 0.12em 0 0;
+    color: var(--gold);
+  }
+
+  .colophon {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 28px;
+    padding: 22px 0 0;
+    border-top: 0.5px solid var(--rule);
+    max-width: 980px;
+  }
+  .colophon dt {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500;
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .colophon dd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.55;
+    color: var(--paper-70);
+  }
+  .colophon dd span { color: var(--paper); }
+
+  /* ─── MANIFESTO QUOTE ─────────────────────────────────────────────── */
+
+  .manifesto {
+    margin: 88px auto 120px;
+    max-width: 880px;
+    padding: 0 20px;
+    position: relative;
+    text-align: center;
+  }
+  .manifesto::before,
+  .manifesto::after {
+    content: '';
+    display: block;
+    width: 40px; height: 0.5px;
+    background: var(--gold);
+    margin: 0 auto;
+  }
+  .manifesto::before { margin-bottom: 28px; }
+  .manifesto::after { margin-top: 28px; }
+
+  .manifesto blockquote {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(22px, 2.6vw, 30px);
+    line-height: 1.4;
+    color: var(--paper);
+    letter-spacing: -0.005em;
+  }
+  .manifesto blockquote::before { content: '“'; color: var(--gold); margin-right: 4px; }
+  .manifesto blockquote::after { content: '”'; color: var(--gold); margin-left: 4px; }
+  .manifesto cite {
+    display: block;
+    margin-top: 18px;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--paper-40);
+    text-transform: uppercase;
+    font-style: normal;
+  }
+  .manifesto cite::before { content: '— '; color: var(--gold); }
+
+  /* ─── SPECIMENS ─────────────────────────────────────────────── */
+
+  .specimens { display: grid; gap: 140px; }
+
+  .specimen {
+    display: grid;
+    grid-template-columns: 110px minmax(0, 1fr);
+    gap: 36px;
+    position: relative;
+  }
+
+  .specimen-numeral {
+    font-family: 'Italiana', 'Playfair Display', serif;
+    font-size: 96px;
+    line-height: 0.85;
+    color: var(--gold);
+    text-align: right;
+    padding-top: 8px;
+    position: sticky;
+    top: 20px;
+    align-self: start;
+  }
+  .specimen-numeral .plate {
+    display: block;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--paper-40);
+    margin-top: 12px;
+    text-transform: uppercase;
+  }
+
+  .specimen-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+
+  .specimen.reverse .specimen-main {
+    grid-template-columns: 1fr 1fr;
+  }
+  .specimen.reverse .specimen-body { order: 2; }
+  .specimen.reverse .specimen-display { order: 1; }
+
+  @media (max-width: 980px) {
+    .specimen { grid-template-columns: 1fr; gap: 18px; }
+    .specimen-numeral { text-align: left; font-size: 64px; position: static; }
+    .specimen-main, .specimen.reverse .specimen-main { grid-template-columns: 1fr; gap: 28px; }
+    .specimen.reverse .specimen-body { order: 2; }
+    .specimen.reverse .specimen-display { order: 1; }
+  }
+
+  /* ── Display side: hero + ladder + masks ── */
+
+  .specimen-display {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .hero-stage {
+    position: relative;
+    background:
+      radial-gradient(ellipse 85% 70% at 50% 40%, rgba(235, 176, 16, 0.05), transparent 70%),
+      linear-gradient(180deg, #07050C, #0A0804 60%, #120A04);
+    border: 0.5px solid var(--paper-08);
+    border-radius: 2px;
+    padding: 40px;
+    display: flex; align-items: center; justify-content: center;
+    aspect-ratio: 1 / 1;
+    max-width: 520px;
+  }
+  .hero-stage::before {
+    content: '';
+    position: absolute; inset: 0;
+    border: 0.5px solid var(--paper-08);
+    margin: 12px;
+    pointer-events: none;
+  }
+  .hero-stage .corner {
+    position: absolute; width: 20px; height: 20px;
+    border: 0.5px solid var(--gold-pale);
+    opacity: 0.4;
+  }
+  .hero-stage .corner.tl { top: 4px; left: 4px; border-right: none; border-bottom: none; }
+  .hero-stage .corner.tr { top: 4px; right: 4px; border-left: none; border-bottom: none; }
+  .hero-stage .corner.bl { bottom: 4px; left: 4px; border-right: none; border-top: none; }
+  .hero-stage .corner.br { bottom: 4px; right: 4px; border-left: none; border-top: none; }
+  .hero-stage > svg {
+    width: 72%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 14px 30px rgba(0, 0, 0, 0.5));
+  }
+  .hero-stage .hero-measure {
+    position: absolute;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: var(--paper-40);
+  }
+  .hero-stage .hero-measure.tl { top: 14px; left: 20px; }
+  .hero-stage .hero-measure.br { bottom: 14px; right: 20px; }
+
+  /* ── Size ladder ── */
+  .ladder {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    padding: 14px 10px 10px;
+    background: rgba(10, 6, 4, 0.5);
+    border: 0.5px solid var(--paper-08);
+    border-radius: 2px;
+  }
+  .ladder .rung {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 10px 4px;
+  }
+  .ladder .rung svg { display: block; }
+  .ladder .rung .sz-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--paper-40);
+    letter-spacing: 0.5px;
+  }
+  .ladder .rung .sz-label b { color: var(--gold); font-weight: 500; }
+
+  /* ── Mask preview ── */
+  .masks {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .mask-cell {
+    background: rgba(10, 6, 4, 0.5);
+    border: 0.5px solid var(--paper-08);
+    border-radius: 2px;
+    padding: 18px 10px 10px;
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; gap: 9px;
+  }
+  .mask-cell::before {
+    content: attr(data-platform);
+    position: absolute; top: 5px; left: 10px;
+    font-family: 'Oswald', sans-serif; font-weight: 500;
+    font-size: 7.5px; letter-spacing: 1.8px;
+    color: var(--paper-40); text-transform: uppercase;
+  }
+  .mask-cell::after {
+    content: attr(data-size);
+    position: absolute; top: 5px; right: 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 8px;
+    color: var(--gold); letter-spacing: 0.5px;
+  }
+  .mask-cell .surface {
+    width: 88px; height: 88px;
+    border-radius: 20%;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.04), 0 2px 8px rgba(0, 0, 0, 0.4);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mask-cell.android .surface { border-radius: 50%; }
+  .mask-cell.favicon .surface { background: #E5E0D5; width: 56px; height: 56px; border-radius: 5px; padding: 7px; }
+  .mask-cell.favicon .surface::before {
+    content: attr(data-url);
+  }
+
+  .mask-cell .surface svg { width: 100%; height: 100%; display: block; }
+  .mask-cell.favicon .surface svg { width: 32px; height: 32px; border-radius: 4px; }
+
+  /* ── Body side: critique + notes ── */
+  .specimen-body {
+    font-family: 'Marcellus', serif;
+    padding-top: 12px;
+  }
+
+  .concept-kicker {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .concept-kicker::after {
+    content: '';
+    display: inline-block;
+    vertical-align: middle;
+    width: 28px; height: 0.5px; background: var(--gold);
+    margin-left: 12px; opacity: 0.6;
+  }
+
+  .concept-name {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: clamp(40px, 4.2vw, 58px);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    color: var(--paper);
+    margin-bottom: 8px;
+  }
+
+  .concept-subtitle {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 1.4;
+    color: var(--gold);
+    margin-bottom: 22px;
+  }
+
+  .concept-desc {
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--paper-70);
+    margin-bottom: 22px;
+  }
+  .concept-desc + .concept-desc { margin-top: -8px; }
+
+  .runners {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 22px;
+    padding: 18px 0;
+    border-top: 0.5px solid var(--rule);
+    border-bottom: 0.5px solid var(--rule);
+    margin: 22px 0;
+  }
+  .runners h4 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500;
+    font-size: 9.5px;
+    letter-spacing: 3px;
+    color: var(--paper-40);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .runners h4.pros { color: var(--gold); }
+  .runners h4.cons { color: #C5724E; }
+  .runners p {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--paper-70);
+  }
+
+  .technique {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    line-height: 1.75;
+    color: var(--paper-40);
+    padding: 14px 16px;
+    background: rgba(10, 6, 4, 0.35);
+    border-left: 2px solid var(--gold);
+    letter-spacing: 0.2px;
+  }
+  .technique strong { color: var(--gold); font-weight: 500; letter-spacing: 0.5px; }
+  .technique .tk { display: block; }
+  .technique .tk::before { content: '→ '; color: var(--gold-pale); }
+
+  /* ─── CLOSING COLOPHON ─────────────────────────────────────────────── */
+
+  .closing {
+    margin-top: 160px;
+    padding-top: 56px;
+    border-top: 0.5px solid var(--rule);
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 64px;
+  }
+  @media (max-width: 980px) { .closing { grid-template-columns: 1fr; gap: 32px; } }
+
+  .closing h3 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: 44px;
+    line-height: 1;
+    color: var(--paper);
+    margin-bottom: 14px;
+  }
+  .closing p {
+    font-size: 15.5px;
+    line-height: 1.7;
+    color: var(--paper-70);
+    max-width: 620px;
+  }
+  .closing ol {
+    margin: 18px 0 0 0;
+    padding-left: 24px;
+    color: var(--paper-70);
+  }
+  .closing ol li { margin-bottom: 6px; font-size: 14px; }
+  .closing ol li::marker {
+    font-family: 'Italiana', serif;
+    color: var(--gold);
+  }
+
+  .closing aside {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--paper-40);
+    line-height: 1.7;
+    padding: 18px;
+    border: 0.5px solid var(--rule);
+    align-self: start;
+  }
+  .closing aside h5 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .closing aside code { color: var(--paper); }
+
+  .end-mark {
+    text-align: center;
+    margin-top: 88px;
+    color: var(--gold);
+    font-family: 'Italiana', serif;
+    font-size: 28px;
+    letter-spacing: 0.6em;
+    opacity: 0.7;
+  }
+
+  /* ─── UTILITY ─────────────────────────────────────────────── */
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity .7s ease, transform .7s cubic-bezier(.22, 1, .36, 1);
+  }
+  [data-reveal].in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  svg { shape-rendering: geometricPrecision; }
+</style>
+</head>
+
+<body>
+  <div class="page">
+
+    <!-- ────────── MASTHEAD ────────── -->
+    <header class="masthead">
+      <div class="mast-sigil">T.</div>
+      <div class="mast-mid">A Torch Football <b>Design Monograph</b> · Plate Sheets · Apr <b>MMXXVI</b></div>
+      <div class="mast-folio">№ 01 / VOL I</div>
+    </header>
+
+    <!-- ────────── TITLE PAGE ────────── -->
+    <section class="title-page">
+      <div class="kicker">Concepts for the Home Screen Icon</div>
+      <h1 class="title">
+        Six<br>
+        <em>Marks</em>
+        <span class="sub-count">· six · distinct · specimens ·</span>
+      </h1>
+      <p class="dek">
+        Six proposed app icons for <strong style="color:var(--paper);">TORCH Football</strong>, drawn
+        exclusively from the two assets that define its on-screen identity: a
+        four-layer flame and a nine-layer leather football. Each mark commits
+        to a single idea — a lapel pin, a struck medallion, a broadcast bug, a
+        heraldic crest, a motion poster, a chenille patch — and executes it
+        with the craft the app hopes to earn.
+      </p>
+      <p style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:3px;color:var(--paper-40);text-transform:uppercase;margin-bottom:24px;">
+        Companion:
+        <a style="display:inline-block;margin-left:6px;font-family:'Oswald',sans-serif;font-size:9.5px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;border:0.5px solid var(--rule);padding:6px 12px;text-decoration:none;" href="/mockups/app-icons-v2.html">Open Volume II →</a>
+      </p>
+      <dl class="colophon">
+        <div>
+          <dt>Canvas</dt>
+          <dd><span>#0A0804</span> · #EBB010 · #FF4511</dd>
+        </div>
+        <div>
+          <dt>Assets</dt>
+          <dd><span>4-layer flame</span><br>9-layer leather football</dd>
+        </div>
+        <div>
+          <dt>Targets</dt>
+          <dd><span>iOS · Android · Web</span><br>512×512 SVG source</dd>
+        </div>
+        <div>
+          <dt>Submission</dt>
+          <dd><span>Capacitor-wrapped</span><br>via App Store / Play</dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- ────────── MANIFESTO ────────── -->
+    <section class="manifesto">
+      <blockquote>
+        An icon is a compression. Most failures are a failure to commit to one
+        idea hard enough.
+      </blockquote>
+      <cite>Editor's note, on the brief</cite>
+    </section>
+
+    <!-- ────────── SPECIMENS (rendered by JS) ────────── -->
+    <main class="specimens" id="specimens"></main>
+
+    <!-- ────────── CLOSING ────────── -->
+    <section class="closing">
+      <div>
+        <div class="kicker">Next</div>
+        <h3>Pick a Plate.</h3>
+        <p>
+          Name the plate (<em>I–VI</em>) and any minor adjustment
+          (&ldquo;tighter crop on IV,&rdquo; &ldquo;brighter rim on II,&rdquo;
+          &ldquo;drop the wordmark on III&rdquo;). Once approved:
+        </p>
+        <ol>
+          <li>Chosen SVG written to <code style="font-family:'JetBrains Mono',monospace;color:var(--gold);font-size:12px;">/public/favicon.svg</code></li>
+          <li>PNG renders generated at <span style="font-family:'JetBrains Mono',monospace;color:var(--paper);">180, 192, 512, 1024</span></li>
+          <li>A maskable Android variant added with safe-zone padding</li>
+          <li>Manifest <code style="font-family:'JetBrains Mono',monospace;color:var(--gold);font-size:12px;">manifest.json</code> updated with the new icon set</li>
+          <li>Dev preview confirms the tab icon + installed-PWA render</li>
+        </ol>
+      </div>
+      <aside>
+        <h5>File Provenance</h5>
+        Every flame:<br><code>/src/utils/flameIcon.js</code><br><br>
+        Every football:<br><code>/src/utils/footballIcon.js</code><br><br>
+        Every path is imported, not redrawn. When the game's flame or
+        football evolves, every specimen on this page updates automatically.
+      </aside>
+    </section>
+
+    <div class="end-mark">· FIN ·</div>
+  </div>
+
+<script type="module">
+  import {
+    FLAME_LAYER_1, FLAME_LAYER_2, FLAME_LAYER_3, FLAME_LAYER_4
+  } from '/src/utils/flameIcon.js';
+  import {
+    FOOTBALL_PATHS, FOOTBALL_COLORS
+  } from '/src/utils/footballIcon.js';
+
+  // ════════════════════════════════════════════════════════════════════
+  // REUSABLE SVG FRAGMENTS
+  // ════════════════════════════════════════════════════════════════════
+
+  // The real 4-layer flame inside a <g>. Scale + translate as needed.
+  // Use inside an SVG; the viewBox coord system is whatever you set,
+  // and the flame content lives in 0..34.
+  const flameG = (fill1 = '#EF3820', fill2 = '#D8190B', fill3 = '#F8AB1F', fill4 = '#FE5436') => `
+    <path fill="${fill1}" d="${FLAME_LAYER_1}"/>
+    <path fill="${fill2}" d="${FLAME_LAYER_2}"/>
+    <path fill="${fill3}" d="${FLAME_LAYER_3}"/>
+    <path fill="${fill4}" d="${FLAME_LAYER_4}"/>
+  `;
+
+  // Single-layer silhouette for small sizes + stencils
+  const flameSilhouette = (color) => `<path fill="${color}" d="${FLAME_LAYER_1}"/>`;
+
+  // The real 9-layer football. coord system is 0..512.
+  const footballG = (colors = FOOTBALL_COLORS) => {
+    const p = FOOTBALL_PATHS;
+    return `
+      <path fill="${colors.tipOuter}" d="${p.tipOuter}"/>
+      <path fill="${colors.tipInner}" d="${p.tipInner}"/>
+      <path fill="${colors.body}" d="${p.body1}"/>
+      <path fill="${colors.body}" d="${p.body2}"/>
+      <path fill="${colors.body}" d="${p.body3}"/>
+      <path fill="${colors.shadow}" d="${p.shadow1}"/>
+      <path fill="${colors.shadow}" d="${p.shadow2}"/>
+      <path fill="${colors.shadow}" d="${p.shadow3}"/>
+      <path fill="${colors.laces}" d="${p.laces}"/>
+    `;
+  };
+
+  // ════════════════════════════════════════════════════════════════════
+  // CONCEPTS — each returns a full <svg> string at 512×512
+  // Each concept appends a "-{suffix}" to its IDs so previews at multiple
+  // sizes (hero + ladder + masks) don't collide.
+  // ════════════════════════════════════════════════════════════════════
+
+  // ─── I. THE EMBER — Enamel Lapel Pin ──────────────────────────────
+  // Concept: A hard-enamel circular pin. Struck-gold outer ring with
+  // specular highlight at 11 o'clock. Deep blood-red enamel in the well.
+  // Real 4-layer flame sits in the well, recolored as radiant gold so it
+  // reads as the "raised" enamel center. Minted letters ring the border.
+  const EMBER = (id) => {
+    const u = `e${id}`;
+    return `
+      <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The Ember concept">
+        <defs>
+          <radialGradient id="${u}-canvas" cx="50%" cy="45%" r="65%">
+            <stop offset="0%" stop-color="#1a0e04"/>
+            <stop offset="100%" stop-color="#0A0804"/>
+          </radialGradient>
+
+          <!-- Struck gold rim with 11-o'clock specular highlight -->
+          <radialGradient id="${u}-rim" cx="35%" cy="28%" r="80%">
+            <stop offset="0%" stop-color="#FFF0B8"/>
+            <stop offset="18%" stop-color="#F5D070"/>
+            <stop offset="45%" stop-color="#C48A10"/>
+            <stop offset="72%" stop-color="#8B5A05"/>
+            <stop offset="100%" stop-color="#3E2A02"/>
+          </radialGradient>
+
+          <!-- Inner bevel (darker gold step toward the enamel) -->
+          <radialGradient id="${u}-bevel" cx="50%" cy="50%" r="50%">
+            <stop offset="92%" stop-color="rgba(0,0,0,0)"/>
+            <stop offset="96%" stop-color="rgba(0,0,0,0.5)"/>
+            <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+          </radialGradient>
+
+          <!-- Blood-red enamel, wet look -->
+          <radialGradient id="${u}-enamel" cx="38%" cy="32%" r="80%">
+            <stop offset="0%" stop-color="#D81F0A"/>
+            <stop offset="35%" stop-color="#8E0A02"/>
+            <stop offset="100%" stop-color="#3D0200"/>
+          </radialGradient>
+
+          <!-- Enamel highlight crescent (gloss topcoat at 11 o'clock) -->
+          <radialGradient id="${u}-gloss" cx="30%" cy="22%" r="40%">
+            <stop offset="0%" stop-color="rgba(255, 240, 220, 0.55)"/>
+            <stop offset="60%" stop-color="rgba(255, 240, 220, 0)"/>
+          </radialGradient>
+
+          <!-- Polished gold for the embossed flame itself -->
+          <linearGradient id="${u}-flame-gold" x1="50%" y1="100%" x2="50%" y2="0%">
+            <stop offset="0%" stop-color="#7A5A0A"/>
+            <stop offset="40%" stop-color="#EBB010"/>
+            <stop offset="75%" stop-color="#FFE070"/>
+            <stop offset="100%" stop-color="#FFF4C0"/>
+          </linearGradient>
+
+          <filter id="${u}-inner" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+            <feOffset dx="0" dy="3"/>
+            <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1"/>
+            <feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0"/>
+            <feBlend in="SourceGraphic" mode="normal"/>
+          </filter>
+
+          <path id="${u}-ring-path" d="M 256 68 A 188 188 0 1 1 255.9 68"/>
+        </defs>
+
+        <rect width="512" height="512" fill="url(#${u}-canvas)"/>
+
+        <!-- Drop shadow beneath the pin -->
+        <ellipse cx="256" cy="450" rx="170" ry="14" fill="rgba(0,0,0,0.55)"/>
+
+        <!-- Struck gold rim (outer ring) -->
+        <circle cx="256" cy="256" r="220" fill="url(#${u}-rim)"/>
+
+        <!-- Inscribed ring text (mint-struck lettering) -->
+        <text font-family="Oswald, sans-serif" font-weight="500" font-size="17" letter-spacing="5" fill="#3E2A02">
+          <textPath href="#${u}-ring-path" startOffset="1%">TORCH · FOOTBALL · ANNO MMXXVI · EMBER · VIII ·</textPath>
+        </text>
+
+        <!-- Subtle bevel step at the rim/enamel boundary -->
+        <circle cx="256" cy="256" r="176" fill="none" stroke="rgba(255,230,180,0.5)" stroke-width="1.5"/>
+        <circle cx="256" cy="256" r="170" fill="none" stroke="rgba(40,20,0,0.7)" stroke-width="2"/>
+
+        <!-- Blood-red enamel well -->
+        <circle cx="256" cy="256" r="168" fill="url(#${u}-enamel)"/>
+
+        <!-- Enamel gloss topcoat (11 o'clock specular) -->
+        <circle cx="256" cy="256" r="168" fill="url(#${u}-gloss)"/>
+
+        <!-- The real flame, polished-gold fill, raised enamel look.
+             Scale up the 34-unit flame to ~240 units, center in the well. -->
+        <g transform="translate(256 286) scale(10.2) translate(-17 -17)">
+          <!-- Dropped shadow for raised-metal effect -->
+          <g transform="translate(0.5 1.5)" opacity="0.5">
+            ${flameSilhouette('#2A1A00')}
+          </g>
+          <!-- Main body: gradient polished gold -->
+          <path fill="url(#${u}-flame-gold)" d="${FLAME_LAYER_1}"/>
+          <!-- Depth shadow (right side) -->
+          <path fill="#7A5A0A" d="${FLAME_LAYER_2}" opacity="0.55"/>
+          <!-- Inner glow: preserve the real inner shape but in warm gold -->
+          <path fill="#FFDB6E" d="${FLAME_LAYER_3}" opacity="0.9"/>
+          <!-- Hot center: bright specular -->
+          <path fill="#FFF8DB" d="${FLAME_LAYER_4}"/>
+        </g>
+
+        <!-- Outer rim highlight (edge sparkle) -->
+        <circle cx="256" cy="256" r="220" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+        <path d="M 110 130 A 188 188 0 0 1 330 88" stroke="rgba(255,240,200,0.5)" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </svg>
+    `;
+  };
+
+  // ─── II. CENTURION — Struck Bronze Medallion ──────────────────────────
+  // Concept: A weathered bowl-game coin. Debossed flame, laurel border,
+  // mint-struck text arcs, visible wear + patina. The flame is relief —
+  // darker than the field, with a highlight on its upper-left edge,
+  // cast shadow down-right. Compass points decorated with small flames.
+  const CENTURION = (id) => {
+    const u = `c${id}`;
+    return `
+      <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Centurion concept">
+        <defs>
+          <linearGradient id="${u}-bg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#0A0804"/>
+            <stop offset="100%" stop-color="#050302"/>
+          </linearGradient>
+
+          <!-- Aged bronze field with warm-cool shift -->
+          <radialGradient id="${u}-bronze" cx="38%" cy="30%" r="80%">
+            <stop offset="0%" stop-color="#F5DC90"/>
+            <stop offset="28%" stop-color="#D8A040"/>
+            <stop offset="55%" stop-color="#9A6810"/>
+            <stop offset="80%" stop-color="#5A3805"/>
+            <stop offset="100%" stop-color="#2E1C00"/>
+          </radialGradient>
+
+          <!-- Patina-shadow ring, for depth under the rim -->
+          <radialGradient id="${u}-patina" cx="50%" cy="55%" r="50%">
+            <stop offset="85%" stop-color="rgba(0,0,0,0)"/>
+            <stop offset="95%" stop-color="rgba(15,5,0,0.4)"/>
+            <stop offset="100%" stop-color="rgba(0,0,0,0.75)"/>
+          </radialGradient>
+
+          <!-- Filter: dust/grain texture for worn metal -->
+          <filter id="${u}-grain">
+            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3"/>
+            <feColorMatrix values="0 0 0 0 0.35  0 0 0 0 0.22  0 0 0 0 0.05  0 0 0 0.12 0"/>
+            <feComposite in2="SourceGraphic" operator="in"/>
+          </filter>
+
+          <path id="${u}-arc-top" d="M 112 256 A 144 144 0 0 1 400 256"/>
+          <path id="${u}-arc-bot" d="M 400 266 A 144 144 0 0 1 112 266"/>
+        </defs>
+
+        <rect width="512" height="512" fill="url(#${u}-bg)"/>
+
+        <!-- Coin cast shadow -->
+        <ellipse cx="256" cy="445" rx="165" ry="10" fill="rgba(0,0,0,0.6)"/>
+
+        <!-- Outer edge darker ring, suggests coin thickness -->
+        <circle cx="256" cy="256" r="220" fill="#1E1208"/>
+        <circle cx="256" cy="256" r="215" fill="url(#${u}-bronze)"/>
+
+        <!-- Grain / patina texture overlay (preserves coin shape) -->
+        <circle cx="256" cy="256" r="215" fill="#D8A040" filter="url(#${u}-grain)" opacity="0.7"/>
+
+        <!-- Vignette under rim -->
+        <circle cx="256" cy="256" r="215" fill="url(#${u}-patina)"/>
+
+        <!-- Outer rim: two fine lines (raised & recessed) -->
+        <circle cx="256" cy="256" r="210" fill="none" stroke="#FFE998" stroke-width="1.2" opacity="0.6"/>
+        <circle cx="256" cy="256" r="200" fill="none" stroke="#3E2A02" stroke-width="1.2"/>
+
+        <!-- Mint-struck text arcs -->
+        <text font-family="Oswald, sans-serif" font-weight="400" font-size="20" letter-spacing="8" fill="#3A2500">
+          <textPath href="#${u}-arc-top" startOffset="8%">TORCH · FOOTBALL</textPath>
+        </text>
+        <text font-family="Oswald, sans-serif" font-weight="400" font-size="20" letter-spacing="8" fill="#3A2500">
+          <textPath href="#${u}-arc-bot" startOffset="8%">· ANNO · MMXXVI ·</textPath>
+        </text>
+
+        <!-- Compass-point dots (four small marks N/S/E/W on the inner band) -->
+        <g fill="#3A2500">
+          <circle cx="256" cy="66" r="3.5"/>
+          <circle cx="256" cy="446" r="3.5"/>
+          <circle cx="66" cy="256" r="3.5"/>
+          <circle cx="446" cy="256" r="3.5"/>
+        </g>
+
+        <!-- Inner raised disc (where the relief sits) -->
+        <circle cx="256" cy="256" r="148" fill="none" stroke="#FFE998" stroke-width="0.5" opacity="0.45"/>
+        <circle cx="256" cy="256" r="145" fill="none" stroke="#3E2A02" stroke-width="0.5"/>
+
+        <!-- DEBOSSED FLAME: dark relief + upper-left highlight + lower-right shadow inside stamp -->
+        <g transform="translate(256 306) scale(7.8) translate(-17 -17)">
+          <!-- Cast shadow inside stamp (down-right) -->
+          <g transform="translate(0.8 1.2)">
+            ${flameSilhouette('rgba(30,15,0,0.75)')}
+          </g>
+          <!-- Body: darker than the bronze, like a debossed stamp -->
+          <path fill="#4E3005" d="${FLAME_LAYER_1}"/>
+          <!-- Inner edge highlight (upper-left rim catches light) -->
+          <g transform="translate(-0.25 -0.35)" opacity="0.65">
+            <path fill="#FFE998" d="${FLAME_LAYER_1}"/>
+          </g>
+          <!-- Recover body over highlight to reveal only the rim -->
+          <path fill="#4E3005" d="${FLAME_LAYER_1}" opacity="0.92"/>
+          <!-- Interior dimensional details from real flame (subtle) -->
+          <path fill="#2A1A00" d="${FLAME_LAYER_2}" opacity="0.5"/>
+          <path fill="#7A4F08" d="${FLAME_LAYER_3}" opacity="0.4"/>
+        </g>
+
+        <!-- Tiny numeral VIII beneath the flame -->
+        <text x="256" y="400" text-anchor="middle"
+              font-family="Italiana, serif" font-size="34"
+              letter-spacing="12" fill="#2A1A00">VIII</text>
+
+        <!-- Overall glare sweep across the coin face -->
+        <path d="M 100 110 Q 220 60, 380 100" stroke="rgba(255, 240, 200, 0.22)"
+              stroke-width="40" fill="none" stroke-linecap="round"/>
+      </svg>
+    `;
+  };
+
+  // ─── III. NIGHT BROADCAST — ESPN-style Scorebug Bug ───────────────────
+  // Concept: Hard-geometric broadcast mark. A gold chevron wedge with the
+  // real flame KNOCKED OUT as negative space. The flame is revealed as
+  // void showing deep canvas. "TORCH" in Bebas Neue across the base like
+  // a lower-third network ID. Sharp corners, saturated gold, lower bar
+  // with coordinates like a real broadcast graphic.
+  const BROADCAST = (id) => {
+    const u = `b${id}`;
+    return `
+      <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Night Broadcast concept">
+        <defs>
+          <linearGradient id="${u}-canvas" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#050204"/>
+            <stop offset="60%" stop-color="#0A0804"/>
+            <stop offset="100%" stop-color="#1A0A00"/>
+          </linearGradient>
+
+          <!-- Saturated broadcast gold with slight vertical gradient -->
+          <linearGradient id="${u}-gold" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stop-color="#FFE070"/>
+            <stop offset="50%" stop-color="#EBB010"/>
+            <stop offset="100%" stop-color="#A07805"/>
+          </linearGradient>
+
+          <!-- Red accent bar gradient -->
+          <linearGradient id="${u}-red" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#FF4511"/>
+            <stop offset="100%" stop-color="#B2200D"/>
+          </linearGradient>
+
+          <!-- Scanline pattern for broadcast feel -->
+          <pattern id="${u}-scan" width="4" height="4" patternUnits="userSpaceOnUse">
+            <rect width="4" height="2" fill="rgba(255,255,255,0.025)"/>
+          </pattern>
+
+          <!-- Mask: a flame-shaped cutout of the gold wedge -->
+          <mask id="${u}-knockout">
+            <rect width="512" height="512" fill="white"/>
+            <g transform="translate(256 240) scale(12) translate(-17 -17)">
+              <path fill="black" d="${FLAME_LAYER_1}"/>
+            </g>
+          </mask>
+
+          <!-- Glow for the cutout's inner rim -->
+          <filter id="${u}-glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="4"/>
+          </filter>
+        </defs>
+
+        <rect width="512" height="512" fill="url(#${u}-canvas)"/>
+        <rect width="512" height="512" fill="url(#${u}-scan)"/>
+
+        <!-- Subtle ember glow where the flame will sit -->
+        <ellipse cx="256" cy="260" rx="120" ry="160" fill="#FF4511" opacity="0.10" filter="url(#${u}-glow)"/>
+
+        <!-- Gold geometric shield — hard-angled chevron cut at the bottom -->
+        <!-- Top rectangle + descending chevron wedge on the bottom = broadcast shield -->
+        <g mask="url(#${u}-knockout)">
+          <path d="M 62 62
+                   L 450 62
+                   L 450 360
+                   L 256 440
+                   L 62 360 Z"
+                fill="url(#${u}-gold)"/>
+        </g>
+
+        <!-- Inner shield outline (thin dark line at shield edge) -->
+        <path d="M 62 62 L 450 62 L 450 360 L 256 440 L 62 360 Z"
+              fill="none" stroke="#1A0A00" stroke-width="2" stroke-linejoin="miter"/>
+
+        <!-- Faint highlight along the upper edge of the shield -->
+        <path d="M 68 64 L 446 64" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+
+        <!-- Red accent bar below the shield chevron -->
+        <rect x="62" y="452" width="388" height="14" fill="url(#${u}-red)"/>
+
+        <!-- TORCH wordmark in Bebas Neue — broadcast lower-third -->
+        <text x="256" y="496" text-anchor="middle"
+              font-family="Bebas Neue, sans-serif"
+              font-size="38"
+              letter-spacing="12"
+              fill="#F5E6CF">TORCH</text>
+
+        <!-- Top-right broadcast tag — looks like the network timestamp -->
+        <g>
+          <rect x="408" y="72" width="30" height="14" fill="#1A0A00" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+          <text x="423" y="82.5" text-anchor="middle"
+                font-family="JetBrains Mono, monospace"
+                font-size="8.5" font-weight="700"
+                fill="#EBB010">E·8</text>
+        </g>
+
+        <!-- Top-left corner tag -->
+        <g>
+          <rect x="74" y="72" width="44" height="14" fill="rgba(26,10,0,0.8)" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
+          <text x="96" y="82.5" text-anchor="middle"
+                font-family="JetBrains Mono, monospace"
+                font-size="8.5" font-weight="700"
+                fill="#F5E6CF">LIVE</text>
+          <circle cx="83" cy="79" r="2" fill="#FF4511"/>
+        </g>
+      </svg>
+    `;
+  };
+
+  // ─── IV. SANCTA VIII — Heraldic Crest ──────────────────────────────
+  // Concept: A proper heraldic shield. Quartered per cross: top chief
+  // with flame in or (gold), dexter/sinister with a pale, crossed
+  // footballs in saltire on the lower field. "VIII" on a banner below.
+  // Decorative mantling, rope border. Aged parchment feel.
+  const SANCTA = (id) => {
+    const u = `s${id}`;
+    return `
+      <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sancta VIII concept">
+        <defs>
+          <radialGradient id="${u}-parchment" cx="50%" cy="40%" r="85%">
+            <stop offset="0%" stop-color="#1a1208"/>
+            <stop offset="70%" stop-color="#0A0804"/>
+            <stop offset="100%" stop-color="#050302"/>
+          </radialGradient>
+
+          <linearGradient id="${u}-chief" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#D89A08"/>
+            <stop offset="100%" stop-color="#EBB010"/>
+          </linearGradient>
+
+          <linearGradient id="${u}-field" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#8B0E02"/>
+            <stop offset="100%" stop-color="#5A0505"/>
+          </linearGradient>
+
+          <!-- Banner gold -->
+          <linearGradient id="${u}-banner" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#FFE070"/>
+            <stop offset="50%" stop-color="#EBB010"/>
+            <stop offset="100%" stop-color="#7A5A0A"/>
+          </linearGradient>
+
+          <!-- Shield shape — a classic heater shield -->
+          <path id="${u}-shield"
+                d="M 124 108
+                   L 388 108
+                   L 388 250
+                   C 388 330 340 390 256 420
+                   C 172 390 124 330 124 250 Z"/>
+
+          <!-- Chief line (upper quarter divider) -->
+          <clipPath id="${u}-shield-clip">
+            <use href="#${u}-shield"/>
+          </clipPath>
+
+          <!-- Vignette inside shield -->
+          <radialGradient id="${u}-shade" cx="50%" cy="38%" r="85%">
+            <stop offset="60%" stop-color="rgba(0,0,0,0)"/>
+            <stop offset="100%" stop-color="rgba(0,0,0,0.45)"/>
+          </radialGradient>
+        </defs>
+
+        <rect width="512" height="512" fill="url(#${u}-parchment)"/>
+
+        <!-- Decorative rays behind shield -->
+        <g opacity="0.08" fill="#EBB010">
+          <path d="M 256 70 L 240 20 L 272 20 Z"/>
+          <path d="M 96 220 L 40 196 L 40 228 Z" transform="rotate(-15 256 256)"/>
+          <path d="M 416 220 L 472 196 L 472 228 Z" transform="rotate(15 256 256)"/>
+        </g>
+
+        <!-- Shield shadow -->
+        <g transform="translate(3 6)">
+          <use href="#${u}-shield" fill="rgba(0,0,0,0.6)"/>
+        </g>
+
+        <!-- Shield body — red field -->
+        <use href="#${u}-shield" fill="url(#${u}-field)"/>
+
+        <!-- Chief (upper third in gold) — clipped by shield -->
+        <g clip-path="url(#${u}-shield-clip)">
+          <rect x="124" y="108" width="264" height="80" fill="url(#${u}-chief)"/>
+          <!-- Divider line between chief and field -->
+          <rect x="124" y="186" width="264" height="3" fill="#1A0A00"/>
+          <rect x="124" y="189" width="264" height="1.5" fill="rgba(255,230,180,0.6)"/>
+        </g>
+
+        <!-- Flame in the chief (charge in or, gules) -->
+        <g transform="translate(256 158) scale(3.2) translate(-17 -17)" clip-path="url(#${u}-shield-clip)">
+          <!-- Shadow -->
+          <g transform="translate(0.25 0.4)" opacity="0.6">
+            ${flameSilhouette('#7A0E02')}
+          </g>
+          ${flameG('#B2200D', '#7A0E02', '#D81F0A', '#FF4511')}
+        </g>
+
+        <!-- Crossed footballs on the lower field (saltire) -->
+        <g clip-path="url(#${u}-shield-clip)">
+          <!-- Left football, rotated toward upper-left -->
+          <g transform="translate(215 320) rotate(-30) scale(0.14) translate(-256 -256)">
+            ${footballG()}
+          </g>
+          <!-- Right football, rotated toward upper-right -->
+          <g transform="translate(297 320) rotate(30) scale(0.14) translate(-256 -256)">
+            ${footballG()}
+          </g>
+        </g>
+
+        <!-- Shield interior vignette for depth -->
+        <use href="#${u}-shield" fill="url(#${u}-shade)" clip-path="url(#${u}-shield-clip)"/>
+
+        <!-- Shield outline -->
+        <use href="#${u}-shield" fill="none" stroke="#1A0A00" stroke-width="3" stroke-linejoin="round"/>
+        <use href="#${u}-shield" fill="none" stroke="rgba(255,230,180,0.2)" stroke-width="0.8" stroke-linejoin="round"/>
+
+        <!-- Banner below shield -->
+        <path d="M 88 412
+                 L 424 412
+                 L 410 446
+                 L 256 438
+                 L 102 446 Z"
+              fill="url(#${u}-banner)"/>
+        <path d="M 88 412
+                 L 424 412
+                 L 410 446
+                 L 256 438
+                 L 102 446 Z"
+              fill="none" stroke="#3E2A02" stroke-width="1.5"/>
+        <path d="M 90 413 L 422 413" stroke="rgba(255,255,255,0.4)" stroke-width="0.5"/>
+
+        <!-- Banner swallowtails on ends -->
+        <path d="M 88 412 L 68 430 L 88 438 Z" fill="#8B5A05"/>
+        <path d="M 424 412 L 444 430 L 424 438 Z" fill="#8B5A05"/>
+
+        <!-- "EMBER VIII" in the banner -->
+        <text x="256" y="436" text-anchor="middle"
+              font-family="Italiana, serif" font-size="23"
+              letter-spacing="10" fill="#3E2A02">SANCTA · VIII</text>
+      </svg>
+    `;
+  };
+
+  // ─── V. SNAP — Action Motion Poster ──────────────────────────────
+  // Concept: A cinematic capture of a football mid-spiral, leading tip
+  // ignited by the flame. Motion lines trail behind, particles scatter.
+  // Composition uses strong diagonal (lower-left → upper-right). Deep
+  // ambient haze focused on the football. Brand moment, not a mark.
+  const SNAP = (id) => {
+    const u = `sn${id}`;
+    return `
+      <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Snap concept">
+        <defs>
+          <radialGradient id="${u}-ambient" cx="62%" cy="38%" r="65%">
+            <stop offset="0%" stop-color="#331A04"/>
+            <stop offset="50%" stop-color="#0A0804"/>
+            <stop offset="100%" stop-color="#000"/>
+          </radialGradient>
+
+          <!-- Streak gradient: ember burst fades to canvas -->
+          <linearGradient id="${u}-streak" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="rgba(255, 69, 17, 0)"/>
+            <stop offset="40%" stop-color="rgba(255, 120, 50, 0.4)"/>
+            <stop offset="80%" stop-color="rgba(255, 180, 80, 0.85)"/>
+            <stop offset="100%" stop-color="rgba(255, 240, 180, 1)"/>
+          </linearGradient>
+
+          <!-- Ignition radial glow around leading tip -->
+          <radialGradient id="${u}-ignite" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(255,240,180,0.9)"/>
+            <stop offset="30%" stop-color="rgba(255,120,40,0.7)"/>
+            <stop offset="70%" stop-color="rgba(180,40,0,0.3)"/>
+            <stop offset="100%" stop-color="rgba(180,40,0,0)"/>
+          </radialGradient>
+
+          <filter id="${u}-soft" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="6"/>
+          </filter>
+
+          <filter id="${u}-sharp" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur stdDeviation="1.2"/>
+          </filter>
+        </defs>
+
+        <rect width="512" height="512" fill="url(#${u}-ambient)"/>
+
+        <!-- Light shafts / stadium lights from upper-right -->
+        <g opacity="0.12" stroke="rgba(255,230,150,1)" stroke-width="1" fill="none">
+          <line x1="140" y1="0" x2="420" y2="340"/>
+          <line x1="220" y1="0" x2="490" y2="300"/>
+          <line x1="300" y1="0" x2="512" y2="250"/>
+        </g>
+
+        <!-- Motion streak trail (diagonal, lower-left to upper-right, fading) -->
+        <path d="M 30 440 Q 180 360, 280 280 Q 340 230, 380 200"
+              stroke="url(#${u}-streak)"
+              stroke-width="28"
+              fill="none"
+              stroke-linecap="round"
+              opacity="0.55"
+              filter="url(#${u}-soft)"/>
+        <path d="M 60 430 Q 200 350, 300 270 Q 350 230, 380 210"
+              stroke="url(#${u}-streak)"
+              stroke-width="10"
+              fill="none"
+              stroke-linecap="round"
+              opacity="0.8"/>
+
+        <!-- Scattered particles in the streak path -->
+        <g fill="#FFD060">
+          <circle cx="100" cy="420" r="2" opacity="0.5"/>
+          <circle cx="160" cy="390" r="2.5" opacity="0.7"/>
+          <circle cx="220" cy="340" r="1.8" opacity="0.55"/>
+          <circle cx="190" cy="370" r="1.2" opacity="0.4"/>
+          <circle cx="260" cy="300" r="2" opacity="0.65"/>
+          <circle cx="310" cy="268" r="1.5" opacity="0.5"/>
+          <circle cx="345" cy="240" r="2.8" opacity="0.8"/>
+          <circle cx="130" cy="410" r="1" opacity="0.3"/>
+          <circle cx="200" cy="320" r="1.2" opacity="0.4"/>
+        </g>
+
+        <!-- Ignition glow behind leading tip -->
+        <circle cx="410" cy="180" r="130" fill="url(#${u}-ignite)"/>
+
+        <!-- Leather football — rotated so it's spiraling upper-right -->
+        <!-- Natural viewBox tips are top-left & bottom-right. We rotate
+             so the leading tip points upper-right (about 45° turn). -->
+        <g transform="translate(370 220) rotate(-45) scale(0.56) translate(-256 -256)">
+          <!-- Subtle cast shadow under the ball -->
+          <g transform="translate(22 16)" opacity="0.5" filter="url(#${u}-soft)">
+            <path fill="#000" d="${FOOTBALL_PATHS.tipOuter}"/>
+            <path fill="#000" d="${FOOTBALL_PATHS.body1}"/>
+            <path fill="#000" d="${FOOTBALL_PATHS.body2}"/>
+            <path fill="#000" d="${FOOTBALL_PATHS.body3}"/>
+          </g>
+          ${footballG()}
+        </g>
+
+        <!-- Real flame bursting from the leading tip (upper-right of football) -->
+        <g transform="translate(420 168) scale(4.5) rotate(15) translate(-17 -17)">
+          ${flameG()}
+        </g>
+
+        <!-- Secondary tiny sparks around the ignition -->
+        <g fill="#FFD060">
+          <circle cx="450" cy="130" r="1.5" opacity="0.9"/>
+          <circle cx="470" cy="150" r="1" opacity="0.8"/>
+          <circle cx="395" cy="110" r="1.2" opacity="0.85"/>
+          <circle cx="430" cy="95" r="1" opacity="0.7"/>
+          <circle cx="470" cy="110" r="0.8" opacity="0.7"/>
+          <circle cx="380" cy="140" r="0.9" opacity="0.6"/>
+        </g>
+
+        <!-- Subtle type lockup bottom -->
+        <text x="48" y="478"
+              font-family="Bebas Neue, sans-serif"
+              font-size="26" letter-spacing="8"
+              fill="rgba(245,230,207,0.85)">TORCH</text>
+        <text x="48" y="500"
+              font-family="Oswald, sans-serif"
+              font-weight="500" font-size="9" letter-spacing="5"
+              fill="rgba(235,176,16,0.8)">FOOTBALL · EMBER VIII</text>
+
+        <!-- Aperture marks at corners for the "poster" feel -->
+        <g stroke="rgba(245,230,207,0.25)" stroke-width="0.5" fill="none">
+          <path d="M 14 14 L 14 40 M 14 14 L 40 14"/>
+          <path d="M 498 14 L 498 40 M 498 14 L 472 14"/>
+          <path d="M 14 498 L 14 472 M 14 498 L 40 498"/>
+          <path d="M 498 498 L 498 472 M 498 498 L 472 498"/>
+        </g>
+      </svg>
+    `;
+  };
+
+  // ─── VI. VARSITY — Chenille Letterman Patch ──────────────────────────
+  // Concept: Classic letterman chenille "T" patch. Three felt layers:
+  // outer deep navy (cut), middle cream, inner bold "T" in TORCH gold.
+  // Chenille stitching texture, visible chain-stitch outline, small
+  // flame as the crest at the top notch. Warm, worn, collegiate.
+  const VARSITY = (id) => {
+    const u = `v${id}`;
+    return `
+      <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Varsity concept">
+        <defs>
+          <linearGradient id="${u}-bg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#0F0A04"/>
+            <stop offset="100%" stop-color="#070402"/>
+          </linearGradient>
+
+          <!-- Navy felt (outer patch) with chenille grain -->
+          <pattern id="${u}-navy-felt" width="3" height="3" patternUnits="userSpaceOnUse">
+            <rect width="3" height="3" fill="#0C1D3A"/>
+            <circle cx="1.5" cy="1.5" r="0.8" fill="#1A3260" opacity="0.6"/>
+          </pattern>
+
+          <!-- Cream felt (middle patch) -->
+          <pattern id="${u}-cream-felt" width="3" height="3" patternUnits="userSpaceOnUse">
+            <rect width="3" height="3" fill="#E8DCBE"/>
+            <circle cx="1.5" cy="1.5" r="0.7" fill="#D4C49E" opacity="0.7"/>
+          </pattern>
+
+          <!-- Gold chenille (T letter) -->
+          <pattern id="${u}-gold-felt" width="4" height="4" patternUnits="userSpaceOnUse">
+            <rect width="4" height="4" fill="#EBB010"/>
+            <circle cx="2" cy="2" r="1.2" fill="#FFE070" opacity="0.6"/>
+            <circle cx="0.5" cy="0.5" r="0.5" fill="#A07805"/>
+          </pattern>
+
+          <!-- Shadow to simulate raised felt layers -->
+          <filter id="${u}-raise" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+            <feOffset dx="0" dy="4" result="offs"/>
+            <feComponentTransfer><feFuncA type="linear" slope="0.6"/></feComponentTransfer>
+            <feComposite in="SourceGraphic"/>
+          </filter>
+
+          <!-- Pennant shield shape — classic banner -->
+          <path id="${u}-pennant"
+                d="M 100 80
+                   L 412 80
+                   L 412 328
+                   C 412 372 380 402 332 412
+                   L 256 432
+                   L 180 412
+                   C 132 402 100 372 100 328 Z"/>
+
+          <clipPath id="${u}-pennant-clip">
+            <use href="#${u}-pennant"/>
+          </clipPath>
+        </defs>
+
+        <rect width="512" height="512" fill="url(#${u}-bg)"/>
+
+        <!-- Cast shadow under the patch -->
+        <g transform="translate(3 8)" filter="url(#${u}-raise)">
+          <use href="#${u}-pennant" fill="rgba(0,0,0,0.65)"/>
+        </g>
+
+        <!-- OUTER LAYER — navy felt patch -->
+        <use href="#${u}-pennant" fill="url(#${u}-navy-felt)"/>
+
+        <!-- Navy patch chain-stitch border (dashed inset) -->
+        <path d="M 114 94
+                 L 398 94
+                 L 398 322
+                 C 398 362 372 388 330 398
+                 L 256 418
+                 L 182 398
+                 C 140 388 114 362 114 322 Z"
+              fill="none"
+              stroke="#E8DCBE"
+              stroke-width="2"
+              stroke-dasharray="4 3"
+              opacity="0.75"/>
+
+        <!-- MIDDLE LAYER — cream felt (smaller, inset) -->
+        <g clip-path="url(#${u}-pennant-clip)">
+          <path d="M 140 110
+                   L 372 110
+                   L 372 320
+                   C 372 354 348 376 312 386
+                   L 256 402
+                   L 200 386
+                   C 164 376 140 354 140 320 Z"
+                fill="url(#${u}-cream-felt)"/>
+
+          <!-- Cream layer chain-stitch -->
+          <path d="M 150 120
+                   L 362 120
+                   L 362 316
+                   C 362 346 340 366 306 374
+                   L 256 390
+                   L 206 374
+                   C 172 366 150 346 150 316 Z"
+                fill="none"
+                stroke="#0C1D3A"
+                stroke-width="1.5"
+                stroke-dasharray="3 2"
+                opacity="0.7"/>
+        </g>
+
+        <!-- Flame crest at top of patch (above the T, like a finial) -->
+        <g transform="translate(256 130) scale(2.4) translate(-17 -17)">
+          <!-- Shadow beneath flame -->
+          <g transform="translate(0.3 0.4)" opacity="0.6">
+            ${flameSilhouette('#5A1005')}
+          </g>
+          ${flameG()}
+        </g>
+
+        <!-- GOLD "T" — the varsity letter, chenille texture -->
+        <g>
+          <!-- Drop shadow for raised felt -->
+          <g transform="translate(0 3)" opacity="0.45">
+            <path d="M 192 200 L 320 200 L 320 232 L 276 232 L 276 342 L 236 342 L 236 232 L 192 232 Z" fill="#3A1A00"/>
+          </g>
+          <!-- Letter body -->
+          <path d="M 192 200 L 320 200 L 320 232 L 276 232 L 276 342 L 236 342 L 236 232 L 192 232 Z"
+                fill="url(#${u}-gold-felt)"/>
+          <!-- Upper edge highlight -->
+          <path d="M 194 202 L 318 202" stroke="rgba(255,240,180,0.65)" stroke-width="1.2"/>
+          <!-- Chain-stitch around the T -->
+          <path d="M 192 200 L 320 200 L 320 232 L 276 232 L 276 342 L 236 342 L 236 232 L 192 232 Z"
+                fill="none"
+                stroke="#3A1A00"
+                stroke-width="1.2"
+                stroke-dasharray="2 1.5"/>
+        </g>
+
+        <!-- Bottom tiny brand string -->
+        <text x="256" y="398" text-anchor="middle"
+              font-family="Oswald, sans-serif"
+              font-weight="700" font-size="11" letter-spacing="5"
+              fill="#0C1D3A">TORCH · EST. MMXXVI</text>
+      </svg>
+    `;
+  };
+
+  // ════════════════════════════════════════════════════════════════════
+  // SPECIMEN DEFINITIONS
+  // ════════════════════════════════════════════════════════════════════
+
+  const specimens = [
+    {
+      numeral: 'I',
+      plate: 'Plate 01 — Enamel',
+      name: 'The Ember',
+      subtitle: 'Struck gold rim on a field of oxblood enamel.',
+      render: EMBER,
+      desc: [
+        'A hard-enamel lapel pin. The kind pressed into the lapel of a blazer at a booster-club luncheon — and, crucially, the kind you earn. Struck gold rim with its specular highlight at eleven o\'clock, a glossy oxblood well, and the real four-layer flame raised in the center as polished gold relief.',
+        'The rim is inscribed with &ldquo;TORCH · FOOTBALL · ANNO MMXXVI · EMBER VIII&rdquo;. Reads as an institutional mark at all sizes.',
+      ],
+      technique: [
+        '<strong>Ring:</strong> radial gradient simulating brushed-metal spec at 11-o\'clock; inscribed text rides a 188px circular path.',
+        '<strong>Well:</strong> deep-red radial; a second radial gloss overlay simulates an enamel topcoat at the same angle.',
+        '<strong>Flame:</strong> the 4-layer flame recolored in gold polish + cast-shadow layer beneath to lift it off the enamel.',
+        '<strong>Scaling:</strong> ring text drops at ≤32px; flame silhouette carries all remaining legibility.',
+      ],
+      pros: 'Premium institutional read. Immediately feels "earned." Rim inscription adds texture without clutter. Ages beautifully.',
+      cons: 'Most ornate — the ring text is invisible at 32px and below (only the flame + rim+well read). Relies on the gold rim for silhouette.',
+    },
+    {
+      numeral: 'II',
+      plate: 'Plate 02 — Bronze',
+      name: 'Centurion',
+      subtitle: 'A struck medallion with debossed relief.',
+      render: CENTURION,
+      desc: [
+        'A fired-bronze bowl-game medallion. Deeper and dirtier than the enamel pin — aged metal, visible patina, mint-struck text arcs, and the flame debossed into the field as actual relief with a highlight on the upper-left rim and a cast shadow toward the lower-right.',
+        'Quieter gravitas than The Ember. Where the enamel pin says &ldquo;club,&rdquo; the medallion says &ldquo;trophy.&rdquo; The mint marks (MMXXVI, VIII) read as context clues, not ornaments.',
+      ],
+      technique: [
+        '<strong>Field:</strong> aged-bronze radial gradient + turbulence-based grain overlay for the fired-metal texture.',
+        '<strong>Rim:</strong> double-ring treatment (raised + recessed) simulates coin-edge thickness.',
+        '<strong>Relief flame:</strong> base-layer dark fill beneath a 65%-opacity cream highlight offset up-left, then the dark body re-overlaid at 92% to reveal only the rim catching light.',
+        '<strong>Glare sweep:</strong> arched stroke across the face suggests a low-angle studio light on real metal.',
+      ],
+      pros: 'Feels tangible — readers instinctively trust the physicality. Debossed flame is a stronger silhouette than raised at small sizes.',
+      cons: 'Text arcs disappear early. At 16px the medallion risks reading as "a dark coin." Depends heavily on the flame holding center.',
+    },
+    {
+      numeral: 'III',
+      plate: 'Plate 03 — Network',
+      name: 'Night Broadcast',
+      subtitle: 'A scorebug bug, set for the lower third.',
+      render: BROADCAST,
+      desc: [
+        'Hard geometry. A gold chevron shield with the real flame <em>knocked out</em> as negative space — the flame is revealed as the void you look through to see the canvas. &ldquo;TORCH&rdquo; rides below in Bebas Neue on a red accent bar, the way a Monday-night graphics package would set a team name in the lower third.',
+        'Least precious of the six. Most contemporary. Reads instantly as a sports brand — not because it evokes football directly, but because it mimics the visual grammar of sports broadcasts.',
+      ],
+      technique: [
+        '<strong>Shield:</strong> a hard-angled polygon (not a circle) — saturated gold with a 2px near-black stroke for definition.',
+        '<strong>Flame:</strong> implemented as an SVG mask knocking the real flame path out of the gold shield, exposing the darker canvas beneath.',
+        '<strong>Corner tags:</strong> &ldquo;LIVE&rdquo; + pulse dot + &ldquo;E·8&rdquo; timestamp are direct quotes from broadcast lower-thirds.',
+        '<strong>Scanlines:</strong> subtle horizontal pattern overlay at 2.5% opacity simulates CRT broadcast feel.',
+      ],
+      pros: 'Strongest silhouette at 16px — the shield outline survives aggressive downscaling. Reads "sports brand" instantly. Owns the mark.',
+      cons: 'Most divergent from TORCH\'s current warm palette — the hard geometry is a deliberate break. Can feel less like a card-game icon, more like a broadcaster.',
+    },
+    {
+      numeral: 'IV',
+      plate: 'Plate 04 — Heraldic',
+      name: 'Sancta VIII',
+      subtitle: 'Per chief, or, a flame; in base, two footballs saltire.',
+      render: SANCTA,
+      desc: [
+        'A conference coat-of-arms for the Ember Eight itself. A classic heater shield divided per chief — flame on a gold upper field, crossed leather footballs saltire on the oxblood lower field. A gold banner reading &ldquo;SANCTA VIII&rdquo; flies beneath.',
+        'The loudest argument for permanence. Collegiate heraldry is already football visual-vocabulary — Ivy League, SEC crests, bowl-game insignias. This is the mark that says the conference is real and will still be here in fifty years.',
+      ],
+      technique: [
+        '<strong>Shield:</strong> heater-shield path with radial shade overlay; two ghosted stroke layers (dark + warm) simulate a stamped edge.',
+        '<strong>Chief division:</strong> gold upper third with a dark + gold-edged divider line, per classic blazon rules.',
+        '<strong>Charge (flame):</strong> real 4-layer flame in gules (red/ember), lifted off the gold field with a shadow offset.',
+        '<strong>Base (footballs):</strong> two real 9-layer footballs, rotated opposite for saltire (diagonal cross) composition.',
+        '<strong>Banner:</strong> hand-drawn curves with swallowtail ends; &ldquo;SANCTA VIII&rdquo; set in Italiana.',
+      ],
+      pros: 'Highest "institution" signal. Owns the narrative of the Ember Eight conference. Age-proof.',
+      cons: 'Busiest composition — reads well at 192+, struggles at 32. The shield silhouette is recognizable at 16 but the flame + footballs merge into a single gold-and-red blob.',
+    },
+    {
+      numeral: 'V',
+      plate: 'Plate 05 — Cinematic',
+      name: 'Snap',
+      subtitle: 'The football mid-flight, ignited at the tip.',
+      render: SNAP,
+      desc: [
+        'Not a mark — a moment. The real leather football captured mid-spiral on a diagonal from lower-left to upper-right, the leading tip blown out by the real 4-layer flame. Motion streaks trail behind in ember color; sparks scatter; stadium light shafts cut through the dark.',
+        'This is the EA Sports cover energy. If the other five concepts sell the brand as institution, this one sells it as <em>kinetics</em> — the feeling of a snap connecting, a throw completing, a card slamming on the table.',
+      ],
+      technique: [
+        '<strong>Composition:</strong> deliberate diagonal from SW to NE, football at the upper-right third along the golden ratio.',
+        '<strong>Streak:</strong> two stacked paths — a wide blurred outer streak at 55% opacity behind a sharp inner trail at 80%, both fading toward ember-red at the tail.',
+        '<strong>Ignition:</strong> radial gradient "fireball" centered on the leading tip where the flame attaches to the leather.',
+        '<strong>Light shafts:</strong> thin stroked lines from the upper right simulate stadium floods breaking through haze.',
+        '<strong>Corner fiducials:</strong> aperture marks frame the composition as a cinematic poster, not a logo.',
+      ],
+      pros: 'Emotional — feels like the game, not just the brand. Unique among app icons; no one else looks like this.',
+      cons: 'Not a mark. Scales worst of the six — the composition dies below 48px. Best reserved as app-store hero art or splash screen rather than favicon.',
+    },
+    {
+      numeral: 'VI',
+      plate: 'Plate 06 — Chenille',
+      name: 'Varsity',
+      subtitle: 'Layered felt, chain-stitched, with a flame finial.',
+      render: VARSITY,
+      desc: [
+        'A letterman-jacket chenille patch. Three stacked layers of felt — navy outer, cream middle, gold &ldquo;T&rdquo; inner — with visible chain-stitched outlines on every layer and a small flame crest at the top of the patch like a finial.',
+        'Warmer than the other five. Where Sancta VIII wants to be taken seriously as an institution, Varsity wants to be taken <em>fondly</em> — the icon as heirloom, passed down, worn. Closest to the "college football memory" the game is actually about.',
+      ],
+      technique: [
+        '<strong>Felt texture:</strong> per-layer SVG patterns — tiny soft dots simulate chenille yarn pile, one pattern per color (navy, cream, gold).',
+        '<strong>Chain stitch:</strong> dashed stroke borders in contrasting thread color around every layer edge.',
+        '<strong>Letter T:</strong> rendered in gold chenille with a 3px down-shadow drop to suggest the raised felt layer lifting off the cream below.',
+        '<strong>Finial flame:</strong> real 4-layer flame at 40% of a letter T\'s height, perched on the patch notch — reads as a crown, not a sticker.',
+      ],
+      pros: 'Distinctive silhouette — a pennant/patch shape isn\'t competing with 50 other "fire" app icons. Warm tone fits the "college football" reading better than any other option.',
+      cons: 'Colder colors (navy) depart from TORCH\'s warm brand. Small-size reads well because of the bold T, but the patch nuance is for large sizes only.',
+    },
+  ];
+
+  // ════════════════════════════════════════════════════════════════════
+  // RENDERING
+  // ════════════════════════════════════════════════════════════════════
+
+  const gallery = document.getElementById('specimens');
+  const LADDER_SIZES = [16, 32, 48, 96, 192, 512];
+
+  specimens.forEach((spec, i) => {
+    const flipped = (i % 2 === 1);
+    const article = document.createElement('article');
+    article.className = 'specimen' + (flipped ? ' reverse' : '');
+    article.setAttribute('data-reveal', '');
+
+    // Generate hero + 6 ladder previews + 3 mask previews (iOS, Android, Favicon)
+    const heroSvg = spec.render('h' + i);
+
+    const ladderHtml = LADDER_SIZES.map(sz => {
+      const sv = spec.render('l' + i + '-' + sz).replace('<svg ', `<svg width="${sz}" height="${sz}" `);
+      // Wrap the actual rendered svg in a fixed-size container
+      const displaySize = Math.max(16, sz === 16 ? 16 : sz === 32 ? 26 : sz === 48 ? 38 : sz === 96 ? 54 : sz === 192 ? 64 : 72);
+      return `
+        <div class="rung">
+          <div style="width:${displaySize}px;height:${displaySize}px;display:flex;align-items:center;justify-content:center;">
+            <div style="width:${Math.min(sz, displaySize)}px;height:${Math.min(sz, displaySize)}px;">
+              ${sv.replace(/width="\d+"/, `width="${Math.min(sz, displaySize)}"`).replace(/height="\d+"/, `height="${Math.min(sz, displaySize)}"`)}
+            </div>
+          </div>
+          <span class="sz-label"><b>${sz}</b>px</span>
+        </div>
+      `;
+    }).join('');
+
+    const iosSvg = spec.render('mi' + i);
+    const androidSvg = spec.render('ma' + i);
+    const favSvg = spec.render('mf' + i);
+
+    article.innerHTML = `
+      <aside class="specimen-numeral">
+        ${spec.numeral}
+        <span class="plate">${spec.plate}</span>
+      </aside>
+      <div class="specimen-main">
+        <div class="specimen-display">
+          <div class="hero-stage">
+            <span class="corner tl"></span>
+            <span class="corner tr"></span>
+            <span class="corner bl"></span>
+            <span class="corner br"></span>
+            <span class="hero-measure tl">512 × 512</span>
+            <span class="hero-measure br">SVG · viewBox 0 0 512 512</span>
+            ${heroSvg}
+          </div>
+          <div class="ladder">${ladderHtml}</div>
+          <div class="masks">
+            <div class="mask-cell ios" data-platform="iOS" data-size="180">
+              <div class="surface">${iosSvg}</div>
+            </div>
+            <div class="mask-cell android" data-platform="Android" data-size="192">
+              <div class="surface">${androidSvg}</div>
+            </div>
+            <div class="mask-cell favicon" data-platform="Favicon" data-size="32">
+              <div class="surface">${favSvg}</div>
+            </div>
+          </div>
+        </div>
+        <div class="specimen-body">
+          <div class="concept-kicker">${spec.plate}</div>
+          <h2 class="concept-name">${spec.name}</h2>
+          <p class="concept-subtitle">${spec.subtitle}</p>
+          ${spec.desc.map(p => `<p class="concept-desc">${p}</p>`).join('')}
+          <div class="technique">
+            ${spec.technique.map(t => `<span class="tk">${t}</span>`).join('')}
+          </div>
+          <div class="runners">
+            <div>
+              <h4 class="pros">Strengths</h4>
+              <p>${spec.pros}</p>
+            </div>
+            <div>
+              <h4 class="cons">Concessions</h4>
+              <p>${spec.cons}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    gallery.appendChild(article);
+  });
+
+  // ─── Scroll reveal (simple IntersectionObserver) ─────────────────
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -80px 0px' });
+
+  document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el));
+</script>
+
+</body>
+</html>

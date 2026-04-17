@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TORCH · Home E — Coin Toss Ritual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Italiana&family=Teko:wght@400;500;600;700&family=Rajdhani:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0A0804; color: #F5E6CF;
+    font-family: 'Rajdhani', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 24px 0;
+  }
+  .caption {
+    color: rgba(245,230,207,0.45);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; margin-bottom: 14px; text-transform: uppercase;
+  }
+  .caption b { color: #EBB010; letter-spacing: 3px; }
+  .nav { display: flex; gap: 8px; margin-bottom: 20px; font-size: 10px; letter-spacing: 2px; }
+  .nav a { color: rgba(245,230,207,0.5); text-decoration: none; padding: 6px 10px; border: 0.5px solid rgba(235,176,16,0.3); border-radius: 2px; }
+  .nav a.on { color: #EBB010; border-color: #EBB010; }
+  .nav a:hover { color: #EBB010; }
+
+  .phone {
+    width: 390px; height: 844px; position: relative;
+    border-radius: 48px; background: #000; padding: 8px;
+    box-shadow: 0 0 0 2px #222, 0 0 0 3px #444, 0 40px 80px rgba(0,0,0,0.8);
+  }
+  .phone .notch {
+    position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+    width: 110px; height: 32px; background: #000; border-radius: 16px; z-index: 100;
+  }
+  .screen {
+    width: 100%; height: 100%; border-radius: 42px;
+    overflow: hidden; position: relative;
+    background: #020104;
+  }
+
+  /* ─── AMBIENT ATMOSPHERE ─── */
+  /* Overhead stadium spotlight cone — warm narrow beam */
+  .spotlight {
+    position: absolute; left: 50%; top: -15%; transform: translateX(-50%);
+    width: 180%; height: 120%;
+    background: radial-gradient(ellipse 30% 55% at 50% 40%, rgba(255,200,120,0.15) 0%, transparent 55%);
+    pointer-events: none;
+  }
+  .spotlight::before {
+    content: ''; position: absolute; left: 50%; top: 0; transform: translateX(-50%);
+    width: 60%; height: 80%;
+    background: radial-gradient(ellipse 25% 50% at 50% 40%, rgba(255,220,160,0.2) 0%, transparent 60%);
+  }
+
+  /* Deep floor dust / fog drifting at the bottom */
+  .dust {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 40%;
+    background: radial-gradient(ellipse 100% 60% at 50% 100%, rgba(60,30,15,0.5) 0%, transparent 65%);
+  }
+
+  /* Slow rising ember specks */
+  .embers { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .embers span {
+    position: absolute; width: 2px; height: 2px; border-radius: 50%;
+    background: #EBB010; box-shadow: 0 0 4px #EBB010;
+    opacity: 0.5;
+    animation: rise linear infinite;
+  }
+  @keyframes rise {
+    from { transform: translateY(0); opacity: 0; }
+    15% { opacity: 0.9; }
+    85% { opacity: 0.9; }
+    to { transform: translateY(-100vh); opacity: 0; }
+  }
+
+  /* ─── FOREGROUND ─── */
+  .fg {
+    position: absolute; inset: 0;
+    padding: calc(58px + env(safe-area-inset-top, 0px)) 28px calc(32px + env(safe-area-inset-bottom, 0px));
+    display: flex; flex-direction: column;
+  }
+
+  .top-line {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .wordmark {
+    font-family: 'Teko', sans-serif; font-weight: 600;
+    font-size: 28px; letter-spacing: 6px; color: #F5E6CF;
+    text-shadow: 0 0 14px rgba(235,176,16,0.3);
+  }
+  .gear {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(245,230,207,0.05);
+    border: 0.5px solid rgba(245,230,207,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: rgba(245,230,207,0.5); cursor: pointer;
+  }
+
+  .invocation {
+    text-align: center;
+    margin-top: 12px;
+    font-family: 'Italiana', serif;
+    font-size: 12px; letter-spacing: 6px;
+    color: rgba(235,176,16,0.7);
+    text-transform: uppercase;
+  }
+
+  /* ─── COIN STAGE ─── */
+  .coin-stage {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+
+  .coin-wrap {
+    position: relative;
+    width: 260px; height: 260px;
+    perspective: 1000px;
+    cursor: pointer;
+    animation: breathe 3.6s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { transform: translateY(0) rotate(-8deg); }
+    50% { transform: translateY(-6px) rotate(8deg); }
+  }
+
+  /* Coin face — struck gold with raised flame */
+  .coin {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 32% 28%, #FFE998 0%, #EBB010 30%, #C48805 60%, #5A3805 100%);
+    box-shadow:
+      inset 0 0 0 1.5px rgba(255,255,255,0.35),
+      inset 0 -8px 20px rgba(0,0,0,0.5),
+      inset 0 8px 20px rgba(255,240,180,0.25),
+      0 12px 36px rgba(0,0,0,0.7),
+      0 0 60px rgba(235,176,16,0.25);
+    display: flex; align-items: center; justify-content: center;
+    transform-style: preserve-3d;
+  }
+  .coin::before {
+    /* Edge ring — simulates the milled edge of a struck coin */
+    content: '';
+    position: absolute; inset: 8px; border-radius: 50%;
+    border: 1px solid rgba(122, 85, 5, 0.5);
+    box-shadow: inset 0 0 0 1px rgba(255, 240, 180, 0.35);
+  }
+  .coin::after {
+    /* Inner debossed ring */
+    content: '';
+    position: absolute; inset: 20px; border-radius: 50%;
+    border: 0.5px solid rgba(42, 22, 8, 0.35);
+  }
+
+  .coin-content {
+    position: relative;
+    z-index: 1;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    filter: drop-shadow(0 2px 2px rgba(42,22,8,0.5));
+  }
+  .coin-content .flame-relief svg {
+    width: 80px; height: 80px;
+    filter: drop-shadow(0 -1px 1px rgba(255,240,180,0.4));
+  }
+  .coin-content .coin-inscription {
+    font-family: 'Italiana', serif; font-size: 9px;
+    letter-spacing: 5px; color: rgba(42,22,8,0.8);
+    text-transform: uppercase;
+  }
+  .coin-content .coin-viii {
+    font-family: 'Italiana', serif; font-size: 28px;
+    color: #2A1608; line-height: 1;
+    font-weight: 400;
+  }
+
+  /* Arc text ringing the coin (mint struck) */
+  .coin-ring-text {
+    position: absolute; inset: 0; pointer-events: none;
+  }
+  .coin-ring-text svg { width: 100%; height: 100%; }
+
+  /* Radial aura behind coin */
+  .aura {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(235,176,16,0.22) 0%, rgba(255,69,17,0.08) 40%, transparent 70%);
+    pointer-events: none;
+    animation: pulse 4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  }
+
+  /* Shadow cast below coin */
+  .coin-shadow {
+    position: absolute; left: 50%; top: calc(50% + 150px); transform: translateX(-50%);
+    width: 220px; height: 32px;
+    background: radial-gradient(ellipse, rgba(0,0,0,0.65) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ─── CTA HINT ─── */
+  .cta-hint {
+    text-align: center;
+    margin-top: 10px;
+  }
+  .cta-hint .hint-text {
+    font-family: 'Italiana', serif;
+    font-size: 11px; letter-spacing: 8px; color: rgba(245,230,207,0.4);
+    text-transform: uppercase;
+  }
+  .cta-hint .hint-verb {
+    font-family: 'Teko', sans-serif; font-weight: 500;
+    font-size: 26px; letter-spacing: 7px; color: #EBB010;
+    margin-top: 4px;
+    text-shadow: 0 0 18px rgba(235,176,16,0.5);
+    animation: breathe-text 2s ease-in-out infinite;
+  }
+  @keyframes breathe-text {
+    0%, 100% { opacity: 0.85; }
+    50% { opacity: 1; }
+  }
+
+  /* Bottom sacred corner — two thin gold rules framing a minimal credit */
+  .sanctum {
+    text-align: center; margin-top: 14px;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    letter-spacing: 2.5px; color: rgba(245,230,207,0.25);
+    text-transform: uppercase;
+  }
+  .sanctum::before, .sanctum::after {
+    content: ''; display: inline-block; vertical-align: middle;
+    width: 30px; height: 0.5px; background: rgba(235,176,16,0.3);
+    margin: 0 10px;
+  }
+</style>
+</head>
+<body>
+  <div class="caption">TORCH · HOME SCREEN MOCKUP · ARCHETYPE <b>E — COIN TOSS RITUAL</b></div>
+  <div class="nav">
+    <a href="/mockups/home-index.html">← INDEX</a>
+    <a href="/mockups/home-a-stadium.html">A · STADIUM</a>
+    <a href="/mockups/home-b-program.html">B · PROGRAM</a>
+    <a href="/mockups/home-c-locker.html">C · LOCKER</a>
+    <a href="/mockups/home-d-broadcast.html">D · BROADCAST</a>
+    <a href="/mockups/home-e-coin.html" class="on">E · COIN</a>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+      <div class="spotlight"></div>
+      <div class="dust"></div>
+      <div class="embers" id="embers"></div>
+
+      <div class="fg">
+        <div class="top-line">
+          <div class="wordmark">TORCH</div>
+          <div class="gear">⚙</div>
+        </div>
+
+        <div class="invocation">· Anno · MMXXVI · Ember VIII ·</div>
+
+        <div class="coin-stage">
+          <div class="aura"></div>
+
+          <div class="coin-wrap">
+            <div class="coin">
+              <div class="coin-content">
+                <div class="flame-relief" id="flameRelief"></div>
+                <div class="coin-inscription">Kickoff</div>
+                <div class="coin-viii">VIII</div>
+              </div>
+            </div>
+
+            <!-- Arc text ringing the coin -->
+            <div class="coin-ring-text">
+              <svg viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <path id="coinArc" d="M 130 18 A 112 112 0 1 1 129.9 18"/>
+                </defs>
+                <text font-family="Italiana, serif" font-size="11" letter-spacing="5" fill="#2A1608">
+                  <textPath href="#coinArc" startOffset="2%">· TORCH · FOOTBALL · ANNO MMXXVI · EMBER VIII ·</textPath>
+                </text>
+              </svg>
+            </div>
+          </div>
+
+          <div class="coin-shadow"></div>
+        </div>
+
+        <div class="cta-hint">
+          <div class="hint-text">· tap the coin ·</div>
+          <div class="hint-verb">KICKOFF</div>
+        </div>
+
+        <div class="sanctum">W · 3 streak · 12·4·1 career</div>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import { FLAME_LAYER_1, FLAME_LAYER_2, FLAME_LAYER_3, FLAME_LAYER_4 } from '/src/utils/flameIcon.js';
+  // Raised-metal flame relief on the coin face — darker "metal" palette
+  document.getElementById('flameRelief').innerHTML = `
+    <svg viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg">
+      <!-- Shadow offset for raised relief -->
+      <g transform="translate(0.3 0.6)" opacity="0.4">
+        <path fill="#2A1608" d="${FLAME_LAYER_1}"/>
+      </g>
+      <!-- Body: struck bronze/dark gold -->
+      <path fill="#5A3805" d="${FLAME_LAYER_1}"/>
+      <path fill="#3A2000" d="${FLAME_LAYER_2}"/>
+      <!-- Highlight: brighter gold -->
+      <path fill="#C48805" d="${FLAME_LAYER_3}"/>
+      <path fill="#FFE998" d="${FLAME_LAYER_4}"/>
+    </svg>`;
+
+  // Ember particles
+  const emberHost = document.getElementById('embers');
+  for (let i = 0; i < 10; i++) {
+    const e = document.createElement('span');
+    e.style.left = (Math.random() * 100) + '%';
+    e.style.bottom = (-10 + Math.random() * 30) + '%';
+    e.style.animationDuration = (16 + Math.random() * 14) + 's';
+    e.style.animationDelay = (-Math.random() * 20) + 's';
+    e.style.transform = 'scale(' + (0.5 + Math.random() * 1.4) + ')';
+    emberHost.appendChild(e);
+  }
+</script>
+</body>
+</html>

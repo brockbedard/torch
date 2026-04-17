@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TORCH · Home C — Locker Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Italiana&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0A0804; color: #F5E6CF;
+    font-family: 'Rajdhani', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 24px 0;
+  }
+  .caption {
+    color: rgba(245,230,207,0.45);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; margin-bottom: 14px; text-transform: uppercase;
+  }
+  .caption b { color: #EBB010; letter-spacing: 3px; }
+  .nav { display: flex; gap: 8px; margin-bottom: 20px; font-family: 'Rajdhani', sans-serif; font-size: 10px; letter-spacing: 2px; }
+  .nav a { color: rgba(245,230,207,0.5); text-decoration: none; padding: 6px 10px; border: 0.5px solid rgba(235,176,16,0.3); border-radius: 2px; }
+  .nav a.on { color: #EBB010; border-color: #EBB010; }
+  .nav a:hover { color: #EBB010; }
+
+  .phone {
+    width: 390px; height: 844px; position: relative;
+    border-radius: 48px; background: #000; padding: 8px;
+    box-shadow: 0 0 0 2px #222, 0 0 0 3px #444, 0 40px 80px rgba(0,0,0,0.8);
+  }
+  .phone .notch {
+    position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+    width: 110px; height: 32px; background: #000; border-radius: 16px; z-index: 100;
+  }
+  .screen {
+    width: 100%; height: 100%; border-radius: 42px;
+    overflow: hidden; position: relative;
+    /* Pronghorns hunter-green palette (coach's team) */
+    background:
+      radial-gradient(ellipse 85% 70% at 50% 35%, #0F3A22 0%, transparent 70%),
+      linear-gradient(180deg, #062014 0%, #041108 100%);
+  }
+
+  /* ─── LOCKER ROOM ─── */
+  /* Wood-panel floor at bottom */
+  .floor {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 18%;
+    background:
+      repeating-linear-gradient(90deg, #1a0e04 0 80px, #2A1608 80px 82px, #1a0e04 82px 162px),
+      linear-gradient(180deg, #2A1608 0%, #1a0e04 100%);
+  }
+  .floor::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(255,200,100,0.12) 0%, transparent 30%);
+  }
+
+  /* Overhead spot light — warm narrow beam on the locker */
+  .spot {
+    position: absolute; top: -20%; left: 50%; transform: translateX(-50%);
+    width: 120%; height: 95%;
+    background: radial-gradient(ellipse 40% 70% at 50% 40%, rgba(255,220,140,0.2) 0%, transparent 55%);
+    pointer-events: none;
+  }
+
+  /* Locker back panel (darker rectangle center) */
+  .locker-back {
+    position: absolute; left: 50%; top: 16%; transform: translateX(-50%);
+    width: 82%; height: 58%;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.55) 100%),
+      repeating-linear-gradient(180deg, transparent 0 18px, rgba(245,222,179,0.04) 18px 19px);
+    border-left: 1px solid rgba(245,222,179,0.12);
+    border-right: 1px solid rgba(245,222,179,0.12);
+    border-top: 2px solid rgba(245,222,179,0.2);
+  }
+  .locker-back::before {
+    content: ''; position: absolute; top: -4px; left: -4px; right: -4px;
+    height: 8px; background: rgba(10,6,4,0.85);
+    border-bottom: 1px solid rgba(245,222,179,0.15);
+  }
+
+  /* Wood bench below the locker */
+  .bench {
+    position: absolute; left: 8%; right: 8%; top: 66%; height: 16px;
+    background: linear-gradient(180deg, #5A3410 0%, #2A1608 100%);
+    border-top: 1px solid rgba(245,222,179,0.2);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+  }
+  .bench::before {
+    content: ''; position: absolute; left: 2%; right: 2%; bottom: -3px; top: 100%; height: 4px;
+    background: #1a0e04;
+  }
+
+  /* ─── FOREGROUND CONTENT ─── */
+  .fg {
+    position: absolute; inset: 0;
+    padding: calc(58px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px));
+    display: flex; flex-direction: column;
+  }
+
+  .top-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px;
+  }
+  .crumb {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 2px; color: rgba(245,222,179,0.5);
+    text-transform: uppercase;
+  }
+  .crumb b { color: #F5DEB3; }
+  .settings {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(245,222,179,0.06);
+    border: 0.5px solid rgba(245,222,179,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; cursor: pointer;
+  }
+
+  /* Nameplate (metal tag above locker) */
+  .nameplate {
+    text-align: center; margin: 14px auto 4px;
+    padding: 6px 22px;
+    background: linear-gradient(180deg, #8B6914 0%, #5A4108 100%);
+    color: #1a0e04;
+    font-family: 'Oswald', sans-serif; font-weight: 700;
+    font-size: 11px; letter-spacing: 5px; text-transform: uppercase;
+    border-radius: 2px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.5);
+    display: inline-block;
+    position: relative;
+  }
+  .nameplate::before {
+    content: '•'; position: absolute; left: 6px; top: 50%; transform: translateY(-50%); color: #1a0e04; font-size: 12px;
+  }
+  .nameplate::after {
+    content: '•'; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); color: #1a0e04; font-size: 12px;
+  }
+  .nameplate-wrap { display: flex; justify-content: center; margin-bottom: 2px; }
+
+  /* Team wordmark above helmet */
+  .team-wordmark {
+    text-align: center;
+    font-family: 'Teko', sans-serif; font-weight: 600;
+    font-size: 52px; line-height: 0.9; letter-spacing: 4px;
+    color: #F5DEB3; margin-top: 6px;
+    text-shadow: 0 0 18px rgba(245, 222, 179, 0.4), 0 2px 8px rgba(0,0,0,0.5);
+  }
+  .team-tier {
+    text-align: center;
+    font-family: 'Italiana', serif; font-size: 13px; letter-spacing: 6px;
+    color: #EBB010; margin-top: -2px;
+  }
+
+  /* Helmet display — glowing spotlight-lit */
+  .helmet-stage {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; padding: 18px 0 8px;
+  }
+  .helmet-stage::before {
+    content: ''; position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(245,222,179,0.25) 0%, transparent 65%);
+    filter: blur(10px);
+  }
+  .helmet-stage svg {
+    width: 200px; height: auto;
+    filter:
+      drop-shadow(0 0 22px rgba(245,222,179,0.3))
+      drop-shadow(0 12px 28px rgba(0,0,0,0.6));
+    position: relative; z-index: 2;
+  }
+
+  /* Hanging clipboard / record card on the right wall */
+  .clipboard {
+    position: absolute; right: 18px; top: 40%;
+    width: 68px; padding: 10px 8px;
+    background: linear-gradient(180deg, #E6D0A0 0%, #C4A870 100%);
+    color: #2A1608;
+    border-radius: 2px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.5);
+    transform: rotate(2deg);
+  }
+  .clipboard::before {
+    content: ''; position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
+    width: 20px; height: 12px;
+    background: #8B6914;
+    border-radius: 3px 3px 0 0;
+  }
+  .clipboard .cb-label {
+    font-family: 'Oswald', sans-serif; font-weight: 500;
+    font-size: 7px; letter-spacing: 1.5px; text-transform: uppercase; text-align: center;
+    color: #5A3410; margin-bottom: 3px;
+    border-bottom: 0.5px solid #5A3410; padding-bottom: 2px;
+  }
+  .clipboard .cb-stat {
+    font-family: 'Italiana', serif; font-size: 18px; text-align: center; line-height: 1; margin-bottom: 2px;
+  }
+  .clipboard .cb-sub {
+    font-family: 'JetBrains Mono', monospace; font-size: 6px; letter-spacing: 1px; text-align: center;
+    color: #5A3410;
+  }
+
+  /* ─── BOTTOM CTA AREA ─── */
+  .cta-area {
+    margin-top: 10px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .cta {
+    height: 58px; border: none; border-radius: 6px; cursor: pointer;
+    background: linear-gradient(180deg, #F5DEB3 0%, #EBB010 100%);
+    color: #2A1608;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 13px; letter-spacing: 5px; text-transform: uppercase;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.55), 0 0 28px rgba(245,222,179,0.35);
+    position: relative; overflow: hidden;
+    animation: breathe 2.4s ease-in-out infinite;
+  }
+  .cta::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.35), transparent);
+    border-radius: 6px 6px 0 0; pointer-events: none;
+  }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.015); }
+  }
+  .cta .verb {
+    display: block; font-family: 'Italiana', serif; font-size: 9px;
+    letter-spacing: 3px; font-weight: 400; color: rgba(42, 22, 8, 0.7);
+    margin-bottom: -2px; font-style: italic;
+  }
+
+  .secondary-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+  }
+  .sec-btn {
+    height: 44px;
+    background: rgba(10, 6, 4, 0.55); backdrop-filter: blur(6px);
+    border: 0.5px solid rgba(245,222,179,0.2);
+    color: rgba(245,222,179,0.85);
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 9.5px; letter-spacing: 2.5px; text-transform: uppercase;
+    border-radius: 4px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1px;
+  }
+  .sec-btn .icon { font-size: 14px; margin-bottom: 2px; opacity: 0.9; }
+  .sec-btn:hover { border-color: rgba(235,176,16,0.4); color: #EBB010; }
+  .sec-btn .small { font-size: 7px; letter-spacing: 1px; opacity: 0.6; }
+</style>
+</head>
+<body>
+  <div class="caption">TORCH · HOME SCREEN MOCKUP · ARCHETYPE <b>C — LOCKER ROOM</b></div>
+  <div class="nav">
+    <a href="/mockups/home-index.html">← INDEX</a>
+    <a href="/mockups/home-a-stadium.html">A · STADIUM</a>
+    <a href="/mockups/home-b-program.html">B · PROGRAM</a>
+    <a href="/mockups/home-c-locker.html" class="on">C · LOCKER</a>
+    <a href="/mockups/home-d-broadcast.html">D · BROADCAST</a>
+    <a href="/mockups/home-e-coin.html">E · COIN</a>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+
+      <div class="spot"></div>
+      <div class="locker-back"></div>
+      <div class="bench"></div>
+      <div class="floor"></div>
+
+      <div class="fg">
+        <div class="top-row">
+          <div class="crumb">
+            <div>SEASON · FALL ’26</div>
+            <b>WEEK VII · HOME</b>
+          </div>
+          <div class="settings">⚙</div>
+        </div>
+
+        <div class="nameplate-wrap">
+          <div class="nameplate">COACH · BROCK</div>
+        </div>
+
+        <div class="team-wordmark">PRONGHORNS</div>
+        <div class="team-tier">· LARKSPUR · POWERHOUSE ·</div>
+
+        <div class="helmet-stage">
+          <div id="helmet"></div>
+          <div class="clipboard">
+            <div class="cb-label">STREAK</div>
+            <div class="cb-stat">W · 3</div>
+            <div class="cb-label" style="margin-top:6px;">RECORD</div>
+            <div class="cb-stat" style="font-size:14px;">12·4·1</div>
+            <div class="cb-sub">2026 CAREER</div>
+          </div>
+        </div>
+
+        <div class="cta-area">
+          <button class="cta">
+            <span class="verb">Step into the</span>
+            CONTINUE THE DRIVE
+          </button>
+          <div class="secondary-row">
+            <button class="sec-btn">
+              <span class="icon">⚑</span>
+              <span>TEAM SELECT</span>
+            </button>
+            <button class="sec-btn">
+              <span class="icon">☉</span>
+              <span>DAILY DRIVE</span>
+              <span class="small">NEW</span>
+            </button>
+            <button class="sec-btn">
+              <span class="icon">★</span>
+              <span>HALL OF FAME</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  // Use the real helmet renderer — this is the whole point of Locker Room: your team's actual helmet.
+  import { renderHelmet } from '/src/assets/helmets/renderHelmet.js';
+  // Larkspur Pronghorns uses hunter green shell + cream accents per Ember Eight bible.
+  const helmetSvg = renderHelmet('pronghorns', {
+    size: 200,
+    facing: 'right',
+  });
+  document.getElementById('helmet').innerHTML = helmetSvg;
+</script>
+</body>
+</html>

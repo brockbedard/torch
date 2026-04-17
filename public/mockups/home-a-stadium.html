@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TORCH · Home A — Stadium Arrival</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Italiana&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #020108; color: #F5E6CF;
+    font-family: 'Rajdhani', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 24px 0;
+    overflow-x: hidden;
+  }
+  .caption {
+    color: rgba(245,230,207,0.45);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 2px;
+    margin-bottom: 14px; text-transform: uppercase;
+  }
+  .caption b { color: #EBB010; letter-spacing: 3px; }
+  .nav {
+    display: flex; gap: 8px; margin-bottom: 20px;
+    font-family: 'Rajdhani', sans-serif; font-size: 10px; letter-spacing: 2px;
+  }
+  .nav a {
+    color: rgba(245,230,207,0.5); text-decoration: none;
+    padding: 6px 10px; border: 0.5px solid rgba(235,176,16,0.3); border-radius: 2px;
+  }
+  .nav a.on { color: #EBB010; border-color: #EBB010; }
+  .nav a:hover { color: #EBB010; }
+
+  /* Device frame (iPhone 13 pro baseline: 390×844, scaled to 375×812 viewport) */
+  .phone {
+    width: 390px; height: 844px;
+    position: relative;
+    border-radius: 48px;
+    background: #000;
+    padding: 8px;
+    box-shadow:
+      0 0 0 2px #222,
+      0 0 0 3px #444,
+      0 40px 80px rgba(0,0,0,0.8),
+      0 0 120px rgba(255,69,17,0.08);
+  }
+  .phone .notch {
+    position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+    width: 110px; height: 32px; background: #000;
+    border-radius: 16px; z-index: 100;
+  }
+  .screen {
+    width: 100%; height: 100%;
+    border-radius: 42px; overflow: hidden;
+    position: relative;
+    background: #0A0804;
+  }
+
+  /* ─── STADIUM ARRIVAL ─── */
+  /* Layered atmosphere: sky → stadium silhouette → lights → fog → crowd → foreground */
+  .sky {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 140% 80% at 50% 40%, #1a0a08 0%, transparent 60%),
+      linear-gradient(180deg, #020108 0%, #0A0500 60%, #1a0a04 100%);
+  }
+
+  /* Stadium light shafts — warm beams from the top */
+  .lights {
+    position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 30% 70% at 20% 0%, rgba(255,180,80,0.22) 0%, transparent 50%),
+      radial-gradient(ellipse 35% 80% at 78% 0%, rgba(255,180,80,0.22) 0%, transparent 55%),
+      radial-gradient(ellipse 22% 60% at 50% 0%, rgba(255,220,140,0.15) 0%, transparent 45%);
+    animation: flood 8s ease-in-out infinite alternate;
+  }
+  @keyframes flood {
+    0% { opacity: 0.85; }
+    100% { opacity: 1; }
+  }
+
+  /* Volumetric fog crawling from the bottom */
+  .fog {
+    position: absolute; left: -20%; right: -20%; bottom: 0; height: 55%;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 100%, rgba(120,60,20,0.3) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 45% at 30% 90%, rgba(80,40,20,0.35) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 45% at 70% 85%, rgba(80,40,20,0.25) 0%, transparent 55%);
+    filter: blur(8px);
+  }
+
+  /* Stadium bowl silhouette (layered dark crescents at the bottom) */
+  .bowl {
+    position: absolute; left: -5%; right: -5%; bottom: 28%; height: 32%;
+    background:
+      radial-gradient(ellipse 80% 100% at 50% 100%, rgba(0,0,0,0.65) 0%, transparent 70%);
+    mask: radial-gradient(ellipse 100% 120% at 50% 100%, black 40%, transparent 75%);
+    -webkit-mask: radial-gradient(ellipse 100% 120% at 50% 100%, black 40%, transparent 75%);
+  }
+
+  /* Crowd silhouette — dark bottom edge with heads */
+  .crowd {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 14%;
+    background: linear-gradient(180deg, transparent 0%, #000 60%, #000 100%);
+  }
+  .crowd::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 0; height: 18px;
+    background:
+      radial-gradient(circle 9px at 6% 70%, #000 70%, transparent 72%),
+      radial-gradient(circle 7px at 14% 80%, #000 70%, transparent 72%),
+      radial-gradient(circle 8px at 23% 65%, #000 70%, transparent 72%),
+      radial-gradient(circle 10px at 32% 75%, #000 70%, transparent 72%),
+      radial-gradient(circle 7px at 42% 82%, #000 70%, transparent 72%),
+      radial-gradient(circle 9px at 50% 70%, #000 70%, transparent 72%),
+      radial-gradient(circle 8px at 60% 78%, #000 70%, transparent 72%),
+      radial-gradient(circle 9px at 70% 68%, #000 70%, transparent 72%),
+      radial-gradient(circle 7px at 79% 80%, #000 70%, transparent 72%),
+      radial-gradient(circle 8px at 88% 72%, #000 70%, transparent 72%),
+      radial-gradient(circle 9px at 95% 78%, #000 70%, transparent 72%);
+  }
+
+  /* Atmospheric dust/embers floating */
+  .embers {
+    position: absolute; inset: 0; pointer-events: none;
+    overflow: hidden;
+  }
+  .embers span {
+    position: absolute; width: 2px; height: 2px; border-radius: 50%;
+    background: #EBB010; box-shadow: 0 0 4px #EBB010;
+    opacity: 0.6;
+    animation: rise linear infinite;
+  }
+  @keyframes rise {
+    from { transform: translateY(0) translateX(0); opacity: 0; }
+    10% { opacity: 0.8; }
+    90% { opacity: 0.8; }
+    to { transform: translateY(-120vh) translateX(10px); opacity: 0; }
+  }
+
+  /* ─── FOREGROUND ─── */
+  .fg {
+    position: absolute; inset: 0;
+    padding: calc(58px + env(safe-area-inset-top, 0px)) 28px 32px;
+    display: flex; flex-direction: column;
+    pointer-events: none;
+  }
+  .fg > * { pointer-events: auto; }
+
+  .meta-row {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px; letter-spacing: 2.5px; color: rgba(245,230,207,0.5);
+    text-transform: uppercase;
+  }
+  .meta-row .right { text-align: right; line-height: 1.3; }
+  .meta-row .right .streak { color: #EBB010; font-weight: 500; }
+
+  .wordmark-block {
+    margin-top: 72px;
+    text-align: center;
+  }
+  .flame-wrap {
+    display: flex; justify-content: center; margin-bottom: 14px;
+    filter: drop-shadow(0 0 24px rgba(255, 120, 40, 0.4));
+  }
+  .wordmark {
+    font-family: 'Teko', sans-serif; font-weight: 600;
+    font-size: 98px; line-height: 0.9; letter-spacing: 4px;
+    color: #F5E6CF;
+    text-shadow:
+      0 0 40px rgba(255, 180, 80, 0.18),
+      0 4px 20px rgba(0,0,0,0.7);
+  }
+  .subtitle {
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 12px; letter-spacing: 6px;
+    color: #EBB010; margin-top: 6px;
+    text-shadow: 0 0 12px rgba(235, 176, 16, 0.4);
+  }
+  .divider {
+    width: 60px; height: 1px; margin: 18px auto 0;
+    background: linear-gradient(90deg, transparent, #EBB010, transparent);
+    box-shadow: 0 0 10px #EBB010;
+  }
+
+  .weather-strip {
+    margin-top: 26px;
+    padding: 12px 18px;
+    display: flex; justify-content: space-around; align-items: center;
+    background: rgba(10, 6, 4, 0.6);
+    backdrop-filter: blur(8px);
+    border-top: 0.5px solid rgba(235,176,16,0.15);
+    border-bottom: 0.5px solid rgba(235,176,16,0.15);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .weather-strip .ws {
+    text-align: center; opacity: 0.85;
+  }
+  .weather-strip .ws b {
+    display: block; color: #EBB010; font-weight: 700; font-size: 13px; margin-bottom: 1px;
+  }
+  .weather-strip .ws span { color: rgba(245,230,207,0.6); font-size: 8.5px; letter-spacing: 1.5px; }
+
+  .spacer { flex: 1; }
+
+  .cta-area {
+    display: flex; flex-direction: column; gap: 10px;
+    margin-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+  .cta {
+    height: 58px; border: none; border-radius: 6px; cursor: pointer;
+    background: linear-gradient(180deg, #FFD040 0%, #EBB010 45%, #FF4511 100%);
+    color: #1A0A00;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 14px; letter-spacing: 5px; text-transform: uppercase;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.55), 0 0 32px rgba(235,176,16,0.35);
+    position: relative; overflow: hidden;
+    animation: breathe 2.4s ease-in-out infinite;
+  }
+  .cta::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.35), transparent);
+    border-radius: 6px 6px 0 0; pointer-events: none;
+  }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.015); box-shadow: 0 10px 28px rgba(0,0,0,0.55), 0 0 42px rgba(235,176,16,0.48); }
+  }
+
+  .secondary-row {
+    display: flex; gap: 10px;
+  }
+  .sec-btn {
+    flex: 1; height: 40px;
+    background: rgba(10, 6, 4, 0.55); backdrop-filter: blur(6px);
+    border: 0.5px solid rgba(245,230,207,0.15);
+    color: rgba(245,230,207,0.85);
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    border-radius: 4px; cursor: pointer;
+  }
+  .sec-btn:hover { border-color: rgba(235,176,16,0.4); color: #EBB010; }
+
+  /* SVG icon sizes */
+  .flame-wrap svg { width: 70px; height: 70px; }
+</style>
+</head>
+<body>
+  <div class="caption">TORCH · HOME SCREEN MOCKUP · ARCHETYPE <b>A — STADIUM ARRIVAL</b></div>
+  <div class="nav">
+    <a href="/mockups/home-index.html">← INDEX</a>
+    <a href="/mockups/home-a-stadium.html" class="on">A · STADIUM</a>
+    <a href="/mockups/home-b-program.html">B · PROGRAM</a>
+    <a href="/mockups/home-c-locker.html">C · LOCKER</a>
+    <a href="/mockups/home-d-broadcast.html">D · BROADCAST</a>
+    <a href="/mockups/home-e-coin.html">E · COIN</a>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="screen">
+
+      <div class="sky"></div>
+      <div class="bowl"></div>
+      <div class="lights"></div>
+      <div class="fog"></div>
+      <div class="crowd"></div>
+
+      <div class="embers" id="embers"></div>
+
+      <div class="fg">
+        <div class="meta-row">
+          <div>
+            <div>FALL ’26</div>
+            <div style="color:#EBB010;">WEEK · VII</div>
+          </div>
+          <div class="right">
+            <div class="streak">W3 · STREAK</div>
+            <div>12 — 4 — 1 · CAREER</div>
+          </div>
+        </div>
+
+        <div class="wordmark-block">
+          <div class="flame-wrap" id="flameWrap"></div>
+          <div class="wordmark">TORCH</div>
+          <div class="subtitle">FOOTBALL · EMBER · VIII</div>
+          <div class="divider"></div>
+        </div>
+
+        <div class="weather-strip">
+          <div class="ws"><b>54°</b><span>CLEAR</span></div>
+          <div class="ws"><b>WNW</b><span>8 MPH</span></div>
+          <div class="ws"><b>TURF</b><span>DRY</span></div>
+          <div class="ws"><b>78K</b><span>ATTENDANCE</span></div>
+        </div>
+
+        <div class="spacer"></div>
+
+        <div class="cta-area">
+          <button class="cta">CONTINUE THE DRIVE</button>
+          <div class="secondary-row">
+            <button class="sec-btn">DAILY DRIVE</button>
+            <button class="sec-btn">ROSTER</button>
+            <button class="sec-btn">SETTINGS</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import { FLAME_LAYER_1, FLAME_LAYER_2, FLAME_LAYER_3, FLAME_LAYER_4 } from '/src/utils/flameIcon.js';
+  document.getElementById('flameWrap').innerHTML = `
+    <svg viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#EF3820" d="${FLAME_LAYER_1}"/>
+      <path fill="#D8190B" d="${FLAME_LAYER_2}"/>
+      <path fill="#F8AB1F" d="${FLAME_LAYER_3}"/>
+      <path fill="#FE5436" d="${FLAME_LAYER_4}"/>
+    </svg>`;
+
+  // Ember particle generator — subtle rising warm specks
+  const emberHost = document.getElementById('embers');
+  const screen = emberHost.closest('.screen');
+  for (let i = 0; i < 14; i++) {
+    const e = document.createElement('span');
+    e.style.left = (Math.random() * 100) + '%';
+    e.style.bottom = (Math.random() * 40 - 10) + '%';
+    e.style.animationDuration = (14 + Math.random() * 10) + 's';
+    e.style.animationDelay = (-Math.random() * 20) + 's';
+    e.style.transform = 'scale(' + (0.5 + Math.random() * 1.5) + ')';
+    emberHost.appendChild(e);
+  }
+</script>
+</body>
+</html>

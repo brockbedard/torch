@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Volume II · Five Marks from Team Select · A TORCH Design Monograph</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Marcellus&family=Italiana&family=Oswald:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&family=Bebas+Neue&family=Teko:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --ink: #0A0804;
+    --ink-2: #120A04;
+    --paper: #F5E6CF;
+    --paper-70: rgba(245, 230, 207, 0.70);
+    --paper-40: rgba(245, 230, 207, 0.40);
+    --paper-15: rgba(245, 230, 207, 0.15);
+    --paper-08: rgba(245, 230, 207, 0.08);
+    --gold: #EBB010;
+    --gold-pale: #D6A838;
+    --gold-deep: #7A5A0A;
+    --ember: #FF4511;
+    --ember-deep: #8B0E02;
+    --rule: rgba(235, 176, 16, 0.22);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--ink); color: var(--paper);
+    font-family: 'Marcellus', Georgia, serif;
+    font-size: 15px; line-height: 1.65;
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 120% 80% at 50% -10%, rgba(255, 69, 17, 0.04), transparent 60%),
+      radial-gradient(ellipse 80% 60% at 50% 110%, rgba(235, 176, 16, 0.03), transparent 60%);
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    opacity: 0.45; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0 0.1  0 0 0 0.35 0'/></filter><rect width='220' height='220' filter='url(%23n)'/></svg>");
+  }
+  main, header, footer { position: relative; z-index: 1; }
+
+  .page { max-width: 1480px; margin: 0 auto; padding: 48px 56px 120px; }
+  @media (max-width: 980px) { .page { padding: 32px 24px 80px; } }
+
+  .masthead {
+    display: grid; grid-template-columns: auto 1fr auto; gap: 24px;
+    align-items: baseline; padding-bottom: 18px;
+    border-bottom: 0.5px solid var(--rule); margin-bottom: 64px;
+  }
+  .mast-sigil {
+    font-family: 'Playfair Display', serif; font-size: 34px; font-weight: 900;
+    letter-spacing: -0.02em; color: var(--gold); line-height: 1;
+  }
+  .mast-mid {
+    text-align: center; font-family: 'Oswald', sans-serif; font-weight: 300;
+    font-size: 10px; letter-spacing: 4px; color: var(--paper-70); text-transform: uppercase;
+  }
+  .mast-mid b { font-weight: 700; color: var(--gold); letter-spacing: 4px; }
+  .mast-folio {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--paper-40); letter-spacing: 1px;
+  }
+  .cross-link {
+    display: inline-block; margin-top: 12px;
+    font-family: 'Oswald', sans-serif; font-size: 9.5px;
+    letter-spacing: 3px; color: var(--gold); text-transform: uppercase;
+    border: 0.5px solid var(--rule); padding: 6px 12px; text-decoration: none;
+  }
+  .cross-link:hover { background: rgba(235,176,16,0.1); }
+
+  .title-page { margin-bottom: 120px; position: relative; }
+  .kicker {
+    font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 11px;
+    letter-spacing: 6px; color: var(--gold); text-transform: uppercase; margin-bottom: 18px;
+  }
+  .kicker::before { content: '※'; display: inline-block; margin-right: 14px; color: var(--gold-pale); font-size: 12px; }
+
+  .title {
+    font-family: 'Playfair Display', serif; font-weight: 900; font-style: italic;
+    font-size: clamp(64px, 10vw, 152px); line-height: 0.88;
+    letter-spacing: -0.035em; color: var(--paper); margin-bottom: 22px;
+  }
+  .title em { font-style: italic; color: var(--gold); font-weight: 400; }
+  .title .sub-count {
+    display: block; font-family: 'Italiana', serif; font-size: 0.22em;
+    letter-spacing: 0.4em; color: var(--paper-40); margin-top: 0.4em; font-weight: 400;
+  }
+  .dek {
+    max-width: 720px; font-size: 19px; line-height: 1.55;
+    color: var(--paper-70); margin-bottom: 32px;
+  }
+  .dek::first-letter {
+    font-family: 'Playfair Display', serif; font-weight: 900; font-size: 3.2em;
+    line-height: 0.85; float: left; padding: 0.05em 0.12em 0 0; color: var(--gold);
+  }
+  .dek em { font-style: italic; color: var(--paper); }
+  .dek strong { color: var(--paper); font-weight: inherit; font-style: italic; }
+
+  .colophon {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px;
+    padding: 22px 0 0; border-top: 0.5px solid var(--rule); max-width: 980px;
+  }
+  .colophon dt {
+    font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 9px;
+    letter-spacing: 2.5px; color: var(--gold); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .colophon dd {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    line-height: 1.55; color: var(--paper-70);
+  }
+  .colophon dd span { color: var(--paper); }
+
+  .manifesto {
+    margin: 88px auto 120px; max-width: 900px; padding: 0 20px;
+    position: relative; text-align: center;
+  }
+  .manifesto::before, .manifesto::after {
+    content: ''; display: block; width: 40px; height: 0.5px;
+    background: var(--gold); margin: 0 auto;
+  }
+  .manifesto::before { margin-bottom: 28px; }
+  .manifesto::after { margin-top: 28px; }
+  .manifesto blockquote {
+    font-family: 'Playfair Display', serif; font-style: italic; font-weight: 400;
+    font-size: clamp(22px, 2.6vw, 30px); line-height: 1.4; color: var(--paper);
+  }
+  .manifesto blockquote::before { content: '“'; color: var(--gold); margin-right: 4px; }
+  .manifesto blockquote::after { content: '”'; color: var(--gold); margin-left: 4px; }
+  .manifesto cite {
+    display: block; margin-top: 18px; font-family: 'Oswald', sans-serif;
+    font-weight: 400; font-size: 10px; letter-spacing: 3px; color: var(--paper-40);
+    text-transform: uppercase; font-style: normal;
+  }
+  .manifesto cite::before { content: '— '; color: var(--gold); }
+
+  .specimens { display: grid; gap: 140px; }
+
+  .specimen { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 36px; position: relative; }
+  .specimen-numeral {
+    font-family: 'Italiana', serif; font-size: 96px; line-height: 0.85;
+    color: var(--gold); text-align: right; padding-top: 8px;
+    position: sticky; top: 20px; align-self: start;
+  }
+  .specimen-numeral .plate {
+    display: block; font-family: 'Oswald', sans-serif; font-weight: 500;
+    font-size: 9px; letter-spacing: 3px; color: var(--paper-40);
+    margin-top: 12px; text-transform: uppercase;
+  }
+  .specimen-main { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+  .specimen.reverse .specimen-body { order: 2; }
+  .specimen.reverse .specimen-display { order: 1; }
+  @media (max-width: 980px) {
+    .specimen { grid-template-columns: 1fr; gap: 18px; }
+    .specimen-numeral { text-align: left; font-size: 64px; position: static; }
+    .specimen-main, .specimen.reverse .specimen-main { grid-template-columns: 1fr; gap: 28px; }
+    .specimen.reverse .specimen-body { order: 2; }
+    .specimen.reverse .specimen-display { order: 1; }
+  }
+
+  .specimen-display { display: flex; flex-direction: column; gap: 22px; }
+  .hero-stage {
+    position: relative;
+    background:
+      radial-gradient(ellipse 85% 70% at 50% 40%, rgba(235,176,16,0.05), transparent 70%),
+      linear-gradient(180deg, #07050C, #0A0804 60%, #120A04);
+    border: 0.5px solid var(--paper-08); border-radius: 2px;
+    padding: 40px; display: flex; align-items: center; justify-content: center;
+    aspect-ratio: 1/1; max-width: 520px;
+  }
+  .hero-stage::before {
+    content: ''; position: absolute; inset: 0;
+    border: 0.5px solid var(--paper-08); margin: 12px; pointer-events: none;
+  }
+  .hero-stage .corner {
+    position: absolute; width: 20px; height: 20px;
+    border: 0.5px solid var(--gold-pale); opacity: 0.4;
+  }
+  .hero-stage .corner.tl { top: 4px; left: 4px; border-right: none; border-bottom: none; }
+  .hero-stage .corner.tr { top: 4px; right: 4px; border-left: none; border-bottom: none; }
+  .hero-stage .corner.bl { bottom: 4px; left: 4px; border-right: none; border-top: none; }
+  .hero-stage .corner.br { bottom: 4px; right: 4px; border-left: none; border-top: none; }
+  .hero-stage > svg {
+    width: 72%; height: auto; display: block;
+    filter: drop-shadow(0 14px 30px rgba(0,0,0,0.5));
+  }
+  .hero-stage .hero-measure {
+    position: absolute; font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 1.5px; color: var(--paper-40);
+  }
+  .hero-stage .hero-measure.tl { top: 14px; left: 20px; }
+  .hero-stage .hero-measure.br { bottom: 14px; right: 20px; }
+
+  .ladder {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
+    padding: 14px 10px 10px; background: rgba(10,6,4,0.5);
+    border: 0.5px solid var(--paper-08); border-radius: 2px;
+  }
+  .ladder .rung {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 10px 4px;
+  }
+  .ladder .rung .sz-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: var(--paper-40); letter-spacing: 0.5px;
+  }
+  .ladder .rung .sz-label b { color: var(--gold); font-weight: 500; }
+
+  .masks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .mask-cell {
+    background: rgba(10,6,4,0.5); border: 0.5px solid var(--paper-08);
+    border-radius: 2px; padding: 18px 10px 10px; position: relative;
+    display: flex; flex-direction: column; align-items: center; gap: 9px;
+  }
+  .mask-cell::before {
+    content: attr(data-platform); position: absolute; top: 5px; left: 10px;
+    font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 7.5px;
+    letter-spacing: 1.8px; color: var(--paper-40); text-transform: uppercase;
+  }
+  .mask-cell::after {
+    content: attr(data-size); position: absolute; top: 5px; right: 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 8px;
+    color: var(--gold); letter-spacing: 0.5px;
+  }
+  .mask-cell .surface {
+    width: 88px; height: 88px; border-radius: 20%; overflow: hidden;
+    background: rgba(255,255,255,0.04);
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.04), 0 2px 8px rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mask-cell.android .surface { border-radius: 50%; }
+  .mask-cell.favicon .surface { background: #E5E0D5; width: 56px; height: 56px; border-radius: 5px; padding: 7px; }
+  .mask-cell .surface svg { width: 100%; height: 100%; display: block; }
+  .mask-cell.favicon .surface svg { width: 32px; height: 32px; border-radius: 4px; }
+
+  .specimen-body { padding-top: 12px; }
+  .concept-kicker {
+    font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 10px;
+    letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-bottom: 12px;
+  }
+  .concept-kicker::after {
+    content: ''; display: inline-block; vertical-align: middle;
+    width: 28px; height: 0.5px; background: var(--gold); margin-left: 12px; opacity: 0.6;
+  }
+  .concept-name {
+    font-family: 'Playfair Display', serif; font-weight: 900;
+    font-size: clamp(40px, 4.2vw, 58px); line-height: 1.02;
+    letter-spacing: -0.02em; color: var(--paper); margin-bottom: 8px;
+  }
+  .concept-subtitle {
+    font-family: 'Playfair Display', serif; font-style: italic; font-weight: 400;
+    font-size: 18px; line-height: 1.4; color: var(--gold); margin-bottom: 22px;
+  }
+  .concept-desc { font-size: 15px; line-height: 1.65; color: var(--paper-70); margin-bottom: 22px; }
+
+  .runners {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 22px;
+    padding: 18px 0; border-top: 0.5px solid var(--rule);
+    border-bottom: 0.5px solid var(--rule); margin: 22px 0;
+  }
+  .runners h4 {
+    font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 9.5px;
+    letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .runners h4.pros { color: var(--gold); }
+  .runners h4.cons { color: #C5724E; }
+  .runners p { font-size: 13.5px; line-height: 1.55; color: var(--paper-70); }
+
+  .technique {
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px; line-height: 1.75;
+    color: var(--paper-40); padding: 14px 16px; background: rgba(10,6,4,0.35);
+    border-left: 2px solid var(--gold);
+  }
+  .technique strong { color: var(--gold); font-weight: 500; letter-spacing: 0.5px; }
+  .technique .tk { display: block; }
+  .technique .tk::before { content: '→ '; color: var(--gold-pale); }
+
+  .closing {
+    margin-top: 160px; padding-top: 56px; border-top: 0.5px solid var(--rule);
+    display: grid; grid-template-columns: 2fr 1fr; gap: 64px;
+  }
+  @media (max-width: 980px) { .closing { grid-template-columns: 1fr; gap: 32px; } }
+  .closing h3 {
+    font-family: 'Playfair Display', serif; font-weight: 900; font-style: italic;
+    font-size: 44px; line-height: 1; color: var(--paper); margin-bottom: 14px;
+  }
+  .closing p { font-size: 15.5px; line-height: 1.7; color: var(--paper-70); max-width: 620px; }
+  .closing ol { margin: 18px 0 0 0; padding-left: 24px; color: var(--paper-70); }
+  .closing ol li { margin-bottom: 6px; font-size: 14px; }
+  .closing ol li::marker { font-family: 'Italiana', serif; color: var(--gold); }
+  .closing aside {
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+    color: var(--paper-40); line-height: 1.7; padding: 18px;
+    border: 0.5px solid var(--rule); align-self: start;
+  }
+  .closing aside h5 {
+    font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 9px;
+    letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 10px;
+  }
+  .closing aside code { color: var(--paper); }
+  .end-mark {
+    text-align: center; margin-top: 88px; color: var(--gold);
+    font-family: 'Italiana', serif; font-size: 28px; letter-spacing: 0.6em; opacity: 0.7;
+  }
+
+  [data-reveal] { opacity: 0; transform: translateY(12px); transition: opacity .7s ease, transform .7s cubic-bezier(.22,1,.36,1); }
+  [data-reveal].in { opacity: 1; transform: translateY(0); }
+  svg { shape-rendering: geometricPrecision; }
+</style>
+</head>
+
+<body>
+  <div class="page">
+
+    <header class="masthead">
+      <div class="mast-sigil">T·II</div>
+      <div class="mast-mid">A Torch Football <b>Design Monograph</b> · Volume II · Apr <b>MMXXVI</b></div>
+      <div class="mast-folio">№ 02 / VOL II</div>
+    </header>
+
+    <section class="title-page">
+      <div class="kicker">Volume II · After Team Select</div>
+      <h1 class="title">
+        Five<br>
+        <em>More Marks</em>
+        <span class="sub-count">· interface · as · icon ·</span>
+      </h1>
+      <p class="dek">
+        A second volume of proposed app icons — this set drawn directly from
+        the visual grammar of TORCH's <strong>team select carousel</strong>:
+        its helmet-stripe edge bands, its stadium-flood top wash, its tier
+        badges, its position-dot indices, its gold-to-ember CTA gradient.
+        Where <em>Volume I</em> treated icons as freestanding objects
+        (a lapel pin, a struck coin, a heraldic crest), Volume II treats them
+        as <em>interface artifacts</em> — each one a fragment of the game's
+        own chrome, sampled at native scale and framed as a mark.
+      </p>
+      <p style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:3px;color:var(--paper-40);text-transform:uppercase;margin-bottom:24px;">
+        Companion:
+        <a class="cross-link" href="/mockups/app-icons.html">Open Volume I →</a>
+      </p>
+      <dl class="colophon">
+        <div>
+          <dt>Source</dt>
+          <dd><span>team select V1</span><br>src/ui/screens/teamSelect.js</dd>
+        </div>
+        <div>
+          <dt>Grammar</dt>
+          <dd><span>helmet stripes</span> · tier badges<br>position dots · gradient CTA</dd>
+        </div>
+        <div>
+          <dt>Assets</dt>
+          <dd><span>4-layer flame</span><br>9-layer leather football</dd>
+        </div>
+        <div>
+          <dt>Palette</dt>
+          <dd><span>#0A0804 · #EBB010</span><br>#FF4511 · #F5E6CF</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="manifesto">
+      <blockquote>
+        The best icon is a piece of the app's own interior — not a portrait
+        of it, but a sample of it. A window, not a flag.
+      </blockquote>
+      <cite>Editor's note · Volume II</cite>
+    </section>
+
+    <main class="specimens" id="specimens"></main>
+
+    <section class="closing">
+      <div>
+        <div class="kicker">Next</div>
+        <h3>Pick a Plate.</h3>
+        <p>
+          Plates <em>VII–XI</em> (this volume) can be compared against plates
+          <em>I–VI</em> (Volume I) before choosing. Once decided, the adoption
+          path is the same:
+        </p>
+        <ol>
+          <li>Chosen SVG written to <code style="font-family:'JetBrains Mono',monospace;color:var(--gold);font-size:12px;">/public/favicon.svg</code></li>
+          <li>PNG renders generated at <span style="font-family:'JetBrains Mono',monospace;color:var(--paper);">180, 192, 512, 1024</span></li>
+          <li>A maskable Android variant added with safe-zone padding</li>
+          <li>Manifest <code style="font-family:'JetBrains Mono',monospace;color:var(--gold);font-size:12px;">manifest.json</code> updated</li>
+          <li>Dev preview confirms the tab icon + installed-PWA render</li>
+        </ol>
+      </div>
+      <aside>
+        <h5>Design DNA</h5>
+        Every motif on this page is sampled from an exact in-game element:<br><br>
+        <code>.ts-helmet-stripe</code> → edge bands<br>
+        <code>.ts-bg-wash</code> → top radial<br>
+        <code>.ts-tier-badge</code> → bordered chip<br>
+        <code>.ts-pos-dots</code> → index marks<br>
+        <code>.ts-btn-coach</code> → gradient CTA
+      </aside>
+    </section>
+
+    <div class="end-mark">· FIN ·</div>
+  </div>
+
+<script type="module">
+  import { FLAME_LAYER_1, FLAME_LAYER_2, FLAME_LAYER_3, FLAME_LAYER_4 } from '/src/utils/flameIcon.js';
+  import { FOOTBALL_PATHS, FOOTBALL_COLORS } from '/src/utils/footballIcon.js';
+
+  const flameG = (f1='#EF3820', f2='#D8190B', f3='#F8AB1F', f4='#FE5436') => `
+    <path fill="${f1}" d="${FLAME_LAYER_1}"/>
+    <path fill="${f2}" d="${FLAME_LAYER_2}"/>
+    <path fill="${f3}" d="${FLAME_LAYER_3}"/>
+    <path fill="${f4}" d="${FLAME_LAYER_4}"/>
+  `;
+  const footballG = (colors=FOOTBALL_COLORS) => {
+    const p = FOOTBALL_PATHS;
+    return `
+      <path fill="${colors.tipOuter}" d="${p.tipOuter}"/>
+      <path fill="${colors.tipInner}" d="${p.tipInner}"/>
+      <path fill="${colors.body}" d="${p.body1}"/>
+      <path fill="${colors.body}" d="${p.body2}"/>
+      <path fill="${colors.body}" d="${p.body3}"/>
+      <path fill="${colors.shadow}" d="${p.shadow1}"/>
+      <path fill="${colors.shadow}" d="${p.shadow2}"/>
+      <path fill="${colors.shadow}" d="${p.shadow3}"/>
+      <path fill="${colors.laces}" d="${p.laces}"/>
+    `;
+  };
+
+  // ════════════════════════════════════════════════════════════════════
+  // VOLUME II CONCEPTS — each samples a team-select CSS motif
+  // ════════════════════════════════════════════════════════════════════
+
+  // ─── VII. STAMP — Tier badge as icon ──────────────────────────────
+  // Samples .ts-tier-badge + .ts-helmet-stripe + .ts-pos-dots.
+  // The entire icon IS a bordered chip with backdrop-blur fill, hemmed
+  // top & bottom by helmet-stripe glow bands, with position-dots below
+  // and a POWERHOUSE label — a piece of the in-game chrome blown up.
+  const STAMP = (id) => {
+    const u = `st${id}`;
+    return `
+      <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img">
+        <defs>
+          <linearGradient id="${u}-canvas" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#0A0804"/>
+            <stop offset="1" stop-color="#050302"/>
+          </linearGradient>
+          <radialGradient id="${u}-wash" cx="50%" cy="18%" r="60%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.12)"/>
+            <stop offset="70%" stop-color="rgba(255,255,255,0)"/>
+          </radialGradient>
+          <linearGradient id="${u}-stripe" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="rgba(235,176,16,0)"/>
+            <stop offset="0.3" stop-color="rgba(235,176,16,0.9)"/>
+            <stop offset="0.7" stop-color="rgba(235,176,16,0.9)"/>
+            <stop offset="1" stop-color="rgba(235,176,16,0)"/>
+          </linearGradient>
+          <filter id="${u}-glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="8"/>
+          </filter>
+          <linearGradient id="${u}-chip-spec" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="rgba(255,240,200,0.22)"/>
+            <stop offset="0.6" stop-color="rgba(255,240,200,0)"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Canvas + top stadium wash -->
+        <rect width="512" height="512" fill="url(#${u}-canvas)"/>
+        <rect width="512" height="512" fill="url(#${u}-wash)"/>
+
+        <!-- Helmet-stripe edge bands (horizontal, hemming the icon) -->
+        <g filter="url(#${u}-glow)" opacity="0.55">
+          <rect x="0" y="16" width="512" height="10" fill="url(#${u}-stripe)"/>
+          <rect x="0" y="486" width="512" height="10" fill="url(#${u}-stripe)"/>
+        </g>
+        <rect x="0" y="18" width="512" height="3" fill="#EBB010" opacity="0.9"/>
+        <rect x="0" y="491" width="512" height="3" fill="#EBB010" opacity="0.9"/>
+
+        <!-- Central tier-badge chip — scaled way up from the in-game 10px component -->
+        <!-- Backdrop-blur-feel: darker fill + 1.2px gold border + top specular -->
+        <g>
+          <!-- Shadow beneath chip -->
+          <rect x="62" y="186" width="388" height="164" rx="3" ry="3" fill="rgba(0,0,0,0.5)" transform="translate(0 4)"/>
+          <!-- Chip body (dark, "backdrop-blur" simulation) -->
+          <rect x="62" y="186" width="388" height="140" rx="3" ry="3" fill="rgba(10,6,4,0.72)"/>
+          <!-- Gold border (1.2px scaled to 512: ~2px) -->
+          <rect x="62" y="186" width="388" height="140" rx="3" ry="3" fill="none" stroke="#EBB010" stroke-width="2" opacity="0.88"/>
+          <!-- Top specular line -->
+          <rect x="64" y="188" width="384" height="56" fill="url(#${u}-chip-spec)"/>
+          <!-- Inner 1px hairline for double-line feel -->
+          <rect x="68" y="192" width="376" height="128" rx="1.5" ry="1.5" fill="none" stroke="rgba(235,176,16,0.22)" stroke-width="0.5"/>
+        </g>
+
+        <!-- Chip content row -->
+        <!-- Left: real flame glyph -->
+        <g transform="translate(90 218) scale(2.8) translate(-17 -17)">
+          ${flameG()}
+        </g>
+
+        <!-- Middle: "TORCH" wordmark in Teko 700 -->
+        <text x="226" y="270" font-family="Teko, sans-serif" font-weight="700"
+              font-size="82" fill="#F5E6CF" letter-spacing="4">TORCH</text>
+
+        <!-- Right: "VIII" in Italiana -->
+        <text x="418" y="262" text-anchor="end" font-family="Italiana, serif"
+              font-size="58" fill="#EBB010" letter-spacing="4">VIII</text>
+
+        <!-- Position-dot index beneath the chip -->
+        <g transform="translate(256 368)">
+          ${Array.from({length: 8}, (_, i) => {
+            const active = i === 2; // 3rd dot "on"
+            const w = active ? 7 : 5;
+            const h = active ? 22 : 12;
+            const x = (i - 3.5) * 16 - w/2;
+            const y = -h/2;
+            const op = active ? 1 : 0.35;
+            return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1.5" fill="#EBB010" opacity="${op}"/>`;
+          }).join('')}
+        </g>
+
+        <!-- Sub-label -->
+        <text x="256" y="418" text-anchor="middle" font-family="Rajdhani, sans-serif"
+              font-weight="700" font-size="16" letter-spacing="6" fill="#F5E6CF"
+              opacity="0.85">POWERHOUSE</text>
+
+        <!-- Corner fiducials (engineer-drawing trim) -->
+        <g stroke="#EBB010" stroke-width="0.8" fill="none" opacity="0.35">
+          <path d="M 28 28 L 28 48 M 28 28 L 48 28"/>
+          <path d="M 484 28 L 484 48 M 484 28 L 464 28"/>
+          <path d="M 28 484 L 28 464 M 28 484 L 48 484"/>
+          <path d="M 484 484 L 484 464 M 484 484 L 464 484"/>
+        </g>
+      </svg>
+    `;
+  };
+
+  // ─── VIII. STADIUM — Team-color full-bleed (Pronghorns) ───────────
+  // Samples .ts-stage + .ts-bg-wash + .ts-helmet-stripe + .ts-logo-stage.
+  // This IS the team-select card compressed to 1:1. Hunter-green bleed,
+  // stadium radial top, helmet stripes, center logo with aura, wordmark.
+  const STADIUM = (id) => {
+    const u = `sd${id}`;
+    return `
+      <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img">
+        <defs>
+          <!-- Pronghorns hunter green with a brighter center radial -->
+          <radialGradient id="${u}-field" cx="50%" cy="35%" r="85%">
+            <stop offset="0%" stop-color="#0F3A22"/>
+            <stop offset="60%" stop-color="#0A2416"/>
+            <stop offset="100%" stop-color="#041108"/>
+          </radialGradient>
+          <!-- Top stadium flood wash -->
+          <radialGradient id="${u}-wash" cx="50%" cy="18%" r="58%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.22)"/>
+            <stop offset="65%" stop-color="rgba(255,255,255,0)"/>
+          </radialGradient>
+          <!-- Bottom darken -->
+          <linearGradient id="${u}-floor" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="60%" stop-color="rgba(0,0,0,0)"/>
+            <stop offset="100%" stop-color="rgba(0,0,0,0.35)"/>
+          </linearGradient>
+          <!-- Helmet stripe color (structure color for pronghorns = cream) -->
+          <linearGradient id="${u}-stripe" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="rgba(245,222,179,0)"/>
+            <stop offset="0.18" stop-color="rgba(245,222,179,0.85)"/>
+            <stop offset="0.82" stop-color="rgba(245,222,179,0.85)"/>
+            <stop offset="1" stop-color="rgba(245,222,179,0)"/>
+          </linearGradient>
+          <filter id="${u}-stripeGlow" x="-40%" y="-10%" width="180%" height="120%">
+            <feGaussianBlur stdDeviation="6"/>
+          </filter>
+          <!-- Center logo aura -->
+          <radialGradient id="${u}-aura" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(245,222,179,0.40)"/>
+            <stop offset="50%" stop-color="rgba(245,222,179,0.10)"/>
+            <stop offset="100%" stop-color="rgba(245,222,179,0)"/>
+          </radialGradient>
+          <!-- CTA-like gradient for the divider -->
+          <linearGradient id="${u}-div" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(245,222,179,0)"/>
+            <stop offset="50%" stop-color="rgba(245,222,179,1)"/>
+            <stop offset="100%" stop-color="rgba(245,222,179,0)"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Team-color field (full bleed) -->
+        <rect width="512" height="512" fill="url(#${u}-field)"/>
+
+        <!-- Top stadium wash -->
+        <rect width="512" height="512" fill="url(#${u}-wash)"/>
+
+        <!-- Bottom CTA-area darken -->
+        <rect width="512" height="512" fill="url(#${u}-floor)"/>
+
+        <!-- Helmet stripes: left + right edges with glow halo -->
+        <g filter="url(#${u}-stripeGlow)" opacity="0.55">
+          <rect x="-4" y="0" width="16" height="512" fill="url(#${u}-stripe)"/>
+          <rect x="500" y="0" width="16" height="512" fill="url(#${u}-stripe)"/>
+        </g>
+        <rect x="0" y="0" width="6" height="512" fill="url(#${u}-stripe)"/>
+        <rect x="506" y="0" width="6" height="512" fill="url(#${u}-stripe)"/>
+
+        <!-- Top seam (color bleed from edge inward, like .ts-seam) -->
+        <rect x="0" y="0" width="512" height="60" fill="#F5DEB3" opacity="0.15"/>
+
+        <!-- Top-right tier badge chip -->
+        <g>
+          <rect x="368" y="38" width="118" height="32" rx="2" ry="2" fill="rgba(10,6,4,0.45)" stroke="#EBB010" stroke-width="1" opacity="0.95"/>
+          <text x="427" y="58" text-anchor="middle" font-family="Rajdhani, sans-serif"
+                font-weight="700" font-size="11" letter-spacing="3" fill="#EBB010">POWERHOUSE</text>
+        </g>
+
+        <!-- Top-left position dots (mini index) -->
+        <g transform="translate(32 52)">
+          ${Array.from({length: 8}, (_, i) => {
+            const active = i === 0;
+            return `<rect x="0" y="${i*10}" width="3" height="${active?14:5}" rx="1.5" fill="#F5DEB3" opacity="${active?1:0.35}"/>`;
+          }).join('')}
+        </g>
+
+        <!-- Center logo stage aura -->
+        <circle cx="256" cy="192" r="140" fill="url(#${u}-aura)"/>
+
+        <!-- Real 4-layer flame centered, large -->
+        <g transform="translate(256 192) scale(5.4) translate(-17 -17)" filter="drop-shadow(0 8px 22px rgba(0,0,0,0.55))">
+          ${flameG()}
+        </g>
+
+        <!-- Wordmark area -->
+        <text x="256" y="348" text-anchor="middle" font-family="Teko, sans-serif"
+              font-weight="600" font-size="76" letter-spacing="3" fill="#FFFFFF"
+              style="filter: drop-shadow(0 4px 14px rgba(0,0,0,0.6));">TORCH</text>
+
+        <!-- Glow divider -->
+        <rect x="216" y="370" width="80" height="2" fill="url(#${u}-div)"
+              style="filter: drop-shadow(0 0 8px #F5DEB3);"/>
+
+        <!-- Subtitle -->
+        <text x="256" y="402" text-anchor="middle" font-family="Rajdhani, sans-serif"
+              font-weight="700" font-size="13" letter-spacing="5" fill="#F5DEB3"
+              style="filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));">FOOTBALL · EMBER VIII</text>
+
+        <!-- Implied CTA-bar hint at very bottom -->
+        <rect x="128" y="456" width="256" height="3" rx="1.5" fill="#F5DEB3" opacity="0.28"/>
+      </svg>
+    `;
+  };
+
+  // ─── IX. INDEX — Carousel position 04/08 ───────────────────────────
+  // Samples .ts-pos-dots + .ts-tier-badge + typography.
+  // The icon reads as "selection in progress" — a literal snapshot of
+  // the team-select carousel's state display, with a huge Italiana
+  // numeral pair and the position-dot column down the left edge.
+  const INDEX = (id) => {
+    const u = `ix${id}`;
+    return `
+      <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img">
+        <defs>
+          <linearGradient id="${u}-canvas" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#0A0804"/>
+            <stop offset="1" stop-color="#050302"/>
+          </linearGradient>
+          <radialGradient id="${u}-wash" cx="50%" cy="18%" r="60%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.10)"/>
+            <stop offset="70%" stop-color="rgba(255,255,255,0)"/>
+          </radialGradient>
+          <radialGradient id="${u}-aura" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(255,69,17,0.22)"/>
+            <stop offset="100%" stop-color="rgba(255,69,17,0)"/>
+          </radialGradient>
+        </defs>
+
+        <rect width="512" height="512" fill="url(#${u}-canvas)"/>
+        <rect width="512" height="512" fill="url(#${u}-wash)"/>
+
+        <!-- Vertical rule separating the index column from the main area -->
+        <line x1="110" y1="80" x2="110" y2="432" stroke="rgba(235,176,16,0.22)" stroke-width="0.5"/>
+
+        <!-- LEFT: position-dot column, dot 4 highlighted -->
+        <g transform="translate(62 256)">
+          ${Array.from({length: 8}, (_, i) => {
+            const active = i === 3;
+            const w = 6;
+            const h = active ? 40 : 16;
+            const gap = 28;
+            const y = (i - 3.5) * gap - h/2;
+            return `<rect x="-3" y="${y}" width="${w}" height="${h}" rx="3" fill="#EBB010" opacity="${active ? 1 : 0.3}"/>`;
+          }).join('')}
+        </g>
+
+        <!-- Top-right meta tag -->
+        <text x="480" y="62" text-anchor="end" font-family="JetBrains Mono, monospace"
+              font-size="12" letter-spacing="2" fill="rgba(245,230,207,0.6)">LARKSPUR</text>
+        <text x="480" y="82" text-anchor="end" font-family="JetBrains Mono, monospace"
+              font-size="12" letter-spacing="2" fill="rgba(245,230,207,0.4)">PRONGHORNS</text>
+
+        <!-- MAIN: huge 04 / 08 -->
+        <g transform="translate(298 280)">
+          <!-- Faint ember aura behind the numerals -->
+          <ellipse cx="0" cy="-40" rx="180" ry="160" fill="url(#${u}-aura)"/>
+          <!-- 04 (gold, bold) -->
+          <text x="-68" y="0" text-anchor="end" font-family="Italiana, serif"
+                font-size="220" fill="#EBB010" dominant-baseline="central"
+                letter-spacing="-8">04</text>
+          <!-- slash -->
+          <text x="-46" y="0" text-anchor="middle" font-family="Italiana, serif"
+                font-size="200" fill="rgba(245,230,207,0.35)" dominant-baseline="central">/</text>
+          <!-- 08 (cream, lighter) -->
+          <text x="-28" y="0" text-anchor="start" font-family="Italiana, serif"
+                font-size="140" fill="rgba(245,230,207,0.7)" dominant-baseline="central"
+                letter-spacing="-4">08</text>
+        </g>
+
+        <!-- Tier chip below the numerals -->
+        <g transform="translate(256 400)">
+          <rect x="-70" y="-18" width="140" height="32" rx="2" ry="2"
+                fill="rgba(245,230,207,0.06)" stroke="rgba(245,230,207,0.55)" stroke-width="1"/>
+          <text x="0" y="4" text-anchor="middle" font-family="Rajdhani, sans-serif"
+                font-weight="700" font-size="12" letter-spacing="4" fill="#F5E6CF">CONTENDER</text>
+        </g>
+
+        <!-- Small flame beneath chip -->
+        <g transform="translate(256 456) scale(1.4) translate(-17 -17)">
+          ${flameG()}
+        </g>
+
+        <!-- Implied CTA-bar hint at very bottom -->
+        <rect x="128" y="488" width="256" height="2" rx="1" fill="#EBB010" opacity="0.35"/>
+      </svg>
+    `;
+  };
+
+  // ─── X. COACH — CTA pill as icon ──────────────────────────────
+  // Samples .ts-btn-coach verbatim — the gold→torch-red gradient button,
+  // its specular top highlight, its in-progress fill. The icon IS the
+  // call-to-action, scaled to occupy the full canvas. An invitation.
+  const COACH = (id) => {
+    const u = `co${id}`;
+    return `
+      <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img">
+        <defs>
+          <linearGradient id="${u}-canvas" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#0A0804"/>
+            <stop offset="1" stop-color="#050302"/>
+          </linearGradient>
+
+          <!-- Main pill gradient: gold → torch red (from in-game CSS) -->
+          <linearGradient id="${u}-pill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FFD040"/>
+            <stop offset="0.35" stop-color="#EBB010"/>
+            <stop offset="0.75" stop-color="#FF6B1F"/>
+            <stop offset="1" stop-color="#FF4511"/>
+          </linearGradient>
+
+          <!-- Top specular highlight (matches .ts-btn-coach::before) -->
+          <linearGradient id="${u}-spec" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="rgba(255,255,255,0.38)"/>
+            <stop offset="0.6" stop-color="rgba(255,255,255,0.04)"/>
+            <stop offset="1" stop-color="rgba(255,255,255,0)"/>
+          </linearGradient>
+
+          <!-- Progressive fill (hold-to-coach state) -->
+          <linearGradient id="${u}-fill" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="rgba(255,255,255,0.32)"/>
+            <stop offset="0.92" stop-color="rgba(255,255,255,0.22)"/>
+            <stop offset="1" stop-color="rgba(255,255,255,0)"/>
+          </linearGradient>
+
+          <!-- Breathing ember glow around the pill -->
+          <radialGradient id="${u}-halo" cx="50%" cy="55%" r="55%">
+            <stop offset="0" stop-color="rgba(255, 140, 40, 0.35)"/>
+            <stop offset="45%" stop-color="rgba(255, 69, 17, 0.15)"/>
+            <stop offset="100%" stop-color="rgba(255, 69, 17, 0)"/>
+          </radialGradient>
+
+          <clipPath id="${u}-pill-clip">
+            <rect x="56" y="196" width="400" height="140" rx="68" ry="68"/>
+          </clipPath>
+        </defs>
+
+        <!-- Canvas -->
+        <rect width="512" height="512" fill="url(#${u}-canvas)"/>
+
+        <!-- Breathing halo behind the pill -->
+        <rect x="0" y="100" width="512" height="300" fill="url(#${u}-halo)"/>
+
+        <!-- Top meta -->
+        <text x="256" y="108" text-anchor="middle" font-family="Oswald, sans-serif"
+              font-weight="500" font-size="11" letter-spacing="5" fill="rgba(245,230,207,0.55)"
+              text-transform="uppercase">EMBER · VIII</text>
+
+        <!-- Pill shadow -->
+        <rect x="56" y="206" width="400" height="140" rx="68" ry="68" fill="rgba(0,0,0,0.55)"/>
+
+        <!-- Pill body: gradient -->
+        <rect x="56" y="196" width="400" height="140" rx="68" ry="68" fill="url(#${u}-pill)"/>
+
+        <!-- Progressive fill — hold-to-coach state at ~48% -->
+        <g clip-path="url(#${u}-pill-clip)">
+          <rect x="56" y="196" width="192" height="140" fill="url(#${u}-fill)"/>
+        </g>
+
+        <!-- Top specular highlight on upper half -->
+        <rect x="56" y="196" width="400" height="70" rx="68" ry="68" fill="url(#${u}-spec)" clip-path="url(#${u}-pill-clip)"/>
+
+        <!-- Inner bottom shadow for depth -->
+        <rect x="56" y="196" width="400" height="140" rx="68" ry="68" fill="none"
+              stroke="rgba(0,0,0,0.35)" stroke-width="3" stroke-opacity="0.5"
+              style="filter: drop-shadow(inset 0 -2px 4px rgba(0,0,0,0.3));"/>
+
+        <!-- Outer thin rim highlight -->
+        <rect x="57" y="197" width="398" height="138" rx="67.5" ry="67.5" fill="none"
+              stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
+
+        <!-- Text inside pill -->
+        <text x="240" y="279" text-anchor="middle" font-family="Rajdhani, sans-serif"
+              font-weight="700" font-size="30" letter-spacing="6" fill="#1A0A00">TAP TO PLAY</text>
+
+        <!-- Flame glyph at right of text -->
+        <g transform="translate(386 268) scale(1.5) translate(-17 -17)">
+          <!-- Small shadow beneath for raised feel -->
+          <g transform="translate(0.3 0.6)" opacity="0.35">
+            <path fill="#1A0A00" d="${FLAME_LAYER_1}"/>
+          </g>
+          ${flameG()}
+        </g>
+
+        <!-- Hint below pill -->
+        <g transform="translate(256 394)">
+          <text text-anchor="middle" font-family="Rajdhani, sans-serif"
+                font-weight="500" font-size="11" letter-spacing="4" fill="rgba(245,230,207,0.55)">HOLD TO COACH · 1.4s</text>
+        </g>
+
+        <!-- Position dots mini-index below hint -->
+        <g transform="translate(256 424)">
+          ${Array.from({length: 8}, (_, i) => {
+            const active = i === 3;
+            return `<rect x="${(i-3.5)*10-1.5}" y="${active?-5:-3}" width="3" height="${active?10:6}" rx="1" fill="#EBB010" opacity="${active?0.9:0.25}"/>`;
+          }).join('')}
+        </g>
+      </svg>
+    `;
+  };
+
+  // ─── XI. SEAL — Kickoff commemorative ceremony ─────────────────────
+  // The only Volume II plate that doesn't directly sample team-select;
+  // instead it references the kickoff ritual the team-select flow feeds
+  // into. A ticket-stub / commemorative seal — flame above, football
+  // below, horizontal divider line between. Reads as program cover.
+  const SEAL = (id) => {
+    const u = `sl${id}`;
+    return `
+      <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img">
+        <defs>
+          <linearGradient id="${u}-canvas" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#0A0804"/>
+            <stop offset="1" stop-color="#050302"/>
+          </linearGradient>
+
+          <!-- Aged parchment-like inside-the-frame -->
+          <radialGradient id="${u}-parchment" cx="50%" cy="50%" r="75%">
+            <stop offset="0%" stop-color="#1A1008"/>
+            <stop offset="80%" stop-color="#0A0804"/>
+            <stop offset="100%" stop-color="#050302"/>
+          </radialGradient>
+
+          <!-- Ember aura behind flame -->
+          <radialGradient id="${u}-ember-aura" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(255,69,17,0.25)"/>
+            <stop offset="100%" stop-color="rgba(255,69,17,0)"/>
+          </radialGradient>
+
+          <filter id="${u}-grain">
+            <feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" seed="5"/>
+            <feColorMatrix values="0 0 0 0 0.35  0 0 0 0 0.25  0 0 0 0 0.1  0 0 0 0.08 0"/>
+            <feComposite in2="SourceGraphic" operator="in"/>
+          </filter>
+        </defs>
+
+        <rect width="512" height="512" fill="url(#${u}-canvas)"/>
+
+        <!-- Outer gold frame (double-line) -->
+        <rect x="46" y="46" width="420" height="420" fill="url(#${u}-parchment)"
+              stroke="#EBB010" stroke-width="2.5" stroke-opacity="0.85"/>
+        <rect x="56" y="56" width="400" height="400" fill="none"
+              stroke="#EBB010" stroke-width="0.5" stroke-opacity="0.55"/>
+
+        <!-- Ticket-stub corner notches -->
+        <circle cx="46" cy="46" r="5" fill="#0A0804"/>
+        <circle cx="466" cy="46" r="5" fill="#0A0804"/>
+        <circle cx="46" cy="466" r="5" fill="#0A0804"/>
+        <circle cx="466" cy="466" r="5" fill="#0A0804"/>
+
+        <!-- Grain overlay inside frame -->
+        <rect x="56" y="56" width="400" height="400" fill="#1A1008" filter="url(#${u}-grain)" opacity="0.45"/>
+
+        <!-- Top ceremonial text -->
+        <text x="256" y="106" text-anchor="middle" font-family="Italiana, serif"
+              font-size="24" letter-spacing="14" fill="#EBB010">KICKOFF</text>
+
+        <!-- Ember aura behind flame -->
+        <ellipse cx="256" cy="190" rx="100" ry="80" fill="url(#${u}-ember-aura)"/>
+
+        <!-- Real 4-layer flame, upper half -->
+        <g transform="translate(256 192) scale(4.2) translate(-17 -17)"
+           style="filter: drop-shadow(0 6px 16px rgba(0,0,0,0.5));">
+          ${flameG()}
+        </g>
+
+        <!-- Horizontal divider line with ornamental end dots -->
+        <g transform="translate(256 276)">
+          <line x1="-140" y1="0" x2="-14" y2="0" stroke="#EBB010" stroke-width="0.8" opacity="0.7"/>
+          <line x1="14" y1="0" x2="140" y2="0" stroke="#EBB010" stroke-width="0.8" opacity="0.7"/>
+          <circle cx="-140" cy="0" r="2.5" fill="#EBB010"/>
+          <circle cx="140" cy="0" r="2.5" fill="#EBB010"/>
+          <!-- Small diamond ornament in the middle -->
+          <g fill="#EBB010">
+            <path d="M 0 -6 L 6 0 L 0 6 L -6 0 Z"/>
+          </g>
+        </g>
+
+        <!-- Real 9-layer football, lower half, horizontal orientation -->
+        <g transform="translate(256 356) rotate(-45) scale(0.26) translate(-256 -256)"
+           style="filter: drop-shadow(0 8px 18px rgba(0,0,0,0.55));">
+          ${footballG()}
+        </g>
+
+        <!-- Bottom ceremonial text -->
+        <text x="256" y="424" text-anchor="middle" font-family="Italiana, serif"
+              font-size="16" letter-spacing="10" fill="#F5E6CF" opacity="0.85">ANNO · MMXXVI</text>
+        <text x="256" y="444" text-anchor="middle" font-family="Oswald, sans-serif"
+              font-weight="500" font-size="9" letter-spacing="5" fill="rgba(245,230,207,0.5)">TORCH · EMBER VIII</text>
+
+        <!-- Tiny side ornaments at horizontal midline -->
+        <text x="76" y="264" font-family="Italiana, serif" font-size="12" fill="#EBB010" opacity="0.55">❦</text>
+        <text x="436" y="264" font-family="Italiana, serif" font-size="12" fill="#EBB010" opacity="0.55">❦</text>
+      </svg>
+    `;
+  };
+
+  // ════════════════════════════════════════════════════════════════════
+  // SPECIMEN DEFINITIONS
+  // ════════════════════════════════════════════════════════════════════
+
+  const specimens = [
+    {
+      numeral: 'VII',
+      plate: 'Plate 07 — Tier Stamp',
+      name: 'Stamp',
+      subtitle: 'The in-game tier badge, magnified and hemmed by helmet stripes.',
+      render: STAMP,
+      desc: [
+        'A literal zoom-in on the team-select tier badge — the small POWERHOUSE/CONTENDER/UNDERDOG chip that rides the top-right of each team\'s carousel card — scaled up to own the full icon. Backdrop-blur-feel chip, gold 1.2px border, top specular highlight, and the real four-layer flame + Teko TORCH wordmark + Italiana VIII in a single tight row.',
+        'Hemmed top and bottom by helmet-stripe glow bands borrowed straight from the <code style="font-family:\'JetBrains Mono\',monospace;color:var(--gold);font-size:12px;">.ts-helmet-stripe</code> component. Position-dot index beneath the chip with the third dot active — implying a selection mid-flow.',
+      ],
+      technique: [
+        '<strong>Chip:</strong> rgba(10,6,4,0.72) fill + 2px gold stroke + upper half specular gradient — simulates the game\'s backdrop-blur:8px badge exactly.',
+        '<strong>Stripes:</strong> horizontal bars with outer blur filter (stdDeviation 8) matching in-game\'s blur(8px) stripe halo.',
+        '<strong>Dots:</strong> programmatic row of 8 rects, active one taller + brighter — faithful to <code style="color:var(--gold);font-family:monospace;font-size:11px;">.ts-pos-dots .on</code> at 22px vs 12px.',
+        '<strong>Fiducials:</strong> L-brackets at corners give the icon an "engineer\'s drawing" frame without crowding.',
+      ],
+      pros: 'Unmistakably TORCH — the chip element is a recognizable piece of the app\'s interior. Scales well; the chip silhouette survives 32px. Institutional read.',
+      cons: 'Looks more like an achievement badge than an app icon. May invite "what app is this" rather than "oh that\'s TORCH." Heavy text dies below 48px.',
+    },
+    {
+      numeral: 'VIII',
+      plate: 'Plate 08 — Stadium',
+      name: 'Stadium',
+      subtitle: 'A single team\'s card, compressed to 1:1.',
+      render: STADIUM,
+      desc: [
+        'The team-select card for the Larkspur Pronghorns, compressed from portrait to square. Full-bleed hunter green field with a brighter center radial (as if stadium lights hit the pitch), top stadium flood wash, cream helmet-stripe edge bands with blur halos, a 220px centered flame with its radial aura behind, and the TORCH wordmark with its glow divider and &ldquo;FOOTBALL · EMBER VIII&rdquo; subtitle.',
+        'This is the most literal sample — the icon is a screenshot of the app&rsquo;s home state. Walks the line between "distinctive" and "just renders a screen in miniature."',
+      ],
+      technique: [
+        '<strong>Field:</strong> radial gradient in Pronghorns canonical palette (<code style="color:var(--gold);font-family:monospace;font-size:11px;">#062014 → #0F3A22</code>), top-lit.',
+        '<strong>Top wash:</strong> radial(90% 50% at 50% 18%, rgba(255,255,255,0.22)) — identical to in-game <code style="color:var(--gold);font-family:monospace;font-size:11px;">.ts-bg-wash::before</code>.',
+        '<strong>Stripes:</strong> left+right 6px cream bars with outer 16px blurred halo at 55% — precisely the in-game stripe system.',
+        '<strong>Logo stage:</strong> 140px radial cream aura + real 4-layer flame at 5.4× scale with drop-shadow.',
+        '<strong>Type:</strong> Teko 600 / 76px for TORCH, Rajdhani 700 / 13px letter-spacing-5 for subtitle — faithful to in-game.',
+      ],
+      pros: 'Strongest "this is a real app" read — you\'re literally previewing the experience in the icon. Warm color escape from "another dark-gradient indie icon."',
+      cons: 'Locks the icon to one team\'s identity (Pronghorns). Risks making every launch feel like "you\'re the Pronghorns coach" even if you play a different team. Could ship 8 variants, but only one can be THE icon.',
+    },
+    {
+      numeral: 'IX',
+      plate: 'Plate 09 — Index',
+      name: 'Index',
+      subtitle: 'Selection in progress: 04 of 08.',
+      render: INDEX,
+      desc: [
+        'A snapshot of the carousel\'s state display. Vertical position-dot column down the left edge (with the fourth dot active and elongated), a huge Italiana numeral pair — <em>04 / 08</em> — reading as the player\'s pick index, a CONTENDER tier chip below, and a small flame accent.',
+        'Conceptually: the icon is the UI <em>reporting on itself</em>. Novel — no other app icon reads as "you are here." Works as a living mark: the denominator (08) implies the scope of the league; the numerator invites navigation.',
+      ],
+      technique: [
+        '<strong>Dot column:</strong> 8 vertical rects programmatically generated; active one is 40px tall at full opacity, others 16px at 30%. Matches the in-game <code style="color:var(--gold);font-family:monospace;font-size:11px;">.ts-pos-dots</code> dimensional spec.',
+        '<strong>Numerals:</strong> Italiana serif at 220px / 200px / 140px — three-tier hierarchy (bold gold → dim paper slash → mid paper denominator).',
+        '<strong>Ember aura:</strong> behind the numerals, a soft radial torch-red tint grounds them in the brand.',
+        '<strong>Tier chip:</strong> centered CONTENDER chip + real 4-layer flame beneath — echoes the in-game composition.',
+        '<strong>Meta tag:</strong> upper-right monospace team-name — data-tag aesthetic.',
+      ],
+      pros: 'Most conceptually original of the five. Invites curiosity ("why 04 of 08?"). Strong typographic silhouette that survives aggressive scaling (the 04 reads at 32px).',
+      cons: 'Highly unusual for an app icon. Risks reading as "half-finished UI" rather than a finished mark. Weakest silhouette at 16px — the numerals become a blob.',
+    },
+    {
+      numeral: 'X',
+      plate: 'Plate 10 — Coach Button',
+      name: 'Coach',
+      subtitle: 'The CTA, captured mid-hold.',
+      render: COACH,
+      desc: [
+        'The gold-to-ember &ldquo;HOLD TO COACH&rdquo; button &mdash; pulled from <code style="font-family:\'JetBrains Mono\',monospace;color:var(--gold);font-size:12px;">.ts-btn-coach</code> directly &mdash; scaled to occupy the icon canvas. Its breathing specular top highlight, its inset shadow depth, its progressive white-fill at 48% (mid-hold), and a real flame glyph inside at the right. The hint text <em>HOLD TO COACH &middot; 1.4s</em> sits beneath.',
+        'This is the icon as invitation. Every time the user sees it, they see the same button they\'ll tap to start coaching. It\'s the app\'s verb, not its noun.',
+      ],
+      technique: [
+        '<strong>Pill:</strong> 400×140 rounded rect (68px radius) with the in-game gradient <code style="color:var(--gold);font-family:monospace;font-size:11px;">linear(180°, #EBB010 → #FF4511)</code>.',
+        '<strong>Top specular:</strong> linear(180°, rgba(255,255,255,0.38) → 0) over upper 50% — matches <code style="color:var(--gold);font-family:monospace;font-size:11px;">.ts-btn-coach::before</code>.',
+        '<strong>Progressive fill:</strong> clip-path white gradient from left to 48% of pill width — a frozen moment in the hold interaction.',
+        '<strong>Halo:</strong> radial ember glow behind the pill at 35% / 15% / 0% — samples the breathing 0 0 22px box-shadow.',
+        '<strong>Text:</strong> Rajdhani 700 / 30px letter-spacing-6 — matches in-game button type to the pixel.',
+      ],
+      pros: 'Most inviting of the five — the icon is literally asking to be tapped. The mid-hold state gives it motion and tension. Scales decently (the pill silhouette reads at 32px).',
+      cons: 'Looks like a button on an icon surface, which can confuse tap expectations ("wait, tap the icon or the button?"). Possibly feels like a product screenshot, not an icon.',
+    },
+    {
+      numeral: 'XI',
+      plate: 'Plate 11 — Seal',
+      name: 'Seal',
+      subtitle: 'A kickoff program cover; a ticket stub.',
+      render: SEAL,
+      desc: [
+        'The only Volume II plate that doesn\'t directly sample team-select. Instead it references what team-select <em>leads into</em>: the kickoff ritual, the pregame runway. A gold-framed rectangular seal with ticket-stub corner notches, aged parchment interior, flame above the horizontal divider, leather football below, and ceremonial Italiana typography — &ldquo;KICKOFF&rdquo; up top, &ldquo;ANNO · MMXXVI&rdquo; below.',
+        'Quieter than the other four. Operates as a commemorative object — the kind of program cover a fan would tear off a ticket and keep in a scrapbook.',
+      ],
+      technique: [
+        '<strong>Frame:</strong> double-line gold border (2.5px outer, 0.5px inner at 8px offset) with corner notches rendered as black circles punched into the frame line.',
+        '<strong>Parchment:</strong> radial dark gradient + turbulence-noise filter overlay at 8% opacity for aged paper feel.',
+        '<strong>Divider:</strong> two horizontal gold lines bracketing a small diamond ornament — breaks the dividing line like engraved decoration.',
+        '<strong>Assets:</strong> real 4-layer flame above with drop shadow; real 9-layer football below at natural 45° angle with drop shadow.',
+        '<strong>Flanking ornaments:</strong> small ❦ fleurons at midline left/right edges.',
+      ],
+      pros: 'Most "heirloom" feeling — the icon that survives in a user\'s head after they uninstall. Warm, specific, committed. Both assets (flame + football) earn their place.',
+      cons: 'Most traditional; least "game-app"-feeling. Text detail dies below 48px — at 16px reduces to "framed rectangle with flame/football stacked." Could read as a wine label rather than an app.',
+    },
+  ];
+
+  // ════════════════════════════════════════════════════════════════════
+  // RENDERING
+  // ════════════════════════════════════════════════════════════════════
+  const gallery = document.getElementById('specimens');
+  const LADDER_SIZES = [16, 32, 48, 96, 192, 512];
+
+  specimens.forEach((spec, i) => {
+    const flipped = (i % 2 === 1);
+    const article = document.createElement('article');
+    article.className = 'specimen' + (flipped ? ' reverse' : '');
+    article.setAttribute('data-reveal', '');
+
+    const heroSvg = spec.render('h' + i);
+
+    const ladderHtml = LADDER_SIZES.map(sz => {
+      const displaySize = Math.max(16, sz === 16 ? 16 : sz === 32 ? 26 : sz === 48 ? 38 : sz === 96 ? 54 : sz === 192 ? 64 : 72);
+      const renderSize = Math.min(sz, displaySize);
+      const sv = spec.render('l' + i + '-' + sz)
+        .replace(/<svg /, `<svg width="${renderSize}" height="${renderSize}" `);
+      return `
+        <div class="rung">
+          <div style="width:${displaySize}px;height:${displaySize}px;display:flex;align-items:center;justify-content:center;">
+            <div style="width:${renderSize}px;height:${renderSize}px;">${sv}</div>
+          </div>
+          <span class="sz-label"><b>${sz}</b>px</span>
+        </div>
+      `;
+    }).join('');
+
+    const iosSvg = spec.render('mi' + i);
+    const androidSvg = spec.render('ma' + i);
+    const favSvg = spec.render('mf' + i);
+
+    article.innerHTML = `
+      <aside class="specimen-numeral">
+        ${spec.numeral}
+        <span class="plate">${spec.plate}</span>
+      </aside>
+      <div class="specimen-main">
+        <div class="specimen-display">
+          <div class="hero-stage">
+            <span class="corner tl"></span><span class="corner tr"></span>
+            <span class="corner bl"></span><span class="corner br"></span>
+            <span class="hero-measure tl">512 × 512</span>
+            <span class="hero-measure br">SVG · viewBox 0 0 512 512</span>
+            ${heroSvg}
+          </div>
+          <div class="ladder">${ladderHtml}</div>
+          <div class="masks">
+            <div class="mask-cell ios" data-platform="iOS" data-size="180"><div class="surface">${iosSvg}</div></div>
+            <div class="mask-cell android" data-platform="Android" data-size="192"><div class="surface">${androidSvg}</div></div>
+            <div class="mask-cell favicon" data-platform="Favicon" data-size="32"><div class="surface">${favSvg}</div></div>
+          </div>
+        </div>
+        <div class="specimen-body">
+          <div class="concept-kicker">${spec.plate}</div>
+          <h2 class="concept-name">${spec.name}</h2>
+          <p class="concept-subtitle">${spec.subtitle}</p>
+          ${spec.desc.map(p => `<p class="concept-desc">${p}</p>`).join('')}
+          <div class="technique">${spec.technique.map(t => `<span class="tk">${t}</span>`).join('')}</div>
+          <div class="runners">
+            <div><h4 class="pros">Strengths</h4><p>${spec.pros}</p></div>
+            <div><h4 class="cons">Concessions</h4><p>${spec.cons}</p></div>
+          </div>
+        </div>
+      </div>
+    `;
+    gallery.appendChild(article);
+  });
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -80px 0px' });
+  document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
