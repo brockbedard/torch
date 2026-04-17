@@ -178,7 +178,7 @@
 
 **#70 · Inherent Interest** — *What's immediately interesting?* → The coin flip is the strongest opening inherent-interest. Lead with it (per home-screen archetype E).
 
-**#71 · Beauty** — *Is it beautiful?* → Dark canvas + neon trails + additive blending = yes. Weakness: the `src/data/gameConditions.js` weather renders are crude. Upgrade weather to a 6-frame Lottie loop per condition.
+**#71 · Beauty** — *Is it beautiful?* → Dark canvas + neon trails + additive blending = yes. Weakness: the `src/data/gameConditions.js` weather renders are crude. Upgrade weather with a GSAP timeline per condition (Lottie was explored and pulled out 2026-04-16 — GSAP is already load-bearing and the default for animation work).
 
 **#72 · Projection** — *Does the player feel themselves there?* → Coach-avatar creation exists but barely surfaces. Put the coach avatar in the scorebug during gameplay — tiny silhouette that reacts to outcomes.
 

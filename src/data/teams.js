@@ -191,10 +191,6 @@ export function getTeamById(id) {
   return TEAMS[id] || null;
 }
 
-export function getTeamIds() {
-  return Object.keys(TEAMS);
-}
-
 /** Get all teams in a given tier ('top' | 'middle' | 'bottom'). */
 export function getTeamsByTier(tier) {
   return Object.values(TEAMS).filter(t => t.tier === tier);

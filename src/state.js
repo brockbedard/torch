@@ -18,10 +18,7 @@ import { getOffenseRoster, getDefenseRoster } from './data/players.js';
 export var VERSION = '0.40.0';
 export var VERSION_NAME = 'Ember Eight';
 
-// Game speed is locked to normal — multiplier always 1.0.
-// Stub export kept so call sites don't need refactoring.
-export var GAME_SPEED = { current: 'normal' };
-export function setGameSpeed() {}
+// Game speed is locked to normal. Kept as a function for call sites in gameplay.js.
 export function getSpeedMultiplier() { return 1.0; }
 // Clear any stale saved preference from before speed was locked
 try { localStorage.removeItem('torch_speed'); } catch(e) {}

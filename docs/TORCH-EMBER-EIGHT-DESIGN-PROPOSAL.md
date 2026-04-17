@@ -282,7 +282,6 @@ For visibility — no files touched yet:
 - `src/ui/screens/teamSelect.js` — full rewrite to vertical hero carousel
 - `src/ui/screens/pregame.js` — update for 8-team matchup support
 - `src/ui/screens/roster.js` — verify works with new traits
-- `src/ui/field/fieldAnimatorV2.js` — `TEAM_COLORS` block already covers all 8
 
 **Test files:**
 - `src/tests/smokeTest.js` — likely needs assertion updates for new team count + new scheme-specific behavior

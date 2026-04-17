@@ -173,24 +173,6 @@ export function epaLabel(epa) {
   return 'Disaster';
 }
 
-// ──────────────────────────────────────────────────────────
-// KPA — "Kindle Points Added" (TORCH's branded name for EPA)
-//
-// The underlying math is identical to standard Expected Points Added. We
-// rebrand it in the UI to fit TORCH's torch/fire theme and to feel like
-// a native metric rather than a generic analytics term. Under the hood,
-// call sites still use _epa / computeEPA / formatEPA — only the display
-// layer switches to KPA / formatKPA.
-//
-// Long-form label for tooltips: "Kindle Points Added"
-// Brief explanation:            "TORCH's version of Expected Points Added"
-// ──────────────────────────────────────────────────────────
-
-export var KPA_LABEL = 'Kindle Points Added';
-export var KPA_TOOLTIP = 'TORCH\'s version of Expected Points Added (EPA).';
-
-/** Alias for formatEPA — prefer this at UI call sites that display "KPA". */
+// KPA — "Kindle Points Added" — UI rebrand of EPA. Engine math stays EPA.
 export var formatKPA = formatEPA;
-
-/** Alias for epaLabel — same quality tiers, re-exported under the KPA name. */
 export var kpaLabel = epaLabel;
