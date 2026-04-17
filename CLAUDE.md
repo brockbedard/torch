@@ -61,13 +61,13 @@ A high-level map. Per-file listings drift fast — `ls src/<dir>/` is always aut
 | `src/style.css` | Global CSS variables (colors, typography, spacing, animation tokens). | — |
 | `src/data/` | All static game data: 8 teams, 112 players, 160 plays (8 × `*Plays.js`), 24 torch cards, game conditions, play diagrams, team identity/wordmarks, helmet variants, play sequence combos. | `TEAMS`, `TORCH_CARDS`, `COUNTER_MATRIX` |
 | `src/engine/` | Game state and resolution. 26 modules: `gameState.js` is the simulation heart, `snapResolver.js` resolves plays, `personnelSystem.js` is the 4-layer player modifier, `aiOpponent.js` is AI brain, `torchPoints.js` is the economy, `handManager.js` manages the 8-card hand, `stDeck.js` is the special teams burn deck. Plus systems for momentum, achievements, streaks, career stats, game history, injuries, EPA, red zone, turnover returns, audio, haptics, storage. | `new GameState()`, `resolveSnap()`, `selectAIPlay()` |
-| `src/ui/screens/` | Full-screen builders. One per route: `home`, `teamSelect`, `roster`, `pregame`, `gameplay` (~6,800 lines), `halftime`, `endGame`, `dailyDrive`, `seasonRecap`, `settings`, `teamCreator`, `visualTest`, `cardMockup`. `gameplay.css.js` holds the gameplay style sheet as a sibling string export. | `buildGameplay()`, `buildPregame()`, etc. |
-| `src/ui/components/` | Reusable widgets: `cards.js` (play/player/torch builders), `cardTray.js` (8-card hand UI), `shop.js` (Torch Store sheet), `stSelect.js` (special teams picker), `devPanel.js`, `statsSheet.js` (scorebug-tap stats), `detailTooltip.js`, `personnelTooltip.js`, `tooltip.js`, `brand.js` (header/flame badge/accent bar), `clipboard.js`. | — |
+| `src/ui/screens/` | Full-screen builders. One per route: `home`, `teamSelect`, `roster`, `pregame`, `gameplay` (~6,800 lines), `halftime`, `endGame`, `dailyDrive`, `seasonRecap`, `settings`, `visualTest`, `cardMockup`. `gameplay.css.js` holds the gameplay style sheet as a sibling string export. | `buildGameplay()`, `buildPregame()`, etc. |
+| `src/ui/components/` | Reusable widgets: `cards.js` (play/player/torch builders), `cardTray.js` (8-card hand UI), `shop.js` (Torch Store sheet), `stSelect.js` (special teams picker), `devPanel.js`, `statsSheet.js` (scorebug-tap stats), `detailTooltip.js`, `brand.js` (header/flame badge/accent bar). | — |
 | `src/ui/effects/` | `torchPointsAnim.js` — sequential points fly-in. | — |
 | `src/ui/field/` | Canvas 2D field renderer + animator. Wired into gameplay as a background layer. | `createFieldAnimator()` |
 | `src/utils/` | `flameIcon.js` (4-layer flame SVG), `footballIcon.js` (9-layer leather football SVG), `helmetLayers.js` (helmet construction). | `flameIconSVG()`, `footballIconSVG()` |
 | `src/assets/` | SVGs (`flame.svg`, `football.svg`), `helmets/`, `icons/` (`teamLogos.js`, `torchCardIcons.js`), `lottie-starters/`, `torch-icons/`. | `renderTeamBadge()`, `renderTorchCardIcon()` |
-| `src/tests/` | 13 test files: `smokeTest.js` (engine assertions), `balanceTest.js` (drive sim), `gameSimTest.js` (full-game sim), `persistenceTest.js`, `uiLogicTest.js`, `regressionTest.js`, `clicheBanTest.js`, `qaAudit.js`, `qaDownDistanceAudit.js`, `yardAlignmentTest.js`, `playByPlay.js`, `playByPlaySim.js`, `testRunner.js`. | `runSmokeTest()`, `runBalanceTest()` |
+| `src/tests/` | 11 test files: `smokeTest.js` (engine assertions), `balanceTest.js` (drive sim), `gameSimTest.js` (full-game sim), `persistenceTest.js`, `uiLogicTest.js`, `regressionTest.js`, `clicheBanTest.js`, `yardAlignmentTest.js`, `playByPlay.js`, `playByPlaySim.js`, `testRunner.js`. | `runSmokeTest()`, `runBalanceTest()` |
 | `docs/` | `TORCH-EMBER-EIGHT-BIBLE.md` (canonical team/lore bible), `CLAUDE.md` (design system), `MOBILE-APP-RESEARCH.md`, `TESTING-GUIDE.md`, `research/` (football source-of-truth docs). | — |
 | `public/` | Static assets: `audio/` (crowd loops, sfx, ambient, PA), `mockups/` (in-progress design HTMLs). | — |
 
@@ -201,7 +201,7 @@ All 14 players start in the ST deck. When used for FG/punt/kickoff/return, they'
 - State managed by `src/engine/stDeck.js`, UI by `src/ui/components/stSelect.js`
 
 ### Onboarding
-First-time players start at 1st & Goal from the 9 with a SURE HANDS gold card. 3-step tooltip sequence: welcome → mechanics → torch cards. Phase-based teach tooltips on first snap. Personnel tooltips (4 max) suggest player cards after play selection.
+First-time players start at 1st & Goal from the 9 with a SURE HANDS gold card. 3-step tooltip sequence: welcome → mechanics → torch cards. Phase-based teach tooltips on first snap.
 
 ### Conversions
 2pt and 3pt conversions play through the full 3-beat snap flow with commentary. XP is automatic. `_isConversion` flag prevents TD celebration loop. Result shows "GOOD!" or "NO GOOD" (not "TOUCHDOWN"). No down & distance overlay. No shop trigger after conversion.

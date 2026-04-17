@@ -195,7 +195,6 @@ export function buildGameplay() {
   var snapCount = 0; // Track snap number for teach tooltips
   var _onboardingDone = true; // Onboarding disabled — will revisit
   var _tutorialStep = 0;
-  var _torchTutorialShown = true; // Onboarding disabled — will revisit
   var twoMinTimer = null; // Real-time clock interval for 2-minute drill
   var _fourthDownDecided = false; // true after player clicks GO FOR IT (hides the bar)
   var _driveHeat = 0; // 0-120 momentum bar
@@ -2877,30 +2876,6 @@ export function buildGameplay() {
         clearTimeout(_idleTimer);
         _idleTimer = null;
       }
-    }
-
-    // Torch card tutorial — disabled, will revisit
-    if (false) {
-      _torchTutorialShown = true;
-      // Show informational overlay — tap to dismiss
-      var torchTutOv = document.createElement('div');
-      torchTutOv.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(10,8,4,0.92);opacity:0;transition:opacity .3s;pointer-events:auto;';
-      var _flameTutSvg = '<svg viewBox="0 0 34 34" width="46" height="46" style="animation:T-flame-pulse 2s ease-in-out infinite;filter:drop-shadow(0 0 12px ' + hTeam.accent + ')">' + flameLayersMarkup() + '</svg>';
-      var _hasReactiveOnly2 = torchInventory.every(function(c) { return c.type === 'reactive'; });
-      var _tutDesc2 = _hasReactiveOnly2
-        ? 'Reactive cards activate automatically when triggered. Look for the prompt during play!'
-        : 'When you have a playable card, tap it to power up your play before you snap.';
-      torchTutOv.innerHTML =
-        _flameTutSvg +
-        "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + hTeam.accent + ";letter-spacing:4px;text-shadow:0 0 20px " + hTeam.accent + "40;\">TORCH CARD EARNED!</div>" +
-        "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:14px;color:#999;letter-spacing:2px;text-align:center;max-width:280px;line-height:1.4;\">" + _tutDesc2 + "</div>" +
-        "<button class='btn-blitz' style='margin-top:20px;font-size:16px;padding:14px 40px;background:#141008;color:" + hTeam.accent + ";border-color:" + hTeam.accent + ";letter-spacing:3px;'>GOT IT</button>";
-      torchTutOv.querySelector('button').onclick = function() {
-        torchTutOv.style.opacity = '0';
-        setTimeout(function() { torchTutOv.remove(); }, 300);
-      };
-      el.appendChild(torchTutOv);
-      requestAnimationFrame(function() { torchTutOv.style.opacity = '1'; });
     }
 
     if (_tutorialStep > 0 && snapCount === 0) {
@@ -6551,37 +6526,9 @@ export function buildGameplay() {
       var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
       showKickoffResult(posLabel, function() {
         drawBug(); drawField();
-        // Torch tutorial — disabled, will revisit
-        if (false) {
-          _torchTutorialShown = true;
-          var torchTutOv = document.createElement('div');
-          torchTutOv.style.cssText = 'position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(10,8,4,0.92);opacity:0;transition:opacity .3s;pointer-events:auto;';
-          var _ftSvg = '<svg viewBox="0 0 34 34" width="46" height="46" style="animation:T-flame-pulse 2s ease-in-out infinite;filter:drop-shadow(0 0 12px ' + hTeam.accent + ')">' + flameLayersMarkup() + '</svg>';
-          var _hasReactiveOnly = torchInventory.every(function(c) { return c.type === 'reactive'; });
-          var _tutDesc = _hasReactiveOnly
-            ? 'Reactive cards activate automatically when triggered. Look for the prompt during play!'
-            : 'When you have a playable card, tap it to power up your play before you snap.';
-          torchTutOv.innerHTML =
-            _ftSvg +
-            "<div style=\"font-family:'Teko';font-weight:700;font-size:28px;color:" + hTeam.accent + ";letter-spacing:4px;text-shadow:0 0 20px " + hTeam.accent + "40;\">TORCH CARD EARNED!</div>" +
-            "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:14px;color:#999;letter-spacing:2px;text-align:center;max-width:280px;line-height:1.4;\">" + _tutDesc + "</div>" +
-            "<button class='btn-blitz' style='margin-top:20px;font-size:16px;padding:14px 40px;background:#141008;color:" + hTeam.accent + ";border-color:" + hTeam.accent + ";letter-spacing:3px;'>GOT IT</button>";
-          torchTutOv.querySelector('button').onclick = function() {
-            torchTutOv.style.opacity = '0';
-            setTimeout(function() {
-              torchTutOv.remove();
-              phase = 'play';
-              panel.style.display = '';
-              drawPanel();
-            }, 300);
-          };
-          el.appendChild(torchTutOv);
-          requestAnimationFrame(function() { torchTutOv.style.opacity = '1'; });
-        } else {
-          phase = 'play';
-          panel.style.display = '';
-          drawPanel();
-        }
+        phase = 'play';
+        panel.style.display = '';
+        drawPanel();
       });
     });
   } else if (gs.half === 2 && GS._halftimeCardDone === false) {

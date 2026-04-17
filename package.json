@@ -43,7 +43,6 @@
     "@fontsource/righteous": "^5.2.7",
     "@fontsource/teko": "^5.2.7",
     "@fontsource/zilla-slab": "^5.2.8",
-    "@lottiefiles/dotlottie-web": "^0.70.0",
     "gsap": "^3.14.2",
     "howler": "^2.2.4"
   }

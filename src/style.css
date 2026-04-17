@@ -220,32 +220,6 @@ body { color: var(--text); font-family: 'Barlow Condensed', sans-serif; display:
 .btn-blitz:active:not(:disabled) { transform: translate(4px, 4px); box-shadow: 2px 2px 0 var(--torch), 4px 4px 0 #000; }
 .btn-blitz:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.chrome-header {
-  color: var(--a-gold); font-family: 'Teko', sans-serif; font-weight: 700;
-  font-size: 28px; letter-spacing: 3px; font-style: italic;
-  transform: skewX(-8deg); display: inline-block; margin-bottom: 20px;
-  text-shadow: 2px 2px 0 rgba(0,0,0,0.9), 0 0 12px rgba(255,204,0,0.3);
-}
-
-.play-card-blitz {
-  background: var(--glass); border: 2px solid var(--white); padding: 10px;
-  text-align: center; position: relative; overflow: hidden; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 90px;
-}
-.play-card-blitz.selected { background: var(--torch); border-color: var(--a-gold); box-shadow: 0 0 15px var(--torch); transform: scale(1.05); }
-
-.clash-card {
-  width: 110px; height: 150px; border: 4px solid var(--white); background: var(--bg-surface);
-  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-  box-shadow: 0 0 20px rgba(255,255,255,0.2); padding: 6px; text-align: center;
-}
-.vs-circle {
-  width: 50px; height: 50px; border-radius: 50%; background: var(--p-red);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Teko', sans-serif; font-weight: 700; font-size: 24px; font-style: italic;
-  box-shadow: 0 0 30px var(--p-red); z-index: 2; color: white; margin: 0 -15px; flex-shrink: 0;
-}
-
 /* Gameplay is now portrait — no landscape enforcement or rotate overlay */
 
 /* ── Shared TORCH brand keyframes (used across all screens) ── */

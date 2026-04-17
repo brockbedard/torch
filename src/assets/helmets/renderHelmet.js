@@ -529,11 +529,6 @@ export function renderHelmet(teamId, opts) {
   '</svg>';
 }
 
-/** Legacy-compatible alias for existing call sites. */
-export function teamHelmetSvg(teamId, size) {
-  return renderHelmet(teamId, { size: size || 48 });
-}
-
 /**
  * Debug labeler — renders the helmet with each path assigned a unique HSL
  * color and a data-debug-index="N" attribute so the mockup page can overlay
