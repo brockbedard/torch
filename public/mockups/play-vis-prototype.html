@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>TORCH · Play Visualization Prototype</title>
+
+  <!-- Fonts (CDN — mockup only, not for production) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600&family=Oswald:wght@700&family=Rajdhani:wght@400;600;700&family=Teko:wght@700;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #05040a;
+      --bg-surface: #141008;
+      --bg-raised: #1E1610;
+      --torch: #FF4511;
+      --gold: #EBB010;
+      --green: #00ff44;
+      --red: #ff0040;
+      --cyan: #4DA6FF;
+
+      /* USER — Salamanders defense */
+      --u-primary: #2ECC71;
+      --u-accent:  #F39C12;
+
+      /* OPPONENT — Spectres offense */
+      --o-primary: #5DADE2;
+      --o-accent:  #1B4F72;
+
+      --border: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.15);
+      --text: rgba(255,250,235,0.92);
+      --text-dim: rgba(255,250,235,0.45);
+      --text-faint: rgba(255,250,235,0.25);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      background: radial-gradient(ellipse at top, #0a0810 0%, var(--bg) 55%);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 16px 120px;
+      gap: 14px;
+      user-select: none;
+    }
+
+    /* ── Prototype chrome ─────────────────────────────────────────── */
+    .proto-tag {
+      font-family: 'Teko', sans-serif;
+      font-weight: 700;
+      letter-spacing: 4px;
+      font-size: 13px;
+      color: var(--gold);
+      text-transform: uppercase;
+      opacity: 0.75;
+    }
+    .proto-sub {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      text-align: center;
+      max-width: 320px;
+      line-height: 1.5;
+    }
+
+    /* ── Field strip (subservient) ─────────────────────────────────── */
+    .field {
+      width: 340px;
+      height: 34px;
+      background: linear-gradient(180deg, #0a1a0a 0%, #030803 100%);
+      border-top: 1px solid rgba(255,255,255,0.05);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      position: relative;
+      overflow: hidden;
+    }
+    .yard-line {
+      position: absolute; top: 0; bottom: 0;
+      width: 1px;
+      background: rgba(255,255,255,0.07);
+    }
+    .yard-line.fifty { background: rgba(255,255,255,0.18); width: 1.5px; }
+    .los {
+      position: absolute; top: 0; bottom: 0;
+      width: 1px;
+      background: var(--gold);
+      opacity: 0.6;
+      box-shadow: 0 0 10px rgba(235,176,16,0.4);
+    }
+    .ltg {
+      position: absolute; top: 0; bottom: 0;
+      width: 1px;
+      background: var(--cyan);
+      opacity: 0.5;
+    }
+    .ball {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 7px; height: 7px;
+      background: var(--gold);
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(235,176,16,0.7);
+    }
+    .trail {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 2px;
+      width: 0;
+      left: 0;
+      background: linear-gradient(90deg, rgba(93,173,226,0) 0%, rgba(93,173,226,0.9) 100%);
+      border-radius: 1px;
+      box-shadow: 0 0 8px rgba(93,173,226,0.5);
+      opacity: 0;
+    }
+
+    .field-legend {
+      display: flex;
+      justify-content: space-between;
+      width: 340px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      margin-top: -6px;
+    }
+
+    /* ── Stage ────────────────────────────────────────────────────── */
+    .stage {
+      width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      position: relative;
+      margin-top: 4px;
+    }
+
+    .side-label {
+      font-family: 'Teko', sans-serif;
+      font-weight: 700;
+      letter-spacing: 3px;
+      font-size: 11px;
+      text-transform: uppercase;
+      text-align: center;
+      opacity: 0.55;
+    }
+    .side-label.opp    { color: var(--o-primary); }
+    .side-label.user   { color: var(--u-primary); }
+
+    .card-row {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* ── Cards ────────────────────────────────────────────────────── */
+    .card {
+      width: 150px;
+      height: 190px;
+      background: linear-gradient(180deg, #1a1510 0%, #0f0b07 100%);
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      position: relative;
+      padding: 12px 11px 10px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+      overflow: hidden;
+      transform-origin: center center;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--u-primary);
+    }
+    .card.opp::before { background: var(--o-primary); }
+
+    .card-type {
+      font-family: 'Teko', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--u-primary);
+      text-transform: uppercase;
+    }
+    .card.opp .card-type { color: var(--o-primary); }
+
+    .card-name {
+      font-family: 'Teko', sans-serif;
+      font-weight: 900;
+      font-size: 20px;
+      letter-spacing: 1.5px;
+      color: var(--text);
+      margin-top: 6px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .card-sub {
+      font-size: 9px;
+      letter-spacing: 0.5px;
+      color: var(--text-dim);
+      margin-top: 4px;
+      line-height: 1.3;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .card-footer {
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .tag {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      padding: 3px 8px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.04);
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+    .tag.risk-safe { color: var(--green); background: rgba(0,255,68,0.08); }
+    .tag.risk-balanced { color: var(--gold); background: rgba(235,176,16,0.08); }
+    .tag.risk-risky { color: var(--torch); background: rgba(255,69,17,0.08); }
+    .tag.coverage-man { color: #C084FC; background: rgba(192,132,252,0.08); }
+    .tag.coverage-zone { color: var(--cyan); background: rgba(77,166,255,0.08); }
+
+    /* Player card specifics */
+    .player-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .pos-chip {
+      font-family: 'Teko', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 1px;
+      padding: 3px 7px;
+      border-radius: 4px;
+      background: var(--u-primary);
+      color: #05040a;
+    }
+    .card.opp .pos-chip { background: var(--o-primary); }
+    .num {
+      font-family: 'Teko', sans-serif;
+      font-weight: 900;
+      font-size: 24px;
+      color: var(--u-primary);
+      line-height: 1;
+    }
+    .card.opp .num { color: var(--o-primary); }
+
+    .trait {
+      font-family: 'Oswald', sans-serif;
+      font-weight: 700;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 7px;
+      border-radius: 4px;
+      background: rgba(235,176,16,0.1);
+      color: var(--gold);
+      border: 1px solid rgba(235,176,16,0.25);
+      align-self: flex-start;
+    }
+
+    .stars {
+      display: flex;
+      gap: 2px;
+      margin-top: 6px;
+    }
+    .star {
+      width: 8px; height: 10px;
+      background: linear-gradient(180deg, var(--gold), #a88010);
+      clip-path: polygon(50% 0, 61% 35%, 100% 35%, 68% 57%, 79% 100%, 50% 77%, 21% 100%, 32% 57%, 0 35%, 39% 35%);
+      opacity: 0.85;
+    }
+    .star.empty { background: rgba(255,255,255,0.08); }
+
+    /* Clash aura & overlay layers */
+    .aura {
+      position: absolute;
+      inset: -6px;
+      border-radius: 12px;
+      pointer-events: none;
+      opacity: 0;
+      background: radial-gradient(ellipse at center, rgba(0,255,68,0.18) 0%, rgba(0,255,68,0) 70%);
+      filter: blur(4px);
+    }
+    .aura.win  { background: radial-gradient(ellipse at center, rgba(0,255,68,0.25) 0%, rgba(0,255,68,0) 70%); }
+    .aura.lose { background: radial-gradient(ellipse at center, rgba(255,0,64,0.22) 0%, rgba(255,0,64,0) 70%); }
+
+    /* ── Clash zone (between rows) ─────────────────────────────────── */
+    .clash {
+      position: relative;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .clash-svg {
+      position: absolute;
+      inset: -20px 0;
+      width: 100%;
+      height: calc(100% + 40px);
+      pointer-events: none;
+    }
+
+    .clash-line {
+      fill: none;
+      stroke: url(#clashGrad);
+      stroke-width: 1.5;
+      stroke-dasharray: 4 4;
+      opacity: 0;
+      stroke-dashoffset: 0;
+    }
+
+    .clash-label {
+      font-family: 'Oswald', sans-serif;
+      font-weight: 700;
+      letter-spacing: 2px;
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0;
+      position: relative;
+      z-index: 2;
+      background: var(--bg);
+      padding: 0 10px;
+    }
+
+    .spark {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 6px; height: 6px;
+      background: var(--gold);
+      border-radius: 50%;
+      transform: translate(-50%,-50%) scale(0);
+      box-shadow: 0 0 12px rgba(235,176,16,0.8);
+      pointer-events: none;
+    }
+
+    /* ── Controls ──────────────────────────────────────────────────── */
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 20;
+    }
+
+    button {
+      font-family: 'Teko', sans-serif;
+      font-weight: 700;
+      letter-spacing: 3px;
+      font-size: 15px;
+      padding: 12px 28px;
+      background: linear-gradient(180deg, #1a1510, #0f0b07);
+      color: var(--text);
+      border: 1.5px solid var(--border-strong);
+      border-radius: 8px;
+      cursor: pointer;
+      text-transform: uppercase;
+      min-width: 120px;
+      transition: all 0.15s cubic-bezier(0.33, 1, 0.68, 1);
+    }
+    button#snap {
+      background: linear-gradient(180deg, var(--torch) 0%, #C03410 100%);
+      color: #fff;
+      border-color: var(--torch);
+      box-shadow: 0 2px 12px rgba(255,69,17,0.4);
+    }
+    button:active { transform: scale(0.96); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Result pop ────────────────────────────────────────────────── */
+    .result {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.6);
+      font-family: 'Teko', sans-serif;
+      font-weight: 900;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 30;
+    }
+    .result-yards {
+      font-size: 72px;
+      line-height: 0.9;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 24px rgba(0,0,0,0.9);
+    }
+    .result-tag {
+      font-size: 22px;
+      letter-spacing: 4px;
+      color: var(--text);
+      margin-top: 6px;
+    }
+    .result-line {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      margin-top: 10px;
+      text-transform: none;
+    }
+
+    /* ── Beat indicator (prototype debug) ──────────────────────────── */
+    .beats {
+      position: fixed;
+      top: 10px;
+      right: 12px;
+      display: flex;
+      gap: 6px;
+      z-index: 5;
+    }
+    .beat-pip {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      transition: all 0.15s;
+    }
+    .beat-pip.on { background: var(--torch); border-color: var(--torch); box-shadow: 0 0 8px rgba(255,69,17,0.5); }
+
+  </style>
+</head>
+<body>
+  <div class="proto-tag">Play Vis · Prototype v0.1</div>
+  <div class="proto-sub">Disposable. Salamanders D vs Spectres O · 1st &amp; 10 · OPP 42</div>
+
+  <!-- Beats indicator (debug) -->
+  <div class="beats">
+    <div class="beat-pip" data-beat="1"></div>
+    <div class="beat-pip" data-beat="2"></div>
+    <div class="beat-pip" data-beat="3"></div>
+    <div class="beat-pip" data-beat="4"></div>
+  </div>
+
+  <!-- Opponent row (top) -->
+  <div class="side-label opp">· Spectres · Offense ·</div>
+  <div class="card-row" id="opp-row">
+    <div class="card opp" id="opp-play" data-card="opp-play">
+      <div class="aura"></div>
+      <div class="card-type">Deep · Pass</div>
+      <div class="card-name">4 Verts</div>
+      <div class="card-sub">Everyone goes long. Tests the deep&nbsp;shell.</div>
+      <div class="card-footer">
+        <span class="tag coverage-man">Pass</span>
+        <span class="tag risk-risky">Risky</span>
+      </div>
+    </div>
+    <div class="card opp" id="opp-player" data-card="opp-player">
+      <div class="aura"></div>
+      <div class="player-head">
+        <span class="pos-chip">WR</span>
+        <span class="num">#11</span>
+      </div>
+      <div class="card-name" style="font-size:18px;margin-top:8px;">Mendoza</div>
+      <div class="stars">
+        <div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div><div class="star empty"></div>
+      </div>
+      <div class="card-footer">
+        <div class="trait" id="opp-trait">Deep Threat</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clash zone with field strip embedded -->
+  <div class="clash">
+    <svg class="clash-svg" viewBox="0 0 340 80" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="clashGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#5DADE2"/>
+          <stop offset="100%" stop-color="#2ECC71"/>
+        </linearGradient>
+      </defs>
+      <!-- Left pair: play-play connection -->
+      <path class="clash-line" id="clash-play" d="M 55 0 C 55 40 55 40 55 80" />
+      <!-- Right pair: player-player connection -->
+      <path class="clash-line" id="clash-player" d="M 235 0 C 235 40 235 40 235 80" />
+    </svg>
+    <span class="clash-label" id="clash-label">Matchup</span>
+    <div class="spark" id="spark-a"></div>
+    <div class="spark" id="spark-b"></div>
+  </div>
+
+  <!-- User row (bottom) -->
+  <div class="card-row" id="user-row">
+    <div class="card" id="user-play" data-card="user-play">
+      <div class="aura"></div>
+      <div class="card-type">Trap · Cover 2</div>
+      <div class="card-name">Robber</div>
+      <div class="card-sub">Safety jumps the deep half. Disguise pre-snap.</div>
+      <div class="card-footer">
+        <span class="tag coverage-man">Man</span>
+        <span class="tag risk-balanced">Balanced</span>
+      </div>
+    </div>
+    <div class="card" id="user-player" data-card="user-player">
+      <div class="aura"></div>
+      <div class="player-head">
+        <span class="pos-chip">SS</span>
+        <span class="num">#22</span>
+      </div>
+      <div class="card-name" style="font-size:18px;margin-top:8px;">Bryant</div>
+      <div class="stars">
+        <div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div><div class="star"></div>
+      </div>
+      <div class="card-footer">
+        <div class="trait" id="user-trait">Cover 2 Safety</div>
+      </div>
+    </div>
+  </div>
+  <div class="side-label user">· Salamanders · Defense ·</div>
+
+  <!-- Field strip (below, subservient) -->
+  <div class="field" id="field">
+    <!-- yard lines at every 10, starting from own 10 -->
+    <div class="yard-line" style="left:10%"></div>
+    <div class="yard-line" style="left:20%"></div>
+    <div class="yard-line" style="left:30%"></div>
+    <div class="yard-line" style="left:40%"></div>
+    <div class="yard-line fifty" style="left:50%"></div>
+    <div class="yard-line" style="left:60%"></div>
+    <div class="yard-line" style="left:70%"></div>
+    <div class="yard-line" style="left:80%"></div>
+    <div class="yard-line" style="left:90%"></div>
+    <div class="ltg" style="left:72%"></div>
+    <div class="los" style="left:58%"></div>
+    <div class="ball" id="ball" style="left:58%"></div>
+    <div class="trail" id="trail" style="left:58%"></div>
+  </div>
+  <div class="field-legend">
+    <span>OWN END ZONE</span>
+    <span style="color:var(--gold);">← 42 (LOS)</span>
+    <span>OPP END ZONE</span>
+  </div>
+
+  <!-- Result pop -->
+  <div class="result" id="result">
+    <div class="result-yards" id="result-yards">+3</div>
+    <div class="result-tag" id="result-tag">INC</div>
+    <div class="result-line" id="result-line">Bryant reads the post-over.</div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button id="snap">SNAP</button>
+    <button id="reset" disabled>REPLAY</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script>
+    // ─────────────────────────────────────────────────────────────────
+    // 4-beat play visualization. Cards are the stage.
+    //
+    // Beat 1 — Pre-snap tension  (400ms) — cards lift, auras breathe,
+    //                                       clash lines draw, traits glow.
+    // Beat 2 — Clash             (500ms) — winner brightens, loser dims,
+    //                                       sparks at contact line.
+    // Beat 3 — Field trace       (800ms) — minimal yard trail animates.
+    // Beat 4 — Result pop        (400ms) — yardage slams in.
+    // ─────────────────────────────────────────────────────────────────
+
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => document.querySelectorAll(sel);
+
+    // Precompute: for this fixed scenario the defense wins the clash.
+    // Bryant's COVER 2 SAFETY trait reads the 4 VERTS pattern → incompletion.
+    // Yardage: 0 (incomplete — no gain). Show that as INC, 2nd & 10.
+    const OUTCOME = {
+      winner: 'user',            // 'user' | 'opp'
+      yards:  0,
+      tag:    'INC',
+      line:   'Bryant reads the post-over.',
+      trail:  { direction: 'backward', distance: 0 }  // no trail for incomplete
+    };
+
+    const snapBtn  = $('#snap');
+    const resetBtn = $('#reset');
+
+    function setBeat(n) {
+      $$('.beat-pip').forEach(p => p.classList.toggle('on', +p.dataset.beat === n));
+    }
+    function clearBeats() {
+      $$('.beat-pip').forEach(p => p.classList.remove('on'));
+    }
+
+    function runSequence() {
+      snapBtn.disabled = true;
+      resetBtn.disabled = true;
+
+      const tl = gsap.timeline({
+        onComplete: () => { resetBtn.disabled = false; }
+      });
+
+      // ── Beat 1 — Pre-snap tension ───────────────────────────────────
+      tl.call(() => setBeat(1));
+
+      // Lift cards
+      tl.to('.card', {
+        y: -8,
+        scale: 1.02,
+        duration: 0.35,
+        ease: 'power2.out',
+        stagger: { each: 0.03, from: 'center' }
+      }, 0);
+
+      // Card shadows deepen
+      tl.to('.card', {
+        boxShadow: '0 10px 28px rgba(0,0,0,0.6)',
+        duration: 0.3
+      }, 0);
+
+      // Auras breathe (all four cards light up cautiously)
+      tl.to('.card .aura', {
+        opacity: 0.55,
+        duration: 0.4,
+        ease: 'power1.out'
+      }, 0.1);
+
+      // Traits pulse to signal "these are the attributes in play"
+      tl.to(['#user-trait', '#opp-trait'], {
+        scale: 1.08,
+        duration: 0.25,
+        yoyo: true,
+        repeat: 1,
+        ease: 'power2.inOut'
+      }, 0.15);
+
+      // Clash lines draw between paired cards
+      tl.to('.clash-line', {
+        opacity: 0.55,
+        duration: 0.35,
+        ease: 'power2.out',
+        stagger: 0.06
+      }, 0.1);
+
+      // Clash label appears
+      tl.to('#clash-label', {
+        opacity: 1,
+        duration: 0.2,
+        ease: 'power1.out'
+      }, 0.2);
+
+      // ── Beat 2 — Clash ──────────────────────────────────────────────
+      tl.call(() => setBeat(2), [], '+=0.05');
+
+      const winSide = OUTCOME.winner === 'user' ? '#user-play, #user-player' : '#opp-play, #opp-player';
+      const loseSide = OUTCOME.winner === 'user' ? '#opp-play, #opp-player' : '#user-play, #user-player';
+      const winAuraSel = winSide.split(', ').map(s => s + ' .aura').join(', ');
+      const loseAuraSel = loseSide.split(', ').map(s => s + ' .aura').join(', ');
+
+      // Loser dims and drops slightly
+      tl.to(loseSide, {
+        y: 0,
+        scale: 0.96,
+        opacity: 0.45,
+        duration: 0.35,
+        ease: 'power2.in'
+      });
+      tl.to(loseAuraSel, {
+        opacity: 0.15,
+        duration: 0.3
+      }, '<');
+      // Loser aura flips to lose-red briefly
+      tl.set(loseAuraSel, { className: 'aura lose' }, '<');
+
+      // Winner spikes — scale up, aura roars
+      tl.to(winSide, {
+        y: -14,
+        scale: 1.07,
+        duration: 0.35,
+        ease: 'back.out(1.8)'
+      }, '<');
+      tl.set(winAuraSel, { className: 'aura win' }, '<');
+      tl.to(winAuraSel, {
+        opacity: 1,
+        duration: 0.25,
+        ease: 'power2.out'
+      }, '<');
+
+      // Sparks burst from the clash midpoints
+      tl.to(['#spark-a', '#spark-b'], {
+        scale: 4,
+        opacity: 0,
+        duration: 0.5,
+        ease: 'power3.out',
+        stagger: 0.08,
+        onStart: () => {
+          gsap.set(['#spark-a', '#spark-b'], { scale: 0.4, opacity: 1 });
+        }
+      }, '<+0.05');
+
+      // Clash label hides — we know the winner now
+      tl.to('#clash-label', { opacity: 0, duration: 0.2 }, '<');
+
+      // Clash lines ease out (connection resolved)
+      tl.to('.clash-line', {
+        opacity: 0,
+        duration: 0.3,
+        ease: 'power1.out'
+      }, '<+0.1');
+
+      // ── Beat 3 — Field trace ────────────────────────────────────────
+      tl.call(() => setBeat(3), [], '+=0.05');
+
+      // For incompletion: short defensive "breakup" flash — no offensive trail.
+      // Trail animation: brief cyan flash at LOS then nothing.
+      if (OUTCOME.yards === 0) {
+        tl.to('#trail', {
+          opacity: 1,
+          width: 16,
+          duration: 0.15,
+          ease: 'power2.out'
+        });
+        tl.to('#trail', {
+          opacity: 0,
+          width: 0,
+          duration: 0.25,
+          ease: 'power2.in'
+        });
+        // Ball jitters at LOS
+        tl.to('#ball', {
+          x: '-=2',
+          duration: 0.08,
+          yoyo: true,
+          repeat: 3
+        }, '<-0.3');
+      } else {
+        // (Offense-win path — for future scenarios)
+        const trailPx = OUTCOME.yards * 3.4; // 3.4px per yard on 340px strip
+        tl.to('#trail', {
+          opacity: 1,
+          width: trailPx,
+          duration: 0.55,
+          ease: 'power2.out'
+        });
+        tl.to('#ball', {
+          x: `+=${trailPx}`,
+          duration: 0.55,
+          ease: 'power2.out'
+        }, '<');
+      }
+
+      // ── Beat 4 — Result pop ─────────────────────────────────────────
+      tl.call(() => setBeat(4), [], '+=0.15');
+
+      const resultColor = OUTCOME.winner === 'user' ? 'var(--green)' : 'var(--red)';
+      $('#result-yards').style.color = resultColor;
+      $('#result-yards').textContent = OUTCOME.yards === 0 ? 'INC' : (OUTCOME.yards > 0 ? '+' + OUTCOME.yards : OUTCOME.yards);
+      $('#result-tag').textContent = OUTCOME.yards === 0 ? 'BRYANT BREAKS UP THE PASS' : OUTCOME.tag;
+      $('#result-line').textContent = OUTCOME.line;
+
+      tl.to('#result', {
+        opacity: 1,
+        scale: 1,
+        duration: 0.45,
+        ease: 'back.out(1.7)'
+      });
+
+      // Hold then fade
+      tl.to('#result', {
+        opacity: 0,
+        scale: 0.95,
+        duration: 0.35,
+        ease: 'power2.in'
+      }, '+=1.2');
+
+      // ── Settle ──────────────────────────────────────────────────────
+      tl.call(() => clearBeats());
+    }
+
+    function reset() {
+      gsap.set('.card', { y: 0, scale: 1, opacity: 1, boxShadow: '0 4px 14px rgba(0,0,0,0.5)' });
+      gsap.set('.aura', { opacity: 0 });
+      $$('.aura').forEach(a => { a.className = 'aura'; });
+      gsap.set('.clash-line', { opacity: 0 });
+      gsap.set('#clash-label', { opacity: 0 });
+      gsap.set(['#spark-a', '#spark-b'], { scale: 0, opacity: 0 });
+      gsap.set('#trail', { opacity: 0, width: 0 });
+      gsap.set('#ball', { x: 0 });
+      gsap.set('#result', { opacity: 0, scale: 0.6 });
+      clearBeats();
+      snapBtn.disabled = false;
+      resetBtn.disabled = true;
+    }
+
+    snapBtn.addEventListener('click', runSequence);
+    resetBtn.addEventListener('click', () => { reset(); });
+
+    // Initial reset
+    reset();
+  </script>
+</body>
+</html>

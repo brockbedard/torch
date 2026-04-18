@@ -100,6 +100,8 @@ export const SND = {
   coinFlip:   safe(function() { AudioManager.playExact('coinFlip', { volume: 0.6 }); }),
   horn:       safe(function() { AudioManager.playExact('horn', { volume: 0.7 }); }),
   whooshIn:   safe(function() { AudioManager.play('whooshIn', { volume: 0.4 }); }),
+  // Alias: some call sites spell this without the "In" suffix.
+  whoosh:     safe(function() { AudioManager.play('whooshIn', { volume: 0.4 }); }),
   broadcastSweep: safe(function() { AudioManager.play('broadcastSweep', { volume: 0.4 }); }),
   anvilImpact: safe(function() { AudioManager.playExact('anvilImpact', { volume: 0.8 }); }),
   bassDrop:   safe(function() { AudioManager.playExact('bassDrop', { volume: 0.7 }); }),

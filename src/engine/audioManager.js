@@ -35,6 +35,8 @@ var ELEVATED_STATES = {           // states that require MIN_HOLD_MS before fadi
   touchdown: true,
   turnover: true,
   game_over_win: true,
+  red_zone: true,
+  goal_to_go: true,
 };
 
 // Load an SFX pool. opts.preload (default true) controls whether Howler
@@ -433,6 +435,8 @@ var AudioManager = {
       menu:           0.03,  // parking lot hum
       pre_game:       0.10,  // low atmospheric rumble
       normal_play:    0.28,  // sustained baseline (slightly up for consistency)
+      red_zone:       0.42,  // sustained lift inside the 20 — crowd leaning in
+      goal_to_go:     0.54,  // tighter lift inside the 10 — one play from 6
       big_moment:     0.58,  // noticeable lift from baseline
       two_min_drill:  0.48,  // sustained tension
       touchdown:      0.88,  // peak — massive contrast

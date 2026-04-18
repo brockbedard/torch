@@ -15,7 +15,7 @@ import { MAPLES_OFF_PLAYS, MAPLES_DEF_PLAYS } from './data/maplesPlays.js';
 import { RACCOONS_OFF_PLAYS, RACCOONS_DEF_PLAYS } from './data/raccoonsPlays.js';
 import { getOffenseRoster, getDefenseRoster } from './data/players.js';
 
-export var VERSION = '0.40.0';
+export var VERSION = '0.40.1';
 export var VERSION_NAME = 'Ember Eight';
 
 // Game speed is locked to normal. Kept as a function for call sites in gameplay.js.
@@ -131,12 +131,33 @@ export function setRender(fn) { render = fn; }
 // TEAM LOOKUPS — v0.21 (replaces CT/IR-specific helpers)
 // ============================================================
 
+// Sentinel returned when a team id cannot be resolved (e.g. stale save from
+// a prior version where the team was renamed or removed). Previously we
+// silently returned the first team in TEAMS, which corrupted season stats
+// and carried-over TORCH points by attributing them to whoever happened to
+// be first in the object. Returning a visible "Unknown" stub lets the UI
+// render without crashing while making the data drift obvious.
+var UNKNOWN_TEAM = {
+  id: 'unknown',
+  name: 'UNKNOWN',
+  school: 'Unknown',
+  mascot: 'UNKNOWN',
+  tier: 'CONTENDER',
+  scheme: 'BALANCED',
+  colors: { primary: '#888888', secondary: '#444444', accent: '#bbbbbb' },
+  celebration: { text: 'UNKNOWN', subtext: '' },
+  wordmark: { font: 'var(--font-display)', weight: 700, spacing: '2px' },
+  roster: [],
+  ovr: 75
+};
+
 export function getTeam(id) {
   var t = getTeamById(id);
   if (!t) {
-    // Fallback for old-style array-based lookups
-    var keys = Object.keys(TEAMS);
-    t = TEAMS[keys[0]];
+    if (typeof console !== 'undefined' && console.warn) {
+      console.warn('[getTeam] Unknown team id:', id);
+    }
+    return UNKNOWN_TEAM;
   }
   return t;
 }

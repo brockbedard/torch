@@ -63,7 +63,7 @@ export function injectDevPanel(el, gs, callbacks) {
   if (isDesktop) _open = true;
 
   var panel = document.createElement('div');
-  panel.style.cssText = 'position:fixed;top:0;right:0;width:280px;height:100vh;z-index:9998;background:rgba(0,0,0,0.95);border-left:1px solid #4DA6FF;overflow-y:auto;padding:40px 10px 20px;transform:' + (_open ? 'translateX(0)' : 'translateX(100%)') + ';transition:transform 0.25s ease;font-family:monospace;font-size:10px;color:#ccc;';
+  panel.style.cssText = 'position:fixed;top:0;right:0;width:280px;height:100vh;height:100dvh;z-index:9998;background:rgba(0,0,0,0.95);border-left:1px solid #4DA6FF;overflow-y:auto;padding:40px 10px max(20px,env(safe-area-inset-bottom,0px));transform:' + (_open ? 'translateX(0)' : 'translateX(100%)') + ';transition:transform 0.25s ease;font-family:monospace;font-size:10px;color:#ccc;';
   if (_open) toggle.style.opacity = '1';
   _panel = panel;
 

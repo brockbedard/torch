@@ -1,6 +1,6 @@
 # TORCH Football
 
-![Version](https://img.shields.io/badge/version-0.40.0-EBB010?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.40.1-EBB010?style=flat-square)
 ![Status](https://img.shields.io/badge/status-Live-brightgreen?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-Web%20(Mobile%20First)-blue?style=flat-square)
 ![License](https://img.shields.io/badge/license-Private-gray?style=flat-square)
@@ -98,6 +98,8 @@ localhost:5173/?dev          # Dev panel (force results, give cards, apply state
 Full architecture docs, engine specs, and design system in [CLAUDE.md](CLAUDE.md).
 
 ## Current Version
+
+**v0.40.1 "Ember Eight"** — Polish pass on top of the 4→8 expansion. Pregame screens (coin toss → card pick → reveal) refactored into flex-centered phase groups so they sit dead-center on any phone height. Kickoff result overlay rebuilt with the team's signature wordmark, badge, and broadcast-style entrance. Toss result stamp unified across user-win and AI-win paths. Scorebug stats tap fixed in the second half. Discard + conversion tap-spam guards. Null safety on `snapResolver` / `turnoverReturns` / `getTeam`. Shop sheet migrated to GSAP. Audio crowd intensity now sustains inside the red zone and on goal-to-go.
 
 **v0.40.0 "Ember Eight"** — The Ember Eight expansion. 4→8 teams with full playbooks, rosters, and counter matrix. Cinematic team select with tier filtering. Per-team wordmark typography. Mobile-prep phases 1-3: audio compression (220→7 MB), self-hosted fonts, safe-area + dvh viewport, Capacitor-ready haptics and storage facades.
 

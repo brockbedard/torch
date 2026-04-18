@@ -149,6 +149,14 @@ export function attachDetailListeners(el, data) {
   el.addEventListener('touchend', () => {
     clearTimeout(_lockTimer);
   }, {passive: true});
+  // If the user drags during the long-press, cancel it — this prevents
+  // the tooltip from firing when they were actually scrolling the tray.
+  el.addEventListener('touchmove', () => {
+    clearTimeout(_lockTimer);
+  }, {passive: true});
+  el.addEventListener('touchcancel', () => {
+    clearTimeout(_lockTimer);
+  }, {passive: true});
 
   // Safety: if element that triggered tooltip is removed, clean up
   var observer = new MutationObserver(function() {

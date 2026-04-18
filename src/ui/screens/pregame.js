@@ -44,10 +44,8 @@ function injectRunwayStyles() {
     '@keyframes runwayCoinSpinUser{0%{transform:rotateY(0) translateY(0)}20%{transform:rotateY(720deg) translateY(-60px)}50%{transform:rotateY(1440deg) translateY(-90px)}80%{transform:rotateY(2160deg) translateY(-40px)}100%{transform:rotateY(2520deg) translateY(0)}}' +
     '@keyframes runwayCoinSpinAi{0%{transform:rotateY(0) translateY(0)}20%{transform:rotateY(720deg) translateY(-60px)}50%{transform:rotateY(1440deg) translateY(-90px)}80%{transform:rotateY(2340deg) translateY(-40px)}100%{transform:rotateY(2700deg) translateY(0)}}' +
     '@keyframes runwayTapPulse{0%,100%{opacity:0.55;transform:translateY(0)}50%{opacity:1;transform:translateY(-2px)}}' +
-    // Keyframe must include translate(-50%) since CSS animations replace the
-    // entire transform property — without it, the inline translateX(-50%)
-    // centering gets wiped out during the hover loop and the coin drifts right.
-    '@keyframes runwayCoinHover{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-3px)}}';
+    // Coin sits inside a flex-centered column now — no translateX needed.
+    '@keyframes runwayCoinHover{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}';
   document.head.appendChild(s);
 }
 
@@ -317,29 +315,68 @@ function runBeat1(ctx, onDone) {
 // ═══════════════════════════════════════════════════════
 // BEAT 2 — COIN TOSS
 // ═══════════════════════════════════════════════════════
+
+// Render "[TEAM WORDMARK] ACTION-WORD" into the toss result's winner row.
+// Used by both the user-win and AI-win paths so the wordmark always sits in
+// the same visual slot. Creates / caches per-beat references so later calls
+// (e.g. AI updating "WINS" → "WILL RECEIVE") can rewrite only the label
+// without re-mounting the wordmark SVG.
+function renderTossWinner(beat, teamObj, action) {
+  var cfg = TEAM_WORDMARKS[teamObj.id] || {};
+  // heroSize range is 48-64 → 0.35 gives 17-22 → clamp min 20 for readability.
+  // Keeping the wordmark small enough that "[NAME] WILL RECEIVE" fits on one
+  // line even on a 320-wide iPhone SE.
+  var wmSize = Math.max(20, Math.round((cfg.heroSize || 48) * 0.35));
+  var winnerEl = beat._resWinner;
+  winnerEl.innerHTML = '';
+  var wm = renderTeamWordmark(teamObj.id, 't3', { mascot: true, fontSize: wmSize });
+  if (wm) {
+    winnerEl.appendChild(wm);
+  } else {
+    // Fallback when no wordmark config: plain team name in a serif-ish heavy display.
+    var fallback = document.createElement('span');
+    fallback.style.cssText = "font-family:'Teko';font-weight:900;font-size:" + (wmSize + 2) + "px;color:#fff;letter-spacing:2px;";
+    fallback.textContent = (teamObj.name || '').toUpperCase();
+    winnerEl.appendChild(fallback);
+  }
+  var lbl = document.createElement('span');
+  lbl.className = 'toss-winner-label';
+  lbl.style.cssText = "font-family:'Teko';font-weight:900;font-size:22px;color:#EBB010;letter-spacing:2px;line-height:1;text-shadow:0 0 16px rgba(235,176,16,0.35);white-space:nowrap;";
+  lbl.textContent = action;
+  winnerEl.appendChild(lbl);
+  beat._resWinnerLabel = lbl;
+}
+
 function buildBeat2(ctx) {
   var beat = document.createElement('div');
   beat.style.cssText = 'position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,#1a1208 0%,#050302 70%);opacity:0;pointer-events:none;';
 
-  // Spot pool
+  // Spot pool — stays viewport-centered via its own translate(-50%,-50%)
   var pool = document.createElement('div');
   pool.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:360px;height:360px;background:radial-gradient(circle,rgba(255,180,60,0.12) 0%,rgba(255,140,40,0.06) 25%,transparent 55%);filter:blur(8px);';
   beat.appendChild(pool);
   beat._pool = pool;
 
+  // Three stacked phase groups, each a flex-column that fills the beat and
+  // centers its OWN content vertically. Only one is visible at a time; we
+  // toggle opacity + pointer-events in the run* animations below.
+  // This replaces the old absolutely-positioned "stage" which was anchored
+  // to the top of the viewport and left big gaps on taller phones.
+  var coinGroup = document.createElement('div');
+  coinGroup.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;pointer-events:none;';
+  beat.appendChild(coinGroup);
+  beat._coinGroup = coinGroup;
+
   // Midfield label
   var label = document.createElement('div');
-  label.style.cssText = "position:absolute;top:76px;left:0;right:0;text-align:center;font-family:'Oswald';font-weight:700;font-size:9px;color:rgba(235,176,16,0.7);letter-spacing:4px;opacity:0;";
+  label.style.cssText = "text-align:center;font-family:'Oswald';font-weight:700;font-size:9px;color:rgba(235,176,16,0.7);letter-spacing:4px;opacity:0;";
   label.textContent = '\u25C6 MIDFIELD \u00B7 COIN TOSS \u25C6';
-  beat.appendChild(label);
+  coinGroup.appendChild(label);
   beat._label = label;
 
-  // Coin — bigger (140px) and tappable. User taps to flip.
-  // Positioned at top 130 so its final resting bottom (270) clears the
-  // result stamp top (282) by 12px. The spin flies it UP into the label
-  // area momentarily — we fade the label on tap to avoid the collision.
+  // Coin — 140px tappable. Flex centers it in the coinGroup.
   var coinWrap = document.createElement('div');
-  coinWrap.style.cssText = 'position:absolute;top:130px;left:50%;transform:translateX(-50%);width:140px;height:140px;perspective:1000px;opacity:0;cursor:pointer;filter:drop-shadow(0 16px 32px rgba(0,0,0,0.65)) drop-shadow(0 0 22px rgba(235,176,16,0.3));animation:runwayCoinHover 2.4s ease-in-out infinite;';
+  coinWrap.style.cssText = 'position:relative;width:140px;height:140px;perspective:1000px;opacity:0;cursor:pointer;filter:drop-shadow(0 16px 32px rgba(0,0,0,0.65)) drop-shadow(0 0 22px rgba(235,176,16,0.3));animation:runwayCoinHover 2.4s ease-in-out infinite;';
   var coin = document.createElement('div');
   coin.style.cssText = 'width:100%;height:100%;position:relative;transform-style:preserve-3d;transform:rotateY(0deg);';
 
@@ -383,66 +420,81 @@ function buildBeat2(ctx) {
   coin.appendChild(back);
 
   coinWrap.appendChild(coin);
-  beat.appendChild(coinWrap);
+  coinGroup.appendChild(coinWrap);
   beat._coinWrap = coinWrap;
   beat._coin = coin;
 
   // TAP TO FLIP hint — pulses to grab attention, hides on tap.
-  // Sits 18px below the coin's resting bottom (270) at top 288. Hides
-  // before the result stamp (top 282) would be visible.
   var tapHint = document.createElement('div');
-  tapHint.style.cssText = "position:absolute;top:288px;left:0;right:0;text-align:center;font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:5px;text-shadow:0 0 14px rgba(235,176,16,0.5);opacity:0;pointer-events:none;";
+  tapHint.style.cssText = "text-align:center;font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:5px;text-shadow:0 0 14px rgba(235,176,16,0.5);opacity:0;";
   tapHint.textContent = 'TAP TO FLIP';
-  beat.appendChild(tapHint);
+  coinGroup.appendChild(tapHint);
   beat._tapHint = tapHint;
 
-  // Toss result stamp
+  // ── DECISION GROUP — result stamp + optional choice cards, flex-centered ──
+  var decisionGroup = document.createElement('div');
+  decisionGroup.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;pointer-events:none;';
+  beat.appendChild(decisionGroup);
+  beat._decisionGroup = decisionGroup;
+
+  // Toss result stamp — three-line stack:
+  //   eye (small):    context label ("COIN TOSS WINNER")
+  //   winner (big):   team wordmark + action word on one line
+  //   sub (medium):   next-action prompt that updates as the flow progresses
   var result = document.createElement('div');
-  result.style.cssText = 'position:absolute;top:282px;left:0;right:0;text-align:center;opacity:0;';
+  result.style.cssText = 'width:100%;max-width:340px;text-align:center;opacity:0;';
   var resEye = document.createElement('div');
-  resEye.style.cssText = "font-family:'Oswald';font-weight:700;font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:2.5px;";
-  resEye.textContent = ' ';
+  resEye.style.cssText = "font-family:'Oswald';font-weight:700;font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:3px;";
+  resEye.textContent = 'COIN TOSS WINNER';
   result.appendChild(resEye);
+  // Winner row — flex-centered so the wordmark + label always read as one unit.
   var resWinner = document.createElement('div');
-  resWinner.style.cssText = "font-family:'Teko';font-weight:900;font-size:30px;color:#EBB010;letter-spacing:3px;line-height:1;margin-top:3px;text-shadow:0 0 20px rgba(235,176,16,0.4);";
-  resWinner.textContent = ' ';
+  resWinner.style.cssText = "display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px;min-height:30px;flex-wrap:nowrap;";
   result.appendChild(resWinner);
   var resSub = document.createElement('div');
-  resSub.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:1.5px;margin-top:4px;";
-  resSub.textContent = ' ';
+  resSub.style.cssText = "font-family:'Rajdhani';font-weight:700;font-size:11px;color:rgba(255,255,255,0.65);letter-spacing:1.5px;margin-top:8px;min-height:14px;";
+  resSub.textContent = '';
   result.appendChild(resSub);
-  beat.appendChild(result);
+  decisionGroup.appendChild(result);
   beat._result = result;
   beat._resEye = resEye;
   beat._resWinner = resWinner;
   beat._resSub = resSub;
 
-  // Choice cards wrap
+  // Choice cards wrap — sits below the result in the decisionGroup column.
   var choiceWrap = document.createElement('div');
-  choiceWrap.style.cssText = 'position:absolute;top:360px;left:16px;right:16px;display:flex;gap:14px;opacity:0;pointer-events:none;';
+  choiceWrap.style.cssText = 'width:100%;max-width:380px;padding:0 16px;display:flex;gap:14px;opacity:0;pointer-events:none;box-sizing:border-box;';
   var kickoffCard = buildChoiceCard('kickoff');
   var torchCardEl = buildChoiceCard('torch');
   choiceWrap.appendChild(kickoffCard);
   choiceWrap.appendChild(torchCardEl);
-  beat.appendChild(choiceWrap);
+  decisionGroup.appendChild(choiceWrap);
   beat._choiceWrap = choiceWrap;
   beat._kickoffCard = kickoffCard;
   beat._torchCard = torchCardEl;
 
-  // Face-down pick area (hidden by default)
+  // ── FACE-DOWN GROUP — title + subtitle + 3-card row + reveal + stamp ──
+  // Reveal card overlays fdRow via position:absolute within this flex group,
+  // centered on the group's visual midpoint.
   var facedownWrap = document.createElement('div');
-  facedownWrap.style.cssText = 'position:absolute;inset:0;opacity:0;pointer-events:none;';
+  facedownWrap.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;opacity:0;pointer-events:none;';
   var csTitle = document.createElement('div');
-  csTitle.style.cssText = "position:absolute;top:76px;left:0;right:0;text-align:center;font-family:'Oswald';font-weight:700;font-size:9px;color:rgba(235,176,16,0.8);letter-spacing:4px;";
+  csTitle.style.cssText = "text-align:center;font-family:'Oswald';font-weight:700;font-size:9px;color:rgba(235,176,16,0.8);letter-spacing:4px;";
   csTitle.textContent = '\u25C6 3 FACE-DOWN \u00B7 FLIP ONE \u25C6';
   facedownWrap.appendChild(csTitle);
   var csSub = document.createElement('div');
-  csSub.style.cssText = "position:absolute;top:94px;left:0;right:0;text-align:center;font-family:'Teko';font-weight:700;font-size:22px;color:#fff;letter-spacing:2px;line-height:1;";
+  csSub.style.cssText = "text-align:center;font-family:'Teko';font-weight:700;font-size:22px;color:#fff;letter-spacing:2px;line-height:1;margin-top:-10px;";
   csSub.textContent = 'PICK YOUR CARD';
   facedownWrap.appendChild(csSub);
 
+  // Card stack area — holds fdRow and the reveal card overlay.
+  // Fixed height = reveal card height so layout is stable before/after reveal.
+  var cardStack = document.createElement('div');
+  cardStack.style.cssText = 'position:relative;width:100%;max-width:340px;height:208px;display:flex;align-items:center;justify-content:center;';
+  facedownWrap.appendChild(cardStack);
+
   var fdRow = document.createElement('div');
-  fdRow.style.cssText = 'position:absolute;top:200px;left:0;right:0;display:flex;justify-content:center;align-items:flex-start;gap:18px;padding:0 20px;';
+  fdRow.style.cssText = 'display:flex;justify-content:center;align-items:center;gap:18px;padding:0 20px;';
   var facedowns = [];
   for (var i = 0; i < 3; i++) {
     // Each face-down slot is a wrapper holding the real torch card back
@@ -456,16 +508,20 @@ function buildBeat2(ctx) {
     fdRow.appendChild(fd);
     facedowns.push(fd);
   }
-  facedownWrap.appendChild(fdRow);
+  cardStack.appendChild(fdRow);
 
-  // Reveal card (hidden until pick)
+  // Reveal card (hidden until pick) — absolute-positioned inside cardStack,
+  // centered on its middle via negative margins so the scale-up grows from
+  // the same spot the picked face-down card sat. Using margin-based
+  // centering instead of transform(-50%,-50%) keeps GSAP's scale/rotationY
+  // animation clean (no xPercent/yPercent gymnastics).
   var reveal = document.createElement('div');
-  reveal.style.cssText = 'position:absolute;top:158px;left:50%;transform:translate(-50%,0) scale(0.6) rotateY(180deg);width:148px;height:208px;opacity:0;pointer-events:none;';
-  facedownWrap.appendChild(reveal);
+  reveal.style.cssText = 'position:absolute;top:50%;left:50%;margin-left:-74px;margin-top:-104px;transform:scale(0.6) rotateY(180deg);width:148px;height:208px;opacity:0;pointer-events:none;';
+  cardStack.appendChild(reveal);
 
-  // Reveal stamp
+  // Reveal stamp — sits in the flex column below the cardStack.
   var revealStamp = document.createElement('div');
-  revealStamp.style.cssText = 'position:absolute;top:384px;left:0;right:0;text-align:center;opacity:0;';
+  revealStamp.style.cssText = 'text-align:center;opacity:0;';
   var revEye = document.createElement('div');
   revEye.style.cssText = "font-family:'Oswald';font-weight:700;font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:2.5px;";
   revEye.textContent = ' ';
@@ -506,10 +562,13 @@ function buildChoiceCard(type) {
   var iconBox = document.createElement('div');
   iconBox.style.cssText = 'width:74px;height:74px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;color:' + accent + ';filter:drop-shadow(0 0 14px rgba(' + tint + ',0.5));';
   if (isKickoff) {
-    // 9-layer leather football, rotated vertical (tips up/down)
+    // 9-layer leather football, rotated 45° so tips point up/down.
+    // Square viewBox (100×100) so the football reads at the same visual
+    // weight as the flame on the adjacent card — previous 66×150 viewBox
+    // made it render ~40% of the intended size on the left side.
     iconBox.innerHTML =
-      '<svg viewBox="17 -25 66 150" preserveAspectRatio="xMidYMid meet" width="100%" height="100%">' +
-      '<g transform="translate(50,50) scale(0.22) rotate(-45) translate(-256,-256)">' +
+      '<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" width="100%" height="100%">' +
+      '<g transform="translate(50,50) scale(0.16) rotate(-45) translate(-256,-256)">' +
       footballLayersMarkup() +
       '</g></svg>';
   } else {
@@ -527,7 +586,9 @@ function buildChoiceCard(type) {
 
   var sub = document.createElement('div');
   sub.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:10px;color:rgba(255,255,255,0.55);letter-spacing:0.8px;margin-top:10px;text-align:center;line-height:1.3;padding:0 4px;";
-  sub.innerHTML = isKickoff ? 'Your offense starts<br/>the game' : 'Free card,<br/>opponent kicks';
+  // Correct the "opponent kicks" copy — if the user takes a card, the
+  // opponent RECEIVES the kickoff (user is the one kicking off).
+  sub.innerHTML = isKickoff ? 'Your offense starts<br/>the game' : 'Free card,<br/>opponent receives';
   card.appendChild(sub);
 
   return card;
@@ -656,16 +717,15 @@ function runBeat2(ctx, onDone) {
         // don't want to see both at once at the same y.
         gsap.to(beat._coinWrap, { opacity: 0, duration: 0.4, ease: 'power2.out' });
 
-        // Result stamp content
-        if (userWon) {
-          beat._resEye.textContent = (ctx.team.name || '').toUpperCase() + ' WIN THE TOSS';
-          beat._resWinner.textContent = 'YOUR CHOICE';
-          beat._resSub.textContent = 'RECEIVE KICKOFF OR TAKE A CARD';
-        } else {
-          beat._resEye.textContent = (ctx.opp.name || '').toUpperCase() + ' WIN THE TOSS';
-          beat._resWinner.textContent = 'OPPONENT CHOOSING...';
-          beat._resSub.textContent = ' ';
-        }
+        // Result stamp — wordmark + action word on the big line, context on sub.
+        // Both paths use the identical structure so the wordmark always sits in
+        // the same visual slot regardless of who wins.
+        // All Ember Eight mascots are plural (Dolphins, Maples, Pronghorns…),
+        // so "WIN" is the grammatically correct verb agreement — not "WINS".
+        renderTossWinner(beat, userWon ? ctx.team : ctx.opp, 'WIN');
+        beat._resSub.textContent = userWon
+          ? 'YOUR CHOICE — KICKOFF OR TORCH CARD'
+          : 'OPPONENT IS CHOOSING...';
         gsap.to(beat._result, { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' });
       }, 1700);
 
@@ -733,15 +793,31 @@ function runAiChoicePhase(ctx, onDone) {
   var beat = ctx.beat2;
   // AI always picks receive → human gets free card
   ctx.humanReceives = false; // AI receives
+
+  // The winner row already shows "[OPP WORDMARK] WINS" from runBeat2.
+  // Swap only the action label + sub so the wordmark slot stays stable —
+  // no remount flash. Tiny fade-through makes the text swap read as a
+  // deliberate beat rather than a flicker.
   setTimeout(function() {
-    beat._resWinner.textContent = (ctx.opp.name || '').toUpperCase() + ' WILL RECEIVE';
-    beat._resSub.textContent = 'YOU GET A FREE CARD';
-  }, 100);
+    var lbl = beat._resWinnerLabel;
+    var sub = beat._resSub;
+    if (lbl) {
+      gsap.to(lbl, { opacity: 0, duration: 0.18, ease: 'power2.in', onComplete: function() {
+        lbl.textContent = 'WILL RECEIVE';
+        gsap.to(lbl, { opacity: 1, duration: 0.22, ease: 'power2.out' });
+      }});
+    }
+    gsap.to(sub, { opacity: 0, duration: 0.18, ease: 'power2.in', onComplete: function() {
+      sub.textContent = 'YOU GET A FREE CARD';
+      gsap.to(sub, { opacity: 1, duration: 0.22, ease: 'power2.out' });
+    }});
+  }, 900);
+
   // Fade out coin
   gsap.to([beat._label, beat._coinWrap, beat._pool], { opacity: 0, duration: 0.35, delay: 0.8, ease: 'power2.out' });
   setTimeout(function() {
     runCardSelectPhase(ctx, 'user', onDone);
-  }, 1600);
+  }, 2300);
 }
 
 // ─── Card selection phase (3 face-down cards, flip one to reveal) ───
@@ -843,7 +919,9 @@ function buildBeat3(ctx) {
   stamp.textContent = 'KICKOFF';
   stamp.style.cssText =
     'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.3);' +
-    "font-family:'Teko';font-weight:900;font-size:86px;letter-spacing:8px;line-height:1;white-space:nowrap;" +
+    // Responsive: clamp between 48px (tiny phones) and 86px (normal viewport).
+    // Letter-spacing also scales so the proportional weight holds.
+    "font-family:'Teko';font-weight:900;font-size:clamp(48px,22vw,86px);letter-spacing:clamp(4px,2vw,8px);line-height:1;white-space:nowrap;" +
     'background:linear-gradient(180deg,#FFE17A 0%,#FFD060 20%,#EBB010 45%,#8B4A1F 72%,#EBB010 90%,#FFD060 100%);' +
     '-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;' +
     'filter:drop-shadow(0 6px 0 rgba(0,0,0,0.9)) drop-shadow(0 0 36px rgba(235,176,16,0.65)) drop-shadow(0 0 72px rgba(255,69,17,0.45));' +
@@ -916,7 +994,7 @@ export function buildPregame() {
 
   // Stage container
   var el = document.createElement('div');
-  el.style.cssText = 'height:100vh;height:100dvh;background:#050403;position:relative;overflow:hidden;padding-top:env(safe-area-inset-top,0px);';
+  el.style.cssText = 'height:100vh;height:100dvh;background:#050403;position:relative;overflow:hidden;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);';
   ctx.el = el;
 
   // Build all 3 beats (stacked, only one visible at a time)

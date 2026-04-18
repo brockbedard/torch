@@ -239,4 +239,32 @@ export const GAMEPLAY_CSS = `
 .T-clash-yds{font-family:'Teko';font-weight:700;font-size:64px;line-height:1;text-shadow:0 0 24px currentColor;animation:T-clash-yds 0.6s cubic-bezier(0.22,1.3,0.36,1) both}
 .T-clash-label{font-family:'Rajdhani';font-weight:700;font-size:14px;letter-spacing:1px;opacity:0.8}
 .T-clash-flash{position:absolute;inset:0;z-index:4;pointer-events:none;animation:T-clash-flash 0.3s ease-out forwards}
+
+/* ── STAT BUG — broadcast-style drive stats panel (slides in from right) ── */
+.T-stat-bug{position:absolute;top:32%;right:4%;width:220px;background:linear-gradient(180deg,#1E1610,#141008);border-left:3px solid var(--bug-accent,#EBB010);border-radius:4px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.6);z-index:120;transform:translateX(260px);opacity:0;pointer-events:none}
+.T-stat-bug.in{animation:T-sbug-in 0.32s cubic-bezier(0.22,1,0.36,1) forwards,T-sbug-out 0.3s ease 2.8s forwards}
+@keyframes T-sbug-in{to{transform:translateX(0);opacity:1}}
+@keyframes T-sbug-out{to{transform:translateX(40px);opacity:0}}
+.T-sbug-hdr{background:linear-gradient(90deg,var(--bug-primary,#EBB010),rgba(20,16,8,0.8));padding:5px 12px;font-family:'Oswald',sans-serif;font-weight:700;font-size:10px;color:var(--bug-accent,#EBB010);letter-spacing:3px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.T-sbug-hdr-label{color:rgba(255,250,235,0.85)}
+.T-sbug-hdr-tag{color:var(--bug-accent,#EBB010);font-size:9px;letter-spacing:2px}
+.T-sbug-body{padding:8px 12px;display:flex;flex-direction:column;gap:3px}
+.T-sbug-row{display:flex;justify-content:space-between;align-items:baseline}
+.T-sbug-label{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:9px;color:rgba(255,250,235,0.4);letter-spacing:1.5px;text-transform:uppercase}
+.T-sbug-value{font-family:'Teko',sans-serif;font-weight:700;font-size:20px;color:#fff;line-height:1}
+.T-sbug-value.gold{color:#EBB010}
+.T-sbug-value.green{color:#00ff44}
+
+/* ── SLASH WIPE — broadcast transition between drives / into halftime ── */
+.T-slash-wipe{position:fixed;inset:0;z-index:950;pointer-events:none;overflow:hidden}
+.T-slash{position:absolute;top:-20%;left:-20%;width:140%;height:140%;transform-origin:center;transform:rotate(-18deg) translateX(-120%)}
+.T-slash-1{background:linear-gradient(90deg,transparent,var(--slash-primary,#EBB010),var(--slash-primary,#EBB010) 80%,transparent);animation:T-slash-in 0.55s cubic-bezier(0.65,0,0.35,1) forwards,T-slash-out 0.45s cubic-bezier(0.65,0,0.35,1) 0.5s forwards}
+.T-slash-2{background:linear-gradient(90deg,transparent,var(--slash-secondary,#F59E0B),var(--slash-secondary,#F59E0B) 80%,transparent);animation:T-slash-in 0.5s cubic-bezier(0.65,0,0.35,1) 0.08s forwards,T-slash-out 0.4s cubic-bezier(0.65,0,0.35,1) 0.55s forwards}
+.T-slash-3{background:linear-gradient(90deg,transparent,var(--slash-accent,#F5DEB3),var(--slash-accent,#F5DEB3) 80%,transparent);animation:T-slash-in 0.45s cubic-bezier(0.65,0,0.35,1) 0.16s forwards,T-slash-out 0.35s cubic-bezier(0.65,0,0.35,1) 0.6s forwards}
+@keyframes T-slash-in{to{transform:rotate(-18deg) translateX(0)}}
+@keyframes T-slash-out{to{transform:rotate(-18deg) translateX(120%)}}
+.T-slash-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Teko',sans-serif;font-weight:900;font-size:54px;color:#0A0804;letter-spacing:6px;opacity:0;white-space:nowrap;text-shadow:0 2px 10px rgba(0,0,0,0.3);animation:T-slash-text-in 0.18s ease 0.38s forwards,T-slash-text-out 0.22s ease 0.68s forwards}
+.T-slash-sub{position:absolute;top:calc(50% + 42px);left:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;gap:4px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;color:rgba(10,8,4,0.8);letter-spacing:3px;opacity:0;white-space:nowrap;text-transform:uppercase;animation:T-slash-text-in 0.18s ease 0.42s forwards,T-slash-text-out 0.22s ease 0.68s forwards}
+@keyframes T-slash-text-in{to{opacity:1}}
+@keyframes T-slash-text-out{to{opacity:0}}
 `;

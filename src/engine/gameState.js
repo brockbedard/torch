@@ -417,19 +417,66 @@ export class GameState {
     return 'xp';
   }
 
-  /** AI 4th down decision */
+  /** Should AI kneel this snap? Triggered when AI is leading in the 2-min drill
+   *  and one or two kneels can run the clock out. User-side kneel is gated by the
+   *  same leading-only rule (see kneel()). */
+  shouldAiKneel() {
+    if (!this.twoMinActive) return false;
+    const sides = this.getCurrentSides();
+    if (sides.offenseIsHuman) return false; // only AI-offense kneels
+    // getScoreDiff is positive when offense trailing — AI must be leading (negative)
+    if (this.getScoreDiff() >= 0) return false;
+    // Only kneel if a kneel will run out the clock. One kneel drains 30s.
+    // If clock ≤ 40s, a single kneel + victory formation ends the half.
+    // If clock ≤ 70s, two kneels do it (and by then we're past the one-kneel threshold).
+    return this.clockSeconds <= 40;
+  }
+
+  /** Should AI spike this snap? Triggered when AI is trailing in the 2-min drill
+   *  and needs to stop the clock to set up a FG or last-shot play. */
+  shouldAiSpike() {
+    if (!this.twoMinActive) return false;
+    const sides = this.getCurrentSides();
+    if (sides.offenseIsHuman) return false;
+    // Only worth spiking if trailing by 1-3 and in FG range with clock running low
+    const scoreDiff = this.getScoreDiff();
+    if (scoreDiff < 1) return false; // not trailing — no need
+    if (scoreDiff > 3) return false; // trailing by more than a FG — need a TD, not a stop
+    // In FG range AND clock is about to expire
+    const ydsToEz = this.yardsToEndzone();
+    if (ydsToEz > 35) return false; // not in FG range
+    if (this.clockSeconds > 20) return false; // plenty of time
+    if (this.clockSeconds <= 6) return false; // too late, can't snap after spike
+    // Only spike on 1st / 2nd / 3rd down — spiking on 4th is turnover on downs
+    if (this.down >= 4) return false;
+    return true;
+  }
+
+  /** AI 4th down decision. Factors in score margin + clock so the AI doesn't
+   *  kick a 3-point FG while trailing by 4, or punt needing a TD in 2-min. */
   ai4thDownDecision() {
     var dist = this.distance;
     var ydsToEz = this.yardsToEndzone();
-    var scoreDiff = this.possession === 'CT' ? this.ctScore - this.irScore : this.irScore - this.ctScore;
-    var desperate = scoreDiff <= -14 && this.twoMinActive;
+    // scoreDiff: positive = offense (the deciding team) is trailing
+    var scoreDiff = this.possession === 'CT' ? this.irScore - this.ctScore : this.ctScore - this.irScore;
+    var late = this.twoMinActive;
+    var desperate = scoreDiff >= 14 && late;
     var aggressive = this.difficulty === 'HARD';
-    
+
+    // Margin-aware logic — "need a TD not a FG" cases force go_for_it even in FG range.
+    // A FG only matters if it actually helps win. Trailing by 8 inside the 10?
+    // A FG leaves you down 5 — you still need a TD. Go for it.
+    var fgWouldBeMeaningless = scoreDiff >= 4 && scoreDiff <= 8 && late; // still need TD after FG
+    // Special case: trailing by exactly 3, FG TIES — kick it.
+    var fgTies = scoreDiff === 3;
+    // Trailing by 1-2, FG WINS — kick it unless really short yardage
+    var fgWins = scoreDiff >= 1 && scoreDiff <= 2;
+
     // ─── 1. OWN TERRITORY (More than 50 yds to EZ) ───
+    // Per CLAUDE.md: you MUST go for it on 4th down unless you've crossed
+    // the 50 into opponent territory. No punt/FG in own territory.
     if (ydsToEz > 50) {
-      if (desperate) return 'go_for_it';
-      if (dist === 1 && aggressive && Math.random() < 0.4) return 'go_for_it';
-      return 'punt';
+      return 'go_for_it';
     }
 
     // ─── 2. MIDFIELD / FRINGE (35-50 yds to EZ) ───
@@ -437,27 +484,32 @@ export class GameState {
       if (desperate) return 'go_for_it';
       if (dist <= 2) return 'go_for_it';
       if (dist <= 5 && aggressive && Math.random() < 0.5) return 'go_for_it';
+      // Late + trailing: punting away the ball is often fatal
+      if (late && scoreDiff >= 4) return 'go_for_it';
       return 'punt';
     }
 
     // ─── 3. FIELD GOAL RANGE (Inside 35 yds to EZ) ───
-    // Check if we have CANNON LEG for range boost
     const sides = this.getCurrentSides();
     const inv = sides.offenseIsHuman ? this.humanTorchCards : this.cpuTorchCards;
     const hasCannon = inv.indexOf('cannon_leg') >= 0;
 
     if (this.canAttemptFG(hasCannon)) {
       if (desperate) return 'go_for_it';
+      // Margin-aware FG decisions
+      if (fgTies || fgWins) return 'field_goal'; // kick the game-tying/winning try
+      if (fgWouldBeMeaningless) return 'go_for_it'; // FG leaves us still needing a TD
       // Inside the 5: more likely to go for TD
       if (ydsToEz <= 5 && dist <= 3) return 'go_for_it';
       // Short yardage in FG range: go for the throat on HARD
       if (dist <= 2 && aggressive && Math.random() < 0.6) return 'go_for_it';
-      
       return 'field_goal';
     }
 
     // ─── 4. NO MAN'S LAND (Too close to punt, too far for FG) ───
     if (desperate || dist <= 5 || aggressive) return 'go_for_it';
+    // Trailing late in no-man's-land — punting is basically giving up
+    if (late && scoreDiff >= 4) return 'go_for_it';
     return 'punt';
   }
 
@@ -466,24 +518,31 @@ export class GameState {
     this.possession = this.possession === 'CT' ? 'IR' : 'CT';
     this.ballPosition = newBallPos;
     this.down = 1;
-    this.distance = 10;
+    // 1st & Goal logic — if the new LOS is inside the opponent 10, distance
+    // can't exceed yards-to-endzone (e.g., pick-6-adjacent INT at the opp 7
+    // → 1st & Goal at 7, not 1st & 10).
+    const ydsLeft = this.yardsToEndzone();
+    this.distance = ydsLeft <= 10 ? ydsLeft : 10;
     this.drivePlayHistory = [];
     this.drivePlays = 0;
-    this.inRedZone = false;
+    this.inRedZone = ydsLeft <= 20;
     if (this.possession === 'CT') this.stats.ctDrives++;
     else this.stats.irDrives++;
     decayMomentum(this.offMomentumMap);
     decayMomentum(this.defMomentumMap);
   }
 
-  /** Advance the ball */
+  /** Advance the ball. Per CLAUDE.md, safeties are NOT implemented —
+   *  negative yardage is capped at the 1-yard line instead (own 1 / opp 99). */
   advanceBall(yards) {
     if (this.possession === 'CT') {
       this.ballPosition += yards;
       this.stats.ctTotalYards += yards;
+      if (this.ballPosition < 1) this.ballPosition = 1;
     } else {
       this.ballPosition -= yards;
       this.stats.irTotalYards += yards;
+      if (this.ballPosition > 99) this.ballPosition = 99;
     }
   }
 
@@ -529,6 +588,13 @@ export class GameState {
       ballPos: this.ballPosition, playHistory: this.drivePlayHistory,
       scoreDiff: this.getScoreDiff(),
       teamId: sides.offenseIsHuman ? null : (this.possession === 'CT' ? this.ctTeamId : this.irTeamId),
+      // defTeamId: the CPU team when AI is on defense (user is on offense). Used by aiSelectPlay
+      // to bias defensive play selection per team scheme (Cover 0 vs Cover 3 vs Cover 1 etc.)
+      defTeamId: sides.offenseIsHuman ? (this.possession === 'CT' ? this.irTeamId : this.ctTeamId) : null,
+      // Clock awareness — drives desperation / victory-mode play selection.
+      twoMinActive: this.twoMinActive,
+      clockSeconds: this.clockSeconds,
+      half: this.half,
     };
 
     const offInv = sides.offenseIsHuman ? this.humanTorchCards : this.cpuTorchCards;
@@ -621,6 +687,7 @@ export class GameState {
       offCard,
       defCard,
       twoMinActive: this.twoMinActive,
+      clockSeconds: this.clockSeconds,
       weather: this.weather,
       momentum: this.momentum,
       coachBadge: this.coachBadge,
@@ -731,7 +798,6 @@ export class GameState {
     let gameEvent = null;
 
     // === HANDLE RESULT ===
-    // Safety removed in v1 — ball capped at 1-yard line instead
 
     if (result.isInterception) {
       const returnYds = calcReturnYards(featuredDef);
@@ -847,27 +913,8 @@ export class GameState {
       else this.stats.ctSacks++;
     }
 
-    // Advance ball
+    // Advance ball (advanceBall caps at the 1-yard line — safeties removed per CLAUDE.md)
     this.advanceBall(result.yards);
-
-    // Safety Check: ball in own endzone after non-turnover play
-    if (this.possession === 'CT' && this.ballPosition <= 0) {
-      this.irScore += 2;
-      this.stats.safeties++;
-      gameEvent = 'safety';
-      this.flipPossession(20); // Free kick from the 20 (modeled as flip to 20)
-      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: 'SAFETY! CT tackled in endzone.', event: 'safety', yards: result.yards });
-      this._checkHalfEnd();
-      return { result, offPlay, defPlay, featuredOff, featuredDef, gotFirstDown, gameEvent };
-    } else if (this.possession === 'IR' && this.ballPosition >= 100) {
-      this.ctScore += 2;
-      this.stats.safeties++;
-      gameEvent = 'safety';
-      this.flipPossession(80); // Free kick from the 20 (80 from IR perspective)
-      this.snapLog.push({ play: this.totalPlays, team: this.possession, offPlay: offPlay.name, defPlay: defPlay.name, result: 'SAFETY! IR tackled in endzone.', event: 'safety', yards: result.yards });
-      this._checkHalfEnd();
-      return { result, offPlay, defPlay, featuredOff, featuredDef, gotFirstDown, gameEvent };
-    }
 
     // Touchdown
     if (result.isTouchdown) {
@@ -1005,9 +1052,11 @@ export class GameState {
     return { event: 'spike', description: 'Ball spiked. Clock stops.' };
   }
 
-  /** Kneel the ball — 2-minute drill only, 30 seconds off clock, 0 yards */
+  /** Kneel the ball — 2-minute drill only, 30 seconds off clock, 0 yards.
+   *  Per CLAUDE.md: kneel is only available when leading (victory-formation only). */
   kneel() {
     if (!this.twoMinActive) return null;
+    if (this.getScoreDiff() >= 0) return null; // Not leading — kneel disallowed
     this.clockSeconds -= 30;
     this.totalPlays++;
     this.down++; // Kneel costs a down
@@ -1165,21 +1214,13 @@ export class GameState {
       if (this.half === 1) {
         this.needsHalftime = true;
       } else {
-        // OVERTIME CHECK
-        if (this.ctScore === this.irScore) {
-          this.half++; // Enter OT (Half 3, 4, etc)
-          this.playsUsed = 0;
-          this.twoMinActive = false;
-          this.clockSeconds = 120;
-          // In OT, possession flip occurs like a new half
-          this.kickoffFlip();
-        } else {
-          this._endGame();
-        }
+        // End of regulation — game ends regardless of score.
+        // Per CLAUDE.md: no overtime; ties are valid outcomes.
+        this._endGame();
       }
     }
-    // Hard cap total plays to prevent infinite loops (expanded for OT)
-    if (this.totalPlays > 200) {
+    // Hard cap total plays to prevent any infinite loop edge case
+    if (this.totalPlays > 150) {
       this._endGame();
     }
   }

@@ -56,6 +56,61 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   };
   const is3rd4th = down >= 3;
 
+  // ── BALL CARRIER DERIVATION ──
+  // OL/DL should NEVER be narrated as the ball carrier. If the user featured a
+  // lineman (e.g., a pulling guard for a PULLING GUARD trait combo), the engine
+  // still uses them for tier/OVR math — but the play description must credit the
+  // actual rusher (RB) or receiver (WR/TE). Falls back to featuredOff when no
+  // skill player is in the roster (edge case — shouldn't happen in normal play).
+  const _featuredIsLineman = featuredOff && (featuredOff.pos === 'OL' || featuredOff.pos === 'DL');
+  const _receiverPositions = ['WR', 'slot WR', 'TE', 'SLOT', 'H-back'];
+  const _rusherFallbacks = ['FB', 'H-back', 'TE', 'slot WR'];
+  let narrator = featuredOff;
+  if (_featuredIsLineman && Array.isArray(offPlayers)) {
+    if (isRunPlay) {
+      narrator = offPlayers.find(p => p.pos === 'RB')
+              || offPlayers.find(p => _rusherFallbacks.indexOf(p.pos) >= 0)
+              || offPlayers.find(p => p.pos === 'QB')
+              || featuredOff;
+    } else {
+      narrator = offPlayers.find(p => _receiverPositions.indexOf(p.pos) >= 0)
+              || offPlayers.find(p => p.pos === 'RB')
+              || offPlayers.find(p => p.pos === 'QB')
+              || featuredOff;
+    }
+  }
+  // Hard guards — if state is corrupted (null featured player, empty roster),
+  // synthesize minimal stubs so descriptions never crash on `.name` / `.badge`.
+  // Normal play guarantees these are populated; this defends against edge cases.
+  const _fallbackOff = { name: 'the offense', pos: '', badge: null };
+  const _fallbackDef = { name: 'the defense', pos: '', badge: null };
+  if (!narrator) narrator = featuredOff || _fallbackOff;
+  if (!featuredOff) featuredOff = _fallbackOff;
+  if (!featuredDef) featuredDef = _fallbackDef;
+  // QB used for sacks/scrambles regardless of featured player
+  const _qb = (Array.isArray(offPlayers) && offPlayers.find(p => p.pos === 'QB')) || featuredOff;
+
+  // ── DEFENDER CREDIT DERIVATION ──
+  // Mirror of the ball-carrier rule: the featured defender gets combo math, but
+  // credit for specific actions must go to a position-appropriate player.
+  //  - INT / PBU → DB (CB, FS, SS, S)
+  //  - SACK → DL or blitzing LB
+  //  - (tackles remain position-neutral — LBs tackle everywhere)
+  // Falls back to featuredDef when the roster isn't available.
+  const _secondaryPositions = ['CB', 'FS', 'SS', 'S', 'OLB/SS'];
+  const _rusherDefPositions = ['DL', 'LB', 'OLB/SS', 'EDGE'];
+  const _featuredDefPos = featuredDef ? featuredDef.pos : '';
+  let _coverageDef = featuredDef;
+  let _passRushDef = featuredDef;
+  if (Array.isArray(defPlayers)) {
+    if (_secondaryPositions.indexOf(_featuredDefPos) < 0) {
+      _coverageDef = defPlayers.find(p => _secondaryPositions.indexOf(p.pos) >= 0) || featuredDef;
+    }
+    if (_rusherDefPositions.indexOf(_featuredDefPos) < 0) {
+      _passRushDef = defPlayers.find(p => _rusherDefPositions.indexOf(p.pos) >= 0) || featuredDef;
+    }
+  }
+
   // ── TRAILING TEAM BONUS ──
   let trailingBonus = 0;
   let trailingVarBoost = 0;
@@ -193,6 +248,45 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
 
   // === PASS PLAY RESOLUTION ===
   if (isPass) {
+    // ── HAIL MARY BRANCH ──
+    // Desperation heave: trailing team, clock ≤ 15s, 30+ yards from endzone,
+    // deep pass. Bypasses normal sack/INT/completion math with a fixed distribution
+    // modeled after real-football Hail Mary outcomes: ~15% TD, ~20% INT, ~65% bat-down.
+    // Activates for BOTH user and AI automatically when conditions match.
+    const _hailClock = context.clockSeconds;
+    const _isHailMaryAttempt =
+      offPlay.playType === 'DEEP' &&
+      context.twoMinActive &&
+      _hailClock !== undefined && _hailClock <= 15 &&
+      context.scoreDiff >= 1 &&           // offense trailing
+      yardsToEndzone >= 30;
+    if (_isHailMaryAttempt) {
+      const hailRoll = Math.random();
+      if (hailRoll < 0.15) {
+        // TOUCHDOWN! Miracle caught
+        result.isComplete = true;
+        result.isTouchdown = true;
+        result.yards = yardsToEndzone;
+        result.description = `HAIL MARY! ${_qb.name} lofts it \u2014 CAUGHT! TOUCHDOWN!`;
+      } else if (hailRoll < 0.35) {
+        // INTERCEPTED in the end zone
+        result.isInterception = true;
+        result.yards = 0;
+        result.description = `HAIL MARY INTERCEPTED! ${_coverageDef.name} comes down with it in the end zone.`;
+      } else {
+        // BAT-DOWN / incomplete
+        result.isIncomplete = true;
+        result.yards = 0;
+        const batdowns = [
+          `HAIL MARY \u2014 batted down! ${_coverageDef.name} plays it well.`,
+          `HAIL MARY falls incomplete. Traffic in the end zone.`,
+          `HAIL MARY \u2014 knocked away! Nobody could come down with it.`,
+        ];
+        result.description = batdowns[Math.floor(Math.random() * batdowns.length)];
+      }
+      return result;
+    }
+
     // ── SACK CHECK ──
     let sackRate = offPlay.sackRate + defPlay.sackRateBonus + ovrMods.sackMod;
 
@@ -210,7 +304,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     if (Math.random() < sackRate) {
       result.isSack = true;
       result.yards = -(4 + Math.floor(Math.random() * 7));
-      result.description = `SACK! ${featuredOff.name} goes down.`;
+      result.description = `SACK! ${_qb.name} goes down.`;
     } else {
       // ── INT CHECK ──
       let intRate = offPlay.intRate + covInt + defPlay.intRateBonus + ovrMods.intMod;
@@ -227,7 +321,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
         result.isInterception = true;
         result.isComplete = false;
         result.yards = 0;
-        result.description = `INTERCEPTED! ${featuredDef.name} jumps the route!`;
+        result.description = `INTERCEPTED! ${_coverageDef.name} jumps the route!`;
       } else {
         // ── COMPLETION CHECK ──
         let compRate = offPlay.completionRate + ovrMods.compMod + defPlay.passCompMod;
@@ -249,7 +343,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
         if (Math.random() > compRate) {
           result.isIncomplete = true;
           result.yards = 0;
-          result.description = `Incomplete. ${featuredOff.name}'s target can't come up with it.`;
+          result.description = `Incomplete. ${_qb.name}'s target can't come up with it.`;
         } else {
           // ── COMPLETE — ROLL YARDS ──
           result.isComplete = true;
@@ -259,7 +353,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
           if (Math.random() < 0.035) {
             var bigMult = 1.4 + Math.random() * 0.5;
             rawYards = mean * bigMult;
-            result.description = `EXPLOSIVE! ${featuredOff.name} breaks free for extra yards!`;
+            result.description = `EXPLOSIVE! ${narrator.name} breaks free for extra yards!`;
           }
 
           // Soft cap: diminishing returns above 20 yards
@@ -283,9 +377,9 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
             result.isFumble = true;
             result.isFumbleLost = Math.random() < 0.5;
             if (result.isFumbleLost) {
-              result.description = `FUMBLE! ${featuredOff.name} coughs it up! Defense recovers!`;
+              result.description = `FUMBLE! ${narrator.name} coughs it up — defense recovers!`;
             } else {
-              result.description = `Fumble by ${featuredOff.name} but offense recovers!`;
+              result.description = `FUMBLE! ${narrator.name} coughs it up — offense falls on it!`;
             }
           }
         }
@@ -311,16 +405,16 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     if (Math.random() < stuffRate) {
       result.yards = -1 + Math.floor(Math.random() * 4);
       if (result.yards <= 0) {
-        result.description = `STUFFED! ${featuredOff.name} hit in the backfield.`;
+        result.description = `STUFFED! ${narrator.name} hit in the backfield.`;
       } else {
-        result.description = `${featuredOff.name} squeezed through traffic for ${result.yards} yards.`;
+        result.description = `${narrator.name} squeezed through traffic for ${result.yards} yards.`;
       }
 
       if (Math.random() < offPlay.fumbleRate * 1.5) {
         result.isFumble = true;
         result.isFumbleLost = Math.random() < 0.5;
         if (result.isFumbleLost) {
-          result.description = `STUFFED AND STRIPPED! ${featuredOff.name} loses it!`;
+          result.description = `STUFFED AND STRIPPED! ${narrator.name} loses it!`;
         }
       }
     } else {
@@ -331,7 +425,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
       if (Math.random() < 0.025) {
         var runBigMult = 1.3 + Math.random() * 0.4;
         rawYards = mean * runBigMult;
-        result.description = `${featuredOff.name} breaks a tackle and keeps going!`;
+        result.description = `${narrator.name} breaks a tackle and keeps going!`;
       }
 
       // Soft cap: diminishing returns above 20 yards
@@ -358,7 +452,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
         if (result.isFumbleLost) {
           result.description = `FUMBLE! Ball on the ground! Defense has it!`;
         } else {
-          result.description = `Fumble but ${featuredOff.name} falls on it.`;
+          result.description = `FUMBLE! ${narrator.name} falls on it — offense recovers.`;
         }
       }
     }
@@ -370,7 +464,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
       if (result.isSack && Math.random() < 0.20) { // was 0.30
         result.isSack = false;
         result.yards = Math.floor(Math.random() * 3);
-        result.description = `${featuredOff.name} escapes pressure for ${result.yards} yards.`;
+        result.description = `${_qb.name} escapes pressure for ${result.yards} yards.`;
       }
       if (result.isInterception && Math.random() < 0.25) { // was 0.40
         result.isInterception = false;
@@ -396,7 +490,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     result.isFumble = false;
     result.isFumbleLost = false;
     result.yards = Math.max(0, result.yards);
-    result.description = "SURE HANDS! Turnover cancelled — " + featuredOff.name + " holds on!";
+    result.description = "SURE HANDS! Turnover cancelled — " + narrator.name + " holds on!";
     result.torchCardUsed = 'sure_hands';
   }
 
@@ -423,7 +517,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   // DEEP SHOT (Silver, pre-snap): 2x yards on pass plays
   if (oCard === 'deep_shot' && isPass && !result.isSack && !result.isInterception && !result.isFumbleLost && !result.isIncomplete) {
     result.yards = Math.round(result.yards * 2);
-    result.description = "DEEP SHOT! " + featuredOff.name + " goes long for " + result.yards + " yards!";
+    result.description = "DEEP SHOT! " + narrator.name + " goes long for " + result.yards + " yards!";
     result.torchCardUsed = 'deep_shot';
   }
 
@@ -432,7 +526,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
     result.yards = Math.round(Math.max(result.yards, 1) * 2);
     result.isFumble = false;
     result.isFumbleLost = false;
-    result.description = "TRUCK STICK! " + featuredOff.name + " trucks a defender for " + result.yards + " yards!";
+    result.description = "TRUCK STICK! " + narrator.name + " trucks a defender for " + result.yards + " yards!";
     result.torchCardUsed = 'truck_stick';
   }
 
@@ -465,7 +559,7 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   if (oCard === 'scramble_drill' && result.yards < 0 && !result.isInterception && !result.isFumbleLost) {
     result.yards = 0;
     result.isSack = false;
-    result.description = "SCRAMBLE DRILL! " + featuredOff.name + " escapes the pressure — no loss!";
+    result.description = "SCRAMBLE DRILL! " + _qb.name + " escapes the pressure — no loss!";
     result.torchCardUsed = 'scramble_drill';
   }
 
@@ -490,19 +584,19 @@ export function resolveSnap(offPlay, defPlay, featuredOff, featuredDef, offPlaye
   if (result.yards >= yardsToEndzone && !result.isFumbleLost && !result.isInterception) {
     result.isTouchdown = true;
     result.yards = yardsToEndzone;
-    result.description = `TOUCHDOWN! ${featuredOff.name} finds the end zone!`;
+    result.description = `TOUCHDOWN! ${narrator.name} finds the end zone!`;
   } else if (!result.description) {
     // Descriptions use plain English with yard numbers (no +/- symbols)
     if (result.yards >= 15) {
-      result.description = `${featuredOff.name} breaks free for ${result.yards} yards!`;
+      result.description = `${narrator.name} breaks free for ${result.yards} yards!`;
     } else if (result.yards >= 8) {
-      result.description = `${featuredOff.name} picks up ${result.yards} yards.`;
+      result.description = `${narrator.name} picks up ${result.yards} yards.`;
     } else if (result.yards >= 1) {
-      result.description = `${featuredOff.name} gains ${result.yards} yards.`;
+      result.description = `${narrator.name} gains ${result.yards} yards.`;
     } else if (result.yards === 0) {
-      result.description = `Stuffed! ${featuredOff.name} goes nowhere.`;
+      result.description = `Stuffed! ${narrator.name} goes nowhere.`;
     } else {
-      result.description = `${featuredOff.name} tackled for a loss of ${Math.abs(result.yards)}.`;
+      result.description = `${narrator.name} tackled for a loss of ${Math.abs(result.yards)}.`;
     }
   }
 

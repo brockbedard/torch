@@ -25,9 +25,24 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
   var offers = [];
   for (var i = 0; i < 3; i++) offers.push(getRandomCard(weights));
 
-  // Skip if can't afford anything
+  // Skip if can't afford anything — show a brief toast so the player knows
+  // the shop opened and closed (otherwise it looks like nothing happened).
   var cheapest = offers.reduce(function(min, c) { return c.cost < min ? c.cost : min; }, Infinity);
-  if (points < cheapest) { if (onClose) onClose(); return; }
+  if (points < cheapest) {
+    try {
+      var toast = document.createElement('div');
+      toast.style.cssText = "position:fixed;bottom:24%;left:50%;transform:translateX(-50%);z-index:900;font-family:'Teko';font-weight:700;font-size:16px;color:#EBB010;letter-spacing:3px;padding:10px 18px;background:rgba(20,16,8,0.92);border:1px solid #EBB01044;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,0.5);pointer-events:none;opacity:0;text-align:center;white-space:nowrap;";
+      toast.innerHTML = "<div>TORCH STORE \u2014 NOT ENOUGH POINTS</div><div style=\"font-family:'Rajdhani';font-weight:600;font-size:10px;color:#888;letter-spacing:1px;margin-top:3px;\">Need " + cheapest + " pts. Earn more on your next drive.</div>";
+      document.body.appendChild(toast);
+      toast.animate([{opacity:0, transform:'translate(-50%,8px)'},{opacity:1, transform:'translate(-50%,0)'}], {duration:220, fill:'forwards', easing:'cubic-bezier(0.22,1,0.36,1)'});
+      setTimeout(function() {
+        toast.animate([{opacity:1},{opacity:0}], {duration:300, fill:'forwards'});
+        setTimeout(function() { if (toast.parentNode) toast.remove(); }, 320);
+      }, 1800);
+    } catch(e) {}
+    if (onClose) onClose();
+    return;
+  }
 
   var _pts = points;
   var _purchased = false;
@@ -44,7 +59,7 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
 
   // Sheet
   var sheet = document.createElement('div');
-  sheet.style.cssText = "position:relative;z-index:1;background:linear-gradient(180deg,#1E1610,#141008);border-top:2px solid #EBB010;border-radius:12px 12px 0 0;padding:14px 14px 20px;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.22,1.3,0.36,1);";
+  sheet.style.cssText = "position:relative;z-index:1;background:linear-gradient(180deg,#1E1610,#141008);border-top:2px solid #EBB010;border-radius:12px 12px 0 0;padding:14px 14px 20px;transform:translateY(100%);";
 
   // Handle indicator
   var handle = document.createElement('div');
@@ -247,17 +262,17 @@ export function showShop(container, trigger, points, inventory, onBuy, onClose) 
   overlay.appendChild(sheet);
   container.appendChild(overlay);
 
-  // Animate in
-  requestAnimationFrame(function() { requestAnimationFrame(function() {
-    sheet.style.transform = 'translateY(0)';
-  }); });
+  // Animate in — GSAP for consistency with the rest of the card-layer animation system
+  gsap.to(sheet, { y: 0, duration: 0.32, ease: 'back.out(1.2)' });
 
   function closeShop() {
-    sheet.style.transform = 'translateY(100%)';
-    setTimeout(function() {
-      if (overlay.parentNode) overlay.remove();
-      if (onClose) onClose();
-    }, 300);
+    gsap.to(sheet, {
+      y: '100%', duration: 0.26, ease: 'power2.in',
+      onComplete: function() {
+        if (overlay.parentNode) overlay.remove();
+        if (onClose) onClose();
+      },
+    });
   }
 }
 

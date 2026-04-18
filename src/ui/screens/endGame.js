@@ -200,7 +200,7 @@ function generateHeadline(won, tied, hScore, cScore, team, opp, mvp, gs) {
     return winLines[Math.floor(Math.random() * winLines.length)];
   }
   if (tied) {
-    return team.name + ' AND ' + opp.name + ' BATTLE TO ' + hScore + '-' + cScore + ' STALEMATE';
+    return team.name + ' AND ' + opp.name + ' BATTLE TO A ' + hScore + '-' + cScore + ' TIE';
   }
   // Loss
   if (close) {
@@ -302,7 +302,7 @@ export function buildEndGame() {
     isChampionship: !!season.championshipPlayed,
     championshipWon: !!season.championshipWon,
     trailingAtHalf: false, // Would need halftime score tracking
-    dailyStreak: parseInt(localStorage.getItem('torch_daily_streak') || '0'),
+    dailyStreak: getJSON('torch_daily_streak', 0) | 0,
   };
   var newAch = checkAchievements(achContext);
 
@@ -643,8 +643,8 @@ export function buildEndGame() {
   }
 
   // ── RATING PROMPT ──
-  var gamesPlayed = parseInt(localStorage.getItem('torch_games_played') || '0');
-  var ratedAlready = localStorage.getItem('torch_rated');
+  var gamesPlayed = getJSON('torch_games_played', 0) | 0;
+  var ratedAlready = getJSON('torch_rated', 0);
   if (humanWon && gamesPlayed >= 3 && !ratedAlready) {
     setTimeout(function() {
       var rateOv = document.createElement('div');
@@ -660,11 +660,11 @@ export function buildEndGame() {
         "</div>";
       el.appendChild(rateOv);
       rateOv.querySelector('#rate-yes').onclick = function() {
-        localStorage.setItem('torch_rated', '1');
+        setJSON('torch_rated', 1);
         rateOv.remove();
       };
       rateOv.querySelector('#rate-later').onclick = function() {
-        localStorage.setItem('torch_rated', '1');
+        setJSON('torch_rated', 1);
         rateOv.remove();
       };
     }, 2000);

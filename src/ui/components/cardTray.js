@@ -248,20 +248,6 @@ function animateMark(card, idx) {
   glowPool.className = 'CT-discard-glow';
   glowPool.style.cssText = 'position:absolute;bottom:-4px;left:15%;right:15%;height:6px;background:radial-gradient(ellipse,rgba(255,69,17,0.3),transparent);border-radius:50%;z-index:0;pointer-events:none;';
   card.appendChild(glowPool);
-
-  // Ember particles
-  var emberColors = ['#FF8C00', '#EBB010', '#FF6600'];
-  for (var e = 0; e < 3; e++) {
-    var ember = document.createElement('div');
-    ember.className = 'CT-discard-ember';
-    var sz = 2 + Math.random() * 1.5;
-    ember.style.cssText = 'position:absolute;bottom:0;left:' + (20 + Math.random() * 60) + '%;width:' + sz + 'px;height:' + sz + 'px;border-radius:50%;background:' + emberColors[e] + ';z-index:15;pointer-events:none;opacity:0;';
-    card.appendChild(ember);
-    try {
-      gsap.to(ember, { opacity: 0.8, duration: 0.3, delay: 0.1 * e });
-      gsap.fromTo(ember, { y: 0, opacity: 0, scale: 1 }, { y: -30, opacity: 0, scale: 0, duration: 1.3 + Math.random() * 0.5, delay: 0.3 + Math.random() * 2, repeat: -1, ease: 'power1.out' });
-    } catch(e2) {}
-  }
 }
 
 function animateUnmark(card) {
@@ -658,7 +644,7 @@ export function renderCardTray(opts) {
   discBar.style.cssText = 'display:none;flex-wrap:nowrap;gap:6px;padding:6px 8px 10px;flex-shrink:0;';
 
   var discCancel = document.createElement('button');
-  discCancel.style.cssText = "flex:1;padding:10px;border-radius:6px;border:1px solid #33333366;text-align:center;cursor:pointer;background:transparent;font-family:'Teko';font-weight:700;font-size:14px;color:#888;letter-spacing:2px;";
+  discCancel.style.cssText = "flex:1;padding:14px 10px;min-height:44px;border-radius:6px;border:1px solid #33333366;text-align:center;cursor:pointer;background:transparent;font-family:'Teko';font-weight:700;font-size:14px;color:#888;letter-spacing:2px;";
   discCancel.textContent = 'CANCEL';
   discCancel.onclick = function() {
     discardMode = false;
@@ -675,9 +661,11 @@ export function renderCardTray(opts) {
   };
 
   var discConfirm = document.createElement('button');
-  discConfirm.style.cssText = "flex:1;padding:10px;border-radius:6px;text-align:center;cursor:pointer;border:none;background:linear-gradient(180deg,#FF4511,#FF451188);box-shadow:0 4px 12px rgba(255,69,17,0.3);";
+  discConfirm.style.cssText = "flex:1;padding:14px 10px;min-height:44px;border-radius:6px;text-align:center;cursor:pointer;border:none;background:linear-gradient(180deg,#FF4511,#FF451188);box-shadow:0 4px 12px rgba(255,69,17,0.3);";
   discConfirm.innerHTML = "<div style=\"display:flex;align-items:center;justify-content:center;gap:6px;\">" + flameSilhouetteSVG(13, '#fff') + "<span style=\"font-family:'Teko';font-weight:700;font-size:14px;color:#fff;letter-spacing:2px;\">BURN 0</span></div>";
+  var _discardingNow = false;
   discConfirm.onclick = function() {
+    if (_discardingNow) return;
     var markedEls = [];
     var markedObjs = [];
     if (markedPlay) {
@@ -691,6 +679,12 @@ export function renderCardTray(opts) {
       markedObjs.push({ type: 'player', obj: markedPlayer });
     }
     if (markedEls.length === 0) return;
+    _discardingNow = true;
+    discConfirm.disabled = true;
+    discConfirm.style.pointerEvents = 'none';
+    discConfirm.style.opacity = '0.4';
+    discCancel.disabled = true;
+    discCancel.style.pointerEvents = 'none';
 
     // Flick-off animation
     var delay = 0;
@@ -746,11 +740,13 @@ export function renderCardTray(opts) {
   snapBadge.innerHTML = flameIconSVG(24, 1, 'filter:drop-shadow(0 0 4px rgba(255,69,17,0.4))');
   var snapText = document.createElement('div');
   snapText.style.cssText = "flex:1;padding:14px;font-family:'Teko';font-weight:700;font-size:24px;color:#fff;letter-spacing:8px;text-align:center;text-shadow:0 2px 4px rgba(0,0,0,0.3);line-height:1;";
-  snapText.textContent = opts.isConversion ? 'ATTEMPT' : 'SNAP';
+  var _inTorchPhase = opts.phase === 'torch';
+  snapText.textContent = _inTorchPhase ? 'WAIT' : (opts.isConversion ? 'ATTEMPT' : 'SNAP');
   snapBtn.appendChild(snapBadge);
   snapBtn.appendChild(snapText);
-  var canSnap = opts.selectedPlay && opts.selectedPlayer && opts.phase !== 'torch';
+  var canSnap = opts.selectedPlay && opts.selectedPlayer && !_inTorchPhase;
   snapBtn.disabled = !canSnap;
+  if (_inTorchPhase) snapBtn.style.filter = 'grayscale(0.6)';
   if (canSnap) {
     // Ready flare — brief bright glow when snap becomes available
     snapBtn.style.transition = 'box-shadow 0.4s';

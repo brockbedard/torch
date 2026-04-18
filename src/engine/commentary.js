@@ -118,17 +118,16 @@ export function resetNarrative() {
 export function setHalftimeScore(diff) { _narrative.scoreDiffAtHalf = diff; }
 
 // ============================================================
-// COOLDOWN TRACKER
+// COOLDOWN TRACKER — currently unused; anti-repetition is handled
+// via template-pool randomness. Kept for future wiring if needed.
 // ============================================================
 var _usedTemplates = {};
 var _usedCount = 0;
 function trackTemplate(key) {
   _usedTemplates[key] = (_usedTemplates[key] || 0) + 1;
   _usedCount++;
-  // Reset every 30 snaps to allow reuse
   if (_usedCount > 30) { _usedTemplates = {}; _usedCount = 0; }
 }
-function isOnCooldown(key) { return (_usedTemplates[key] || 0) >= 2; }
 
 // ============================================================
 // MAIN COMMENTARY GENERATOR
@@ -172,8 +171,10 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
   // OL/DL should never be featured — if they slip through, use generic names
   var _offIsLineman = off.pos === 'OL' || off.pos === 'DL';
   var _defIsLineman = def.pos === 'OL' || def.pos === 'DL';
-  // QB always throws — use roster QB name, not featured player
-  var qbName = res._qbName || (off.pos === 'QB' ? qbName : 'the QB');
+  // QB always throws — use roster QB name, not featured player.
+  // NOTE: `qbName` used to self-reference in the fallback (bug — TDZ undefined),
+  // which rendered "undefined" in templates when off.pos === 'QB' and res._qbName was absent.
+  var qbName = res._qbName || (off.pos === 'QB' ? (off.name || 'the QB') : 'the QB');
   // Receiver is the featured non-QB skill player on pass plays
   var receiverName = res._receiverName || (_offIsLineman ? 'the receiver' : (off.pos !== 'QB' ? (off.name || 'the receiver') : 'the receiver'));
   // Rusher is the featured skill player on run plays
@@ -200,7 +201,7 @@ export function generateCommentary(res, gameState, humanTeamName, oppTeamName) {
 
   // ── TOUCHDOWN ──
   if (r.isTouchdown) {
-    // NOTE: isOnCooldown() is not yet checked — pool randomness handles anti-repetition
+    // Anti-repetition is handled via template-pool randomness, not cooldowns.
     var tdKey = isHumanOnOff ? (isPass ? 'td_pass' : 'td_run') : 'td_opp';
     if (isHumanOnOff) {
       // User scores — BIG energy

@@ -6,7 +6,7 @@ import { getJSON } from '../../engine/storage.js';
 
 export function buildSettings() {
   var el = document.createElement('div');
-  el.style.cssText = 'min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);padding:16px;padding-top:max(16px,env(safe-area-inset-top,0px));overflow-y:auto;';
+  el.style.cssText = 'min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);padding:16px;padding-top:max(16px,env(safe-area-inset-top,0px));padding-bottom:max(16px,env(safe-area-inset-bottom,0px));overflow-y:auto;';
 
   // Back button
   var backBtn = document.createElement('div');

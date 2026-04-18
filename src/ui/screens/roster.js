@@ -199,7 +199,7 @@ export function buildRoster() {
 function buildRow(p, tm, ac, sideColor) {
   var isStar = p.isStar;
   var row = document.createElement('div');
-  row.style.cssText = 'display:flex;align-items:center;gap:7px;padding:5px 8px;margin:1px 0;border-radius:5px;position:relative;' +
+  row.style.cssText = 'display:flex;align-items:center;gap:7px;padding:5px 8px;margin:1px 0;border-radius:6px;position:relative;' +
     (isStar
       ? 'background:linear-gradient(90deg,' + ac + '1c,' + ac + '06 40%,transparent);border-left:3px solid ' + ac + ';box-shadow:inset 0 0 0 1px ' + ac + '14;'
       : 'border-left:3px solid transparent;');
@@ -208,10 +208,10 @@ function buildRow(p, tm, ac, sideColor) {
   row.innerHTML =
     "<div style=\"font-family:'Teko';font-weight:700;font-size:17px;color:" + (isStar ? ac : '#555') + ";width:24px;text-align:right;line-height:1;flex-shrink:0;\">" + (p.num || '') + "</div>" +
     // Position badge — filled for stars, outlined for non-stars
-    "<div style=\"font-family:'Oswald';font-weight:700;font-size:8px;color:" + (isStar ? '#0A0804' : sideColor) + ";background:" + (isStar ? sideColor : sideColor + '14') + ";border:1px solid " + sideColor + (isStar ? 'cc' : '33') + ";border-radius:3px;padding:2px 5px;flex-shrink:0;letter-spacing:1px;min-width:18px;text-align:center;\">" + p.pos + "</div>" +
+    "<div style=\"font-family:'Oswald';font-weight:700;font-size:8px;color:" + (isStar ? '#0A0804' : sideColor) + ";background:" + (isStar ? sideColor : sideColor + '14') + ";border:1px solid " + sideColor + (isStar ? 'cc' : '33') + ";border-radius:4px;padding:2px 5px;flex-shrink:0;letter-spacing:1px;min-width:18px;text-align:center;\">" + p.pos + "</div>" +
     // Name + star title
     '<div style="flex:1;min-width:0;">' +
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:" + (isStar ? '#fff' : '#bbb') + ";line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">" + p.name + "</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:13px;color:" + (isStar ? '#fff' : '#bbb') + ";line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">" + (p.firstName ? p.firstName + ' ' + p.name : p.name) + "</div>" +
       (isStar && p.starTitle
         ? "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:8px;color:" + ac + ";font-style:italic;letter-spacing:0.3px;line-height:1.2;margin-top:1px;\">" + p.starTitle + "</div>"
         : '') +

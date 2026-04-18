@@ -19,6 +19,20 @@ var TEAM_AI_BIAS = {
   raccoons:    { RUN: 1.5, SHORT: 1.5, DEEP: 1.8, QUICK: 2.2, SCREEN: 1.5 },  // Veer & Shoot
 };
 
+// Team defensive scheme biases — mirror each team's preferred coverage shell per CLAUDE.md.
+// Applied to defensive play selection at all difficulty levels so each team's D has identity.
+// Keys are baseCoverage values (cover_0 through cover_6, man_free); values are weight multipliers.
+var TEAM_DEF_BIAS = {
+  sentinels:   { cover_3: 2.5, cover_2: 1.2, cover_4: 1.0, cover_1: 0.8, cover_0: 0.6, cover_6: 0.8, man_free: 0.7 }, // Cover 3 zone
+  wolves:      { cover_1: 2.5, man_free: 2.0, cover_0: 1.2, cover_3: 1.0, cover_2: 0.8, cover_4: 0.7, cover_6: 0.8 }, // Cover 1 + spy
+  stags:       { cover_0: 2.5, cover_1: 1.5, man_free: 1.2, cover_3: 0.6, cover_2: 0.6, cover_4: 0.5, cover_6: 0.7 }, // Cover 0 blitz
+  serpents:    { cover_0: 1.3, cover_1: 1.3, cover_2: 1.3, cover_3: 1.3, cover_4: 1.3, cover_6: 1.3, man_free: 1.0 }, // Multiple — balanced
+  pronghorns:  { cover_4: 2.5, cover_2: 1.2, cover_6: 1.2, cover_3: 1.0, cover_1: 0.8, cover_0: 0.6, man_free: 0.7 }, // Cover 4
+  salamanders: { cover_1: 2.5, man_free: 2.0, cover_0: 1.2, cover_2: 0.8, cover_3: 0.6, cover_4: 0.6, cover_6: 0.7 }, // Cover 1 man
+  maples:      { cover_2: 2.5, cover_6: 1.5, cover_3: 1.2, cover_4: 1.0, cover_1: 0.8, cover_0: 0.6, man_free: 0.7 }, // Cover 2 / pattern match
+  raccoons:    { cover_3: 2.5, cover_2: 1.2, cover_4: 1.0, cover_6: 1.0, cover_1: 0.8, cover_0: 0.6, man_free: 0.7 }, // Cover 3 zone
+};
+
 /**
  * Weighted random selection from an array using weights.
  * @param {any[]} items
@@ -51,6 +65,16 @@ export function aiSelectPlay(hand, playType, difficulty, situation) {
     return available[Math.floor(Math.random() * available.length)];
   }
 
+  // ── CLOCK-AWARE DESPERATION / VICTORY MODES ──
+  // Derived from situation (scoreDiff: positive = trailing, twoMinActive + clockSeconds).
+  // Applied on top of team bias + situational weighting below.
+  const twoMin = situation.twoMinActive;
+  const scoreDiff = situation.scoreDiff || 0;   // + = offense trailing
+  const clockSecs = situation.clockSeconds;     // undefined if not tracked
+  const isDesperate = twoMin && scoreDiff >= 7 && (clockSecs === undefined || clockSecs <= 90);
+  const isVictoryMode = twoMin && scoreDiff <= -8 && (clockSecs === undefined || clockSecs <= 90);
+  const isHailMaryMoment = twoMin && scoreDiff >= 1 && clockSecs !== undefined && clockSecs <= 15;
+
   if (playType === 'offense') {
     // Filter by situation — ALL levels use basic football sense
     let filtered = available.filter(p => {
@@ -62,6 +86,12 @@ export function aiSelectPlay(hand, playType, difficulty, situation) {
 
     if (filtered.length === 0) filtered = available;
 
+    // Pure Hail Mary moment — if a deep pass exists and we're trailing with <15s, take it
+    if (isHailMaryMoment) {
+      const deep = filtered.filter(p => p.playType === 'DEEP');
+      if (deep.length > 0) return deep[Math.floor(Math.random() * deep.length)];
+    }
+
     if (difficulty === 'EASY') {
       // Weight by team archetype so each team feels distinct even on Easy
       const weights = filtered.map(p => {
@@ -69,6 +99,16 @@ export function aiSelectPlay(hand, playType, difficulty, situation) {
         if (situation.teamId) {
           var bias = TEAM_AI_BIAS[situation.teamId];
           if (bias && bias[p.playType]) w *= bias[p.playType];
+        }
+        // Even Easy AI reacts to desperation/victory mode
+        if (isDesperate) {
+          if (p.playType === 'DEEP') w *= 2.0;
+          else if (p.playType === 'QUICK') w *= 1.3;
+          else if (isRunType(p.playType)) w *= 0.4;
+        } else if (isVictoryMode) {
+          if (isRunType(p.playType)) w *= 2.5;
+          else if (p.playType === 'DEEP') w *= 0.3;
+          else if (p.playType === 'SCREEN') w *= 1.2;
         }
         return w;
       });
@@ -90,15 +130,36 @@ export function aiSelectPlay(hand, playType, difficulty, situation) {
         var bias = TEAM_AI_BIAS[situation.teamId];
         if (bias && bias[p.playType]) w *= bias[p.playType];
       }
+      // Desperation / victory mode — dominates other weighting when active
+      if (isDesperate) {
+        if (p.playType === 'DEEP') w *= 2.8;
+        else if (p.playType === 'QUICK') w *= 1.6;
+        else if (isRunType(p.playType)) w *= 0.25;
+        else if (p.playType === 'SCREEN') w *= 0.6;
+      } else if (isVictoryMode) {
+        if (isRunType(p.playType)) w *= 3.0;
+        else if (p.playType === 'SCREEN') w *= 1.3;
+        else if (p.playType === 'DEEP') w *= 0.15;
+        else if (p.playType === 'QUICK') w *= 0.7;
+      }
       return w;
     });
 
     return weightedChoice(filtered, weights);
   }
 
-  // Defense
+  // Defense — team scheme bias applies at ALL difficulties so each team's D has identity.
+  // EASY still uses team bias but skips situational weighting. MEDIUM/HARD layer both.
   if (difficulty === 'EASY') {
-    return available[Math.floor(Math.random() * available.length)];
+    const easyWeights = available.map(p => {
+      let w = 1.0;
+      if (situation.defTeamId) {
+        var dBias = TEAM_DEF_BIAS[situation.defTeamId];
+        if (dBias && dBias[p.baseCoverage]) w *= dBias[p.baseCoverage];
+      }
+      return w;
+    });
+    return weightedChoice(available, easyWeights);
   }
 
   const weights = available.map(p => {
@@ -107,6 +168,31 @@ export function aiSelectPlay(hand, playType, difficulty, situation) {
     if (distance >= 8 && p.cardType === 'BLITZ') w *= 1.5;
     if (down >= 3 && distance >= 5) {
       w *= 1.0 + (p.sackRateBonus > 0.03 ? 0.5 : 0);
+    }
+    // Team scheme identity — each team prefers their canonical coverage shell
+    if (situation.defTeamId) {
+      var dBias = TEAM_DEF_BIAS[situation.defTeamId];
+      if (dBias && dBias[p.baseCoverage]) w *= dBias[p.baseCoverage];
+    }
+    // Clock-aware defense: AI on D with a LEAD in 2-min plays prevent
+    // (zones, no blitzes — don't give up the big play). AI on D TRAILING in 2-min
+    // must force a turnover — heavy blitz, tight coverage.
+    // Note: defense AI is called when the user has the ball, so scoreDiff is
+    // from the USER's perspective (positive = user trailing = AI leading).
+    // Flip sign for AI-defense perspective: AI lead → -scoreDiff is positive.
+    const aiDefLead = -(situation.scoreDiff || 0);
+    if (situation.twoMinActive && (situation.clockSeconds === undefined || situation.clockSeconds <= 90)) {
+      if (aiDefLead >= 1) {
+        // AI leading — prevent defense
+        if (p.cardType === 'BLITZ') w *= 0.3;
+        if (p.baseCoverage === 'cover_4' || p.baseCoverage === 'cover_2' || p.baseCoverage === 'cover_6') w *= 2.0;
+        if (p.baseCoverage === 'cover_0') w *= 0.2;
+      } else if (aiDefLead <= -7) {
+        // AI trailing big — gotta get the ball back, bring pressure
+        if (p.cardType === 'BLITZ') w *= 2.5;
+        if (p.baseCoverage === 'cover_0') w *= 2.0;
+        if (p.baseCoverage === 'cover_4') w *= 0.5;
+      }
     }
     return w;
   });

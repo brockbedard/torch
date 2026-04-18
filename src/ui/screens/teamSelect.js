@@ -113,7 +113,7 @@ function injectStyles() {
     // .ts-logo-stage / stripes), so they match the helmet-stripe hue per team.
     '.ts-pos-dots .ts-dot{width:3px;height:12px;border-radius:2px;background:currentColor;opacity:0.35;transition:height .25s ease, opacity .25s ease;}',
     '.ts-pos-dots .ts-dot.on{height:22px;opacity:1;}',
-    '.ts-tier-badge{font-family:"Rajdhani",sans-serif;font-weight:700;font-size:10px;letter-spacing:3px;padding:7px 13px;border:1px solid;border-radius:2px;backdrop-filter:blur(8px);background:rgba(0,0,0,0.3);text-transform:uppercase;position:relative;}',
+    '.ts-tier-badge{font-family:"Rajdhani",sans-serif;font-weight:700;font-size:10px;letter-spacing:3px;padding:7px 13px;border:1px solid;border-radius:4px;backdrop-filter:blur(8px);background:rgba(0,0,0,0.3);text-transform:uppercase;position:relative;}',
     '.ts-tier-badge.pwr{border-color:rgba(235,176,16,0.7);color:#EBB010;}',
     '.ts-tier-badge.cnt{border-color:rgba(255,255,255,0.55);color:#fff;}',
     '.ts-tier-badge.und{border-color:rgba(255,107,58,0.8);color:#FF6B3A;}',
@@ -140,7 +140,7 @@ function injectStyles() {
     '.ts-cta-wrap{position:absolute;left:0;right:0;bottom:calc(36px + env(safe-area-inset-bottom,0px));padding:0 22px;z-index:10;background:transparent;pointer-events:none;}',
     '.ts-cta-wrap > *{pointer-events:auto;}',
     '.ts-diff-row{display:flex;gap:6px;justify-content:center;margin-bottom:10px;}',
-    '.ts-diff-row .ts-diff{flex:1;font-family:"Teko",sans-serif;font-weight:700;font-size:12px;letter-spacing:2px;padding:6px 0;border-radius:3px;cursor:pointer;border:1.5px solid;background:transparent;transition:all .2s;}',
+    '.ts-diff-row .ts-diff{flex:1;font-family:"Teko",sans-serif;font-weight:700;font-size:12px;letter-spacing:2px;padding:6px 0;border-radius:4px;cursor:pointer;border:1.5px solid;background:transparent;transition:all .2s;}',
     // CTA — team-colored via CSS vars, updated per carousel change. Uses the
     // `structure` (high-contrast accent) color rather than the primary so
     // the button pops OFF the team-washed background instead of blending.
@@ -151,7 +151,7 @@ function injectStyles() {
     '.ts-btn-coach.holding{animation-play-state:paused;transform:scale(0.97);}',
     // Swipe hint — sits inside the CTA wrap above the button, between
     // the tagline block and the CTA. Pill-style with arrows that bob.
-    '.ts-swipe-hint{display:flex;align-items:center;justify-content:center;gap:6px;margin:0 auto 14px;font-family:"Rajdhani",sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.85);text-shadow:0 1px 4px rgba(0,0,0,0.7);pointer-events:none;padding:6px 14px;border:1px solid rgba(255,255,255,0.25);border-radius:3px;background:rgba(0,0,0,0.3);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);width:max-content;text-transform:uppercase;}',
+    '.ts-swipe-hint{display:flex;align-items:center;justify-content:center;gap:6px;margin:0 auto 14px;font-family:"Rajdhani",sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.85);text-shadow:0 1px 4px rgba(0,0,0,0.7);pointer-events:none;padding:6px 14px;border:1px solid rgba(255,255,255,0.25);border-radius:4px;background:rgba(0,0,0,0.3);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);width:max-content;text-transform:uppercase;}',
     '.ts-swipe-hint .ts-arrow{display:inline-block;animation:ts-bob 1.6s ease-in-out infinite;font-size:13px;line-height:1;}',
     '.ts-swipe-hint .ts-arrow.down{animation-delay:0.8s;}',
     '@keyframes ts-bob{0%,100%{transform:translateY(0);opacity:0.5;}50%{transform:translateY(-3px);opacity:1;}}',

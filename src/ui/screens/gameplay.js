@@ -33,6 +33,7 @@ import { aiSelectPlay, aiSelectPlayer } from '../../engine/aiOpponent.js';
 import { showSTSelect } from '../components/stSelect.js';
 import { createFieldAnimator } from '../field/fieldAnimator.js';
 import { checkCardCombo } from '../../engine/cardCombos.js';
+import { rollFreakEvent } from '../../engine/freakEvents.js';
 import { getMomentumMultiplier } from '../../engine/momentumSystem.js';
 import { Haptic } from '../../engine/haptics.js';
 import { GAMEPLAY_CSS as CSS } from './gameplay.css.js';
@@ -340,6 +341,7 @@ export function buildGameplay() {
   GS._gameplayStats = null; // Clear after restoring
   // CPU roster for QB lookup
   var cpuOffRoster = getOffenseRoster(oppId);
+  var cpuDefRoster = getDefenseRoster(oppId);
 
   function resetDriveSummary() {
     driveSummaryLog = [];
@@ -361,14 +363,109 @@ export function buildGameplay() {
     if (eIdx >= 0) gs.humanTorchCards.splice(eIdx, 1);
   }
 
-  // Helper: resolve kickoff with HOUSE_CALL auto-consumption
-  function _resolveKickoff(humanReceives) {
+  // Helper: resolve kickoff. HOUSE CALL consumption is now user-opt-in (see _maybeUseHouseCall).
+  function _resolveKickoff(humanReceives, houseCallUsed) {
     var opts = {};
-    if (humanReceives) {
-      var hcIdx = torchInventory.findIndex(function(c) { return c.id === 'house_call'; });
-      if (hcIdx >= 0) { opts.houseCall = true; consumeTorchCard('house_call'); torchCardToast('HOUSE CALL', 'Guaranteed 50+ yard return'); }
-    }
+    if (humanReceives && houseCallUsed) { opts.houseCall = true; }
     return gs.constructor.resolveKickoff(null, opts);
+  }
+
+  // Shared handler for kickoff results (opening + halftime flows).
+  // Normal kick → set field position, show touchback/return label.
+  // Return TD (kickResult === -1) → award 6 to receiver + conversion flow (XP/2pt/3pt),
+  // matching real football and regular-TD treatment. showConv() handles the follow-up
+  // kickoff internally via handleConversion → kickoffFlip.
+  function _handleKickoffResult(kickResult, humanReceives, onReady) {
+    if (kickResult === -1) {
+      // RETURN TOUCHDOWN — 6 pts + conversion (same as regular TD)
+      var scoringTeam;
+      if (humanReceives) {
+        gs.ctScore += 6;
+        gs.possession = 'CT';
+        scoringTeam = 'CT';
+      } else {
+        gs.irScore += 6;
+        gs.possession = 'IR';
+        scoringTeam = 'IR';
+      }
+      var returningTeam = humanReceives ? hTeam : oTeam;
+      var returnOv = document.createElement('div');
+      returnOv.style.cssText = 'position:fixed;inset:0;z-index:900;background:rgba(10,8,4,0.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0;transition:opacity 0.3s;pointer-events:auto;';
+      var retAccent = returningTeam.accent || '#EBB010';
+      returnOv.innerHTML =
+        "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:11px;color:#888;letter-spacing:4px;\">KICKOFF RETURN</div>" +
+        "<div style=\"font-family:'Teko';font-weight:900;font-size:56px;color:" + retAccent + ";letter-spacing:6px;text-shadow:0 0 32px " + retAccent + "88,0 4px 12px rgba(0,0,0,0.9);\">TAKEN TO THE HOUSE!</div>" +
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:22px;color:#fff;letter-spacing:3px;margin-top:4px;\">" + returningTeam.name.toUpperCase() + " RETURN TD</div>" +
+        "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:13px;color:#EBB010;margin-top:6px;\">+6 POINTS \u2014 CONVERSION NEXT</div>";
+      var dismissBtn = _flameBadgeContinue('CONTINUE', function() {
+        returnOv.style.opacity = '0';
+        setTimeout(function() {
+          if (returnOv.parentNode) returnOv.remove();
+          drawBug(); drawField();
+          // Hand off to conversion UI — XP/2pt/3pt picker for human, auto for AI.
+          // showConv internally calls handleConversion → kickoffFlip → next drive starts.
+          showConv(scoringTeam);
+          // Don't call onReady — showConv owns the rest of the flow from here.
+        }, 300);
+      });
+      returnOv.appendChild(dismissBtn);
+      document.body.appendChild(returnOv);
+      try { SND.td && SND.td(); } catch(e) {}
+      requestAnimationFrame(function() { returnOv.style.opacity = '1'; });
+      return;
+    }
+    // Normal kickoff
+    var startYard = kickResult;
+    if (humanReceives) {
+      gs.possession = 'CT';
+      gs.ballPosition = startYard;
+    } else {
+      gs.possession = 'IR';
+      gs.ballPosition = 100 - startYard;
+    }
+    gs.down = 1;
+    gs.distance = 10;
+    var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
+    showKickoffResult(posLabel, onReady);
+  }
+
+  // Prompt user to use HOUSE CALL before a kickoff they're receiving. Calls onDecided(useIt)
+  // with user's choice. If no HC in inventory or user isn't receiving, calls onDecided(false).
+  function _maybeUseHouseCall(humanReceives, onDecided) {
+    if (!humanReceives) return onDecided(false);
+    var hcIdx = torchInventory.findIndex(function(c) { return c.id === 'house_call'; });
+    if (hcIdx < 0) return onDecided(false);
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.25s;';
+    var card = document.createElement('div');
+    card.style.cssText = "background:#141008;border:2px solid #EBB010;border-radius:12px;padding:20px 22px;max-width:320px;text-align:center;box-shadow:0 0 40px rgba(235,176,16,0.35);";
+    card.innerHTML =
+      "<div style=\"font-family:'Teko';font-weight:900;font-size:26px;color:#EBB010;letter-spacing:4px;text-shadow:0 0 18px rgba(235,176,16,0.5);\">HOUSE CALL</div>" +
+      "<div style=\"font-family:'Rajdhani';font-size:11px;color:#ccc;margin:10px 0 18px;line-height:1.4;\">Use it on this kickoff? Guaranteed 50+ yard return. Chance for a TD.</div>" +
+      "<div style='display:flex;gap:10px;justify-content:center;'>" +
+        "<button id='hc-use' style=\"flex:1;padding:14px;border-radius:6px;border:2px solid #EBB010;background:#EBB010;color:#000;font-family:'Teko';font-weight:700;font-size:17px;letter-spacing:2px;cursor:pointer;\">USE IT</button>" +
+        "<button id='hc-save' style=\"flex:1;padding:14px;border-radius:6px;border:1px solid #444;background:transparent;color:#aaa;font-family:'Teko';font-weight:700;font-size:17px;letter-spacing:2px;cursor:pointer;\">SAVE IT</button>" +
+      "</div>";
+    ov.appendChild(card);
+    document.body.appendChild(ov);
+    try { SND.cardSnap(); } catch(e) {}
+    requestAnimationFrame(function() { ov.style.opacity = '1'; });
+    var decided = false;
+    function close(useIt) {
+      if (decided) return;
+      decided = true;
+      ov.style.opacity = '0';
+      if (useIt) {
+        consumeTorchCard('house_call');
+        torchCardToast('HOUSE CALL', 'Guaranteed 50+ yard return');
+      }
+      setTimeout(function() { if (ov.parentNode) ov.remove(); }, 250);
+      onDecided(useIt);
+    }
+    ov.querySelector('#hc-use').onclick = function() { close(true); };
+    ov.querySelector('#hc-save').onclick = function() { close(false); };
+    // Safety timeout — default to SAVE IT if user walks away (10s)
+    setTimeout(function() { if (!decided) close(false); }, 10000);
   }
 
   // Star Heat Check (v0.21)
@@ -437,10 +534,12 @@ export function buildGameplay() {
 
 
   // ── SCOREBOARD ──
-  const bug = document.createElement('div'); bug.className = 'T-sb'; bug.style.cursor = 'pointer'; el.appendChild(bug);
-  // Tap scorebug to show stats sheet
+  const bug = document.createElement('div'); bug.className = 'T-sb'; bug.style.cursor = 'pointer'; bug.style.pointerEvents = 'auto'; el.appendChild(bug);
+  // Tap scorebug to show stats sheet.
+  // No phase guard — stats are read-only, so showing them mid-animation is
+  // fine, and a stuck 'busy' phase (which previously blocked the 2H tap)
+  // never strands the user.
   bug.addEventListener('click', function() {
-    if (phase === 'busy') return;
     import('../components/statsSheet.js').then(function(mod) {
       // Aggregate sacks / PBUs / INTs / forced fumbles from per-player def stats
       var _hSacks = 0, _hPBUs = 0;
@@ -745,11 +844,8 @@ export function buildGameplay() {
       _bugEls.clockEl.style.display = 'none';
       _bugEls.clockLabel.style.display = 'none';
       
-      var halfText = s.half === 1 ? 'FIRST HALF' : s.half === 2 ? 'SECOND HALF' : 'OVERTIME';
-      if (s.half === 4) halfText = '2ND OVERTIME';
-      if (s.half === 5) halfText = '3RD OVERTIME';
-      if (s.half > 5) halfText = (s.half - 2) + 'TH OVERTIME';
-      _bugEls.halfEl.textContent = halfText;
+      // No overtime per CLAUDE.md — only two halves.
+      _bugEls.halfEl.textContent = s.half === 1 ? 'FIRST HALF' : 'SECOND HALF';
 
       _bugEls.snapEl.textContent = s.playsUsed + '/' + (gs.playsPerHalf || 20);
     }
@@ -1605,16 +1701,16 @@ export function buildGameplay() {
   function distLabel(dist, ydsToEz) {
     var yz = ydsToEz !== undefined ? ydsToEz : gs.getSummary().yardsToEndzone;
     if (yz <= 10) return 'GOAL';
-    var s = gs.getSummary();
-    if (s.down === 1 && dist > 10) dist = Math.min(10, yz);
+    // Engine is the source of truth for distance (gameState.js sets it correctly
+    // after first downs and inside the 10). No UI-layer defensive recalc needed.
     return dist;
   }
-  // Format down & distance string with GL support
+  // Format down & distance string with "Goal" support (e.g., "1st & Goal" inside the 10)
   function fmtDownDist(down, dist, ydsToEz) {
     if (conversionMode) return (conversionMode.choice || '2pt').toUpperCase() + ' ATTEMPT';
     var dnLabels = ['','1st','2nd','3rd','4th'];
     var dn = dnLabels[down] || '';
-    var d = (ydsToEz !== undefined && ydsToEz <= 10) ? 'GL' : dist;
+    var d = (ydsToEz !== undefined && ydsToEz <= 10) ? 'Goal' : dist;
     return dn + ' & ' + d;
   }
 
@@ -2001,11 +2097,10 @@ export function buildGameplay() {
   var _idleTimer = null;
 
   function shouldShowHint(key) {
-    if (_onboardingSkipped) return false;
-    if (_onboardingActive) return false;
-    if (_onboardingCooldown) return false;
-    if (localStorage.getItem(key)) return false;
-    return true;
+    // Onboarding disabled (user-directed 2026-04-17). All hint bubbles suppressed.
+    // Scaffolding left in place (showOnboardingBubble, _tutorialStep, etc.) in case
+    // a future onboarding rebuild wants to reuse it, but nothing surfaces to the player.
+    return false;
   }
 
   function showOnboardingBubble(targetEl, text, storageKey, opts) {
@@ -2474,6 +2569,18 @@ export function buildGameplay() {
       } catch(e) { setTimeout(function() { lpFlash.remove(); }, 2000); }
     }
 
+    // 4th down in OWN TERRITORY: no punt/FG option per CLAUDE.md aggressive rule —
+    // show a compact "MUST GO FOR IT" banner so the player knows why there's no choice.
+    var is4thOwnHalf = gs.down === 4 && isOff && !gs.canSpecialTeams() && !conversionMode;
+    if (is4thOwnHalf && phase === 'play') {
+      var mustGoBar = document.createElement('div');
+      mustGoBar.style.cssText = "display:flex;flex-direction:column;gap:2px;padding:8px 12px;flex-shrink:0;border-top:2px solid " + hTeam.accent + "44;text-align:center;";
+      mustGoBar.innerHTML =
+        "<div style=\"font-family:'Teko';font-weight:700;font-size:16px;color:" + hTeam.accent + ";letter-spacing:3px;\">4TH DOWN \u2014 MUST GO FOR IT</div>" +
+        "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:10px;color:#888;\">Own territory. No punt or field goal.</div>";
+      panel.appendChild(mustGoBar);
+    }
+
     // 4th down decision bar — appears ABOVE cards so player sees it first
     var is4thPastMid = gs.down === 4 && isOff && gs.canSpecialTeams() && !conversionMode && !_fourthDownDecided;
     if (is4thPastMid && phase === 'play') {
@@ -2543,8 +2650,12 @@ export function buildGameplay() {
       var _hasRinger = torchInventory.some(function(c) { return c.id === 'ringer'; });
       if (gs.canAttemptFG(_hasCannonLeg)) {
         var fgDist = ydsToEz + 17;
-        fgBtn.style.cssText = "flex:1;padding:10px;border-radius:6px;text-align:center;cursor:pointer;border:1.5px solid #EBB01044;background:linear-gradient(180deg,#EBB01008,transparent);font-family:'Teko';font-weight:700;font-size:16px;color:#EBB010;letter-spacing:2px;";
-        fgBtn.textContent = 'FG (' + fgDist + 'yd)' + (_hasCannonLeg ? ' +10' : '');
+        // Approximate make rate from CLAUDE.md buckets for player risk awareness.
+        var _fgRate = fgDist <= 29 ? 88 : fgDist <= 39 ? 80 : fgDist <= 49 ? 68 : 50;
+        fgBtn.style.cssText = "flex:1;padding:8px 6px;border-radius:6px;text-align:center;cursor:pointer;border:1.5px solid #EBB01044;background:linear-gradient(180deg,#EBB01008,transparent);display:flex;flex-direction:column;gap:1px;";
+        fgBtn.innerHTML =
+          "<div style=\"font-family:'Teko';font-weight:700;font-size:16px;color:#EBB010;letter-spacing:2px;line-height:1;\">FG \u2014 " + fgDist + " YD</div>" +
+          "<div style=\"font-family:'Rajdhani';font-weight:600;font-size:9px;color:#888;letter-spacing:1px;margin-top:2px;\">" + _fgRate + "% make" + (_hasCannonLeg ? " \u00b7 CANNON LEG +10" : "") + "</div>";
         fgBtn.onclick = function() {
         if (SND.snap) SND.snap(); else if (SND.click) SND.click();
           phase = 'busy';
@@ -3201,6 +3312,42 @@ export function buildGameplay() {
       }
     }
 
+    // ── FREAK EVENTS — narrative surprise overlays ──
+    // Low-probability chaos layer: fumbled snaps, broken tackles, tipped passes,
+    // juke moves, big hits. Independent of combo/tier math. Mutates result in-place
+    // and returns event metadata for the clash cadence to render.
+    if (res && res.result && !res._isConversion) {
+      // Derive the actual ball carrier for freak event commentary (OL should
+      // never be narrated as the runner — see lineman-handling logic below).
+      var _freakRoster = isOff ? offRoster : cpuOffRoster;
+      var _freakIsRun = playedPlay && (playedPlay.isRun === true || playedPlay.type === 'run');
+      var _freakBallCarrier = res.featuredOff;
+      if (res.featuredOff && (res.featuredOff.pos === 'OL' || res.featuredOff.pos === 'DL')) {
+        if (_freakIsRun) {
+          _freakBallCarrier = _freakRoster.find(function(p) { return p.pos === 'RB'; })
+                           || _freakRoster.find(function(p) { return ['FB','H-back','TE','slot WR'].indexOf(p.pos) >= 0; })
+                           || _freakRoster.find(function(p) { return p.pos === 'QB'; })
+                           || res.featuredOff;
+        } else {
+          _freakBallCarrier = _freakRoster.find(function(p) { return ['WR','slot WR','TE','SLOT','H-back'].indexOf(p.pos) >= 0; })
+                           || _freakRoster.find(function(p) { return p.pos === 'RB'; })
+                           || _freakRoster.find(function(p) { return p.pos === 'QB'; })
+                           || res.featuredOff;
+        }
+      }
+      var _freakCtx = {
+        isFirstSnapOfDrive: driveSnaps.length === 0,
+        isRunPlay: _freakIsRun,
+        isOffenseHuman: isOff,
+        featuredOff: res.featuredOff,
+        ballCarrier: _freakBallCarrier,
+      };
+      var _freakEvent = rollFreakEvent(res.result, _freakCtx);
+      if (_freakEvent) {
+        res._freakEvent = _freakEvent;
+      }
+    }
+
     // Check play sequence combos (notification only — yard bonuses handled by engine)
     var playCat = playedPlay ? (playedPlay.cat || playedPlay.playType || 'RUN') : 'RUN';
     var lastDefCat = res.defPlay ? (res.defPlay.cat || res.defPlay.cardType || '') : '';
@@ -3244,6 +3391,45 @@ export function buildGameplay() {
     // Track drive summary
     var r = res.result;
     var defName = res.featuredDef ? res.featuredDef.name : 'the defense';
+
+    // ── ACTION-APPROPRIATE DEFENDER CREDIT ──
+    // Featured defender gets combo math, but specific actions need position-matched credit:
+    //   INT / PBU → DB (CB, FS, SS, S)
+    //   SACK → DL or blitzing LB
+    // Falls back to featuredDef if the right position isn't on the roster.
+    var currentDefRoster = isOff ? cpuDefRoster : defRoster;
+    var _SECONDARY_POS = ['CB', 'FS', 'SS', 'S', 'OLB/SS'];
+    var _RUSHER_POS = ['DL', 'LB', 'OLB/SS', 'EDGE'];
+    // Returns the player OBJECT responsible for an action (used for stat IDs + names).
+    // Falls back to featuredDef if the roster lookup finds nothing.
+    function pickDefender(action) {
+      if (!res.featuredDef) return null;
+      var fpos = res.featuredDef.pos;
+      if ((action === 'int' || action === 'pbu') && _SECONDARY_POS.indexOf(fpos) < 0) {
+        return currentDefRoster.find(function(p) { return _SECONDARY_POS.indexOf(p.pos) >= 0; }) || res.featuredDef;
+      }
+      if (action === 'sack' && _RUSHER_POS.indexOf(fpos) < 0) {
+        return currentDefRoster.find(function(p) { return _RUSHER_POS.indexOf(p.pos) >= 0; }) || res.featuredDef;
+      }
+      return res.featuredDef;
+    }
+    function pickDefCredit(action) {
+      var d = pickDefender(action);
+      return d ? d.name : 'the defense';
+    }
+    var intCreditObj = pickDefender('int');
+    var sackCreditObj = pickDefender('sack');
+    var pbuCreditObj = pickDefender('pbu');
+    var intCreditName = intCreditObj ? intCreditObj.name : 'the defense';
+    var sackCreditName = sackCreditObj ? sackCreditObj.name : 'the defense';
+    var pbuCreditName = pbuCreditObj ? pbuCreditObj.name : 'the defense';
+    // Expose on res so downstream consumers (trophy stamps, play-by-play, stats) use the right credit
+    res._intCreditName = intCreditName;
+    res._sackCreditName = sackCreditName;
+    res._pbuCreditName = pbuCreditName;
+    res._intCreditor = intCreditObj;
+    res._sackCreditor = sackCreditObj;
+    res._pbuCreditor = pbuCreditObj;
     var isPassPlay = r.playType === 'pass';
 
     // Resolve QB and receiver/rusher names properly
@@ -3252,29 +3438,55 @@ export function buildGameplay() {
     var qbName = teamQB ? teamQB.name : '';
     var featuredPos = res.featuredOff ? res.featuredOff.pos : '';
     var featuredName = res.featuredOff ? res.featuredOff.name : '';
-    // On pass plays: receiver = featuredOff if not a QB, otherwise pick a WR from roster
-    var receiverName = featuredName;
-    if (isPassPlay && featuredPos === 'QB') {
-      var wr = currentOffRoster.find(function(p) { return p.pos === 'WR' || p.pos === 'TE' || p.pos === 'SLOT'; });
-      receiverName = wr ? wr.name : featuredName;
-    }
-    // On run plays: ball carrier = featuredOff
-    var rusherName = featuredName;
+    // OL/DL should NEVER be credited as the ball carrier. If the user featured
+    // a lineman (e.g., a pulling guard on GH Counter), the literal ball carrier
+    // is still the RB (run) or WR/TE (pass) — the OL just enables the play.
+    var featuredIsLineman = featuredPos === 'OL' || featuredPos === 'DL';
+    var receiverPositions = ['WR', 'slot WR', 'TE', 'SLOT', 'H-back'];
+    var rusherFallbackPositions = ['FB', 'H-back', 'TE', 'slot WR'];
 
-    // Attach resolved names to res so commentary.js uses consistent names
+    // On pass plays: receiver = featuredOff if they're a skill player who catches.
+    // QB or lineman featured → find an actual receiver from the roster.
+    var receiverObj = res.featuredOff;
+    if (isPassPlay && (featuredPos === 'QB' || featuredIsLineman)) {
+      var wr = currentOffRoster.find(function(p) { return receiverPositions.indexOf(p.pos) >= 0; });
+      if (wr) receiverObj = wr;
+    }
+    var receiverName = receiverObj ? receiverObj.name : featuredName;
+
+    // On run plays: ball carrier = featuredOff, UNLESS featured is a lineman.
+    // In that case the RB is the actual runner.
+    var rusherObj = res.featuredOff;
+    if (!isPassPlay && featuredIsLineman) {
+      var runner = currentOffRoster.find(function(p) { return p.pos === 'RB'; })
+                || currentOffRoster.find(function(p) { return rusherFallbackPositions.indexOf(p.pos) >= 0; })
+                || currentOffRoster.find(function(p) { return p.pos === 'QB'; });
+      if (runner) rusherObj = runner;
+    }
+    var rusherName = rusherObj ? rusherObj.name : featuredName;
+
+    // Attach resolved names + objects to res so downstream (commentary, stats,
+    // trophy stamps, drive summary) credit the right player, not the OL/DL
+    // that may have been featured for tier/OVR math.
     res._qbName = qbName;
+    res._qb = teamQB;
     res._receiverName = receiverName;
+    res._receiver = receiverObj;
     res._rusherName = rusherName;
+    res._rusher = rusherObj;
+    res._ballCarrier = isPassPlay ? receiverName : rusherName;
+    res._ballCarrierObj = isPassPlay ? receiverObj : rusherObj;
+    res._featuredIsLineman = featuredIsLineman;
 
     // ESPN-style play description with player names
     var espnDesc = '?';
     if (r.isTouchdown) espnDesc = r.yards + '-yd TD ' + (isPassPlay ? 'Pass to ' + receiverName : 'Run by ' + rusherName);
-    else if (r.isInterception) espnDesc = 'INTERCEPTION by ' + defName;
+    else if (r.isInterception) espnDesc = 'INTERCEPTION by ' + intCreditName;
     else if (r.isFumbleLost) espnDesc = 'FUMBLE \u2014 recovered by ' + defName;
-    else if (r.isSack) espnDesc = 'SACK by ' + defName + (Math.abs(r.yards) > 0 ? ', loss of ' + Math.abs(r.yards) : '');
+    else if (r.isSack) espnDesc = 'SACK by ' + sackCreditName + (Math.abs(r.yards) > 0 ? ', loss of ' + Math.abs(r.yards) : '');
     else if (r.isIncomplete) {
       var incVariants = [
-        'Incomplete \u2014 broken up by ' + defName,
+        'Incomplete \u2014 broken up by ' + pbuCreditName,
         'Incomplete \u2014 overthrown, intended for ' + receiverName,
         'Incomplete \u2014 dropped by ' + receiverName,
         'Incomplete \u2014 ' + receiverName + ' couldn\'t hang on',
@@ -3308,15 +3520,17 @@ export function buildGameplay() {
         hOffRushAtt++; hOffRushYds += r.yards;
         if (!hOffRBName) hOffRBName = rusherName;
       }
-      // CPU defensive player stats
-      if (defName) {
-        if (!cDefStats[defName]) cDefStats[defName] = { pos: res.featuredDef ? res.featuredDef.pos : '', tkl: 0, pbu: 0, int: 0, sack: 0 };
-        var cds = cDefStats[defName];
-        if (r.isSack) cds.sack++;
-        else if (r.isInterception) cds.int++;
-        else if (r.isIncomplete) cds.pbu++;
-        else if (!r.isTouchdown) cds.tkl++;
+      // CPU defensive player stats — use action-appropriate defender so OL/DL
+      // never gets credited with an INT/PBU, CB never gets credited with a sack.
+      function _cdefAdd(name, pos, key) {
+        if (!name) return;
+        if (!cDefStats[name]) cDefStats[name] = { pos: pos || '', tkl: 0, pbu: 0, int: 0, sack: 0 };
+        cDefStats[name][key]++;
       }
+      if (r.isSack) _cdefAdd(sackCreditName, res._sackCreditor && res._sackCreditor.pos, 'sack');
+      else if (r.isInterception) _cdefAdd(intCreditName, res._intCreditor && res._intCreditor.pos, 'int');
+      else if (r.isIncomplete) _cdefAdd(pbuCreditName, res._pbuCreditor && res._pbuCreditor.pos, 'pbu');
+      else if (!r.isTouchdown && defName) _cdefAdd(defName, res.featuredDef && res.featuredDef.pos, 'tkl');
     } else {
       // Human on defense → track CPU OFF stats + human DEF stats
       if (isPassPlay) {
@@ -3331,40 +3545,57 @@ export function buildGameplay() {
         cOffRushAtt++; cOffRushYds += r.yards;
         if (!cOffRBName) cOffRBName = rusherName;
       }
-      // Human defensive player stats
-      if (defName) {
-        if (!hDefStats[defName]) hDefStats[defName] = { pos: res.featuredDef ? res.featuredDef.pos : '', tkl: 0, pbu: 0, int: 0, sack: 0 };
-        var hds = hDefStats[defName];
-        if (r.isSack) hds.sack++;
-        else if (r.isInterception) hds.int++;
-        else if (r.isIncomplete) hds.pbu++;
-        else if (!r.isTouchdown) hds.tkl++;
+      // Human defensive player stats — action-appropriate defender credit.
+      function _hdefAdd(name, pos, key) {
+        if (!name) return;
+        if (!hDefStats[name]) hDefStats[name] = { pos: pos || '', tkl: 0, pbu: 0, int: 0, sack: 0 };
+        hDefStats[name][key]++;
       }
+      if (r.isSack) _hdefAdd(sackCreditName, res._sackCreditor && res._sackCreditor.pos, 'sack');
+      else if (r.isInterception) _hdefAdd(intCreditName, res._intCreditor && res._intCreditor.pos, 'int');
+      else if (r.isIncomplete) _hdefAdd(pbuCreditName, res._pbuCreditor && res._pbuCreditor.pos, 'pbu');
+      else if (!r.isTouchdown && defName) _hdefAdd(defName, res.featuredDef && res.featuredDef.pos, 'tkl');
     }
-    // Per-player stat accumulation for card display
+    // Per-player stat accumulation for card display.
+    // IMPORTANT: credit the actual ball carrier/thrower/defender — not the
+    // featured player (who could be an OL/DL or a blocker featured for combo math).
     function _addStat(pid, key, val) {
       if (!pid) return;
       if (!_playerGameStats[pid]) _playerGameStats[pid] = {};
       _playerGameStats[pid][key] = (_playerGameStats[pid][key] || 0) + (val || 1);
     }
-    var _offId = res.featuredOff ? res.featuredOff.id : null;
-    var _defId = res.featuredDef ? res.featuredDef.id : null;
+    var _qbId = res._qb ? res._qb.id : null;
+    var _rusherId = res._rusher && res._rusher.pos !== 'OL' && res._rusher.pos !== 'DL' ? res._rusher.id : null;
+    var _receiverId = res._receiver && res._receiver.pos !== 'OL' && res._receiver.pos !== 'DL' && res._receiver.pos !== 'QB' ? res._receiver.id : null;
+    // Milestone check should attribute to the actual ball carrier when applicable.
+    var _milestoneId = isPassPlay ? _receiverId : _rusherId;
 
     if (isPassPlay) {
-      if (_offId && res.featuredOff.pos === 'QB') { _addStat(_offId, 'passAtt'); if (r.isComplete) { _addStat(_offId, 'passComp'); _addStat(_offId, 'passYds', r.yards); } }
-      if (_offId && res.featuredOff.pos !== 'QB' && r.isComplete) { _addStat(_offId, 'rec'); _addStat(_offId, 'recYds', r.yards); }
+      // QB always gets passing stats regardless of who was featured
+      if (_qbId) { _addStat(_qbId, 'passAtt'); if (r.isComplete) { _addStat(_qbId, 'passComp'); _addStat(_qbId, 'passYds', r.yards); } }
+      // Receiver gets rec/recYds (skip if featured was QB — QB doesn't catch their own throws)
+      if (_receiverId && r.isComplete) { _addStat(_receiverId, 'rec'); _addStat(_receiverId, 'recYds', r.yards); }
     } else if (!r.isSack) {
-      if (_offId) { _addStat(_offId, 'rushAtt'); _addStat(_offId, 'rushYds', r.yards); }
+      // Rushing stats go to the actual ball carrier — not to the OL
+      if (_rusherId) { _addStat(_rusherId, 'rushAtt'); _addStat(_rusherId, 'rushYds', r.yards); }
     }
-    if (r.isTouchdown && _offId) _addStat(_offId, 'td');
-    if (r.isSack && _defId) _addStat(_defId, 'sack');
-    if (r.isInterception && _defId) _addStat(_defId, 'int');
-    if (r.isIncomplete && _defId) _addStat(_defId, 'pbu');
-    if (!r.isTouchdown && !r.isSack && !r.isInterception && !r.isIncomplete && _defId) _addStat(_defId, 'tkl');
+    if (r.isTouchdown) {
+      // TD credit goes to whoever scored — receiver on pass TDs, rusher on run TDs
+      var _tdId = isPassPlay ? _receiverId : _rusherId;
+      if (_tdId) _addStat(_tdId, 'td');
+    }
+    // Defense — use action-appropriate player (DB for INT/PBU, DL/LB for sack)
+    if (r.isSack && res._sackCreditor) _addStat(res._sackCreditor.id, 'sack');
+    if (r.isInterception && res._intCreditor) _addStat(res._intCreditor.id, 'int');
+    if (r.isIncomplete && res._pbuCreditor) _addStat(res._pbuCreditor.id, 'pbu');
+    // Tackle — featuredDef is a reasonable default (any defender can tackle)
+    if (!r.isTouchdown && !r.isSack && !r.isInterception && !r.isIncomplete && res.featuredDef) {
+      _addStat(res.featuredDef.id, 'tkl');
+    }
 
-    // Stat milestone checks (only for user's team)
-    if (isOff && _offId) _checkMilestone(_offId);
-    if (!isOff && _defId) _checkMilestone(_defId);
+    // Stat milestone checks (only for user's team) — attributed to actual ball carrier
+    if (isOff && _milestoneId) _checkMilestone(_milestoneId);
+    else if (!isOff && res.featuredDef) _checkMilestone(res.featuredDef.id);
 
     driveSummaryLog.push({
       down: preSnap.down, dist: preSnap.distance, ydsToEz: preSnap.yardsToEndzone,
@@ -3382,6 +3613,26 @@ export function buildGameplay() {
       pushTicker(_ptBreakdown, '#EBB010');
     }
     if (res.gotFirstDown) driveFirstDowns++;
+
+    // ── STAT BUG TRIGGERS ──
+    // Drive milestones that warrant a broadcast-style stat pop. Fires with delay
+    // so the bug appears AFTER the snap clash settles (not during).
+    (function() {
+      var postYdsToEz = gs.yardsToEndzone();
+      var preYdsToEz = preSnap.yardsToEndzone;
+      // 3rd first down of the drive — sustained-drive reward
+      if (res.gotFirstDown && driveFirstDowns === 3) {
+        setTimeout(function() { showStatBug('third-fd'); }, 2600);
+      }
+      // Red zone entry — crossed into the 20 on this snap
+      else if (preYdsToEz > 20 && postYdsToEz <= 20 && postYdsToEz > 0 && isOff) {
+        setTimeout(function() { showStatBug('red-zone'); }, 2600);
+      }
+      // Converted 4th down — gutsy call rewarded
+      else if (res.gotFirstDown && preSnap.down === 4) {
+        setTimeout(function() { showStatBug('fourth-down'); }, 2600);
+      }
+    })();
 
     // Replace used cards in hand manager
     var _snapHs = getHandState();
@@ -3695,6 +3946,92 @@ export function buildGameplay() {
         try { gsap.to(_tcFlash, { opacity: 0, duration: 0.4, delay: 0.15, onComplete: function() { _tcFlash.remove(); } }); } catch(e) { _tcFlash.remove(); }
       }
 
+      // ── NAMED PLAY BANNER — broadcast-style play call identifier ──
+      // Small subtitle at the top of the clash overlay, always shown when an
+      // offensive play has a name (skipped on conversions which have their own flow).
+      // Format: "▸ POWER" / "▸ GH COUNTER" / "▸ FOUR VERTS" — real play names from
+      // the team's playbook, uppercased in broadcast style.
+      if (res.offPlay && res.offPlay.name && !res._isConversion) {
+        var _pnBanner = document.createElement('div');
+        _pnBanner.style.cssText = "position:absolute;top:10%;left:50%;transform:translateX(-50%);z-index:5;font-family:'Oswald';font-weight:700;font-size:14px;color:rgba(255,250,235,0.65);letter-spacing:3px;pointer-events:none;opacity:0;white-space:nowrap;text-transform:uppercase;";
+        _pnBanner.textContent = '▸ ' + res.offPlay.name;
+        overlay.appendChild(_pnBanner);
+        try {
+          gsap.to(_pnBanner, { opacity: 1, duration: 0.3, delay: 0.05 });
+          gsap.to(_pnBanner, { opacity: 0, duration: 0.4, delay: 1.8 });
+        } catch(e) {}
+        setTimeout(function() { if (_pnBanner.parentNode) _pnBanner.remove(); }, 2500);
+      }
+
+      // ── STAR PLAYER SPOTLIGHT — broadcast graphic for a star's dramatic play ──
+      // TV-style lower-third: "#66 BAUER" + trait or nickname underneath.
+      // Only fires on notable outcomes (TD, big play, turnover, sack) AND when
+      // the player who "owned" the moment is flagged isStar. Offense star gets
+      // the spotlight on scoring/explosive plays; defense star gets it on sacks,
+      // INTs, and forced fumbles.
+      var _isDramaticPlay = r.isTouchdown || r.isInterception || r.isFumbleLost || r.isSack || (r.yards !== undefined && r.yards >= 12);
+      if (_isDramaticPlay && !res._isConversion) {
+        var _defAction = r.isSack || r.isInterception || r.isFumbleLost;
+        var _spotPlayer = null;
+        if (_defAction && res.featuredDef && res.featuredDef.isStar) {
+          _spotPlayer = res.featuredDef;
+        } else if (!_defAction && res.featuredOff && res.featuredOff.isStar) {
+          _spotPlayer = res.featuredOff;
+        }
+        if (_spotPlayer) {
+          var _spotWrap = document.createElement('div');
+          _spotWrap.style.cssText = "position:absolute;bottom:20%;left:50%;transform:translate(-50%,8px);z-index:5;pointer-events:none;opacity:0;text-align:center;";
+          var _spotLine1 = document.createElement('div');
+          _spotLine1.style.cssText = "font-family:'Teko';font-weight:700;font-size:20px;color:#EBB010;letter-spacing:3px;text-shadow:0 0 16px rgba(235,176,16,0.4);text-transform:uppercase;line-height:1;";
+          _spotLine1.textContent = '#' + (_spotPlayer.num || '--') + ' ' + (_spotPlayer.name || '').toUpperCase();
+          var _spotLine2 = document.createElement('div');
+          _spotLine2.style.cssText = "font-family:'Rajdhani';font-weight:600;font-size:10px;color:rgba(235,176,16,0.85);letter-spacing:2px;margin-top:3px;text-transform:uppercase;";
+          _spotLine2.textContent = _spotPlayer.starTitle || _spotPlayer.trait || '';
+          _spotWrap.appendChild(_spotLine1);
+          _spotWrap.appendChild(_spotLine2);
+          overlay.appendChild(_spotWrap);
+          try {
+            gsap.to(_spotWrap, { opacity: 1, y: 0, duration: 0.35, delay: 0.3, ease: 'back.out(1.5)' });
+            gsap.to(_spotWrap, { opacity: 0, y: 6, duration: 0.35, delay: 1.8, ease: 'power2.in' });
+          } catch(e) {}
+          setTimeout(function() { if (_spotWrap.parentNode) _spotWrap.remove(); }, 2400);
+        }
+      }
+
+      // ── FREAK EVENT BANNER — narrative surprise pop ──
+      // Fires just as the result slams in. Positioned above the yardage number,
+      // color-coded by tone (green = good for user, red = bad, gold = neutral).
+      if (res._freakEvent) {
+        var _fe = res._freakEvent;
+        var _feForUser = (_fe.tone === 'good' && !isUserOff) || (_fe.tone === 'bad' && isUserOff);
+        var _feAgainstUser = (_fe.tone === 'bad' && !isUserOff) || (_fe.tone === 'good' && isUserOff);
+        var _feColor;
+        if (_fe.tone === 'neutral') _feColor = '#EBB010';
+        else if (isUserOff ? (_fe.tone === 'good') : (_fe.tone === 'bad')) _feColor = '#00ff44';
+        else _feColor = '#ff0040';
+        var _feBanner = document.createElement('div');
+        _feBanner.style.cssText = "position:absolute;top:22%;left:50%;transform:translate(-50%,-8px);z-index:6;font-family:'Teko';font-weight:900;font-size:30px;color:" + _feColor + ";letter-spacing:4px;text-shadow:0 0 24px " + _feColor + "99,0 2px 6px rgba(0,0,0,0.6);pointer-events:none;opacity:0;white-space:nowrap;";
+        _feBanner.textContent = _fe.label;
+        overlay.appendChild(_feBanner);
+        var _feCommentary = document.createElement('div');
+        _feCommentary.style.cssText = "position:absolute;top:calc(22% + 34px);left:50%;transform:translateX(-50%);z-index:6;font-family:'Rajdhani';font-weight:600;font-size:11px;color:rgba(255,250,235,0.75);letter-spacing:1px;pointer-events:none;opacity:0;white-space:nowrap;max-width:320px;text-align:center;";
+        _feCommentary.textContent = _fe.commentary;
+        overlay.appendChild(_feCommentary);
+        try {
+          gsap.to(_feBanner, { opacity: 1, y: 0, duration: 0.28, ease: 'back.out(2)' });
+          gsap.to(_feCommentary, { opacity: 1, duration: 0.25, delay: 0.15 });
+          gsap.to(_feBanner, { opacity: 0, y: -14, duration: 0.4, delay: 1.6, ease: 'power2.in' });
+          gsap.to(_feCommentary, { opacity: 0, duration: 0.35, delay: 1.55 });
+          // Bigger audio/haptic cue — this IS a surprise moment
+          if (SND.bigPlay) SND.bigPlay();
+          if (Haptic && Haptic.bigPlay) Haptic.bigPlay();
+        } catch(e) {}
+        setTimeout(function() {
+          if (_feBanner.parentNode) _feBanner.remove();
+          if (_feCommentary.parentNode) _feCommentary.remove();
+        }, 2400);
+      }
+
       // Dim stays at opacity 1 (set on creation) — no hit-stop modification
 
       // Screen shake
@@ -3793,16 +4130,29 @@ export function buildGameplay() {
 
       // ── TROPHY STAMPS — fire on user-positive defensive moments ──
       // (User is on defense, CPU is on offense, user just made a play)
+      // Use action-appropriate defender names so trophies don't misattribute
+      // (e.g. DL getting an INT trophy, CB getting a sack trophy).
       if (!isUserOff) {
         var defenderName = res.featuredDef && res.featuredDef.name;
-        if (r.isInterception)       triggerTrophyStamp('pickedOff', defenderName);
+        if (r.isInterception)       triggerTrophyStamp('pickedOff', res._intCreditName || defenderName);
         else if (r.isFumbleLost)    triggerTrophyStamp('strip',     defenderName);
-        else if (r.isSack && Math.abs(r.yards) >= 6) triggerTrophyStamp('sack', defenderName);
+        else if (r.isSack && Math.abs(r.yards) >= 6) triggerTrophyStamp('sack', res._sackCreditName || defenderName);
         else if (r._fourthDownStop) triggerTrophyStamp('stand',     defenderName);
       }
 
-      // Sound — crowd spikes on big plays, holds, then settles
+      // Sound — crowd spikes on big plays, holds, then settles.
+      // Settle intensity lifts when the USER's offense is inside the 20
+      // (red zone) or 10 (goal to go) — mirrors real stadium behavior
+      // where the crowd sustains tension once scoring is one play away.
       var _settleState = gs.twoMinActive ? 'two_min_drill' : 'normal_play';
+      try {
+        var _postYds = (typeof gs.yardsToEndzone === 'function') ? gs.yardsToEndzone() : null;
+        var _userHasBall = gs.possession === hAbbr;
+        if (!gs.twoMinActive && _userHasBall && _postYds !== null && !isTD) {
+          if (_postYds <= 10) _settleState = 'goal_to_go';
+          else if (_postYds <= 20) _settleState = 'red_zone';
+        }
+      } catch(e) {}
       if (isTD && isUserOff) { SND.td(); AudioStateManager.setState('touchdown'); AudioStateManager.holdThenSettle(4000, _settleState); }
       else if (isTD && !isUserOff) { SND.turnover(); AudioStateManager.setState('turnover'); AudioStateManager.holdThenSettle(3000, _settleState); }
       else if (isGoodForUser && tier >= 2) { SND.bigPlay(); AudioStateManager.setState('big_moment'); AudioStateManager.holdThenSettle(2000, _settleState); }
@@ -4560,7 +4910,8 @@ export function buildGameplay() {
         var _narrBias = isGoodForUser ? '#00ff44' : isBadForUser ? '#ff0040' : '#EBB010';
         var _narrEvent = r.isTouchdown ? 'TOUCHDOWN' : r.isSack ? 'SACK' : r.isInterception ? 'INTERCEPTION' : r.isFumbleLost ? 'FUMBLE' : r.isIncomplete ? 'INCOMPLETE' : res.gotFirstDown ? 'FIRST DOWN' : null;
         var _narrPlay = res.offPlay ? res.offPlay.name : null;
-        var _narrPlayer = res.featuredOff ? res.featuredOff.name : null;
+        // Narrator is the actual ball carrier — never the OL even when user featured them
+        var _narrPlayer = res._ballCarrier || (res.featuredOff ? res.featuredOff.name : null);
         setNarr(_commLine1, _commLine2, {
           biasColor: _narrBias,
           yards: r.yards,
@@ -4584,9 +4935,11 @@ export function buildGameplay() {
           try { gsap.to(commEl, { opacity: 1, y: 0, duration: 0.3, delay: 0.05, ease: 'power2.out' }); } catch(e) { commEl.style.opacity = '1'; }
         }
 
-        // Milestone stat pop-ups (rare, non-blocking flourish)
-        if (res.featuredOff && _playerGameStats[res.featuredOff.id]) {
-          var pStats = _playerGameStats[res.featuredOff.id];
+        // Milestone stat pop-ups (rare, non-blocking flourish) — credit actual
+        // ball carrier (receiver on pass plays, rusher on run plays), not a featured OL.
+        var _msBallCarrier = isPassPlay ? res._receiver : res._rusher;
+        if (_msBallCarrier && _msBallCarrier.pos !== 'OL' && _msBallCarrier.pos !== 'DL' && _playerGameStats[_msBallCarrier.id]) {
+          var pStats = _playerGameStats[_msBallCarrier.id];
           var milestoneText = null;
           if (pStats.rushYds >= 100 && pStats.rushYds - r.yards < 100) milestoneText = '100 YD RUSHING MILESTONE';
           else if (pStats.recYds >= 100 && pStats.recYds - r.yards < 100) milestoneText = '100 YD RECEIVING MILESTONE';
@@ -4935,8 +5288,31 @@ export function buildGameplay() {
     // For 2-min drill, always ensure it's set since it's a persistent state.
     if (gs.twoMinActive) AudioStateManager.setState('two_min_drill');
 
-    // AI 4th down decision — resolve BEFORE showing cards to the player
+    // AI kneel / spike — resolve clock-awareness decisions BEFORE user picks defense.
+    // Leading AI kneels to end the game; trailing AI in FG range spikes to save seconds.
     var isUserDef = gs.possession !== hAbbr;
+    if (isUserDef && gs.shouldAiKneel()) {
+      phase = 'busy';
+      var kneelResult = gs.kneel();
+      driveSummaryLog.push({ down: gs.down - 1, dist: gs.distance, playName: 'KNEEL — clock running', yards: 0, isUserOff: false });
+      pushTicker(oTeam.name.toUpperCase() + ' KNEEL', '#888');
+      showFieldResult(oTeam.name.toUpperCase() + ' KNEELS', '#888', { heroSize: 36, contextText: 'VICTORY FORMATION', contextColor: '#666', duration: 1200 });
+      setNarr(oTeam.name + ' takes a knee.', fmtClock(Math.max(0, gs.clockSeconds)) + ' left');
+      setTimeout(function() { if (!checkEnd()) nextSnap(); }, 1500);
+      return;
+    }
+    if (isUserDef && gs.shouldAiSpike()) {
+      phase = 'busy';
+      gs.spike();
+      driveSummaryLog.push({ down: gs.down - 1, dist: gs.distance, playName: 'SPIKE — clock stopped', yards: 0, isUserOff: false });
+      pushTicker(oTeam.name.toUpperCase() + ' SPIKES', '#EBB010');
+      showFieldResult(oTeam.name.toUpperCase() + ' SPIKES IT', '#EBB010', { heroSize: 36, contextText: 'CLOCK STOPPED · SETTING UP FG', contextColor: '#EBB010', duration: 1200 });
+      setNarr(oTeam.name + ' spikes it.', 'Clock stopped. ' + fmtClock(Math.max(0, gs.clockSeconds)) + ' left.');
+      setTimeout(function() { if (!checkEnd()) nextSnap(); }, 1500);
+      return;
+    }
+
+    // AI 4th down decision — resolve BEFORE showing cards to the player
     if (isUserDef && gs.down === 4) {
       var aiDec = gs.ai4thDownDecision();
       if (aiDec === 'punt') {
@@ -4983,6 +5359,9 @@ export function buildGameplay() {
             var aiPunter = aiPickST(_cpuSTDeck, 'kickPower', gs.difficulty);
             if (aiPunter) burnPlayer(_cpuSTDeck, aiPunter, 'punter', 'AI punt');
             var puntResult = gs.punt(aiPunter, _bkPuntOpts);
+            // Push to driveSummaryLog so showDrive classifies this as a PUNT (not turnover on downs)
+            driveSummaryLog.push({ down: 4, dist: gs.distance, playName: puntResult.label, yards: 0, isUserOff: false });
+            pushTicker('PUNT — ' + puntResult.label, '#4DA6FF');
             var puntColor = puntResult.blocked ? '#00ff44' : '#4DA6FF';
             var _aiPuntType = puntResult.blocked ? 'blocked_punt' : 'punt';
             showSpecialTeamsResult(puntResult.label, puntColor, function() {
@@ -5035,6 +5414,10 @@ export function buildGameplay() {
             SND.kickThud();
             var fgResult = gs.attemptFieldGoal(aiKicker, _aiFgOpts);
             if (fgResult.made) _cFgMade++;
+            // Push to driveSummaryLog so showDrive classifies as FG good/miss (not turnover on downs)
+            driveSummaryLog.push({ down: 4, dist: gs.distance, playName: fgResult.label, yards: 0, isUserOff: false });
+            var _aiFgTickerColor = fgResult.made ? '#ff0040' : '#00ff44';
+            pushTicker('FG ' + fgResult.distance + ' yds — ' + (fgResult.made ? 'GOOD' : (fgResult.blocked ? 'BLOCKED' : 'NO GOOD')), _aiFgTickerColor);
             setTimeout(function() {
               if (fgResult.made) { SND.turnover(); AudioStateManager.setState('turnover'); AudioStateManager.holdThenSettle(2000, _settleState); }
               else { SND.goalPostClang(); setTimeout(function(){ SND.kickMiss(); }, 250); }
@@ -5067,9 +5450,90 @@ export function buildGameplay() {
     }
 
     drawBug(); drawField(); drawPanel(); drawDriveSummary();
+
+    // ── DESPERATION TELL — pre-snap banner for late-game pressure moments ──
+    // Fires when the clock + score + field-position combination makes THIS snap
+    // dramatic. Dedupes per situation so it doesn't spam every snap.
+    maybeShowDesperationTell();
+
     // Human always picks cards — on offense they pick offPlay+player,
     // on defense they pick defPlay+player. doSnap() passes them in the right slots.
     // No auto-CPU here — the human taps SNAP every time.
+  }
+
+  var _desperationTellShown = ''; // key of last tell shown — dedupes per situation
+  function maybeShowDesperationTell() {
+    if (!gs.twoMinActive) return;
+    if (phase === 'busy') return;
+    var s = gs.getSummary();
+    var isUserOff = s.possession === hAbbr;
+    var userScore = gs.ctScore;
+    var oppScore = gs.irScore;
+    var userMargin = userScore - oppScore; // + = user leading
+    var ydsToEz = s.yardsToEndzone;
+    var clock = gs.clockSeconds;
+    if (clock === undefined || clock > 60) return; // only final minute
+
+    var key, text, sub, color, glow;
+    if (isUserOff) {
+      if (userMargin < 0) {
+        // Trailing
+        var deficit = -userMargin;
+        if (deficit >= 1 && deficit <= 3 && ydsToEz <= 35) {
+          key = 'fg-tie'; color = '#EBB010'; glow = 'rgba(235,176,16,0.4)';
+          text = deficit === 3 ? 'GAME-TYING FG RANGE' : (deficit <= 2 ? 'GAME-WINNING FG RANGE' : 'FG RANGE');
+          sub = (ydsToEz + 17) + '-YARD TRY';
+        } else if (deficit >= 1 && deficit <= 7 && ydsToEz <= 50) {
+          key = 'hail-mary'; color = '#ff0040'; glow = 'rgba(255,0,64,0.45)';
+          text = 'HAIL MARY RANGE';
+          sub = ydsToEz + ' YARDS TO PAYDIRT';
+        } else if (deficit >= 8 && ydsToEz <= 50) {
+          key = 'go-for-broke'; color = '#ff0040'; glow = 'rgba(255,0,64,0.5)';
+          text = 'GO FOR BROKE';
+          sub = 'MUST SCORE TO STAY ALIVE';
+        } else if (deficit >= 1 && ydsToEz > 50) {
+          key = 'long-field'; color = '#FF6B00'; glow = 'rgba(255,107,0,0.4)';
+          text = 'LONG FIELD · DRIVE IT';
+          sub = ydsToEz + ' YARDS · ' + fmtClock(Math.max(0, clock)) + ' LEFT';
+        }
+      } else if (userMargin >= 1 && clock <= 40) {
+        // User leading + can bleed clock
+        key = 'clock-bleed'; color = '#00ff44'; glow = 'rgba(0,255,68,0.3)';
+        text = 'RUN OUT THE CLOCK';
+        sub = 'KEEP IT ON THE GROUND';
+      }
+    } else {
+      // User on defense
+      if (userMargin >= 1 && userMargin <= 3) {
+        key = 'must-stop'; color = '#ff0040'; glow = 'rgba(255,0,64,0.4)';
+        text = 'MUST STOP THEM';
+        sub = userMargin + '-POINT LEAD · HOLD THE LINE';
+      } else if (userMargin < 0 && clock <= 30) {
+        key = 'stop-for-ball'; color = '#EBB010'; glow = 'rgba(235,176,16,0.4)';
+        text = 'NEED THE BALL BACK';
+        sub = fmtClock(Math.max(0, clock)) + ' LEFT';
+      }
+    }
+
+    if (!key) return;
+    if (_desperationTellShown === key) return; // already showed this situation
+    _desperationTellShown = key;
+
+    var banner = document.createElement('div');
+    banner.style.cssText =
+      "position:fixed;top:24%;left:50%;transform:translate(-50%,-10px);z-index:660;" +
+      "font-family:'Teko',sans-serif;font-weight:900;font-size:32px;color:" + color + ";" +
+      "letter-spacing:5px;text-shadow:0 0 24px " + glow + ",0 4px 10px rgba(0,0,0,0.8);" +
+      "pointer-events:none;opacity:0;white-space:nowrap;text-align:center;";
+    banner.innerHTML = text + "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:12px;color:rgba(255,250,235,0.7);letter-spacing:3px;margin-top:6px;\">" + sub + "</div>";
+    el.appendChild(banner);
+    try {
+      gsap.to(banner, { opacity: 1, y: 0, duration: 0.28, ease: 'back.out(1.5)' });
+      gsap.to(banner, { opacity: 0, y: -10, duration: 0.35, delay: 1.8, ease: 'power2.in' });
+      if (SND && SND.whistle) SND.whistle();
+      if (Haptic && Haptic.hit) Haptic.hit();
+    } catch(e) {}
+    setTimeout(function() { if (banner.parentNode) banner.remove(); }, 2300);
   }
 
   // ── POSSESSION CUT ──
@@ -5078,12 +5542,140 @@ export function buildGameplay() {
     return gs.possession !== prev;
   }
 
+  // ── STAT BUG — broadcast-style drive stats panel (slides in from right) ──
+  // Triggered on drive milestones: 3rd first-down, red zone entry, 4th-down conversion.
+  // Lives on screen ~3s, then auto-tucks. Ignored during active clash/busy phases
+  // so it doesn't step on the snap beat.
+  var _statBugShown = {};   // per-drive dedupe { '3rd-fd': true, 'red-zone': true }
+  var _statBugDriveKey = '';
+  function _statBugReset() { _statBugShown = {}; _statBugDriveKey = ''; }
+  function showStatBug(trigger) {
+    // Skip if a higher-priority overlay is active
+    if (document.querySelector('.T-clash-overlay')) return;
+    // Per-drive dedupe — each trigger fires at most once per possession
+    var driveKey = gs.possession + ':' + (gs.stats.ctDrives + gs.stats.irDrives);
+    if (_statBugDriveKey !== driveKey) { _statBugShown = {}; _statBugDriveKey = driveKey; }
+    if (_statBugShown[trigger]) return;
+    _statBugShown[trigger] = true;
+
+    var possTeam = gs.possession === 'CT' ? hTeam : oTeam;
+    var accent = possTeam.accent || '#EBB010';
+    var primary = (possTeam.colors && possTeam.colors.primary) || possTeam.accent || '#EBB010';
+
+    // Compute drive stats from driveSnaps
+    var plays = driveSnaps.length;
+    var yds = driveSnaps.reduce(function(s, r) { return s + (r.result ? (r.result.yards || 0) : 0); }, 0);
+    var firstDowns = driveSnaps.filter(function(r) { return r.gotFirstDown; }).length;
+    var explosives = driveSnaps.filter(function(r) { return r.result && r.result.yards >= 15; }).length;
+
+    var tagMap = {
+      'third-fd': 'CONVERTING',
+      'red-zone': 'RED ZONE',
+      'fourth-down': 'GUTSY CALL',
+    };
+    var tag = tagMap[trigger] || 'DRIVE';
+
+    var bug = document.createElement('div');
+    bug.className = 'T-stat-bug';
+    bug.style.setProperty('--bug-accent', accent);
+    bug.style.setProperty('--bug-primary', primary);
+    bug.innerHTML =
+      '<div class="T-sbug-hdr">' +
+        '<span class="T-sbug-hdr-label">' + possTeam.name.toUpperCase() + ' DRIVE</span>' +
+        '<span class="T-sbug-hdr-tag">' + tag + '</span>' +
+      '</div>' +
+      '<div class="T-sbug-body">' +
+        '<div class="T-sbug-row"><span class="T-sbug-label">Plays</span><span class="T-sbug-value">' + plays + '</span></div>' +
+        '<div class="T-sbug-row"><span class="T-sbug-label">Yards</span><span class="T-sbug-value gold">' + yds + '</span></div>' +
+        '<div class="T-sbug-row"><span class="T-sbug-label">1st Downs</span><span class="T-sbug-value">' + firstDowns + '</span></div>' +
+        (explosives > 0 ? '<div class="T-sbug-row"><span class="T-sbug-label">Explosive</span><span class="T-sbug-value green">' + explosives + '</span></div>' : '') +
+      '</div>';
+    el.appendChild(bug);
+    requestAnimationFrame(function() { bug.classList.add('in'); });
+    setTimeout(function() { if (bug.parentNode) bug.remove(); }, 3400);
+  }
+
+  // ── SLASH WIPE — broadcast transition between drives or into halftime ──
+  // Three staggered team-colored diagonal slashes sweep across the screen, carrying
+  // a big label ("PRONGHORNS BALL", "HALFTIME", etc.). ~1s total. Optionally awaits
+  // a callback after the wipe finishes.
+  function showSlashWipe(opts) {
+    opts = opts || {};
+    var team = opts.team;
+    var text = opts.text || '';
+    var subtitle = opts.subtitle || '';
+    var useTeamWordmark = opts.teamWordmark !== false && team; // default: use wordmark when team is given
+    var onComplete = opts.onComplete || function() {};
+    var accent = (team && team.accent) || '#EBB010';
+    var primary = (team && team.colors && team.colors.primary) || accent;
+    var secondary = (team && team.colors && team.colors.secondary) || accent;
+
+    var wipe = document.createElement('div');
+    wipe.className = 'T-slash-wipe';
+    wipe.style.setProperty('--slash-primary', primary);
+    wipe.style.setProperty('--slash-secondary', secondary);
+    wipe.style.setProperty('--slash-accent', accent);
+    wipe.innerHTML =
+      '<div class="T-slash T-slash-1"></div>' +
+      '<div class="T-slash T-slash-2"></div>' +
+      '<div class="T-slash T-slash-3"></div>' +
+      (text ? '<div class="T-slash-text">' + text + '</div>' : '');
+
+    // Subtitle — render team wordmark in the team's custom font for identity,
+    // or fall back to a plain subtitle string.
+    if (subtitle || useTeamWordmark) {
+      var sub = document.createElement('div');
+      sub.className = 'T-slash-sub';
+      if (useTeamWordmark) {
+        var _swCfg = TEAM_WORDMARKS[team.id] || {};
+        var _swSize = Math.max(16, Math.round((_swCfg.heroSize || 36) * 0.44));
+        var _swWm = renderTeamWordmark(team.id, 't2', { mascot: true, fontSize: _swSize });
+        if (_swWm) {
+          // Neutralize dark on-slash background — force the wordmark to read on the dark pre/post-wipe
+          _swWm.style.color = '#0A0804';
+          sub.appendChild(_swWm);
+          if (subtitle) {
+            var _sep = document.createElement('span');
+            _sep.style.cssText = "margin-left:10px;font-family:'Rajdhani';font-weight:700;font-size:12px;color:rgba(10,8,4,0.75);letter-spacing:3px;text-transform:uppercase;";
+            _sep.textContent = subtitle;
+            sub.appendChild(_sep);
+          }
+        } else if (subtitle) {
+          sub.textContent = subtitle;
+        }
+      } else {
+        sub.textContent = subtitle;
+      }
+      wipe.appendChild(sub);
+    }
+    document.body.appendChild(wipe);
+    try { if (SND && SND.whoosh) SND.whoosh(); else if (SND && SND.cardSnap) SND.cardSnap(); } catch(e) {}
+    setTimeout(function() {
+      if (wipe.parentNode) wipe.remove();
+      onComplete();
+    }, 950);
+  }
+
   function showPossCut(ev, done) {
     driveCommLine1 = ''; driveCommLine2 = '';
     drawDriveSummary();
     narr.innerHTML = '<div class="T-pbp-idle">Awaiting snap<span class="T-pbp-cursor"></span></div>';
     var s = gs.getSummary();
     var newPossTeam = s.possession === 'CT' ? hTeam : oTeam;
+
+    // Slash wipe transition — skip on events that already have their own celebration
+    // (TD, turnover-for-score). Otherwise a team-colored slash punctuates the handoff.
+    // Team name renders in the subtitle via custom wordmark; top line is the event.
+    if (ev !== 'touchdown' && ev !== 'turnover_td' && ev !== 'score') {
+      var wipeText, wipeSub;
+      if (ev === 'interception') { wipeText = 'PICKED OFF'; wipeSub = 'BALL'; }
+      else if (ev === 'fumble_lost') { wipeText = 'FUMBLE'; wipeSub = 'RECOVER'; }
+      else if (ev === 'turnover_on_downs') { wipeText = 'TURNOVER ON DOWNS'; wipeSub = 'TAKE OVER'; }
+      else if (ev === 'punt') { wipeText = 'PUNT'; wipeSub = 'BALL'; }
+      else if (ev === 'missed_fg') { wipeText = 'NO GOOD'; wipeSub = 'TAKEOVER'; }
+      else { wipeText = 'NEW DRIVE'; wipeSub = 'BALL'; }
+      showSlashWipe({ team: newPossTeam, text: wipeText, subtitle: wipeSub });
+    }
     var newPossId = s.possession === 'CT' ? GS.team : GS.opponent;
     var otherTeam = s.possession === 'CT' ? oTeam : hTeam;
     var otherId = s.possession === 'CT' ? GS.opponent : GS.team;
@@ -5166,10 +5758,24 @@ export function buildGameplay() {
     scoreEl.textContent = hS + ' \u2014 ' + oS;
     ov.appendChild(scoreEl);
 
-    // Team name — big hero
+    // Team name — big hero in the team's custom wordmark font + "BALL" label underneath
     var teamNameEl = document.createElement('div');
-    teamNameEl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:26px;color:" + newPossTeam.accent + ";letter-spacing:5px;text-shadow:0 0 20px " + newPossTeam.accent + "50;z-index:1;opacity:0;transform:scale(0.3);";
-    teamNameEl.textContent = newPossTeam.name.toUpperCase() + ' BALL';
+    teamNameEl.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:2px;z-index:1;opacity:0;transform:scale(0.3);";
+    var _pcWmCfg = TEAM_WORDMARKS[newPossTeam.id] || {};
+    var _pcWmSize = Math.max(24, Math.round((_pcWmCfg.heroSize || 36) * 0.72));
+    var _pcWm = renderTeamWordmark(newPossTeam.id, 't1', { mascot: true, fontSize: _pcWmSize });
+    if (_pcWm) {
+      teamNameEl.appendChild(_pcWm);
+    } else {
+      var _pcFallback = document.createElement('div');
+      _pcFallback.style.cssText = "font-family:'Teko';font-weight:900;font-size:32px;color:" + newPossTeam.accent + ";letter-spacing:5px;text-shadow:0 0 20px " + newPossTeam.accent + "50;";
+      _pcFallback.textContent = newPossTeam.name.toUpperCase();
+      teamNameEl.appendChild(_pcFallback);
+    }
+    var _pcBallLbl = document.createElement('div');
+    _pcBallLbl.style.cssText = "font-family:'Oswald';font-weight:700;font-size:14px;color:rgba(255,250,235,0.8);letter-spacing:6px;margin-top:2px;";
+    _pcBallLbl.textContent = 'BALL';
+    teamNameEl.appendChild(_pcBallLbl);
     ov.appendChild(teamNameEl);
 
     // Field position
@@ -5222,6 +5828,10 @@ export function buildGameplay() {
     var td = nonConv.some(function(r) { return r.result ? r.result.isTouchdown : r.isTD; });
     var hasInt = nonConv.some(function(r) { return r.result ? r.result.isInterception : r.isInt; });
     var hasFum = nonConv.some(function(r) { return r.result ? r.result.isFumbleLost : r.isFumble; });
+    // Defensive TD: drive ended with opponent returning a turnover for a score (pick-6 / scoop-and-score)
+    var defensiveTD = nonConv.some(function(r) { return r.gameEvent === 'turnover_td'; });
+    var pickSix = defensiveTD && hasInt;
+    var scoopScore = defensiveTD && hasFum;
     var to = hasInt || hasFum;
 
     // Check driveSummaryLog tail for punt/FG classification (showDrive is called after
@@ -5264,8 +5874,19 @@ export function buildGameplay() {
     var _ptSuffix = drivePoints === 1 ? 'POINT' : 'POINTS';
 
     // Result classification — hero stamp text + color
+    // Defensive TDs get their own celebration (pick-6 / scoop-and-score) — these
+    // must be checked BEFORE the normal INT/FUM/TD branches because the drive
+    // ended with the opponent scoring AFTER a turnover.
     var resText, resColor, resSub;
-    if (td) {
+    if (pickSix) {
+      resText = 'PICK SIX';
+      resColor = isUserTeam ? '#ff0040' : '#00ff44';
+      resSub = 'Interception returned for a touchdown';
+    } else if (scoopScore) {
+      resText = 'SCOOP & SCORE';
+      resColor = isUserTeam ? '#ff0040' : '#00ff44';
+      resSub = 'Fumble returned for a touchdown';
+    } else if (td) {
       // Real point total including XP/2pt/3pt (e.g. "7 POINTS ON THE BOARD")
       resText = 'TOUCHDOWN';
       resColor = isUserTeam ? '#00ff44' : '#ff0040';
@@ -5277,12 +5898,16 @@ export function buildGameplay() {
     } else if (isFgGood) {
       resText = 'FIELD GOAL'; resColor = '#EBB010'; resSub = drivePoints + ' ' + _ptSuffix;
     } else if (isFgMiss) {
-      resText = 'NO GOOD'; resColor = isUserTeam ? '#ff0040' : '#00ff44'; resSub = 'Field goal missed';
+      // Opp took over at LOS or own 20, whichever is farther (CLAUDE.md rule).
+      // Compute the new possessor's own yard line from the post-flip state.
+      var _missYd = Math.max(0, Math.min(99, 100 - gs.yardsToEndzone()));
+      resText = 'NO GOOD'; resColor = isUserTeam ? '#ff0040' : '#00ff44';
+      resSub = 'Short of the post — takeover at the ' + _missYd;
     } else if (isPunt) {
       resText = 'PUNT'; resColor = '#888'; resSub = 'Flipping the field';
     } else {
       // 4th down stop, no score — neutral result
-      resText = 'TURNOVER ON DOWNS'; resColor = isUserTeam ? '#ff0040' : '#00ff44'; resSub = 'Came up short';
+      resText = 'TURNOVER ON DOWNS'; resColor = isUserTeam ? '#ff0040' : '#00ff44'; resSub = 'Turned it over on downs';
     }
 
     // ── Backdrop ──
@@ -5518,8 +6143,18 @@ export function buildGameplay() {
         gs.ballPosition = team === 'CT' ? (100 - convYards) : convYards;
         gs.down = 1;
         gs.distance = convYards;
-        setNarr(choice.toUpperCase() + ' attempt', oTeam.name + ' going for it! Select your defense.');
+        setNarr('YOU\'RE ON DEFENSE — ' + choice.toUpperCase() + ' ATTEMPT', oTeam.name + ' going for it from the ' + convYards + '. Pick your defensive play.');
         phase = 'play';
+        // Flash a brief "ON DEFENSE" pre-snap banner so the user knows the panel below is defensive choice, not offensive.
+        try {
+          var _defFlash = document.createElement('div');
+          _defFlash.style.cssText = "position:fixed;top:28%;left:50%;transform:translateX(-50%);z-index:660;font-family:'Teko';font-weight:900;font-size:32px;color:#4DA6FF;letter-spacing:6px;text-shadow:0 0 24px rgba(77,166,255,0.5);pointer-events:none;opacity:0;white-space:nowrap;";
+          _defFlash.textContent = 'DEFEND THE ' + (choice === '2pt' ? '2-POINT' : '3-POINT');
+          el.appendChild(_defFlash);
+          gsap.to(_defFlash, { opacity: 1, duration: 0.3, ease: 'back.out(1.5)' });
+          gsap.to(_defFlash, { opacity: 0, duration: 0.4, delay: 1.8, onComplete: function() { _defFlash.remove(); } });
+          if (SND.whistle) SND.whistle();
+        } catch(e) {}
         drawBug(); drawField(); drawPanel();
       }
       return;
@@ -5558,6 +6193,11 @@ export function buildGameplay() {
         "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:8px;color:" + c.color + ";letter-spacing:1px;padding:2px 6px;border:1px solid " + c.color + "33;border-radius:3px;margin-top:4px;\">" + c.risk + "</div>";
 
       card.onclick = function() {
+        // Rapid-tap guard — one conversion decision locks out the rest.
+        if (w._convDecided) return;
+        w._convDecided = true;
+        // Block pointer events on sibling cards during the async flow.
+        w.style.pointerEvents = 'none';
         SND.click();
         if (c.id === 'xp') {
           gs.handleConversion('xp'); drawBug();
@@ -5619,7 +6259,7 @@ export function buildGameplay() {
         isIncomplete: !convResult.success,
         isSack: false, isInterception: false, isFumbleLost: false, isSafety: false,
         offComboPts: 0, defComboPts: 0, historyBonus: 0,
-        description: convResult.success ? cm.choice.toUpperCase() + ' conversion is GOOD!' : cm.choice.toUpperCase() + ' conversion FAILED'
+        description: convResult.success ? cm.choice.toUpperCase() + ' conversion is GOOD!' : cm.choice.toUpperCase() + ' conversion NO GOOD'
       },
       gotFirstDown: false,
       playType: 'pass',
@@ -6236,35 +6876,94 @@ export function buildGameplay() {
   function showKickoffResult(resultText, onDone) {
     var recTeam = gs.possession === hAbbr ? hTeam : oTeam;
     var recColor = recTeam.accent || '#EBB010';
+    var recPrimary = (recTeam.colors && recTeam.colors.primary) || recColor;
     var kov = document.createElement('div');
     var _kovFired = false;
     function _kovDone() { if (_kovFired) return; _kovFired = true; if (kov.parentNode) kov.remove(); if (onDone) onDone(); }
-    kov.style.cssText = 'position:fixed;inset:0;z-index:950;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:rgba(10,8,4,0.96);opacity:0;transition:opacity 0.4s;pointer-events:auto;';
+    kov.style.cssText = 'position:fixed;inset:0;z-index:950;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:#0A0804;opacity:0;transition:opacity 0.4s;pointer-events:auto;';
 
-    // Background radial glow
+    // Layered background — deeper team-colored radial glow than before + two
+    // broadcast accent bars (top/bottom of content block) for visual depth.
     var bgGlow = document.createElement('div');
-    bgGlow.style.cssText = 'position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,' + (recTeam.colors ? recTeam.colors.primary : recColor) + '15 0%,transparent 70%);pointer-events:none;';
+    bgGlow.style.cssText = 'position:absolute;inset:0;background:' +
+      'radial-gradient(ellipse at 50% 32%,' + recPrimary + '2e 0%,' + recColor + '12 26%,transparent 62%),' +
+      'radial-gradient(ellipse at 50% 72%,' + recColor + '0d 0%,transparent 55%);' +
+      'pointer-events:none;';
     kov.appendChild(bgGlow);
 
-    // Container for structured layout
+    var accentBarTop = document.createElement('div');
+    accentBarTop.style.cssText = 'position:absolute;top:calc(50% - 165px);left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,' + recColor + '80,transparent);pointer-events:none;opacity:0;' ;
+    accentBarTop.id = 'kov-bar-top';
+    kov.appendChild(accentBarTop);
+    var accentBarBot = document.createElement('div');
+    accentBarBot.style.cssText = 'position:absolute;top:calc(50% + 175px);left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,' + recColor + '80,transparent);pointer-events:none;opacity:0;';
+    accentBarBot.id = 'kov-bar-bot';
+    kov.appendChild(accentBarBot);
+
+    // Container
     var content = document.createElement('div');
-    content.style.cssText = 'width:90%;max-width:320px;z-index:1;display:flex;flex-direction:column;gap:30px;align-items:center;';
+    content.style.cssText = 'width:90%;max-width:340px;z-index:1;display:flex;flex-direction:column;gap:18px;align-items:center;';
     kov.appendChild(content);
 
-    // Header
+    // Header block — badge, eyebrow, team wordmark (in signature font), action
     var hdr = document.createElement('div');
-    hdr.style.cssText = 'text-align:center;';
-    hdr.innerHTML = 
-      "<div style=\"font-family:'Oswald';font-weight:700;font-size:11px;color:#888;letter-spacing:4px;margin-bottom:6px;opacity:0;transform:translateY(10px);\" id='kov-label'>KICKOFF</div>" +
-      "<div style=\"font-family:'Teko';font-weight:900;font-size:42px;color:" + recColor + ";letter-spacing:2px;line-height:1;text-shadow:0 0 30px " + recColor + "40;opacity:0;transform:scale(0.8);\" id='kov-team'>" + recTeam.name.toUpperCase() + " RECEIVE</div>";
+    hdr.style.cssText = 'text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;';
+
+    // Team badge — 44px, team-colored drop shadow. Small accent — it
+    // anchors identity without competing with the wordmark underneath.
+    var badgeWrap = document.createElement('div');
+    badgeWrap.id = 'kov-badge';
+    badgeWrap.style.cssText = 'width:44px;height:44px;opacity:0;transform:scale(0.7);filter:drop-shadow(0 4px 14px ' + recColor + '66);';
+    badgeWrap.innerHTML = renderTeamBadge(recTeam.id, 44);
+    hdr.appendChild(badgeWrap);
+
+    // "KICKOFF" eyebrow — gold accent, more presence than before.
+    var eyebrow = document.createElement('div');
+    eyebrow.id = 'kov-label';
+    eyebrow.style.cssText = "font-family:'Oswald';font-weight:700;font-size:10px;color:#EBB010;letter-spacing:5px;opacity:0;transform:translateY(8px);";
+    eyebrow.textContent = 'KICKOFF';
+    hdr.appendChild(eyebrow);
+
+    // Team wordmark in the team's SIGNATURE FONT (Italiana for Dolphins, Zilla
+    // Slab for Boars, Playfair for Maples, etc.). Renders at T2 tier with the
+    // auto-scaled shadow — T1's 3px offset was tuned for 54px hero displays
+    // and looked like a chromatic glitch at this smaller overlay size.
+    // Explicit text-shadow override strips the hard offset drop entirely and
+    // keeps only the team-colored glow so the glyphs stay clean.
+    var wmCfg = TEAM_WORDMARKS[recTeam.id] || {};
+    var wmSize = Math.max(32, Math.round((wmCfg.heroSize || 54) * 0.62));
+    var wordmarkWrap = document.createElement('div');
+    wordmarkWrap.id = 'kov-team';
+    wordmarkWrap.style.cssText = 'opacity:0;transform:scale(0.88);';
+    var wm = renderTeamWordmark(recTeam.id, 't2', { mascot: true, fontSize: wmSize });
+    if (wm) {
+      wm.style.textShadow = '0 0 22px ' + recColor + '66, 0 2px 8px rgba(0,0,0,0.6)';
+      wordmarkWrap.appendChild(wm);
+    } else {
+      var fallback = document.createElement('div');
+      fallback.style.cssText = "font-family:'Teko';font-weight:900;font-size:" + (wmSize + 4) + "px;color:" + recColor + ";letter-spacing:2px;line-height:1;text-shadow:0 0 24px " + recColor + "55;white-space:nowrap;";
+      fallback.textContent = recTeam.name.toUpperCase();
+      wordmarkWrap.appendChild(fallback);
+    }
+    hdr.appendChild(wordmarkWrap);
+
+    // "RECEIVE" — broadcast action word below the wordmark.
+    var action = document.createElement('div');
+    action.id = 'kov-action';
+    action.style.cssText = "font-family:'Teko';font-weight:900;font-size:22px;color:" + recColor + ";letter-spacing:5px;line-height:1;text-shadow:0 0 14px " + recColor + "55;opacity:0;transform:translateY(6px);";
+    action.textContent = 'RECEIVE';
+    hdr.appendChild(action);
+
     content.appendChild(hdr);
 
-    // Result Highlight Box
+    // Result card — upgraded: team-color border/glow + "RESULT" label
+    // + bigger result text. Previously a plain gray box.
     var resBox = document.createElement('div');
-    resBox.style.cssText = 'width:100%;padding:20px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.05);text-align:center;opacity:0;transform:translateY(10px);';
     resBox.id = 'kov-res';
-    resBox.innerHTML = 
-      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:16px;color:#fff;letter-spacing:1px;\">" + resultText.toUpperCase() + "</div>";
+    resBox.style.cssText = 'width:100%;padding:14px 20px 16px;background:linear-gradient(180deg,rgba(255,255,255,0.05) 0%,rgba(255,255,255,0.015) 100%);border-radius:10px;border:1px solid ' + recColor + '3d;text-align:center;opacity:0;transform:translateY(10px);box-shadow:0 0 28px ' + recColor + '14,inset 0 1px 0 rgba(255,255,255,0.05);';
+    resBox.innerHTML =
+      "<div style=\"font-family:'Oswald';font-weight:700;font-size:9px;color:" + recColor + ";letter-spacing:4px;margin-bottom:5px;opacity:0.85;\">RESULT</div>" +
+      "<div style=\"font-family:'Rajdhani';font-weight:700;font-size:15px;color:#fff;letter-spacing:1.3px;line-height:1.2;\">" + resultText.toUpperCase() + "</div>";
     content.appendChild(resBox);
 
     // Continue button
@@ -6276,20 +6975,31 @@ export function buildGameplay() {
 
     kov.onclick = function() { kov.style.opacity = '0'; setTimeout(_kovDone, 200); };
     el.appendChild(kov);
-    
+
     requestAnimationFrame(function() {
       kov.style.opacity = '1';
+      var badge = kov.querySelector('#kov-badge');
+      var barT = kov.querySelector('#kov-bar-top');
+      var barB = kov.querySelector('#kov-bar-bot');
       var l = kov.querySelector('#kov-label');
       var t = kov.querySelector('#kov-team');
+      var a = kov.querySelector('#kov-action');
       var r = kov.querySelector('#kov-res');
       var b = kov.querySelector('#kov-btn');
       try {
-        gsap.to(l, { opacity: 1, y: 0, duration: 0.3, delay: 0.1 });
-        gsap.to(t, { opacity: 1, scale: 1, duration: 0.4, delay: 0.15, ease: 'back.out(1.5)' });
-        gsap.to(r, { opacity: 1, y: 0, duration: 0.3, delay: 0.3 });
-        gsap.to(b, { opacity: 1, y: 0, duration: 0.3, delay: 0.45 });
-      } catch(e) { 
-        l.style.opacity='1'; t.style.opacity='1'; t.style.transform='none';
+        gsap.to([barT, barB], { opacity: 1, duration: 0.5, delay: 0.05 });
+        gsap.to(badge, { opacity: 1, scale: 1, duration: 0.42, delay: 0.08, ease: 'back.out(1.5)' });
+        gsap.to(l, { opacity: 1, y: 0, duration: 0.3, delay: 0.22 });
+        gsap.to(t, { opacity: 1, scale: 1, duration: 0.5, delay: 0.28, ease: 'back.out(1.4)' });
+        gsap.to(a, { opacity: 1, y: 0, duration: 0.35, delay: 0.42, ease: 'power2.out' });
+        gsap.to(r, { opacity: 1, y: 0, duration: 0.35, delay: 0.55, ease: 'power2.out' });
+        gsap.to(b, { opacity: 1, y: 0, duration: 0.35, delay: 0.7, ease: 'power2.out' });
+      } catch(e) {
+        barT.style.opacity='1'; barB.style.opacity='1';
+        badge.style.opacity='1'; badge.style.transform='none';
+        l.style.opacity='1'; l.style.transform='none';
+        t.style.opacity='1'; t.style.transform='none';
+        a.style.opacity='1'; a.style.transform='none';
         r.style.opacity='1'; r.style.transform='none'; b.style.opacity='1'; b.style.transform='none';
       }
     });
@@ -6421,7 +7131,17 @@ export function buildGameplay() {
         _hCardsUsed: _hCardsUsed, _cCardsUsed: _cCardsUsed,
         _gameDriveHistory: _gameDriveHistory,
       };
-      showHalfEnd(false, function() { setGs(s => ({...s, screen:'halftime'})); });
+      showHalfEnd(false, function() {
+        // Slash wipe into halftime for a clean broadcast transition
+        showSlashWipe({
+          team: hTeam,
+          text: 'HALFTIME',
+          // Both-team score line — use plain text (not wordmark) so the subtitle fits on one line.
+          teamWordmark: false,
+          subtitle: hTeam.name + ' ' + gs.ctScore + '  \u00b7  ' + oTeam.name + ' ' + gs.irScore,
+          onComplete: function() { setGs(s => ({...s, screen:'halftime'})); }
+        });
+      });
       return true;
     }
     return false;
@@ -6464,25 +7184,14 @@ export function buildGameplay() {
   // dev quick play) and the new runway path where the coin toss was
   // already handled in pregame.js before arriving here.
   function _enterPlayAfterOpeningKickoff(humanReceives) {
-    // Resolve kickoff and set field position (HOUSE_CALL auto-consumed if human receives)
-    var kickResult = _resolveKickoff(humanReceives);
-    var startYard = kickResult === -1 ? 25 : kickResult; // return TD = rare, treat as touchback for simplicity
-    if (humanReceives) {
-      gs.possession = 'CT';
-      gs.ballPosition = startYard; // CT at own yard line
-    } else {
-      gs.possession = 'IR';
-      gs.ballPosition = 100 - startYard; // IR at own yard line (from CT perspective)
-    }
-    gs.down = 1;
-    gs.distance = 10;
-
-    var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
-    showKickoffResult(posLabel, function() {
-      drawBug(); drawField();
-      phase = 'play';
-      panel.style.display = '';
-      drawPanel();
+    _maybeUseHouseCall(humanReceives, function(useHC) {
+      var kickResult = _resolveKickoff(humanReceives, useHC);
+      _handleKickoffResult(kickResult, humanReceives, function() {
+        drawBug(); drawField();
+        phase = 'play';
+        panel.style.display = '';
+        drawPanel();
+      });
     });
   }
 
@@ -6509,26 +7218,14 @@ export function buildGameplay() {
       // 'receive' = human chose to receive. 'card' = human drew card, kicks off (CPU receives).
       // 'card_cpu_receives' = CPU won toss and chose to receive, human got card (CPU receives).
       var humanReceives = result.chose === 'receive';
-
-      // Resolve kickoff and set field position (HOUSE_CALL auto-consumed if human receives)
-      var kickResult = _resolveKickoff(humanReceives);
-      var startYard = kickResult === -1 ? 25 : kickResult; // return TD = rare, treat as touchback for simplicity
-      if (humanReceives) {
-        gs.possession = 'CT';
-        gs.ballPosition = startYard; // CT at own yard line
-      } else {
-        gs.possession = 'IR';
-        gs.ballPosition = 100 - startYard; // IR at own yard line (from CT perspective)
-      }
-      gs.down = 1;
-      gs.distance = 10;
-
-      var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
-      showKickoffResult(posLabel, function() {
-        drawBug(); drawField();
-        phase = 'play';
-        panel.style.display = '';
-        drawPanel();
+      _maybeUseHouseCall(humanReceives, function(useHC) {
+        var kickResult = _resolveKickoff(humanReceives, useHC);
+        _handleKickoffResult(kickResult, humanReceives, function() {
+          drawBug(); drawField();
+          phase = 'play';
+          panel.style.display = '';
+          drawPanel();
+        });
       });
     });
   } else if (gs.half === 2 && GS._halftimeCardDone === false) {
@@ -6564,21 +7261,16 @@ export function buildGameplay() {
     // Reset half-scoped state for second half
     _lastPlayFlashed = false;
     prev2min = false;
-    var kickResult = _resolveKickoff(GS.humanReceives);
-    var startYard = kickResult === -1 ? 25 : kickResult;
-    if (GS.humanReceives) {
-      gs.possession = 'CT';
-      gs.ballPosition = startYard;
-    } else {
-      gs.possession = 'IR';
-      gs.ballPosition = 100 - startYard;
-    }
-    gs.down = 1; gs.distance = 10;
-    var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
-    showKickoffResult(posLabel, function() {
-      drawBug(); drawField();
-      phase = 'play';
-      drawPanel();
+    // H2 receiver is the OPPOSITE of the H1 receiver (coin-toss loser mirrors).
+    // Previous code passed GS.humanReceives directly — that was the H1 receiver, not H2.
+    var humanReceivesHalftime = !GS.humanReceives;
+    _maybeUseHouseCall(humanReceivesHalftime, function(useHC) {
+      var kickResult = _resolveKickoff(humanReceivesHalftime, useHC);
+      _handleKickoffResult(kickResult, humanReceivesHalftime, function() {
+        drawBug(); drawField();
+        phase = 'play';
+        drawPanel();
+      });
     });
   }
 
@@ -6631,21 +7323,23 @@ export function buildGameplay() {
     showCoinToss: function() {
       showCoinToss(function(result) {
         // 'receive' = human chose to receive. 'card' = human drew card, kicks off (CPU receives).
-      // 'card_cpu_receives' = CPU won toss and chose to receive, human got card (CPU receives).
-      var humanReceives = result.chose === 'receive';
-        var kickResult = _resolveKickoff(humanReceives);
-        var startYard = kickResult === -1 ? 25 : kickResult;
-        gs.ballPosition = humanReceives ? startYard : 100 - startYard;
-        gs.possession = humanReceives ? 'CT' : 'IR';
-        gs.down = 1; gs.distance = 10;
-        drawBug(); drawField(); drawPanel();
+        // 'card_cpu_receives' = CPU won toss and chose to receive, human got card (CPU receives).
+        var humanReceives = result.chose === 'receive';
+        _maybeUseHouseCall(humanReceives, function(useHC) {
+          var kickResult = _resolveKickoff(humanReceives, useHC);
+          _handleKickoffResult(kickResult, humanReceives, function() {
+            drawBug(); drawField(); drawPanel();
+          });
+        });
       });
     },
     showKickoff: function() {
-      var kickResult = _resolveKickoff(gs.possession !== hAbbr);
-      var startYard = kickResult === -1 ? 25 : kickResult;
-      var posLabel = startYard === 25 ? 'Touchback \u2014 ball on the 25' : 'Returned to the ' + startYard;
-      showKickoffResult(posLabel, function() { drawBug(); drawField(); drawPanel(); });
+      // Dev-panel kickoff — no HC prompt (just demonstrate the kickoff mechanics)
+      var humanReceives = gs.possession !== hAbbr;
+      var kickResult = _resolveKickoff(humanReceives, false);
+      _handleKickoffResult(kickResult, humanReceives, function() {
+        drawBug(); drawField(); drawPanel();
+      });
     },
     openBooster: function() {
       triggerShop('halftime', function() { drawBug(); drawField(); drawPanel(); });

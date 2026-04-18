@@ -133,7 +133,7 @@ export function buildDailyDrive() {
   var accentColor = humanTeam ? humanTeam.accent : 'var(--a-gold)';
 
   var el = document.createElement('div');
-  el.style.cssText = 'min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);padding-top:env(safe-area-inset-top,0px);';
+  el.style.cssText = 'min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);';
 
   // ── HEADER ──
   var hdr = document.createElement('div');
@@ -471,7 +471,11 @@ function generateDailyGrid(snapLog) {
 // ============================================================
 
 function _diffColor(diff) {
-  if (diff === 'EASY') return '#00FF44';
-  if (diff === 'HARD') return '#FF4511';
-  return '#EBB010';
+  // Map difficulty → canonical semantic tokens:
+  //   EASY   → --l-green  (good-for-user / safe)
+  //   MEDIUM → --a-gold   (neutral / balanced)
+  //   HARD   → --torch    (brand danger / aggressive)
+  if (diff === 'EASY') return 'var(--l-green)';
+  if (diff === 'HARD') return 'var(--torch)';
+  return 'var(--a-gold)';
 }

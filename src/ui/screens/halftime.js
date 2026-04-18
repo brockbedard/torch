@@ -323,9 +323,11 @@ export function buildHalftime() {
   var offersRow = document.createElement('div');
   offersRow.style.cssText = 'display:flex;gap:6px;';
 
+  // Halftime weights per SHOP_WEIGHTS.halftime: 20% bronze / 40% silver / 40% gold.
+  // (Was independently set to 30/40/30 — a distribution that existed nowhere else.)
   var getOffer = function() {
     var r = Math.random();
-    var tier = r < 0.3 ? 'BRONZE' : r < 0.7 ? 'SILVER' : 'GOLD';
+    var tier = r < 0.2 ? 'BRONZE' : r < 0.6 ? 'SILVER' : 'GOLD';
     var pool = TORCH_CARDS.filter(function(c) { return c.tier === tier; });
     return pool[Math.floor(Math.random() * pool.length)];
   };
@@ -425,11 +427,22 @@ export function buildHalftime() {
   }
 
   // ── 2ND HALF RECEIVE INFO ──
+  // Team name renders in the team's custom wordmark font (each team has a distinct
+  // display typeface — Zilla Slab, Playfair Display, etc.) so identity carries through.
   var receiverIsHuman = !GS.humanReceives;
   var receiverTeam = receiverIsHuman ? team : opp;
   var receiveInfo = document.createElement('div');
-  receiveInfo.style.cssText = "text-align:center;font-family:'Rajdhani';font-weight:600;font-size:10px;color:#555;";
-  receiveInfo.innerHTML = "<span style='color:" + receiverTeam.accent + ";font-weight:700;'>" + receiverTeam.name + "</span> receive to start the 2nd half";
+  receiveInfo.style.cssText = "display:flex;align-items:center;justify-content:center;gap:8px;text-align:center;font-family:'Rajdhani';font-weight:600;font-size:10px;color:#555;";
+  var _recvWm = renderTeamWordmark(receiverTeam.id, 't3', { mascot: true, fontSize: 14 });
+  if (_recvWm) {
+    receiveInfo.appendChild(_recvWm);
+    var _recvRest = document.createElement('span');
+    _recvRest.textContent = 'will receive to start the 2nd half';
+    receiveInfo.appendChild(_recvRest);
+  } else {
+    // Fallback if no wordmark config
+    receiveInfo.innerHTML = "<span style='color:" + receiverTeam.accent + ";font-weight:700;'>" + receiverTeam.name + "</span> will receive to start the 2nd half";
+  }
   content.appendChild(receiveInfo);
 
   el.appendChild(content);
